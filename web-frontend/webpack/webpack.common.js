@@ -63,7 +63,7 @@ const modules = {
     },
     {
       test: /\.(woff|woff2|eot|ttf|svg|ico|jpg|jpeg|png)$/,
-      loader: 'url-loader?limit=1000000',
+      loader: 'url-loader?limit=10000',
     },
     {
       test: /\.scss$/,
