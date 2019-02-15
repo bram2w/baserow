@@ -18,11 +18,11 @@
     "dev": "webpack-dev-server -d --progress --color --open --config webpack/webpack.dev.js"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0-beta.49",
-    "@babel/preset-env": "^7.0.0-beta.49",
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.2",
     "autoprefixer": "^8.6.2",
     "babel-eslint": "^8.2.3",
-    "babel-loader": "8.0.0-beta.0",
+    "babel-loader": "^8.0.5",
     "clean-webpack-plugin": "^0.1.19",
     "copy-webpack-plugin": "^4.5.1",
     "css-loader": "^0.28.11",
@@ -30,7 +30,7 @@
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-loader": "^2.0.0",
     "eslint-plugin-import": "^2.12.0",
-    "extract-text-webpack-plugin": "^4.0.0-beta.0",
+    "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^1.1.11",
     "html-webpack-plugin": "^3.2.0",
     "node-sass": "^4.9.0",
@@ -53,5 +53,8 @@
     "babel",
     "es6",
     "eslint"
-  ]
+  ],
+  "dependencies": {
+    "normalize.css": "^8.0.1"
+  }
 }
