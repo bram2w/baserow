@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  baserow:
+    container_name: baserow
+    build: .
+    volumes:
+      - .:/baserow
+    ports:
+      - 8080:8080
+
+networks:
+  default:
+    external:
+      name: baserow_default

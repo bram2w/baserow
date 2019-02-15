@@ -1,1 +1,8 @@
+.DS_Store
+.tmp
+.sass-cache
 .idea
+npm-debug.log
+yarn-error.log
+node_modules
+web-frontend/_build
