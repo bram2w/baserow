@@ -18,3 +18,20 @@
   line-height: $height;
   padding: 0 $left-right-space;
 }
+
+@mixin alert-style($background, $border, $title, $text, $icon-border) {
+  background-color: $background;
+  border-color: $border;
+
+  .alert-icon {
+    border-color: $icon-border;
+  }
+
+  .alert-title {
+    color: $title;
+  }
+
+  .alert-content {
+    color: $text;
+  }
+}
