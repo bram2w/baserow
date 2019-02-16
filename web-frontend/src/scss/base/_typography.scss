@@ -1,0 +1,23 @@
+html{
+  font-size: 62.5%;
+}
+
+body {
+  color: $color-primary-900;
+  font-family: $text-font-stack;
+  font-size: 13px;
+}
+
+a {
+  color: $color-primary-500;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+p {
+  color: $color-neutral-500;
+  line-height: 170%;
+}
