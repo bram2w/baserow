@@ -1,0 +1,40 @@
+.control {
+  margin-bottom: 20px;
+}
+
+.control-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.control-elements {
+
+}
+
+.input {
+  display: block;
+  width: 100%;
+  border: 1px solid $color-neutral-400;
+  border-radius: 3px;
+  padding: 8px 12px;
+
+  &:active,
+  &:focus {
+    border-color: $color-primary-500;
+  }
+
+  &.input-large {
+    padding: 12px 12px;
+  }
+
+  &.input-error {
+    border-color: $color-error-500;
+  }
+}
+
+.error {
+  margin-top: 6px;
+  color: $color-error-500;
+}
