@@ -20,4 +20,23 @@ a {
 p {
   color: $color-neutral-500;
   line-height: 170%;
+  margin-bottom: 30px;
+}
+
+h1,
+.heading-1 {
+  font-size: 33px;
+  margin: 30px 0;
+}
+
+h2,
+.heading-2 {
+  font-size: 22px;
+  margin: 20px 0;
+}
+
+h3,
+.heading-3 {
+  font-size: 14px;
+  margin: 10px 0;
 }
