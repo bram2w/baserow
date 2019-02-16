@@ -1,5 +1,6 @@
 @import "abstracts/variables";
 @import "abstracts/mixins";
+@import "abstracts/placeholders";
 
 @import "vendors";
 
@@ -9,3 +10,6 @@
 @import "components/button";
 @import "components/alert";
 @import "components/form";
+@import "components/box";
+
+@import "components/box_page";

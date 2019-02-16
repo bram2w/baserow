@@ -14,6 +14,7 @@
   "scripts": {
     "eslint": "eslint src",
     "stylelint": "stylelint src/scss/**/*.scss",
+    "stylelint --fix": "stylelint src/scss/**/*.scss --fix",
     "build": "webpack -p --progress --config webpack/webpack.prod.js",
     "dev": "webpack-dev-server -d --progress --color --open --config webpack/webpack.dev.js"
   },

@@ -113,7 +113,12 @@ const plugins = [
   new ExtractTextPlugin(config.cssFilename),
   new HtmlWebpackPlugin({
     template: `${config.output}/index.html`,
+    filename: 'index.html'
   }),
+  new HtmlWebpackPlugin({
+    template: `${config.output}/login.html`,
+    filename: 'login.html'
+  })
 ];
 
 const webpackConfig = {

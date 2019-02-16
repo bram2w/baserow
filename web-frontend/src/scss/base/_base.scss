@@ -1,5 +1,5 @@
 html,
-body{
+body {
   height: 100%;
 }
 
@@ -7,7 +7,12 @@ html {
   box-sizing: border-box;
 }
 
-*, *::before,
+body {
+  background-color: $color-neutral-100;
+}
+
+*,
+*::before,
 *::after {
   box-sizing: inherit;
 }
