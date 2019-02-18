@@ -29,6 +29,7 @@ h1,
 .heading-1 {
   @extend %first-last-no-margin;
 
+  font-family: $logo-font-stack;
   font-size: 33px;
   margin: 30px 0;
 }

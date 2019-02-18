@@ -111,15 +111,14 @@ const plugins = [
     allowExternal: true,
   }),
   new ExtractTextPlugin(config.cssFilename),
-  new HtmlWebpackPlugin({
-    template: `${config.output}/index.html`,
-    filename: 'index.html'
-  }),
-  new HtmlWebpackPlugin({
-    template: `${config.output}/login.html`,
-    filename: 'login.html'
-  })
 ];
+
+for(const page in config.pages) {
+  plugins.push(new HtmlWebpackPlugin({
+    template: `${config.output}/${config.pages[page]}`,
+    filename: `${config.pages[page]}`
+  }));
+}
 
 const webpackConfig = {
   entry,

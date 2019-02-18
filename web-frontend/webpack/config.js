@@ -9,7 +9,8 @@ const config = {
   'jsFilename': './baserow.js',
   'cssFilename': './baserow.css',
   'sourceMaps': true,
-  'devtool': 'inline-source-map'
+  'devtool': 'inline-source-map',
+  'pages': ['index.html', 'login.html']
 };
 
 // Export config

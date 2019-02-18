@@ -34,3 +34,30 @@
   margin-top: 6px;
   color: $color-error-500;
 }
+
+.actions {
+  @extend %first-last-no-margin;
+
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  text-align: right;
+  margin: 30px 0;
+}
+
+.action-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: inline;
+    margin-right: 20px;
+    white-space: nowrap;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
