@@ -42,8 +42,11 @@
   width: 100%;
   align-items: center;
   justify-content: space-between;
-  text-align: right;
   margin: 30px 0;
+
+  > div {
+    width: 100%;
+  }
 }
 
 .action-links {

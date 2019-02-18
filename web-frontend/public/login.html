@@ -4,10 +4,12 @@
         <meta charset="utf-8" />
         <title>Login</title>
     </head>
-    <body>
+    <body class="page-login">
         <div class="box-page-header"></div>
         <div class="box-page">
-            <div class="box">
+
+            <!-- login page -->
+            <div class="box login-page login-page-login">
                 <h1 class="box-title">Baserow</h1>
                 <div class="alert alert-error alert-has-icon">
                     <div class="alert-icon">
@@ -33,10 +35,10 @@
                     <div class="actions">
                         <ul class="action-links">
                             <li>
-                                <a href="#">Sign up</a>
+                                <a href="#" data-page=".login-page-signup">Sign up</a>
                             </li>
                             <li>
-                                <a href="#">Forgot password</a>
+                                <a href="#" data-page=".login-page-forgot">Forgot password</a>
                             </li>
                         </ul>
                         <a href="#" class="button button-large">
@@ -46,6 +48,135 @@
                     </div>
                 </form>
             </div>
+
+            <!-- forgot page -->
+            <div class="box login-page login-page-forgot hidden">
+                <h1 class="box-title">Forgot password</h1>
+                <p>
+                    Please enter your e-mail address in the form. If we find an account then we will send an e-mail with a link to reset your password.
+                </p>
+                <form>
+                    <div class="control">
+                        <label class="control-label">E-mail address</label>
+                        <div class="control-elements">
+                            <input type="text" class="input input-large" />
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <ul class="action-links">
+                            <li>
+                                <a href="#" data-page=".login-page-login">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Back
+                                </a>
+                            </li>
+                        </ul>
+                        <a href="#" class="button button-large" data-page=".login-page-forgot-success">
+                            Send link
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- forgot success page -->
+            <div class="box login-page login-page-forgot-success hidden">
+                <div class="box-message">
+                    <div class="box-message-icon">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <h1 class="box-message-title">E-mail is send</h1>
+                    <a href="#" class="button button-large" data-page=".login-page-reset-password">
+                        <i class="fas fa-arrow-left"></i>
+                        Go back
+                    </a>
+                </div>
+            </div>
+
+            <!-- sign up page -->
+            <div class="box login-page login-page-signup hidden">
+                <h1 class="box-title">Sign up</h1>
+                <form>
+                    <div class="control">
+                        <label class="control-label">E-mail address</label>
+                        <div class="control-elements">
+                            <input type="text" class="input input-large" />
+                        </div>
+                    </div>
+                    <div class="control">
+                        <label class="control-label">Your name</label>
+                        <div class="control-elements">
+                            <input type="text" class="input input-large" />
+                        </div>
+                    </div>
+                    <div class="control">
+                        <label class="control-label">Password</label>
+                        <div class="control-elements">
+                            <input type="password" class="input input-large" />
+                        </div>
+                    </div>
+                    <div class="control">
+                        <label class="control-label">Repeat password</label>
+                        <div class="control-elements">
+                            <input type="password" class="input input-large" />
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <ul class="action-links">
+                            <li>
+                                <a href="#" data-page=".login-page-login">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Back
+                                </a>
+                            </li>
+                        </ul>
+                        <a href="#" class="button button-large" data-loading>
+                            Sign up
+                            <i class="fas fa-user-plus"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- sign up page -->
+            <div class="box login-page login-page-reset-password hidden">
+                <h1 class="box-title">Reset password</h1>
+                <form>
+                    <div class="control">
+                        <label class="control-label">New password</label>
+                        <div class="control-elements">
+                            <input type="password" class="input input-large" />
+                        </div>
+                    </div>
+                    <div class="control">
+                        <label class="control-label">Repeat password</label>
+                        <div class="control-elements">
+                            <input type="password" class="input input-large" />
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <div class="align-right">
+                            <a href="#" class="button button-large" data-page=".login-page-login">
+                                Change password
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script>
+            /**
+             * A small temporary peace of code to navigatie to other login related pages.
+             */
+            (function(){
+                $("[data-page]").click(function(e) {
+                    e.preventDefault();
+                    $(".login-page").addClass("hidden");
+                    $($(this).attr("data-page")).removeClass("hidden");
+                });
+            })();
+        </script>
     </body>
 </html>
