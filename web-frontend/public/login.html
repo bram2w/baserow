@@ -9,7 +9,7 @@
         <div class="box-page">
 
             <!-- login page -->
-            <div class="box login-page login-page-login">
+            <div class="box login-page login-page-login hidden">
                 <h1 class="box-title">Baserow</h1>
                 <div class="alert alert-error alert-has-icon">
                     <div class="alert-icon">
@@ -94,7 +94,7 @@
             </div>
 
             <!-- sign up page -->
-            <div class="box login-page login-page-signup hidden">
+            <div class="box login-page login-page-signup">
                 <h1 class="box-title">Sign up</h1>
                 <form>
                     <div class="control">
@@ -175,6 +175,11 @@
                     e.preventDefault();
                     $(".login-page").addClass("hidden");
                     $($(this).attr("data-page")).removeClass("hidden");
+                });
+
+                $("[data-loading]").click(function(e) {
+                    e.preventDefault();
+                    $(this).toggleClass("button-loading");
                 });
             })();
         </script>

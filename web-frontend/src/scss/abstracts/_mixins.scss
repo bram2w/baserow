@@ -10,6 +10,11 @@
   &[disabled] {
     background-color: $background;
   }
+
+  &.button-loading {
+    background-color: $active-background;
+    color: $active-background;
+  }
 }
 
 @mixin button-size($font-size, $height, $left-right-space) {
