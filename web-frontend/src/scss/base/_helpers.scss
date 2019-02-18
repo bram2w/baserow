@@ -11,7 +11,11 @@
     transform: rotate(0deg);
   }
 
+  68% {
+    transform: rotate(880deg);
+  }
+
   100% {
-    transform: rotate(360deg);
+    transform: rotate(1080deg);
   }
 }
