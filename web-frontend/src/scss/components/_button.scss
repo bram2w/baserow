@@ -45,7 +45,7 @@
 }
 
 .button-ghost {
-  @include button-style(#ffffff, $color-neutral-100, $color-primary-900);
+  @include button-style($white, $color-neutral-100, $color-primary-900);
 
   border-color: $color-neutral-400;
 }

@@ -1,4 +1,4 @@
-@mixin button-style($background, $active-background, $color: #ffffff) {
+@mixin button-style($background, $active-background, $color: $white) {
   background-color: $background;
   color: $color;
 
@@ -39,4 +39,12 @@
   .alert-content {
     color: $text;
   }
+}
+
+@mixin center-text($width, $font-size, $height: $width) {
+  width: $width;
+  height: $height;
+  line-height: $height;
+  font-size: $font-size;
+  text-align: center;
 }

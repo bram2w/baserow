@@ -1,0 +1,24 @@
+.layout {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+}
+
+.layout-col-1 {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 52px;
+}
+
+.layout-col-2 {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 226px;
+}
+
+.layout-col-3 {
+  width: 100%;
+}
