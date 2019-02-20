@@ -1,4 +1,44 @@
 .sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   background-color: $white;
   border-right: 1px solid $color-neutral-200;
+}
+
+.sidebar-content {
+  padding: 12px;
+}
+
+.sidebar-footer {
+  flex-grow: 0;
+  flex-shrink: 0;
+  border-top: 1px solid $color-neutral-200;
+}
+
+.sidebar-collapse {
+  display: block;
+  padding: 14px 16px;
+  color: $color-primary-900;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 14px;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+}
+
+.sidebar-title {
+  font-family: $logo-font-stack;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.sidebar-group-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
 }

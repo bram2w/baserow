@@ -4,21 +4,31 @@
   top: 0;
   right: 0;
   bottom: 0;
-  display: flex;
 }
 
 .layout-col-1 {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 52px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 52px;
+  overflow-x: auto;
 }
 
 .layout-col-2 {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 226px;
+  position: absolute;
+  left: 52px;
+  top: 0;
+  bottom: 0;
+  width: 226px;
+  overflow-y: auto;
 }
 
 .layout-col-3 {
-  width: 100%;
+  position: absolute;
+  left: 278px;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  overflow-y: auto;
 }

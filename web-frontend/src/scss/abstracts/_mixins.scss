@@ -41,10 +41,15 @@
   }
 }
 
-@mixin center-text($width, $font-size, $height: $width) {
-  width: $width;
+@mixin fixed-height($height, $font-size) {
   height: $height;
   line-height: $height;
   font-size: $font-size;
+}
+
+@mixin center-text($width, $font-size, $height: $width) {
+  @include fixed-height($height, $font-size);
+
+  width: $width;
   text-align: center;
 }
