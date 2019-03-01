@@ -6,6 +6,10 @@
   border-right: 1px solid $color-neutral-200;
 }
 
+.sidebar-content-wrapper {
+  overflow-y: auto;
+}
+
 .sidebar-content {
   padding: 12px;
 }
@@ -18,11 +22,11 @@
 
 .sidebar-collapse {
   display: block;
-  padding: 14px 16px;
+  padding: 0 16px;
   color: $color-primary-900;
   font-weight: bold;
-  font-size: 14px;
-  line-height: 14px;
+
+  @include fixed-height(47px, 14px);
 
   &:hover {
     text-decoration: none;

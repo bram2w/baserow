@@ -1,0 +1,113 @@
+.grid-view {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.grid-view-left,
+.grid-view-right-wrapper {
+  position: absolute;
+  top: 0;
+  bottom: -17px;
+  overflow-x: scroll;
+}
+
+.grid-view-left {
+  background-color: $color-neutral-50;
+
+  &:after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    border-right: 1px solid $color-neutral-300;
+  }
+}
+
+.grid-view-right-wrapper {
+  right: 0;
+}
+
+.grid-view-right {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  overflow: hidden;
+}
+
+.grid-view-header {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 33px;
+  background-color: $color-neutral-50;
+  border-bottom: 1px solid $color-neutral-200;
+}
+
+.grid-view-data {
+  position: absolute;
+  left: 0;
+  top: 33px;
+  right: -17px;
+  bottom: 48px - 17px;
+  overflow: scroll;
+}
+
+.grid-view-spacer {
+  display: block;
+  height: 50px;
+  width: 100%;
+}
+
+.grid-view-footer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  height: 48px;
+  background-color: $color-neutral-50;
+  border-top: 1px solid $color-neutral-200;
+}
+
+.grid-view-row {
+  @extend .clearfix;
+  height: 32px + 1px;
+}
+
+.grid-view-column {
+  position: relative;
+  float: left;
+  height: 32px + 1px;
+  border-right: 1px solid $color-neutral-200;
+  border-bottom: 1px solid $color-neutral-200;
+
+  .grid-view-header & {
+    height:  32px;
+    border-bottom: none;
+    background-color: $color-neutral-100;
+  }
+
+  .grid-view-left & {
+    border-right: none;
+  }
+}
+
+.grid-view-cell {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background-color: $white;
+
+  &.active {
+
+  }
+}

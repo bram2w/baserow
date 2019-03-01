@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8" />
         <title>Baserow</title>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/antiscroll/0.9/antiscroll.css" rel="stylesheet" type="text/css" />
     </head>
     <body>
         <div class="layout">
@@ -31,115 +32,117 @@
                 </ul>
             </div>
             <div class="layout-col-2 sidebar">
-                <div class="sidebar-content">
-                    <div class="sidebar-title">Baserow</div>
-                    <div class="sidebar-group-title">Group name 1</div>
-                    <ul class="tree">
-                        <li class="tree-item">
-                            <div class="tree-action">
-                                <a href="#" class="tree-link">
-                                    <i class="tree-type fas fa-database"></i>
-                                    Vehicles
-                                </a>
-                                <a href="#" class="tree-options">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </a>
-                            </div>
-                        </li>
-                        <li class="tree-item">
-                            <div class="tree-action">
-                                <a href="#" class="tree-link">
-                                    <i class="tree-type fas fa-angle-right"></i>
-                                    Map nummer 1
-                                </a>
-                            </div>
-                        </li>
-                        <li class="tree-item active">
-                            <div class="tree-action">
-                                <a href="#" class="tree-link">
-                                    <i class="tree-type fas fa-database"></i>
-                                    Webshop
-                                </a>
-                                <a href="#" class="tree-options">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </a>
-                            </div>
-                            <ul class="tree-subs">
-                                <li class="tree-sub active">
-                                    <a href="#" class="tree-sub-link">Customers</a>
+                <div class="sidebar-content-wrapper">
+                    <nav class="sidebar-content">
+                        <div class="sidebar-title">Baserow</div>
+                        <div class="sidebar-group-title">Group name 1</div>
+                        <ul class="tree">
+                            <li class="tree-item">
+                                <div class="tree-action">
+                                    <a href="#" class="tree-link">
+                                        <i class="tree-type fas fa-database"></i>
+                                        Vehicles
+                                    </a>
                                     <a href="#" class="tree-options">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </a>
-                                </li>
-                                <li class="tree-sub">
-                                    <a href="#" class="tree-sub-link">Products very long name</a>
+                                </div>
+                            </li>
+                            <li class="tree-item">
+                                <div class="tree-action">
+                                    <a href="#" class="tree-link">
+                                        <i class="tree-type fas fa-angle-right"></i>
+                                        Map nummer 1
+                                    </a>
+                                </div>
+                            </li>
+                            <li class="tree-item active">
+                                <div class="tree-action">
+                                    <a href="#" class="tree-link">
+                                        <i class="tree-type fas fa-database"></i>
+                                        Webshop
+                                    </a>
                                     <a href="#" class="tree-options">
                                         <i class="fas fa-ellipsis-v"></i>
                                     </a>
-                                </li>
-                                <li class="tree-sub">
-                                    <a href="#" class="tree-sub-link">Categories</a>
-                                    <a href="#" class="tree-options">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="tree-item">
-                            <div class="tree-action">
-                                <a href="#" class="tree-link">
-                                    <i class="tree-type fas fa-angle-down"></i>
-                                    Map nummer 1
-                                </a>
-                            </div>
-                            <ul class="tree">
-                                <li class="tree-item">
-                                    <div class="tree-action">
-                                        <a href="#" class="tree-link">
-                                            <i class="tree-type fas fa-database"></i>
-                                            Vehicles
-                                        </a>
+                                </div>
+                                <ul class="tree-subs">
+                                    <li class="tree-sub active">
+                                        <a href="#" class="tree-sub-link">Customers</a>
                                         <a href="#" class="tree-options">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </a>
-                                    </div>
-                                </li>
-                                <li class="tree-item">
-                                    <div class="tree-action">
-                                        <a href="#" class="tree-link">
-                                            <i class="tree-type fas fa-database"></i>
-                                            Something
-                                        </a>
+                                    </li>
+                                    <li class="tree-sub">
+                                        <a href="#" class="tree-sub-link">Products very long name</a>
                                         <a href="#" class="tree-options">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </a>
-                                    </div>
-                                </li>
-                            </ul>
-                        </li>
-                        <li class="tree-item">
-                            <div class="tree-action">
-                                <a href="#" class="tree-link">
-                                    <i class="tree-type fas fa-database"></i>
-                                    Vehicles with very long name and that is not good.
-                                </a>
-                                <a href="#" class="tree-options">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </a>
-                            </div>
-                        </li>
-                        <li class="tree-item">
-                            <div class="tree-action">
-                                <a href="#" class="tree-link">
-                                    <i class="tree-type fas fa-database"></i>
-                                    Something else
-                                </a>
-                                <a href="#" class="tree-options">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
+                                    </li>
+                                    <li class="tree-sub">
+                                        <a href="#" class="tree-sub-link">Categories</a>
+                                        <a href="#" class="tree-options">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="tree-item">
+                                <div class="tree-action">
+                                    <a href="#" class="tree-link">
+                                        <i class="tree-type fas fa-angle-down"></i>
+                                        Map nummer 1
+                                    </a>
+                                </div>
+                                <ul class="tree">
+                                    <li class="tree-item">
+                                        <div class="tree-action">
+                                            <a href="#" class="tree-link">
+                                                <i class="tree-type fas fa-database"></i>
+                                                Vehicles
+                                            </a>
+                                            <a href="#" class="tree-options">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </a>
+                                        </div>
+                                    </li>
+                                    <li class="tree-item">
+                                        <div class="tree-action">
+                                            <a href="#" class="tree-link">
+                                                <i class="tree-type fas fa-database"></i>
+                                                Something
+                                            </a>
+                                            <a href="#" class="tree-options">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </a>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="tree-item">
+                                <div class="tree-action">
+                                    <a href="#" class="tree-link">
+                                        <i class="tree-type fas fa-database"></i>
+                                        Vehicles with very long name and that is not good.
+                                    </a>
+                                    <a href="#" class="tree-options">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                </div>
+                            </li>
+                            <li class="tree-item">
+                                <div class="tree-action">
+                                    <a href="#" class="tree-link">
+                                        <i class="tree-type fas fa-database"></i>
+                                        Something else
+                                    </a>
+                                    <a href="#" class="tree-options">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                </div>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
                 <div class="sidebar-footer">
                     <a href="#" class="sidebar-collapse">
@@ -149,7 +152,7 @@
                 </div>
             </div>
             <div class="layout-col-3">
-                <div class="layout-col-3-1 header">
+                <header class="layout-col-3-1 header">
                     <ul class="header-filter">
                         <li>
                             <a href="#">
@@ -170,11 +173,266 @@
                         <li>Webshop</li>
                         <li>Products</li>
                     </ul>
-                </div>
+                </header>
                 <div class="layout-col-3-2 content">
-                    CONTENT !
+                    <div class="grid-view">
+                        <div class="grid-view-left" style="width: 200px;">
+                            <div class="grid-view-header">
+                                <div class="grid-view-row">
+                                    <div class="grid-view-column" style="width: 200px;">
+                                        header column 1
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid-view-data" data-match-height>
+                                <div class="grid-view-row">
+                                    <div class="grid-view-column" style="width: 200px;">
+                                        <div class="grid-view-cell">
+                                            data column 1
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-view-row">
+                                    <div class="grid-view-column" style="width: 200px;">
+                                        <div class="grid-view-cell">
+                                            data column 1
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-view-row">
+                                    <div class="grid-view-column" style="width: 200px;">
+                                        <div class="grid-view-cell">
+                                            data column 1
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-view-row">
+                                    <div class="grid-view-column" style="width: 200px;">
+                                        <div class="grid-view-cell">
+                                            data column 1
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-view-row">
+                                    <div class="grid-view-column" style="width: 200px;">
+                                        <div class="grid-view-cell">
+                                            data column 1
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-view-row">
+                                    <div class="grid-view-column" style="width: 200px;">
+                                        <div class="grid-view-cell">
+                                            data column 1
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-view-row">
+                                    <div class="grid-view-column" style="width: 200px;">
+                                        <div class="grid-view-cell">
+                                            data column 1
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-view-row">
+                                    <div class="grid-view-column" style="width: 200px;">
+                                        <div class="grid-view-cell">
+                                            data column 1
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-view-spacer"></div>
+                            </div>
+                            <div class="grid-view-footer">
+                                <div class="grid-view-footer-column" style="width: 200px;">
+                                    18 records
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid-view-right-wrapper" style="left: 200px;">
+                            <div class="grid-view-right" style="min-width: 700px;">
+                                <div class="grid-view-header">
+                                    <div class="grid-view-row">
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            header column 2
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            header column 3
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            header column 4
+                                        </div>
+                                        <div class="grid-view-column" style="width: 100px;">
+                                            +
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid-view-data" data-match-height>
+                                    <div class="grid-view-row">
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 2
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 3
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 4
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid-view-row">
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 2
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 3
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 4
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid-view-row">
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 2
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 3
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 4
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid-view-row">
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 2
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 3
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 4
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid-view-row">
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 2
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 3
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 4
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid-view-row">
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 2
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 3
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 4
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid-view-row">
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 2
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 3
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 4
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid-view-row">
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 2
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 3
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-cell">
+                                                data column 4
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid-view-spacer"></div>
+                                </div>
+                                <div class="grid-view-footer">right footer</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/antiscroll/0.9/antiscroll.js"></script>
+        <script>
+            (function() {
+                $matchHeight = $("[data-match-height]");
+                var ignore = false;
+
+                $matchHeight.scroll(function(e) {
+                    if (ignore) {
+                        ignore = false;
+                        return;
+                    }
+                    $matchHeight.each(function(i, object) {
+                        if (object !== e.currentTarget) {
+                            ignore = true;
+                            object.scrollTop = e.currentTarget.scrollTop;
+                        }
+                    });
+                });
+            })();
+        </script>
     </body>
 </html>
