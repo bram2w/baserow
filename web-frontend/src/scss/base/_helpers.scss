@@ -1,3 +1,9 @@
+.clearfix::after {
+  clear: both;
+  content: '';
+  display: table;
+}
+
 .hidden {
   display: none;
 }
@@ -11,11 +17,11 @@
     transform: rotate(0deg);
   }
 
-  68% {
-    transform: rotate(880deg);
+  40% {
+    transform: rotate(360deg);
   }
 
   100% {
-    transform: rotate(1080deg);
+    transform: rotate(720deg);
   }
 }
