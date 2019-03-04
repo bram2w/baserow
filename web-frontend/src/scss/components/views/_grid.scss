@@ -1,3 +1,5 @@
+// @TODO make this a bit clearer
+
 .grid-view {
   position: absolute;
   left: 0;
@@ -7,41 +9,53 @@
   overflow: hidden;
 }
 
-.grid-view-left,
-.grid-view-right-wrapper {
+.grid-view-divider {
   position: absolute;
   top: 0;
-  bottom: -17px;
-  overflow-x: scroll;
+  bottom: 0;
+  border-right: 1px solid $color-neutral-300;
+}
+
+.grid-view-left,
+.grid-view-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
 }
 
 .grid-view-left {
+  left: 0;
   background-color: $color-neutral-50;
-
-  &:after {
-    content: "";
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    border-right: 1px solid $color-neutral-300;
-  }
-}
-
-.grid-view-right-wrapper {
-  right: 0;
 }
 
 .grid-view-right {
+  right: 0;
+}
+
+.grid-view-outer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: scroll;
+}
+
+.grid-view-inner {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
   right: 0;
-  overflow: hidden;
 }
 
-.grid-view-header {
+.grid-view-divider {
+  z-index: 2;
+  border-right: 1px solid $color-neutral-300;
+}
+
+.grid-view-head {
   position: absolute;
   left: 0;
   top: 0;
@@ -51,22 +65,29 @@
   border-bottom: 1px solid $color-neutral-200;
 }
 
-.grid-view-data {
+.grid-view-body {
   position: absolute;
   left: 0;
   top: 33px;
-  right: -17px;
-  bottom: 48px - 17px;
+  right: 0;
+  bottom: 48px;
+  overflow: hidden;
+}
+
+.grid-view-body-outer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
   overflow: scroll;
 }
 
-.grid-view-spacer {
-  display: block;
-  height: 50px;
-  width: 100%;
+.grid-view-body-inner {
+  padding-bottom: 100px;
 }
 
-.grid-view-footer {
+.grid-view-foot {
   position: absolute;
   left: 0;
   bottom: 0;
@@ -88,10 +109,15 @@
   border-right: 1px solid $color-neutral-200;
   border-bottom: 1px solid $color-neutral-200;
 
-  .grid-view-header & {
+  .grid-view-head & {
     height:  32px;
     border-bottom: none;
     background-color: $color-neutral-100;
+  }
+
+  .grid-view-foot & {
+    border-right: 0;
+    border-bottom: 0;
   }
 
   .grid-view-left & {
@@ -108,6 +134,12 @@
   background-color: $white;
 
   &.active {
-
+    z-index: 2;
+    left: -2px;
+    top: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid $color-primary-500;
+    border-radius: 2px;
   }
 }
