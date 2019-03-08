@@ -1,0 +1,6 @@
+.grid-field-number {
+  @extend %ellipsis;
+  @include fixed-height(32px, 13px);
+  text-align: right;
+  padding: 0 10px;
+}

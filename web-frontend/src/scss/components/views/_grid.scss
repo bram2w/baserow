@@ -87,6 +87,10 @@
   border-top: 1px solid $color-neutral-200;
 }
 
+.grid-view-foot-info {
+  padding: 10px;
+}
+
 .grid-view-row {
   @extend .clearfix;
   height: 32px + 1px;
@@ -121,12 +125,91 @@
   background-color: $white;
 
   &.active {
+    @include absolute(-2px);
     z-index: 2;
-    left: -2px;
-    top: -2px;
-    right: -2px;
-    bottom: -2px;
     border: 2px solid $color-primary-500;
     border-radius: 2px;
+  }
+
+  &.active-by {
+    border-color: $color-success-500;
+  }
+
+  .grid-view-cell-active-by {
+    @include absolute(-8px, 0, auto, auto);
+    @include fixed-height(18px, 12px);
+    background-color: $color-success-500;
+    color: $white;
+    border-radius: 3px;
+    padding: 0 3px;
+    transform: translateX(50%);
+
+    .icon {
+      font-size: 9px;
+    }
+  }
+}
+
+.grid-view-description {
+  padding: 0 30px;
+  line-height: 32px;
+
+  .grid-view-description-icon,
+  .grid-view-description-options {
+    line-height: inherit;
+    width: 30px;
+    color: $color-neutral-600;
+  }
+
+  .grid-view-description-icon {
+    @include absolute(0, auto, 0, 0);
+    padding-left: 10px;
+    text-align: left;
+  }
+
+  .grid-view-description-options {
+    @include absolute(0, 0, 0, auto);
+    text-align: center;
+
+    &:hover {
+      color: $color-neutral-900;
+    }
+  }
+
+  .grid-view-description-name {
+    @extend %ellipsis;
+  }
+}
+
+.grid-view-add-column {
+  display: block;
+  line-height: 32px;
+  text-align: center;
+  color: $color-neutral-900;
+
+  &:hover {
+    background-color: $color-primary-100;
+  }
+}
+
+.grid-view-add-column-placeholder {
+  display: none;
+
+  &.hover {
+    display: block;
+  }
+}
+
+.grid-view-add-row {
+  display: block;
+  line-height: 32px;
+  height: 32px;
+  padding-left: 10px;
+  color: $color-neutral-900;
+  background-color: $white;
+
+  &:hover,
+  &.hover {
+    background-color: $color-primary-100;
   }
 }

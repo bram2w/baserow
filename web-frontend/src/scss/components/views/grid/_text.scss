@@ -1,0 +1,5 @@
+.grid-field-text {
+  @extend %ellipsis;
+  @include fixed-height(32px, 13px);
+  padding: 0 10px;
+}
