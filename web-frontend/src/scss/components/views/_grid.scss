@@ -1,65 +1,67 @@
-// @TODO make this a bit clearer
-
 .grid-view {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  @include absolute(0);
   overflow: hidden;
-}
 
-.grid-view-divider {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-right: 1px solid $color-neutral-300;
+  .scrollbars {
+    // We don't want the scrollbars to go over the header. We also don't want the
+    // scrollbars to go over the first column, but since the width can automatically
+    // be adjusted that needs to be specified in the html file.
+    top: 33px;
+  }
 }
 
 .grid-view-left,
 .grid-view-right {
-  position: absolute;
-  top: 0;
-  bottom: 0;
+  @include absolute(0, auto);
+  z-index: 1;
   overflow: hidden;
 }
 
+.grid-view-inner {
+  @include absolute(0);
+  overflow: hidden;
+}
+
+// The width of the first column can be adjusted that is why it is specified in the html
+// file.
 .grid-view-left {
   left: 0;
   background-color: $color-neutral-50;
 }
 
+// The width of the first column can be adjusted that is why the left offset is
+// specified in the html file.
 .grid-view-right {
   right: 0;
 }
 
-.grid-view-outer {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  overflow: scroll;
-}
-
-.grid-view-inner {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  right: 0;
-}
-
+// The divider has not left property because the width of the left column can be
+// adjusted that is why it is specified in the html file.
 .grid-view-divider {
+  @include absolute(0, auto);
   z-index: 2;
-  border-right: 1px solid $color-neutral-300;
+  width: 4px;
+  border-left: 1px solid $color-neutral-300;
+  overflow: hidden;
+  pointer-events: none;
+
+  &:before {
+    display: none;
+    content: "";
+    @include absolute(0, auto, 0, 0);
+    width: 4px;
+    left: -4px;
+    background-color: black;
+    box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  &.shadow:before {
+    display: block;
+  }
 }
 
 .grid-view-head {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
+  @include absolute(0, 0, auto, 0);
   height: 33px;
   background-color: $color-neutral-50;
   border-bottom: 1px solid $color-neutral-200;
@@ -74,24 +76,12 @@
   overflow: hidden;
 }
 
-.grid-view-body-outer {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  overflow: scroll;
-}
-
 .grid-view-body-inner {
   padding-bottom: 100px;
 }
 
 .grid-view-foot {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  right: 0;
+  @include absolute(auto, 0, 0, 0);
   height: 48px;
   background-color: $color-neutral-50;
   border-top: 1px solid $color-neutral-200;
@@ -102,6 +92,7 @@
   height: 32px + 1px;
 }
 
+// Because the width of a column can be adjusted it is specified in the html file.
 .grid-view-column {
   position: relative;
   float: left;
@@ -126,11 +117,7 @@
 }
 
 .grid-view-cell {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  @include absolute(0);
   background-color: $white;
 
   &.active {

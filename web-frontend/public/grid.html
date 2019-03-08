@@ -3,7 +3,6 @@
     <head>
         <meta charset="utf-8" />
         <title>Baserow</title>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/antiscroll/0.9/antiscroll.css" rel="stylesheet" type="text/css" />
     </head>
     <body>
         <div class="layout">
@@ -176,351 +175,640 @@
                 </header>
                 <div class="layout-col-3-2 content">
                     <div class="grid-view">
+                        <div class="scrollbars" style="left: 200px;">
+                            <div class="scrollbar-vertical" style="top: 20px; height: 40px;"></div>
+                            <div class="scrollbar-horizontal" style="left: 10px; width: 40px;"></div>
+                        </div>
                         <div class="grid-view-left" style="width: 200px;">
-                            <div class="grid-view-outer remove-scrollbar">
-                                <div class="grid-view-inner" style="min-width: 200px;">
-                                    <div class="grid-view-head">
-                                        <div class="grid-view-column" style="width: 200px;">head 1</div>
-                                    </div>
-                                    <div class="grid-view-body">
-                                        <div class="grid-view-body-outer remove-scrollbar" data-match-scroll-top>
-                                            <div class="grid-view-body-inner">
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 1</div>
-                                                    </div>
-                                                </div>
+                            <div class="grid-view-inner" style="min-width: 200px;">
+                                <div class="grid-view-head">
+                                    <div class="grid-view-column" style="width: 200px;">head 1</div>
+                                </div>
+                                <div class="grid-view-body">
+                                    <div class="grid-view-body-inner">
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 1</div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="grid-view-foot">
-                                        <div class="grid-view-column">footer 1</div>
-                                    </div>
+                                </div>
+                                <div class="grid-view-foot">
+                                    <div class="grid-view-column">footer 1</div>
                                 </div>
                             </div>
                         </div>
                         <div class="grid-view-divider" style="left: 200px;"></div>
                         <div class="grid-view-right" style="left: 200px;">
-                            <div class="grid-view-outer remove-scrollbar">
-                                <div class="grid-view-inner" style="min-width: 1400px;">
-                                    <div class="grid-view-head">
-                                        <div class="grid-view-column" style="width: 200px;">head 2</div>
-                                        <div class="grid-view-column" style="width: 200px;">head 3</div>
-                                        <div class="grid-view-column" style="width: 200px;">head 4</div>
-                                        <div class="grid-view-column" style="width: 200px;">head 5</div>
-                                        <div class="grid-view-column" style="width: 200px;">head 6</div>
-                                        <div class="grid-view-column" style="width: 200px;">head 7</div>
-                                        <div class="grid-view-column" style="width: 100px;">+</div>
-                                    </div>
-                                    <div class="grid-view-body">
-                                        <div class="grid-view-body-outer remove-scrollbar" data-match-scroll-top>
-                                            <div class="grid-view-body-inner">
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell active">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
-                                                <div class="grid-view-row">
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 2</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 3</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 4</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 5</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 6</div>
-                                                    </div>
-                                                    <div class="grid-view-column" style="width: 200px;">
-                                                        <div class="grid-view-cell">body 7</div>
-                                                    </div>
-                                                </div>
+                            <div class="grid-view-inner" style="min-width: 1800px;">
+                                <div class="grid-view-head">
+                                    <div class="grid-view-column" style="width: 200px;">head 2</div>
+                                    <div class="grid-view-column" style="width: 200px;">head 3</div>
+                                    <div class="grid-view-column" style="width: 200px;">head 4</div>
+                                    <div class="grid-view-column" style="width: 200px;">head 5</div>
+                                    <div class="grid-view-column" style="width: 200px;">head 6</div>
+                                    <div class="grid-view-column" style="width: 200px;">head 7</div>
+                                    <div class="grid-view-column" style="width: 200px;">head 8</div>
+                                    <div class="grid-view-column" style="width: 200px;">head 9</div>
+                                    <div class="grid-view-column" style="width: 100px;">+</div>
+                                </div>
+                                <div class="grid-view-body">
+                                    <div class="grid-view-body-inner">
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell active">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
+                                            </div>
+                                        </div>
+                                        <div class="grid-view-row">
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 2</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 3</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 4</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 5</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 6</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 7</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 8</div>
+                                            </div>
+                                            <div class="grid-view-column" style="width: 200px;">
+                                                <div class="grid-view-cell">body 9</div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="grid-view-foot">
-                                        <div class="grid-view-column" style="width: 200px;">footer 2</div>
-                                        <div class="grid-view-column" style="width: 200px;">footer 3</div>
-                                        <div class="grid-view-column" style="width: 200px;">footer 4</div>
-                                        <div class="grid-view-column" style="width: 200px;">footer 5</div>
-                                        <div class="grid-view-column" style="width: 200px;">footer 6</div>
-                                        <div class="grid-view-column" style="width: 200px;">footer 7</div>
-                                    </div>
+                                </div>
+                                <div class="grid-view-foot">
+                                    <div class="grid-view-column" style="width: 200px;">footer 2</div>
+                                    <div class="grid-view-column" style="width: 200px;">footer 3</div>
+                                    <div class="grid-view-column" style="width: 200px;">footer 4</div>
+                                    <div class="grid-view-column" style="width: 200px;">footer 5</div>
+                                    <div class="grid-view-column" style="width: 200px;">footer 6</div>
+                                    <div class="grid-view-column" style="width: 200px;">footer 7</div>
+                                    <div class="grid-view-column" style="width: 200px;">footer 8</div>
+                                    <div class="grid-view-column" style="width: 200px;">footer 9</div>
                                 </div>
                             </div>
                         </div>
@@ -529,47 +817,22 @@
             </div>
         </div>
         <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/antiscroll/0.9/antiscroll.js"></script>
         <script>
             (function() {
-                $matchHeight = $("[data-match-scroll-top]");
-                var ignore = false;
+                $top1 = $(".grid-view-left .grid-view-body");
+                $top2 = $(".grid-view-right .grid-view-body");
+                $left1 = $(".grid-view-right");
+                $divider = $(".grid-view-divider");
 
-                $matchHeight.scroll(function(e) {
-                    if (ignore) {
-                        ignore = false;
-                        return;
-                    }
-                    $matchHeight.each(function(i, object) {
-                        if (object !== e.currentTarget) {
-                            ignore = true;
-                            object.scrollTop = e.currentTarget.scrollTop;
-                        }
-                    });
-                });
+                $(".grid-view").on('wheel', function(event) {
+                    var top = $top2.scrollTop() + event.originalEvent.deltaY;
+                    var left = $left1.scrollLeft() + event.originalEvent.deltaX;
 
-                var size = scrollbarSize();
-                function scrollbarSize () {
-                    var div = $(
-                        '<div class="remove-scrollbar"' +
-                        '     style="width:50px;height:50px;overflow-y:scroll;position:absolute;top:-200px;left:-200px;">' +
-                        '   <div style="height:100px;width:100%"/>' +
-                        '</div>'
-                    );
-
-                    $('body').append(div);
-                    var w1 = $(div).innerWidth();
-                    var w2 = $('div', div).innerWidth();
-                    $(div).remove();
-
-                    return size = w1 - w2;
-                };
-
-                $(".remove-scrollbar").each(function(i, object) {
-                    $(object).css({
-                        "bottom": "-" + size + "px",
-                        "right": "-" + size + "px"
-                    });
+                    $divider.toggleClass("shadow", left > 0);
+                    $top1.scrollTop(top);
+                    $top2.scrollTop(top);
+                    $left1.scrollLeft(left);
+                    event.preventDefault();
                 });
             })();
         </script>

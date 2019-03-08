@@ -53,3 +53,62 @@
   width: $width;
   text-align: center;
 }
+
+// The basically works the same as padding: 10px 0 0 10px or padding: 10px; only then
+// resulting position: absolute; with corresponding top, right, bottom, left values.
+// -------
+// Example:
+//  @include absolute(10px);
+// Would result in:
+//  position: absolute;
+//  top: 10px; right: 10px; bottom: 10px; left: 10px;
+// -------
+// Example:
+//  @include absolute(10px, 20px);
+// Would result in:
+//  position: absolute;
+//  top: 10px; right: 20px; bottom: 10px; left: 20px;
+// -------
+// Example:
+//  @include absolute(10px, 20px, 30px);
+// Would result in:
+//  position: absolute;
+//  top: 10px; right: 20px; bottom: 30px;
+@mixin absolute($top: null, $right: null, $bottom: null, $left: null) {
+  position: absolute;
+
+  @if ($top != null and $right == null and $bottom == null and $left == null) {
+    top: $top;
+    right: $top;
+    bottom: $top;
+    left: $top;
+  }
+
+  /* stylelint-disable-next-line at-rule-no-unknown */
+  @else if ($top != null and $right != null and $bottom == null and
+  $left == null) {
+    top: $top;
+    right: $right;
+    bottom: $top;
+    left: $right;
+  }
+
+  /* stylelint-disable-next-line at-rule-no-unknown */
+  @else {
+    @if $top != null {
+      top: $top;
+    }
+
+    @if $right != null {
+      right: $right;
+    }
+
+    @if $bottom != null {
+      bottom: $bottom;
+    }
+
+    @if $left != null {
+      left: $left;
+    }
+  }
+}

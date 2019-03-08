@@ -1,0 +1,29 @@
+.scrollbars {
+  @include absolute(0);
+
+  z-index: 100;
+  pointer-events: none;
+}
+
+%scrollbar {
+  position: absolute;
+  background-color: $color-neutral-900;
+  opacity: 0.6;
+  border-radius: 3px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.scrollbar-vertical {
+  @extend %scrollbar;
+
+  width: $scrollbar-size;
+  right: 3px;
+}
+
+.scrollbar-horizontal {
+  @extend %scrollbar;
+
+  height: $scrollbar-size;
+  bottom: 3px;
+}
