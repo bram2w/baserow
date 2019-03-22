@@ -39,7 +39,7 @@
 // adjusted that is why it is specified in the html file.
 .grid-view-divider {
   @include absolute(0, auto);
-  z-index: 2;
+  z-index: 3;
   width: 4px;
   border-left: 1px solid $color-neutral-300;
   overflow: hidden;
@@ -57,6 +57,24 @@
 
   &.shadow:before {
     display: block;
+  }
+}
+
+.grid-view-divider-width {
+  @include absolute(3px, auto, auto, auto);
+  margin-left: -4.5px;
+  z-index: 3;
+  width: 9px;
+  height: 26px;
+
+  &:before {
+    content: "";
+    @include absolute(0, 2px, 0, 2px);
+    border-radius: 2px;
+  }
+
+  &:hover:before {
+    background-color: $color-primary-500;
   }
 }
 
@@ -120,6 +138,36 @@
   }
 }
 
+.grid-view-row-info {
+  @include absolute(0);
+  background-color: $white;
+  padding: 0 24px 0 6px;
+  line-height: 32px;
+}
+
+.grid-view-row-count {
+  @extend %ellipsis;
+  width: 100%;
+
+}
+
+.grid-view-row-more {
+  @include absolute((32px - 18px) / 2, 4px, 0 auto);
+  @include center-text(18px, 11px);
+  color: $color-neutral-400;
+  border-radius: 100%;
+  display: none;
+
+  .grid-view-row-hover & {
+    display: block;
+  }
+
+  &:hover {
+    background-color: $color-primary-100;
+    color: $color-primary-800;
+  }
+}
+
 .grid-view-cell {
   @include absolute(0);
   background-color: $white;
@@ -168,11 +216,27 @@
   }
 
   .grid-view-description-options {
-    @include absolute(0, 0, 0, auto);
+    @include absolute(0, 4px, 0, auto);
     text-align: center;
 
     &:hover {
       color: $color-neutral-900;
+    }
+  }
+
+  .grid-view-description-width {
+    @include absolute(3px, -4.5px, 3px, auto);
+    z-index: 2;
+    width: 9px;
+
+    &:before {
+      content: "";
+      @include absolute(0, 2px, 0, 2px);
+      border-radius: 2px;
+    }
+
+    &:hover:before {
+      background-color: $color-primary-500;
     }
   }
 

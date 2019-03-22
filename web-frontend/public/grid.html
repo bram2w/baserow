@@ -175,13 +175,14 @@
                 </header>
                 <div class="layout-col-3-2 content">
                     <div class="grid-view">
-                        <div class="scrollbars" style="left: 200px;">
+                        <div class="scrollbars" style="left: 260px;">
                             <div class="scrollbar-vertical" style="top: 20px; height: 40px;"></div>
                             <div class="scrollbar-horizontal" style="left: 10px; width: 40px;"></div>
                         </div>
-                        <div class="grid-view-left" style="width: 200px;">
-                            <div class="grid-view-inner" style="min-width: 200px;">
+                        <div class="grid-view-left" style="width: 260px;">
+                            <div class="grid-view-inner" style="width: 260px;">
                                 <div class="grid-view-head">
+                                    <div class="grid-view-column" style="width: 60px;"></div>
                                     <div class="grid-view-column" style="width: 200px;">
                                         <div class="grid-view-description">
                                             <div class="grid-view-description-icon">
@@ -197,6 +198,14 @@
                                 <div class="grid-view-body">
                                     <div class="grid-view-body-inner">
                                         <div class="grid-view-row" data-repeat="20">
+                                            <div class="grid-view-column" style="width: 60px;">
+                                                <div class="grid-view-row-info">
+                                                    <div class="grid-view-row-count">10</div>
+                                                    <a href="#" class="grid-view-row-more">
+                                                        <i class="fas fa-expand"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
                                             <div class="grid-view-column" style="width: 200px;">
                                                 <div class="grid-view-cell">
                                                     <div class="grid-field-text">
@@ -206,7 +215,7 @@
                                             </div>
                                         </div>
                                         <div class="grid-view-row">
-                                            <div class="grid-view-column" style="width: 200px;">
+                                            <div class="grid-view-column" style="width: 260px;">
                                                 <a href="#" class="grid-view-add-row">
                                                     <i class="fas fa-plus"></i>
                                                 </a>
@@ -221,8 +230,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="grid-view-divider" style="left: 200px;"></div>
-                        <div class="grid-view-right" style="left: 200px;">
+                        <div class="grid-view-divider" style="left: 260px;"></div>
+                        <a href="#" class="grid-view-divider-width"style="left: 260px;"></a>
+                        <div class="grid-view-right" style="left: 260px;">
                             <div class="grid-view-inner" style="min-width: 1800px;">
                                 <div class="grid-view-head">
                                     <div class="grid-view-column" style="width: 200px;">
@@ -234,6 +244,7 @@
                                             <a href="#" class="grid-view-description-options">
                                                 <i class="fas fa-caret-down"></i>
                                             </a>
+                                            <a href="#" class="grid-view-description-width"></a>
                                         </div>
                                     </div>
                                     <div class="grid-view-column" style="width: 200px;">
@@ -245,6 +256,7 @@
                                             <a href="#" class="grid-view-description-options">
                                                 <i class="fas fa-caret-down"></i>
                                             </a>
+                                            <a href="#" class="grid-view-description-width"></a>
                                         </div>
                                     </div>
                                     <div class="grid-view-column" style="width: 200px;" data-repeat="5">
@@ -256,6 +268,7 @@
                                             <a href="#" class="grid-view-description-options">
                                                 <i class="fas fa-caret-down"></i>
                                             </a>
+                                            <a href="#" class="grid-view-description-width"></a>
                                         </div>
                                     </div>
                                     <div class="grid-view-column" style="width: 100px;">
@@ -292,6 +305,7 @@
                                             </div>
                                             <div class="grid-view-column" style="width: 200px;">
                                                 <div class="grid-view-cell">
+                                                    <!--<div class-parent="active-by" class="grid-view-cell-active-by">Bram</div>-->
                                                     <div class="grid-field-text">
                                                         Hello World!
                                                     </div>
@@ -369,6 +383,15 @@
                     $addPlaceholder.addClass("hover");
                 }, function() {
                     $addPlaceholder.removeClass("hover");
+                });
+
+                $row = $(".grid-view-row");
+                $row.hover(function() {
+                    $this = $(this);
+                    $this.addClass("grid-view-row-hover");
+                }, function() {
+                    $this = $(this);
+                    $this.removeClass("grid-view-row-hover");
                 });
 
                 $cell = $(".grid-view-cell")
