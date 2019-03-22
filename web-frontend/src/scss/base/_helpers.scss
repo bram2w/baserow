@@ -23,14 +23,14 @@
 
 @keyframes spin {
   0% {
-    transform: rotate(0deg);
+    transform:rotate(0);
   }
 
-  40% {
-    transform: rotate(360deg);
+  50% {
+    transform:rotate(360deg);
   }
 
   100% {
-    transform: rotate(720deg);
+    transform:rotate(720deg);
   }
 }

@@ -78,8 +78,9 @@
     width: 1.4em;
     height: 1.4em;
     border-radius: 50%;
-    border: 0.25em solid #fff;
+    border: 0.25em solid;
     border-color: #fff transparent #fff transparent;
-    animation: spin 1.8s linear infinite;
+    animation: spin infinite 1800ms;
+    animation-timing-function: cubic-bezier(.785, .135, .15, .86);
   }
 }
