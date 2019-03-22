@@ -8,7 +8,7 @@
 
 .layout-col-1 {
   position: absolute;
-  z-index: 3;
+  z-index: $z-index-layout-col-1;
   left: 0;
   top: 0;
   bottom: 0;
@@ -17,7 +17,7 @@
 
 .layout-col-2 {
   position: absolute;
-  z-index: 2;
+  z-index: $z-index-layout-col-2;
   left: 52px;
   top: 0;
   bottom: 0;
@@ -26,7 +26,7 @@
 
 .layout-col-3 {
   position: absolute;
-  z-index: 1;
+  z-index: $z-index-layout-col-3;
   left: 278px;
   top: 0;
   bottom: 0;

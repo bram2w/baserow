@@ -9,6 +9,16 @@
   margin-bottom: 16px;
 }
 
+.control-context {
+  color: $color-primary-900;
+  margin-left: 6px;
+
+  &:hover {
+    text-decoration: none;
+    color:$color-neutral-500;
+  }
+}
+
 .input {
   display: block;
   width: 100%;

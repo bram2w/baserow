@@ -347,6 +347,84 @@
                 </div>
             </div>
         </div>
+        <div class="modal-wrapper">
+            <div class="modal-box">
+                <a href="#" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </a>
+                <h2 class="box-title">Orange Penquin</h2>
+                <form>
+                    <div class="control">
+                        <label class="control-label">
+                            <i class="fas fa-font"></i>
+                            Name
+                            <a href="#" class="control-context">
+                                <i class="fas fa-caret-down"></i>
+                            </a>
+                        </label>
+                        <div class="control-elements">
+                            <input type="text" class="input input-large" />
+                        </div>
+                    </div>
+                    <div class="control">
+                        <label class="control-label">
+                            <i class="fas fa-hashtag"></i>
+                            Price
+                            <a href="#" class="control-context">
+                                <i class="fas fa-caret-down"></i>
+                            </a>
+                        </label>
+                        <div class="control-elements">
+                            <input type="text" class="input input-large field-number" />
+                        </div>
+                    </div>
+                    <div class="control">
+                        <label class="control-label">
+                            <i class="fas fa-check-square"></i>
+                            Active
+                            <a href="#" class="control-context">
+                                <i class="fas fa-caret-down"></i>
+                            </a>
+                        </label>
+                        <div class="control-elements">
+                            <div class="field-boolean-checkbox">
+                                <i class="fas fa-check check"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control">
+                        <label class="control-label">
+                            <i class="fas fa-font"></i>
+                            Description
+                            <a href="#" class="control-context">
+                                <i class="fas fa-caret-down"></i>
+                            </a>
+                        </label>
+                        <div class="control-elements">
+                            <input type="text" class="input input-large" />
+                        </div>
+                    </div>
+                    <div class="control">
+                        <label class="control-label">
+                            <i class="fas fa-hashtag"></i>
+                            Times sold
+                            <a href="#" class="control-context">
+                                <i class="fas fa-caret-down"></i>
+                            </a>
+                        </label>
+                        <div class="control-elements">
+                            <input type="text" class="input input-large field-number" />
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <a href="#">
+                            <i class="fas fa-plus"></i>
+                            add field
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
         <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
         <script>
             (function() {
@@ -410,6 +488,14 @@
                     if ($(this).closest(".grid-view-cell").hasClass("active")) {
                         $(this).toggleClass("active");
                     }
+                });
+
+                $(".field-boolean-checkbox").click(function() {
+                    $(this).toggleClass("active");
+                });
+
+                $(".modal-close").click(function() {
+                    $(this).closest(".modal-wrapper").addClass("hidden");
                 });
             })();
         </script>

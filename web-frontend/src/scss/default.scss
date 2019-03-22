@@ -18,6 +18,10 @@
 @import "components/tree";
 @import "components/header";
 @import "components/scrollbar";
+@import "components/modal";
+
+@import "components/fields/boolean";
+@import "components/fields/number";
 
 @import "components/views/grid";
 @import "components/views/grid/text";
