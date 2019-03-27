@@ -1,0 +1,46 @@
+.context {
+  position: absolute;
+  z-index: 1;
+  white-space: nowrap;
+  background-color: $white;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px 0 rgba($black, 0.16);
+}
+
+.context-menu-title {
+  color: $color-neutral-600;
+  padding: 12px 8px;
+  line-height: 13px;
+}
+
+.context-menu {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 10px;
+
+  li {
+    margin-bottom: 4px;
+    padding: 0 8px;
+  }
+
+  a {
+    display: block;
+    border-radius: 3px;
+    color: $color-primary-900;
+    padding: 0 10px;
+
+    @include fixed-height(32px, 14px);
+
+    &:hover {
+      background-color: $color-neutral-100;
+      text-decoration: none;
+    }
+  }
+}
+
+.context-menu-icon {
+  font-size: 13px;
+  color: $color-neutral-400;
+  margin-right: 4px;
+  text-align: left;
+}

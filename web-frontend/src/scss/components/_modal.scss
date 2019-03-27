@@ -22,6 +22,7 @@
 
 .modal-close {
   @include absolute(20px, 20px, auto, auto);
+
   font-size: 20px;
   color: $color-neutral-400;
 
