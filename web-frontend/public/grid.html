@@ -9,7 +9,7 @@
         <title>Baserow</title>
     </head>
     <body>
-        <div class="layout">
+        <div class="layout layout-collapsed">
             <div class="layout-col-1 menu">
                 <ul class="menu-items">
                     <li>
@@ -26,6 +26,12 @@
                     </li>
                 </ul>
                 <ul class="menu-items">
+                    <li class="layout-uncollapse">
+                        <a href="#" class="menu-item" data-toggle-layout-collapse>
+                            <i class="fas fa-angle-double-right"></i>
+                            <span class="menu-item-text">Uncollapse</span>
+                        </a>
+                    </li>
                     <li>
                         <a href="#" class="user-item">
                             B
@@ -167,7 +173,7 @@
                     </nav>
                 </div>
                 <div class="sidebar-footer">
-                    <a href="#" class="sidebar-collapse">
+                    <a href="#" class="sidebar-collapse" data-toggle-layout-collapse>
                         <i  class="fas fa-angle-double-left"></i>
                         Collapse sidebar
                     </a>
@@ -521,6 +527,10 @@
 
                 $("[data-context]").click(function() {
                     $(this).siblings($(this).attr("data-context")).toggleClass("hidden");
+                });
+
+                $("[data-toggle-layout-collapse]").click(function() {
+                    $(".layout").toggleClass("layout-collapsed");
                 });
             })();
         </script>
