@@ -30,34 +30,34 @@
   list-style: none;
   padding: 0;
   margin: auto 0;
+}
 
-  li {
-    @extend %first-last-no-margin;
+.header-filter-item {
+  @extend %first-last-no-margin;
 
-    float: left;
-    margin-left: 12px;
+  float: left;
+  margin-left: 12px;
+}
+
+.header-filter-link {
+  display: block;
+  font-weight: 600;
+  color: $color-primary-900;
+  padding: 0 10px;
+  border-radius: 3px;
+
+  @include fixed-height(32px, 13px);
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
   }
+}
 
-  a {
-    display: block;
-    font-weight: 600;
-    color: $color-primary-900;
-    padding: 0 10px;
-    border-radius: 3px;
-
-    @include fixed-height(32px, 13px);
-
-    &:hover {
-      text-decoration: none;
-      background-color: $color-neutral-100;
-    }
-  }
-
-  .header-filter-icon {
-    color: $color-primary-500;
-    margin-right: 4px;
-    font-size: 14px;
-  }
+.header-filter-icon {
+  color: $color-primary-500;
+  margin-right: 4px;
+  font-size: 14px;
 }
 
 .header-info {

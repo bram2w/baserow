@@ -9,7 +9,7 @@
         <title>Baserow</title>
     </head>
     <body>
-        <div class="layout layout-collapsed">
+        <div class="layout">
             <div class="layout-col-1 menu">
                 <ul class="menu-items">
                     <li>
@@ -182,11 +182,24 @@
             <div class="layout-col-3">
                 <header class="layout-col-3-1 header">
                     <ul class="header-filter">
-                        <li>
-                            <a href="#">
+                        <li class="header-filter-item">
+                            <a href="#" class="header-filter-link" data-context=".context">
                                 <i class="header-filter-icon fas fa-th"></i>
                                 Grid view name
                             </a>
+                            <div class="context">
+                                <div class="context-search">
+                                    <i class="context-search-icon fas fa-search"></i>
+                                    <input type="text" class="context-search-input" placeholder="Search views" />
+                                </div>
+                                @TODO
+                                <div class="context-footer">
+                                    <a href="#" class="context-footer-button">
+                                        <i class="fas fa-plus"></i>
+                                        Do something
+                                    </a>
+                                </div>
+                            </div>
                         </li>
                     </ul>
                     <ul class="header-info">

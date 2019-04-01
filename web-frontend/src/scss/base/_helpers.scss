@@ -12,6 +12,10 @@
   text-align: right;
 }
 
+.color-primary {
+  color: $color-primary-500 !important;
+}
+
 .remove-scrollbar {
   -ms-overflow-style: none;
 

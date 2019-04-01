@@ -43,6 +43,7 @@
 
 .layout-col-3-1 {
   position: absolute;
+  z-index: $z-index-layout-col-3-1;
   left: 0;
   top: 0;
   right: 0;
@@ -51,6 +52,7 @@
 
 .layout-col-3-2 {
   position: absolute;
+  z-index: $z-index-layout-col-3-2;
   left: 0;
   top: 52px;
   right: 0;

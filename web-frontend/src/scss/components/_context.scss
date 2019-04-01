@@ -4,19 +4,65 @@
   white-space: nowrap;
   background-color: $white;
   border-radius: 6px;
+  border: 1px solid $color-neutral-200;
   box-shadow: 0 2px 6px 0 rgba($black, 0.16);
 }
 
 .context-menu-title {
   color: $color-neutral-600;
-  padding: 12px 8px;
+  padding: 12px 8px 2px 8px;
   line-height: 13px;
+  margin-bottom: 10px;
+}
+
+.context-search {
+  position: relative;
+  border-bottom: 1px solid $color-neutral-200;
+}
+
+.context-search-icon {
+  @include absolute(0, auto, auto, 0);
+  @include center-text(32px, 14px, 36px);
+
+  color: $color-neutral-300;
+}
+
+.context-search-input {
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 0 12px 0 36px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+
+  @include fixed-height(36px, 14px);
+}
+
+.context-footer {
+  border-top: 1px solid $color-neutral-200;
+}
+
+.context-footer-button {
+  display: block;
+  padding: 0 12px;
+  color: $color-neutral-600;
+
+  @include fixed-height(36px, 14px);
+
+  .fas {
+    margin-right: 6px;
+  }
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+  }
 }
 
 .context-menu {
   list-style: none;
   padding: 0;
-  margin-bottom: 10px;
+  margin: 10px 0;
 
   li {
     margin-bottom: 4px;
