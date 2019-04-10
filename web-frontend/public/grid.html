@@ -12,30 +12,84 @@
         <div class="layout">
             <div class="layout-col-1 menu">
                 <ul class="menu-items">
-                    <li>
-                        <a href="#" class="menu-item active">
+                    <li class="menu-item">
+                        <a href="#" class="menu-link active">
                             <i class="fas fa-tachometer-alt"></i>
-                            <span class="menu-item-text">Dashboard</span>
+                            <span class="menu-link-text">Dashboard</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="#" class="menu-item">
+                    <li class="menu-item">
+                        <a href="#" class="menu-link" data-context=".select">
                             <i class="fas fa-layer-group"></i>
-                            <span class="menu-item-text">Groups</span>
+                            <span class="menu-link-text">Groups</span>
                         </a>
+                        <div class="select hidden">
+                            <div class="select-search">
+                                <i class="select-search-icon fas fa-search"></i>
+                                <input type="text" class="select-search-input" placeholder="Search views" />
+                            </div>
+                            <ul class="select-items">
+                                <li class="select-item active">
+                                    <a href="#" class="select-item-link">Group name 1</a>
+                                    <a href="#" class="select-item-options" data-context=".context">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                    <div class="context hidden">
+                                        <ul class="context-menu">
+                                            <li>
+                                                <a href="#">
+                                                    <i class="context-menu-icon fas fa-fw fa-pen"></i>
+                                                    Rename group
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="#">
+                                                    <i class="context-menu-icon fas fa-fw fa-trash"></i>
+                                                    Delete group
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </li>
+                                <li class="select-item">
+                                    <a href="#" class="select-item-link">Group name 2</a>
+                                    <a href="#" class="select-item-options">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                </li>
+                                <li class="select-item">
+                                    <a href="#" class="select-item-link">Group name 3</a>
+                                    <a href="#" class="select-item-options">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                </li>
+                                <li class="select-item">
+                                    <a href="#" class="select-item-link">Group name 4</a>
+                                    <a href="#" class="select-item-options">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="select-footer">
+                                <a href="#" class="select-footer-button">
+                                    <i class="fas fa-plus"></i>
+                                    Do something
+                                </a>
+                            </div>
+                        </div>
                     </li>
                 </ul>
                 <ul class="menu-items">
-                    <li class="layout-uncollapse">
-                        <a href="#" class="menu-item" data-toggle-layout-collapse>
-                            <i class="fas fa-angle-double-right"></i>
-                            <span class="menu-item-text">Uncollapse</span>
+                    <li class="menu-item layout-uncollapse">
+                        <a href="#" class="menu-link" data-toggle-layout-collapse>
+                            <i class="menu-item-icon fas fa-angle-double-right"></i>
+                            <span class="menu-link-text">Uncollapse</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="#" class="user-item">
+                    <li class="menu-item">
+                        <a href="#" class="menu-link user-item">
                             B
-                            <span class="menu-item-text">Full Name</span>
+                            <span class="menu-link-text">Full Name</span>
                         </a>
                     </li>
                 </ul>
@@ -69,7 +123,7 @@
                                             <li>
                                                 <a href="#">
                                                     <i class="context-menu-icon fas fa-fw fa-trash"></i>
-                                                    Rename table
+                                                    Delete table
                                                 </a>
                                             </li>
                                         </ul>
@@ -183,21 +237,65 @@
                 <header class="layout-col-3-1 header">
                     <ul class="header-filter">
                         <li class="header-filter-item">
-                            <a href="#" class="header-filter-link" data-context=".context">
+                            <a href="#" class="header-filter-link" data-context=".select">
                                 <i class="header-filter-icon fas fa-th"></i>
                                 Grid view name
                             </a>
-                            <div class="context">
-                                <div class="context-search">
-                                    <i class="context-search-icon fas fa-search"></i>
-                                    <input type="text" class="context-search-input" placeholder="Search views" />
+                            <div class="select">
+                                <div class="select-search">
+                                    <i class="select-search-icon fas fa-search"></i>
+                                    <input type="text" class="select-search-input" placeholder="Search views" />
                                 </div>
-                                @TODO
-                                <div class="context-footer">
-                                    <a href="#" class="context-footer-button">
-                                        <i class="fas fa-plus"></i>
-                                        Do something
-                                    </a>
+                                <ul class="select-items">
+                                    <li class="select-item active">
+                                        <a href="#" class="select-item-link">Grid view name</a>
+                                        <a href="#" class="select-item-options" data-context=".context">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </a>
+                                        <div class="context hidden">
+                                            <ul class="context-menu">
+                                                <li>
+                                                    <a href="#">
+                                                        <i class="context-menu-icon fas fa-fw fa-pen"></i>
+                                                        Rename
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="#">
+                                                        <i class="context-menu-icon fas fa-fw fa-trash"></i>
+                                                        Delete
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <li class="select-item">
+                                        <a href="#" class="select-item-link">Grid view option 2.</a>
+                                        <a href="#" class="select-item-options">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </a>
+                                    </li>
+                                    <li class="select-item">
+                                        <a href="#" class="select-item-link">Grid view 2</a>
+                                        <a href="#" class="select-item-options">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </a>
+                                    </li>
+                                    <li class="select-item">
+                                        <a href="#" class="select-item-link">Grid view 3</a>
+                                        <a href="#" class="select-item-options">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <div class="select-footer">
+                                    <div class="select-footer-multiple">
+                                        <div class="select-footer-multiple-label">Add a view:</div>
+                                        <a href="#" class="select-footer-multiple-item">
+                                            <i class="select-footer-multiple-icon fas fa-th"></i>
+                                            Grid
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </li>
