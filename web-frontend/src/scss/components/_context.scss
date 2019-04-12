@@ -46,3 +46,15 @@
   margin-right: 4px;
   text-align: left;
 }
+
+.context-form {
+  min-width: 260px;
+  padding: 16px;
+}
+
+.context-form-actions {
+  border-top: 1px solid $color-neutral-200;
+  padding-top: 20px;
+  margin-top: 20px;
+  text-align: right;
+}

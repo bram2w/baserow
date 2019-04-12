@@ -27,6 +27,7 @@
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
+    text-decoration: none;
   }
 
   &.active {
@@ -53,7 +54,7 @@
   }
 }
 
-.user-item {
+.menu-user-item {
   border-radius: 100%;
   background-color: $color-primary-500;
   color: $white;

@@ -34,8 +34,8 @@
   max-height: (4 * 36px) + 20px; // we show max 8 items
   overflow: auto;
 
-  &:before,
-  &:after {
+  &::before,
+  &::after {
     content: "";
     display: block;
     height: 10px;
@@ -94,6 +94,10 @@
   &:hover {
     text-decoration: none;
   }
+}
+
+.select-item-icon {
+  margin-right: 6px;
 }
 
 .select-item-options {

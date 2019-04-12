@@ -87,7 +87,7 @@
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="#" class="menu-link user-item">
+                        <a href="#" class="menu-link menu-user-item">
                             B
                             <span class="menu-link-text">Full Name</span>
                         </a>
@@ -241,7 +241,7 @@
                                 <i class="header-filter-icon fas fa-th"></i>
                                 Grid view name
                             </a>
-                            <div class="select">
+                            <div class="select hidden">
                                 <div class="select-search">
                                     <i class="select-search-icon fas fa-search"></i>
                                     <input type="text" class="select-search-input" placeholder="Search views" />
@@ -249,7 +249,7 @@
                                 <ul class="select-items">
                                     <li class="select-item">
                                         <a href="#" class="select-item-link">
-                                            <i class="fas fa-th fa-fw color-primary"></i>
+                                            <i class="select-item-icon fas fa-th fa-fw color-primary"></i>
                                             Grid view name
                                         </a>
                                         <a href="#" class="select-item-options" data-context=".context">
@@ -274,7 +274,7 @@
                                     </li>
                                     <li class="select-item">
                                         <a href="#" class="select-item-link">
-                                            <i class="fas fa-th fa-fw color-primary"></i>
+                                            <i class="select-item-icon fas fa-th fa-fw color-primary"></i>
                                             Grid view option 2.
                                         </a>
                                         <a href="#" class="select-item-options">
@@ -283,7 +283,7 @@
                                     </li>
                                     <li class="select-item">
                                         <a href="#" class="select-item-link">
-                                            <i class="fas fa-th fa-fw color-primary"></i>
+                                            <i class="select-item-icon fas fa-th fa-fw color-primary"></i>
                                             Grid view 2
                                         </a>
                                         <a href="#" class="select-item-options">
@@ -292,7 +292,7 @@
                                     </li>
                                     <li class="select-item">
                                         <a href="#" class="select-item-link">
-                                            <i class="fas fa-th fa-fw color-primary"></i>
+                                            <i class="select-item-icon fas fa-th fa-fw color-primary"></i>
                                             Grid view 3
                                         </a>
                                         <a href="#" class="select-item-options">
@@ -393,9 +393,58 @@
                                                 <i class="fas fa-hashtag"></i>
                                             </div>
                                             <div class="grid-view-description-name">Price</div>
-                                            <a href="#" class="grid-view-description-options">
+                                            <a href="#" class="grid-view-description-options" data-context=".context">
                                                 <i class="fas fa-caret-down"></i>
                                             </a>
+                                            <div class="context hidden">
+                                                <div class="context-form">
+                                                    <div class="control">
+                                                        <div class="control-elements">
+                                                            <input type="text" class="input" placeholder="Name" value="Price" />
+                                                        </div>
+                                                    </div>
+                                                    <div class="control">
+                                                        <div class="control-elements">
+                                                            <div class="dropdown">
+                                                                <a href="#" class="dropdown-selected" data-context=".dropdown-items">
+                                                                    <i class="dropdown-selected-icon fas fa-hashtag"></i>
+                                                                    Number
+                                                                    <i class="dropdown-toggle-icon fas fa-caret-down"></i>
+                                                                </a>
+                                                                <div class="dropdown-items hidden">
+                                                                    <div class="select-search">
+                                                                        <i class="select-search-icon fas fa-search"></i>
+                                                                        <input type="text" class="select-search-input" placeholder="Search field types" />
+                                                                    </div>
+                                                                    <ul class="select-items">
+                                                                        <li class="select-item">
+                                                                            <a href="#" class="select-item-link">
+                                                                                <i class="select-item-icon fas fa-font fa-fw"></i>
+                                                                                Text
+                                                                            </a>
+                                                                        </li>
+                                                                        <li class="select-item active">
+                                                                            <a href="#" class="select-item-link">
+                                                                                <i class="select-item-icon fas fa-hashtag fa-fw"></i>
+                                                                                Number
+                                                                            </a>
+                                                                        </li>
+                                                                        <li class="select-item">
+                                                                            <a href="#" class="select-item-link">
+                                                                                <i class="select-item-icon fas fa-check-square fa-fw"></i>
+                                                                                Checkbox
+                                                                            </a>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="context-form-actions">
+                                                        <a href="#" class="button">Change</a>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <a href="#" class="grid-view-description-width"></a>
                                         </div>
                                     </div>
@@ -655,6 +704,10 @@
                 $("[data-toggle-layout-collapse]").click(function() {
                     $(".layout").toggleClass("layout-collapsed");
                 });
+
+                $(".dropdown-items .select-item-link").click(function(e) {
+                    $(this).closest(".dropdown-items").addClass("hidden");
+                })
             })();
         </script>
     </body>
