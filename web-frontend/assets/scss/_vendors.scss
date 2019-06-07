@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css?family=Montserrat:700|Open+Sans:400,400i,600,700,700i");
-
-@import "~normalize.css/normalize.css";
+@import "~normalize-scss/sass/normalize/import-now";
 
 $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
+
 @import "~@fortawesome/fontawesome-free/scss/fontawesome.scss";
 @import "~@fortawesome/fontawesome-free/scss/solid.scss";

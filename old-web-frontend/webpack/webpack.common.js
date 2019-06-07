@@ -28,10 +28,7 @@ const modules = {
           options: {
             presets: ['@babel/preset-env'],
           },
-        },
-        {
-          loader: 'eslint-loader',
-        },
+        }
       ],
     },
     {

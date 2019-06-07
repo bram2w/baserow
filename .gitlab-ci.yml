@@ -4,17 +4,23 @@ before_script:
   - apt-get update && apt-get -y install make curl gnupg2
 
 stages:
-  - lint
-  - build
+  - web-frontend-lint
+  - web-frontend-test
 
-eslint:
-  stage: lint
+web-frontend-eslint:
+  stage: web-frontend-lint
   script:
     - make install-web-frontend-dependencies
-    - (cd web-frontend && yarn eslint)
+    - (cd web-frontend && yarn run eslint)
 
-stylelint:
-  stage: lint
+web-frontend-stylelint:
+  stage: web-frontend-lint
   script:
     - make install-web-frontend-dependencies
-    - (cd web-frontend && yarn stylelint)
+    - (cd web-frontend && yarn run stylelint)
+
+web-frontend-test:
+  stage: web-frontend-test
+  script:
+    - make install-web-frontend-dependencies
+    - (cd web-frontend && yarn run test)

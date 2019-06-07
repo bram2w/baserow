@@ -3,14 +3,32 @@
 To first start Baserow make sure you have installed docker and docker-compose. After that execute the following commands.
 
 ```
-docker network create baserow_default
-docker-compose up -d
+$ docker network create baserow_default
+$ docker-compose up -d
 ```
 
-For now it's only possible to work on the frontend SCSS components. In order to do so you can execute the commands below and then visit http://localhost:8080 in your browser.
+In order to start developing for the web frontend you need to execute the following commands.
 
 ```
-docker exec -it baserow bash
-cd /baserow/web-frontend
-yarn dev
+# install web frontend dependencies
+$ docker exec -it baserow bash
+$ cd /baserow/web-frontend
+$ yarn install
+$ yarn run dev
+
+# build for production and launch server
+$ yarn run build
+$ yarn start
+
+# generate static project
+$ yarn run generate
+
+# lint
+$ yarn run eslint
+$ yarn run stylelint
+
+# test
+$ yarn run test
 ```
+
+When the development server starts you can visit http://localhost:3000.
