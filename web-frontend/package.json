@@ -18,7 +18,8 @@
     "@nuxtjs/axios": "^5.3.6",
     "cross-env": "^5.2.0",
     "normalize-scss": "^7.0.1",
-    "nuxt": "^2.4.0"
+    "nuxt": "^2.4.0",
+    "vuelidate": "^0.7.4"
   },
   "devDependencies": {
     "@nuxtjs/eslint-config": "^0.0.1",

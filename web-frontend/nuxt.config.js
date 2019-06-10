@@ -1,7 +1,5 @@
 import StyleLintPlugin from 'stylelint-webpack-plugin'
 
-import pkg from './package'
-
 export default {
   mode: 'universal',
 
@@ -9,13 +7,11 @@ export default {
    ** Headers of the page
    */
   head: {
-    title: pkg.name,
+    title: 'Baserow',
     meta: [
       { charset: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'description', name: 'description', content: pkg.description }
-    ],
-    link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }]
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' }
+    ]
   },
 
   /*
@@ -31,7 +27,7 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [],
+  plugins: [{ src: '@/plugins/Vuelidate.js' }],
 
   /*
    ** Nuxt.js modules

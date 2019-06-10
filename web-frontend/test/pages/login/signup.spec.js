@@ -1,9 +1,9 @@
 import { mount } from '@vue/test-utils'
-import Index from '@/pages/index.vue'
+import Signup from '@/pages/login/signup.vue'
 
-describe('Home', () => {
+describe('Signup', () => {
   test('is a Vue instance', () => {
-    const wrapper = mount(Index)
+    const wrapper = mount(Signup)
     expect(wrapper.isVueInstance()).toBeTruthy()
   })
 })
