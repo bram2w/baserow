@@ -8,4 +8,26 @@ install-web-frontend-dependencies:
 
 	(cd web-frontend && yarn install)
 
-install-dependencies: install-web-frontend-dependencies
+install-backend-dependencies:
+	apt-get update && apt-get install -y libpq-dev postgresql postgresql-contrib
+	pip install -r backend/requirements/base.txt
+	pip install -r backend/requirements/dev.txt
+
+install-dependencies: backend-dependencies install-web-frontend-dependencies
+
+eslint-web-frontend:
+	(cd web-frontend && yarn run eslint) || exit;
+
+stylelint-web-frontend:
+	(cd web-frontend && yarn run stylelint) || exit;
+
+lint-web-frontend: eslint-web-frontend stylelint-web-frontend
+
+test-web-frontend:
+	(cd web-frontend && yarn run test) || exit;
+
+lint-backend:
+	(cd backend && flake8 src/baserow) || exit;
+
+test-backend:
+	(cd backend && pytest tests) || exit;

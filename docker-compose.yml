@@ -8,7 +8,19 @@ services:
       - .:/baserow
     ports:
       - 3000:3000
+      - 8000:8000
       - 8080:8080
+    depends_on:
+      - db
+
+  db:
+    image: postgres:11.3
+    environment:
+      - POSTGRES_USER=baserow
+      - POSTGRES_PASSWORD=baserow
+      - POSTGRES_DB=baserow
+    ports:
+      - 5432:5432
 
 networks:
   default:

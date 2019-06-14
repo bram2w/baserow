@@ -82,3 +82,9 @@ dist
 
 # Service worker
 sw.*
+
+backend/src/baserow/config/settings/local.py
+*.pyc
+__pycache__
+.pytest_cache
+*.log

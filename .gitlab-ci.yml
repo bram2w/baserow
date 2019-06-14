@@ -4,23 +4,38 @@ before_script:
   - apt-get update && apt-get -y install make curl gnupg2
 
 stages:
-  - web-frontend-lint
-  - web-frontend-test
+  - lint
+  - test
 
 web-frontend-eslint:
-  stage: web-frontend-lint
+  stage: lint
   script:
     - make install-web-frontend-dependencies
-    - (cd web-frontend && yarn run eslint)
+    - make eslint-web-frontend
 
 web-frontend-stylelint:
-  stage: web-frontend-lint
+  stage: lint
   script:
     - make install-web-frontend-dependencies
-    - (cd web-frontend && yarn run stylelint)
+    - make stylelint-web-frontend
 
 web-frontend-test:
   stage: web-frontend-test
   script:
     - make install-web-frontend-dependencies
-    - (cd web-frontend && yarn run test)
+    - make test-web-frontend
+
+backend-flake8:
+  stage: lint
+  image: python:3.6
+  script:
+    - make install-backend-dependencies
+    - make lint-backend
+
+backend-pytest:
+  stage: lint
+  image: python:3.6
+  script:
+    - make install-backend-dependencies
+    - export PYTHONPATH=$CI_PROJECT_DIR/backend/src
+    - make test-backend

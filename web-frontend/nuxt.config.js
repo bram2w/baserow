@@ -36,6 +36,7 @@ export default {
     // Doc: https://axios.nuxtjs.org/usage
     '@nuxtjs/axios'
   ],
+
   /*
    ** Axios module configuration
    */
@@ -62,7 +63,7 @@ export default {
 
         config.plugins.push(
           new StyleLintPlugin({
-            syntax: 'scss' // eg. with options if you need SCSS ;-)
+            syntax: 'scss'
           })
         )
       }
