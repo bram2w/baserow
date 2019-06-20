@@ -20,7 +20,7 @@ web-frontend-stylelint:
     - make stylelint-web-frontend
 
 web-frontend-test:
-  stage: web-frontend-test
+  stage: test
   script:
     - make install-web-frontend-dependencies
     - make test-web-frontend
@@ -33,7 +33,7 @@ backend-flake8:
     - make lint-backend
 
 backend-pytest:
-  stage: lint
+  stage: test
   image: python:3.6
   script:
     - make install-backend-dependencies
