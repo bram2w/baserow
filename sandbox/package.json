@@ -1,0 +1,13 @@
+{
+  "name": "baserow-sandbox",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt --hostname 0.0.0.0",
+    "generate": "nuxt generate",
+    "start": "nuxt start"
+  },
+  "dependencies": {
+    "baserow": "link:../web-frontend"
+  }
+}
