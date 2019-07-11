@@ -1,4 +1,7 @@
 module.exports = {
+  testEnvironment: 'node',
+  expand: true,
+  forceExit: true,
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^~/(.*)$': '<rootDir>/$1',

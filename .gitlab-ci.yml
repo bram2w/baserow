@@ -35,6 +35,13 @@ backend-flake8:
 backend-pytest:
   stage: test
   image: python:3.6
+  services:
+    - name: postgres:11.3
+      alias: db
+  variables:
+    POSTGRES_USER: baserow
+    POSTGRES_PASSWORD: baserow
+    POSTGRES_DB: baserow
   script:
     - make install-backend-dependencies
     - export PYTHONPATH=$CI_PROJECT_DIR/backend/src

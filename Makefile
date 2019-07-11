@@ -13,7 +13,7 @@ install-backend-dependencies:
 	pip install -r backend/requirements/base.txt
 	pip install -r backend/requirements/dev.txt
 
-install-dependencies: backend-dependencies install-web-frontend-dependencies
+install-dependencies: install-backend-dependencies install-web-frontend-dependencies
 
 eslint-web-frontend:
 	(cd web-frontend && yarn run eslint) || exit;
@@ -31,3 +31,7 @@ lint-backend:
 
 test-backend:
 	(cd backend && pytest tests) || exit;
+
+lint: lint-backend lint-web-frontend
+test: test-backend test-web-frontend
+lint-and-test: lint test
