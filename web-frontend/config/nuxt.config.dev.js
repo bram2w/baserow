@@ -1,4 +1,4 @@
-import merge from 'lodash.merge'
+import _ from 'lodash'
 import StyleLintPlugin from 'stylelint-webpack-plugin'
 
 import base from './nuxt.config.base.js'
@@ -6,7 +6,6 @@ import base from './nuxt.config.base.js'
 const config = {
   build: {
     extend(config, ctx) {
-      // Run ESLint ad Stylelint on save
       if (ctx.isDev && ctx.isClient) {
         config.module.rules.push({
           enforce: 'pre',
@@ -25,4 +24,4 @@ const config = {
   }
 }
 
-export default merge(base, config)
+export default _.assign(base, config)

@@ -1,6 +1,18 @@
 <template>
   <div>
     <h1 class="box-title">Sign up</h1>
+    <div
+      v-if="error == 'ERROR_ALREADY_EXISTS'"
+      class="alert alert-error alert-has-icon"
+    >
+      <div class="alert-icon">
+        <i class="fas fa-exclamation"></i>
+      </div>
+      <div class="alert-title">User already exists</div>
+      <p class="alert-content">
+        A user with the provided e-mail address already exists.
+      </p>
+    </div>
     <form @submit.prevent="register">
       <div class="control">
         <label class="control-label">E-mail address</label>
@@ -108,6 +120,7 @@ export default {
   },
   data() {
     return {
+      error: '',
       loading: false,
       account: {
         email: '',
@@ -122,6 +135,23 @@ export default {
       this.$v.$touch()
       if (!this.$v.$invalid) {
         this.loading = true
+        this.error = ''
+        this.$store
+          .dispatch('auth/register', {
+            name: this.account.name,
+            email: this.account.email,
+            password: this.account.password
+          })
+          .then(() => {
+            this.$nuxt.$router.replace({ name: 'app' })
+          })
+          .catch(error => {
+            this.error = error.responseError
+            this.$v.$reset()
+          })
+          .then(() => {
+            this.loading = false
+          })
       }
     }
   }

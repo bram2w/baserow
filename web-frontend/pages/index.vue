@@ -1,5 +1,12 @@
 <template>
-  <div>
-    <h1>Baserow</h1>
-  </div>
+  <div>{{ test }}</div>
 </template>
+
+<script>
+export default {
+  fetch({ store, redirect }) {
+    const name = store.getters['auth/isAuthenticated'] ? 'app' : 'login'
+    redirect({ name: name })
+  }
+}
+</script>

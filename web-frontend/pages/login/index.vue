@@ -3,14 +3,24 @@
     <h1 class="box-title">
       <img src="@/static/img/logo.svg" alt="" />
     </h1>
+    <div v-if="invalid" class="alert alert-error alert-has-icon">
+      <div class="alert-icon">
+        <i class="fas fa-exclamation"></i>
+      </div>
+      <div class="alert-title">Incorrect credentials</div>
+      <p class="alert-content">
+        The provided e-mail address or password is incorrect.
+      </p>
+    </div>
     <form @submit.prevent="login">
       <div class="control">
         <label class="control-label">E-mail address</label>
         <div class="control-elements">
           <input
+            ref="email"
             v-model="credentials.email"
             :class="{ 'input-error': $v.credentials.email.$error }"
-            type="text"
+            type="email"
             class="input input-large"
             @blur="$v.credentials.email.$touch()"
           />
@@ -23,6 +33,7 @@
         <label class="control-label">Password</label>
         <div class="control-elements">
           <input
+            ref="password"
             v-model="credentials.password"
             :class="{ 'input-error': $v.credentials.password.$error }"
             type="password"
@@ -67,6 +78,7 @@ export default {
   data() {
     return {
       loading: false,
+      invalid: false,
       credentials: {
         email: '',
         password: ''
@@ -84,6 +96,23 @@ export default {
       this.$v.$touch()
       if (!this.$v.$invalid) {
         this.loading = true
+        this.$store
+          .dispatch('auth/login', {
+            email: this.credentials.email,
+            password: this.credentials.password
+          })
+          .then(() => {
+            this.$nuxt.$router.replace({ name: 'app' })
+          })
+          .catch(() => {
+            this.invalid = true
+            this.credentials.password = ''
+            this.$v.$reset()
+            this.$refs.password.focus()
+          })
+          .then(() => {
+            this.loading = false
+          })
       }
     }
   }

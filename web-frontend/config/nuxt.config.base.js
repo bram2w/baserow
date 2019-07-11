@@ -25,20 +25,19 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [{ src: '@/plugins/Vuelidate.js' }],
+  plugins: [{ src: '@/plugins/auth.js' }, { src: '@/plugins/vuelidate.js' }],
 
   /*
    ** Nuxt.js modules
    */
-  modules: [
-    // Doc: https://axios.nuxtjs.org/usage
-    '@nuxtjs/axios'
-  ],
+  modules: ['@nuxtjs/axios', 'cookie-universal-nuxt'],
 
-  /*
-   ** Axios module configuration
-   */
-  axios: {
-    // See https://github.com/nuxt-community/axios-module#options
+  router: {
+    middleware: 'authentication'
+  },
+
+  env: {
+    // The API base url, this will be prepended to the urls of the remote calls.
+    baseUrl: 'http://localhost:8000/api/v0'
   }
 }
