@@ -144,7 +144,7 @@ export default {
             password: this.account.password
           })
           .then(() => {
-            this.$nuxt.$router.replace({ name: 'app' })
+            this.$nuxt.$router.push({ name: 'app' })
           })
           .catch(error => {
             this.error = error.responseError
