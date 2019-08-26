@@ -80,7 +80,6 @@ import Notifications from '@/components/notifications/Notifications'
 import GroupsContext from '@/components/group/GroupsContext'
 
 export default {
-  layout: 'default',
   middleware: 'authenticated',
   components: {
     GroupsContext,
@@ -96,7 +95,7 @@ export default {
   methods: {
     logoff() {
       this.$store.dispatch('auth/logoff')
-      this.$nuxt.$router.replace({ name: 'login' })
+      this.$nuxt.$router.push({ name: 'login' })
     },
     ...mapActions({
       toggleCollapsed: 'sidebar/toggleCollapsed'
