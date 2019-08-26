@@ -8,24 +8,3 @@ export const client = axios.create({
     'Content-Type': 'application/json'
   }
 })
-
-client.interceptors.response.use(
-  response => {
-    return response
-  },
-  error => {
-    error.responseError = undefined
-    error.responseDetail = undefined
-
-    if (
-      error.response &&
-      'error' in error.response.data &&
-      'detail' in error.response.data
-    ) {
-      error.responseError = error.response.data.error
-      error.responseDetail = error.response.data.detail
-    }
-
-    return Promise.reject(error)
-  }
-)

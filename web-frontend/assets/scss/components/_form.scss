@@ -57,6 +57,10 @@
   > div {
     width: 100%;
   }
+
+  &.actions-right {
+    justify-content: right;
+  }
 }
 
 .action-links {

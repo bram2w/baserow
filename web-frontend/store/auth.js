@@ -50,6 +50,14 @@ export const actions = {
     )
   },
   /**
+   * Logs off the user by removing the token as a cookie and clearing the user
+   * data.
+   */
+  logoff({ commit }) {
+    unsetToken(this.app.$cookies)
+    commit('CLEAR_USER_DATA')
+  },
+  /**
    * Refresh the existing token. If successful commit the new token and start a
    * new refresh timeout. If unsuccessful the existing cookie and user data is
    * cleared.
@@ -100,10 +108,19 @@ export const getters = {
   token(state) {
     return state.token
   },
+  getName(state) {
+    return state.user ? state.user.first_name : ''
+  },
+  getNameAbbreviation(state) {
+    return state.user ? state.user.first_name.split('')[0] : ''
+  },
+  getEmail(state) {
+    return state.user ? state.user.email : ''
+  },
   /**
    * Returns the amount of seconds it will take before the tokes expires.
-   * @TODO figure out what happens if the browser and server time and not very
-   *       much in sync.
+   * @TODO figure out what happens if the browser and server time are not in
+   *       sync.
    */
   tokenExpireSeconds(state) {
     const now = Math.ceil(new Date().getTime() / 1000)

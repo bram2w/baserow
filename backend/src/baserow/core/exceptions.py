@@ -1,0 +1,2 @@
+class UserNotIngroupError(Exception):
+    pass

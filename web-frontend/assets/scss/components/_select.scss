@@ -82,6 +82,17 @@
       display: none;
     }
   }
+
+  &.select-item-loading {
+    background-color: $color-neutral-100;
+
+    &::before {
+      content: " ";
+
+      @include loading(14px);
+      @include absolute(9px, 9px, auto, auto);
+    }
+  }
 }
 
 .select-item-link {
@@ -114,7 +125,7 @@
     color: $color-neutral-700;
   }
 
-  :hover > & {
+  :not(.select-item-loading):hover > & {
     display: block;
   }
 }

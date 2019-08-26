@@ -86,6 +86,7 @@
         <button
           :class="{ 'button-loading': loading }"
           class="button button-large"
+          :disabled="loading"
         >
           Sign up
           <i class="fas fa-user-plus"></i>

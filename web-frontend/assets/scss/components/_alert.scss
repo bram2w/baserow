@@ -10,6 +10,10 @@
     position: relative;
     padding-left: 72px;
   }
+
+  &.alert-with-shadow {
+    box-shadow: 0 2px 6px 0 rgba($black, 0.16);
+  }
 }
 
 .alert-icon {
@@ -33,6 +37,10 @@
 
 .alert-content {
   margin: 0;
+}
+
+.alert-close {
+  @include absolute(10px, 10px, auto, auto);
 }
 
 .alert-success {

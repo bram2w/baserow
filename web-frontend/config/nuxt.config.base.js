@@ -25,7 +25,12 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: [{ src: '@/plugins/auth.js' }, { src: '@/plugins/vuelidate.js' }],
+  plugins: [
+    { src: '@/plugins/global.js' },
+    { src: '@/plugins/client.js' },
+    { src: '@/plugins/auth.js' },
+    { src: '@/plugins/vuelidate.js' }
+  ],
 
   /*
    ** Nuxt.js modules
