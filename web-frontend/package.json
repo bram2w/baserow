@@ -46,6 +46,7 @@
     "eslint-plugin-vue": "^5.2.2",
     "jest": "^24.1.0",
     "jsdom": "^15.1.1",
+    "jsdom-global": "^3.0.2",
     "moxios": "^0.4.0",
     "node-mocks-http": "^1.7.6",
     "nodemon": "^1.18.9",

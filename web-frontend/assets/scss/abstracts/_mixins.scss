@@ -39,6 +39,14 @@
   .alert-content {
     color: $text;
   }
+
+  .alert-close {
+    color: $title;
+
+    &:hover {
+      color: $text;
+    }
+  }
 }
 
 @mixin fixed-height($height, $font-size) {
@@ -52,6 +60,18 @@
 
   width: $width;
   text-align: center;
+}
+
+@mixin loading($size: 1.4em) {
+  position: relative;
+  display: block;
+  width: $size;
+  height: $size;
+  border-radius: 50%;
+  border: 0.25em solid;
+  border-color: $color-primary-500 transparent $color-primary-500 transparent;
+  animation: spin infinite 1800ms;
+  animation-timing-function: cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
 // The basically works the same as padding: 10px 0 0 10px or padding: 10px; only then

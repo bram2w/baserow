@@ -11,6 +11,10 @@ body {
   background-color: $color-neutral-100;
 }
 
+a {
+  cursor: pointer;
+}
+
 *,
 *::before,
 *::after {

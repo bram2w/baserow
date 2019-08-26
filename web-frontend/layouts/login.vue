@@ -1,5 +1,6 @@
 <template>
   <div>
+    <Notifications></Notifications>
     <div class="box-page-header"></div>
     <div class="box-page">
       <div class="box login-page login-page-login">
@@ -8,3 +9,11 @@
     </div>
   </div>
 </template>
+
+<script>
+import Notifications from '@/components/notifications/Notifications'
+
+export default {
+  components: { Notifications }
+}
+</script>

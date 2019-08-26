@@ -56,6 +56,7 @@
         <button
           :class="{ 'button-loading': loading }"
           class="button button-large"
+          :disabled="loading"
         >
           Sign in
           <i class="fas fa-lock-open"></i>
@@ -104,11 +105,14 @@ export default {
           .then(() => {
             this.$nuxt.$router.replace({ name: 'app' })
           })
-          .catch(() => {
-            this.invalid = true
-            this.credentials.password = ''
-            this.$v.$reset()
-            this.$refs.password.focus()
+          .catch(error => {
+            // If the status code is 400 the provided email or password is incorrect.
+            if (error.response && error.response.status === 400) {
+              this.invalid = true
+              this.credentials.password = ''
+              this.$v.$reset()
+              this.$refs.password.focus()
+            }
           })
           .then(() => {
             this.loading = false

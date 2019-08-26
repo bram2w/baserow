@@ -63,4 +63,15 @@ $z-index-layout-col-2: 2;
 $z-index-layout-col-3: 1;
 $z-index-layout-col-3-1: 5;
 $z-index-layout-col-3-2: 4;
-$z-index-modal: 6;
+
+// The z-index of modal and context must always be the same because they can be nested
+// inside each other. The order in html decided which must be shown over the other.
+$z-index-modal: 7;
+$z-index-context: 7;
+
+// The notifications will be on top of anything else, because the message is temporary
+// and must always be visible.
+$z-index-notifications: 8;
+
+// normalize overrides
+$base-font-family: $text-font-stack;

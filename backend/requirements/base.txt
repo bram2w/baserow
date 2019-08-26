@@ -3,3 +3,4 @@ django-cors-headers==3.0.2
 djangorestframework==3.9.4
 djangorestframework-jwt==1.11.0
 psycopg2==2.8.3
+ipython==7.7.0

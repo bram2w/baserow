@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
 
+    'baserow.core',
     'baserow.api.v0'
 ]
 
