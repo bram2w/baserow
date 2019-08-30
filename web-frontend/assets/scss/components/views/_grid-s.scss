@@ -1,0 +1,284 @@
+.grid-view-s {
+  @include absolute(0);
+
+  overflow: hidden;
+}
+
+.grid-view-s-sticky-left {
+  position: sticky;
+  z-index: 1;
+  left: 0;
+}
+
+.grid-view-s-scroll {
+  @include absolute(0);
+
+  overflow: hidden;
+}
+
+.grid-view-s-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 33px;
+  background-color: $color-neutral-50;
+  border-bottom: 1px solid $color-neutral-200;
+}
+
+.grid-view-s-body {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100% - 33px - 48px);
+
+  &::after {
+    content: "";
+    display: block;
+    height: 100px;
+    width: 100%;
+  }
+}
+
+.grid-view-s-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  height: 48px;
+  background-color: $color-neutral-50;
+  border-top: 1px solid $color-neutral-200;
+}
+
+// The divider has not left property because the width of the left column can be
+// adjusted that is why it is specified in the html file.
+.grid-view-s-divider {
+  @include absolute(0, auto);
+
+  z-index: 3;
+  width: 4px;
+  border-left: 1px solid $color-neutral-300;
+  overflow: hidden;
+  pointer-events: none;
+  margin-left: -1px;
+
+  &::before {
+    display: none;
+    content: "";
+
+    @include absolute(0, auto, 0, 0);
+
+    width: 4px;
+    left: -4px;
+    background-color: black;
+    box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  &.shadow::before {
+    display: block;
+  }
+}
+
+.grid-view-s-divider-width {
+  @include absolute(3px, auto, auto, auto);
+
+  margin-left: -4.5px;
+  z-index: 3;
+  width: 9px;
+  height: 26px;
+
+  &::before {
+    content: "";
+
+    @include absolute(0, 2px, 0, 2px);
+
+    border-radius: 2px;
+  }
+
+  &:hover::before {
+    background-color: $color-primary-500;
+  }
+}
+
+.grid-view-s-foot-info {
+  padding: 10px;
+}
+
+.grid-view-s-row {
+  @extend .clearfix;
+
+  height: 32px + 1px;
+}
+
+// Because the width of a column can be adjusted it is specified in the html file.
+.grid-view-s-column {
+  position: relative;
+  float: left;
+  height: 32px + 1px;
+  border-right: 1px solid $color-neutral-200;
+  border-bottom: 1px solid $color-neutral-200;
+
+  .grid-view-s-head & {
+    height: 32px;
+    border-bottom: none;
+    background-color: $color-neutral-100;
+  }
+
+  .grid-view-s-foot & {
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  &.grid-view-s-column-no-border-right {
+    border-right: none;
+  }
+}
+
+.grid-view-s-row-info {
+  @include absolute(0);
+
+  background-color: $white;
+  padding: 0 24px 0 6px;
+  line-height: 32px;
+}
+
+.grid-view-s-row-count {
+  @extend %ellipsis;
+
+  width: 100%;
+}
+
+.grid-view-s-row-more {
+  @include absolute((32px - 18px) / 2, 4px, 0 auto);
+  @include center-text(18px, 11px);
+
+  color: $color-neutral-400;
+  border-radius: 100%;
+  display: none;
+
+  .grid-view-s-row-hover & {
+    display: block;
+  }
+
+  &:hover {
+    background-color: $color-primary-100;
+    color: $color-primary-800;
+  }
+}
+
+.grid-view-s-cell {
+  @include absolute(0);
+
+  background-color: $white;
+
+  &.active {
+    @include absolute(-2px);
+
+    z-index: 2;
+    border: 2px solid $color-primary-500;
+    border-radius: 2px;
+  }
+
+  &.active-by {
+    border-color: $color-success-500;
+  }
+
+  .grid-view-s-cell-active-by {
+    @include absolute(-8px, 0, auto, auto);
+    @include fixed-height(18px, 12px);
+
+    background-color: $color-success-500;
+    color: $white;
+    border-radius: 3px;
+    padding: 0 3px;
+    transform: translateX(50%);
+
+    .icon {
+      font-size: 9px;
+    }
+  }
+}
+
+.grid-view-s-description {
+  padding: 0 30px;
+  line-height: 32px;
+
+  .grid-view-s-description-icon,
+  .grid-view-s-description-options {
+    line-height: inherit;
+    width: 30px;
+    color: $color-neutral-600;
+  }
+
+  .grid-view-s-description-icon {
+    @include absolute(0, auto, 0, 0);
+
+    padding-left: 10px;
+    text-align: left;
+  }
+
+  .grid-view-s-description-options {
+    @include absolute(0, 4px, 0, auto);
+
+    text-align: center;
+
+    &:hover {
+      color: $color-neutral-900;
+    }
+  }
+
+  .grid-view-s-description-width {
+    @include absolute(3px, -4.5px, 3px, auto);
+
+    z-index: 2;
+    width: 9px;
+
+    &::before {
+      content: "";
+
+      @include absolute(0, 2px, 0, 2px);
+
+      border-radius: 2px;
+    }
+
+    &:hover::before {
+      background-color: $color-primary-500;
+    }
+  }
+
+  .grid-view-s-description-name {
+    @extend %ellipsis;
+  }
+}
+
+.grid-view-s-add-column {
+  display: block;
+  line-height: 32px;
+  text-align: center;
+  color: $color-neutral-900;
+
+  &:hover {
+    background-color: $color-primary-100;
+  }
+}
+
+.grid-view-s-add-column-placeholder {
+  display: none;
+
+  &.hover {
+    display: block;
+  }
+}
+
+.grid-view-s-add-row {
+  display: block;
+  height: 32px;
+  color: $color-neutral-900;
+  background-color: $white;
+
+  &:hover {
+    background-color: $color-primary-100;
+  }
+}
+
+.grid-view-s-add-row-icon {
+  padding-left: 10px;
+  line-height: 32px;
+}

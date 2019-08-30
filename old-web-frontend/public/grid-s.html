@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" type="image/png" href="../../web-frontend/static/img/favicon_16.png" sizes="16x16" />
+  <link rel="icon" type="image/png" href="../../web-frontend/static/img/favicon_32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="../../web-frontend/static/img/favicon_48.png" sizes="48x48" />
+  <link rel="icon" type="image/png" href="../../web-frontend/static/img/favicon_48.png" sizes="192x192" />
+  <title>Baserow</title>
+</head>
+<body>
+<div class="layout">
+  <div class="layout-col-1 menu">
+    <ul class="menu-items">
+      <li class="menu-item">
+        <a href="#" class="menu-link active">
+          <i class="fas fa-tachometer-alt"></i>
+          <span class="menu-link-text">Dashboard</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="#" class="menu-link" data-context=".select">
+          <i class="fas fa-layer-group"></i>
+          <span class="menu-link-text">Groups</span>
+        </a>
+        <div class="select hidden">
+          <div class="select-search">
+            <i class="select-search-icon fas fa-search"></i>
+            <input type="text" class="select-search-input" placeholder="Search views" />
+          </div>
+          <ul class="select-items">
+            <li class="select-item active">
+              <a href="#" class="select-item-link">Group name 1</a>
+              <a href="#" class="select-item-options" data-context=".context">
+                <i class="fas fa-ellipsis-v"></i>
+              </a>
+              <div class="context hidden">
+                <ul class="context-menu">
+                  <li>
+                    <a href="#">
+                      <i class="context-menu-icon fas fa-fw fa-pen"></i>
+                      Rename group
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <i class="context-menu-icon fas fa-fw fa-trash"></i>
+                      Delete group
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </li>
+            <li class="select-item">
+              <a href="#" class="select-item-link">Group name 2</a>
+              <a href="#" class="select-item-options">
+                <i class="fas fa-ellipsis-v"></i>
+              </a>
+            </li>
+            <li class="select-item">
+              <a href="#" class="select-item-link">Group name 3</a>
+              <a href="#" class="select-item-options">
+                <i class="fas fa-ellipsis-v"></i>
+              </a>
+            </li>
+            <li class="select-item">
+              <a href="#" class="select-item-link">Group name 4</a>
+              <a href="#" class="select-item-options">
+                <i class="fas fa-ellipsis-v"></i>
+              </a>
+            </li>
+          </ul>
+          <div class="select-footer">
+            <a href="#" class="select-footer-button">
+              <i class="fas fa-plus"></i>
+              Do something
+            </a>
+          </div>
+        </div>
+      </li>
+    </ul>
+    <ul class="menu-items">
+      <li class="menu-item layout-uncollapse">
+        <a href="#" class="menu-link" data-toggle-layout-collapse>
+          <i class="menu-item-icon fas fa-angle-double-right"></i>
+          <span class="menu-link-text">Uncollapse</span>
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="#" class="menu-link menu-user-item">
+          B
+          <span class="menu-link-text">Full Name</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="layout-col-2 sidebar">
+    <div class="sidebar-content-wrapper">
+      <nav class="sidebar-content">
+        <div class="sidebar-title">
+          <img src="../../web-frontend/static/img/logo.svg" alt="" />
+        </div>
+        <div class="sidebar-group-title">Group name 1</div>
+        <ul class="tree">
+          <li class="tree-item">
+            <div class="tree-action">
+              <a href="#" class="tree-link">
+                <i class="tree-type fas fa-database"></i>
+                Vehicles
+              </a>
+              <a href="#" class="tree-options" data-context=".context">
+                <i class="fas fa-ellipsis-v"></i>
+              </a>
+              <div class="context hidden">
+                <div class="context-menu-title">Vehicles</div>
+                <ul class="context-menu">
+                  <li>
+                    <a href="#">
+                      <i class="context-menu-icon fas fa-fw fa-pen"></i>
+                      Rename database
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#">
+                      <i class="context-menu-icon fas fa-fw fa-trash"></i>
+                      Delete table
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </li>
+          <li class="tree-item">
+            <div class="tree-action">
+              <a href="#" class="tree-link">
+                <i class="tree-type fas fa-angle-right"></i>
+                Map nummer 1
+              </a>
+            </div>
+          </li>
+          <li class="tree-item active">
+            <div class="tree-action">
+              <a href="#" class="tree-link">
+                <i class="tree-type fas fa-database"></i>
+                Webshop
+              </a>
+              <a href="#" class="tree-options">
+                <i class="fas fa-ellipsis-v"></i>
+              </a>
+            </div>
+            <ul class="tree-subs">
+              <li class="tree-sub active">
+                <a href="#" class="tree-sub-link">Customers</a>
+                <a href="#" class="tree-options">
+                  <i class="fas fa-ellipsis-v"></i>
+                </a>
+              </li>
+              <li class="tree-sub">
+                <a href="#" class="tree-sub-link">Products very long name</a>
+                <a href="#" class="tree-options">
+                  <i class="fas fa-ellipsis-v"></i>
+                </a>
+              </li>
+              <li class="tree-sub">
+                <a href="#" class="tree-sub-link">Categories</a>
+                <a href="#" class="tree-options">
+                  <i class="fas fa-ellipsis-v"></i>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <li class="tree-item">
+            <div class="tree-action">
+              <a href="#" class="tree-link">
+                <i class="tree-type fas fa-angle-down"></i>
+                Map nummer 1
+              </a>
+            </div>
+            <ul class="tree">
+              <li class="tree-item">
+                <div class="tree-action">
+                  <a href="#" class="tree-link">
+                    <i class="tree-type fas fa-database"></i>
+                    Vehicles
+                  </a>
+                  <a href="#" class="tree-options">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </a>
+                </div>
+              </li>
+              <li class="tree-item">
+                <div class="tree-action">
+                  <a href="#" class="tree-link">
+                    <i class="tree-type fas fa-database"></i>
+                    Something
+                  </a>
+                  <a href="#" class="tree-options">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </a>
+                </div>
+              </li>
+            </ul>
+          </li>
+          <li class="tree-item">
+            <div class="tree-action">
+              <a href="#" class="tree-link">
+                <i class="tree-type fas fa-database"></i>
+                Vehicles with very long name and that is not good.
+              </a>
+              <a href="#" class="tree-options">
+                <i class="fas fa-ellipsis-v"></i>
+              </a>
+            </div>
+          </li>
+          <li class="tree-item">
+            <div class="tree-action">
+              <a href="#" class="tree-link">
+                <i class="tree-type fas fa-database"></i>
+                Something else
+              </a>
+              <a href="#" class="tree-options">
+                <i class="fas fa-ellipsis-v"></i>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <div class="sidebar-footer">
+      <a href="#" class="sidebar-collapse" data-toggle-layout-collapse>
+        <i  class="fas fa-angle-double-left"></i>
+        Collapse sidebar
+      </a>
+    </div>
+  </div>
+  <div class="layout-col-3">
+    <header class="layout-col-3-1 header">
+      <ul class="header-filter">
+        <li class="header-filter-item">
+          <a href="#" class="header-filter-link" data-context=".select">
+            <i class="header-filter-icon fas fa-th"></i>
+            Grid view name
+          </a>
+          <div class="select hidden">
+            <div class="select-search">
+              <i class="select-search-icon fas fa-search"></i>
+              <input type="text" class="select-search-input" placeholder="Search views" />
+            </div>
+            <ul class="select-items">
+              <li class="select-item">
+                <a href="#" class="select-item-link">
+                  <i class="select-item-icon fas fa-th fa-fw color-primary"></i>
+                  Grid view name
+                </a>
+                <a href="#" class="select-item-options" data-context=".context">
+                  <i class="fas fa-ellipsis-v"></i>
+                </a>
+                <div class="context hidden">
+                  <ul class="context-menu">
+                    <li>
+                      <a href="#">
+                        <i class="context-menu-icon fas fa-fw fa-pen"></i>
+                        Rename
+                      </a>
+                    </li>
+                    <li>
+                      <a href="#">
+                        <i class="context-menu-icon fas fa-fw fa-trash"></i>
+                        Delete
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li class="select-item">
+                <a href="#" class="select-item-link">
+                  <i class="select-item-icon fas fa-th fa-fw color-primary"></i>
+                  Grid view option 2.
+                </a>
+                <a href="#" class="select-item-options">
+                  <i class="fas fa-ellipsis-v"></i>
+                </a>
+              </li>
+              <li class="select-item">
+                <a href="#" class="select-item-link">
+                  <i class="select-item-icon fas fa-th fa-fw color-primary"></i>
+                  Grid view 2
+                </a>
+                <a href="#" class="select-item-options">
+                  <i class="fas fa-ellipsis-v"></i>
+                </a>
+              </li>
+              <li class="select-item">
+                <a href="#" class="select-item-link">
+                  <i class="select-item-icon fas fa-th fa-fw color-primary"></i>
+                  Grid view 3
+                </a>
+                <a href="#" class="select-item-options">
+                  <i class="fas fa-ellipsis-v"></i>
+                </a>
+              </li>
+            </ul>
+            <div class="select-footer">
+              <div class="select-footer-multiple">
+                <div class="select-footer-multiple-label">Add a view:</div>
+                <a href="#" class="select-footer-multiple-item">
+                  <i class="select-footer-multiple-icon fas fa-th"></i>
+                  Grid
+                </a>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <ul class="header-info">
+        <li class="undo-redo">
+          <a href="#" class="active">
+            <i class="fas fa-undo"></i>
+          </a>
+          <a href="#">
+            <i class="fas fa-redo"></i>
+          </a>
+        </li>
+        <li>Webshop</li>
+        <li>Products</li>
+      </ul>
+    </header>
+    <div class="layout-col-3-2 content">
+      <div class="grid-view-s">
+        <div class="scrollbars" style="left: 260px;">
+          <div class="scrollbar-vertical" style="top: 20px; height: 40px;"></div>
+          <div class="scrollbar-horizontal" style="left: 10px; width: 40px;"></div>
+        </div>
+        <div class="grid-view-s-divider" style="left: 260px;"></div>
+        <a href="#" class="grid-view-s-divider-width"style="left: 260px;"></a>
+        <div class="grid-view-s-scroll">
+          <div class="grid-view-s-inner" style="width: 2000px;">
+            <div class="grid-view-s-head">
+              <div class="grid-view-s-sticky-left" style="width: 260px;">
+                <div class="grid-view-s-column grid-view-s-column-no-border-right" style="width: 60px;"></div>
+                <div class="grid-view-s-column" style="width: 200px;">
+                  <div class="grid-view-s-description">
+                    <div class="grid-view-s-description-icon">
+                      <i class="fas fa-font"></i>
+                    </div>
+                    <div class="grid-view-s-description-name">Name</div>
+                    <a href="#" class="grid-view-s-description-options">
+                      <i class="fas fa-caret-down"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div class="grid-view-s-column" style="width: 200px;">
+                <div class="grid-view-s-description">
+                  <div class="grid-view-s-description-icon">
+                    <i class="fas fa-hashtag"></i>
+                  </div>
+                  <div class="grid-view-s-description-name">Price</div>
+                  <a href="#" class="grid-view-s-description-options" data-context=".context">
+                    <i class="fas fa-caret-down"></i>
+                  </a>
+                  <a href="#" class="grid-view-s-description-width"></a>
+                </div>
+              </div>
+              <div class="grid-view-s-column" style="width: 200px;">
+                <div class="grid-view-s-description">
+                  <div class="grid-view-s-description-icon">
+                    <i class="fas fa-check-square"></i>
+                  </div>
+                  <div class="grid-view-s-description-name">Active</div>
+                  <a href="#" class="grid-view-s-description-options">
+                    <i class="fas fa-caret-down"></i>
+                  </a>
+                  <a href="#" class="grid-view-s-description-width"></a>
+                </div>
+              </div>
+              <div class="grid-view-s-column" style="width: 200px;" data-repeat="5">
+                <div class="grid-view-s-description">
+                  <div class="grid-view-s-description-icon">
+                    <i class="fas fa-font"></i>
+                  </div>
+                  <div class="grid-view-s-description-name">Description</div>
+                  <a href="#" class="grid-view-s-description-options">
+                    <i class="fas fa-caret-down"></i>
+                  </a>
+                  <a href="#" class="grid-view-s-description-width"></a>
+                </div>
+              </div>
+              <div class="grid-view-s-column" style="width: 100px;">
+                <a href="#" class="grid-view-s-add-column">
+                  <i class="fas fa-plus"></i>
+                </a>
+              </div>
+            </div>
+            <div class="grid-view-s-body">
+              <div class="grid-view-s-row" data-repeat="20">
+                <div class="grid-view-s-sticky-left" style="width: 260px;">
+                  <div class="grid-view-s-column grid-view-s-column-no-border-right" style="width: 60px;">
+                    <div class="grid-view-s-row-info">
+                      <div class="grid-view-s-row-count">10</div>
+                      <a href="#" class="grid-view-s-row-more">
+                        <i class="fas fa-expand"></i>
+                      </a>
+                    </div>
+                  </div>
+                  <div class="grid-view-s-column" style="width: 200px;">
+                    <div class="grid-view-s-cell">
+                      <div class="grid-field-text">
+                        Blue socks
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid-view-s-column" style="width: 200px;">
+                  <div class="grid-view-s-cell">
+                    <div class="grid-field-number">
+                      99,99
+                    </div>
+                  </div>
+                </div>
+                <div class="grid-view-s-column" style="width: 200px;">
+                  <div class="grid-view-s-cell">
+                    <div class="grid-field-boolean">
+                      <div class="grid-field-checkbox">
+                        <i class="fas fa-check check"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="grid-view-s-column" style="width: 200px;">
+                  <div class="grid-view-s-cell">
+                    <div class="grid-field-text">
+                      A very long description that is not fully visible.
+                    </div>
+                  </div>
+                </div>
+                <div class="grid-view-s-column" style="width: 200px;">
+                  <div class="grid-view-s-cell">
+                    <div class="grid-field-text">Hello World!</div>
+                  </div>
+                </div>
+                <div class="grid-view-s-column" style="width: 200px;">
+                  <div class="grid-view-s-cell">body 6</div>
+                </div>
+                <div class="grid-view-s-column" style="width: 200px;">
+                  <div class="grid-view-s-cell">body 7</div>
+                </div>
+                <div class="grid-view-s-column" style="width: 200px;">
+                  <div class="grid-view-s-cell">body 8</div>
+                </div>
+                <div class="grid-view-s-column" style="width: 200px;">
+                  <div class="grid-view-s-cell">body 9</div>
+                </div>
+                <div class="grid-view-s-column grid-view-s-add-column-placeholder" style="width: 100px;">
+                  <div class="grid-view-s-cell"></div>
+                </div>
+              </div>
+              <div class="grid-view-s-row">
+                <div class="grid-view-s-column" style="width: 1860px;">
+                  <a href="#" class="grid-view-s-add-row">
+                    <div class="grid-view-s-add-row-icon grid-view-s-sticky-left" style="width: 260px;">
+                      <i class="fas fa-plus"></i>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="grid-view-s-foot">
+              <div class="grid-view-s-sticky-left" style="width: 260px;">
+                <div class="grid-view-s-column" style="width: 260px;">
+                  <div class="grid-view-s-foot-info">18 records</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-wrapper hidden">
+  <div class="modal-box">
+    <a href="#" class="modal-close">
+      <i class="fas fa-times"></i>
+    </a>
+    <h2 class="box-title">Orange Penquin</h2>
+    <form>
+      <div class="control">
+        <label class="control-label">
+          <i class="fas fa-font"></i>
+          Name
+          <a href="#" class="control-context">
+            <i class="fas fa-caret-down"></i>
+          </a>
+        </label>
+        <div class="control-elements">
+          <input type="text" class="input input-large" />
+        </div>
+      </div>
+      <div class="control">
+        <label class="control-label">
+          <i class="fas fa-hashtag"></i>
+          Price
+          <a href="#" class="control-context">
+            <i class="fas fa-caret-down"></i>
+          </a>
+        </label>
+        <div class="control-elements">
+          <input type="text" class="input input-large field-number" />
+        </div>
+      </div>
+      <div class="control">
+        <label class="control-label">
+          <i class="fas fa-check-square"></i>
+          Active
+          <a href="#" class="control-context">
+            <i class="fas fa-caret-down"></i>
+          </a>
+        </label>
+        <div class="control-elements">
+          <div class="field-boolean-checkbox">
+            <i class="fas fa-check check"></i>
+          </div>
+        </div>
+      </div>
+      <div class="control">
+        <label class="control-label">
+          <i class="fas fa-font"></i>
+          Description
+          <a href="#" class="control-context">
+            <i class="fas fa-caret-down"></i>
+          </a>
+        </label>
+        <div class="control-elements">
+          <input type="text" class="input input-large" />
+        </div>
+      </div>
+      <div class="control">
+        <label class="control-label">
+          <i class="fas fa-hashtag"></i>
+          Times sold
+          <a href="#" class="control-context">
+            <i class="fas fa-caret-down"></i>
+          </a>
+        </label>
+        <div class="control-elements">
+          <input type="text" class="input input-large field-number" />
+        </div>
+      </div>
+      <div class="actions">
+        <a href="#">
+          <i class="fas fa-plus"></i>
+          add field
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script>
+(function() {
+  $("[data-repeat]").each(function(i, object) {
+    var $object = $(object);
+    var amount = parseInt($object.attr("data-repeat"));
+
+    var html = $object[0].outerHTML;
+    for(var i = 0; i < amount; i++) {
+      $(html).insertAfter($object);
+    }
+  });
+
+  $scroll = $(".grid-view-s-scroll");
+  $divider = $(".grid-view-s-divider");
+
+  $(".grid-view-s-scroll").on('wheel', function(event) {
+    var top = $scroll.scrollTop() + event.originalEvent.deltaY;
+    var left = $scroll.scrollLeft() + event.originalEvent.deltaX;
+
+    $divider.toggleClass("shadow", left > 0);
+    $scroll.scrollTop(top);
+    $scroll.scrollLeft(left);
+    event.preventDefault();
+  });
+
+  $addColumn = $(".grid-view-s-add-column");
+  $addPlaceholder = $(".grid-view-s-add-column-placeholder")
+  $addColumn.hover(function() {
+    $addPlaceholder.addClass("hover");
+  }, function() {
+    $addPlaceholder.removeClass("hover");
+  });
+
+  $cell = $(".grid-view-s-cell");
+  $cell.click(function(e) {
+    $cell.removeClass("active");
+    $(this).addClass("active");
+  });
+
+  $row = $(".grid-view-s-row");
+  $row.hover(function() {
+    $this = $(this);
+    $this.addClass("grid-view-s-row-hover");
+  }, function() {
+    $this = $(this);
+    $this.removeClass("grid-view-s-row-hover");
+  });
+
+  $(".grid-field-checkbox").click(function() {
+    if ($(this).closest(".grid-view-s-cell").hasClass("active")) {
+      $(this).toggleClass("active");
+    }
+  });
+
+  $(".field-boolean-checkbox").click(function() {
+    $(this).toggleClass("active");
+  });
+
+  $(".modal-close").click(function() {
+    $(this).closest(".modal-wrapper").addClass("hidden");
+  });
+
+  $(".grid-view-s-row-more").click(function() {
+    $(".modal-wrapper").removeClass("hidden");
+  });
+
+  $("[data-context]").click(function() {
+    $(this).siblings($(this).attr("data-context")).toggleClass("hidden");
+  });
+
+  $("[data-toggle-layout-collapse]").click(function() {
+    $(".layout").toggleClass("layout-collapsed");
+  });
+
+  $(".dropdown-items .select-item-link").click(function(e) {
+    $(this).closest(".dropdown-items").addClass("hidden");
+  })
+})();
+</script>
+</body>
+</html>
