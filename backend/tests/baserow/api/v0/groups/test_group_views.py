@@ -9,17 +9,17 @@ from baserow.core.models import Group, GroupUser
 def test_list_groups(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email='test@test.nl', password='password', first_name='Test1')
-    group_2 = data_fixture.create_user_group(user=user, order=2)
-    group_1 = data_fixture.create_user_group(user=user, order=1)
+    user_group_2 = data_fixture.create_user_group(user=user, order=2)
+    user_group_1 = data_fixture.create_user_group(user=user, order=1)
 
     response = api_client.get(reverse('api_v0:groups:list'), **{
         'HTTP_AUTHORIZATION': f'JWT {token}'
     })
     assert response.status_code == 200
     response_json = response.json()
-    assert response_json[0]['id'] == group_1.id
+    assert response_json[0]['id'] == user_group_1.group.id
     assert response_json[0]['order'] == 1
-    assert response_json[1]['id'] == group_2.id
+    assert response_json[1]['id'] == user_group_2.group.id
     assert response_json[1]['order'] == 2
 
 
