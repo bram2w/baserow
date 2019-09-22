@@ -26,7 +26,8 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'baserow.core',
-    'baserow.api.v0'
+    'baserow.api.v0',
+    'baserow.contrib.database'
 ]
 
 MIDDLEWARE = [
