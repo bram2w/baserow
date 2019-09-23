@@ -10,27 +10,31 @@ stages:
 web-frontend-eslint:
   stage: lint
   script:
-    - make install-web-frontend-dependencies
-    - make eslint-web-frontend
+    - cd web-frontend
+    - make install-dependencies
+    - make eslint
 
 web-frontend-stylelint:
   stage: lint
   script:
-    - make install-web-frontend-dependencies
-    - make stylelint-web-frontend
+    - cd web-frontend
+    - make install-dependencies
+    - make stylelint
 
 web-frontend-test:
   stage: test
   script:
-    - make install-web-frontend-dependencies
-    - make test-web-frontend
+    - cd web-frontend
+    - make install-dependencies
+    - make test
 
 backend-flake8:
   stage: lint
   image: python:3.6
   script:
-    - make install-backend-dependencies
-    - make lint-backend
+    - cd backend
+    - make install-dependencies
+    - make lint
 
 backend-pytest:
   stage: test
@@ -43,6 +47,7 @@ backend-pytest:
     POSTGRES_PASSWORD: baserow
     POSTGRES_DB: baserow
   script:
-    - make install-backend-dependencies
+    - cd backend
+    - make install-dependencies
     - export PYTHONPATH=$CI_PROJECT_DIR/backend/src
-    - make test-backend
+    - make test

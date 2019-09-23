@@ -11,7 +11,7 @@
     "start": "nuxt start",
     "eslint": "eslint --ext .js,.vue .",
     "stylelint": "stylelint **/*.scss --syntax scss",
-    "test": "jest -i --verbose false test/"
+    "jest": "jest -i --verbose false test/"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.8.2",
