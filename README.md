@@ -54,17 +54,22 @@ $ docker exec -it baserow bash
 $ cd /baserow
 
 # run pytest for the backend
-$ make lint-backend
+$ cd backend
+$ make lint
 
 # run flake8 for the backend
-$ make test-backend
+$ cd backend
+$ make test
 
 # run jest for the web frontend
-$ make test-web-frontend
+$ cd web-frontend
+$ make test
 
 # run eslint for the web frontend
-$ make eslint-web-frontend
+$ cd web-frontend
+$ make eslint
 
 # run stylelint for the web frontend
-$ make stylelint-web-frontend
+$ cd web-frontend
+$ make stylelint
 ```
