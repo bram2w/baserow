@@ -1,8 +1,8 @@
 export default {
   mode: 'universal',
 
-  /*
-   ** Headers of the page
+  /**
+   * Headers of the page
    */
   head: {
     title: 'Baserow',
@@ -12,18 +12,18 @@ export default {
     ]
   },
 
-  /*
-   ** Customize the progress-bar color
+  /**
+   * Customize the progress-bar color
    */
   loading: { color: '#fff' },
 
-  /*
-   ** Global CSS
+  /**
+   * Global CSS
    */
   css: ['@/assets/scss/default.scss'],
 
-  /*
-   ** Plugins to load before mounting the App
+  /**
+   * Plugins to load before mounting the App
    */
   plugins: [
     { src: '@/plugins/global.js' },
@@ -32,13 +32,17 @@ export default {
     { src: '@/plugins/vuelidate.js' }
   ],
 
-  /*
-   ** Nuxt.js modules
+  /**
+   * Nuxt.js modules
    */
-  modules: ['@nuxtjs/axios', 'cookie-universal-nuxt'],
+  modules: [
+    '@nuxtjs/axios',
+    'cookie-universal-nuxt',
+    '@/modules/database/module.js'
+  ],
 
   router: {
-    middleware: 'authentication'
+    middleware: ['authentication', 'group']
   },
 
   env: {

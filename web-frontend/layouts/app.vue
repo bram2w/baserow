@@ -57,6 +57,7 @@
             <div class="sidebar-title">
               <img src="@/static/img/logo.svg" alt="" />
             </div>
+            <Sidebar></Sidebar>
           </nav>
         </div>
         <div class="sidebar-footer">
@@ -78,12 +79,14 @@ import { mapActions, mapGetters } from 'vuex'
 
 import Notifications from '@/components/notifications/Notifications'
 import GroupsContext from '@/components/group/GroupsContext'
+import Sidebar from '@/components/sidebar/Sidebar'
 
 export default {
   middleware: 'authenticated',
   components: {
     GroupsContext,
-    Notifications
+    Notifications,
+    Sidebar
   },
   computed: {
     ...mapGetters({

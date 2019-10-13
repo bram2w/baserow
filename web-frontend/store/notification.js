@@ -15,6 +15,9 @@ export const mutations = {
 }
 
 export const actions = {
+  /**
+   * Shows a notification message to the user.
+   */
   add({ commit }, { type, title, message }) {
     commit('ADD', {
       id: uuid(),

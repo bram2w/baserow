@@ -1,19 +1,17 @@
 <template>
-  <transition name="fade">
-    <div
-      v-if="open"
-      ref="modalWrapper"
-      class="modal-wrapper"
-      @click="outside($event)"
-    >
-      <div class="modal-box">
-        <a class="modal-close" @click="hide()">
-          <i class="fas fa-times"></i>
-        </a>
-        <slot></slot>
-      </div>
+  <div
+    v-if="open"
+    ref="modalWrapper"
+    class="modal-wrapper"
+    @click="outside($event)"
+  >
+    <div class="modal-box">
+      <a class="modal-close" @click="hide()">
+        <i class="fas fa-times"></i>
+      </a>
+      <slot></slot>
     </div>
-  </transition>
+  </div>
 </template>
 
 <script>
@@ -56,7 +54,16 @@ export default {
      * Hide the modal.
      */
     hide() {
-      this.open = false
+      // This is a temporary fix. What happens is the model is opened by a context menu
+      // item and the user closes the modal, the element is first deleted and then the
+      // click outside event of the context is fired. It then checks if the click was
+      // inside one of his children, but because the modal element doesn't exists
+      // anymore it thinks it was outside, so is closes the context menu which we don't
+      // want automatically.
+      setTimeout(() => {
+        this.open = false
+      })
+      this.$emit('hidden')
       window.removeEventListener('keyup', this.keyup)
     },
     /**

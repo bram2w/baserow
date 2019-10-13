@@ -13,13 +13,13 @@ export default {
       }
     },
     toggle(...args) {
-      this.getRootModal().toggle(...args)
+      this.getRootContext().toggle(...args)
     },
     show(...args) {
-      this.getRootModal().show(...args)
+      this.getRootContext().show(...args)
     },
     hide(...args) {
-      this.getRootModal().hide(...args)
+      this.getRootContext().hide(...args)
     }
   }
 }

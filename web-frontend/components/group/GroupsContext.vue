@@ -1,5 +1,5 @@
 <template>
-  <Context class="select">
+  <Context ref="groupsContext" class="select">
     <div class="select-search">
       <i class="select-search-icon fas fa-search"></i>
       <input
@@ -13,28 +13,12 @@
       <div class="loading"></div>
     </div>
     <ul v-if="!isLoading && isLoaded && groups.length > 0" class="select-items">
-      <li
+      <GroupsContextItem
         v-for="group in searchAndSort(groups)"
         :key="group.id"
-        :ref="'groupSelect' + group.id"
-        class="select-item"
-      >
-        <div class="loading-overlay"></div>
-        <a class="select-item-link">
-          <Editable
-            :ref="'groupRename' + group.id"
-            :value="group.name"
-            @change="renameGroup(group, $event)"
-          ></Editable>
-        </a>
-        <a
-          :ref="'groupOptions' + group.id"
-          class="select-item-options"
-          @click="toggleContext(group.id)"
-        >
-          <i class="fas fa-ellipsis-v"></i>
-        </a>
-      </li>
+        :group="group"
+        @selected="hide"
+      ></GroupsContextItem>
     </ul>
     <div
       v-if="!isLoading && isLoaded && groups.length == 0"
@@ -42,22 +26,6 @@
     >
       No results found
     </div>
-    <Context ref="groupsItemContext">
-      <ul class="context-menu">
-        <li>
-          <a @click="toggleRename(contextId)">
-            <i class="context-menu-icon fas fa-fw fa-pen"></i>
-            Rename group
-          </a>
-        </li>
-        <li>
-          <a @click="deleteGroup(contextId)">
-            <i class="context-menu-icon fas fa-fw fa-trash"></i>
-            Delete group
-          </a>
-        </li>
-      </ul>
-    </Context>
     <div class="select-footer">
       <a class="select-footer-button" @click="$refs.createGroupModal.show()">
         <i class="fas fa-plus"></i>
@@ -72,18 +40,19 @@
 import { mapGetters, mapState } from 'vuex'
 
 import CreateGroupModal from '@/components/group/CreateGroupModal'
+import GroupsContextItem from '@/components/group/GroupsContextItem'
 import context from '@/mixins/context'
 
 export default {
-  name: 'GroupsItemContext',
+  name: 'GroupsContext',
   components: {
-    CreateGroupModal
+    CreateGroupModal,
+    GroupsContextItem
   },
   mixins: [context],
   data() {
     return {
-      query: '',
-      contextId: -1
+      query: ''
     }
   },
   computed: {
@@ -96,14 +65,13 @@ export default {
     })
   },
   methods: {
+    /**
+     * When the groups context select is opened for the for the first time we must make
+     * sure that all the groups are already loaded or going to be loaded.
+     */
     toggle(...args) {
       this.$store.dispatch('group/loadAll')
       this.getRootContext().toggle(...args)
-    },
-    toggleContext(groupId) {
-      const target = this.$refs['groupOptions' + groupId][0]
-      this.contextId = groupId
-      this.$refs.groupsItemContext.toggle(target, 'bottom', 'right', 0)
     },
     searchAndSort(groups) {
       const query = this.query
@@ -115,39 +83,6 @@ export default {
       // .sort((a, b) => {
       //   return a.order - b.order
       // })
-    },
-    toggleRename(id) {
-      this.$refs.groupsItemContext.hide()
-      this.$refs['groupRename' + id][0].edit()
-    },
-    renameGroup(group, event) {
-      const select = this.$refs['groupSelect' + group.id][0]
-      select.classList.add('select-item-loading')
-
-      this.$store
-        .dispatch('group/update', {
-          id: group.id,
-          values: {
-            name: event.value
-          }
-        })
-        .catch(() => {
-          // If something is going wrong we will reset the original value
-          const rename = this.$refs['groupRename' + group.id][0]
-          rename.set(event.oldValue)
-        })
-        .then(() => {
-          select.classList.remove('select-item-loading')
-        })
-    },
-    deleteGroup(id) {
-      this.$refs.groupsItemContext.hide()
-      const select = this.$refs['groupSelect' + id][0]
-      select.classList.add('select-item-loading')
-
-      this.$store.dispatch('group/delete', id).catch(() => {
-        select.classList.remove('select-item-loading')
-      })
     }
   }
 }
