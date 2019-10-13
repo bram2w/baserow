@@ -14,8 +14,7 @@ export default {
   data() {
     return {
       open: false,
-      opener: null,
-      children: []
+      opener: null
     }
   },
   methods: {
@@ -81,9 +80,9 @@ export default {
           !isElement(this.opener, event.target) &&
           // If the click was not inside one of the context children of this context
           // menu.
-          !this.children.some(component =>
-            isElement(component.$el, event.target)
-          )
+          !this.moveToBody.children.some(child => {
+            return isElement(child.$el, event.target)
+          })
         ) {
           this.hide()
         }
@@ -96,6 +95,7 @@ export default {
     hide() {
       this.opener = null
       this.open = false
+      this.$emit('hidden')
 
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
     },
@@ -171,13 +171,6 @@ export default {
       }
 
       return positions
-    },
-    /**
-     * A child context can register itself with the parent to prevent closing of the
-     * parent when clicked inside the child.
-     */
-    registerContextChild(element) {
-      this.children.push(element)
     }
   }
 }

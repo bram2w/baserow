@@ -29,7 +29,7 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@/mixins/form'
 
 export default {
-  name: 'GroupForm',
+  name: 'CreateApplicationForm',
   mixins: [form],
   data() {
     return {
@@ -38,13 +38,13 @@ export default {
       }
     }
   },
+  mounted() {
+    this.$refs.name.focus()
+  },
   validations: {
     values: {
       name: { required }
     }
-  },
-  mounted() {
-    this.$refs.name.focus()
   }
 }
 </script>

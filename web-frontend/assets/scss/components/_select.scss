@@ -63,10 +63,17 @@
     background-color: $color-neutral-100;
   }
 
+  &.select-item-loading::before {
+    content: " ";
+
+    @include loading(14px);
+    @include absolute(9px, 9px, auto, auto);
+  }
+
   &.active {
     background-color: $color-primary-100;
 
-    &::after {
+    &:not(.select-item-loading)::after {
       @extend .fas;
       @extend %select-item-size;
 
@@ -80,17 +87,6 @@
 
     &:hover::after {
       display: none;
-    }
-  }
-
-  &.select-item-loading {
-    background-color: $color-neutral-100;
-
-    &::before {
-      content: " ";
-
-      @include loading(14px);
-      @include absolute(9px, 9px, auto, auto);
     }
   }
 }

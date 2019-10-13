@@ -2,6 +2,7 @@ import jwtDecode from 'jwt-decode'
 
 import AuthService from '@/services/auth'
 import { setToken, unsetToken } from '@/utils/auth'
+import { unsetGroupCookie } from '@/utils/group'
 
 export const state = () => ({
   refreshing: false,
@@ -53,9 +54,12 @@ export const actions = {
    * Logs off the user by removing the token as a cookie and clearing the user
    * data.
    */
-  logoff({ commit }) {
+  logoff({ commit, dispatch }) {
     unsetToken(this.app.$cookies)
+    unsetGroupCookie(this.app.$cookies)
     commit('CLEAR_USER_DATA')
+    dispatch('group/clearAll', {}, { root: true })
+    dispatch('group/unselect', {}, { root: true })
   },
   /**
    * Refresh the existing token. If successful commit the new token and start a

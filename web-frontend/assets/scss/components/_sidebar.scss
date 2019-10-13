@@ -50,3 +50,14 @@
   font-weight: 700;
   margin-bottom: 10px;
 }
+
+.sidebar-new {
+  font-size: 13px;
+  color: $color-neutral-300;
+  margin-left: 7px;
+
+  &:hover {
+    color: $color-neutral-500;
+    text-decoration: none;
+  }
+}
