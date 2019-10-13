@@ -1,5 +1,3 @@
-image: ubuntu:18.04
-
 before_script:
   - apt-get update && apt-get -y install make curl gnupg2
 
@@ -9,6 +7,7 @@ stages:
 
 web-frontend-eslint:
   stage: lint
+  image: node:10
   script:
     - cd web-frontend
     - make install-dependencies
@@ -16,6 +15,7 @@ web-frontend-eslint:
 
 web-frontend-stylelint:
   stage: lint
+  image: node:10
   script:
     - cd web-frontend
     - make install-dependencies
@@ -23,6 +23,7 @@ web-frontend-stylelint:
 
 web-frontend-test:
   stage: test
+  image: node:10
   script:
     - cd web-frontend
     - make install-dependencies

@@ -1,18 +1,6 @@
 version: "3"
 
 services:
-  baserow:
-    container_name: baserow
-    build: .
-    volumes:
-      - .:/baserow
-    ports:
-      - 3000:3000
-      - 8000:8000
-      - 8080:8080
-    depends_on:
-      - db
-
   db:
     image: postgres:11.3
     environment:
@@ -21,6 +9,35 @@ services:
       - POSTGRES_DB=baserow
     ports:
       - 5432:5432
+
+  backend:
+    container_name: backend
+    build: ./backend/.
+    volumes:
+      - ./backend:/backend
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+
+  web-frontend:
+    container_name: web-frontend
+    build: ./web-frontend/.
+    volumes:
+      - ./web-frontend:/web-frontend
+    ports:
+      - 3000:3000
+    depends_on:
+      - backend
+
+  old-web-frontend:
+    container_name: old-web-frontend
+    build: ./old-web-frontend/.
+    volumes:
+      - ./old-web-frontend:/old-web-frontend
+      - ./web-frontend:/web-frontend
+    ports:
+      - 8080:8080
 
 networks:
   default:

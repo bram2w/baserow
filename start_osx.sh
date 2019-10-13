@@ -20,17 +20,17 @@ new_tab() {
 docker-compose up -d
 
 new_tab "Backend" \
-        "docker exec -it baserow bash" \
-        "cd backend; python src/baserow/manage.py runserver 0.0.0.0:8000"
+        "docker exec -it backend bash" \
+        "python src/baserow/manage.py runserver 0.0.0.0:8000"
 
 new_tab "Web frontend" \
-        "docker exec -it baserow bash" \
-        "cd web-frontend; yarn run dev"
+        "docker exec -it web-frontend bash" \
+        "yarn run dev"
 
 new_tab "Web frontend eslint" \
-        "docker exec -it baserow bash" \
-        "cd web-frontend; yarn run eslint --fix"
+        "docker exec -it web-frontend bash" \
+        "yarn run eslint --fix"
 
 new_tab "Old web frontend" \
-        "docker exec -it baserow bash" \
-        "cd old-web-frontend; yarn run dev"
+        "docker exec -it old-web-frontend bash" \
+        "yarn run dev"
