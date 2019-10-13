@@ -10,7 +10,7 @@ SECRET_KEY = '0s0@+(p7&qip7spd%l1$sp%ne*e(2hk1jv!6&mq^d+&40m+24j'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', 'backend']
 
 
 # Application definition
@@ -128,6 +128,7 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',
+    'http://backend:3000'
 )
 
 JWT_AUTH = {
