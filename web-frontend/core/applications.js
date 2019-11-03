@@ -72,9 +72,6 @@ export class Application {
     if (this.name === null) {
       throw new Error('The name of an application must be set.')
     }
-    if (this.routeName === null) {
-      throw new Error('The route name of an application must be set.')
-    }
   }
 
   /**
@@ -88,5 +85,15 @@ export class Application {
       routeName: this.routeName,
       hasSelectedSidebarComponent: this.getSelectedSidebarComponent() !== null
     }
+  }
+
+  /**
+   * Every time a fresh application object is fetched from the backend, it will
+   * be populated, this is the moment to update some values. Because each
+   * application can have unique properties, they might need to be populated.
+   * This method can be overwritten in order the populate the correct values.
+   */
+  populate(application) {
+    return application
   }
 }

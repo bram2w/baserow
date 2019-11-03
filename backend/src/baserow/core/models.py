@@ -39,7 +39,8 @@ class GroupUser(OrderableMixin, models.Model):
 
     @classmethod
     def get_last_order(cls, user):
-        return cls.get_highest_order_of_queryset(cls.objects.filter(user=user)) + 1
+        queryset = cls.objects.filter(user=user)
+        return cls.get_highest_order_of_queryset(queryset) + 1
 
 
 class Application(OrderableMixin, models.Model):
@@ -88,5 +89,5 @@ class Application(OrderableMixin, models.Model):
 
     @classmethod
     def get_last_order(cls, group):
-        return cls.get_highest_order_of_queryset(
-            Application.objects.filter(group=group)) + 1
+        queryset = Application.objects.filter(group=group)
+        return cls.get_highest_order_of_queryset(queryset) + 1

@@ -27,7 +27,13 @@ class Application(object):
     """
 
     type = None
+    """A unique string that identifies the application."""
+
     instance_model = None
+    """The model instance that is created when adding an application."""
+
+    instance_serializer = None
+    """This serializer that is used to serialize the instance model."""
 
     def __init__(self):
         if not self.type:
@@ -92,7 +98,8 @@ class ApplicationRegistry(object):
         return self.registry[type]
 
     def get_by_model(self, instance):
-        """Returns the application instance of a model or model instance.
+        """
+        Returns the application instance of a model or model instance.
 
         :param instance: The modal that must be the applications model_instance.
         :type instance: Model or an instance of model.

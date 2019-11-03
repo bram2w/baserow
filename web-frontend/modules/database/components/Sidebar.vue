@@ -1,38 +1,36 @@
 <template>
   <div>
     <ul class="tree-subs">
-      <li class="tree-sub active">
-        <a href="#" class="tree-sub-link">@TODO</a>
-        <a
-          class="tree-options"
-          @click="
-            $refs.context.toggle($event.currentTarget, 'bottom', 'right', 0)
-          "
-        >
-          <i class="fas fa-ellipsis-v"></i>
-        </a>
-        <Context ref="context">
-          <div class="context-menu-title">@TODO</div>
-          <ul class="context-menu">
-            <li>
-              <a>
-                <i class="context-menu-icon fas fa-fw fa-pen"></i>
-                Rename
-              </a>
-            </li>
-            <li>
-              <a>
-                <i class="context-menu-icon fas fa-fw fa-trash"></i>
-                Delete
-              </a>
-            </li>
-          </ul>
-        </Context>
-      </li>
+      <SidebarItem
+        v-for="table in application.tables"
+        :key="table.id"
+        :database="application"
+        :table="table"
+      ></SidebarItem>
     </ul>
-    <a href="#" class="tree-sub-add">
+    <a class="tree-sub-add" @click="$refs.createTableModal.show()">
       <i class="fas fa-plus"></i>
       Create table
     </a>
+    <CreateTableModal
+      ref="createTableModal"
+      :application="application"
+    ></CreateTableModal>
   </div>
 </template>
+
+<script>
+import SidebarItem from '@/modules/database/components/table/SidebarItem'
+import CreateTableModal from '@/modules/database/components/table/CreateTableModal'
+
+export default {
+  name: 'Sidebar',
+  components: { SidebarItem, CreateTableModal },
+  props: {
+    application: {
+      type: Object,
+      required: true
+    }
+  }
+}
+</script>

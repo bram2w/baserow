@@ -10,7 +10,7 @@ function populateApplication(application, getters) {
     loading: false,
     selected: false
   }
-  return application
+  return type.populate(application)
 }
 
 export const state = () => ({
@@ -143,6 +143,8 @@ export const actions = {
           "You're unable to create a new application for the selected " +
             "group. This could be because you're not part of the group."
         )
+
+        throw error
       })
   },
   /**
@@ -158,10 +160,12 @@ export const actions = {
           dispatch,
           error,
           'ERROR_USER_NOT_IN_GROUP',
-          'Rename not allowed',
-          "You're not allowed to rename the application because you're " +
+          'Change not allowed',
+          "You're not allowed to change the application because you're " +
             'not part of the group where the application is in.'
         )
+
+        throw error
       })
   },
   /**
@@ -181,6 +185,8 @@ export const actions = {
           "You're not allowed to rename the application because you're" +
             ' not part of the group where the application is in.'
         )
+
+        throw error
       })
   },
   /**
@@ -188,6 +194,7 @@ export const actions = {
    */
   select({ commit }, application) {
     commit('SET_SELECTED', application)
+    return application
   },
   /**
    * Select an application by a given application id.
@@ -213,17 +220,17 @@ export const actions = {
    * to date. In short it will make sure that the depending state of the given
    * application will be there.
    */
-  preSelect({ dispatch, getters, rootGetters }, id) {
+  preSelect({ dispatch, getters, rootGetters, state }, id) {
     // First we will check if the application is already in the items.
     const application = getters.get(id)
 
     // If the application is already selected we don't have to do anything.
     if (application !== undefined && application._.selected) {
-      return
+      return application
     }
 
     // This function will select a group by its id which will then automatically
-    // fetch the applications related to that group. When done it will select
+    // fetches the applications related to that group. When done it will select
     // the provided application id.
     const selectGroupAndApplication = (groupId, applicationId) => {
       return dispatch('group/selectById', groupId, {
@@ -237,19 +244,20 @@ export const actions = {
       // If the application is already in the selected groups, which means that
       // the groups and applications are already loaded, we can just select that
       // application.
-      dispatch('select', application)
+      return dispatch('select', application)
     } else {
       // The application is not in the selected group so we need to figure out
       // in which he is by fetching the application.
-      return ApplicationService.get(id).then(data => {
+      return ApplicationService.get(id).then(response => {
         if (!rootGetters['group/isLoaded']) {
           // If the groups are not already loaded we need to load them first.
           return dispatch('group/fetchAll', {}, { root: true }).then(() => {
-            return selectGroupAndApplication(data.data.group.id, id)
+            return selectGroupAndApplication(response.data.group.id, id)
           })
         } else {
-          // The groups are already loaded so we
-          return selectGroupAndApplication(data.data.group.id, id)
+          // The groups are already loaded so we need to select the group and
+          // application.
+          return selectGroupAndApplication(response.data.group.id, id)
         }
       })
     }

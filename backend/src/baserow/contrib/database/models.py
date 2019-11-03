@@ -1,12 +1,11 @@
-from django.db import models
-
 from baserow.core.models import Application
+
+from .table.models import Table
+
+__all__ = [
+    'Table'
+]
 
 
 class Database(Application):
     pass
-
-
-class Table(models.Model):
-    group = models.ForeignKey(Database, on_delete=models.CASCADE)
-    order = models.PositiveIntegerField()

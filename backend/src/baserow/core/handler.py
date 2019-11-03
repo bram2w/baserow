@@ -106,11 +106,10 @@ class CoreHandler:
         application = registry.get(type)
         model = application.instance_model
         application_values = extract_allowed(kwargs, ['name'])
+        last_order = model.get_last_order(group)
 
-        if 'order' not in application_values:
-            application_values['order'] = model.get_last_order(group)
-
-        instance = model.objects.create(group=group, **application_values)
+        instance = model.objects.create(group=group, order=last_order,
+                                        **application_values)
 
         return instance
 
