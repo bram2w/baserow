@@ -122,10 +122,12 @@ export const actions = {
         notify404(
           dispatch,
           error,
-          'Unable to rename',
-          "You're unable to rename the group. This could be because " +
+          'Unable to update',
+          "You're unable to update the group. This could be because " +
             "you're not part of the group."
         )
+
+        throw error
       })
   },
   /**
@@ -148,6 +150,8 @@ export const actions = {
           "You're unable to delete the group. This could be because " +
             "you're not part of the group."
         )
+
+        throw error
       })
   },
   /**

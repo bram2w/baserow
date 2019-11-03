@@ -9,6 +9,7 @@ export default function DatabaseModule(options) {
     filename: 'plugin.js'
   })
 
+  // Add all the related routes.
   this.extendRoutes(routes => {
     routes.push(...databaseRoutes)
   })

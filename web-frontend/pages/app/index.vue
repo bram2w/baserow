@@ -10,7 +10,9 @@
       <br /><br />
       {{ groupApplications }}
       <br /><br />
-      <nuxt-link :to="{ name: 'application-database', params: { id: 1 } }">
+      <nuxt-link
+        :to="{ name: 'database-table', params: { id: 1, tableId: 1 } }"
+      >
         <i class="fas fa-arrow-left"></i>
         App
       </nuxt-link>

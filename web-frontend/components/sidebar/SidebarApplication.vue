@@ -95,6 +95,15 @@ export default {
         })
     },
     selectApplication(application) {
+      // If there is no route associated with the application we just change the
+      // selected state.
+      if (application._.type.routeName === null) {
+        this.$store.dispatch('application/select', application)
+        return
+      }
+
+      // If we do have a route, this the related component with that route has to do
+      // the state change.
       this.setLoading(application, true)
 
       this.$nuxt.$router.push(

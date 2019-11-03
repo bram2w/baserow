@@ -40,7 +40,7 @@ def map_exceptions(exceptions):
             except tuple(exceptions.keys()) as e:
                 value = exceptions.get(e.__class__)
                 status_code = status.HTTP_400_BAD_REQUEST
-                detail = str(e)
+                detail = ''
 
                 if isinstance(value, str):
                     error = value
