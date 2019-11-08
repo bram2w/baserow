@@ -1,6 +1,6 @@
 import pytest
 
-from baserow.core.exceptions import UserNotIngroupError
+from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 
@@ -21,7 +21,7 @@ def test_create_database_table(data_fixture):
     assert table.order == 1
     assert table.database == database
 
-    with pytest.raises(UserNotIngroupError):
+    with pytest.raises(UserNotInGroupError):
         handler.create_table(user=user_2, database=database, name='')
 
 
@@ -35,7 +35,7 @@ def test_update_database_table(data_fixture):
 
     handler = TableHandler()
 
-    with pytest.raises(UserNotIngroupError):
+    with pytest.raises(UserNotInGroupError):
         handler.update_table(user=user_2, table=table, name='Test 1')
 
     handler.update_table(user=user, table=table, name='Test 1')
@@ -54,7 +54,7 @@ def test_delete_database_application(data_fixture):
 
     handler = TableHandler()
 
-    with pytest.raises(UserNotIngroupError):
+    with pytest.raises(UserNotInGroupError):
         handler.delete_table(user=user_2, table=table)
 
     assert Table.objects.all().count() == 1

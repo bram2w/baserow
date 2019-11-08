@@ -57,6 +57,8 @@
 </template>
 
 <script>
+import { notifyIf } from '@/utils/error'
+
 export default {
   name: 'SidebarApplication',
   props: {
@@ -86,9 +88,9 @@ export default {
             name: event.value
           }
         })
-        .catch(() => {
-          // If something is going wrong we will reset the original value
+        .catch(error => {
           this.$refs.rename.set(event.oldValue)
+          notifyIf(error, 'application')
         })
         .then(() => {
           this.setLoading(application, false)
@@ -98,7 +100,9 @@ export default {
       // If there is no route associated with the application we just change the
       // selected state.
       if (application._.type.routeName === null) {
-        this.$store.dispatch('application/select', application)
+        this.$store.dispatch('application/select', application).catch(error => {
+          notifyIf(error, 'group')
+        })
         return
       }
 
@@ -125,9 +129,14 @@ export default {
       this.$refs.context.hide()
       this.setLoading(application, true)
 
-      this.$store.dispatch('application/delete', application).then(() => {
-        this.setLoading(application, false)
-      })
+      this.$store
+        .dispatch('application/delete', application)
+        .catch(error => {
+          notifyIf(error, 'application')
+        })
+        .then(() => {
+          this.setLoading(application, false)
+        })
     },
     getSelectedApplicationComponent(application) {
       const type = this.$store.getters['application/getApplicationByType'](

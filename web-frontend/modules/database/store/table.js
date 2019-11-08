@@ -1,6 +1,5 @@
 import TableService from '@/modules/database/services/table'
 import { DatabaseApplication } from '@/modules/database/application'
-import { notify404, notifyError } from '@/utils/error'
 
 export function populateTable(table) {
   table._ = {
@@ -51,59 +50,22 @@ export const actions = {
       )
     }
 
-    return TableService.create(database.id, values)
-      .then(({ data }) => {
-        commit('ADD_ITEM', { database, table: data })
-      })
-      .catch(error => {
-        notify404(
-          dispatch,
-          error,
-          'Could not create table',
-          "You're unable to create a new table for the selected database. " +
-            ". This is because the database doesn't exist."
-        )
-
-        notifyError(
-          dispatch,
-          error,
-          'ERROR_USER_NOT_IN_GROUP',
-          'Could not create table',
-          "You're unable to create a new table for the selected database. " +
-            ". This is because you're not part of the group."
-        )
-
-        throw error
-      })
+    return TableService.create(database.id, values).then(({ data }) => {
+      commit('ADD_ITEM', { database, table: data })
+    })
   },
   /**
    * Update an existing table of the provided database with the provided tables.
    */
   update({ commit, dispatch }, { database, table, values }) {
-    return TableService.update(table.id, values)
-      .then(({ data }) => {
-        commit('UPDATE_ITEM', { database, table, values: data })
-      })
-      .catch(error => {
-        notify404(
-          dispatch,
-          error,
-          'Could not update table',
-          "You're unable to update the table. This is because the " +
-            "table doesn't exist."
-        )
-
-        notifyError(
-          dispatch,
-          error,
-          'ERROR_USER_NOT_IN_GROUP',
-          'Could not update table',
-          "You're unable to update the table. This is because you're " +
-            'not part of the group.'
-        )
-
-        throw error
-      })
+    return TableService.update(table.id, values).then(({ data }) => {
+      // Create a dict with only the values we want to update.
+      const update = Object.keys(values).reduce((result, key) => {
+        result[key] = data[key]
+        return result
+      }, {})
+      commit('UPDATE_ITEM', { database, table, values: update })
+    })
   },
   /**
    * Deletes an existing application.
@@ -111,28 +73,26 @@ export const actions = {
   delete({ commit, dispatch }, { database, table }) {
     return TableService.delete(table.id)
       .then(() => {
-        commit('DELETE_ITEM', { database, id: table.id })
+        return dispatch('forceDelete', { database, table })
       })
       .catch(error => {
-        notify404(
-          dispatch,
-          error,
-          'Could not delete table',
-          "You're unable to delete the table for the selected database. " +
-            ". This is because the database doesn't exist."
-        )
-
-        notifyError(
-          dispatch,
-          error,
-          'ERROR_USER_NOT_IN_GROUP',
-          'Unable to delete',
-          "You're not allowed to delete the table because you're" +
-            ' not part of the group where the application is in.'
-        )
-
-        throw error
+        if (error.response && error.response.status === 404) {
+          return dispatch('forceDelete', { database, table })
+        } else {
+          throw error
+        }
       })
+  },
+  /**
+   *
+   */
+  forceDelete({ commit, dispatch }, { database, table }) {
+    if (table._.selected) {
+      // Redirect back to the dashboard because the table doesn't exist anymore.
+      this.$router.push({ name: 'app' })
+    }
+
+    commit('DELETE_ITEM', { database, id: table.id })
   },
   /**
    * Select a table of a database.

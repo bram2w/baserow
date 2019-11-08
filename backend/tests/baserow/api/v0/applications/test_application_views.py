@@ -40,15 +40,22 @@ def test_list_applications(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+    response = api_client.get(
+        reverse('api_v0:applications:list', kwargs={'group_id': 999999}), **{
+            'HTTP_AUTHORIZATION': f'JWT {token}'
+        }
+    )
     assert response.status_code == 404
 
 
 @pytest.mark.django_db
 def test_create_application(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    user_2, token_2 = data_fixture.create_user_and_token()
     group = data_fixture.create_group(user=user)
-    group_2 = data_fixture.create_group(user=user_2)
+    group_2 = data_fixture.create_group()
 
     response = api_client.post(
         reverse('api_v0:applications:list', kwargs={'group_id': group.id}),
@@ -65,15 +72,21 @@ def test_create_application(api_client, data_fixture):
     assert response_json['detail']['type'][0]['code'] == 'invalid_choice'
 
     response = api_client.post(
-        reverse('api_v0:applications:list', kwargs={'group_id': group_2.id}),
-        {
-            'name': 'Test 1',
-            'type': 'database'
-        },
+        reverse('api_v0:applications:list', kwargs={'group_id': 99999}),
+        {'name': 'Test 1', 'type': 'database'},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == 404
+
+    response = api_client.post(
+        reverse('api_v0:applications:list', kwargs={'group_id': group_2.id}),
+        {'name': 'Test 1', 'type': 'database'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.post(
         reverse('api_v0:applications:list', kwargs={'group_id': group.id}),
@@ -110,7 +123,8 @@ def test_get_application(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:applications:item',
                   kwargs={'application_id': 99999})

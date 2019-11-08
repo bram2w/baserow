@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from baserow.api.v0.decorators import validate_body, map_exceptions
 from baserow.api.v0.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.core.exceptions import UserNotIngroupError
+from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
@@ -27,13 +27,12 @@ class TablesView(APIView):
         )
 
         if not database.group.has_user(user):
-            raise UserNotIngroupError(f'User {user} doesn\'t belong to group '
-                                      f'{database.group}.')
+            raise UserNotInGroupError(user, database.group)
 
         return database
 
     @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, database_id):
         """Lists all the tables of a database."""
@@ -45,7 +44,7 @@ class TablesView(APIView):
 
     @transaction.atomic
     @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     @validate_body(TableCreateUpdateSerializer)
     def post(self, request, data, database_id):
@@ -70,13 +69,12 @@ class TableView(APIView):
         )
 
         if not table.database.group.has_user(user):
-            raise UserNotIngroupError(f'User {user} doesn\'t belong to group '
-                                      f'{table.database.group}.')
+            raise UserNotInGroupError(user, table.database.group)
 
         return table
 
     @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, table_id):
         """Responds with a serialized table instance."""
@@ -87,7 +85,7 @@ class TableView(APIView):
 
     @transaction.atomic
     @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     @validate_body(TableCreateUpdateSerializer)
     def patch(self, request, data, table_id):
@@ -103,7 +101,7 @@ class TableView(APIView):
 
     @transaction.atomic
     @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, table_id):
         """Deletes an existing table."""

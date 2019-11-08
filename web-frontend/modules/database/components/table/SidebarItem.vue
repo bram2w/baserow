@@ -44,6 +44,8 @@
 </template>
 
 <script>
+import { notifyIf } from '@/utils/error'
+
 export default {
   name: 'SidebarItem',
   props: {
@@ -67,9 +69,14 @@ export default {
       this.$refs.context.hide()
       this.setLoading(database, true)
 
-      this.$store.dispatch('table/delete', { database, table }).then(() => {
-        this.setLoading(database, false)
-      })
+      this.$store
+        .dispatch('table/delete', { database, table })
+        .catch(error => {
+          notifyIf(error, 'table')
+        })
+        .then(() => {
+          this.setLoading(database, false)
+        })
     },
     enableRename() {
       this.$refs.context.hide()
@@ -86,9 +93,9 @@ export default {
             name: event.value
           }
         })
-        .catch(() => {
-          // If something is going wrong we will reset the original value.
+        .catch(error => {
           this.$refs.rename.set(event.oldValue)
+          notifyIf(error, 'table')
         })
         .then(() => {
           this.setLoading(database, false)
