@@ -7,9 +7,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from baserow.api.v0.decorators import validate_body, map_exceptions
 from baserow.api.v0.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.core.models import GroupUser, Application
+from baserow.core.models import Group, Application
 from baserow.core.handler import CoreHandler
-from baserow.core.exceptions import UserNotIngroupError
+from baserow.core.exceptions import UserNotInGroupError
 
 from .serializers import (
     ApplicationCreateSerializer, ApplicationUpdateSerializer, get_application_serializer
@@ -22,22 +22,28 @@ class ApplicationsView(APIView):
 
     @staticmethod
     def get_group(request, group_id):
-        return get_object_or_404(
-            GroupUser.objects.select_related('group'),
-            group_id=group_id,
-            user=request.user
+        group = get_object_or_404(
+            Group,
+            id=group_id
         )
 
+        if not group.has_user(request.user):
+            raise UserNotInGroupError(request.user, group)
+
+        return group
+
+    @map_exceptions({
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+    })
     def get(self, request, group_id):
         """
         Responds with a list of serialized applications that belong to the group if the
         user has access to that group.
         """
 
-        group_user = self.get_group(request, group_id)
-        applications = Application.objects.filter(
-            group=group_user.group
-        ).select_related('content_type')
+        group = self.get_group(request, group_id)
+        applications = Application.objects.filter(group=group) \
+            .select_related('content_type')
         data = [
             get_application_serializer(application).data
             for application in applications
@@ -46,12 +52,15 @@ class ApplicationsView(APIView):
 
     @transaction.atomic
     @validate_body(ApplicationCreateSerializer)
+    @map_exceptions({
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+    })
     def post(self, request, data, group_id):
         """Creates a new application for a user."""
 
-        group_user = self.get_group(request, group_id)
+        group = self.get_group(request, group_id)
         application = self.core_handler.create_application(
-            request.user, group_user.group, data['type'], name=data['name'])
+            request.user, group, data['type'], name=data['name'])
 
         return Response(get_application_serializer(application).data)
 
@@ -60,19 +69,26 @@ class ApplicationView(APIView):
     permission_classes = (IsAuthenticated,)
     core_handler = CoreHandler()
 
+    @map_exceptions({
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+    })
     def get(self, request, application_id):
         """Selects a single application and responds with a serialized version."""
+
         application = get_object_or_404(
             Application.objects.select_related('group'),
-            pk=application_id, group__users__in=[request.user]
+            pk=application_id
         )
+
+        if not application.group.has_user(request.user):
+            raise UserNotInGroupError(request.user, application.group)
 
         return Response(get_application_serializer(application).data)
 
     @transaction.atomic
     @validate_body(ApplicationUpdateSerializer)
     @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def patch(self, request, data, application_id):
         """Updates the application if the user belongs to the group."""
@@ -88,7 +104,7 @@ class ApplicationView(APIView):
 
     @transaction.atomic
     @map_exceptions({
-        UserNotIngroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, application_id):
         """Deletes an existing application if the user belongs to the group."""

@@ -2,7 +2,7 @@ import pytest
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser, Application
-from baserow.core.exceptions import UserNotIngroupError, ApplicationTypeDoesNotExist
+from baserow.core.exceptions import UserNotInGroupError, ApplicationTypeDoesNotExist
 from baserow.contrib.database.models import Database
 
 
@@ -40,7 +40,7 @@ def test_update_group(data_fixture):
 
     assert group.name == 'New name'
 
-    with pytest.raises(UserNotIngroupError):
+    with pytest.raises(UserNotInGroupError):
         handler.update_group(user=user_2, group=group, name='New name')
 
     with pytest.raises(ValueError):
@@ -62,7 +62,7 @@ def test_delete_group(data_fixture):
     assert Group.objects.all().count() == 2
     assert GroupUser.objects.all().count() == 2
 
-    with pytest.raises(UserNotIngroupError):
+    with pytest.raises(UserNotInGroupError):
         handler.delete_group(user, group_3)
 
     handler.delete_group(user_2, group_3)
@@ -119,7 +119,7 @@ def test_create_database_application(data_fixture):
     assert database.order == 1
     assert database.group == group
 
-    with pytest.raises(UserNotIngroupError):
+    with pytest.raises(UserNotInGroupError):
         handler.create_application(user=user_2, group=group, type='database', name='')
 
     with pytest.raises(ApplicationTypeDoesNotExist):
@@ -135,7 +135,7 @@ def test_update_database_application(data_fixture):
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotIngroupError):
+    with pytest.raises(UserNotInGroupError):
         handler.update_application(user=user_2, application=database, name='Test 1')
 
     with pytest.raises(ValueError):
@@ -156,7 +156,7 @@ def test_delete_database_application(data_fixture):
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotIngroupError):
+    with pytest.raises(UserNotInGroupError):
         handler.delete_application(user=user_2, application=database)
 
     with pytest.raises(ValueError):

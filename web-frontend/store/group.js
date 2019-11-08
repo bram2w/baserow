@@ -1,5 +1,4 @@
 import GroupService from '@/services/group'
-import { notify404 } from '@/utils/error'
 import { setGroupCookie, unsetGroupCookie } from '@/utils/group'
 
 function populateGroup(group) {
@@ -38,8 +37,8 @@ export const mutations = {
     item = populateGroup(item)
     state.items.push(item)
   },
-  UPDATE_ITEM(state, values) {
-    const index = state.items.findIndex(item => item.id === values.id)
+  UPDATE_ITEM(state, { id, values }) {
+    const index = state.items.findIndex(item => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
   DELETE_ITEM(state, id) {
@@ -114,21 +113,14 @@ export const actions = {
    * Updates the values of the group with the provided id.
    */
   update({ commit, dispatch }, { group, values }) {
-    return GroupService.update(group.id, values)
-      .then(({ data }) => {
-        commit('UPDATE_ITEM', data)
-      })
-      .catch(error => {
-        notify404(
-          dispatch,
-          error,
-          'Unable to update',
-          "You're unable to update the group. This could be because " +
-            "you're not part of the group."
-        )
-
-        throw error
-      })
+    return GroupService.update(group.id, values).then(({ data }) => {
+      // Create a dict with only the values we want to update.
+      const update = Object.keys(values).reduce((result, key) => {
+        result[key] = data[key]
+        return result
+      }, {})
+      commit('UPDATE_ITEM', { id: group.id, values: update })
+    })
   },
   /**
    * Deletes an existing group with the provided id.
@@ -136,31 +128,36 @@ export const actions = {
   delete({ commit, dispatch }, group) {
     return GroupService.delete(group.id)
       .then(() => {
-        if (group._.selected) {
-          dispatch('unselect', group)
-        }
-
-        commit('DELETE_ITEM', group.id)
+        dispatch('forceDelete', group)
       })
       .catch(error => {
-        notify404(
-          dispatch,
-          error,
-          'Unable to delete',
-          "You're unable to delete the group. This could be because " +
-            "you're not part of the group."
-        )
-
-        throw error
+        // If the group to delete wasn't found we can just delete it from the
+        // state.
+        if (error.response && error.response.status === 404) {
+          dispatch('forceDelete', group)
+        } else {
+          throw error
+        }
       })
+  },
+  /**
+   * Forcibly remove the group from the items  without calling the server.
+   */
+  forceDelete({ commit, dispatch }, group) {
+    if (group._.selected) {
+      dispatch('unselect', group)
+    }
+
+    commit('DELETE_ITEM', group.id)
   },
   /**
    * Select a group and fetch all the applications related to that group.
    */
   select({ commit, dispatch }, group) {
-    commit('SET_SELECTED', group)
-    setGroupCookie(group.id, this.app.$cookies)
-    return dispatch('application/fetchAll', group, { root: true })
+    return dispatch('application/fetchAll', group, { root: true }).then(() => {
+      commit('SET_SELECTED', group)
+      setGroupCookie(group.id, this.app.$cookies)
+    })
   },
   /**
    * Select a group by a given group id.

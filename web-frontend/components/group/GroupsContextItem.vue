@@ -41,6 +41,8 @@
 </template>
 
 <script>
+import { notifyIf } from '@/utils/error'
+
 export default {
   name: 'GroupsContextItem',
   props: {
@@ -67,9 +69,9 @@ export default {
             name: event.value
           }
         })
-        .catch(() => {
-          // If something is going wrong we will reset the original value
+        .catch(error => {
           this.$refs.rename.set(event.oldValue)
+          notifyIf(error, 'group')
         })
         .then(() => {
           this.setLoading(group, false)
@@ -78,18 +80,30 @@ export default {
     selectGroup(group) {
       this.setLoading(group, true)
 
-      this.$store.dispatch('group/select', group).then(() => {
-        this.setLoading(group, false)
-        this.$emit('selected')
-      })
+      this.$store
+        .dispatch('group/select', group)
+        .then(() => {
+          this.$emit('selected')
+        })
+        .catch(error => {
+          notifyIf(error, 'group')
+        })
+        .then(() => {
+          this.setLoading(group, false)
+        })
     },
     deleteGroup(group) {
       this.$refs.context.hide()
       this.setLoading(group, true)
 
-      this.$store.dispatch('group/delete', group).then(() => {
-        this.setLoading(group, false)
-      })
+      this.$store
+        .dispatch('group/delete', group)
+        .catch(error => {
+          notifyIf(error, 'group')
+        })
+        .then(() => {
+          this.setLoading(group, false)
+        })
     }
   }
 }

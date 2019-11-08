@@ -1,5 +1,5 @@
 from .models import Group, GroupUser, Application
-from .exceptions import UserNotIngroupError
+from .exceptions import UserNotInGroupError
 from .utils import extract_allowed, set_allowed_attrs
 from .applications import registry
 
@@ -38,8 +38,7 @@ class CoreHandler:
             raise ValueError('The group is not an instance of Group.')
 
         if not group.has_user(user):
-            raise UserNotIngroupError(f'The user {user} does not belong to the group '
-                                      f'{group}.')
+            raise UserNotInGroupError(user, group)
 
         group = set_allowed_attrs(kwargs, ['name'], group)
         group.save()
@@ -60,8 +59,7 @@ class CoreHandler:
             raise ValueError('The group is not an instance of Group.')
 
         if not group.has_user(user):
-            raise UserNotIngroupError(f'The user {user} does not belong to the group '
-                                      f'{group}.')
+            raise UserNotInGroupError(user, group)
 
         group.delete()
 
@@ -99,8 +97,7 @@ class CoreHandler:
         """
 
         if not group.has_user(user):
-            raise UserNotIngroupError(f'The user {user} does not belong to the group '
-                                      f'{group}.')
+            raise UserNotInGroupError(user, group)
 
         # Figure out which model is used for the given application type.
         application = registry.get(type)
@@ -131,8 +128,7 @@ class CoreHandler:
             raise ValueError('The application is not an instance of Application')
 
         if not application.group.has_user(user):
-            raise UserNotIngroupError(f'The user {user} does not belong to the group '
-                                      f'{application.group}.')
+            raise UserNotInGroupError(user, application.group)
 
         application = set_allowed_attrs(kwargs, ['name'], application)
         application.save()
@@ -153,7 +149,6 @@ class CoreHandler:
             raise ValueError('The application is not an instance of Application')
 
         if not application.group.has_user(user):
-            raise UserNotIngroupError(f'The user {user} does not belong to the group '
-                                      f'{application.group}.')
+            raise UserNotInGroupError(user, application.group)
 
         application.delete()

@@ -1,4 +1,4 @@
-import { getGroupCookie, unsetGroupCookie } from '@/utils/group'
+import { getGroupCookie } from '@/utils/group'
 
 /**
  * This middleware checks if there is a saved group id in the cookies. If set
@@ -18,16 +18,11 @@ export default function({ store, req, app }) {
     store.getters['auth/isAuthenticated'] &&
     !store.getters['group/hasSelected']
   ) {
-    return store
-      .dispatch('group/fetchAll')
-      .catch(() => {
-        unsetGroupCookie(app.$cookies)
-      })
-      .then(() => {
-        const group = store.getters['group/get'](groupId)
-        if (group) {
-          return store.dispatch('group/select', group)
-        }
-      })
+    return store.dispatch('group/fetchAll').then(() => {
+      const group = store.getters['group/get'](groupId)
+      if (group) {
+        return store.dispatch('group/select', group)
+      }
+    })
   }
 }

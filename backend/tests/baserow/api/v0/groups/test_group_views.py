@@ -49,6 +49,7 @@ def test_create_group(api_client, data_fixture):
 def test_update_group(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     group = data_fixture.create_group(user=user, name='Old name')
+    group_2 = data_fixture.create_group()
 
     url = reverse('api_v0:groups:item', kwargs={'group_id': 99999})
     response = api_client.patch(
@@ -58,6 +59,16 @@ def test_update_group(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == 404
+
+    url = reverse('api_v0:groups:item', kwargs={'group_id': group_2.id})
+    response = api_client.patch(
+        url,
+        {'name': 'New name'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:groups:item', kwargs={'group_id': group.id})
     response = api_client.patch(
@@ -80,6 +91,7 @@ def test_update_group(api_client, data_fixture):
 def test_delete_group(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     group = data_fixture.create_group(user=user, name='Old name')
+    group_2 = data_fixture.create_group()
 
     url = reverse('api_v0:groups:item', kwargs={'group_id': 99999})
     response = api_client.delete(
@@ -88,13 +100,21 @@ def test_delete_group(api_client, data_fixture):
     )
     assert response.status_code == 404
 
+    url = reverse('api_v0:groups:item', kwargs={'group_id': group_2.id})
+    response = api_client.delete(
+        url,
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
     url = reverse('api_v0:groups:item', kwargs={'group_id': group.id})
     response = api_client.delete(
         url,
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == 204
-    assert Group.objects.all().count() == 0
+    assert Group.objects.all().count() == 1
 
 
 @pytest.mark.django_db

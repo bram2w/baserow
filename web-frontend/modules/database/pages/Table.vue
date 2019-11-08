@@ -13,8 +13,6 @@
 </template>
 
 <script>
-// import { notify404 } from '@/utils/error'
-
 export default {
   layout: 'app',
   props: {

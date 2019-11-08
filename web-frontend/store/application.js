@@ -1,6 +1,5 @@
 import { Application } from '@/core/applications'
 import ApplicationService from '@/services/application'
-import { notify404, notifyError } from '@/utils/error'
 
 function populateApplication(application, getters) {
   const type = getters.getApplicationByType(application.type)
@@ -36,8 +35,8 @@ export const mutations = {
   ADD_ITEM(state, item) {
     state.items.push(item)
   },
-  UPDATE_ITEM(state, values) {
-    const index = state.items.findIndex(item => item.id === values.id)
+  UPDATE_ITEM(state, { id, values }) {
+    const index = state.items.findIndex(item => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
   DELETE_ITEM(state, id) {
@@ -90,20 +89,13 @@ export const actions = {
           populateApplication(data[index], getters)
         })
         commit('SET_ITEMS', data)
+        commit('SET_LOADING', false)
       })
       .catch(error => {
         commit('SET_ITEMS', [])
-
-        notify404(
-          dispatch,
-          error,
-          'Unable to fetch applications',
-          "You're unable to fetch the application of this group. " +
-            "This could be because you're not part of the group."
-        )
-      })
-      .then(() => {
         commit('SET_LOADING', false)
+
+        throw error
       })
   },
   /**
@@ -130,43 +122,28 @@ export const actions = {
     }
 
     values.type = type
-    return ApplicationService.create(rootGetters['group/selectedId'], values)
-      .then(({ data }) => {
-        populateApplication(data, getters)
-        commit('ADD_ITEM', data)
-      })
-      .catch(error => {
-        notify404(
-          dispatch,
-          error,
-          'Could not create application',
-          "You're unable to create a new application for the selected " +
-            "group. This could be because you're not part of the group."
-        )
-
-        throw error
-      })
+    return ApplicationService.create(
+      rootGetters['group/selectedId'],
+      values
+    ).then(({ data }) => {
+      populateApplication(data, getters)
+      commit('ADD_ITEM', data)
+    })
   },
   /**
    * Updates the values of an existing application.
    */
-  update({ commit, dispatch }, { application, values }) {
-    return ApplicationService.update(application.id, values)
-      .then(({ data }) => {
-        commit('UPDATE_ITEM', data)
-      })
-      .catch(error => {
-        notifyError(
-          dispatch,
-          error,
-          'ERROR_USER_NOT_IN_GROUP',
-          'Change not allowed',
-          "You're not allowed to change the application because you're " +
-            'not part of the group where the application is in.'
-        )
-
-        throw error
-      })
+  update({ commit, dispatch, getters }, { application, values }) {
+    return ApplicationService.update(application.id, values).then(
+      ({ data }) => {
+        // Create a dict with only the values we want to update.
+        const update = Object.keys(values).reduce((result, key) => {
+          result[key] = data[key]
+          return result
+        }, {})
+        commit('UPDATE_ITEM', { id: application.id, values: update })
+      }
+    )
   },
   /**
    * Deletes an existing application.
@@ -177,16 +154,11 @@ export const actions = {
         commit('DELETE_ITEM', application.id)
       })
       .catch(error => {
-        notifyError(
-          dispatch,
-          error,
-          'ERROR_USER_NOT_IN_GROUP',
-          'Delete not allowed',
-          "You're not allowed to rename the application because you're" +
-            ' not part of the group where the application is in.'
-        )
-
-        throw error
+        if (error.response && error.response.status === 404) {
+          commit('DELETE_ITEM', application.id)
+        } else {
+          throw error
+        }
       })
   },
   /**
