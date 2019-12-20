@@ -143,7 +143,7 @@ export const actions = {
   /**
    * Forcibly remove the group from the items  without calling the server.
    */
-  forceDelete({ commit, dispatch }, group) {
+  forceDelete({ commit, dispatch, rootGetters }, group) {
     if (group._.selected) {
       dispatch('unselect', group)
     }

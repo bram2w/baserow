@@ -1,8 +1,9 @@
-import { Application } from '@/core/applications'
+import { ApplicationType } from '@/core/applicationTypes'
 import ApplicationService from '@/services/application'
+import { clone } from '@/utils/object'
 
 function populateApplication(application, getters) {
-  const type = getters.getApplicationByType(application.type)
+  const type = getters.getType(application.type)
 
   application._ = {
     type: type.serialize(),
@@ -13,7 +14,7 @@ function populateApplication(application, getters) {
 }
 
 export const state = () => ({
-  applications: {},
+  types: {},
   loading: false,
   items: [],
   selected: {}
@@ -21,7 +22,7 @@ export const state = () => ({
 
 export const mutations = {
   REGISTER(state, application) {
-    state.applications[application.type] = application
+    state.types[application.type] = application
   },
   SET_ITEMS(state, applications) {
     state.items = applications
@@ -55,6 +56,9 @@ export const mutations = {
       item._.selected = false
     })
     state.selected = {}
+  },
+  CLEAR_CHILDREN_SELECTED(state, { type, application }) {
+    type.clearChildrenSelected(application)
   }
 }
 
@@ -63,9 +67,9 @@ export const actions = {
    * Register a new application within the registry. The is commonly used when
    * creating an extension.
    */
-  register({ commit }, application) {
-    if (!(application instanceof Application)) {
-      throw Error('The application must be an instance of Application.')
+  register({ commit, getters }, application) {
+    if (!(application instanceof ApplicationType)) {
+      throw Error('The application must be an instance of ApplicationType.')
     }
 
     commit('REGISTER', application)
@@ -106,6 +110,16 @@ export const actions = {
     commit('SET_ITEMS', [])
   },
   /**
+   * If called all the applications that are in the state will clear their
+   * children active state if they have one.
+   */
+  clearChildrenSelected({ commit, getters }) {
+    Object.values(getters.getAll).forEach(application => {
+      const type = getters.getType(application.type)
+      commit('CLEAR_CHILDREN_SELECTED', { type, application })
+    })
+  },
+  /**
    * Creates a new application with the given type and values for the currently
    * selected group.
    */
@@ -117,14 +131,15 @@ export const actions = {
       )
     }
 
-    if (!getters.applicationTypeExists(type)) {
-      throw new Error(`An application with type "${type}" doesn't exist.`)
+    if (!getters.typeExists(type)) {
+      throw new Error(`An application type with type "${type}" doesn't exist.`)
     }
 
-    values.type = type
+    const data = clone(values)
+    data.type = type
     return ApplicationService.create(
       rootGetters['group/selectedId'],
-      values
+      data
     ).then(({ data }) => {
       populateApplication(data, getters)
       commit('ADD_ITEM', data)
@@ -148,9 +163,11 @@ export const actions = {
   /**
    * Deletes an existing application.
    */
-  delete({ commit, dispatch }, application) {
+  delete({ commit, dispatch, getters }, application) {
     return ApplicationService.delete(application.id)
       .then(() => {
+        const type = getters.getType(application.type)
+        type.delete(application, this)
         commit('DELETE_ITEM', application.id)
       })
       .catch(error => {
@@ -243,13 +260,16 @@ export const getters = {
   get: state => id => {
     return state.items.find(item => item.id === id)
   },
-  applicationTypeExists: state => type => {
-    return state.applications.hasOwnProperty(type)
+  getAll(state) {
+    return state.items
   },
-  getApplicationByType: state => type => {
-    if (!state.applications.hasOwnProperty(type)) {
-      throw new Error(`An application with type "${type}" doesn't exist.`)
+  typeExists: state => type => {
+    return state.types.hasOwnProperty(type)
+  },
+  getType: state => type => {
+    if (!state.types.hasOwnProperty(type)) {
+      throw new Error(`An application type with type "${type}" doesn't exist.`)
     }
-    return state.applications[type]
+    return state.types[type]
   }
 }

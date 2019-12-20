@@ -108,7 +108,7 @@ def test_create_database_application(data_fixture):
     group = data_fixture.create_group(user=user)
 
     handler = CoreHandler()
-    handler.create_application(user=user, group=group, type='database',
+    handler.create_application(user=user, group=group, type_name='database',
                                name='Test database')
 
     assert Application.objects.all().count() == 1
@@ -120,10 +120,12 @@ def test_create_database_application(data_fixture):
     assert database.group == group
 
     with pytest.raises(UserNotInGroupError):
-        handler.create_application(user=user_2, group=group, type='database', name='')
+        handler.create_application(user=user_2, group=group, type_name='database',
+                                   name='')
 
     with pytest.raises(ApplicationTypeDoesNotExist):
-        handler.create_application(user=user, group=group, type='UNKNOWN', name='')
+        handler.create_application(user=user, group=group, type_name='UNKNOWN',
+                                   name='')
 
 
 @pytest.mark.django_db

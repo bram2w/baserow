@@ -139,9 +139,7 @@ export default {
         })
     },
     getSelectedApplicationComponent(application) {
-      const type = this.$store.getters['application/getApplicationByType'](
-        application.type
-      )
+      const type = this.$store.getters['application/getType'](application.type)
       return type.getSelectedSidebarComponent()
     }
   }

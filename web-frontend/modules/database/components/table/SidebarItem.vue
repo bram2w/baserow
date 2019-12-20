@@ -4,7 +4,7 @@
       :to="{
         name: 'database-table',
         params: {
-          id: database.id,
+          databaseId: database.id,
           tableId: table.id
         }
       }"

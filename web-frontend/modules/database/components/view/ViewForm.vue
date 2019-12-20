@@ -29,7 +29,7 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@/mixins/form'
 
 export default {
-  name: 'ApplicationForm',
+  name: 'ViewForm',
   mixins: [form],
   data() {
     return {

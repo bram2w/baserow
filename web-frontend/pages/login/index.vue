@@ -3,14 +3,12 @@
     <h1 class="box-title">
       <img src="@/static/img/logo.svg" alt="" />
     </h1>
-    <div v-if="invalid" class="alert alert-error alert-has-icon">
+    <div v-if="error" class="alert alert-error alert-has-icon">
       <div class="alert-icon">
         <i class="fas fa-exclamation"></i>
       </div>
-      <div class="alert-title">Incorrect credentials</div>
-      <p class="alert-content">
-        The provided e-mail address or password is incorrect.
-      </p>
+      <div class="alert-title">{{ errorTitle }}</div>
+      <p class="alert-content">{{ errorMessage }}</p>
     </div>
     <form @submit.prevent="login">
       <div class="control">
@@ -79,11 +77,13 @@ export default {
   data() {
     return {
       loading: false,
-      invalid: false,
       credentials: {
         email: '',
         password: ''
-      }
+      },
+      error: false,
+      errorTitle: '',
+      errorMessage: ''
     }
   },
   validations: {
@@ -106,16 +106,29 @@ export default {
             this.$nuxt.$router.push({ name: 'app' })
           })
           .catch(error => {
-            // If the status code is 400 the provided email or password is incorrect.
-            if (error.response && error.response.status === 400) {
-              this.invalid = true
-              this.credentials.password = ''
-              this.$v.$reset()
-              this.$refs.password.focus()
+            if (error.handler) {
+              const response = error.handler.response
+              // Because the API server does not yet respond with proper error codes we
+              // manually have to add the error here.
+              if (response && response.status === 400) {
+                this.errorTitle = 'Incorrect credentials'
+                this.errorMessage =
+                  'The provided e-mail address or password is ' + 'incorrect.'
+                this.credentials.password = ''
+                this.$v.$reset()
+                this.$refs.password.focus()
+              } else {
+                const message = error.handler.getMessage('login')
+                this.errorTitle = message.title
+                this.errorMessage = message.message
+              }
+
+              this.error = true
+              this.loading = false
+              error.handler.handled()
+            } else {
+              throw error
             }
-          })
-          .then(() => {
-            this.loading = false
           })
       }
     }
