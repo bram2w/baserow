@@ -1,10 +1,10 @@
 import ApplicationForm from '@/components/sidebar/ApplicationForm'
 
 /**
- * The application base class that can be extended when creating a plugin for
- * the frontend.
+ * The application type base class that can be extended when creating a plugin
+ * for the frontend.
  */
-export class Application {
+export class ApplicationType {
   /**
    * Must return a string with the unique name, this must be the same as the
    * type used in the backend.
@@ -24,7 +24,7 @@ export class Application {
   }
 
   /**
-   * A human readable name of the application.
+   * A human readable name of the application type.
    */
   getName() {
     return null
@@ -64,13 +64,13 @@ export class Application {
     this.routeName = this.getRouteName()
 
     if (this.type === null) {
-      throw new Error('The type name of an application must be set.')
+      throw new Error('The type name of an application type must be set.')
     }
     if (this.iconClass === null) {
-      throw new Error('The icon class of an application must be set.')
+      throw new Error('The icon class of an application type must be set.')
     }
     if (this.name === null) {
-      throw new Error('The name of an application must be set.')
+      throw new Error('The name of an application type must be set.')
     }
   }
 
@@ -96,4 +96,15 @@ export class Application {
   populate(application) {
     return application
   }
+
+  /**
+   * When an application is deleted it could be that an action should be taken,
+   * like redirect the user to another page.
+   */
+  delete(application, context) {}
+
+  /**
+   *
+   */
+  clearChildrenSelected(application) {}
 }

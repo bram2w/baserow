@@ -1,5 +1,5 @@
 import TableService from '@/modules/database/services/table'
-import { DatabaseApplication } from '@/modules/database/application'
+import { DatabaseApplicationType } from '@/modules/database/applicationTypes'
 
 export function populateTable(table) {
   table._ = {
@@ -40,12 +40,12 @@ export const actions = {
    * of the provided database.
    */
   create({ commit, dispatch }, { database, values }) {
-    const type = DatabaseApplication.getType()
+    const type = DatabaseApplicationType.getType()
 
     // Check if the provided database (application) has the correct type.
     if (database.type !== type) {
       throw new Error(
-        `The provided database application doesn't have the required type 
+        `The provided database application doesn't have the required type
         "${type}".`
       )
     }
@@ -95,11 +95,33 @@ export const actions = {
     commit('DELETE_ITEM', { database, id: table.id })
   },
   /**
-   * Select a table of a database.
+   * When selecting the view we we will have to fetch all the views that belong
+   * to a the table we want to select. While waiting for that the loading state
+   * is set to true so that if a user clicked on the table in sidebar we will
+   * see that he has to wait. When finished the table will be marked as
+   * selected.
    */
-  select({ commit }, { database, table }) {
-    commit('SET_SELECTED', { database, table })
-    return { database, table }
+  select({ commit, dispatch }, { database, table }) {
+    const setDatabaseLoading = (database, value) => {
+      dispatch(
+        'application/setItemLoading',
+        { application: database, value },
+        { root: true }
+      )
+    }
+
+    setDatabaseLoading(database, true)
+    return dispatch('view/fetchAll', table, { root: true })
+      .then(() => {
+        dispatch('application/clearChildrenSelected', null, { root: true })
+        commit('SET_SELECTED', { database, table })
+        setDatabaseLoading(database, false)
+        return { database, table }
+      })
+      .catch(error => {
+        setDatabaseLoading(database, false)
+        throw error
+      })
   },
   /**
    * First it will preSelect the application to make sure the groups are
@@ -110,10 +132,9 @@ export const actions = {
    * the table and return the database and table so it can be used.
    */
   preSelect({ dispatch, getters, rootGetters }, { databaseId, tableId }) {
-    // Preselect the application
     return dispatch('application/preSelect', databaseId, { root: true }).then(
       database => {
-        const type = DatabaseApplication.getType()
+        const type = DatabaseApplicationType.getType()
 
         // Check if the just selected application has the correct type because
         // it needs to have tables.

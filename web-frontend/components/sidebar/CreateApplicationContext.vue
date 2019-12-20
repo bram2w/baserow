@@ -1,20 +1,20 @@
 <template>
   <Context>
     <ul class="context-menu">
-      <li v-for="(application, type) in applications" :key="type">
+      <li v-for="(applicationType, type) in applications" :key="type">
         <a
           :ref="'createApplicationModalToggle' + type"
           @click="toggleCreateApplicationModal(type)"
         >
           <i
             class="context-menu-icon fas fa-fw"
-            :class="'fa-' + application.iconClass"
+            :class="'fa-' + applicationType.iconClass"
           ></i>
-          {{ application.name }}
+          {{ applicationType.name }}
         </a>
         <CreateApplicationModal
           :ref="'createApplicationModal' + type"
-          :application="application"
+          :application-type="applicationType"
           @created="hide"
         ></CreateApplicationModal>
       </li>
@@ -36,7 +36,7 @@ export default {
   mixins: [context],
   computed: {
     ...mapState({
-      applications: state => state.application.applications
+      applications: state => state.application.types
     })
   },
   methods: {

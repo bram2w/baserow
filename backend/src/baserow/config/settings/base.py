@@ -13,8 +13,6 @@ DEBUG = False
 ALLOWED_HOSTS = ['localhost', 'backend']
 
 
-# Application definition
-
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',

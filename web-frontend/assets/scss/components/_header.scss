@@ -58,6 +58,10 @@
   color: $color-primary-500;
   margin-right: 4px;
   font-size: 14px;
+
+  &.header-filter-icon-no-choice {
+    color: $color-neutral-200;
+  }
 }
 
 .header-info {

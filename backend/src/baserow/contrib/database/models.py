@@ -1,9 +1,10 @@
 from baserow.core.models import Application
 
 from .table.models import Table
+from .views.models import View
 
 __all__ = [
-    'Table'
+    'Database', 'Table', 'View'
 ]
 
 

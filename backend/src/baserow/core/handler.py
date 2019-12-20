@@ -1,7 +1,7 @@
 from .models import Group, GroupUser, Application
 from .exceptions import UserNotInGroupError
 from .utils import extract_allowed, set_allowed_attrs
-from .applications import registry
+from .registries import application_type_registry
 
 
 class CoreHandler:
@@ -79,7 +79,7 @@ class CoreHandler:
                 group_id=group_id
             ).update(order=index + 1)
 
-    def create_application(self, user, group, type, **kwargs):
+    def create_application(self, user, group, type_name, **kwargs):
         """
         Creates a new application based on the provided type.
 
@@ -87,9 +87,9 @@ class CoreHandler:
         :type user: User
         :param group: The group that the application instance belongs to.
         :type group: Group
-        :param type: The type name of the application. Application can be registered via
-                     the ApplicationRegistry.
-        :type type: str
+        :param type_name: The type name of the application. ApplicationType can be
+                          registered via the ApplicationTypeRegistry.
+        :type type_name: str
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
         :return: The created application instance.
@@ -100,8 +100,8 @@ class CoreHandler:
             raise UserNotInGroupError(user, group)
 
         # Figure out which model is used for the given application type.
-        application = registry.get(type)
-        model = application.instance_model
+        application_type = application_type_registry.get(type_name)
+        model = application_type.model_class
         application_values = extract_allowed(kwargs, ['name'])
         last_order = model.get_last_order(group)
 
@@ -125,7 +125,7 @@ class CoreHandler:
         """
 
         if not isinstance(application, Application):
-            raise ValueError('The application is not an instance of Application')
+            raise ValueError('The application is not an instance of Application.')
 
         if not application.group.has_user(user):
             raise UserNotInGroupError(user, application.group)

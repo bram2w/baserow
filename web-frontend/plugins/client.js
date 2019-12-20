@@ -9,10 +9,10 @@ class ResponseErrorMessage {
 }
 
 class ErrorHandler {
-  constructor(store, status, code = null, detail = null) {
+  constructor(store, response, code = null, detail = null) {
     this.isHandled = false
     this.store = store
-    this.status = status
+    this.response = response
     this.setError(code, detail)
 
     // A temporary errorMap containing error messages for certain errors. This
@@ -44,7 +44,7 @@ class ErrorHandler {
    * @return {boolean}
    */
   hasError() {
-    return this.code !== null
+    return this.response !== undefined && this.response.code !== null
   }
 
   /**
@@ -52,7 +52,15 @@ class ErrorHandler {
    * @return {boolean}
    */
   isNotFound() {
-    return this.status === 404
+    return this.response !== undefined && this.response.status === 404
+  }
+
+  /**
+   * Return true if there is a network error.
+   * @return {boolean}
+   */
+  hasNetworkError() {
+    return this.response === undefined
   }
 
   /**
@@ -63,7 +71,7 @@ class ErrorHandler {
       return new ResponseErrorMessage(
         'Action not completed.',
         "The action couldn't be completed because an unknown error has" +
-          'occured.'
+          ' occured.'
       )
     }
     return this.errorMap[this.code]
@@ -83,10 +91,24 @@ class ErrorHandler {
   }
 
   /**
+   * Returns a standard network error message. For example if the API server
+   * could not be reached.
+   */
+  getNetworkErrorMessage() {
+    return new ResponseErrorMessage(
+      'Network error',
+      'Could not connect to the API server.'
+    )
+  }
+
+  /**
    * If there is an error or the requested detail is not found an error
    * message related to the problem is returned.
    */
   getMessage(name = null) {
+    if (this.hasNetworkError()) {
+      return this.getNetworkErrorMessage()
+    }
     if (this.hasError()) {
       return this.getErrorMessage()
     }
@@ -102,7 +124,17 @@ class ErrorHandler {
    * about what went wrong. After that the error is marked as handled.
    */
   notifyIf(name = null, message = null) {
-    if (!(this.hasError() || this.isNotFound()) || this.isHandled) {
+    console.log(
+      this.hasError(),
+      this.hasNetworkError(),
+      this.isNotFound(),
+      this.isHandled
+    )
+
+    if (
+      !(this.hasError() || this.hasNetworkError() || this.isNotFound()) ||
+      this.isHandled
+    ) {
       return
     }
 
@@ -149,7 +181,7 @@ export default function({ store }) {
       return response
     },
     error => {
-      error.handler = new ErrorHandler(store, error.response.status)
+      error.handler = new ErrorHandler(store, error.response)
 
       // Add the error message in the response to the error object.
       if (
@@ -161,14 +193,6 @@ export default function({ store }) {
           error.response.data.error,
           error.response.data.detail
         )
-      }
-
-      // Network error, the server could not reached
-      if (!error.response) {
-        store.dispatch('notification/error', {
-          title: 'Network error',
-          message: 'Could not connect to the API server.'
-        })
       }
 
       return Promise.reject(error)
