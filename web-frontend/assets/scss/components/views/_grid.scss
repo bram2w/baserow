@@ -237,6 +237,7 @@
     @include absolute(0, 4px, 0, auto);
 
     text-align: center;
+    display: block;
 
     &:hover {
       color: $color-neutral-900;
@@ -251,10 +252,9 @@
 
     &::before {
       content: "";
+      border-radius: 2px;
 
       @include absolute(0, 2px, 0, 2px);
-
-      border-radius: 2px;
     }
 
     &:hover::before {
@@ -264,6 +264,20 @@
 
   .grid-view-description-name {
     @extend %ellipsis;
+  }
+
+  &.grid-view-description-loading {
+    &::after {
+      @include loading();
+      @include absolute(50%, 12px, auto, auto);
+
+      content: "";
+      margin-top: -0.7rem;
+    }
+
+    .grid-view-description-options {
+      display: none;
+    }
   }
 }
 

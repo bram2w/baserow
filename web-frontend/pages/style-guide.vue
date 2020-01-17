@@ -68,6 +68,39 @@
               />
             </div>
           </div>
+          <div class="control">
+            <label class="control-label">Checkbox field</label>
+            <div class="control-elements">
+              value: {{ checkbox }}
+              <br />
+              <br />
+              <Checkbox v-model="checkbox"></Checkbox>
+              <Checkbox v-model="checkbox">With text</Checkbox>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control-label">Dropdown</label>
+            <div class="control-elements">
+              value: {{ dropdown }}
+              <br />
+              <br />
+              <div style="width: 200px;">
+                <Dropdown v-model="dropdown">
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="pencil"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="database"
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="margin-bottom-3">
           <div class="alert alert-has-icon">
@@ -502,6 +535,12 @@ import Notifications from '@/components/notifications/Notifications'
 export default {
   components: {
     Notifications
+  },
+  data() {
+    return {
+      checkbox: false,
+      dropdown: null
+    }
   }
 }
 </script>

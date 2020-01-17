@@ -3,6 +3,7 @@ import pytest
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.fields.models import TextField
 
 
 @pytest.mark.django_db
@@ -15,11 +16,17 @@ def test_create_database_table(data_fixture):
     handler.create_table(user=user, database=database, name='Test table')
 
     assert Table.objects.all().count() == 1
+    assert TextField.objects.all().count() == 1
 
     table = Table.objects.all().first()
     assert table.name == 'Test table'
     assert table.order == 1
     assert table.database == database
+
+    primary_field = TextField.objects.all().first()
+    assert primary_field.table == table
+    assert primary_field.primary
+    assert primary_field.name == 'Name'
 
     with pytest.raises(UserNotInGroupError):
         handler.create_table(user=user_2, database=database, name='')

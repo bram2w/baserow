@@ -7,7 +7,7 @@ from baserow.contrib.database.views.exceptions import ViewTypeDoesNotExist
 
 
 @pytest.mark.django_db
-def test_create_database_application(data_fixture):
+def test_create_view(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -31,7 +31,7 @@ def test_create_database_application(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_database_application(data_fixture):
+def test_update_view(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -52,7 +52,7 @@ def test_update_database_application(data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_database_application(data_fixture):
+def test_delete_view(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

@@ -1,10 +1,11 @@
 from baserow.core.registry import (
-    Instance, Registry, ModelInstanceMixin, ModelRegistryMixin
+    Instance, Registry, ModelInstanceMixin, ModelRegistryMixin,
+    CustomFieldsInstanceMixin, CustomFieldsRegistryMixin
 )
 from .exceptions import ViewTypeAlreadyRegistered, ViewTypeDoesNotExist
 
 
-class ViewType(ModelInstanceMixin, Instance):
+class ViewType(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
     """
     This abstract class represents a custom view type that can be added to the
     view type registry. It must be extended so customisation can be done. Each view type
@@ -12,8 +13,8 @@ class ViewType(ModelInstanceMixin, Instance):
     user can set custom settings per view instance he has created.
 
     Example:
-        from baserow.contrib.views.models import View
-        from baserow.contrib.database.views.registry import ViewType, registry
+        from baserow.contrib.database.views.models import View
+        from baserow.contrib.database.views.registry import ViewType, view_type_registry
 
         class ExampleViewModel(ViewType):
             pass
@@ -21,16 +22,17 @@ class ViewType(ModelInstanceMixin, Instance):
         class ExampleViewType(ViewType):
             type = 'a-unique-view-type-name'
             model_class = ExampleViewModel
+            allowed_fields = ['example_ordering']
+            serializer_field_names = ['example_ordering']
+            serializer_field_overrides = {
+                'example_ordering': serializers.CharField()
+            }
 
-        registry.register(ExampleViewType())
-
+        view_type_registry.register(ExampleViewType())
     """
 
-    instance_serializer_class = None
-    """This serializer that is used to serialize the instance model."""
 
-
-class ViewTypeRegistry(ModelRegistryMixin, Registry):
+class ViewTypeRegistry(CustomFieldsRegistryMixin, ModelRegistryMixin, Registry):
     """
     With the view type registry it is possible to register new view types.  A view type
     is an abstraction made specifically for Baserow. If added to the registry a user can

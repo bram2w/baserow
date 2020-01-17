@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 import TableService from '@/modules/database/services/table'
 import { DatabaseApplicationType } from '@/modules/database/applicationTypes'
 
@@ -111,13 +113,19 @@ export const actions = {
     }
 
     setDatabaseLoading(database, true)
-    return dispatch('view/fetchAll', table, { root: true })
-      .then(() => {
-        dispatch('application/clearChildrenSelected', null, { root: true })
-        commit('SET_SELECTED', { database, table })
-        setDatabaseLoading(database, false)
-        return { database, table }
-      })
+    return axios
+      .all([
+        dispatch('view/fetchAll', table, { root: true }),
+        dispatch('field/fetchAll', table, { root: true })
+      ])
+      .then(
+        axios.spread(() => {
+          dispatch('application/clearChildrenSelected', null, { root: true })
+          commit('SET_SELECTED', { database, table })
+          setDatabaseLoading(database, false)
+          return { database, table }
+        })
+      )
       .catch(error => {
         setDatabaseLoading(database, false)
         throw error

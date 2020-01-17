@@ -142,6 +142,7 @@ def test_get_view(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == 200
     assert response_json['id'] == view.id
+    assert response_json['type'] == 'grid'
     assert response_json['table']['id'] == table.id
 
 

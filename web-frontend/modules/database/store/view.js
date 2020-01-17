@@ -88,7 +88,7 @@ export const actions = {
    * Fetches all the views of a given table. The is mostly called when the user
    * selects a different table.
    */
-  fetchAll({ commit, getters, dispatch }, table) {
+  fetchAll({ commit, getters, dispatch, state }, table) {
     commit('SET_LOADING', true)
     commit('SET_LOADED', false)
     commit('UNSELECT', {})
@@ -101,6 +101,12 @@ export const actions = {
         commit('SET_ITEMS', data)
         commit('SET_LOADING', false)
         commit('SET_LOADED', true)
+
+        // @TODO REMOVE THIS!
+        if (state.items.length > 0) {
+          dispatch('select', state.items[0])
+        }
+        // END REMOVE
       })
       .catch(error => {
         commit('SET_ITEMS', [])

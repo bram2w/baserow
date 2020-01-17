@@ -1,5 +1,5 @@
 import ViewForm from '@/modules/database/components/view/ViewForm'
-import GridView from '@/modules/database/components/view/GridView'
+import GridView from '@/modules/database/components/view/grid/GridView'
 
 export class ViewType {
   /**

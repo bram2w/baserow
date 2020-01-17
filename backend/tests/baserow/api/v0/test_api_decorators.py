@@ -3,15 +3,19 @@ import json
 
 from unittest.mock import MagicMock
 
-from django.http.request import HttpRequest
-
 from rest_framework import status, serializers
 from rest_framework.request import Request
 from rest_framework.parsers import JSONParser
 from rest_framework.exceptions import APIException
 from rest_framework.test import APIRequestFactory
 
-from baserow.api.v0.decorators import map_exceptions, validate_body
+from baserow.api.v0.decorators import (
+    map_exceptions, validate_body, validate_body_custom_fields
+)
+from baserow.core.models import Group
+from baserow.core.registry import (
+    Instance, Registry, CustomFieldsInstanceMixin, ModelInstanceMixin
+)
 
 
 class TemporaryException(Exception):
@@ -21,6 +25,33 @@ class TemporaryException(Exception):
 class TemporarySerializer(serializers.Serializer):
     field_1 = serializers.CharField()
     field_2 = serializers.ChoiceField(choices=('choice_1', 'choice_2'))
+
+
+class TemporaryBaseModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('name',)
+
+
+class TemporaryInstance(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
+    pass
+
+
+class TemporaryInstanceType1(TemporaryInstance):
+    type = 'temporary_1'
+    model_class = Group
+
+
+class TemporaryInstanceType2(TemporaryInstance):
+    type = 'temporary_2'
+    model_class = Group
+    serializer_field_names = ['name']
+    serializer_field_overrides = {
+        'name': serializers.IntegerField()
+    }
+
+
+class TemporaryTypeRegistry(Registry):
+    name = 'temporary'
 
 
 def test_map_exceptions():
@@ -85,15 +116,15 @@ def test_validate_body():
     ), parsers=[JSONParser()])
     func = MagicMock()
 
-    with pytest.raises(APIException) as api_exception_1:
+    with pytest.raises(APIException) as api_exception_2:
         validate_body(TemporarySerializer)(func)(*[object, request])
 
-    assert api_exception_1.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_1.value.detail['detail']['field_2'][0]['error'] == \
+    assert api_exception_2.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert api_exception_2.value.detail['detail']['field_2'][0]['error'] == \
         '"wrong" is not a valid choice.'
-    assert api_exception_1.value.detail['detail']['field_2'][0]['code'] == \
+    assert api_exception_2.value.detail['detail']['field_2'][0]['code'] == \
         'invalid_choice'
-    assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
+    assert api_exception_2.value.status_code == status.HTTP_400_BAD_REQUEST
 
     request = Request(factory.post(
         '/some-page/',
@@ -104,3 +135,101 @@ def test_validate_body():
 
     validate_body(TemporarySerializer)(func)(*[object, request])
 
+
+def test_validate_body_custom_fields():
+    factory = APIRequestFactory()
+    registry = TemporaryTypeRegistry()
+    registry.register(TemporaryInstanceType1())
+    registry.register(TemporaryInstanceType2())
+
+    request = Request(factory.post(
+        '/some-page/',
+        data=json.dumps({'missing': 'type'}),
+        content_type='application/json'
+    ), parsers=[JSONParser()])
+    func = MagicMock()
+
+    with pytest.raises(APIException) as api_exception_1:
+        validate_body_custom_fields(
+            registry, 'serializer_class')(func)(*[object, request])
+
+    assert api_exception_1.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert api_exception_1.value.detail['detail']['type'][0]['error'] == \
+           'This field is required.'
+    assert api_exception_1.value.detail['detail']['type'][0]['code'] == 'required'
+    assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
+
+    request = Request(factory.post(
+        '/some-page/',
+        data=json.dumps({'type': 'NOT_EXISTING'}),
+        content_type='application/json'
+    ), parsers=[JSONParser()])
+    func = MagicMock()
+
+    with pytest.raises(APIException) as api_exception_2:
+        validate_body_custom_fields(registry)(func)(*[object, request])
+
+    assert api_exception_2.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert api_exception_2.value.detail['detail']['type'][0]['error'] == \
+           '"NOT_EXISTING" is not a valid choice.'
+    assert api_exception_2.value.detail['detail']['type'][0]['code'] == 'invalid_choice'
+    assert api_exception_2.value.status_code == status.HTTP_400_BAD_REQUEST
+
+    request = Request(factory.post(
+        '/some-page/',
+        data=json.dumps({'type': 'temporary_2'}),
+        content_type='application/json'
+    ), parsers=[JSONParser()])
+    func = MagicMock()
+
+    with pytest.raises(APIException) as api_exception_3:
+        validate_body_custom_fields(registry)(func)(*[object, request])
+
+    assert api_exception_3.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert api_exception_3.value.detail['detail']['name'][0]['error'] == \
+           'This field is required.'
+    assert api_exception_3.value.detail['detail']['name'][0]['code'] == 'required'
+    assert api_exception_3.value.status_code == status.HTTP_400_BAD_REQUEST
+
+    request = Request(factory.post(
+        '/some-page/',
+        data=json.dumps({'type': 'temporary_1'}),
+        content_type='application/json'
+    ), parsers=[JSONParser()])
+    func = MagicMock()
+
+    with pytest.raises(APIException) as api_exception_4:
+        validate_body_custom_fields(
+            registry, base_serializer_class=TemporaryBaseModelSerializer
+        )(func)(*[object, request])
+
+    assert api_exception_4.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert api_exception_4.value.detail['detail']['name'][0]['error'] == \
+           'This field is required.'
+    assert api_exception_4.value.detail['detail']['name'][0]['code'] == 'required'
+    assert api_exception_4.value.status_code == status.HTTP_400_BAD_REQUEST
+
+    request = Request(factory.post(
+        '/some-page/',
+        data=json.dumps({'type': 'temporary_2', 'name': 'test1'}),
+        content_type='application/json'
+    ), parsers=[JSONParser()])
+    func = MagicMock()
+
+    with pytest.raises(APIException) as api_exception_5:
+        validate_body_custom_fields(registry)(func)(*[object, request])
+
+    assert api_exception_5.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert api_exception_5.value.detail['detail']['name'][0]['error'] == \
+           'A valid integer is required.'
+    assert api_exception_5.value.detail['detail']['name'][0]['code'] == 'invalid'
+    assert api_exception_5.value.status_code == status.HTTP_400_BAD_REQUEST
+
+    request = Request(factory.post(
+        '/some-page/',
+        data=json.dumps({'type': 'temporary_2', 'name': 123}),
+        content_type='application/json'
+    ), parsers=[JSONParser()])
+    func = MagicMock()
+
+    validate_body_custom_fields(registry)(func)(*[object, request])

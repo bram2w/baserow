@@ -51,7 +51,7 @@ class PolymorphicContentTypeMixin:
 
     @cached_property
     def specific(self):
-        """Return this page in its most specific subclassed form."""
+        """Returns this instance in its most specific subclassed form."""
 
         content_type = ContentType.objects.get_for_id(self.content_type_id)
         model_class = self.specific_class
@@ -66,8 +66,35 @@ class PolymorphicContentTypeMixin:
     def specific_class(self):
         """
         Return the class that this application would be if instantiated in its
-        most specific form
+        most specific form.
         """
 
         content_type = ContentType.objects.get_for_id(self.content_type_id)
         return content_type.model_class()
+
+    def change_polymorphic_type_to(self, new_model_class):
+        """
+        If you for example have two polymorphic types TypeA and TypeB which both have
+        unique fields, an instance with TypeA can be changed to TypeB while keeping the
+        parent values and id. This method actually changes the class and sets the
+        default values in the __dict__.
+
+        :param new_model_class: The new model class that the instance must be converted
+                                to.
+        :type new_model_class: Model
+        """
+
+        old_fields = set([f.name for f in self._meta.get_fields()])
+        new_fields = set([f.name for f in new_model_class._meta.get_fields()])
+        field_names_to_remove = old_fields - new_fields
+        field_names_to_add = new_fields - old_fields
+
+        self.delete(keep_parents=True)
+        self.__class__ = new_model_class
+        self.content_type = ContentType.objects.get_for_model(new_model_class)
+
+        for name in field_names_to_remove:
+            del self.__dict__[name]
+
+        for name in field_names_to_add:
+            self.__dict__[name] = new_model_class._meta.get_field(name).default

@@ -62,7 +62,7 @@
   text-align: center;
 }
 
-@mixin loading($size: 1.4em) {
+@mixin loading($size: 1.4rem) {
   position: relative;
   display: block;
   width: $size;
