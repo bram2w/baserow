@@ -2,8 +2,12 @@ import pytest
 
 from django.core.exceptions import ImproperlyConfigured
 
+from rest_framework.serializers import IntegerField, ModelSerializer
+
+from baserow.contrib.database.models import Database
 from baserow.core.registry import (
-    Instance, ModelInstanceMixin, Registry, ModelRegistryMixin
+    Instance, ModelInstanceMixin, Registry, ModelRegistryMixin,
+    CustomFieldsInstanceMixin, CustomFieldsRegistryMixin
 )
 from baserow.core.exceptions import (
     InstanceTypeAlreadyRegistered, InstanceTypeDoesNotExist
@@ -30,6 +34,27 @@ class TemporaryApplication2(ModelInstanceMixin, Instance):
 
 class TemporaryRegistry(ModelRegistryMixin, Registry):
     name = 'temporary'
+
+
+class CustomFieldsTemporaryRegistry(ModelRegistryMixin, CustomFieldsRegistryMixin,
+                                    Registry):
+    name = 'temporary'
+
+
+class TemporaryGroupInstanceType(ModelInstanceMixin, CustomFieldsInstanceMixin,
+                                 Instance):
+    type = 'temporary_3'
+    model_class = Database
+    allowed_fields = ['name']
+    serializer_field_names = ['name']
+    serializer_field_overrides = {
+        'name': IntegerField()
+    }
+
+
+class TemporarySerializer(ModelSerializer):
+    class Meta:
+        fields = ['id']
 
 
 def test_registry():
@@ -84,3 +109,19 @@ def test_registry_get():
         registry.get_by_model(FakeModel2())
 
     assert registry.get_types() == ['temporary_1']
+
+
+@pytest.mark.django_db
+def test_get_serializer(data_fixture):
+    database = data_fixture.create_database_application(name='1')
+    registry = CustomFieldsTemporaryRegistry()
+    registry.register(TemporaryGroupInstanceType())
+
+    serializer = registry.get_serializer(database)
+
+    assert serializer.__class__.__name__ == 'DatabaseSerializer'
+    assert 'id' not in serializer.data
+    assert serializer.data['name'] == 1
+
+    serializer = registry.get_serializer(database, base_class=TemporarySerializer)
+    assert 'id' in serializer.data

@@ -1,8 +1,14 @@
 import { DatabaseApplicationType } from '@/modules/database/applicationTypes'
 import { GridViewType } from '@/modules/database/viewTypes'
+import {
+  TextFieldType,
+  NumberFieldType,
+  BooleanFieldType
+} from '@/modules/database/fieldTypes'
 
 import tableStore from '@/modules/database/store/table'
 import viewStore from '@/modules/database/store/view'
+import fieldStore from '@/modules/database/store/field'
 
 /**
  * Note that this method is actually called on the server and client side, but
@@ -19,7 +25,11 @@ import viewStore from '@/modules/database/store/view'
 export default ({ store }) => {
   store.registerModule('table', tableStore)
   store.registerModule('view', viewStore)
+  store.registerModule('field', fieldStore)
 
   store.dispatch('application/register', new DatabaseApplicationType())
   store.dispatch('view/register', new GridViewType())
+  store.dispatch('field/register', new TextFieldType())
+  store.dispatch('field/register', new NumberFieldType())
+  store.dispatch('field/register', new BooleanFieldType())
 }

@@ -29,7 +29,8 @@ class ViewHandler:
         # Figure out which model to use for the given view type.
         view_type = view_type_registry.get(type_name)
         model_class = view_type.model_class
-        view_values = extract_allowed(kwargs, ['name'])
+        allowed_fields = ['name'] + view_type.allowed_fields
+        view_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
         instance = model_class.objects.create(table=table, order=last_order,
@@ -58,7 +59,9 @@ class ViewHandler:
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
 
-        view = set_allowed_attrs(kwargs, ['name'], view)
+        view_type = view_type_registry.get_by_model(view)
+        allowed_fields = ['name'] + view_type.allowed_fields
+        view = set_allowed_attrs(kwargs, allowed_fields, view)
         view.save()
 
         return view

@@ -1,5 +1,6 @@
 .dropdown {
   position: relative;
+  background-color: $white;
 }
 
 .dropdown-selected {
@@ -19,6 +20,10 @@
     text-decoration: none;
     border-color: $color-neutral-600;
   }
+
+  .dropdown-error & {
+    border-color: $color-error-500;
+  }
 }
 
 .dropdown-selected-icon {
@@ -36,6 +41,7 @@
   border-radius: 3px;
   background-color: $white;
   box-shadow: 0 2px 6px 0 rgba($black, 0.16);
+  z-index: 1;
 
   @include absolute(0, 0, auto, 0);
 

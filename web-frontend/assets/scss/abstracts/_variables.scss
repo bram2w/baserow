@@ -58,20 +58,22 @@ $color-error-800: #6e160b !default;
 $color-error-900: #4d0c03 !default;
 
 // all z-indexes
-$z-index-layout-col-1: 3;
-$z-index-layout-col-2: 2;
-$z-index-layout-col-3: 1;
-$z-index-layout-col-3-1: 5;
-$z-index-layout-col-3-2: 4;
+$z-index-layout-col-1: 3 !default;
+$z-index-layout-col-2: 2 !default;
+$z-index-layout-col-3: 1 !default;
+$z-index-layout-col-3-1: 5 !default;
+$z-index-layout-col-3-2: 4 !default;
 
 // The z-index of modal and context must always be the same because they can be nested
 // inside each other. The order in html decided which must be shown over the other.
-$z-index-modal: 7;
-$z-index-context: 7;
+$z-index-modal: 7 !default;
+$z-index-context: 7 !default;
 
 // The notifications will be on top of anything else, because the message is temporary
 // and must always be visible.
-$z-index-notifications: 8;
+$z-index-notifications: 8 !default;
 
 // normalize overrides
-$base-font-family: $text-font-stack;
+$base-font-family: $text-font-stack !default;
+$font-awesome-font-family: 'Font Awesome 5 Free', sans-serif !default;
+$font-awesome-font-weight: 900 !default;

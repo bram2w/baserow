@@ -7,6 +7,12 @@
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 16px;
+
+  &.control-label-small {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
 }
 
 .control-context {
@@ -37,6 +43,34 @@
 
   &.input-error {
     border-color: $color-error-500;
+  }
+}
+
+.checkbox {
+  position: relative;
+  height: 28px;
+  line-height: 28px;
+  padding-left: 24px;
+  cursor: pointer;
+
+  &::before {
+    @include absolute(5px, auto, 0, 0);
+
+    content: "";
+    font-family: $font-awesome-font-family;
+    font-weight: $font-awesome-font-weight;
+    border: 1px solid $color-neutral-400;
+    border-radius: 3px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    background-color: $white;
+    color: $color-success-600;
+  }
+
+  &.active::before {
+    content: fa-content($fa-var-check);
   }
 }
 

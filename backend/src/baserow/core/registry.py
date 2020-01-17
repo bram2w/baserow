@@ -1,5 +1,7 @@
 from django.core.exceptions import ImproperlyConfigured
 
+from baserow.api.v0.utils import get_serializer_class
+
 from .exceptions import InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
 
 
@@ -28,6 +30,58 @@ class ModelInstanceMixin:
     def __init__(self):
         if not self.model_class:
             raise ImproperlyConfigured('The model_class of an instance must be set.')
+
+
+class CustomFieldsInstanceMixin:
+    """
+    If an instance can have custom fields per type, they can be defined here.
+    """
+
+    allowed_fields = []
+    """The field names that are allowed to set when creating and updating"""
+
+    serializer_field_names = []
+    """The field names that must be added to the serializer."""
+
+    serializer_field_overrides = {}
+    """The fields that must be added to the serializer."""
+
+    def get_serializer_class(self, *args, **kwargs):
+        """
+        Returns a model serializer class based on this type field names and overrides.
+
+        :return: The generated model serializer class.
+        :rtype: ModelSerializer
+        """
+
+        model_class = getattr(self, 'model_class')
+        if not model_class:
+            raise ValueError('Attribute model_class must be set, maybe you forgot to '
+                             'extend the ModelInstanceMixin?')
+
+        return get_serializer_class(
+            model_class, self.serializer_field_names,
+            field_overrides=self.serializer_field_overrides,
+            *args, **kwargs
+        )
+
+    def get_serializer(self, model_instance, base_class=None):
+        """
+        Returns an instantiated model serializer based on this type field names and
+        overrides. The provided model instance will be used instantiate the serializer.
+
+        :param model_instance: The instance for which the serializer must be generated.
+        :type model_instance: Model
+        :param base_class: The base serializer class that must be extended. For example
+                           common fields could be stored here.
+        :type base_class: ModelSerializer
+        :return: The instantiated generated model serializer.
+        :rtype: ModelSerializer
+        """
+
+        model_instance = model_instance.specific
+        serializer_class = self.get_serializer_class(base_class=base_class)
+        return serializer_class(model_instance, context={'instance_type': self})
 
 
 class Registry(object):
@@ -133,3 +187,28 @@ class ModelRegistryMixin:
 
         raise self.does_not_exist_exception_class(f'The {self.name} model instance '
                                                   f'{model_instance} does not exist.')
+
+
+class CustomFieldsRegistryMixin:
+    def get_serializer(self, model_instance, base_class=None):
+        """
+        Based on the provided model_instance and base_class a unique serializer
+        containing the correct field type is generated.
+
+        :param model_instance: The instance for which the serializer must be generated.
+        :type model_instance: Model
+        :param base_class: The base serializer class that must be extended. For example
+                           common fields could be stored here.
+        :type base_class: ModelSerializer
+        :return: The instantiated generated model serializer.
+        :rtype: ModelSerializer
+        """
+
+        get_by_model = getattr(self, 'get_by_model')
+        if not get_by_model:
+            raise ValueError('The method get_by_model must exist on the registry in '
+                             'order to generate the serializer, maybe you forgot to '
+                             'extend the ModelRegistryMixin?')
+
+        instance_type = self.get_by_model(model_instance.specific_class)
+        return instance_type.get_serializer(model_instance, base_class=base_class)

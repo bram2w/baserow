@@ -5,8 +5,9 @@ from .group import GroupFixtures
 from .application import ApplicationFixtures
 from .table import TableFixtures
 from .view import ViewFixtures
+from .field import FieldFixtures
 
 
 class Fixtures(UserFixtures, GroupFixtures, ApplicationFixtures, TableFixtures,
-               ViewFixtures):
+               ViewFixtures, FieldFixtures):
     fake = Faker()

@@ -45,6 +45,8 @@
           :database="database"
           :table="table"
           :view="selectedView"
+          :fields="fields"
+          :primary="primary"
         />
       </template>
     </div>
@@ -73,7 +75,9 @@ export default {
   },
   computed: {
     ...mapState({
-      selectedView: state => state.view.selected
+      selectedView: state => state.view.selected,
+      fields: state => state.field.items,
+      primary: state => state.field.primary
     }),
     ...mapGetters({
       hasSelectedView: 'view/hasSelected'

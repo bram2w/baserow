@@ -1,5 +1,6 @@
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
+from baserow.contrib.database.fields.handler import FieldHandler
 
 from .models import Table
 
@@ -7,7 +8,7 @@ from .models import Table
 class TableHandler:
     def create_table(self, user, database, **kwargs):
         """
-        Creates a new table.
+        Creates a new table and a primary text field.
 
         :param user: The user on whose behalf the table is created.
         :type user: User
@@ -26,6 +27,9 @@ class TableHandler:
         last_order = Table.get_last_order(database)
         table = Table.objects.create(database=database, order=last_order,
                                      **table_values)
+
+        # Create the text field which acts as the primary field, this
+        FieldHandler().create_field(user, table, 'text', primary=True, name='Name')
 
         return table
 

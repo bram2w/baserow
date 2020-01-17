@@ -12,7 +12,7 @@ class ApplicationType(ModelInstanceMixin, Instance):
 
     Example:
         from baserow.core.models import Application
-        from baserow.core.applications import ApplicationType, registry
+        from baserow.core.applications import ApplicationType, application_type_registry
 
         class ExampleApplicationModel(Application):
             pass
@@ -21,7 +21,7 @@ class ApplicationType(ModelInstanceMixin, Instance):
             type = 'a-unique-type-name'
             model_class = ExampleApplicationModel
 
-        registry.register(ExampleApplication())
+        application_type_registry.register(ExampleApplication())
 
     """
 
