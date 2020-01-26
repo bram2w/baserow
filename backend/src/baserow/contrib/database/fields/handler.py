@@ -1,9 +1,19 @@
+import logging
+
+from django.db import connection
+from django.db.utils import ProgrammingError, DataError
+
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 
-from .exceptions import PrimaryFieldAlreadyExists, CannotDeletePrimaryField
+from .exceptions import (
+    PrimaryFieldAlreadyExists, CannotDeletePrimaryField, CannotChangeFieldType
+)
 from .registries import field_type_registry
 from .models import Field
+
+
+logger = logging.getLogger(__name__)
 
 
 class FieldHandler:
@@ -48,6 +58,12 @@ class FieldHandler:
         instance = model_class.objects.create(table=table, order=last_order,
                                               primary=primary, **field_values)
 
+        # Add the field to the table schema.
+        with connection.schema_editor() as schema_editor:
+            to_model = table.get_model(field_ids=[], fields=[instance])
+            model_field = to_model._meta.get_field(instance.db_column)
+            schema_editor.add_field(to_model, model_field)
+
         return instance
 
     def update_field(self, user, field, new_type_name=None, **kwargs):
@@ -74,9 +90,12 @@ class FieldHandler:
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
 
+        field_type = field_type_registry.get_by_model(field)
+        from_model = field.table.get_model(field_ids=[], fields=[field])
+        from_field_type = field_type.type
+
         # If the provided field type does not match with the current one we need to
         # migrate the field to the new type.
-        field_type = field_type_registry.get_by_model(field)
         if new_type_name and field_type.type != new_type_name:
             field_type = field_type_registry.get(new_type_name)
             new_model_class = field_type.model_class
@@ -85,6 +104,24 @@ class FieldHandler:
         allowed_fields = ['name'] + field_type.allowed_fields
         field = set_allowed_attrs(kwargs, allowed_fields, field)
         field.save()
+
+        # Change the field in the table schema.
+        with connection.schema_editor() as schema_editor:
+            to_model = field.table.get_model(field_ids=[], fields=[field])
+            from_model_field = from_model._meta.get_field(field.db_column)
+            to_model_field = to_model._meta.get_field(field.db_column)
+
+            try:
+                schema_editor.alter_field(from_model, from_model_field, to_model_field)
+            except (ProgrammingError, DataError):
+                # If something is going wrong while changing the schema we will just
+                # raise a specific exception. In the future we want to have some sort
+                # of converter abstraction where the values of certain types can be
+                # converted to another value.
+                message = f'Could not alter field when changing field type ' \
+                          f'{from_field_type} to {new_type_name}.'
+                logger.error(message)
+                raise CannotChangeFieldType(message)
 
         return field
 
@@ -108,5 +145,11 @@ class FieldHandler:
         if field.primary:
             raise CannotDeletePrimaryField('Cannot delete the primary field of a '
                                            'table.')
+
+        # Remove the field from the table schema.
+        with connection.schema_editor() as schema_editor:
+            from_model = field.table.get_model(field_ids=[], fields=[field])
+            model_field = from_model._meta.get_field(field.db_column)
+            schema_editor.remove_field(from_model, model_field)
 
         field.delete()

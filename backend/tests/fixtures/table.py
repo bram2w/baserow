@@ -1,8 +1,10 @@
+from django.db import connection
+
 from baserow.contrib.database.table.models import Table
 
 
 class TableFixtures:
-    def create_database_table(self, user=None, **kwargs):
+    def create_database_table(self, user=None, create_table=True, **kwargs):
         if 'database' not in kwargs:
             kwargs['database'] = self.create_database_application(user=user)
 
@@ -12,4 +14,10 @@ class TableFixtures:
         if 'order' not in kwargs:
             kwargs['order'] = 0
 
-        return Table.objects.create(**kwargs)
+        table = Table.objects.create(**kwargs)
+
+        if create_table:
+            with connection.schema_editor() as schema_editor:
+                schema_editor.create_model(table.get_model())
+
+        return table

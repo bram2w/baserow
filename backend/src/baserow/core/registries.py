@@ -28,6 +28,14 @@ class ApplicationType(ModelInstanceMixin, Instance):
     instance_serializer_class = None
     """This serializer that is used to serialize the instance model."""
 
+    def pre_delete(self, application):
+        """
+        A hook that is called before the application instance is deleted.
+
+        :param application: The application model instance that needs to be deleted.
+        :type application: Application
+        """
+
     def get_api_v0_urls(self):
         """
         If needed custom api related urls to the application can be added here.

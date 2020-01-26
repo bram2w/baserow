@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 
+from baserow.core.utils import to_snake_case, remove_special_characters
 from baserow.core.mixins import OrderableMixin, PolymorphicContentTypeMixin
 
 
@@ -49,6 +50,27 @@ class Field(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
     def get_last_order(cls, table):
         queryset = Field.objects.filter(table=table)
         return cls.get_highest_order_of_queryset(queryset) + 1
+
+    @property
+    def db_column(self):
+        return f'field_{self.id}'
+
+    @property
+    def model_attribute_name(self):
+        """
+        Generates a pascal case based model attribute name based on the field name.
+
+        :return: The generated model attribute name.
+        :rtype: str
+        """
+
+        name = remove_special_characters(self.name, False)
+        name = to_snake_case(name)
+
+        if name[0].isnumeric():
+            name = f'field_{name}'
+
+        return name
 
 
 class TextField(Field):

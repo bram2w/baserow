@@ -11,9 +11,11 @@ from baserow.api.v0.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.api.v0.fields.errors import (
-    ERROR_CANNOT_DELETE_PRIMARY_FIELD
+    ERROR_CANNOT_DELETE_PRIMARY_FIELD, ERROR_CANNOT_CHANGE_FIELD_TYPE
 )
-from baserow.contrib.database.fields.exceptions import CannotDeletePrimaryField
+from baserow.contrib.database.fields.exceptions import (
+    CannotDeletePrimaryField, CannotChangeFieldType
+)
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -100,7 +102,8 @@ class FieldView(APIView):
 
     @transaction.atomic
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        CannotChangeFieldType: ERROR_CANNOT_CHANGE_FIELD_TYPE
     })
     def patch(self, request, field_id):
         """Updates the field if the user belongs to the group."""

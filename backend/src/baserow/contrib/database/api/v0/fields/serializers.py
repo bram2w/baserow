@@ -22,6 +22,7 @@ class FieldSerializer(serializers.ModelSerializer):
         # It could be that the field related to the instance is already in the context
         # else we can call the specific_class property to find it.
         field = self.context.get('instance_type')
+
         if not field:
             field = field_type_registry.get_by_model(instance.specific_class)
 

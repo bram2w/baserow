@@ -17,3 +17,7 @@ class PrimaryFieldAlreadyExists(Exception):
 
 class CannotDeletePrimaryField(Exception):
     """Raised if the user tries to delete the primary field which is not allowed."""
+
+
+class CannotChangeFieldType(Exception):
+    """Raised if the field type cannot be altered."""
