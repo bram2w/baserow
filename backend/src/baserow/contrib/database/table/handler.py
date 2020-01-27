@@ -1,6 +1,8 @@
+from django.db import connection
+
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
-from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import TextField
 
 from .models import Table
 
@@ -28,8 +30,13 @@ class TableHandler:
         table = Table.objects.create(database=database, order=last_order,
                                      **table_values)
 
-        # Create the text field which acts as the primary field, this
-        FieldHandler().create_field(user, table, 'text', primary=True, name='Name')
+        # Create a primary text field for the table.
+        TextField.objects.create(table=table, order=0, primary=True, name='Name')
+
+        # Create the table schema in the database database.
+        with connection.schema_editor() as schema_editor:
+            model = table.get_model()
+            schema_editor.create_model(model)
 
         return table
 
@@ -73,5 +80,10 @@ class TableHandler:
 
         if not table.database.group.has_user(user):
             raise UserNotInGroupError(user, table.database.group)
+
+        # Delete the table schema from the database.
+        with connection.schema_editor() as schema_editor:
+            model = table.get_model()
+            schema_editor.delete_model(model)
 
         table.delete()

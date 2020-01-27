@@ -98,3 +98,8 @@ class PolymorphicContentTypeMixin:
 
         for name in field_names_to_add:
             self.__dict__[name] = new_model_class._meta.get_field(name).default
+
+        # Because the field type has changed we need to invalidate the cached
+        # properties so that they wont return the values of the old type.
+        del self.specific
+        del self.specific_class

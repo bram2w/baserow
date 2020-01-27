@@ -261,10 +261,8 @@ def test_update_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
-    assert response_json['name'] == 'Test 2'
-    assert response_json['type'] == 'boolean'
-    assert 'number_type' not in response_json
+    assert response.status_code == 400
+    assert response_json['error'] == 'ERROR_CANNOT_CHANGE_FIELD_TYPE'
 
 
 @pytest.mark.django_db

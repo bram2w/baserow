@@ -1,6 +1,8 @@
 import pytest
 
+from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -8,7 +10,8 @@ from baserow.contrib.database.fields.models import (
     Field, TextField, NumberField, BooleanField
 )
 from baserow.contrib.database.fields.exceptions import (
-    FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField
+    FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
+    CannotChangeFieldType
 )
 
 
@@ -31,6 +34,16 @@ def test_create_field(data_fixture):
     assert text_field.table == table
     assert text_field.text_default == 'Some default'
     assert not text_field.primary
+
+    table_model = table.get_model()
+    field_name = f'field_{text_field.id}'
+    assert field_name in [field.name for field in table_model._meta.get_fields()]
+
+    instance = table_model.objects.create(**{field_name: 'Test 1'})
+    assert getattr(instance, field_name) == 'Test 1'
+
+    instance_2 = table_model.objects.create()
+    assert getattr(instance_2, field_name) == 'Some default'
 
     with pytest.raises(ValueError):
         handler.create_field(user=user, table=table, type_name='number',
@@ -68,10 +81,10 @@ def test_create_field(data_fixture):
     assert BooleanField.objects.all().count() == 1
 
     with pytest.raises(UserNotInGroupError):
-        handler.create_field(user=user_2, table=table, type_name='text', name='')
+        handler.create_field(user=user_2, table=table, type_name='text')
 
     with pytest.raises(FieldTypeDoesNotExist):
-        handler.create_field(user=user, table=table, type_name='UNKNOWN', name='')
+        handler.create_field(user=user, table=table, type_name='UNKNOWN')
 
 
 @pytest.mark.django_db
@@ -117,22 +130,41 @@ def test_update_field(data_fixture):
     with pytest.raises(FieldTypeDoesNotExist):
         handler.update_field(user=user, field=text_field_2, new_type_name='NOT_EXISTING')
 
-    handler.update_field(user=user, field=text_field_2, name='Test 1',
-                         text_default='Test 2')
+    text_field_2 = handler.update_field(user=user, field=text_field_2, name='Test 1',
+                                        text_default='Test 2')
 
     text_field_2.refresh_from_db()
     assert text_field_2.name == 'Test 1'
     assert text_field_2.text_default == 'Test 2'
 
-    handler.update_field(user=user, field=text_field_2, new_type_name='number',
-                         number_type='DECIMAL')
+    table_model = table.get_model()
+    field_name = f'field_{text_field_2.id}'
+    instance = table_model.objects.create(**{field_name: 'Test'})
+
+    with pytest.raises(CannotChangeFieldType):
+        handler.update_field(user=user, field=text_field_2, new_type_name='number',
+                             number_type='DECIMAL')
+
+    setattr(instance, field_name, '1')
+    instance.save()
+
+    number_field_2 = handler.update_field(user=user, field=text_field_2,
+                                          new_type_name='number', number_type='DECIMAL')
+
+    table_model = table.get_model()
+    with pytest.raises(ValidationError):
+        with transaction.atomic():
+            table_model.objects.create(**{field_name: 'Test 1'})
+
+    instance = table_model.objects.create(**{field_name: 2})
+    assert getattr(instance, field_name) == 2
 
     assert Field.objects.all().count() == 2
     assert TextField.objects.all().count() == 1
     assert NumberField.objects.all().count() == 1
     assert BooleanField.objects.all().count() == 0
 
-    handler.update_field(user=user, field=text_field_2, new_type_name='number',
+    handler.update_field(user=user, field=number_field_2, new_type_name='number',
                          number_type='DECIMAL', number_decimal_places=2,
                          number_negative=True)
 
@@ -150,22 +182,30 @@ def test_update_field(data_fixture):
     assert number_field.order == 1
     assert number_field.content_type == content_type
 
-    handler.update_field(user=user, field=number_field, new_type_name='boolean',
+    handler.update_field(user=user, field=number_field, new_type_name='text',
                          name='Test 2')
 
     assert Field.objects.all().count() == 2
-    assert TextField.objects.all().count() == 1
+    assert TextField.objects.all().count() == 2
     assert NumberField.objects.all().count() == 0
-    assert BooleanField.objects.all().count() == 1
+    assert BooleanField.objects.all().count() == 0
 
-    boolean_field = BooleanField.objects.all().first()
-    content_type = ContentType.objects.get_for_model(BooleanField)
-    assert boolean_field.name == 'Test 2'
-    assert boolean_field.order == 1
-    assert boolean_field.content_type == content_type
+    text_field = TextField.objects.all()[1:].first()
+    content_type = ContentType.objects.get_for_model(TextField)
+    assert text_field.name == 'Test 2'
+    assert text_field.order == 1
+    assert text_field.content_type == content_type
 
-    boolean_field = handler.update_field(user=user, field=boolean_field, name='Test 3')
-    assert boolean_field.name == 'Test 3'
+    text_field = handler.update_field(user=user, field=text_field, name='Test 3')
+    assert text_field.name == 'Test 3'
+
+    number_field = handler.update_field(
+        user=user, field=text_field, new_type_name='number', number_type='DECIMAL',
+        number_decimal_places=2, number_negative=True
+    )
+
+    with pytest.raises(CannotChangeFieldType):
+        handler.update_field(user=user, field=number_field, new_type_name='boolean')
 
 
 @pytest.mark.django_db
@@ -188,6 +228,10 @@ def test_delete_field(data_fixture):
     handler.delete_field(user=user, field=text_field)
     assert Field.objects.all().count() == 0
     assert TextField.objects.all().count() == 0
+
+    table_model = table.get_model()
+    field_name = f'field_{text_field.id}'
+    assert field_name not in [field.name for field in table_model._meta.get_fields()]
 
     primary = data_fixture.create_text_field(table=table, primary=True)
     with pytest.raises(CannotDeletePrimaryField):

@@ -1,9 +1,11 @@
 import pytest
 
+from django.db import connection
+
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser, Application
 from baserow.core.exceptions import UserNotInGroupError, ApplicationTypeDoesNotExist
-from baserow.contrib.database.models import Database
+from baserow.contrib.database.models import Database, Table
 
 
 @pytest.mark.django_db
@@ -51,14 +53,18 @@ def test_update_group(data_fixture):
 def test_delete_group(data_fixture):
     user = data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user)
-    group_2 = data_fixture.create_group(user=user)
-
+    database = data_fixture.create_database_application(group=group_1)
+    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_group(user=user)
     user_2 = data_fixture.create_user()
     group_3 = data_fixture.create_group(user=user_2)
 
     handler = CoreHandler()
     handler.delete_group(user, group_1)
 
+    assert Database.objects.all().count() == 0
+    assert Table.objects.all().count() == 0
+    assert f'database_table_{table.id}' not in connection.introspection.table_names()
     assert Group.objects.all().count() == 2
     assert GroupUser.objects.all().count() == 2
 
@@ -149,12 +155,14 @@ def test_update_database_application(data_fixture):
 
     assert database.name == 'Test 1'
 
+
 @pytest.mark.django_db
 def test_delete_database_application(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(group=group)
+    table = data_fixture.create_database_table(database=database)
 
     handler = CoreHandler()
 
@@ -164,6 +172,8 @@ def test_delete_database_application(data_fixture):
     with pytest.raises(ValueError):
         handler.delete_application(user=user_2, application=object())
 
-    assert Database.objects.all().count() == 1
     handler.delete_application(user=user, application=database)
+
     assert Database.objects.all().count() == 0
+    assert Table.objects.all().count() == 0
+    assert f'database_table_{table.id}' not in connection.introspection.table_names()

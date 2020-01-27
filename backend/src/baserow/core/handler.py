@@ -47,7 +47,7 @@ class CoreHandler:
 
     def delete_group(self, user, group):
         """
-        Deletes an existing group.
+        Deletes an existing group and related application the proper way.
 
         :param user: The user on whose behalf the delete is done.
         :type: user: User
@@ -60,6 +60,12 @@ class CoreHandler:
 
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
+
+        # Select all the applications so we can delete them via the handler which is
+        # needed in order to call the pre_delete method for each application.
+        applications = group.application_set.all().select_related('group')
+        for application in applications:
+            self.delete_application(user, application)
 
         group.delete()
 
@@ -150,5 +156,9 @@ class CoreHandler:
 
         if not application.group.has_user(user):
             raise UserNotInGroupError(user, application.group)
+
+        application = application.specific
+        application_type = application_type_registry.get_by_model(application)
+        application_type.pre_delete(user, application)
 
         application.delete()

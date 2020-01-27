@@ -33,6 +33,19 @@ class FieldType(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
         field_type_registry.register(ExampleFieldType())
     """
 
+    def get_model_field(self, instance, **kwargs):
+        """
+        Should return the model field based on the custom model instance attributes.
+
+        :param instance: The field instance for which to get the model field for.
+        :type instance: Field
+        :param kwargs: The kwargs that will be passed to the field.
+        :type kwargs: dict
+        :return: The modal field that represents the field instance attributes.
+        :rtype: Field
+        """
+        raise NotImplementedError('Each must have his own get_model_field method.')
+
 
 class FieldTypeRegistry(CustomFieldsRegistryMixin, ModelRegistryMixin, Registry):
     """
