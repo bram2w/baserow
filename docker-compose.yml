@@ -19,6 +19,7 @@ services:
       - 8000:8000
     depends_on:
       - db
+      - db_tables
 
   web-frontend:
     container_name: web-frontend
