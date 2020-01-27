@@ -88,3 +88,5 @@ backend/src/baserow/config/settings/local.py
 __pycache__
 .pytest_cache
 *.log
+
+docker-compose.override.yml
