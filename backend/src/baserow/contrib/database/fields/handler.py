@@ -1,7 +1,8 @@
 import logging
 
-from django.db import connection
+from django.db import connections
 from django.db.utils import ProgrammingError, DataError
+from django.conf import settings
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
@@ -59,6 +60,7 @@ class FieldHandler:
                                               primary=primary, **field_values)
 
         # Add the field to the table schema.
+        connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
             to_model = table.get_model(field_ids=[], fields=[instance])
             model_field = to_model._meta.get_field(instance.db_column)
@@ -106,6 +108,7 @@ class FieldHandler:
         field.save()
 
         # Change the field in the table schema.
+        connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
             to_model = field.table.get_model(field_ids=[], fields=[field])
             from_model_field = from_model._meta.get_field(field.db_column)
@@ -147,6 +150,7 @@ class FieldHandler:
                                            'table.')
 
         # Remove the field from the table schema.
+        connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
             from_model = field.table.get_model(field_ids=[], fields=[field])
             model_field = from_model._meta.get_field(field.db_column)
