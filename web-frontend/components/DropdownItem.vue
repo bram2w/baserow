@@ -16,7 +16,7 @@ export default {
   name: 'DropdownItem',
   props: {
     value: {
-      type: String,
+      type: [String, Number, Boolean, Object],
       required: true
     },
     name: {

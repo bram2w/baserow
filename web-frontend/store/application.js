@@ -16,6 +16,7 @@ function populateApplication(application, getters) {
 export const state = () => ({
   types: {},
   loading: false,
+  loaded: false,
   items: [],
   selected: {}
 })
@@ -29,6 +30,9 @@ export const mutations = {
   },
   SET_LOADING(state, value) {
     state.loading = value
+  },
+  SET_LOADED(state, value) {
+    state.loaded = value
   },
   SET_ITEM_LOADING(state, { application, value }) {
     application._.loading = value
@@ -81,19 +85,19 @@ export const actions = {
     commit('SET_ITEM_LOADING', { application, value })
   },
   /**
-   * Fetches all the applications of a given group. The is mostly called when
-   * the user selects a different group.
+   * Fetches all the application of the authenticated user.
    */
-  fetchAll({ commit, getters, dispatch }, group) {
+  fetchAll({ commit, getters }) {
     commit('SET_LOADING', true)
 
-    return ApplicationService.fetchAll(group.id)
+    return ApplicationService.fetchAll()
       .then(({ data }) => {
         data.forEach((part, index, d) => {
           populateApplication(data[index], getters)
         })
         commit('SET_ITEMS', data)
         commit('SET_LOADING', false)
+        commit('SET_LOADED', true)
       })
       .catch(error => {
         commit('SET_ITEMS', [])
@@ -108,6 +112,8 @@ export const actions = {
    */
   clearAll({ commit }) {
     commit('SET_ITEMS', [])
+    commit('SET_SELECTED', {})
+    commit('SET_LOADED', false)
   },
   /**
    * If called all the applications that are in the state will clear their
@@ -200,62 +206,15 @@ export const actions = {
    */
   unselect({ commit }) {
     commit('UNSELECT', {})
-  },
-  /**
-   * The preSelect action will eventually select an application, but it will
-   * first check which information still needs to be loaded. For example if
-   * no group or not the group where the application is in loaded it will then
-   * first fetch that group and related application so that the sidebar is up
-   * to date. In short it will make sure that the depending state of the given
-   * application will be there.
-   */
-  preSelect({ dispatch, getters, rootGetters, state }, id) {
-    // First we will check if the application is already in the items.
-    const application = getters.get(id)
-
-    // If the application is already selected we don't have to do anything.
-    if (application !== undefined && application._.selected) {
-      return application
-    }
-
-    // This function will select a group by its id which will then automatically
-    // fetches the applications related to that group. When done it will select
-    // the provided application id.
-    const selectGroupAndApplication = (groupId, applicationId) => {
-      return dispatch('group/selectById', groupId, {
-        root: true
-      }).then(() => {
-        return dispatch('selectById', applicationId)
-      })
-    }
-
-    if (application !== undefined) {
-      // If the application is already in the selected groups, which means that
-      // the groups and applications are already loaded, we can just select that
-      // application.
-      return dispatch('select', application)
-    } else {
-      // The application is not in the selected group so we need to figure out
-      // in which he is by fetching the application.
-      return ApplicationService.get(id).then(response => {
-        if (!rootGetters['group/isLoaded']) {
-          // If the groups are not already loaded we need to load them first.
-          return dispatch('group/fetchAll', {}, { root: true }).then(() => {
-            return selectGroupAndApplication(response.data.group.id, id)
-          })
-        } else {
-          // The groups are already loaded so we need to select the group and
-          // application.
-          return selectGroupAndApplication(response.data.group.id, id)
-        }
-      })
-    }
   }
 }
 
 export const getters = {
   isLoading(state) {
     return state.loading
+  },
+  isLoaded(state) {
+    return state.loaded
   },
   get: state => id => {
     return state.items.find(item => item.id === id)

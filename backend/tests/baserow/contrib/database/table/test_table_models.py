@@ -37,6 +37,7 @@ def test_get_table_model(data_fixture):
                                                       name='For sale')
 
     model = table.get_model(attribute_names=True)
+    assert model._generated_table_model
     assert model._meta.db_table == f'database_table_{table.id}'
     assert len(model._meta.get_fields()) == 4
 
@@ -109,3 +110,24 @@ def test_get_table_model(data_fixture):
     assert len(field_names) == 5
     assert f'{text_field.model_attribute_name}_field_{text_field.id}' in field_names
     assert f'{text_field_2.model_attribute_name}_field_{text_field.id}' in field_names
+
+    # Test if the fields are also returns if requested.
+    model = table.get_model()
+    fields = model._field_objects
+    assert len(fields.items()) == 4
+
+    assert fields[text_field.id]['field'].id == text_field.id
+    assert fields[text_field.id]['type'].type == 'text'
+    assert fields[text_field.id]['name'] == f'field_{text_field.id}'
+
+    assert fields[number_field.id]['field'].id == number_field.id
+    assert fields[number_field.id]['type'].type == 'number'
+    assert fields[number_field.id]['name'] == f'field_{number_field.id}'
+
+    assert fields[boolean_field.id]['field'].id == boolean_field.id
+    assert fields[boolean_field.id]['type'].type == 'boolean'
+    assert fields[boolean_field.id]['name'] == f'field_{boolean_field.id}'
+
+    assert fields[text_field_2.id]['field'].id == text_field_2.id
+    assert fields[text_field_2.id]['type'].type == 'text'
+    assert fields[text_field_2.id]['name'] == f'field_{text_field_2.id}'

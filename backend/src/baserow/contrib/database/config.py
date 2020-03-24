@@ -10,13 +10,13 @@ class DatabaseConfig(AppConfig):
     name = 'baserow.contrib.database'
 
     def ready(self):
-        from .application_types import DatabaseApplicationType
-        application_type_registry.register(DatabaseApplicationType())
-
-        from .views.view_types import GridViewType
-        view_type_registry.register(GridViewType())
-
         from .fields.field_types import TextFieldType, NumberFieldType, BooleanFieldType
         field_type_registry.register(TextFieldType())
         field_type_registry.register(NumberFieldType())
         field_type_registry.register(BooleanFieldType())
+
+        from .views.view_types import GridViewType
+        view_type_registry.register(GridViewType())
+
+        from .application_types import DatabaseApplicationType
+        application_type_registry.register(DatabaseApplicationType())

@@ -30,15 +30,6 @@ services:
     depends_on:
       - backend
 
-  old-web-frontend:
-    container_name: old-web-frontend
-    build: ./old-web-frontend/.
-    volumes:
-      - ./old-web-frontend:/old-web-frontend
-      - ./web-frontend:/web-frontend
-    ports:
-      - 8080:8080
-
 networks:
   default:
     external:

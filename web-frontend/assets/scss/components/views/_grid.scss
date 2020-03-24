@@ -3,11 +3,10 @@
 
   overflow: hidden;
 
-  .scrollbars {
-    // We don't want the scrollbars to go over the header. We also don't want the
-    // scrollbars to go over the first column, but since the width can automatically
-    // be adjusted that needs to be specified in the html file.
-    top: 33px;
+  .scrollbar-vertical-wrapper {
+    // We don't want to scrollbar to go over the header and footer.
+    top: 33 + 3px;
+    bottom: 48 + 3px;
   }
 }
 
@@ -120,9 +119,42 @@
   padding: 10px;
 }
 
+.grid-view-placeholder {
+  position: relative;
+  background-color: $white;
+  background-image:
+    linear-gradient(
+      0deg,
+      $color-neutral-200 1.52%,
+      $white 1.52%,
+      $white 50%,
+      $color-neutral-200 50%,
+      $color-neutral-200 51.52%,
+      $white 51.52%,
+      $white 100%
+    );
+  background-size: 66px 66px;
+}
+
+.grid-view-placeholder-column {
+  @include absolute(0, auto, 0, auto);
+
+  border-right: 1px solid $color-neutral-200;
+
+  .grid-view-left & {
+    border-right: none;
+  }
+}
+
+.grid-view-rows {
+  position: absolute;
+  top: 0;
+}
+
 .grid-view-row {
   @extend .clearfix;
 
+  position: relative;
   height: 32px + 1px;
 }
 
@@ -161,7 +193,20 @@
 .grid-view-row-count {
   @extend %ellipsis;
 
+  position: relative;
   width: 100%;
+
+  .grid-view-row-loading & {
+    color: $white;
+
+    &::after {
+      @include loading();
+      @include absolute(50%, auto, auto, 0);
+
+      content: "";
+      margin-top: -0.7rem;
+    }
+  }
 }
 
 .grid-view-row-more {
@@ -193,6 +238,12 @@
     z-index: 2;
     border: 2px solid $color-primary-500;
     border-radius: 2px;
+
+    &.editing {
+      @include absolute(-3px);
+
+      border: 3px solid $color-primary-600;
+    }
   }
 
   &.active-by {
@@ -304,12 +355,15 @@
   display: block;
   line-height: 32px;
   height: 32px;
-  padding-left: 10px;
   color: $color-neutral-900;
   background-color: $white;
 
   &:hover,
   &.hover {
     background-color: $color-primary-100;
+  }
+
+  .grid-view-left & {
+    padding-left: 10px;
   }
 }

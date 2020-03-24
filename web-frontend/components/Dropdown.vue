@@ -41,7 +41,7 @@ export default {
   name: 'Dropdown',
   props: {
     value: {
-      type: String,
+      type: [String, Number, Boolean, Object],
       required: true
     }
   },

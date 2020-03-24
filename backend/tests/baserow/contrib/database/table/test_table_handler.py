@@ -5,7 +5,25 @@ from django.db import connection
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.fields.models import TextField
+
+
+@pytest.mark.django_db
+def test_get_database_table(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table()
+    handler = TableHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.get_table(user=user, table_id=table_2.id)
+
+    with pytest.raises(TableDoesNotExist):
+        handler.get_table(user=user, table_id=99999)
+
+    table_copy = handler.get_table(user=user, table_id=table.id)
+    assert table_copy.id == table.id
 
 
 @pytest.mark.django_db

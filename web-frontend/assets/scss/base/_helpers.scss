@@ -20,15 +20,6 @@
   color: $color-primary-500 !important;
 }
 
-.remove-scrollbar {
-  -ms-overflow-style: none;
-
-  &::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-  }
-}
-
 .margin-bottom-1 {
   margin-bottom: 8px;
 }

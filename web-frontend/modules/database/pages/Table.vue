@@ -31,6 +31,8 @@
           :database="database"
           :table="table"
           :view="selectedView"
+          :fields="fields"
+          :primary="primary"
         />
       </template>
       <ul class="header-info">
@@ -58,20 +60,14 @@ import { mapState, mapGetters } from 'vuex'
 
 import ViewsContext from '@/modules/database/components/view/ViewsContext'
 
+/**
+ * This page component is the skeleton for a table. Depending on the selected view it
+ * will load the correct components into the header and body.
+ */
 export default {
   layout: 'app',
   components: {
     ViewsContext
-  },
-  props: {
-    databaseId: {
-      type: Number,
-      required: true
-    },
-    tableId: {
-      type: Number,
-      required: true
-    }
   },
   computed: {
     ...mapState({
@@ -83,19 +79,49 @@ export default {
       hasSelectedView: 'view/hasSelected'
     })
   },
-  asyncData({ store, params, error, app }) {
+  /**
+   * Prepares all the table, field and view data for the provided database, table and
+   * view id.
+   */
+  async asyncData({ store, params, error }) {
     // @TODO figure out why the id's aren't converted to an int in the route.
     const databaseId = parseInt(params.databaseId)
     const tableId = parseInt(params.tableId)
+    const viewId = params.viewId ? parseInt(params.viewId) : null
+    const data = {}
 
-    return store
-      .dispatch('table/preSelect', { databaseId, tableId })
-      .then(data => {
-        return { database: data.database, table: data.table }
+    // Try to find the table in the already fetched applications by the
+    // groupsAndApplications middleware and select that one. By selecting the table, the
+    // fields and views are also going to be fetched.
+    try {
+      const { database, table } = await store.dispatch('table/selectById', {
+        databaseId,
+        tableId
       })
-      .catch(() => {
-        return error({ statusCode: 404, message: 'Table not found.' })
-      })
+      data.database = database
+      data.table = table
+    } catch {
+      return error({ statusCode: 404, message: 'Table not found.' })
+    }
+
+    // If a view id is provided and the table is selected we can select the view. The
+    // views that belong to the table have already been fetched so we just need to
+    // select the correct one.
+    if (viewId !== null) {
+      try {
+        const { view } = await store.dispatch('view/selectById', viewId)
+        data.view = view
+
+        // It might be possible that the view also has some stores that need to be
+        // filled with initial data so we're going to call the fetch function here.
+        const type = store.getters['view/getType'](view.type)
+        await type.fetch({ store }, view)
+      } catch {
+        return error({ statusCode: 404, message: 'View not found.' })
+      }
+    }
+
+    return data
   },
   methods: {
     getViewComponent(view) {

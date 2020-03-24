@@ -84,6 +84,34 @@ class CustomFieldsInstanceMixin:
         return serializer_class(model_instance, context={'instance_type': self})
 
 
+class APIUrlsInstanceMixin:
+    def get_api_v0_urls(self):
+        """
+        If needed custom api related urls to the instance can be added here.
+
+        Example:
+
+            def get_api_urls(self):
+                from . import api_urls
+
+                return [
+                    path('some-url/', include(api_urls, namespace=self.type)),
+                ]
+
+            # api_urls.py
+            from django.conf.urls import url
+
+            urlpatterns = [
+                url(r'some-view^$', SomeView.as_view(), name='some_view'),
+            ]
+
+        :return: A list containing the urls.
+        :rtype: list
+        """
+
+        return []
+
+
 class Registry(object):
     name = None
     """The unique name that is used when raising exceptions."""
@@ -212,3 +240,19 @@ class CustomFieldsRegistryMixin:
 
         instance_type = self.get_by_model(model_instance.specific_class)
         return instance_type.get_serializer(model_instance, base_class=base_class)
+
+
+class APIUrlsRegistryMixin:
+    @property
+    def api_urls(self):
+        """
+        Returns a list of all the api urls that are in the registered instances.
+
+        :return: The api urls of the registered instances.
+        :rtype: list
+        """
+
+        api_urls = []
+        for types in self.registry.values():
+            api_urls += types.get_api_v0_urls()
+        return api_urls

@@ -73,9 +73,11 @@ export const actions = {
   /**
    * Clears all the selected groups. Can be used when logging off.
    */
-  clearAll({ commit }) {
+  clearAll({ commit, dispatch }) {
     commit('SET_ITEMS', [])
+    commit('SET_SELECTED', {})
     commit('SET_LOADED', false)
+    return dispatch('application/clearAll', { root: true })
   },
   /**
    * Changes the loading state of a specific group.
@@ -154,10 +156,8 @@ export const actions = {
    * Select a group and fetch all the applications related to that group.
    */
   select({ commit, dispatch }, group) {
-    return dispatch('application/fetchAll', group, { root: true }).then(() => {
-      commit('SET_SELECTED', group)
-      setGroupCookie(group.id, this.app.$cookies)
-    })
+    commit('SET_SELECTED', group)
+    setGroupCookie(group.id, this.app.$cookies)
   },
   /**
    * Select a group by a given group id.

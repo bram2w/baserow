@@ -11,10 +11,12 @@ def test_list_applications(api_client, data_fixture):
         email='test@test.nl', password='password', first_name='Test1')
     group_1 = data_fixture.create_group(user=user)
     group_2 = data_fixture.create_group()
+    group_3 = data_fixture.create_group(user=user)
     application_1 = data_fixture.create_database_application(group=group_1, order=1)
     application_2 = data_fixture.create_database_application(group=group_1, order=3)
     application_3 = data_fixture.create_database_application(group=group_1, order=2)
     data_fixture.create_database_application(group=group_2, order=1)
+    application_4 = data_fixture.create_database_application(group=group_3, order=1)
 
     response = api_client.get(
         reverse('api_v0:applications:list', kwargs={'group_id': group_1.id}), **{
@@ -34,6 +36,20 @@ def test_list_applications(api_client, data_fixture):
 
     assert response_json[2]['id'] == application_2.id
     assert response_json[2]['type'] == 'database'
+
+    response = api_client.get(
+        reverse('api_v0:applications:list'), **{
+            'HTTP_AUTHORIZATION': f'JWT {token}'
+        }
+    )
+    assert response.status_code == 200
+    response_json = response.json()
+
+    assert len(response_json) == 4
+    assert response_json[0]['id'] == application_1.id
+    assert response_json[1]['id'] == application_4.id
+    assert response_json[2]['id'] == application_3.id
+    assert response_json[3]['id'] == application_2.id
 
     response = api_client.get(
         reverse('api_v0:applications:list', kwargs={'group_id': group_2.id}), **{

@@ -1,11 +1,44 @@
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 
+from .exceptions import ViewDoesNotExist
 from .registries import view_type_registry
 from .models import View
 
 
 class ViewHandler:
+    def get_view(self, user, view_id, view_model=None):
+        """
+        Selects a view and checks if the user has access to that view. If everything
+        is fine the view is returned.
+
+        :param user: The user on whose behalf the view is requested.
+        :type user: User
+        :param view_id: The identifier of the view that must be returned.
+        :type view_id: int
+        :param view_model: If provided that models objects are used to select the
+                           view. This can for example be useful when you want to select
+                           a GridView or other child of the View model.
+        :type view_model: View
+        :return:
+        """
+
+        if not view_model:
+            view_model = View
+
+        try:
+            view = view_model.objects.select_related('table__database__group').get(
+                pk=view_id
+            )
+        except View.DoesNotExist:
+            raise ViewDoesNotExist(f'The view with id {view_id} does not exist.')
+
+        group = view.table.database.group
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        return view
+
     def create_view(self, user, table, type_name, **kwargs):
         """
         Creates a new view based on the provided type.

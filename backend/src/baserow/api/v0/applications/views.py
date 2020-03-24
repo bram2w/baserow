@@ -35,15 +35,21 @@ class ApplicationsView(APIView):
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
-    def get(self, request, group_id):
+    def get(self, request, group_id=None):
         """
-        Responds with a list of serialized applications that belong to the group if the
-        user has access to that group.
+        Responds with a list of serialized applications that belong to the user. If a
+        group id is provided only the applications of that group are going to be
+        returned.
         """
 
-        group = self.get_group(request, group_id)
-        applications = Application.objects.filter(group=group) \
-            .select_related('content_type')
+        applications = Application.objects.select_related('content_type')
+
+        if group_id:
+            group = self.get_group(request, group_id)
+            applications = applications.filter(group=group)
+        else:
+            applications = applications.filter(group__users__in=[request.user])
+
         data = [
             get_application_serializer(application).data
             for application in applications

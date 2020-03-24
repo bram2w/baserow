@@ -41,7 +41,7 @@ class Table(OrderableMixin, models.Model):
         Generates a django model based on available fields that belong to this table.
 
         :param fields: Extra table field instances that need to be added the model.
-        :type fields: fields
+        :type fields: list
         :param field_ids: If provided only the fields with the ids in the list will be
                           added to the model. This can be done to improve speed if for
                           example only a single field needs to be mutated.
@@ -49,7 +49,6 @@ class Table(OrderableMixin, models.Model):
         :param attribute_names: If True, the the model attributes will be based on the
                                 field name instead of the field id.
         :type attribute_names: bool
-
         :return: The generated model.
         :rtype: Model
         """
@@ -66,7 +65,12 @@ class Table(OrderableMixin, models.Model):
 
         attrs = {
             'Meta': meta,
-            '__module__': 'database.models'
+            '__module__': 'database.models',
+            # An indication that the model is a generated table model.
+            '_generated_table_model': True,
+            # An object containing the table fields, field types and the chosen names
+            # with the table field id as key.
+            '_field_objects': {}
         }
 
         # Construct a query to fetch all the fields of that table.
@@ -106,6 +110,14 @@ class Table(OrderableMixin, models.Model):
                     attrs[replaced_field_name] = attrs.pop(field_name)
                 if field_name in duplicate_field_names:
                     field_name = f'{field_name}_{field.db_column}'
+
+            # Add the generated objects and information to the dict that optionally can
+            # be returned.
+            attrs['_field_objects'][field.id] = {
+                'field': field,
+                'type': field_type,
+                'name': field_name
+            }
 
             # Add the field to the attribute dict that is used to generate the model.
             # All the kwargs that are passed to the `get_model_field` method are going

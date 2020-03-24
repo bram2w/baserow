@@ -86,7 +86,8 @@ export const actions = {
       })
   },
   /**
-   *
+   * Delete the table from the store only. It will not send a request for deleting
+   * to the server.
    */
   forceDelete({ commit, dispatch }, { database, table }) {
     if (table._.selected) {
@@ -97,78 +98,82 @@ export const actions = {
     commit('DELETE_ITEM', { database, id: table.id })
   },
   /**
-   * When selecting the view we we will have to fetch all the views that belong
-   * to a the table we want to select. While waiting for that the loading state
-   * is set to true so that if a user clicked on the table in sidebar we will
-   * see that he has to wait. When finished the table will be marked as
-   * selected.
+   * When selecting the table we will have to fetch all the views and fields that
+   * belong to the table we want to select. While the user is waiting he will see a
+   * loading icon in the related database and after that the table is selected.
    */
-  select({ commit, dispatch }, { database, table }) {
+  async select({ commit, dispatch, getters }, { database, table }) {
+    // If the table is already selected we don't have to fetch the views and fields.
+    if (getters.getSelectedId === table.id) {
+      return { database, table }
+    }
+
+    // A small helper to change the loading state of the database application.
     const setDatabaseLoading = (database, value) => {
-      dispatch(
+      return dispatch(
         'application/setItemLoading',
         { application: database, value },
         { root: true }
       )
     }
 
-    setDatabaseLoading(database, true)
-    return axios
-      .all([
+    await setDatabaseLoading(database, true)
+
+    try {
+      await axios.all([
         dispatch('view/fetchAll', table, { root: true }),
         dispatch('field/fetchAll', table, { root: true })
       ])
-      .then(
-        axios.spread(() => {
-          dispatch('application/clearChildrenSelected', null, { root: true })
-          commit('SET_SELECTED', { database, table })
-          setDatabaseLoading(database, false)
-          return { database, table }
-        })
-      )
-      .catch(error => {
-        setDatabaseLoading(database, false)
-        throw error
-      })
+
+      await dispatch('application/clearChildrenSelected', null, { root: true })
+      commit('SET_SELECTED', { database, table })
+
+      setDatabaseLoading(database, false)
+      return { database, table }
+    } catch (error) {
+      setDatabaseLoading(database, false)
+      throw error
+    }
   },
   /**
-   * First it will preSelect the application to make sure the groups are
-   * fetched, the correct group is selected, the related applications are
-   * selected and the provided application id is selected. After that is will
-   * check if the application has the correct type which is a database and makes
-   * sure that the table actually belongs to that database. If so it will select
-   * the table and return the database and table so it can be used.
+   * Selects a table based on the provided database (application) and table id. The
+   * application will also be selected if it has not already been selected. Because the
+   * table object is stored inside the database (application) object we have to check if
+   * it exists in there, if so it will be selected.
    */
-  preSelect({ dispatch, getters, rootGetters }, { databaseId, tableId }) {
-    return dispatch('application/preSelect', databaseId, { root: true }).then(
-      database => {
-        const type = DatabaseApplicationType.getType()
+  async selectById(
+    { dispatch, getters, rootGetters },
+    { databaseId, tableId }
+  ) {
+    const database = await dispatch('application/selectById', databaseId, {
+      root: true
+    })
+    const type = DatabaseApplicationType.getType()
 
-        // Check if the just selected application has the correct type because
-        // it needs to have tables.
-        if (database.type !== type) {
-          throw new Error(
-            `The application doesn't have the required ${type} type.`
-          )
-        }
+    // Check if the just selected application is a database
+    if (database.type !== type) {
+      throw new Error(`The application doesn't have the required ${type} type.`)
+    }
 
-        // Check if the provided table id is found is the just selected
-        // database.
-        const index = database.tables.findIndex(item => item.id === tableId)
-        if (index === -1) {
-          throw new Error('The table is not found in the selected application.')
-        }
-        const table = database.tables[index]
+    // Check if the provided table id is found in the just selected database.
+    const index = database.tables.findIndex(item => item.id === tableId)
+    if (index === -1) {
+      throw new Error('The table is not found in the selected application.')
+    }
+    const table = database.tables[index]
 
-        // Select the table table and return the database and table instance
-        // when done.
-        return dispatch('select', { database, table })
-      }
-    )
+    return dispatch('select', { database, table })
   }
 }
 
-export const getters = {}
+export const getters = {
+  getSelected: state => {
+    return state.selected
+  },
+  getSelectedId(state) {
+    return state.selected.id || 0
+  }
+}
 
 export default {
   namespaced: true,

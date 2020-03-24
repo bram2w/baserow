@@ -11,10 +11,20 @@
       {{ groupApplications }}
       <br /><br />
       <nuxt-link
-        :to="{ name: 'database-table', params: { id: 1, tableId: 1 } }"
+        :to="{ name: 'database-table', params: { databaseId: 1, tableId: 5 } }"
       >
-        <i class="fas fa-arrow-left"></i>
-        App
+        <i class="fas fa-arrow-right"></i>
+        Database 1 table 5
+      </nuxt-link>
+      <br /><br />
+      <nuxt-link
+        :to="{
+          name: 'database-table',
+          params: { databaseId: 1, tableId: 5, viewId: 5 }
+        }"
+      >
+        <i class="fas fa-arrow-right"></i>
+        Database 1 table 5 view 5
       </nuxt-link>
     </p>
   </div>

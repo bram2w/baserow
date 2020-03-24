@@ -71,7 +71,7 @@ export const actions = {
    * Register a new view type with the registry. This is used for creating a new
    * view type that users can create.
    */
-  register({ commit, getters }, view) {
+  register({ dispatch, commit }, view) {
     if (!(view instanceof ViewType)) {
       throw Error('The view must be an instance of ViewType.')
     }
@@ -101,12 +101,6 @@ export const actions = {
         commit('SET_ITEMS', data)
         commit('SET_LOADING', false)
         commit('SET_LOADED', true)
-
-        // @TODO REMOVE THIS!
-        if (state.items.length > 0) {
-          dispatch('select', state.items[0])
-        }
-        // END REMOVE
       })
       .catch(error => {
         commit('SET_ITEMS', [])
@@ -151,7 +145,8 @@ export const actions = {
     })
   },
   /**
-   * Deletes an existing view with the provided id.
+   * Deletes an existing view with the provided id. A request to the server is first
+   * made and after that it will be deleted from the store.
    */
   delete({ commit, dispatch }, view) {
     return ViewService.delete(view.id)
@@ -169,7 +164,7 @@ export const actions = {
       })
   },
   /**
-   * Forcibly remove the view from the items  without calling the server.
+   * Removes the view from the this store without making a delete request to the server.
    */
   forceDelete({ commit, dispatch }, view) {
     if (view._.selected) {
@@ -179,14 +174,18 @@ export const actions = {
     commit('DELETE_ITEM', view.id)
   },
   /**
-   * Select a view and fetch all the applications related to that view.
+   * Select a view and fetch all the applications related to that view. Note that
+   * only the views of the selected table are stored in this store. It might be
+   * possible you need to select the table first.
    */
   select({ commit, dispatch }, view) {
     commit('SET_SELECTED', view)
     return { view }
   },
   /**
-   * Select a view by a given view id.
+   * Selects a view by a given view id. Note that only the views of the selected
+   * table are stored in this store. It might be possible you need to select the
+   * table first.
    */
   selectById({ dispatch, getters }, id) {
     const view = getters.get(id)
@@ -194,12 +193,6 @@ export const actions = {
       return new Error(`View with id ${id} is not found.`)
     }
     return dispatch('select', view)
-  },
-  /**
-   * Unselect a view if selected.
-   */
-  unselect({ commit, dispatch, getters }, view) {
-    commit('UNSELECT', {})
   }
 }
 

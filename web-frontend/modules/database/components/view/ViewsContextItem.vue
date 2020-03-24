@@ -99,17 +99,21 @@ export default {
     selectView(view) {
       this.setLoading(view, true)
 
-      this.$store
-        .dispatch('view/selectById', view.id)
-        .then(() => {
-          this.$emit('selected')
-        })
-        .catch(error => {
-          notifyIf(error, 'view')
-        })
-        .then(() => {
+      this.$nuxt.$router.push(
+        {
+          name: 'database-table',
+          params: {
+            viewId: view.id
+          }
+        },
+        () => {
           this.setLoading(view, false)
-        })
+          this.$emit('selected')
+        },
+        () => {
+          this.setLoading(view, false)
+        }
+      )
     }
   }
 }
