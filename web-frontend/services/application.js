@@ -1,8 +1,9 @@
 import { client } from './client'
 
 export default {
-  fetchAll(groupId) {
-    return client.get(`/applications/group/${groupId}/`)
+  fetchAll(groupId = null) {
+    const groupUrl = groupId !== null ? `group/${groupId}/` : ''
+    return client.get(`/applications/${groupUrl}`)
   },
   create(groupId, values) {
     return client.post(`/applications/group/${groupId}/`, values)

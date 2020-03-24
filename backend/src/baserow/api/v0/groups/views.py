@@ -19,7 +19,7 @@ class GroupsView(APIView):
     core_handler = CoreHandler()
 
     def get(self, request):
-        """Responds with a list of groups where the users takes part in."""
+        """Responds with a list of serialized groups where the user is part of."""
 
         groups = GroupUser.objects.filter(user=request.user).select_related('group')
         serializer = GroupUserSerializer(groups, many=True)

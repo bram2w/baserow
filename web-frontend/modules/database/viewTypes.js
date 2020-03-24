@@ -80,6 +80,12 @@ export class ViewType {
   }
 
   /**
+   * The fetch method is called inside the asyncData function when the table page
+   * loads with a selected view. It is possible to fill some stores serverside here.
+   */
+  fetch() {}
+
+  /**
    * @return object
    */
   serialize() {
@@ -110,5 +116,9 @@ export class GridViewType extends ViewType {
 
   getComponent() {
     return GridView
+  }
+
+  async fetch({ store }, view) {
+    await store.dispatch('view/grid/fetchInitial', { gridId: view.id })
   }
 }

@@ -1,6 +1,10 @@
 import FieldNumberSubForm from '@/modules/database/components/field/FieldNumberSubForm'
 import FieldTextSubForm from '@/modules/database/components/field/FieldTextSubForm'
 
+import GridViewFieldText from '@/modules/database/components/view/grid/GridViewFieldText'
+import GridViewFieldNumber from '@/modules/database/components/view/grid/GridViewFieldNumber'
+import GridViewFieldBoolean from '@/modules/database/components/view/grid/GridViewFieldBoolean'
+
 export class FieldType {
   /**
    * Must return a string with the unique name, this must be the same as the
@@ -35,6 +39,23 @@ export class FieldType {
    * the inputs to choose of it is an integer of decimal.
    */
   getFormComponent() {
+    return null
+  }
+
+  /**
+   * @TODO make this depending on the view type.
+   */
+  getGridViewFieldComponent() {
+    throw new Error(
+      'Not implement error. This method should return a component.'
+    )
+  }
+
+  /**
+   * Because we want to show a new row immediately after creating we need to have an
+   * empty value to show right away.
+   */
+  getEmptyValue(field) {
     return null
   }
 
@@ -96,6 +117,10 @@ export class TextFieldType extends FieldType {
   getFormComponent() {
     return FieldTextSubForm
   }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldText
+  }
 }
 
 export class NumberFieldType extends FieldType {
@@ -118,6 +143,10 @@ export class NumberFieldType extends FieldType {
   getFormComponent() {
     return FieldNumberSubForm
   }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldNumber
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -135,5 +164,13 @@ export class BooleanFieldType extends FieldType {
 
   getName() {
     return 'Boolean'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldBoolean
+  }
+
+  getEmptyValue(field) {
+    return false
   }
 }

@@ -22,6 +22,17 @@ class ErrorHandler {
         'Action not allowed.',
         "The action couldn't be completed because you aren't a " +
           'member of the related group.'
+      ),
+      // @TODO move these errors to the module.
+      ERROR_TABLE_DOES_NOT_EXIST: new ResponseErrorMessage(
+        "Table doesn't exist.",
+        "The action couldn't be completed because the related table doesn't exist" +
+          ' anymore.'
+      ),
+      ERROR_ROW_DOES_NOT_EXIST: new ResponseErrorMessage(
+        "Row doesn't exist.",
+        "The action couldn't be completed because the related row doesn't exist" +
+          ' anymore.'
       )
     }
 
@@ -124,13 +135,6 @@ class ErrorHandler {
    * about what went wrong. After that the error is marked as handled.
    */
   notifyIf(name = null, message = null) {
-    console.log(
-      this.hasError(),
-      this.hasNetworkError(),
-      this.isNotFound(),
-      this.isHandled
-    )
-
     if (
       !(this.hasError() || this.hasNetworkError() || this.isNotFound()) ||
       this.isHandled

@@ -30,7 +30,3 @@ new_tab "Web frontend" \
 new_tab "Web frontend eslint" \
         "docker exec -it web-frontend bash" \
         "yarn run eslint --fix"
-
-new_tab "Old web frontend" \
-        "docker exec -it old-web-frontend bash" \
-        "yarn run dev"

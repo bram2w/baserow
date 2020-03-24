@@ -33,18 +33,71 @@ class FieldType(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
         field_type_registry.register(ExampleFieldType())
     """
 
-    def get_model_field(self, instance, **kwargs):
+    def prepare_value_for_db(self, instance, value):
         """
-        Should return the model field based on the custom model instance attributes.
+        When a row is created or updated all the values are going to be prepared for the
+        database. The value for this field type will run through this method and the
+        returned value will be used. It is also possible to raise validation errors if
+        the value is incorrect.
+
+        :param instance: The field instance.
+        :type instance: Field
+        :param value: The value that needs to be inserted or updated.
+        :type value: str
+        :return: The modified value that is going to be saved in the database.
+        :rtype: str
+        """
+
+        return value
+
+    def get_serializer_field(self, instance, **kwargs):
+        """
+        Should return the serializer field based on the custom model instance
+        attributes. It is common that the field is not required so that a user
+        doesn't have to update the field each time another field in the same row
+        changes.
 
         :param instance: The field instance for which to get the model field for.
         :type instance: Field
         :param kwargs: The kwargs that will be passed to the field.
         :type kwargs: dict
-        :return: The modal field that represents the field instance attributes.
-        :rtype: Field
+        :return: The serializer field that represents the field instance attributes.
+        :rtype: serializer.Field
         """
+
+        raise NotImplementedError('Each must have his own get_serializer_field method.')
+
+    def get_model_field(self, instance, **kwargs):
+        """
+        Should return the model field based on the custom model instance attributes. It
+        is common that the field can be blank because people are going to create a row
+        without any data in it.
+
+        :param instance: The field instance for which to get the model field for.
+        :type instance: Field
+        :param kwargs: The kwargs that will be passed to the field.
+        :type kwargs: dict
+        :return: The model field that represents the field instance attributes.
+        :rtype: model.Field
+        """
+
         raise NotImplementedError('Each must have his own get_model_field method.')
+
+    def random_value(self, instance, fake):
+        """
+        Should return a random value that can be used as value for the field. This is
+        used by the fill_table management command which will add an N amount of rows
+        to the a table with random data.
+
+        :param instance: The field instance for which to get the random value for.
+        :type instance: Field
+        :param fake: An instance of the Faker package.
+        :type fake: Faker
+        :return: The randomly generated value.
+        :rtype: any
+        """
+
+        return None
 
 
 class FieldTypeRegistry(CustomFieldsRegistryMixin, ModelRegistryMixin, Registry):

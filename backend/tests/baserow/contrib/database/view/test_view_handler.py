@@ -3,7 +3,36 @@ import pytest
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View, GridView
-from baserow.contrib.database.views.exceptions import ViewTypeDoesNotExist
+from baserow.contrib.database.views.exceptions import (
+    ViewTypeDoesNotExist, ViewDoesNotExist
+)
+
+
+@pytest.mark.django_db
+def test_get_view(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    grid = data_fixture.create_grid_view(user=user)
+
+    handler = ViewHandler()
+
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_view(user=user, view_id=99999)
+
+    with pytest.raises(UserNotInGroupError):
+        handler.get_view(user=user_2, view_id=grid.id)
+
+    view = handler.get_view(user=user, view_id=grid.id)
+
+    assert view.id == grid.id
+    assert view.name == grid.name
+    assert isinstance(view, View)
+
+    view = handler.get_view(user=user, view_id=grid.id, view_model=GridView)
+
+    assert view.id == grid.id
+    assert view.name == grid.name
+    assert isinstance(view, GridView)
 
 
 @pytest.mark.django_db

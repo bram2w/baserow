@@ -41,8 +41,17 @@ export default {
     SidebarApplication
   },
   computed: {
+    /**
+     * Because all the applications that belong to the user are in the store we will
+     * filter on the selected group here.
+     */
+    applications() {
+      return this.allApplications.filter(
+        application => application.group.id === this.selectedGroup.id
+      )
+    },
     ...mapState({
-      applications: state => state.application.items,
+      allApplications: state => state.application.items,
       selectedGroup: state => state.group.selected
     }),
     ...mapGetters({

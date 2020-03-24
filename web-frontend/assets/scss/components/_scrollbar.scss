@@ -5,25 +5,35 @@
   pointer-events: none;
 }
 
+.scrollbar-vertical-wrapper {
+  @include absolute(3px, 3px, 3px, auto);
+
+  width: $scrollbar-size;
+}
+
+.scrollbar-horizontal-wrapper {
+  @include absolute(auto, 3px, 3px, 3px);
+
+  height: $scrollbar-size;
+}
+
 %scrollbar {
-  position: absolute;
   background-color: $color-neutral-900;
   opacity: 0.6;
   border-radius: 3px;
   pointer-events: auto;
   cursor: pointer;
+  user-select: none;
 }
 
 .scrollbar-vertical {
   @extend %scrollbar;
 
-  width: $scrollbar-size;
-  right: 3px;
+  @include absolute(auto, 0, auto, 0);
 }
 
 .scrollbar-horizontal {
   @extend %scrollbar;
 
-  height: $scrollbar-size;
-  bottom: 3px;
+  @include absolute(0, auto, 0, auto);
 }

@@ -6,9 +6,33 @@ from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.fields.models import TextField
 
 from .models import Table
+from .exceptions import TableDoesNotExist
 
 
 class TableHandler:
+    def get_table(self, user, table_id):
+        """
+        Selects a table with a given id from the database.
+
+        :param user: The user on whose behalf the table is requested.
+        :type user: User
+        :param table_id: The identifier of the table that must be returned.
+        :type table_id: int
+        :return: The requested table of the provided id.
+        :rtype: Table
+        """
+
+        try:
+            table = Table.objects.select_related('database__group').get(id=table_id)
+        except Table.DoesNotExist:
+            raise TableDoesNotExist(f'The table with id {table_id} doe not exist.')
+
+        group = table.database.group
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        return table
+
     def create_table(self, user, database, **kwargs):
         """
         Creates a new table and a primary text field.

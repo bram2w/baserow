@@ -1,3 +1,5 @@
+import Vue from 'vue'
+
 import { DatabaseApplicationType } from '@/modules/database/applicationTypes'
 import { GridViewType } from '@/modules/database/viewTypes'
 import {
@@ -9,6 +11,7 @@ import {
 import tableStore from '@/modules/database/store/table'
 import viewStore from '@/modules/database/store/view'
 import fieldStore from '@/modules/database/store/field'
+import gridStore from '@/modules/database/store/view/grid'
 
 /**
  * Note that this method is actually called on the server and client side, but
@@ -22,10 +25,13 @@ import fieldStore from '@/modules/database/store/field'
  * non-POJOs DatabaseApplicationType' on the server side. There is an issue for
  * that on the backlog with id 15.
  */
-export default ({ store }) => {
+export default ({ store }, inject) => {
+  inject('databaseEventBus', new Vue())
+
   store.registerModule('table', tableStore)
   store.registerModule('view', viewStore)
   store.registerModule('field', fieldStore)
+  store.registerModule('view/grid', gridStore)
 
   store.dispatch('application/register', new DatabaseApplicationType())
   store.dispatch('view/register', new GridViewType())

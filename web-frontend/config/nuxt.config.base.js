@@ -42,7 +42,7 @@ export default {
   ],
 
   router: {
-    middleware: ['authentication', 'group']
+    middleware: ['authentication']
   },
 
   env: {

@@ -138,3 +138,5 @@ JWT_AUTH = {
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'baserow.api.v0.user.jwt.'
                                     'jwt_response_payload_handler'
 }
+
+DATABASE_ROUTERS = ('baserow.contrib.database.database_routers.TablesDatabaseRouter',)

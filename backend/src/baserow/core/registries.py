@@ -1,14 +1,21 @@
-from .registry import Instance, Registry, ModelInstanceMixin, ModelRegistryMixin
+from .registry import (
+    Instance, Registry, ModelInstanceMixin, ModelRegistryMixin, APIUrlsRegistryMixin,
+    APIUrlsInstanceMixin
+)
 from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
 
 
-class ApplicationType(ModelInstanceMixin, Instance):
+class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, Instance):
     """
     This abstract class represents a custom application that can be added to the
     application registry. It must be extended so customisation can be done. Each
     application will have his own model that must extend the Application model, this is
     needed so that the user can set custom settings per application instance he has
     created.
+
+    The added API urls will be available under the namespace 'api_v0'. So if a url
+    with name 'example' is returned by the method it will available under
+    reverse('api_v0:example').
 
     Example:
         from baserow.core.models import Application
@@ -20,6 +27,11 @@ class ApplicationType(ModelInstanceMixin, Instance):
         class ExampleApplication(ApplicationType):
             type = 'a-unique-type-name'
             model_class = ExampleApplicationModel
+
+            def get_api_v0_urls(self):
+                return [
+                    path('application-type/', include(api_urls, namespace=self.type)),
+                ]
 
         application_type_registry.register(ExampleApplication())
 
@@ -36,34 +48,8 @@ class ApplicationType(ModelInstanceMixin, Instance):
         :type application: Application
         """
 
-    def get_api_v0_urls(self):
-        """
-        If needed custom api related urls to the application can be added here.
 
-        Example:
-
-            def get_api_urls(self):
-                from . import api_urls
-
-                return [
-                    path('some-application/', include(api_urls, namespace=self.type)),
-                ]
-
-            # api_urls.py
-            from django.conf.urls import url
-
-            urlpatterns = [
-              url(r'some-view^$', SomeView.as_view(), name='some_view'),
-            ]
-
-        :return: A list containing the urls.
-        :rtype: list
-        """
-
-        return []
-
-
-class ApplicationTypeRegistry(ModelRegistryMixin, Registry):
+class ApplicationTypeRegistry(APIUrlsRegistryMixin, ModelRegistryMixin, Registry):
     """
     With the application registry it is possible to register new applications. An
     application is an abstraction made specifically for Baserow. If added to the
@@ -74,20 +60,6 @@ class ApplicationTypeRegistry(ModelRegistryMixin, Registry):
     name = 'application'
     does_not_exist_exception_class = ApplicationTypeDoesNotExist
     already_registered_exception_class = ApplicationTypeAlreadyRegistered
-
-    @property
-    def api_urls(self):
-        """
-        Returns a list of all the api urls that are in the registered applications.
-
-        :return: The api urls of the registered applications.
-        :rtype: list
-        """
-
-        api_urls = []
-        for application in self.registry.values():
-            api_urls += application.get_api_v0_urls()
-        return api_urls
 
 
 # A default application registry is created here, this is the one that is used

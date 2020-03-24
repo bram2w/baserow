@@ -3,7 +3,7 @@ from django.conf.urls import url
 from .views import FieldsView, FieldView
 
 
-app_name = 'baserow.contrib.api.v0.fields'
+app_name = 'baserow.contrib.database.api.v0.fields'
 
 urlpatterns = [
     url(r'table/(?P<table_id>[0-9]+)/$', FieldsView.as_view(), name='list'),

@@ -82,7 +82,11 @@ import GroupsContext from '@/components/group/GroupsContext'
 import Sidebar from '@/components/sidebar/Sidebar'
 
 export default {
-  middleware: 'authenticated',
+  // Application pages are pages that have the edit sidebar on the left side which
+  // contains the groups and applications. In order to be able to fetch them the user
+  // must be authenticated. And in order to show them we must fetch all the groups and
+  // applications.
+  middleware: ['authenticated', 'groupsAndApplications'],
   components: {
     GroupsContext,
     Notifications,
