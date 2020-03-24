@@ -1,23 +1,19 @@
 <template>
   <div>
     <h1 class="box-title">Sign up</h1>
-    <div
-      v-if="error == 'ERROR_ALREADY_EXISTS'"
-      class="alert alert-error alert-has-icon"
-    >
+    <div v-if="error" class="alert alert-error alert-has-icon">
       <div class="alert-icon">
         <i class="fas fa-exclamation"></i>
       </div>
-      <div class="alert-title">User already exists</div>
-      <p class="alert-content">
-        A user with the provided e-mail address already exists.
-      </p>
+      <div class="alert-title">{{ errorTitle }}</div>
+      <p class="alert-content">{{ errorMessage }}</p>
     </div>
     <form @submit.prevent="register">
       <div class="control">
         <label class="control-label">E-mail address</label>
         <div class="control-elements">
           <input
+            ref="email"
             v-model="account.email"
             :class="{ 'input-error': $v.account.email.$error }"
             type="text"
@@ -99,6 +95,8 @@
 <script>
 import { required, email, sameAs, minLength } from 'vuelidate/lib/validators'
 
+import { ResponseErrorMessage } from '@/plugins/client'
+
 export default {
   layout: 'login',
   head() {
@@ -121,38 +119,52 @@ export default {
   },
   data() {
     return {
-      error: '',
       loading: false,
       account: {
         email: '',
         name: '',
         password: '',
         passwordConfirm: ''
-      }
+      },
+      error: false,
+      errorTitle: '',
+      errorMessage: ''
     }
   },
   methods: {
-    register() {
+    async register() {
       this.$v.$touch()
-      if (!this.$v.$invalid) {
-        this.loading = true
-        this.error = ''
-        this.$store
-          .dispatch('auth/register', {
-            name: this.account.name,
-            email: this.account.email,
-            password: this.account.password
+      if (this.$v.$invalid) {
+        return
+      }
+
+      this.loading = true
+      this.error = false
+
+      try {
+        await this.$store.dispatch('auth/register', {
+          name: this.account.name,
+          email: this.account.email,
+          password: this.account.password
+        })
+        this.$nuxt.$router.push({ name: 'app' })
+      } catch (error) {
+        this.loading = false
+
+        if (error.handler) {
+          const message = error.handler.getMessage('signup', {
+            ERROR_EMAIL_ALREADY_EXISTS: new ResponseErrorMessage(
+              'User already exists.',
+              'A user with the provided e-mail address already exists.'
+            )
           })
-          .then(() => {
-            this.$nuxt.$router.push({ name: 'app' })
-          })
-          .catch(error => {
-            this.error = error.responseError
-            this.$v.$reset()
-          })
-          .then(() => {
-            this.loading = false
-          })
+          this.error = true
+          this.errorTitle = message.title
+          this.errorMessage = message.message
+          error.handler.handled()
+        } else {
+          throw error
+        }
       }
     }
   }

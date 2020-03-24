@@ -28,7 +28,7 @@ def test_create_user(client):
     }, format='json')
 
     assert response_failed.status_code == 400
-    assert response_failed.json()['error'] == 'ERROR_ALREADY_EXISTS'
+    assert response_failed.json()['error'] == 'ERROR_EMAIL_ALREADY_EXISTS'
 
     response_failed_2 = client.post(reverse('api_v0:user:index'), {
         'email': 'test'

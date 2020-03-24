@@ -48,12 +48,12 @@ export const mutations = {
     const index = state.items.findIndex(item => item.id === id)
     state.items.splice(index, 1)
   },
-  SET_SELECTED(state, group) {
+  SET_SELECTED(state, application) {
     Object.values(state.items).forEach(item => {
       item._.selected = false
     })
-    group._.selected = true
-    state.selected = group
+    application._.selected = true
+    state.selected = application
   },
   UNSELECT(state) {
     Object.values(state.items).forEach(item => {
@@ -112,7 +112,7 @@ export const actions = {
    */
   clearAll({ commit }) {
     commit('SET_ITEMS', [])
-    commit('SET_SELECTED', {})
+    commit('UNSELECT')
     commit('SET_LOADED', false)
   },
   /**

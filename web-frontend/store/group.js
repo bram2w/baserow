@@ -75,9 +75,9 @@ export const actions = {
    */
   clearAll({ commit, dispatch }) {
     commit('SET_ITEMS', [])
-    commit('SET_SELECTED', {})
+    commit('UNSELECT')
     commit('SET_LOADED', false)
-    return dispatch('application/clearAll', { root: true })
+    return dispatch('application/clearAll', undefined, { root: true })
   },
   /**
    * Changes the loading state of a specific group.

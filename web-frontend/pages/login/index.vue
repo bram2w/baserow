@@ -93,43 +93,45 @@ export default {
     }
   },
   methods: {
-    login() {
+    async login() {
       this.$v.$touch()
-      if (!this.$v.$invalid) {
-        this.loading = true
-        this.$store
-          .dispatch('auth/login', {
-            email: this.credentials.email,
-            password: this.credentials.password
-          })
-          .then(() => {
-            this.$nuxt.$router.push({ name: 'app' })
-          })
-          .catch(error => {
-            if (error.handler) {
-              const response = error.handler.response
-              // Because the API server does not yet respond with proper error codes we
-              // manually have to add the error here.
-              if (response && response.status === 400) {
-                this.errorTitle = 'Incorrect credentials'
-                this.errorMessage =
-                  'The provided e-mail address or password is ' + 'incorrect.'
-                this.credentials.password = ''
-                this.$v.$reset()
-                this.$refs.password.focus()
-              } else {
-                const message = error.handler.getMessage('login')
-                this.errorTitle = message.title
-                this.errorMessage = message.message
-              }
+      if (this.$v.$invalid) {
+        return
+      }
 
-              this.error = true
-              this.loading = false
-              error.handler.handled()
-            } else {
-              throw error
-            }
-          })
+      this.loading = true
+      this.error = false
+
+      try {
+        await this.$store.dispatch('auth/login', {
+          email: this.credentials.email,
+          password: this.credentials.password
+        })
+        this.$nuxt.$router.push({ name: 'app' })
+      } catch (error) {
+        if (error.handler) {
+          const response = error.handler.response
+          // Because the API server does not yet respond with proper error codes we
+          // manually have to add the error here.
+          if (response && response.status === 400) {
+            this.errorTitle = 'Incorrect credentials'
+            this.errorMessage =
+              'The provided e-mail address or password is ' + 'incorrect.'
+            this.credentials.password = ''
+            this.$v.$reset()
+            this.$refs.password.focus()
+          } else {
+            const message = error.handler.getMessage('login')
+            this.errorTitle = message.title
+            this.errorMessage = message.message
+          }
+
+          this.error = true
+          this.loading = false
+          error.handler.handled()
+        } else {
+          throw error
+        }
       }
     }
   }

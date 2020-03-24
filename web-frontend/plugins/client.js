@@ -1,7 +1,7 @@
 import { client } from '@/services/client'
 import { lowerCaseFirst } from '@/utils/string'
 
-class ResponseErrorMessage {
+export class ResponseErrorMessage {
   constructor(title, message) {
     this.title = title
     this.message = message
@@ -15,8 +15,8 @@ class ErrorHandler {
     this.response = response
     this.setError(code, detail)
 
-    // A temporary errorMap containing error messages for certain errors. This
-    // must later be replaced by a more dynamic way.
+    // A temporary global errorMap containing error messages for certain errors codes.
+    // This must later be replaced by a more dynamic way.
     this.errorMap = {
       ERROR_USER_NOT_IN_GROUP: new ResponseErrorMessage(
         'Action not allowed.',
@@ -75,17 +75,25 @@ class ErrorHandler {
   }
 
   /**
-   * Finds a message for the user based on the code.
+   * Finds a message in the global errors or in the provided specific error map.
    */
-  getErrorMessage() {
-    if (!this.errorMap.hasOwnProperty(this.code)) {
-      return new ResponseErrorMessage(
-        'Action not completed.',
-        "The action couldn't be completed because an unknown error has" +
-          ' occured.'
-      )
+  getErrorMessage(specificErrorMap = null) {
+    if (
+      specificErrorMap !== null &&
+      specificErrorMap.hasOwnProperty(this.code)
+    ) {
+      return specificErrorMap[this.code]
     }
-    return this.errorMap[this.code]
+
+    if (this.errorMap.hasOwnProperty(this.code)) {
+      return this.errorMap[this.code]
+    }
+
+    return new ResponseErrorMessage(
+      'Action not completed.',
+      "The action couldn't be completed because an unknown error has" +
+        ' occured.'
+    )
   }
 
   /**
@@ -116,12 +124,12 @@ class ErrorHandler {
    * If there is an error or the requested detail is not found an error
    * message related to the problem is returned.
    */
-  getMessage(name = null) {
+  getMessage(name = null, specificErrorMap = null) {
     if (this.hasNetworkError()) {
       return this.getNetworkErrorMessage()
     }
     if (this.hasError()) {
-      return this.getErrorMessage()
+      return this.getErrorMessage(specificErrorMap)
     }
     if (this.isNotFound()) {
       return this.getNotFoundMessage(name)
