@@ -15,9 +15,9 @@
 </template>
 
 <script>
-import context from '@/mixins/context'
-import FieldForm from '@/modules/database/components/field/FieldForm'
-import { notifyIf } from '@/utils/error'
+import context from '@baserow/modules/core/mixins/context'
+import FieldForm from '@baserow/modules/database/components/field/FieldForm'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'CreateFieldContext',
@@ -35,27 +35,25 @@ export default {
     }
   },
   methods: {
-    submit(values) {
+    async submit(values) {
       this.loading = true
 
       const type = values.type
       delete values.type
 
-      this.$store
-        .dispatch('field/create', {
+      try {
+        await this.$store.dispatch('field/create', {
           type,
           values,
           table: this.table
         })
-        .then(() => {
-          this.loading = false
-          this.$refs.form.reset()
-          this.hide()
-        })
-        .catch(error => {
-          this.loading = false
-          notifyIf(error, 'field')
-        })
+        this.loading = false
+        this.$refs.form.reset()
+        this.hide()
+      } catch (error) {
+        this.loading = false
+        notifyIf(error, 'field')
+      }
     }
   }
 }

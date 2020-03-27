@@ -20,8 +20,8 @@
 </template>
 
 <script>
-import SidebarItem from '@/modules/database/components/table/SidebarItem'
-import CreateTableModal from '@/modules/database/components/table/CreateTableModal'
+import SidebarItem from '@baserow/modules/database/components/table/SidebarItem'
+import CreateTableModal from '@baserow/modules/database/components/table/CreateTableModal'
 
 export default {
   name: 'Sidebar',

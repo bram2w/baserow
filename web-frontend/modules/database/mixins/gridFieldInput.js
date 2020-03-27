@@ -1,4 +1,4 @@
-import { isCharacterKeyPress } from '@/utils/events'
+import { isCharacterKeyPress } from '@baserow/modules/core/utils/events'
 
 /**
  * This mixin can be used with a grid view field if the field only needs an input. For

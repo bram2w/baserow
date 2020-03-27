@@ -1,6 +1,6 @@
-import { FieldType } from '@/modules/database/fieldTypes'
-import FieldService from '@/modules/database/services/field'
-import { clone } from '@/utils/object'
+import { FieldType } from '@baserow/modules/database/fieldTypes'
+import FieldService from '@baserow/modules/database/services/field'
+import { clone } from '@baserow/modules/core/utils/object'
 
 export function populateField(field, getters) {
   const type = getters.getType(field.type)
@@ -90,37 +90,39 @@ export const actions = {
    * Fetches all the fields of a given table. The is mostly called when the user
    * selects a different table.
    */
-  fetchAll({ commit, getters, dispatch }, table) {
+  async fetchAll({ commit, getters, dispatch }, table) {
     commit('SET_LOADING', true)
     commit('SET_LOADED', false)
     commit('UNSELECT', {})
 
-    return FieldService.fetchAll(table.id)
-      .then(({ data }) => {
-        data.forEach((part, index, d) => {
-          populateField(data[index], getters)
-        })
-
-        const primaryIndex = data.findIndex(item => item.primary === true)
-        const primary =
-          primaryIndex !== -1 ? data.splice(primaryIndex, 1)[0] : null
-        commit('SET_PRIMARY', primary)
-
-        commit('SET_ITEMS', data)
-        commit('SET_LOADING', false)
-        commit('SET_LOADED', true)
+    try {
+      const { data } = await FieldService.fetchAll(table.id)
+      data.forEach((part, index, d) => {
+        populateField(data[index], getters)
       })
-      .catch(error => {
-        commit('SET_ITEMS', [])
-        commit('SET_LOADING', false)
 
-        throw error
-      })
+      const primaryIndex = data.findIndex(item => item.primary === true)
+      const primary =
+        primaryIndex !== -1 ? data.splice(primaryIndex, 1)[0] : null
+      commit('SET_PRIMARY', primary)
+
+      commit('SET_ITEMS', data)
+      commit('SET_LOADING', false)
+      commit('SET_LOADED', true)
+    } catch (error) {
+      commit('SET_ITEMS', [])
+      commit('SET_LOADING', false)
+
+      throw error
+    }
   },
   /**
    * Creates a new field with the provided type for the given table.
    */
-  create({ commit, getters, rootGetters, dispatch }, { type, table, values }) {
+  async create(
+    { commit, getters, rootGetters, dispatch },
+    { type, table, values }
+  ) {
     if (values.hasOwnProperty('type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
@@ -132,17 +134,17 @@ export const actions = {
       throw new Error(`A field with type "${type}" doesn't exist.`)
     }
 
-    const data = clone(values)
-    data.type = type
-    return FieldService.create(table.id, data).then(({ data }) => {
-      data = populateField(data, getters)
-      commit('ADD_ITEM', data)
-    })
+    const postData = clone(values)
+    postData.type = type
+
+    let { data } = await FieldService.create(table.id, postData)
+    data = populateField(data, getters)
+    commit('ADD_ITEM', data)
   },
   /**
    * Updates the values of the provided field.
    */
-  update({ commit, dispatch, getters }, { field, type, values }) {
+  async update({ commit, dispatch, getters }, { field, type, values }) {
     if (values.hasOwnProperty('type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the values when ' +
@@ -154,35 +156,33 @@ export const actions = {
       throw new Error(`A field with type "${type}" doesn't exist.`)
     }
 
-    const data = clone(values)
-    data.type = type
+    const postData = clone(values)
+    postData.type = type
 
-    return FieldService.update(field.id, data).then(({ data }) => {
-      data = populateField(data, getters)
-      if (field.primary) {
-        commit('SET_PRIMARY', data)
-      } else {
-        commit('UPDATE_ITEM', { id: field.id, values: data })
-      }
-    })
+    let { data } = await FieldService.update(field.id, postData)
+    data = populateField(data, getters)
+    if (field.primary) {
+      commit('SET_PRIMARY', data)
+    } else {
+      commit('UPDATE_ITEM', { id: field.id, values: data })
+    }
   },
   /**
    * Deletes an existing field with the provided id.
    */
-  delete({ commit, dispatch }, field) {
-    return FieldService.delete(field.id)
-      .then(() => {
+  async delete({ commit, dispatch }, field) {
+    try {
+      await FieldService.delete(field.id)
+      dispatch('forceDelete', field)
+    } catch (error) {
+      // If the field to delete wasn't found we can just delete it from the
+      // state.
+      if (error.response && error.response.status === 404) {
         dispatch('forceDelete', field)
-      })
-      .catch(error => {
-        // If the field to delete wasn't found we can just delete it from the
-        // state.
-        if (error.response && error.response.status === 404) {
-          dispatch('forceDelete', field)
-        } else {
-          throw error
-        }
-      })
+      } else {
+        throw error
+      }
+    }
   },
   /**
    * Forcibly remove the field from the items  without calling the server.

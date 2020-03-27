@@ -1,10 +1,10 @@
 import path from 'path'
 
-export const databaseRoutes = [
+export const routes = [
   {
     name: 'database-table',
     path: '/database/:databaseId/table/:tableId/:viewId?',
-    component: path.resolve(__dirname, 'pages/Table.vue'),
+    component: path.resolve(__dirname, 'pages/table.vue'),
     props(route) {
       // @TODO figure out why the route param is empty on the server side.
       const p = { ...route.params }

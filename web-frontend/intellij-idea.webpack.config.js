@@ -1,4 +1,7 @@
-/** This file can be used in combination with intellij idea so the @ path resolves **/
+/**
+ * This file can be used in combination with intellij idea so the @baserow path
+ * resolves.
+ */
 
 const path = require('path')
 
@@ -7,10 +10,7 @@ module.exports = {
     extensions: ['.js', '.json', '.vue', '.ts'],
     root: path.resolve(__dirname),
     alias: {
-      '@': path.resolve(__dirname),
-      '@@': path.resolve(__dirname),
-      '~': path.resolve(__dirname),
-      '~~': path.resolve(__dirname)
+      '@baserow': path.resolve(__dirname)
     }
   }
 }

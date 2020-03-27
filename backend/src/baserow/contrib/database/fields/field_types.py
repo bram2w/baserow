@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -35,6 +37,8 @@ class NumberFieldType(FieldType):
     serializer_field_names = ['number_type', 'number_decimal_places', 'number_negative']
 
     def prepare_value_for_db(self, instance, value):
+        if instance.number_type == NUMBER_TYPE_DECIMAL:
+            value = Decimal(value)
         if not instance.number_negative and value < 0:
             raise ValidationError(f'The value for field {instance.id} cannot be '
                                   f'negative.')

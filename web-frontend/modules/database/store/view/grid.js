@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-import GridService from '@/modules/database/services/view/grid'
-import RowService from '@/modules/database/services/row'
+import GridService from '@baserow/modules/database/services/view/grid'
+import RowService from '@baserow/modules/database/services/row'
 
 export function populateRow(row) {
   row._ = { loading: false }
@@ -357,39 +357,33 @@ export const actions = {
   /**
    * Fetches an initial set of rows and adds that data to the store.
    */
-  fetchInitial({ dispatch, commit, getters }, { gridId }) {
+  async fetchInitial({ dispatch, commit, getters }, { gridId }) {
     commit('CLEAR_ROWS')
 
     const limit = getters.getBufferRequestSize * 2
-
-    return GridService.fetchRows({
+    const { data } = await GridService.fetchRows({
       gridId,
       offset: 0,
       limit: limit
     })
-      .then(({ data }) => {
-        data.results.forEach((part, index) => {
-          populateRow(data.results[index])
-        })
-        commit('ADD_ROWS', {
-          rows: data.results,
-          prependToRows: 0,
-          appendToRows: data.results.length,
-          count: data.count,
-          bufferStartIndex: 0,
-          bufferLimit: data.count > limit ? limit : data.count
-        })
-        commit('SET_ROWS_INDEX', {
-          startIndex: 0,
-          // @TODO mut calculate how many rows would fit and based on that calculate
-          // what the end index should be.
-          endIndex: data.count > 31 ? 31 : data.count,
-          top: 0
-        })
-      })
-      .catch(error => {
-        throw error
-      })
+    data.results.forEach((part, index) => {
+      populateRow(data.results[index])
+    })
+    commit('ADD_ROWS', {
+      rows: data.results,
+      prependToRows: 0,
+      appendToRows: data.results.length,
+      count: data.count,
+      bufferStartIndex: 0,
+      bufferLimit: data.count > limit ? limit : data.count
+    })
+    commit('SET_ROWS_INDEX', {
+      startIndex: 0,
+      // @TODO mut calculate how many rows would fit and based on that calculate
+      // what the end index should be.
+      endIndex: data.count > 31 ? 31 : data.count,
+      top: 0
+    })
   },
   /**
    * Updates a grid view field value. It will immediately be updated in the store
@@ -411,7 +405,7 @@ export const actions = {
    * which will be added to the store. Only if the request fails the row is @TODO
    * removed.
    */
-  create(
+  async create(
     { commit, getters, rootGetters, dispatch },
     { table, fields, values = {} }
   ) {
@@ -448,14 +442,13 @@ export const actions = {
     })
     const index = getters.getRowsLength - 1
 
-    return RowService.create(table.id, values)
-      .then(({ data }) => {
-        commit('FINALIZE_ROW', { index, id: data.id })
-      })
-      .catch(error => {
-        // @TODO remove the correct row is the request fails.
-        throw error
-      })
+    try {
+      const { data } = await RowService.create(table.id, values)
+      commit('FINALIZE_ROW', { index, id: data.id })
+    } catch (error) {
+      // @TODO remove the correct row is the request fails.
+      throw error
+    }
   }
 }
 

@@ -45,7 +45,7 @@ describe('index redirect', () => {
     })
     const res = httpMocks.createResponse()
     const { redirected } = await nuxt.server.renderRoute('/', { req, res })
-    expect(redirected.path).toBe('/app')
+    expect(redirected.path).toBe('/dashboard')
     expect(redirected.status).toBe(302)
   })
 

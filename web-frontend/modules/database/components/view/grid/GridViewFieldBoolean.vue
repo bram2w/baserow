@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import gridField from '@/modules/database/mixins/gridField'
+import gridField from '@baserow/modules/database/mixins/gridField'
 
 export default {
   mixins: [gridField],

@@ -9,7 +9,7 @@ describe('children', () => {
   }, 120000)
 
   test('/login', async () => {
-    const { html } = await nuxt.server.renderRoute('/login/signup')
+    const { html } = await nuxt.server.renderRoute('/signup')
     expect(html).toContain('Sign up')
   })
 
