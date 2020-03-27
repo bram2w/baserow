@@ -12,8 +12,8 @@
 </template>
 
 <script>
-import { isElement } from '@/utils/dom'
-import { notifyIf } from '@/utils/error'
+import { isElement } from '@baserow/modules/core/utils/dom'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'GridViewField',
@@ -63,19 +63,19 @@ export default {
      * If the grid field component emits an update event this method will be called
      * which will actually update the value via the store.
      */
-    update(value, oldValue) {
-      this.$store
-        .dispatch('view/grid/updateValue', {
+    async update(value, oldValue) {
+      try {
+        await this.$store.dispatch('view/grid/updateValue', {
           table: this.table,
           row: this.row,
           field: this.field,
           value,
           oldValue
         })
-        .catch(error => {
-          this.$forceUpdate()
-          notifyIf(error, 'column')
-        })
+      } catch (error) {
+        this.$forceUpdate()
+        notifyIf(error, 'column')
+      }
 
       // This is needed because in some cases we do have a value yet, so a watcher of
       // the value is not guaranteed. This will make sure the component shows the

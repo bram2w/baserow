@@ -1,4 +1,4 @@
-import { client } from '@/services/client'
+import { client } from '@baserow/modules/core/services/client'
 
 export default {
   fetchRows({ gridId, limit = 100, offset = null, cancelToken = null }) {

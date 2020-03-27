@@ -55,9 +55,9 @@
 <script>
 import { mapState } from 'vuex'
 
-import context from '@/mixins/context'
-import ViewsContextItem from '@/modules/database/components/view/ViewsContextItem'
-import CreateViewModal from '@/modules/database/components/view/CreateViewModal'
+import context from '@baserow/modules/core/mixins/context'
+import ViewsContextItem from '@baserow/modules/database/components/view/ViewsContextItem'
+import CreateViewModal from '@baserow/modules/database/components/view/CreateViewModal'
 
 export default {
   name: 'ViewsContext',

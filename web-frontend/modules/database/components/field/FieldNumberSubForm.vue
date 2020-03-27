@@ -39,7 +39,7 @@
 
 <script>
 import { required } from 'vuelidate/lib/validators'
-import form from '@/mixins/form'
+import form from '@baserow/modules/core/mixins/form'
 
 export default {
   name: 'FieldNumberSubForm',

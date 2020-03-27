@@ -52,8 +52,8 @@
 </template>
 
 <script>
-import { notifyIf } from '@/utils/error'
-import UpdateFieldContext from '@/modules/database/components/field/UpdateFieldContext'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import UpdateFieldContext from '@baserow/modules/database/components/field/UpdateFieldContext'
 
 export default {
   name: 'GridViewFieldType',
@@ -68,18 +68,17 @@ export default {
     setLoading(field, value) {
       this.$store.dispatch('field/setItemLoading', { field, value })
     },
-    deleteField(field) {
+    async deleteField(field) {
       this.$refs.context.hide()
       this.setLoading(field, true)
 
-      this.$store
-        .dispatch('field/delete', field)
-        .catch(error => {
-          notifyIf(error, 'field')
-        })
-        .then(() => {
-          this.setLoading(field, false)
-        })
+      try {
+        await this.$store.dispatch('field/delete', field)
+      } catch (error) {
+        notifyIf(error, 'field')
+      }
+
+      this.setLoading(field, false)
     }
   }
 }

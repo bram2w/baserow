@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import pytest
 
 from django.shortcuts import reverse
@@ -240,6 +242,31 @@ def test_update_row(api_client, data_fixture):
     assert getattr(row_2, f'field_{text_field.id}') == 'Blue'
     assert getattr(row_2, f'field_{number_field.id}') == 50
     assert not getattr(row_2, f'field_{boolean_field.id}')
+
+    table_3 = data_fixture.create_database_table(user=user)
+    decimal_field = data_fixture.create_number_field(
+        table=table_3, order=0, name='Price', number_type='DECIMAL',
+        number_decimal_places=2
+    )
+    model_3 = table_3.get_model()
+    row_3 = model_3.objects.create()
+
+    url = reverse('api_v0:database:rows:item', kwargs={
+        'table_id': table_3.id,
+        'row_id': row_3.id
+    })
+    response = api_client.patch(
+        url,
+        {f'field_{decimal_field.id}': 10.22},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+    assert response_json[f'field_{decimal_field.id}'] == '10.22'
+
+    row_3.refresh_from_db()
+    assert getattr(row_3, f'field_{decimal_field.id}') == Decimal('10.22')
 
 
 @pytest.mark.django_db

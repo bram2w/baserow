@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import form from '@/mixins/form'
+import form from '@baserow/modules/core/mixins/form'
 
 export default {
   name: 'FieldTextSubForm',

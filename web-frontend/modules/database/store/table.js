@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-import TableService from '@/modules/database/services/table'
-import { DatabaseApplicationType } from '@/modules/database/applicationTypes'
+import TableService from '@baserow/modules/database/services/table'
+import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 
 export function populateTable(table) {
   table._ = {
@@ -41,7 +41,7 @@ export const actions = {
    * Create a new table based on the provided values and add it to the tables
    * of the provided database.
    */
-  create({ commit, dispatch }, { database, values }) {
+  async create({ commit, dispatch }, { database, values }) {
     const type = DatabaseApplicationType.getType()
 
     // Check if the provided database (application) has the correct type.
@@ -52,38 +52,35 @@ export const actions = {
       )
     }
 
-    return TableService.create(database.id, values).then(({ data }) => {
-      commit('ADD_ITEM', { database, table: data })
-    })
+    const { data } = await TableService.create(database.id, values)
+    commit('ADD_ITEM', { database, table: data })
   },
   /**
    * Update an existing table of the provided database with the provided tables.
    */
-  update({ commit, dispatch }, { database, table, values }) {
-    return TableService.update(table.id, values).then(({ data }) => {
-      // Create a dict with only the values we want to update.
-      const update = Object.keys(values).reduce((result, key) => {
-        result[key] = data[key]
-        return result
-      }, {})
-      commit('UPDATE_ITEM', { database, table, values: update })
-    })
+  async update({ commit, dispatch }, { database, table, values }) {
+    const { data } = await TableService.update(table.id, values)
+    // Create a dict with only the values we want to update.
+    const update = Object.keys(values).reduce((result, key) => {
+      result[key] = data[key]
+      return result
+    }, {})
+    commit('UPDATE_ITEM', { database, table, values: update })
   },
   /**
    * Deletes an existing application.
    */
-  delete({ commit, dispatch }, { database, table }) {
-    return TableService.delete(table.id)
-      .then(() => {
+  async delete({ commit, dispatch }, { database, table }) {
+    try {
+      await TableService.delete(table.id)
+      return dispatch('forceDelete', { database, table })
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
         return dispatch('forceDelete', { database, table })
-      })
-      .catch(error => {
-        if (error.response && error.response.status === 404) {
-          return dispatch('forceDelete', { database, table })
-        } else {
-          throw error
-        }
-      })
+      } else {
+        throw error
+      }
+    }
   },
   /**
    * Delete the table from the store only. It will not send a request for deleting
@@ -92,7 +89,7 @@ export const actions = {
   forceDelete({ commit, dispatch }, { database, table }) {
     if (table._.selected) {
       // Redirect back to the dashboard because the table doesn't exist anymore.
-      this.$router.push({ name: 'app' })
+      this.$router.push({ name: 'dashboard' })
     }
 
     commit('DELETE_ITEM', { database, id: table.id })

@@ -1,13 +1,7 @@
 <template>
   <Modal>
     <h2 class="box-title">Create new table</h2>
-    <div v-if="error" class="alert alert-error alert-has-icon">
-      <div class="alert-icon">
-        <i class="fas fa-exclamation"></i>
-      </div>
-      <div class="alert-title">{{ errorTitle }}</div>
-      <p class="alert-content">{{ errorMessage }}</p>
-    </div>
+    <Error :error="error"></Error>
     <TableForm ref="tableForm" @submitted="submitted">
       <div class="actions">
         <div class="align-right">
@@ -25,14 +19,15 @@
 </template>
 
 <script>
-import TableForm from './TableForm'
+import modal from '@baserow/modules/core/mixins/modal'
+import error from '@baserow/modules/core/mixins/error'
 
-import modal from '@/mixins/modal'
+import TableForm from './TableForm'
 
 export default {
   name: 'CreateTableModal',
   components: { TableForm },
-  mixins: [modal],
+  mixins: [modal, error],
   props: {
     application: {
       type: Object,
@@ -41,36 +36,25 @@ export default {
   },
   data() {
     return {
-      loading: false,
-      error: false,
-      errorTitle: '',
-      errorMessage: ''
+      loading: false
     }
   },
   methods: {
-    submitted(values) {
+    async submitted(values) {
       this.loading = true
-      this.error = false
+      this.hideError()
 
-      this.$store
-        .dispatch('table/create', { database: this.application, values })
-        .then(() => {
-          this.loading = false
-          this.hide()
+      try {
+        await this.$store.dispatch('table/create', {
+          database: this.application,
+          values
         })
-        .catch(error => {
-          this.loading = false
-
-          if (error.handler) {
-            const message = error.handler.getMessage('application')
-            this.error = true
-            this.errorTitle = message.title
-            this.errorMessage = message.message
-            error.handler.handled()
-          } else {
-            throw error
-          }
-        })
+        this.loading = false
+        this.hide()
+      } catch (error) {
+        this.loading = false
+        this.handleError(error, 'application')
+      }
     }
   }
 }

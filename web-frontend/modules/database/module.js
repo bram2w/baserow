@@ -1,16 +1,15 @@
 import path from 'path'
 
-import { databaseRoutes } from './routes'
+import { routes } from './routes'
 
 export default function DatabaseModule(options) {
   // Add the plugin to register the database application.
-  this.addPlugin({
-    src: path.resolve(__dirname, 'plugin.js'),
-    filename: 'plugin.js'
+  this.appendPlugin({
+    src: path.resolve(__dirname, 'plugin.js')
   })
 
   // Add all the related routes.
-  this.extendRoutes(routes => {
-    routes.push(...databaseRoutes)
+  this.extendRoutes(configRoutes => {
+    configRoutes.push(...routes)
   })
 }

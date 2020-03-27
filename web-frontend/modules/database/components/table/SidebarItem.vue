@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import { notifyIf } from '@/utils/error'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'SidebarItem',
@@ -65,41 +65,39 @@ export default {
         value
       })
     },
-    deleteTable(database, table) {
+    async deleteTable(database, table) {
       this.$refs.context.hide()
       this.setLoading(database, true)
 
-      this.$store
-        .dispatch('table/delete', { database, table })
-        .catch(error => {
-          notifyIf(error, 'table')
-        })
-        .then(() => {
-          this.setLoading(database, false)
-        })
+      try {
+        await this.$store.dispatch('table/delete', { database, table })
+      } catch (error) {
+        notifyIf(error, 'table')
+      }
+
+      this.setLoading(database, false)
     },
     enableRename() {
       this.$refs.context.hide()
       this.$refs.rename.edit()
     },
-    renameTable(database, table, event) {
+    async renameTable(database, table, event) {
       this.setLoading(database, true)
 
-      this.$store
-        .dispatch('table/update', {
+      try {
+        await this.$store.dispatch('table/update', {
           database,
           table,
           values: {
             name: event.value
           }
         })
-        .catch(error => {
-          this.$refs.rename.set(event.oldValue)
-          notifyIf(error, 'table')
-        })
-        .then(() => {
-          this.setLoading(database, false)
-        })
+      } catch (error) {
+        this.$refs.rename.set(event.oldValue)
+        notifyIf(error, 'table')
+      }
+
+      this.setLoading(database, false)
     }
   }
 }

@@ -1,6 +1,6 @@
-import { ApplicationType } from '@/core/applicationTypes'
-import Sidebar from '@/modules/database/components/Sidebar'
-import { populateTable } from '@/modules/database/store/table'
+import { ApplicationType } from '@baserow/modules/core/applicationTypes'
+import Sidebar from '@baserow/modules/database/components/Sidebar'
+import { populateTable } from '@baserow/modules/database/store/table'
 
 export class DatabaseApplicationType extends ApplicationType {
   static getType() {
@@ -36,7 +36,7 @@ export class DatabaseApplicationType extends ApplicationType {
   delete(application, { $router }) {
     const tableSelected = application.tables.some(table => table._.selected)
     if (tableSelected) {
-      $router.push({ name: 'app' })
+      $router.push({ name: 'dashboard' })
     }
   }
 

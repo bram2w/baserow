@@ -1,9 +1,9 @@
-import FieldNumberSubForm from '@/modules/database/components/field/FieldNumberSubForm'
-import FieldTextSubForm from '@/modules/database/components/field/FieldTextSubForm'
+import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
+import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 
-import GridViewFieldText from '@/modules/database/components/view/grid/GridViewFieldText'
-import GridViewFieldNumber from '@/modules/database/components/view/grid/GridViewFieldNumber'
-import GridViewFieldBoolean from '@/modules/database/components/view/grid/GridViewFieldBoolean'
+import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
+import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
+import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
 
 export class FieldType {
   /**

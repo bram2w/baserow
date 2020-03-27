@@ -1,4 +1,4 @@
-import { uuid } from '@/utils/string'
+import { uuid } from '@/modules/core/utils/string'
 
 describe('test string utils', () => {
   test('test uuid', () => {
