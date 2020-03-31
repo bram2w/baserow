@@ -20,6 +20,6 @@ export default {
     },
     hide(...args) {
       this.getRootModal().hide(...args)
-    }
-  }
+    },
+  },
 }

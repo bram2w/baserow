@@ -83,7 +83,7 @@ export class ApplicationType {
       iconClass: this.iconClass,
       name: this.name,
       routeName: this.routeName,
-      hasSelectedSidebarComponent: this.getSelectedSidebarComponent() !== null
+      hasSelectedSidebarComponent: this.getSelectedSidebarComponent() !== null,
     }
   }
 

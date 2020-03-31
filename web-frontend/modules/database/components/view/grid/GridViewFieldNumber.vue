@@ -23,7 +23,7 @@ export default {
         this.$refs.input.focus()
         this.$refs.input.selectionStart = this.$refs.input.selectionEnd = 100000
       })
-    }
-  }
+    },
+  },
 }
 </script>

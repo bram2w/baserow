@@ -33,7 +33,7 @@ class ErrorHandler {
         "Row doesn't exist.",
         "The action couldn't be completed because the related row doesn't exist" +
           ' anymore.'
-      )
+      ),
     }
 
     // A temporary notFoundMap containing the error messages for when the
@@ -80,12 +80,12 @@ class ErrorHandler {
   getErrorMessage(specificErrorMap = null) {
     if (
       specificErrorMap !== null &&
-      specificErrorMap.hasOwnProperty(this.code)
+      Object.prototype.hasOwnProperty.call(specificErrorMap, this.code)
     ) {
       return specificErrorMap[this.code]
     }
 
-    if (this.errorMap.hasOwnProperty(this.code)) {
+    if (Object.prototype.hasOwnProperty.call(this.errorMap, this.code)) {
       return this.errorMap[this.code]
     }
 
@@ -100,7 +100,7 @@ class ErrorHandler {
    * Finds a not found message for a given context.
    */
   getNotFoundMessage(name) {
-    if (!this.notFoundMap.hasOwnProperty(name)) {
+    if (!Object.prototype.hasOwnProperty.call(this.notFoundMap, name)) {
       return new ResponseErrorMessage(
         `${lowerCaseFirst(name)} not found.`,
         `The selected ${name.toLowerCase()} wasn't found, maybe it has already been deleted.`
@@ -158,7 +158,7 @@ class ErrorHandler {
       'notification/error',
       {
         title: message.title,
-        message: message.message
+        message: message.message,
       },
       { root: true }
     )
@@ -175,10 +175,10 @@ class ErrorHandler {
   }
 }
 
-export default function({ store }) {
+export default function ({ store }) {
   // Create a request interceptor to add the authorization token to every
   // request if the user is authenticated.
-  client.interceptors.request.use(config => {
+  client.interceptors.request.use((config) => {
     if (store.getters['auth/isAuthenticated']) {
       const token = store.getters['auth/token']
       config.headers.Authorization = `JWT ${token}`
@@ -189,10 +189,10 @@ export default function({ store }) {
   // Create a response interceptor to add more detail tot the error message
   // and to create a notification when there is a network error.
   client.interceptors.response.use(
-    response => {
+    (response) => {
       return response
     },
-    error => {
+    (error) => {
       error.handler = new ErrorHandler(store, error.response)
 
       // Add the error message in the response to the error object.

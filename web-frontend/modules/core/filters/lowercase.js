@@ -1,7 +1,7 @@
 /**
  * Converts a string to the same string, but with lowercase characters.
  */
-export default function(value) {
+export default function (value) {
   if (!value) {
     return ''
   }

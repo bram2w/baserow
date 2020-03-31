@@ -125,7 +125,7 @@
               class="grid-view-placeholder"
               :style="{
                 height: placeholderHeight + 'px',
-                width: fields.length * 200 + 'px'
+                width: fields.length * 200 + 'px',
               }"
             >
               <div
@@ -192,34 +192,34 @@ export default {
   components: {
     CreateFieldContext,
     GridViewFieldType,
-    GridViewField
+    GridViewField,
   },
   props: {
     primary: {
       type: Object,
-      required: true
+      required: true,
     },
     fields: {
       type: Array,
-      required: true
+      required: true,
     },
     view: {
       type: Object,
-      required: true
+      required: true,
     },
     table: {
       type: Object,
-      required: true
+      required: true,
     },
     database: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
       addHover: false,
-      loading: true
+      loading: true,
     }
   },
   computed: {
@@ -228,8 +228,8 @@ export default {
       count: 'view/grid/getCount',
       rowHeight: 'view/grid/getRowHeight',
       rowsTop: 'view/grid/getRowsTop',
-      placeholderHeight: 'view/grid/getPlaceholderHeight'
-    })
+      placeholderHeight: 'view/grid/getPlaceholderHeight',
+    }),
   },
   methods: {
     scroll(pixelY, pixelX) {
@@ -251,7 +251,7 @@ export default {
       this.$store.dispatch('view/grid/fetchByScrollTopDelayed', {
         gridId: this.view.id,
         scrollTop: this.$refs.rightBody.scrollTop,
-        windowHeight: this.$refs.rightBody.clientHeight
+        windowHeight: this.$refs.rightBody.clientHeight,
       })
     },
     horizontalScroll(left) {
@@ -278,12 +278,12 @@ export default {
         await this.$store.dispatch('view/grid/create', {
           table: this.table,
           fields: this.fields,
-          values: {}
+          values: {},
         })
       } catch (error) {
         notifyIf(error, 'row')
       }
-    }
-  }
+    },
+  },
 }
 </script>

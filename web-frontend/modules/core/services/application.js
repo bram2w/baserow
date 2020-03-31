@@ -16,5 +16,5 @@ export default {
   },
   delete(applicationId) {
     return client.delete(`/applications/${applicationId}/`)
-  }
+  },
 }

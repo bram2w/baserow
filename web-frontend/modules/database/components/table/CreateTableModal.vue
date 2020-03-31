@@ -31,12 +31,12 @@ export default {
   props: {
     application: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
-      loading: false
+      loading: false,
     }
   },
   methods: {
@@ -47,7 +47,7 @@ export default {
       try {
         await this.$store.dispatch('table/create', {
           database: this.application,
-          values
+          values,
         })
         this.loading = false
         this.hide()
@@ -55,7 +55,7 @@ export default {
         this.loading = false
         this.handleError(error, 'application')
       }
-    }
-  }
+    },
+  },
 }
 </script>

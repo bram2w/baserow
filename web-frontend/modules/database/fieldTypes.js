@@ -92,7 +92,7 @@ export class FieldType {
     return {
       type: this.type,
       iconClass: this.iconClass,
-      name: this.name
+      name: this.name,
     }
   }
 }

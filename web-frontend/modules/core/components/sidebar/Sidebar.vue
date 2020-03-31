@@ -38,7 +38,7 @@ export default {
   name: 'Sidebar',
   components: {
     CreateApplicationContext,
-    SidebarApplication
+    SidebarApplication,
   },
   computed: {
     /**
@@ -47,17 +47,17 @@ export default {
      */
     applications() {
       return this.allApplications.filter(
-        application => application.group.id === this.selectedGroup.id
+        (application) => application.group.id === this.selectedGroup.id
       )
     },
     ...mapState({
-      allApplications: state => state.application.items,
-      selectedGroup: state => state.group.selected
+      allApplications: (state) => state.application.items,
+      selectedGroup: (state) => state.group.selected,
     }),
     ...mapGetters({
       isLoading: 'application/isLoading',
-      hasSelectedGroup: 'group/hasSelected'
-    })
-  }
+      hasSelectedGroup: 'group/hasSelected',
+    }),
+  },
 }
 </script>

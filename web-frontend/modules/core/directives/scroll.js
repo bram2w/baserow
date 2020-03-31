@@ -23,7 +23,7 @@ export default {
   bind(el, binding) {
     const DOM_DELTA_PIXEL = 0
     const DOM_DELTA_LINE = 1
-    el.scrollDirectiveEvent = event => {
+    el.scrollDirectiveEvent = (event) => {
       event.preventDefault()
 
       const { deltaY, deltaX, deltaMode } = event
@@ -52,5 +52,5 @@ export default {
   },
   unbind(el) {
     el.removeEventListener('wheel', el.scrollDirectiveEvent)
-  }
+  },
 }

@@ -20,7 +20,7 @@
       <nuxt-link
         :to="{
           name: 'database-table',
-          params: { databaseId: 1, tableId: 5, viewId: 5 }
+          params: { databaseId: 1, tableId: 5, viewId: 5 },
         }"
       >
         <i class="fas fa-arrow-right"></i>
@@ -35,19 +35,19 @@ import { mapState } from 'vuex'
 
 export default {
   layout: 'app',
-  head() {
-    return {
-      title: 'Dashboard'
-    }
-  },
   computed: {
     ...mapState({
-      user: state => state.auth.user,
-      groups: state => state.group.items,
-      selectedGroup: state => state.group.selected,
-      applications: state => state.application.applications,
-      groupApplications: state => state.application.items
-    })
-  }
+      user: (state) => state.auth.user,
+      groups: (state) => state.group.items,
+      selectedGroup: (state) => state.group.selected,
+      applications: (state) => state.application.applications,
+      groupApplications: (state) => state.application.items,
+    }),
+  },
+  head() {
+    return {
+      title: 'Dashboard',
+    }
+  },
 }
 </script>

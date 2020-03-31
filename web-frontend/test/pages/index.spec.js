@@ -6,7 +6,7 @@ import createNuxt from '@/test/helpers/create-nuxt'
 let nuxt = null
 
 describe('index redirect', () => {
-  beforeAll(async done => {
+  beforeAll(async (done) => {
     moxios.install()
 
     // Because the token 'test1' exists it will be refreshed immediately, the
@@ -22,9 +22,9 @@ describe('index redirect', () => {
           '5uy7mk4kf3LoLpZYXoyMrOfi0fDQneVcaFE',
         user: {
           first_name: 'Test',
-          username: 'test@test.nl'
-        }
-      }
+          username: 'test@test.nl',
+        },
+      },
     })
 
     nuxt = await createNuxt(true)
@@ -40,8 +40,8 @@ describe('index redirect', () => {
   test('if authenticated', async () => {
     const req = httpMocks.createRequest({
       headers: {
-        cookie: 'jwt_token=test1'
-      }
+        cookie: 'jwt_token=test1',
+      },
     })
     const res = httpMocks.createResponse()
     const { redirected } = await nuxt.server.renderRoute('/', { req, res })

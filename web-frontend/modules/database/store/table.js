@@ -6,13 +6,13 @@ import { DatabaseApplicationType } from '@baserow/modules/database/applicationTy
 export function populateTable(table) {
   table._ = {
     disabled: false,
-    selected: false
+    selected: false,
   }
   return table
 }
 
 export const state = () => ({
-  selected: {}
+  selected: {},
 })
 
 export const mutations = {
@@ -24,16 +24,16 @@ export const mutations = {
     Object.assign(table, table, values)
   },
   SET_SELECTED(state, { database, table }) {
-    Object.values(database.tables).forEach(item => {
+    Object.values(database.tables).forEach((item) => {
       item._.selected = false
     })
     table._.selected = true
     state.selected = table
   },
   DELETE_ITEM(state, { database, id }) {
-    const index = database.tables.findIndex(item => item.id === id)
+    const index = database.tables.findIndex((item) => item.id === id)
     database.tables.splice(index, 1)
-  }
+  },
 }
 
 export const actions = {
@@ -119,7 +119,7 @@ export const actions = {
     try {
       await axios.all([
         dispatch('view/fetchAll', table, { root: true }),
-        dispatch('field/fetchAll', table, { root: true })
+        dispatch('field/fetchAll', table, { root: true }),
       ])
 
       await dispatch('application/clearChildrenSelected', null, { root: true })
@@ -143,7 +143,7 @@ export const actions = {
     { databaseId, tableId }
   ) {
     const database = await dispatch('application/selectById', databaseId, {
-      root: true
+      root: true,
     })
     const type = DatabaseApplicationType.getType()
 
@@ -153,23 +153,23 @@ export const actions = {
     }
 
     // Check if the provided table id is found in the just selected database.
-    const index = database.tables.findIndex(item => item.id === tableId)
+    const index = database.tables.findIndex((item) => item.id === tableId)
     if (index === -1) {
       throw new Error('The table is not found in the selected application.')
     }
     const table = database.tables[index]
 
     return dispatch('select', { database, table })
-  }
+  },
 }
 
 export const getters = {
-  getSelected: state => {
+  getSelected: (state) => {
     return state.selected
   },
   getSelectedId(state) {
     return state.selected.id || 0
-  }
+  },
 }
 
 export default {
@@ -177,5 +177,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

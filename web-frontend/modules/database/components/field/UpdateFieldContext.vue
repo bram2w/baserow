@@ -31,12 +31,12 @@ export default {
   props: {
     field: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
-      loading: false
+      loading: false,
     }
   },
   methods: {
@@ -50,7 +50,7 @@ export default {
         await this.$store.dispatch('field/update', {
           field: this.field,
           type,
-          values
+          values,
         })
         this.loading = false
         this.$refs.form.reset()
@@ -60,7 +60,7 @@ export default {
         this.loading = false
         notifyIf(error, 'field')
       }
-    }
-  }
+    },
+  },
 }
 </script>

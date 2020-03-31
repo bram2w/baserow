@@ -11,13 +11,13 @@ export default {
     value: {
       type: Boolean,
       required: false,
-      default: false
-    }
+      default: false,
+    },
   },
   methods: {
     toggle(value) {
       this.$emit('input', !value)
-    }
-  }
+    },
+  },
 }
 </script>

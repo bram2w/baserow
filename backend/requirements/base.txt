@@ -1,7 +1,7 @@
-Django==2.2.2
-django-cors-headers==3.0.2
-djangorestframework==3.9.4
+Django==2.2.11
+django-cors-headers==3.2.1
+djangorestframework==3.11.0
 djangorestframework-jwt==1.11.0
-psycopg2==2.8.3
-ipython==7.7.0
-Faker==1.0.7
+psycopg2==2.8.4
+ipython==7.13.0
+Faker==4.0.2

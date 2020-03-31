@@ -36,7 +36,7 @@ export const state = () => ({
   // The last scrollTop when the visibleByScrollTop was called.
   scrollTop: 0,
   // The last windowHeight when the visibleByScrollTop was called.
-  windowHeight: 0
+  windowHeight: 0,
 })
 
 export const mutations = {
@@ -105,7 +105,7 @@ export const mutations = {
   },
   SET_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
-  }
+  },
 }
 
 // Contains the timeout needed for the delayed delayed scroll top action.
@@ -228,7 +228,7 @@ export const actions = {
         gridId,
         offset: requestOffset,
         limit: requestLimit,
-        cancelToken: lastSource.token
+        cancelToken: lastSource.token,
       })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
@@ -239,17 +239,17 @@ export const actions = {
             prependToRows: prependToBuffer,
             appendToRows: appendToBuffer,
             count: data.count,
-            bufferStartIndex: bufferStartIndex,
-            bufferLimit: bufferLimit
+            bufferStartIndex,
+            bufferLimit,
           })
           dispatch('visibleByScrollTop', {
             // Somehow we have to explicitly set these values to null.
             scrollTop: null,
-            windowHeight: null
+            windowHeight: null,
           })
           lastRequest = null
         })
-        .catch(error => {
+        .catch((error) => {
           if (!axios.isCancel(error)) {
             lastRequest = null
             throw error
@@ -323,7 +323,7 @@ export const actions = {
       commit('SET_ROWS_INDEX', {
         startIndex: visibleRowStartIndex,
         endIndex: visibleRowEndIndex,
-        top
+        top,
       })
     }
   },
@@ -364,7 +364,7 @@ export const actions = {
     const { data } = await GridService.fetchRows({
       gridId,
       offset: 0,
-      limit: limit
+      limit,
     })
     data.results.forEach((part, index) => {
       populateRow(data.results[index])
@@ -375,14 +375,14 @@ export const actions = {
       appendToRows: data.results.length,
       count: data.count,
       bufferStartIndex: 0,
-      bufferLimit: data.count > limit ? limit : data.count
+      bufferLimit: data.count > limit ? limit : data.count,
     })
     commit('SET_ROWS_INDEX', {
       startIndex: 0,
       // @TODO mut calculate how many rows would fit and based on that calculate
       // what the end index should be.
       endIndex: data.count > 31 ? 31 : data.count,
-      top: 0
+      top: 0,
     })
   },
   /**
@@ -395,7 +395,7 @@ export const actions = {
 
     const values = {}
     values[`field_${field.id}`] = value
-    return RowService.update(table.id, row.id, values).catch(error => {
+    return RowService.update(table.id, row.id, values).catch((error) => {
       commit('SET_VALUE', { row, field, value: oldValue })
       throw error
     })
@@ -411,7 +411,7 @@ export const actions = {
   ) {
     // Fill the not provided values with the empty value of the field type so we can
     // immediately commit the created row to the state.
-    fields.forEach(field => {
+    fields.forEach((field) => {
       const name = `field_${field.id}`
       if (!(name in values)) {
         const fieldType = rootGetters['field/getType'](field._.type.type)
@@ -434,22 +434,18 @@ export const actions = {
       appendToRows: 1,
       count: getters.getCount + 1,
       bufferStartIndex: getters.getBufferStartIndex,
-      bufferLimit: getters.getBufferLimit + 1
+      bufferLimit: getters.getBufferLimit + 1,
     })
     dispatch('visibleByScrollTop', {
       scrollTop: null,
-      windowHeight: null
+      windowHeight: null,
     })
     const index = getters.getRowsLength - 1
 
-    try {
-      const { data } = await RowService.create(table.id, values)
-      commit('FINALIZE_ROW', { index, id: data.id })
-    } catch (error) {
-      // @TODO remove the correct row is the request fails.
-      throw error
-    }
-  }
+    // @TODO remove the correct row is the request fails.
+    const { data } = await RowService.create(table.id, values)
+    commit('FINALIZE_ROW', { index, id: data.id })
+  },
 }
 
 export const getters = {
@@ -503,7 +499,7 @@ export const getters = {
   },
   getWindowHeight(state) {
     return state.windowHeight
-  }
+  },
 }
 
 export default {
@@ -511,5 +507,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

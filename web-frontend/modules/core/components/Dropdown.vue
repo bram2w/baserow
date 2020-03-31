@@ -42,15 +42,15 @@ export default {
   props: {
     value: {
       type: [String, Number, Boolean, Object],
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
       open: false,
       name: null,
       icon: null,
-      query: ''
+      query: '',
     }
   },
   watch: {
@@ -59,7 +59,7 @@ export default {
      */
     value(newValue) {
       this.setDisplayValue(newValue)
-    }
+    },
   },
   /**
    * When the dropdown first loads we have to check if there already is a value, if
@@ -92,7 +92,7 @@ export default {
 
       // If the user clicks outside the dropdown while the list of choices of open we
       // have to hide them.
-      this.$el.clickOutsideEvent = event => {
+      this.$el.clickOutsideEvent = (event) => {
         if (
           // Check if the context menu is still open
           this.open &&
@@ -130,7 +130,7 @@ export default {
      * If not empty it will only show children that contain the given query.
      */
     search(query) {
-      this.$children.forEach(item => {
+      this.$children.forEach((item) => {
         item.search(query)
       })
     },
@@ -138,13 +138,13 @@ export default {
      * Changes the selected name and icon of the dropdown based on the provided value.
      */
     setDisplayValue(value) {
-      this.$children.forEach(item => {
+      this.$children.forEach((item) => {
         if (item.value === value) {
           this.name = item.name
           this.icon = item.icon
         }
       })
-    }
-  }
+    },
+  },
 }
 </script>

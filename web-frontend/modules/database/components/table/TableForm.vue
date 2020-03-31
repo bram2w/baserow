@@ -34,17 +34,17 @@ export default {
   data() {
     return {
       values: {
-        name: ''
-      }
+        name: '',
+      },
     }
   },
   validations: {
     values: {
-      name: { required }
-    }
+      name: { required },
+    },
   },
   mounted() {
     this.$refs.name.focus()
-  }
+  },
 }
 </script>

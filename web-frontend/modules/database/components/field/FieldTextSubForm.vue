@@ -24,14 +24,14 @@ export default {
     return {
       allowedValues: ['text_default'],
       values: {
-        text_default: ''
-      }
+        text_default: '',
+      },
     }
   },
   methods: {
     isFormValid() {
       return true
-    }
-  }
+    },
+  },
 }
 </script>

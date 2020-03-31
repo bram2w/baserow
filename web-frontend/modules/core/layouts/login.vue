@@ -14,6 +14,6 @@
 import Notifications from '@baserow/modules/core/components/notifications/Notifications'
 
 export default {
-  components: { Notifications }
+  components: { Notifications },
 }
 </script>

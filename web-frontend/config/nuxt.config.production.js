@@ -2,7 +2,7 @@ import path from 'path'
 
 import base from './nuxt.config.base.js'
 
-export default function(rootDir) {
+export default function (rootDir) {
   const _ = require(rootDir + '/node_modules/lodash')
 
   /**
@@ -12,8 +12,8 @@ export default function(rootDir) {
    * which contains the node modules.
    */
   const config = {
-    rootDir: rootDir,
-    srcDir: path.resolve(__dirname, '../')
+    rootDir,
+    srcDir: path.resolve(__dirname, '../'),
   }
 
   return _.assign(base, config)

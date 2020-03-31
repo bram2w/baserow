@@ -10,8 +10,8 @@ const config = {
   debug: false,
   env: {
     // The API base url, this will be prepended to the urls of the remote calls.
-    baseUrl: 'http://localhost/api/v0'
-  }
+    baseUrl: 'http://localhost/api/v0',
+  },
 }
 
 export default _.assign({}, base, config)

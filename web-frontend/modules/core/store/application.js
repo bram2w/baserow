@@ -8,7 +8,7 @@ function populateApplication(application, getters) {
   application._ = {
     type: type.serialize(),
     loading: false,
-    selected: false
+    selected: false,
   }
   return type.populate(application)
 }
@@ -18,7 +18,7 @@ export const state = () => ({
   loading: false,
   loaded: false,
   items: [],
-  selected: {}
+  selected: {},
 })
 
 export const mutations = {
@@ -41,29 +41,29 @@ export const mutations = {
     state.items.push(item)
   },
   UPDATE_ITEM(state, { id, values }) {
-    const index = state.items.findIndex(item => item.id === id)
+    const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
   DELETE_ITEM(state, id) {
-    const index = state.items.findIndex(item => item.id === id)
+    const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
   },
   SET_SELECTED(state, application) {
-    Object.values(state.items).forEach(item => {
+    Object.values(state.items).forEach((item) => {
       item._.selected = false
     })
     application._.selected = true
     state.selected = application
   },
   UNSELECT(state) {
-    Object.values(state.items).forEach(item => {
+    Object.values(state.items).forEach((item) => {
       item._.selected = false
     })
     state.selected = {}
   },
   CLEAR_CHILDREN_SELECTED(state, { type, application }) {
     type.clearChildrenSelected(application)
-  }
+  },
 }
 
 export const actions = {
@@ -73,7 +73,9 @@ export const actions = {
    */
   register({ commit, getters }, application) {
     if (!(application instanceof ApplicationType)) {
-      throw Error('The application must be an instance of ApplicationType.')
+      throw new TypeError(
+        'The application must be an instance of ApplicationType.'
+      )
     }
 
     commit('REGISTER', application)
@@ -119,7 +121,7 @@ export const actions = {
    * children active state if they have one.
    */
   clearChildrenSelected({ commit, getters }) {
-    Object.values(getters.getAll).forEach(application => {
+    Object.values(getters.getAll).forEach((application) => {
       const type = getters.getType(application.type)
       commit('CLEAR_CHILDREN_SELECTED', { type, application })
     })
@@ -129,7 +131,7 @@ export const actions = {
    * selected group.
    */
   async create({ commit, getters, rootGetters, dispatch }, { type, values }) {
-    if (values.hasOwnProperty('type')) {
+    if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
           'values when creating a new application.'
@@ -201,7 +203,7 @@ export const actions = {
    */
   unselect({ commit }) {
     commit('UNSELECT', {})
-  }
+  },
 }
 
 export const getters = {
@@ -211,21 +213,21 @@ export const getters = {
   isLoaded(state) {
     return state.loaded
   },
-  get: state => id => {
-    return state.items.find(item => item.id === id)
+  get: (state) => (id) => {
+    return state.items.find((item) => item.id === id)
   },
   getAll(state) {
     return state.items
   },
-  typeExists: state => type => {
-    return state.types.hasOwnProperty(type)
+  typeExists: (state) => (type) => {
+    return Object.prototype.hasOwnProperty.call(state.types, type)
   },
-  getType: state => type => {
-    if (!state.types.hasOwnProperty(type)) {
+  getType: (state) => (type) => {
+    if (!Object.prototype.hasOwnProperty.call(state.types, type)) {
       throw new Error(`An application type with type "${type}" doesn't exist.`)
     }
     return state.types[type]
-  }
+  },
 }
 
 export default {
@@ -233,5 +235,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

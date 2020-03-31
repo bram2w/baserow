@@ -1,11 +1,11 @@
 export const state = () => ({
-  collapsed: false
+  collapsed: false,
 })
 
 export const mutations = {
   SET_COLLAPSED(state, collapsed) {
     state.collapsed = collapsed
-  }
+  },
 }
 
 export const actions = {
@@ -14,13 +14,13 @@ export const actions = {
       value = !getters.isCollapsed
     }
     commit('SET_COLLAPSED', value)
-  }
+  },
 }
 
 export const getters = {
   isCollapsed(state) {
     return !!state.collapsed
-  }
+  },
 }
 
 export default {
@@ -28,5 +28,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

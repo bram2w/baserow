@@ -5,8 +5,8 @@
         name: 'database-table',
         params: {
           databaseId: database.id,
-          tableId: table.id
-        }
+          tableId: table.id,
+        },
       }"
       class="tree-sub-link"
     >
@@ -51,18 +51,18 @@ export default {
   props: {
     database: {
       type: Object,
-      required: true
+      required: true,
     },
     table: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   methods: {
     setLoading(database, value) {
       this.$store.dispatch('application/setItemLoading', {
         application: database,
-        value
+        value,
       })
     },
     async deleteTable(database, table) {
@@ -89,8 +89,8 @@ export default {
           database,
           table,
           values: {
-            name: event.value
-          }
+            name: event.value,
+          },
         })
       } catch (error) {
         this.$refs.rename.set(event.oldValue)
@@ -98,7 +98,7 @@ export default {
       }
 
       this.setLoading(database, false)
-    }
-  }
+    },
+  },
 }
 </script>

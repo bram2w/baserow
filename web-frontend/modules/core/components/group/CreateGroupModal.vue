@@ -30,7 +30,7 @@ export default {
   mixins: [modal, error],
   data() {
     return {
-      loading: false
+      loading: false,
     }
   },
   methods: {
@@ -46,7 +46,7 @@ export default {
         this.loading = false
         this.handleError(error, 'group')
       }
-    }
-  }
+    },
+  },
 }
 </script>

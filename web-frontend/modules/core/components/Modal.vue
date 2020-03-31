@@ -22,7 +22,7 @@ export default {
   mixins: [MoveToBody],
   data() {
     return {
-      open: false
+      open: false,
     }
   },
   destroyed() {
@@ -82,7 +82,7 @@ export default {
       if (event.keyCode === 27) {
         this.hide()
       }
-    }
-  }
+    },
+  },
 }
 </script>

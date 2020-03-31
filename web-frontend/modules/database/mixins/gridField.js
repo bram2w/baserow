@@ -12,7 +12,7 @@ export default {
      */
     field: {
       type: Object,
-      required: true
+      required: true,
     },
     /**
      * The value of the grid field, this could for example for a number field 10,
@@ -20,15 +20,15 @@ export default {
      */
     value: {
       type: [String, Number, Object, Boolean],
-      required: false
+      required: false,
     },
     /**
      * Indicates if the grid field is in a selected state.
      */
     selected: {
       type: Boolean,
-      required: true
-    }
+      required: true,
+    },
   },
   methods: {
     /**
@@ -46,6 +46,6 @@ export default {
      * to do something here apart from triggering the selected state. A boolean
      * toggles its value for example.
      */
-    doubleClick() {}
-  }
+    doubleClick() {},
+  },
 }

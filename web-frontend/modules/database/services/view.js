@@ -15,5 +15,5 @@ export default {
   },
   delete(viewId) {
     return client.delete(`/database/views/${viewId}/`)
-  }
+  },
 }

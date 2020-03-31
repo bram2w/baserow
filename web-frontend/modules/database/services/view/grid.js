@@ -4,8 +4,8 @@ export default {
   fetchRows({ gridId, limit = 100, offset = null, cancelToken = null }) {
     const config = {
       params: {
-        limit: limit
-      }
+        limit,
+      },
     }
 
     if (offset !== null) {
@@ -17,5 +17,5 @@ export default {
     }
 
     return client.get(`/database/views/grid/${gridId}/`, config)
-  }
+  },
 }

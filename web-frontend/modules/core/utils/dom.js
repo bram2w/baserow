@@ -13,7 +13,7 @@ export const isElement = (element, target) => {
  *
  * @param element
  */
-export const focusEnd = element => {
+export const focusEnd = (element) => {
   element.focus()
 
   if (

@@ -15,5 +15,5 @@ export default {
   },
   delete(fieldId) {
     return client.delete(`/database/fields/${fieldId}/`)
-  }
+  },
 }

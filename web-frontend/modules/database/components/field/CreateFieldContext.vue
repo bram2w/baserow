@@ -26,12 +26,12 @@ export default {
   props: {
     table: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
-      loading: false
+      loading: false,
     }
   },
   methods: {
@@ -45,7 +45,7 @@ export default {
         await this.$store.dispatch('field/create', {
           type,
           values,
-          table: this.table
+          table: this.table,
         })
         this.loading = false
         this.$refs.form.reset()
@@ -54,7 +54,7 @@ export default {
         this.loading = false
         notifyIf(error, 'field')
       }
-    }
-  }
+    },
+  },
 }
 </script>

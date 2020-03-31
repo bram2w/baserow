@@ -35,7 +35,7 @@ export default {
      */
     vertical: {
       required: true,
-      type: String
+      type: String,
     },
     /**
      * The horizontal property should be the reference of the vertical scrollable
@@ -43,8 +43,8 @@ export default {
      */
     horizontal: {
       required: true,
-      type: String
-    }
+      type: String,
+    },
   },
   data() {
     return {
@@ -56,7 +56,7 @@ export default {
       verticalTop: 0,
       horizontalShow: false,
       horizontalWidth: 0,
-      horizontalLeft: 0
+      horizontalLeft: 0,
     }
   },
   mounted() {
@@ -69,12 +69,12 @@ export default {
 
     // Register the mouseup event for when the user releases the mouse button. This is
     // needed for the dragging of the scrollbar handle.
-    this.$el.mouseUpEventListener = event => this.mouseUp(event)
+    this.$el.mouseUpEventListener = (event) => this.mouseUp(event)
     window.addEventListener('mouseup', this.$el.mouseUpEventListener)
 
     // Register the mousemove event for when the user moves his mouse. This is needed
     // for the dragging of the scrollbar handle.
-    this.$el.mouseMoveEventListener = event => this.mouseMove(event)
+    this.$el.mouseMoveEventListener = (event) => this.mouseMove(event)
     window.addEventListener('mousemove', this.$el.mouseMoveEventListener)
   },
   beforeDestroy() {
@@ -184,7 +184,7 @@ export default {
       this.dragging = null
       this.elementStart = 0
       this.mouseStart = 0
-    }
-  }
+    },
+  },
 }
 </script>

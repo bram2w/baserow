@@ -1,7 +1,7 @@
 import { uuid } from '@baserow/modules/core/utils/string'
 
 export const state = () => ({
-  items: []
+  items: [],
 })
 
 export const mutations = {
@@ -11,7 +11,7 @@ export const mutations = {
   REMOVE(state, notification) {
     const index = state.items.indexOf(notification)
     state.items.splice(index, 1)
-  }
+  },
 }
 
 export const actions = {
@@ -21,9 +21,9 @@ export const actions = {
   add({ commit }, { type, title, message }) {
     commit('ADD', {
       id: uuid(),
-      type: type,
-      title: title,
-      message: message
+      type,
+      title,
+      message,
     })
   },
   info({ dispatch }, { title, message }) {
@@ -40,7 +40,7 @@ export const actions = {
   },
   remove({ commit }, notification) {
     commit('REMOVE', notification)
-  }
+  },
 }
 
 export const getters = {}
@@ -50,5 +50,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

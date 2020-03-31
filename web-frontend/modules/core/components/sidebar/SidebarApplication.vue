@@ -3,7 +3,7 @@
     class="tree-item"
     :class="{
       active: application._.selected,
-      'tree-item-loading': application._.loading
+      'tree-item-loading': application._.loading,
     }"
   >
     <div class="tree-action">
@@ -64,14 +64,14 @@ export default {
   props: {
     application: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   methods: {
     setLoading(application, value) {
       this.$store.dispatch('application/setItemLoading', {
         application,
-        value: value
+        value,
       })
     },
     enableRename() {
@@ -85,8 +85,8 @@ export default {
         await this.$store.dispatch('application/update', {
           application,
           values: {
-            name: event.value
-          }
+            name: event.value,
+          },
         })
       } catch (error) {
         this.$refs.rename.set(event.oldValue)
@@ -115,8 +115,8 @@ export default {
         {
           name: application._.type.routeName,
           params: {
-            id: application.id
-          }
+            id: application.id,
+          },
         },
         () => {
           this.setLoading(application, false)
@@ -141,7 +141,7 @@ export default {
     getSelectedApplicationComponent(application) {
       const type = this.$store.getters['application/getType'](application.type)
       return type.getSelectedSidebarComponent()
-    }
-  }
+    },
+  },
 }
 </script>

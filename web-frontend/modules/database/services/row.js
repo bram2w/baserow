@@ -9,5 +9,5 @@ export default {
   },
   delete(tableId, rowId) {
     return client.delete(`/database/rows/table/${tableId}/${rowId}/`)
-  }
+  },
 }

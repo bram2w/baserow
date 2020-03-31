@@ -62,25 +62,25 @@ export default {
       allowedValues: ['name', 'type'],
       values: {
         name: '',
-        type: ''
-      }
+        type: '',
+      },
     }
   },
   computed: {
     ...mapState({
-      fieldTypes: state => state.field.types
-    })
+      fieldTypes: (state) => state.field.types,
+    }),
   },
   validations: {
     values: {
       name: { required },
-      type: { required }
-    }
+      type: { required },
+    },
   },
   methods: {
     getFormComponent(type) {
       return this.$store.getters['field/getType'](type).getFormComponent()
-    }
-  }
+    },
+  },
 }
 </script>

@@ -14,7 +14,7 @@ export default {
       /**
        *  A temporary copy of the value when editing.
        */
-      copy: null
+      copy: null,
     }
   },
   methods: {
@@ -25,7 +25,7 @@ export default {
      * characters are pressed because that should replace the value.
      */
     select() {
-      this.$el.keydownEvent = event => {
+      this.$el.keydownEvent = (event) => {
         // If the enter key is pressed.
         if (event.keyCode === 13) {
           if (this.editing) {
@@ -94,6 +94,6 @@ export default {
      * Method that is called after saving the value. This can be overridden in the
      * component.
      */
-    afterSave() {}
-  }
+    afterSave() {},
+  },
 }

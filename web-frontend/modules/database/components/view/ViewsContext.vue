@@ -63,27 +63,27 @@ export default {
   name: 'ViewsContext',
   components: {
     ViewsContextItem,
-    CreateViewModal
+    CreateViewModal,
   },
   mixins: [context],
   props: {
     table: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
-      query: ''
+      query: '',
     }
   },
   computed: {
     ...mapState({
-      isLoading: state => state.view.loading,
-      isLoaded: state => state.view.loaded,
-      viewTypes: state => state.view.types,
-      views: state => state.view.items
-    })
+      isLoading: (state) => state.view.loading,
+      isLoaded: (state) => state.view.loaded,
+      viewTypes: (state) => state.view.types,
+      views: (state) => state.view.items,
+    }),
   },
   methods: {
     toggleCreateViewModal(type) {
@@ -93,11 +93,11 @@ export default {
     search(views) {
       const query = this.query
 
-      return views.filter(function(view) {
+      return views.filter(function (view) {
         const regex = new RegExp('(' + query + ')', 'i')
         return view.name.match(regex)
       })
-    }
-  }
+    },
+  },
 }
 </script>

@@ -1,4 +1,4 @@
-export default function({ store }) {
+export default function ({ store }) {
   // If the user is authenticated, but is not refreshing in the browser means
   // that the refresh was done on the server side, so we need to manually start
   // the refreshing timeout here.

@@ -12,5 +12,5 @@ export default {
   },
   delete(id) {
     return client.delete(`/groups/${id}/`)
-  }
+  },
 }

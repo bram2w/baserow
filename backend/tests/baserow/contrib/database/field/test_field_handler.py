@@ -128,7 +128,8 @@ def test_update_field(data_fixture):
         handler.update_field(user=user, field=object())
 
     with pytest.raises(FieldTypeDoesNotExist):
-        handler.update_field(user=user, field=text_field_2, new_type_name='NOT_EXISTING')
+        handler.update_field(user=user, field=text_field_2,
+                             new_type_name='NOT_EXISTING')
 
     text_field_2 = handler.update_field(user=user, field=text_field_2, name='Test 1',
                                         text_default='Test 2')

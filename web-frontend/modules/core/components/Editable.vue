@@ -17,14 +17,14 @@ export default {
   props: {
     value: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
       editing: false,
       oldValue: '',
-      newValue: ''
+      newValue: '',
     }
   },
   mounted() {
@@ -55,7 +55,7 @@ export default {
 
       this.$emit('change', {
         oldValue: this.value,
-        value: this.newValue
+        value: this.newValue,
       })
       this.oldValue = this.newValue
     },
@@ -96,8 +96,8 @@ export default {
     set(value) {
       this.oldValue = this.value
       this.newValue = this.value
-      this.$refs.editable.innerText = this.value
-    }
-  }
+      this.$refs.editable.textContent = this.value
+    },
+  },
 }
 </script>
