@@ -6,8 +6,8 @@ export function notifyIf404(dispatch, error, title, message) {
     dispatch(
       'notification/error',
       {
-        title: title,
-        message: message
+        title,
+        message,
       },
       { root: true }
     )
@@ -23,8 +23,8 @@ export function notifyIfError(dispatch, error, errorCode, title, message) {
     dispatch(
       'notification/error',
       {
-        title: title,
-        message: message
+        title,
+        message,
       },
       { root: true }
     )

@@ -1,6 +1,6 @@
 import { getToken } from '@baserow/modules/core/utils/auth'
 
-export default function({ store, req, app }) {
+export default function ({ store, req, app }) {
   // If nuxt generate, pass this middleware
   if (process.server && !req) return
 

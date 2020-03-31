@@ -7,6 +7,6 @@ export default {
 
     // If the API base url must different at the client side it can be changed
     // here.
-    publicBaseUrl: 'http://localhost:8000/api/v0'
-  }
+    publicBaseUrl: 'http://localhost:8000/api/v0',
+  },
 }

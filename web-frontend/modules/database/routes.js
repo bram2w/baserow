@@ -12,6 +12,6 @@ export const routes = [
       p.tableId = parseInt(p.tableId)
       p.viewId = p.viewId ? parseInt(p.viewId) : null
       return p
-    }
-  }
+    },
+  },
 ]

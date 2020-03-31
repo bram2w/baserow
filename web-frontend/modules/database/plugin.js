@@ -3,7 +3,7 @@ import { GridViewType } from '@baserow/modules/database/viewTypes'
 import {
   TextFieldType,
   NumberFieldType,
-  BooleanFieldType
+  BooleanFieldType,
 } from '@baserow/modules/database/fieldTypes'
 
 import tableStore from '@baserow/modules/database/store/table'

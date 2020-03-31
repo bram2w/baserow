@@ -20,13 +20,13 @@ export default {
   props: {
     notification: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   computed: {
     notificationClass() {
       return 'alert-' + this.notification.type
-    }
+    },
   },
   mounted() {
     setTimeout(() => {
@@ -36,7 +36,7 @@ export default {
   methods: {
     close(notification) {
       this.$store.dispatch('notification/remove', notification)
-    }
-  }
+    },
+  },
 }
 </script>

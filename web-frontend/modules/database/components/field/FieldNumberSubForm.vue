@@ -49,20 +49,20 @@ export default {
       allowedValues: [
         'number_type',
         'number_decimal_places',
-        'number_negative'
+        'number_negative',
       ],
       values: {
         number_type: 'INTEGER',
         number_decimal_places: 1,
-        number_negative: false
-      }
+        number_negative: false,
+      },
     }
   },
   validations: {
     values: {
       number_type: { required },
-      number_decimal_places: { required }
-    }
-  }
+      number_decimal_places: { required },
+    },
+  },
 }
 </script>

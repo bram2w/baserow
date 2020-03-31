@@ -20,16 +20,16 @@ export default {
   props: {
     table: {
       type: Object,
-      required: true
+      required: true,
     },
     field: {
       type: Object,
-      required: true
+      required: true,
     },
     row: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
@@ -41,7 +41,7 @@ export default {
        * Timestamp of the last the time the user clicked on the field. We need this to
        * check if it was double clicked.
        */
-      clickTimestamp: null
+      clickTimestamp: null,
     }
   },
   /**
@@ -70,7 +70,7 @@ export default {
           row: this.row,
           field: this.field,
           value,
-          oldValue
+          oldValue,
         })
       } catch (error) {
         this.$forceUpdate()
@@ -111,7 +111,7 @@ export default {
         // Register a body click event listener so that we can detect if a user has
         // clicked outside the field. If that happens we want to unselect the field and
         // possibly save the value.
-        this.$el.clickOutsideEvent = event => {
+        this.$el.clickOutsideEvent = (event) => {
           if (
             // Check if the column is still selected.
             this.selected &&
@@ -132,7 +132,7 @@ export default {
         this.selected = false
       })
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
-    }
-  }
+    },
+  },
 }
 </script>

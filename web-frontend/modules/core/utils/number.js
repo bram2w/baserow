@@ -1,4 +1,4 @@
-export const rounder = digits => {
+export const rounder = (digits) => {
   return parseInt('1' + Array(digits + 1).join('0'))
 }
 

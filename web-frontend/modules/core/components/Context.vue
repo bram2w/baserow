@@ -14,7 +14,7 @@ export default {
   data() {
     return {
       open: false,
-      opener: null
+      opener: null,
     }
   },
   methods: {
@@ -68,7 +68,7 @@ export default {
       this.opener = target
       this.open = true
 
-      this.$el.clickOutsideEvent = event => {
+      this.$el.clickOutsideEvent = (event) => {
         if (
           // Check if the context menu is still open
           this.open &&
@@ -80,7 +80,7 @@ export default {
           !isElement(this.opener, event.target) &&
           // If the click was not inside one of the context children of this context
           // menu.
-          !this.moveToBody.children.some(child => {
+          !this.moveToBody.children.some((child) => {
             return isElement(child.$el, event.target)
           })
         ) {
@@ -171,7 +171,7 @@ export default {
       }
 
       return positions
-    }
-  }
+    },
+  },
 }
 </script>

@@ -32,16 +32,16 @@ export default {
   props: {
     table: {
       type: Object,
-      required: true
+      required: true,
     },
     viewType: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
-      loading: false
+      loading: false,
     }
   },
   methods: {
@@ -53,7 +53,7 @@ export default {
         await this.$store.dispatch('view/create', {
           type: this.viewType.type,
           table: this.table,
-          values: values
+          values,
         })
         this.loading = false
         this.$emit('created')
@@ -62,7 +62,7 @@ export default {
         this.loading = false
         this.handleError(error, 'view')
       }
-    }
-  }
+    },
+  },
 }
 </script>

@@ -9,7 +9,7 @@ export function populateView(view, getters) {
   view._ = {
     type: type.serialize(),
     selected: false,
-    loading: false
+    loading: false,
   }
   return type.populate(view)
 }
@@ -19,7 +19,7 @@ export const state = () => ({
   loading: false,
   loaded: false,
   items: [],
-  selected: {}
+  selected: {},
 })
 
 export const mutations = {
@@ -33,7 +33,7 @@ export const mutations = {
     state.loading = value
   },
   SET_ITEM_LOADING(state, { view, value }) {
-    if (!view.hasOwnProperty('_')) {
+    if (!Object.prototype.hasOwnProperty.call(view, '_')) {
       return
     }
     view._.loading = value
@@ -45,26 +45,26 @@ export const mutations = {
     state.items.push(item)
   },
   UPDATE_ITEM(state, { id, values }) {
-    const index = state.items.findIndex(item => item.id === id)
+    const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
   DELETE_ITEM(state, id) {
-    const index = state.items.findIndex(item => item.id === id)
+    const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
   },
   SET_SELECTED(state, view) {
-    Object.values(state.items).forEach(item => {
+    Object.values(state.items).forEach((item) => {
       item._.selected = false
     })
     view._.selected = true
     state.selected = view
   },
   UNSELECT(state) {
-    Object.values(state.items).forEach(item => {
+    Object.values(state.items).forEach((item) => {
       item._.selected = false
     })
     state.selected = {}
-  }
+  },
 }
 
 export const actions = {
@@ -74,7 +74,7 @@ export const actions = {
    */
   register({ dispatch, commit }, view) {
     if (!(view instanceof ViewType)) {
-      throw Error('The view must be an instance of ViewType.')
+      throw new TypeError('The view must be an instance of ViewType.')
     }
 
     commit('REGISTER', view)
@@ -116,7 +116,7 @@ export const actions = {
     { commit, getters, rootGetters, dispatch },
     { type, table, values }
   ) {
-    if (values.hasOwnProperty('type')) {
+    if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
           'values when creating a new view.'
@@ -177,13 +177,13 @@ export const actions = {
 
       // Try to find the table and database id so we can redirect back to the table
       // page. We might want to move this to a separate function.
-      applications.forEach(application => {
+      applications.forEach((application) => {
         if (application.type === DatabaseApplicationType.getType()) {
-          application.tables.forEach(table => {
+          application.tables.forEach((table) => {
             if (table.id === tableId) {
               redirect = {
                 name: 'database-table',
-                params: { databaseId: application.id, tableId: table.id }
+                params: { databaseId: application.id, tableId: table.id },
               }
             }
           })
@@ -216,28 +216,28 @@ export const actions = {
       return new Error(`View with id ${id} is not found.`)
     }
     return dispatch('select', view)
-  }
+  },
 }
 
 export const getters = {
   hasSelected(state) {
-    return state.selected.hasOwnProperty('_')
+    return Object.prototype.hasOwnProperty.call(state.selected, '_')
   },
   isLoaded(state) {
     return state.loaded
   },
-  get: state => id => {
-    return state.items.find(item => item.id === id)
+  get: (state) => (id) => {
+    return state.items.find((item) => item.id === id)
   },
-  typeExists: state => type => {
-    return state.types.hasOwnProperty(type)
+  typeExists: (state) => (type) => {
+    return Object.prototype.hasOwnProperty.call(state.types, type)
   },
-  getType: state => type => {
-    if (!state.types.hasOwnProperty(type)) {
+  getType: (state) => (type) => {
+    if (!Object.prototype.hasOwnProperty.call(state.types, type)) {
       throw new Error(`A view with type "${type}" doesn't exist.`)
     }
     return state.types[type]
-  }
+  },
 }
 
 export default {
@@ -245,5 +245,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

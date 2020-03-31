@@ -2,7 +2,7 @@
  * If this middleware is added to a page, it will redirect back to the login
  * page if the user is not authenticated.
  */
-export default function({ req, store, redirect }) {
+export default function ({ req, store, redirect }) {
   // If nuxt generate, pass this middleware
   if (process.server && !req) return
 

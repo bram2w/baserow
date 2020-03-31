@@ -66,23 +66,8 @@ import ViewsContext from '@baserow/modules/database/components/view/ViewsContext
  */
 export default {
   layout: 'app',
-  head() {
-    return {
-      title: (this.view ? this.view.name + ' - ' : '') + this.table.name
-    }
-  },
   components: {
-    ViewsContext
-  },
-  computed: {
-    ...mapState({
-      selectedView: state => state.view.selected,
-      fields: state => state.field.items,
-      primary: state => state.field.primary
-    }),
-    ...mapGetters({
-      hasSelectedView: 'view/hasSelected'
-    })
+    ViewsContext,
   },
   /**
    * Prepares all the table, field and view data for the provided database, table and
@@ -101,11 +86,12 @@ export default {
     try {
       const { database, table } = await store.dispatch('table/selectById', {
         databaseId,
-        tableId
+        tableId,
       })
       data.database = database
       data.table = table
-    } catch {
+    } catch (e) {
+      console.log(e)
       return error({ statusCode: 404, message: 'Table not found.' })
     }
 
@@ -128,6 +114,16 @@ export default {
 
     return data
   },
+  computed: {
+    ...mapState({
+      selectedView: (state) => state.view.selected,
+      fields: (state) => state.field.items,
+      primary: (state) => state.field.primary,
+    }),
+    ...mapGetters({
+      hasSelectedView: 'view/hasSelected',
+    }),
+  },
   methods: {
     getViewComponent(view) {
       const type = this.$store.getters['view/getType'](view.type)
@@ -136,7 +132,12 @@ export default {
     getViewHeaderComponent(view) {
       const type = this.$store.getters['view/getType'](view.type)
       return type.getHeaderComponent()
+    },
+  },
+  head() {
+    return {
+      title: (this.view ? this.view.name + ' - ' : '') + this.table.name,
     }
-  }
+  },
 }
 </script>

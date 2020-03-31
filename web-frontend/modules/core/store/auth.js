@@ -7,7 +7,7 @@ import { unsetGroupCookie } from '@baserow/modules/core/utils/group'
 export const state = () => ({
   refreshing: false,
   token: null,
-  user: null
+  user: null,
 })
 
 export const mutations = {
@@ -22,7 +22,7 @@ export const mutations = {
   },
   SET_REFRESHING(state, refreshing) {
     state.refreshing = refreshing
-  }
+  },
 }
 
 export const actions = {
@@ -94,7 +94,7 @@ export const actions = {
       dispatch('refresh', getters.token)
       commit('SET_REFRESHING', false)
     }, (getters.tokenExpireSeconds - 10) * 1000)
-  }
+  },
 }
 
 export const getters = {
@@ -124,7 +124,7 @@ export const getters = {
   tokenExpireSeconds(state) {
     const now = Math.ceil(new Date().getTime() / 1000)
     return state.token_data.exp - now
-  }
+  },
 }
 
 export default {
@@ -132,5 +132,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

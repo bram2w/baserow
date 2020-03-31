@@ -95,24 +95,6 @@ import error from '@baserow/modules/core/mixins/error'
 export default {
   layout: 'login',
   mixins: [error],
-  head() {
-    return {
-      title: 'Create new account'
-    }
-  },
-  validations: {
-    account: {
-      email: { required, email },
-      name: {
-        required,
-        minLength: minLength(2)
-      },
-      password: { required },
-      passwordConfirm: {
-        sameAsPassword: sameAs('password')
-      }
-    }
-  },
   data() {
     return {
       loading: false,
@@ -120,8 +102,8 @@ export default {
         email: '',
         name: '',
         password: '',
-        passwordConfirm: ''
-      }
+        passwordConfirm: '',
+      },
     }
   },
   methods: {
@@ -138,7 +120,7 @@ export default {
         await this.$store.dispatch('auth/register', {
           name: this.account.name,
           email: this.account.email,
-          password: this.account.password
+          password: this.account.password,
         })
         this.$nuxt.$router.push({ name: 'dashboard' })
       } catch (error) {
@@ -147,10 +129,28 @@ export default {
           ERROR_EMAIL_ALREADY_EXISTS: new ResponseErrorMessage(
             'User already exists.',
             'A user with the provided e-mail address already exists.'
-          )
+          ),
         })
       }
+    },
+  },
+  head() {
+    return {
+      title: 'Create new account',
     }
-  }
+  },
+  validations: {
+    account: {
+      email: { required, email },
+      name: {
+        required,
+        minLength: minLength(2),
+      },
+      password: { required },
+      passwordConfirm: {
+        sameAsPassword: sameAs('password'),
+      },
+    },
+  },
 }
 </script>

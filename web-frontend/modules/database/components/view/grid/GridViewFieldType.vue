@@ -61,8 +61,8 @@ export default {
   props: {
     field: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   methods: {
     setLoading(field, value) {
@@ -79,7 +79,7 @@ export default {
       }
 
       this.setLoading(field, false)
-    }
-  }
+    },
+  },
 }
 </script>

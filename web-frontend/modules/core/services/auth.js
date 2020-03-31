@@ -4,12 +4,12 @@ export default {
   login(username, password) {
     return client.post('/user/token-auth/', {
       username,
-      password
+      password,
     })
   },
   refresh(token) {
     return client.post('/user/token-refresh/', {
-      token
+      token,
     })
   },
   register(email, name, password, authenticate = true) {
@@ -17,7 +17,7 @@ export default {
       name,
       email,
       password,
-      authenticate
+      authenticate,
     })
-  }
+  },
 }

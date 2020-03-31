@@ -25,7 +25,7 @@ export default {
       const oldValue = !!value
       const newValue = !value
       this.$emit('update', newValue, oldValue)
-    }
-  }
+    },
+  },
 }
 </script>

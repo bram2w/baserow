@@ -9,13 +9,13 @@ export default {
       required: false,
       default: () => {
         return {}
-      }
-    }
+      },
+    },
   },
   data() {
     return {
       // A list of values that the form allows. If null all values are allowed.
-      allowedValues: null
+      allowedValues: null,
     }
   },
   mounted() {
@@ -33,7 +33,7 @@ export default {
         return this.defaultValues
       }
       return Object.keys(this.defaultValues).reduce((result, key) => {
-        if (this.allowedValues.indexOf(key) > -1) {
+        if (this.allowedValues.includes(key)) {
           result[key] = this.defaultValues[key]
         }
         return result
@@ -75,7 +75,7 @@ export default {
     getChildFormsValues() {
       return Object.assign(
         {},
-        ...this.$children.map(child => {
+        ...this.$children.map((child) => {
           return 'getChildFormsValues' in child ? child.getFormValues() : {}
         })
       )
@@ -90,6 +90,6 @@ export default {
         this.getDefaultValues()
       )
       this.$v.$reset()
-    }
-  }
+    },
+  },
 }

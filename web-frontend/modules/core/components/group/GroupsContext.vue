@@ -47,22 +47,22 @@ export default {
   name: 'GroupsContext',
   components: {
     CreateGroupModal,
-    GroupsContextItem
+    GroupsContextItem,
   },
   mixins: [context],
   data() {
     return {
-      query: ''
+      query: '',
     }
   },
   computed: {
     ...mapState({
-      groups: state => state.group.items
+      groups: (state) => state.group.items,
     }),
     ...mapGetters({
       isLoading: 'group/isLoading',
-      isLoaded: 'group/isLoaded'
-    })
+      isLoaded: 'group/isLoaded',
+    }),
   },
   methods: {
     /**
@@ -76,14 +76,14 @@ export default {
     searchAndSort(groups) {
       const query = this.query
 
-      return groups.filter(function(group) {
+      return groups.filter(function (group) {
         const regex = new RegExp('(' + query + ')', 'i')
         return group.name.match(regex)
       })
       // .sort((a, b) => {
       //   return a.order - b.order
       // })
-    }
-  }
+    },
+  },
 }
 </script>

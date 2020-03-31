@@ -17,21 +17,21 @@ export default {
   props: {
     value: {
       type: [String, Number, Boolean, Object],
-      required: true
+      required: true,
     },
     name: {
       type: String,
-      required: true
+      required: true,
     },
     icon: {
       type: String,
       required: false,
-      default: null
-    }
+      default: null,
+    },
   },
   data() {
     return {
-      query: ''
+      query: '',
     }
   },
   methods: {
@@ -44,7 +44,7 @@ export default {
     isVisible(query) {
       const regex = new RegExp('(' + query + ')', 'i')
       return this.name.match(regex)
-    }
-  }
+    },
+  },
 }
 </script>

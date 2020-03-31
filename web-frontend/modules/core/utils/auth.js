@@ -5,11 +5,11 @@ export const setToken = (token, cookie) => {
   cookie.set(cookieTokenName, token)
 }
 
-export const unsetToken = cookie => {
+export const unsetToken = (cookie) => {
   if (process.SERVER_BUILD) return
   cookie.remove(cookieTokenName)
 }
 
-export const getToken = cookie => {
+export const getToken = (cookie) => {
   return cookie.get(cookieTokenName)
 }

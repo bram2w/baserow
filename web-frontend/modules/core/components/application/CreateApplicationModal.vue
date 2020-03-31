@@ -32,12 +32,12 @@ export default {
   props: {
     applicationType: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   data() {
     return {
-      loading: false
+      loading: false,
     }
   },
   methods: {
@@ -48,7 +48,7 @@ export default {
       try {
         await this.$store.dispatch('application/create', {
           type: this.applicationType.type,
-          values: values
+          values,
         })
         this.loading = false
         this.$emit('created')
@@ -57,7 +57,7 @@ export default {
         this.loading = false
         this.handleError(error, 'application')
       }
-    }
-  }
+    },
+  },
 }
 </script>

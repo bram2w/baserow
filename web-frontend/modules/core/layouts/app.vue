@@ -90,14 +90,14 @@ export default {
   components: {
     GroupsContext,
     Notifications,
-    Sidebar
+    Sidebar,
   },
   computed: {
     ...mapGetters({
       isCollapsed: 'sidebar/isCollapsed',
       name: 'auth/getName',
-      nameAbbreviation: 'auth/getNameAbbreviation'
-    })
+      nameAbbreviation: 'auth/getNameAbbreviation',
+    }),
   },
   methods: {
     logoff() {
@@ -105,8 +105,8 @@ export default {
       this.$nuxt.$router.push({ name: 'login' })
     },
     ...mapActions({
-      toggleCollapsed: 'sidebar/toggleCollapsed'
-    })
-  }
+      toggleCollapsed: 'sidebar/toggleCollapsed',
+    }),
+  },
 }
 </script>

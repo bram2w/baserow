@@ -7,8 +7,8 @@ export default {
       error: {
         visible: false,
         title: '',
-        message: ''
-      }
+        message: '',
+      },
     }
   },
   methods: {
@@ -42,6 +42,6 @@ export default {
     },
     hideError() {
       this.error.visible = false
-    }
-  }
+    },
+  },
 }

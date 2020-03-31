@@ -18,8 +18,8 @@ export default {
   components: { Notification },
   computed: {
     ...mapState({
-      notifications: state => state.notification.items
-    })
-  }
+      notifications: (state) => state.notification.items,
+    }),
+  },
 }
 </script>

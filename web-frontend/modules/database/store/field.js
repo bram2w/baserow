@@ -7,7 +7,7 @@ export function populateField(field, getters) {
 
   field._ = {
     type: type.serialize(),
-    loading: false
+    loading: false,
   }
   return type.populate(field)
 }
@@ -17,7 +17,7 @@ export const state = () => ({
   loading: false,
   loaded: false,
   primary: null,
-  items: []
+  items: [],
 })
 
 export const mutations = {
@@ -31,7 +31,7 @@ export const mutations = {
     state.loading = value
   },
   SET_ITEM_LOADING(state, { field, value }) {
-    if (!field.hasOwnProperty('_')) {
+    if (!Object.prototype.hasOwnProperty.call(field, '_')) {
       return
     }
     field._.loading = value
@@ -46,26 +46,26 @@ export const mutations = {
     state.items.push(item)
   },
   UPDATE_ITEM(state, { id, values }) {
-    const index = state.items.findIndex(item => item.id === id)
+    const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1, values)
   },
   DELETE_ITEM(state, id) {
-    const index = state.items.findIndex(item => item.id === id)
+    const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
   },
   SET_SELECTED(state, field) {
-    Object.values(state.items).forEach(item => {
+    Object.values(state.items).forEach((item) => {
       item._.selected = false
     })
     field._.selected = true
     state.selected = field
   },
   UNSELECT(state) {
-    Object.values(state.items).forEach(item => {
+    Object.values(state.items).forEach((item) => {
       item._.selected = false
     })
     state.selected = {}
-  }
+  },
 }
 
 export const actions = {
@@ -75,7 +75,7 @@ export const actions = {
    */
   register({ commit, getters }, field) {
     if (!(field instanceof FieldType)) {
-      throw Error('The field must be an instance of fieldType.')
+      throw new TypeError('The field must be an instance of fieldType.')
     }
 
     commit('REGISTER', field)
@@ -101,7 +101,7 @@ export const actions = {
         populateField(data[index], getters)
       })
 
-      const primaryIndex = data.findIndex(item => item.primary === true)
+      const primaryIndex = data.findIndex((item) => item.primary === true)
       const primary =
         primaryIndex !== -1 ? data.splice(primaryIndex, 1)[0] : null
       commit('SET_PRIMARY', primary)
@@ -123,7 +123,7 @@ export const actions = {
     { commit, getters, rootGetters, dispatch },
     { type, table, values }
   ) {
-    if (values.hasOwnProperty('type')) {
+    if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
           'values when creating a new field.'
@@ -145,7 +145,7 @@ export const actions = {
    * Updates the values of the provided field.
    */
   async update({ commit, dispatch, getters }, { field, type, values }) {
-    if (values.hasOwnProperty('type')) {
+    if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the values when ' +
           'creating a new field.'
@@ -189,25 +189,25 @@ export const actions = {
    */
   forceDelete({ commit, dispatch }, field) {
     commit('DELETE_ITEM', field.id)
-  }
+  },
 }
 
 export const getters = {
   isLoaded(state) {
     return state.loaded
   },
-  get: state => id => {
-    return state.items.find(item => item.id === id)
+  get: (state) => (id) => {
+    return state.items.find((item) => item.id === id)
   },
-  typeExists: state => type => {
-    return state.types.hasOwnProperty(type)
+  typeExists: (state) => (type) => {
+    return Object.prototype.hasOwnProperty.call(state.types, type)
   },
-  getType: state => type => {
-    if (!state.types.hasOwnProperty(type)) {
+  getType: (state) => (type) => {
+    if (!Object.prototype.hasOwnProperty.call(state.types, type)) {
       throw new Error(`A field with type "${type}" doesn't exist.`)
     }
     return state.types[type]
-  }
+  },
 }
 
 export default {
@@ -215,5 +215,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

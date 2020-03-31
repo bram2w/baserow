@@ -3,7 +3,7 @@ import createNuxt from '@/test/helpers/create-nuxt'
 let nuxt = null
 
 describe('children', () => {
-  beforeAll(async done => {
+  beforeAll(async (done) => {
     nuxt = await createNuxt(true)
     done()
   }, 120000)

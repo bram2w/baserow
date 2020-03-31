@@ -4,8 +4,8 @@ export default {
       moveToBody: {
         children: [],
         hasMoved: false,
-        movedEventHandlers: []
-      }
+        movedEventHandlers: [],
+      },
     }
   },
   /**
@@ -23,7 +23,7 @@ export default {
     // to prevent closing when clicking in a child. We also check which parent
     // is first so can correctly move the element.
     while (parent !== undefined) {
-      if (parent.hasOwnProperty('moveToBody')) {
+      if (Object.prototype.hasOwnProperty.call(parent, 'moveToBody')) {
         parent.registerMoveToBodyChild(this)
         if (first === null) {
           first = parent
@@ -84,13 +84,13 @@ export default {
      *
      */
     fireMovedToBodyHandlers() {
-      this.moveToBody.movedEventHandlers.forEach(handler => handler())
+      this.moveToBody.movedEventHandlers.forEach((handler) => handler())
     },
     /**
      *
      */
     registerMoveToBodyChild(child) {
       this.moveToBody.children.push(child)
-    }
-  }
+    },
+  },
 }

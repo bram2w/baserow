@@ -1,7 +1,7 @@
 import GroupService from '@baserow/modules/core/services/group'
 import {
   setGroupCookie,
-  unsetGroupCookie
+  unsetGroupCookie,
 } from '@baserow/modules/core/utils/group'
 
 function populateGroup(group) {
@@ -13,7 +13,7 @@ export const state = () => ({
   loaded: false,
   loading: false,
   items: [],
-  selected: {}
+  selected: {},
 })
 
 export const mutations = {
@@ -25,13 +25,13 @@ export const mutations = {
   },
   SET_ITEMS(state, items) {
     // Set some default values that we might need later.
-    state.items = items.map(item => {
+    state.items = items.map((item) => {
       item = populateGroup(item)
       return item
     })
   },
   SET_ITEM_LOADING(state, { group, value }) {
-    if (!group.hasOwnProperty('_')) {
+    if (!Object.prototype.hasOwnProperty.call(group, '-')) {
       return
     }
     group._.loading = value
@@ -41,26 +41,26 @@ export const mutations = {
     state.items.push(item)
   },
   UPDATE_ITEM(state, { id, values }) {
-    const index = state.items.findIndex(item => item.id === id)
+    const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
   DELETE_ITEM(state, id) {
-    const index = state.items.findIndex(item => item.id === id)
+    const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
   },
   SET_SELECTED(state, group) {
-    Object.values(state.items).forEach(item => {
+    Object.values(state.items).forEach((item) => {
       item._.selected = false
     })
     group._.selected = true
     state.selected = group
   },
   UNSELECT(state) {
-    Object.values(state.items).forEach(item => {
+    Object.values(state.items).forEach((item) => {
       item._.selected = false
     })
     state.selected = {}
-  }
+  },
 }
 
 export const actions = {
@@ -174,7 +174,7 @@ export const actions = {
     commit('UNSELECT', {})
     unsetGroupCookie(this.app.$cookies)
     return dispatch('application/clearAll', group, { root: true })
-  }
+  },
 }
 
 export const getters = {
@@ -184,19 +184,19 @@ export const getters = {
   isLoading(state) {
     return state.loading
   },
-  get: state => id => {
-    return state.items.find(item => item.id === id)
+  get: (state) => (id) => {
+    return state.items.find((item) => item.id === id)
   },
   hasSelected(state) {
-    return state.selected.hasOwnProperty('id')
+    return Object.prototype.hasOwnProperty.call(state.selected, 'id')
   },
   selectedId(state) {
-    if (!state.selected.hasOwnProperty('id')) {
+    if (!Object.prototype.hasOwnProperty.call(state.selected, 'id')) {
       throw new Error('There is no selected group.')
     }
 
     return state.selected.id
-  }
+  },
 }
 
 export default {
@@ -204,5 +204,5 @@ export default {
   state,
   getters,
   actions,
-  mutations
+  mutations,
 }

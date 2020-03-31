@@ -34,8 +34,8 @@ export default {
   data() {
     return {
       values: {
-        name: ''
-      }
+        name: '',
+      },
     }
   },
   mounted() {
@@ -43,8 +43,8 @@ export default {
   },
   validations: {
     values: {
-      name: { required }
-    }
-  }
+      name: { required },
+    },
+  },
 }
 </script>

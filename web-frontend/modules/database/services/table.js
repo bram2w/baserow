@@ -15,5 +15,5 @@ export default {
   },
   delete(tableId) {
     return client.delete(`/database/tables/${tableId}/`)
-  }
+  },
 }

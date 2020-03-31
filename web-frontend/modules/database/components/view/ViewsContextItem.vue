@@ -3,7 +3,7 @@
     class="select-item"
     :class="{
       active: view._.selected,
-      'select-item-loading': view._.loading
+      'select-item-loading': view._.loading,
     }"
   >
     <div class="loading-overlay"></div>
@@ -54,8 +54,8 @@ export default {
   props: {
     view: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   methods: {
     setLoading(view, value) {
@@ -72,8 +72,8 @@ export default {
         await this.$store.dispatch('view/update', {
           view,
           values: {
-            name: event.value
-          }
+            name: event.value,
+          },
         })
       } catch (error) {
         this.$refs.rename.set(event.oldValue)
@@ -101,8 +101,8 @@ export default {
         {
           name: 'database-table',
           params: {
-            viewId: view.id
-          }
+            viewId: view.id,
+          },
         },
         () => {
           this.setLoading(view, false)
@@ -112,7 +112,7 @@ export default {
           this.setLoading(view, false)
         }
       )
-    }
-  }
+    },
+  },
 }
 </script>

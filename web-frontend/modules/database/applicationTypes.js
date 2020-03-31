@@ -34,7 +34,7 @@ export class DatabaseApplicationType extends ApplicationType {
    * the dashboard because that page doesn't exist anymore.
    */
   delete(application, { $router }) {
-    const tableSelected = application.tables.some(table => table._.selected)
+    const tableSelected = application.tables.some((table) => table._.selected)
     if (tableSelected) {
       $router.push({ name: 'dashboard' })
     }
@@ -45,7 +45,7 @@ export class DatabaseApplicationType extends ApplicationType {
    * selected state of all the table children.
    */
   clearChildrenSelected(application) {
-    Object.values(application.tables).forEach(table => {
+    Object.values(application.tables).forEach((table) => {
       if (table._.selected) {
         table._.selected = false
       }

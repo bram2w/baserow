@@ -65,24 +65,13 @@ import error from '@baserow/modules/core/mixins/error'
 export default {
   layout: 'login',
   mixins: [error],
-  head() {
-    return {
-      title: 'Login'
-    }
-  },
   data() {
     return {
       loading: false,
       credentials: {
         email: '',
-        password: ''
-      }
-    }
-  },
-  validations: {
-    credentials: {
-      email: { required, email },
-      password: { required }
+        password: '',
+      },
     }
   },
   methods: {
@@ -98,7 +87,7 @@ export default {
       try {
         await this.$store.dispatch('auth/login', {
           email: this.credentials.email,
-          password: this.credentials.password
+          password: this.credentials.password,
         })
         this.$nuxt.$router.push({ name: 'dashboard' })
       } catch (error) {
@@ -125,7 +114,18 @@ export default {
           throw error
         }
       }
+    },
+  },
+  head() {
+    return {
+      title: 'Login',
     }
-  }
+  },
+  validations: {
+    credentials: {
+      email: { required, email },
+      password: { required },
+    },
+  },
 }
 </script>

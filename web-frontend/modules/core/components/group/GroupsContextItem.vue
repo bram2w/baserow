@@ -3,7 +3,7 @@
     class="select-item"
     :class="{
       active: group._.selected,
-      'select-item-loading': group._.loading
+      'select-item-loading': group._.loading,
     }"
   >
     <div class="loading-overlay"></div>
@@ -48,12 +48,12 @@ export default {
   props: {
     group: {
       type: Object,
-      required: true
-    }
+      required: true,
+    },
   },
   methods: {
     setLoading(group, value) {
-      this.$store.dispatch('group/setItemLoading', { group, value: value })
+      this.$store.dispatch('group/setItemLoading', { group, value })
     },
     enableRename() {
       this.$refs.context.hide()
@@ -66,8 +66,8 @@ export default {
         await this.$store.dispatch('group/update', {
           group,
           values: {
-            name: event.value
-          }
+            name: event.value,
+          },
         })
       } catch (error) {
         this.$refs.rename.set(event.oldValue)
@@ -99,7 +99,7 @@ export default {
       }
 
       this.setLoading(group, false)
-    }
-  }
+    },
+  },
 }
 </script>

@@ -10,7 +10,7 @@ export default function DatabaseModule(options) {
    * This function adds a plugin, but rather then prepending it to the list it will
    * be appended.
    */
-  this.appendPlugin = template => {
+  this.appendPlugin = (template) => {
     this.addPlugin(template)
     this.options.plugins.push(this.options.plugins.splice(0, 1)[0])
   }
@@ -52,19 +52,19 @@ export default function DatabaseModule(options) {
     'plugins/auth.js',
     'plugins/clientHandler.js',
     'plugins/global.js',
-    'plugins/vuelidate.js'
+    'plugins/vuelidate.js',
   ]
-  plugins.forEach(plugin => {
+  plugins.forEach((plugin) => {
     this.addPlugin({
-      src: path.resolve(__dirname, plugin)
+      src: path.resolve(__dirname, plugin),
     })
   })
 
-  this.extendRoutes(configRoutes => {
+  this.extendRoutes((configRoutes) => {
     // Remove all the routes created by nuxt.
     let i = configRoutes.length
     while (i--) {
-      if (configRoutes[i].component.indexOf('/@nuxt/') !== -1) {
+      if (configRoutes[i].component.includes('/@nuxt/')) {
         configRoutes.splice(i, 1)
       }
     }

@@ -467,7 +467,7 @@
             @click="
               $store.dispatch('notification/success', {
                 title: 'Custom success notification',
-                message: 'Mauris dignissim massa ac justo consequat porttitor.'
+                message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
             >toggle success notification</a
@@ -477,7 +477,7 @@
             @click="
               $store.dispatch('notification/error', {
                 title: 'Custom error notification',
-                message: 'Mauris dignissim massa ac justo consequat porttitor.'
+                message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
             >toggle error notification</a
@@ -487,7 +487,7 @@
             @click="
               $store.dispatch('notification/warning', {
                 title: 'Custom warning notification',
-                message: 'Mauris dignissim massa ac justo consequat porttitor.'
+                message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
             >toggle warning notification</a
@@ -497,7 +497,7 @@
             @click="
               $store.dispatch('notification/info', {
                 title: 'Custom info notification',
-                message: 'Mauris dignissim massa ac justo consequat porttitor.'
+                message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
             >toggle info notification</a
@@ -534,18 +534,18 @@ import Notifications from '@baserow/modules/core/components/notifications/Notifi
 
 export default {
   components: {
-    Notifications
-  },
-  head() {
-    return {
-      title: 'Style guide'
-    }
+    Notifications,
   },
   data() {
     return {
       checkbox: false,
-      dropdown: null
+      dropdown: null,
     }
-  }
+  },
+  head() {
+    return {
+      title: 'Style guide',
+    }
+  },
 }
 </script>
