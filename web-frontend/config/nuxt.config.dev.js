@@ -3,7 +3,7 @@ import StyleLintPlugin from 'stylelint-webpack-plugin'
 
 import base from './nuxt.config.base.js'
 
-const config = {
+export default _.assign(base(), {
   build: {
     extend(config, ctx) {
       if (ctx.isDev && ctx.isClient) {
@@ -22,6 +22,4 @@ const config = {
       }),
     ],
   },
-}
-
-export default _.assign(base, config)
+})

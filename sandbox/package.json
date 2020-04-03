@@ -4,10 +4,9 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt --hostname 0.0.0.0",
-    "generate": "nuxt generate",
-    "start": "nuxt start"
+    "start": "nuxt start --hostname 0.0.0.0"
   },
   "dependencies": {
-    "baserow": "link:../web-frontend"
+    "baserow": "file:/web-frontend"
   }
 }

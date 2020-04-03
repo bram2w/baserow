@@ -14,9 +14,7 @@ services:
     container_name: backend
     build:
       context: ./backend/
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./backend:/backend
+      dockerfile: Dockerfile.demo
     ports:
       - 8000:8000
     depends_on:
@@ -26,22 +24,13 @@ services:
     container_name: web-frontend
     build:
       context: ./web-frontend/
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./web-frontend:/web-frontend
+      dockerfile: Dockerfile.demo
     ports:
       - 3000:3000
     depends_on:
       - backend
 
-  sandbox:
-    build:
-      context: ./
-      dockerfile: ./sandbox/Dockerfile
-    volumes:
-      - ./web-frontend:/web-frontend
-      - ./backend:/backend
-      - ./sandbox:/sandbox
-    ports:
-      - 8001:8000
-      - 3001:3000
+networks:
+  default:
+    external:
+      name: baserow_demo_default
