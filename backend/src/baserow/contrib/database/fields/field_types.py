@@ -72,8 +72,8 @@ class NumberFieldType(FieldType):
     def random_value(self, instance, fake):
         if instance.number_type == NUMBER_TYPE_INTEGER:
             return fake.pyint(
-                min=-10000 if instance.number_negative else 0,
-                max=10000,
+                min_value=-10000 if instance.number_negative else 0,
+                max_value=10000,
                 step=1
             )
         elif instance.number_type == NUMBER_TYPE_DECIMAL:

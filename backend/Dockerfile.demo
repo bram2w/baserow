@@ -1,0 +1,17 @@
+FROM python:3.6
+
+ADD . /backend
+
+WORKDIR /backend
+
+ENV PYTHONPATH $PYTHONPATH:/backend/src
+ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.demo'
+
+RUN apt-get update
+RUN apt-get -y install make
+RUN apt-get -y install curl
+RUN apt-get -y install gnupg2
+
+RUN make install-dependencies
+
+ENTRYPOINT python src/baserow/manage.py migrate && python src/baserow/manage.py runserver 0.0.0.0:8000

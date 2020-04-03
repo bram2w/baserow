@@ -1,14 +1,14 @@
 {
   "name": "baserow",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Baserow web frontend",
   "author": "Bram Wiepjes (Cloud 3)",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt --hostname 0.0.0.0",
-    "generate": "nuxt generate",
     "start": "nuxt start --hostname 0.0.0.0",
+    "demo": "nuxt start --hostname 0.0.0.0 --config-file config/nuxt.config.demo.js",
     "eslint": "eslint --ext .js,.vue .",
     "stylelint": "stylelint **/*.scss --syntax scss",
     "jest": "jest -i --verbose false test/"

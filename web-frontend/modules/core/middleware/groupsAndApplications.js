@@ -4,7 +4,7 @@ import { getGroupCookie } from '@baserow/modules/core/utils/group'
  * This middleware will make sure that all the groups and applications belonging to
  * the user are fetched and added to the store.
  */
-export default async function ({ store, req, app }) {
+export default async function GroupsAndApplications({ store, req, app }) {
   // If nuxt generate, pass this middleware
   if (process.server && !req) return
 
@@ -19,7 +19,9 @@ export default async function ({ store, req, app }) {
 
       // If there is a groupId cookie we will select that group.
       if (groupId) {
-        await store.dispatch('group/selectById', groupId)
+        try {
+          await store.dispatch('group/selectById', groupId)
+        } catch {}
       }
     }
     // If the applications haven't been loaded we will also load them all.

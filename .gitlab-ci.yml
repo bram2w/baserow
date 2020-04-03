@@ -35,6 +35,7 @@ backend-flake8:
   script:
     - cd backend
     - make install-dependencies
+    - make install-dev-dependencies
     - make lint
 
 backend-pytest:
@@ -50,5 +51,6 @@ backend-pytest:
   script:
     - cd backend
     - make install-dependencies
+    - make install-dev-dependencies
     - export PYTHONPATH=$CI_PROJECT_DIR/backend/src
     - make test
