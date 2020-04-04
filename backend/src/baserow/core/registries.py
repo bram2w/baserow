@@ -40,6 +40,16 @@ class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, Instance):
     instance_serializer_class = None
     """This serializer that is used to serialize the instance model."""
 
+    def user_created(self, user, group):
+        """
+        A hook that is called after a new user has been created. This is the place to
+        create some data the user can start with. A group has already been created
+        for the user to that one is passed as a parameter.
+
+        :param user: The newly created user.
+        :param group: The newly created group for the user.
+        """
+
     def pre_delete(self, application):
         """
         A hook that is called before the application instance is deleted.
