@@ -27,7 +27,6 @@ from .serializers import (
 
 class FieldsView(APIView):
     permission_classes = (IsAuthenticated,)
-    field_handler = FieldHandler()
 
     @staticmethod
     def get_table(user, table_id):
@@ -71,7 +70,7 @@ class FieldsView(APIView):
 
         type_name = data.pop('type')
         table = self.get_table(request.user, table_id)
-        field = self.field_handler.create_field(
+        field = FieldHandler().create_field(
             request.user, table, type_name, **data)
 
         serializer = field_type_registry.get_serializer(field, FieldSerializer)
@@ -80,7 +79,6 @@ class FieldsView(APIView):
 
 class FieldView(APIView):
     permission_classes = (IsAuthenticated,)
-    field_handler = FieldHandler()
 
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
@@ -117,7 +115,7 @@ class FieldView(APIView):
         data = validate_data_custom_fields(type_name, field_type_registry, request.data,
                                            base_serializer_class=UpdateFieldSerializer)
 
-        field = self.field_handler.update_field(request.user, field, type_name, **data)
+        field = FieldHandler().update_field(request.user, field, type_name, **data)
 
         serializer = field_type_registry.get_serializer(field, FieldSerializer)
         return Response(serializer.data)
@@ -134,6 +132,6 @@ class FieldView(APIView):
             Field.objects.select_related('table__database__group'),
             pk=field_id
         )
-        self.field_handler.delete_field(request.user, field)
+        FieldHandler().delete_field(request.user, field)
 
         return Response(status=204)

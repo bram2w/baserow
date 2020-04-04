@@ -19,7 +19,6 @@ from .serializers import ViewSerializer, CreateViewSerializer, UpdateViewSeriali
 
 class ViewsView(APIView):
     permission_classes = (IsAuthenticated,)
-    view_handler = ViewHandler()
 
     @staticmethod
     def get_table(user, table_id):
@@ -61,7 +60,7 @@ class ViewsView(APIView):
         """Creates a new view for a user."""
 
         table = self.get_table(request.user, table_id)
-        view = self.view_handler.create_view(
+        view = ViewHandler().create_view(
             request.user, table, data['type'], name=data['name'])
 
         serializer = view_type_registry.get_serializer(view, ViewSerializer)
@@ -70,7 +69,6 @@ class ViewsView(APIView):
 
 class ViewView(APIView):
     permission_classes = (IsAuthenticated,)
-    view_handler = ViewHandler()
 
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
@@ -108,7 +106,7 @@ class ViewView(APIView):
             base_serializer_class=UpdateViewSerializer
         )
 
-        view = self.view_handler.update_view(request.user, view, **data)
+        view = ViewHandler().update_view(request.user, view, **data)
 
         serializer = view_type_registry.get_serializer(view, ViewSerializer)
         return Response(serializer.data)
@@ -124,6 +122,6 @@ class ViewView(APIView):
             View.objects.select_related('table__database__group'),
             pk=view_id
         )
-        self.view_handler.delete_view(request.user, view)
+        ViewHandler().delete_view(request.user, view)
 
         return Response(status=204)

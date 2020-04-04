@@ -16,7 +16,6 @@ from .serializers import GroupSerializer, GroupUserSerializer, OrderGroupsSerial
 
 class GroupsView(APIView):
     permission_classes = (IsAuthenticated,)
-    core_handler = CoreHandler()
 
     def get(self, request):
         """Responds with a list of serialized groups where the user is part of."""
@@ -30,13 +29,12 @@ class GroupsView(APIView):
     def post(self, request, data):
         """Creates a new group for a user."""
 
-        group_user = self.core_handler.create_group(request.user, name=data['name'])
+        group_user = CoreHandler().create_group(request.user, name=data['name'])
         return Response(GroupUserSerializer(group_user).data)
 
 
 class GroupView(APIView):
     permission_classes = (IsAuthenticated,)
-    core_handler = CoreHandler()
 
     @staticmethod
     def get_group_user(user, group_id):
@@ -60,7 +58,7 @@ class GroupView(APIView):
         """Updates the group if it belongs to a user."""
 
         group_user = self.get_group_user(request.user, group_id)
-        group_user.group = self.core_handler.update_group(
+        group_user.group = CoreHandler().update_group(
             request.user,  group_user.group, name=data['name'])
 
         return Response(GroupUserSerializer(group_user).data)
@@ -73,17 +71,16 @@ class GroupView(APIView):
         """Deletes an existing group if it belongs to a user."""
 
         group_user = self.get_group_user(request.user, group_id)
-        self.core_handler.delete_group(request.user,  group_user.group)
+        CoreHandler().delete_group(request.user,  group_user.group)
         return Response(status=204)
 
 
 class GroupOrderView(APIView):
     permission_classes = (IsAuthenticated,)
-    core_handler = CoreHandler()
 
     @validate_body(OrderGroupsSerializer)
     def post(self, request, data):
         """Updates to order of some groups for a user."""
 
-        self.core_handler.order_groups(request.user, data['groups'])
+        CoreHandler().order_groups(request.user, data['groups'])
         return Response(status=204)

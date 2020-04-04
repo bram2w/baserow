@@ -17,7 +17,6 @@ from .serializers import TableSerializer, TableCreateUpdateSerializer
 
 class TablesView(APIView):
     permission_classes = (IsAuthenticated,)
-    table_handler = TableHandler()
 
     @staticmethod
     def get_database(user, database_id):
@@ -51,7 +50,7 @@ class TablesView(APIView):
         """Creates a new table in a database."""
 
         database = self.get_database(request.user, database_id)
-        table = self.table_handler.create_table(
+        table = TableHandler().create_table(
             request.user, database, name=data['name'])
         serializer = TableSerializer(table)
         return Response(serializer.data)
@@ -59,7 +58,6 @@ class TablesView(APIView):
 
 class TableView(APIView):
     permission_classes = (IsAuthenticated,)
-    table_handler = TableHandler()
 
     @staticmethod
     def get_table(user, table_id):
@@ -91,7 +89,7 @@ class TableView(APIView):
     def patch(self, request, data, table_id):
         """Updates the values a table instance."""
 
-        table = self.table_handler.update_table(
+        table = TableHandler().update_table(
             request.user,
             self.get_table(request.user, table_id),
             name=data['name']
@@ -106,7 +104,7 @@ class TableView(APIView):
     def delete(self, request, table_id):
         """Deletes an existing table."""
 
-        self.table_handler.delete_table(
+        TableHandler().delete_table(
             request.user,
             self.get_table(request.user, table_id)
         )
