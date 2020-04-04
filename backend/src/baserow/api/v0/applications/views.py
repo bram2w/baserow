@@ -18,7 +18,6 @@ from .serializers import (
 
 class ApplicationsView(APIView):
     permission_classes = (IsAuthenticated,)
-    core_handler = CoreHandler()
 
     @staticmethod
     def get_group(request, group_id):
@@ -65,7 +64,7 @@ class ApplicationsView(APIView):
         """Creates a new application for a user."""
 
         group = self.get_group(request, group_id)
-        application = self.core_handler.create_application(
+        application = CoreHandler().create_application(
             request.user, group, data['type'], name=data['name'])
 
         return Response(get_application_serializer(application).data)
@@ -73,7 +72,6 @@ class ApplicationsView(APIView):
 
 class ApplicationView(APIView):
     permission_classes = (IsAuthenticated,)
-    core_handler = CoreHandler()
 
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
@@ -103,7 +101,7 @@ class ApplicationView(APIView):
             Application.objects.select_related('group').select_for_update(),
             pk=application_id
         )
-        application = self.core_handler.update_application(
+        application = CoreHandler().update_application(
             request.user, application, name=data['name'])
 
         return Response(get_application_serializer(application).data)
@@ -119,6 +117,6 @@ class ApplicationView(APIView):
             Application.objects.select_related('group'),
             pk=application_id
         )
-        self.core_handler.delete_application(request.user, application)
+        CoreHandler().delete_application(request.user, application)
 
         return Response(status=204)

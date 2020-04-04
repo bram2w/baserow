@@ -19,7 +19,6 @@ jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
 class UserView(APIView):
     permission_classes = (AllowAny,)
-    user_handler = UserHandler()
 
     @transaction.atomic
     @map_exceptions({
@@ -29,8 +28,8 @@ class UserView(APIView):
     def post(self, request, data):
         """Registers a new user."""
 
-        user = self.user_handler.create_user(name=data['name'], email=data['email'],
-                                             password=data['password'])
+        user = UserHandler().create_user(name=data['name'], email=data['email'],
+                                         password=data['password'])
 
         response = {'user': UserSerializer(user).data}
 

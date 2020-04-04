@@ -20,8 +20,6 @@ from .serializers import RowSerializer, get_row_serializer_class
 
 class RowsView(APIView):
     permission_classes = (IsAuthenticated,)
-    row_handler = RowHandler()
-    table_handler = TableHandler()
 
     @transaction.atomic
     @map_exceptions({
@@ -34,13 +32,13 @@ class RowsView(APIView):
         according to the tables field types.
         """
 
-        table = self.table_handler.get_table(request.user, table_id)
+        table = TableHandler().get_table(request.user, table_id)
         model = table.get_model()
 
         validation_serializer = get_row_serializer_class(model)
         data = validate_data(validation_serializer, request.data)
 
-        row = self.row_handler.create_row(request.user, table, data, model)
+        row = RowHandler().create_row(request.user, table, data, model)
         serializer_class = get_row_serializer_class(model, RowSerializer)
         serializer = serializer_class(row)
 
@@ -49,8 +47,6 @@ class RowsView(APIView):
 
 class RowView(APIView):
     permission_classes = (IsAuthenticated,)
-    row_handler = RowHandler()
-    table_handler = TableHandler()
 
     @transaction.atomic
     @map_exceptions({
@@ -64,19 +60,19 @@ class RowView(APIView):
         table_id. Also the post data is validated according to the tables field types.
         """
 
-        table = self.table_handler.get_table(request.user, table_id)
+        table = TableHandler().get_table(request.user, table_id)
 
         # Small side effect of generating the model for only the fields that need to
         # change is that the response it not going to contain the other fields. It is
         # however much faster because it doesn't need to get the specific version of
         # all the field objects.
-        field_ids = self.row_handler.extract_field_ids_from_dict(request.data)
+        field_ids = RowHandler().extract_field_ids_from_dict(request.data)
         model = table.get_model(field_ids=field_ids)
 
         validation_serializer = get_row_serializer_class(model)
         data = validate_data(validation_serializer, request.data)
 
-        row = self.row_handler.update_row(request.user, table, row_id, data, model)
+        row = RowHandler().update_row(request.user, table, row_id, data, model)
 
         serializer_class = get_row_serializer_class(model, RowSerializer)
         serializer = serializer_class(row)
@@ -94,7 +90,7 @@ class RowView(APIView):
         Deletes an existing row with the given row_id for table with the given table_id.
         """
 
-        table = self.table_handler.get_table(request.user, table_id)
-        self.row_handler.delete_row(request.user, table, row_id)
+        table = TableHandler().get_table(request.user, table_id)
+        RowHandler().delete_row(request.user, table, row_id)
 
         return Response(status=204)

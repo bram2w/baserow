@@ -18,7 +18,6 @@ from .errors import ERROR_GRID_DOES_NOT_EXIST
 
 class GridViewView(APIView):
     permission_classes = (IsAuthenticated,)
-    view_handler = ViewHandler()
 
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
@@ -31,7 +30,7 @@ class GridViewView(APIView):
         else the page number pagination.
         """
 
-        view = self.view_handler.get_view(request.user, view_id, GridView)
+        view = ViewHandler().get_view(request.user, view_id, GridView)
 
         model = view.table.get_model()
         queryset = model.objects.all().order_by('id')
