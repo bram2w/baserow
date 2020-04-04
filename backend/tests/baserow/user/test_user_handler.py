@@ -1,5 +1,9 @@
 import pytest
 
+from baserow.core.models import Group
+from baserow.contrib.database.models import (
+    Database, Table, GridView, TextField, BooleanField
+)
 from baserow.user.exceptions import UserAlreadyExist
 from baserow.user.handler import UserHandler
 
@@ -13,6 +17,21 @@ def test_create_user():
     assert user.first_name == 'Test1'
     assert user.email == 'test@test.nl'
     assert user.username == 'test@test.nl'
+
+    assert Group.objects.all().count() == 1
+    group = Group.objects.all().first()
+    assert group.users.filter(id=user.id).count() == 1
+    assert group.name == "Test1's group"
+
+    assert Database.objects.all().count() == 1
+    assert Table.objects.all().count() == 1
+    assert GridView.objects.all().count() == 1
+    assert TextField.objects.all().count() == 2
+    assert BooleanField.objects.all().count() == 1
+
+    table = Table.objects.first()
+    model = table.get_model()
+    assert model.objects.all().count() == 4
 
     with pytest.raises(UserAlreadyExist):
         user_handler.create_user('Test1', 'test@test.nl', 'password')
