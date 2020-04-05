@@ -10,6 +10,7 @@
 
 .visibility-hidden {
   visibility: hidden;
+  transform: translateX(-10000px) translateY(-10000px);
 }
 
 .align-right {

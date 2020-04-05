@@ -46,8 +46,8 @@ export default {
      * filter on the selected group here.
      */
     applications() {
-      return this.allApplications.filter(
-        (application) => application.group.id === this.selectedGroup.id
+      return this.$store.getters['application/getAllOfGroup'](
+        this.selectedGroup
       )
     },
     ...mapState({

@@ -99,7 +99,8 @@ export class ApplicationType {
 
   /**
    * When an application is deleted it could be that an action should be taken,
-   * like redirect the user to another page.
+   * like redirect the user to another page. This method is called when application
+   * of this type is deleted.
    */
   delete(application, context) {}
 
