@@ -219,6 +219,11 @@ export const getters = {
   getAll(state) {
     return state.items
   },
+  getAllOfGroup: (state) => (group) => {
+    return state.items.filter(
+      (application) => application.group.id === group.id
+    )
+  },
   typeExists: (state) => (type) => {
     return Object.prototype.hasOwnProperty.call(state.types, type)
   },

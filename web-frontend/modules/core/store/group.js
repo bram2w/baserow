@@ -141,9 +141,18 @@ export const actions = {
     }
   },
   /**
-   * Forcibly remove the group from the items  without calling the server.
+   * Forcibly remove the group from the items  without calling the server. The
+   * delete event is also called for all the applications that are in the
+   * group. This is needed so that we can redirect the user to another page if for
+   * example a Table is open that has been deleted because the group has been deleted.
    */
   forceDelete({ commit, dispatch, rootGetters }, group) {
+    const applications = rootGetters['application/getAllOfGroup'](group)
+    applications.forEach((application) => {
+      const type = rootGetters['application/getType'](application.type)
+      type.delete(application, this)
+    })
+
     if (group._.selected) {
       dispatch('unselect', group)
     }
