@@ -88,10 +88,10 @@ export default {
         databaseId,
         tableId,
       })
+      await store.dispatch('group/selectById', database.group.id)
       data.database = database
       data.table = table
     } catch (e) {
-      console.log(e)
       return error({ statusCode: 404, message: 'Table not found.' })
     }
 
@@ -123,6 +123,10 @@ export default {
     ...mapGetters({
       hasSelectedView: 'view/hasSelected',
     }),
+  },
+  beforeRouteLeave(to, from, next) {
+    this.$store.dispatch('table/unselect')
+    next()
   },
   methods: {
     getViewComponent(view) {

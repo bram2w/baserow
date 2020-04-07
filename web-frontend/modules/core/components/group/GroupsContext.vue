@@ -6,7 +6,7 @@
         v-model="query"
         type="text"
         class="select-search-input"
-        placeholder="Search views"
+        placeholder="Search groups"
       />
     </div>
     <div v-if="isLoading" class="context-loading">

@@ -30,6 +30,13 @@ export const mutations = {
     table._.selected = true
     state.selected = table
   },
+  UNSELECT(state) {
+    if (!Object.prototype.hasOwnProperty.call(state.selected, '_')) {
+      return
+    }
+    state.selected._.selected = false
+    state.selected = {}
+  },
   DELETE_ITEM(state, { database, id }) {
     const index = database.tables.findIndex((item) => item.id === id)
     database.tables.splice(index, 1)
@@ -160,6 +167,12 @@ export const actions = {
     const table = database.tables[index]
 
     return dispatch('select', { database, table })
+  },
+  /**
+   * Unselect the selected table.
+   */
+  unselect({ commit, dispatch, getters }) {
+    commit('UNSELECT')
   },
 }
 

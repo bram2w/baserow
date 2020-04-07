@@ -15,6 +15,7 @@
         <CreateApplicationModal
           :ref="'createApplicationModal' + type"
           :application-type="applicationType"
+          :group="group"
           @created="hide"
         ></CreateApplicationModal>
       </li>
@@ -34,6 +35,12 @@ export default {
     CreateApplicationModal,
   },
   mixins: [context],
+  props: {
+    group: {
+      type: Object,
+      required: true,
+    },
+  },
   computed: {
     ...mapState({
       applications: (state) => state.application.types,

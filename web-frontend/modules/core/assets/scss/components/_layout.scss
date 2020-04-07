@@ -41,6 +41,12 @@
   }
 }
 
+.layout-col-3-scroll {
+  @include absolute(0);
+
+  overflow: auto;
+}
+
 .layout-col-3-1 {
   position: absolute;
   z-index: $z-index-layout-col-3-1;

@@ -34,6 +34,10 @@ export default {
       type: Object,
       required: true,
     },
+    group: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
@@ -48,6 +52,7 @@ export default {
       try {
         await this.$store.dispatch('application/create', {
           type: this.applicationType.type,
+          group: this.group,
           values,
         })
         this.loading = false
