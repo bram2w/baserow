@@ -18,10 +18,11 @@ class TextFieldType(FieldType):
     serializer_field_names = ['text_default']
 
     def get_serializer_field(self, instance, **kwargs):
-        return serializers.CharField(required=False, allow_blank=True, **kwargs)
+        return serializers.CharField(required=False, allow_null=True, allow_blank=True,
+                                     default=instance.text_default, **kwargs)
 
     def get_model_field(self, instance, **kwargs):
-        return models.TextField(default=instance.text_default, null=True, blank=True,
+        return models.TextField(default=instance.text_default, blank=True, null=True,
                                 **kwargs)
 
     def random_value(self, instance, fake):
@@ -37,15 +38,16 @@ class NumberFieldType(FieldType):
     serializer_field_names = ['number_type', 'number_decimal_places', 'number_negative']
 
     def prepare_value_for_db(self, instance, value):
-        if instance.number_type == NUMBER_TYPE_DECIMAL:
+        if value and instance.number_type == NUMBER_TYPE_DECIMAL:
             value = Decimal(value)
-        if not instance.number_negative and value < 0:
+        if value and not instance.number_negative and value < 0:
             raise ValidationError(f'The value for field {instance.id} cannot be '
                                   f'negative.')
         return value
 
     def get_serializer_field(self, instance, **kwargs):
         kwargs['required'] = False
+        kwargs['allow_null'] = True
         if not instance.number_negative:
             kwargs['min_value'] = 0
         if instance.number_type == NUMBER_TYPE_INTEGER:
@@ -89,7 +91,7 @@ class BooleanFieldType(FieldType):
     model_class = BooleanField
 
     def get_serializer_field(self, instance, **kwargs):
-        return serializers.BooleanField(required=False, **kwargs)
+        return serializers.BooleanField(required=False, default=False, **kwargs)
 
     def get_model_field(self, instance, **kwargs):
         return models.BooleanField(default=False, **kwargs)

@@ -149,7 +149,7 @@ export const actions = {
   forceDelete({ commit, dispatch, rootGetters }, group) {
     const applications = rootGetters['application/getAllOfGroup'](group)
     applications.forEach((application) => {
-      const type = rootGetters['application/getType'](application.type)
+      const type = this.$registry.get('application', application.type)
       type.delete(application, this)
     })
 

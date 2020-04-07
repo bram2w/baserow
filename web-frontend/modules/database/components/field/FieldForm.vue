@@ -48,7 +48,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
 import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
@@ -67,9 +66,9 @@ export default {
     }
   },
   computed: {
-    ...mapState({
-      fieldTypes: (state) => state.field.types,
-    }),
+    fieldTypes() {
+      return this.$registry.getAll('field')
+    },
   },
   validations: {
     values: {
@@ -79,7 +78,7 @@ export default {
   },
   methods: {
     getFormComponent(type) {
-      return this.$store.getters['field/getType'](type).getFormComponent()
+      return this.$registry.get('field', type).getFormComponent()
     },
   },
 }

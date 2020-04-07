@@ -167,7 +167,7 @@ def test_update_table(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_group(api_client, data_fixture):
+def test_delete_table(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     table_1 = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table()

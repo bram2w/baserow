@@ -24,8 +24,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
-
 import CreateApplicationModal from '@baserow/modules/core/components/application/CreateApplicationModal'
 import context from '@baserow/modules/core/mixins/context'
 
@@ -42,9 +40,9 @@ export default {
     },
   },
   computed: {
-    ...mapState({
-      applications: (state) => state.application.types,
-    }),
+    applications() {
+      return this.$registry.getAll('application')
+    },
   },
   methods: {
     toggleCreateApplicationModal(type) {

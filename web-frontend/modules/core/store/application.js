@@ -1,9 +1,8 @@
-import { ApplicationType } from '@baserow/modules/core/applicationTypes'
 import ApplicationService from '@baserow/modules/core/services/application'
 import { clone } from '@baserow/modules/core/utils/object'
 
-function populateApplication(application, getters) {
-  const type = getters.getType(application.type)
+function populateApplication(application, registry) {
+  const type = registry.get('application', application.type)
 
   application._ = {
     type: type.serialize(),
@@ -14,7 +13,6 @@ function populateApplication(application, getters) {
 }
 
 export const state = () => ({
-  types: {},
   loading: false,
   loaded: false,
   items: [],
@@ -22,9 +20,6 @@ export const state = () => ({
 })
 
 export const mutations = {
-  REGISTER(state, application) {
-    state.types[application.type] = application
-  },
   SET_ITEMS(state, applications) {
     state.items = applications
   },
@@ -68,19 +63,6 @@ export const mutations = {
 
 export const actions = {
   /**
-   * Register a new application within the registry. The is commonly used when
-   * creating an extension.
-   */
-  register({ commit, getters }, application) {
-    if (!(application instanceof ApplicationType)) {
-      throw new TypeError(
-        'The application must be an instance of ApplicationType.'
-      )
-    }
-
-    commit('REGISTER', application)
-  },
-  /**
    * Changes the loading state of a specific item.
    */
   setItemLoading({ commit }, { application, value }) {
@@ -95,7 +77,7 @@ export const actions = {
     try {
       const { data } = await ApplicationService.fetchAll()
       data.forEach((part, index, d) => {
-        populateApplication(data[index], getters)
+        populateApplication(data[index], this.$registry)
       })
       commit('SET_ITEMS', data)
       commit('SET_LOADING', false)
@@ -122,7 +104,7 @@ export const actions = {
    */
   clearChildrenSelected({ commit, getters }) {
     Object.values(getters.getAll).forEach((application) => {
-      const type = getters.getType(application.type)
+      const type = this.$registry.get('application', application.type)
       commit('CLEAR_CHILDREN_SELECTED', { type, application })
     })
   },
@@ -141,7 +123,7 @@ export const actions = {
       )
     }
 
-    if (!getters.typeExists(type)) {
+    if (!this.$registry.exists('application', type)) {
       throw new Error(`An application type with type "${type}" doesn't exist.`)
     }
 
@@ -149,7 +131,7 @@ export const actions = {
     postData.type = type
 
     const { data } = await ApplicationService.create(group.id, postData)
-    populateApplication(data, getters)
+    populateApplication(data, this.$registry)
     commit('ADD_ITEM', data)
   },
   /**
@@ -170,7 +152,7 @@ export const actions = {
   async delete({ commit, dispatch, getters }, application) {
     try {
       await ApplicationService.delete(application.id)
-      const type = getters.getType(application.type)
+      const type = this.$registry.get('application', application.type)
       type.delete(application, this)
       commit('DELETE_ITEM', application.id)
     } catch (error) {
@@ -223,15 +205,6 @@ export const getters = {
     return state.items.filter(
       (application) => application.group.id === group.id
     )
-  },
-  typeExists: (state) => (type) => {
-    return Object.prototype.hasOwnProperty.call(state.types, type)
-  },
-  getType: (state) => (type) => {
-    if (!Object.prototype.hasOwnProperty.call(state.types, type)) {
-      throw new Error(`An application type with type "${type}" doesn't exist.`)
-    }
-    return state.types[type]
   },
 }
 

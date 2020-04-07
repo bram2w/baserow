@@ -24,14 +24,18 @@ def test_create_user():
     assert group.name == "Test1's group"
 
     assert Database.objects.all().count() == 1
-    assert Table.objects.all().count() == 1
-    assert GridView.objects.all().count() == 1
-    assert TextField.objects.all().count() == 2
-    assert BooleanField.objects.all().count() == 1
+    assert Table.objects.all().count() == 2
+    assert GridView.objects.all().count() == 2
+    assert TextField.objects.all().count() == 3
+    assert BooleanField.objects.all().count() == 2
 
-    table = Table.objects.first()
-    model = table.get_model()
-    assert model.objects.all().count() == 4
+    tables = Table.objects.all().order_by('id')
+
+    model_1 = tables[0].get_model()
+    assert model_1.objects.all().count() == 4
+
+    model_2 = tables[1].get_model()
+    assert model_2.objects.all().count() == 3
 
     with pytest.raises(UserAlreadyExist):
         user_handler.create_user('Test1', 'test@test.nl', 'password')

@@ -55,27 +55,27 @@ export default {
   },
   methods: {
     getFieldComponent(type) {
-      return this.$store.getters['field/getType'](
-        type
-      ).getGridViewFieldComponent()
+      return this.$registry.get('field', type).getGridViewFieldComponent()
     },
     /**
      * If the grid field component emits an update event this method will be called
      * which will actually update the value via the store.
      */
-    async update(value, oldValue) {
-      try {
-        await this.$store.dispatch('view/grid/updateValue', {
+    update(value, oldValue) {
+      this.$store
+        .dispatch('view/grid/updateValue', {
           table: this.table,
           row: this.row,
           field: this.field,
           value,
           oldValue,
         })
-      } catch (error) {
-        this.$forceUpdate()
-        notifyIf(error, 'column')
-      }
+        .catch((error) => {
+          notifyIf(error, 'column')
+        })
+        .then(() => {
+          this.$forceUpdate()
+        })
 
       // This is needed because in some cases we do have a value yet, so a watcher of
       // the value is not guaranteed. This will make sure the component shows the
