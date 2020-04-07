@@ -23,6 +23,7 @@
       </a>
       <CreateApplicationContext
         ref="createApplicationContext"
+        :group="selectedGroup"
       ></CreateApplicationContext>
     </div>
   </div>

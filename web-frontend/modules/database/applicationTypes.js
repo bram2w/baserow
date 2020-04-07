@@ -40,6 +40,25 @@ export class DatabaseApplicationType extends ApplicationType {
     }
   }
 
+  select(application, { $router, $store }) {
+    if (application.tables.length > 0) {
+      $router.push({
+        name: 'database-table',
+        params: {
+          databaseId: application.id,
+          tableId: application.tables[0].id,
+        },
+      })
+    } else {
+      $store.dispatch('notification/error', {
+        title: 'Could select the database.',
+        message:
+          "The database could be selected because it doesn't have any tables. Use " +
+          'the sidebar to create one.',
+      })
+    }
+  }
+
   /**
    * When another database is selected in the sidebar we have the change the
    * selected state of all the table children.

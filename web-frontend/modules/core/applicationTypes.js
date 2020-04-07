@@ -105,6 +105,13 @@ export class ApplicationType {
   delete(application, context) {}
 
   /**
+   * When an application is selected, for example from the dashboard, an action needs to
+   * be taken. For example when a database is selected the user will be redirected to
+   * the first table of that database.
+   */
+  select(application, context) {}
+
+  /**
    *
    */
   clearChildrenSelected(application) {}

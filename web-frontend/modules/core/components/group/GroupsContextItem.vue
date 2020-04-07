@@ -41,64 +41,15 @@
 </template>
 
 <script>
-import { notifyIf } from '@baserow/modules/core/utils/error'
+import editGroup from '@baserow/modules/core/mixins/editGroup'
 
 export default {
   name: 'GroupsContextItem',
+  mixins: [editGroup],
   props: {
     group: {
       type: Object,
       required: true,
-    },
-  },
-  methods: {
-    setLoading(group, value) {
-      this.$store.dispatch('group/setItemLoading', { group, value })
-    },
-    enableRename() {
-      this.$refs.context.hide()
-      this.$refs.rename.edit()
-    },
-    async renameGroup(group, event) {
-      this.setLoading(group, true)
-
-      try {
-        await this.$store.dispatch('group/update', {
-          group,
-          values: {
-            name: event.value,
-          },
-        })
-      } catch (error) {
-        this.$refs.rename.set(event.oldValue)
-        notifyIf(error, 'group')
-      }
-
-      this.setLoading(group, false)
-    },
-    async selectGroup(group) {
-      this.setLoading(group, true)
-
-      try {
-        await this.$store.dispatch('group/select', group)
-        this.$emit('selected')
-      } catch (error) {
-        notifyIf(error, 'group')
-      }
-
-      this.setLoading(group, false)
-    },
-    async deleteGroup(group) {
-      this.$refs.context.hide()
-      this.setLoading(group, true)
-
-      try {
-        await this.$store.dispatch('group/delete', group)
-      } catch (error) {
-        notifyIf(error, 'group')
-      }
-
-      this.setLoading(group, false)
     },
   },
 }

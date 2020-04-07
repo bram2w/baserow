@@ -130,7 +130,10 @@ export const actions = {
    * Creates a new application with the given type and values for the currently
    * selected group.
    */
-  async create({ commit, getters, rootGetters, dispatch }, { type, values }) {
+  async create(
+    { commit, getters, rootGetters, dispatch },
+    { type, group, values }
+  ) {
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
@@ -145,10 +148,7 @@ export const actions = {
     const postData = clone(values)
     postData.type = type
 
-    const { data } = await ApplicationService.create(
-      rootGetters['group/selectedId'],
-      postData
-    )
+    const { data } = await ApplicationService.create(group.id, postData)
     populateApplication(data, getters)
     commit('ADD_ITEM', data)
   },

@@ -31,7 +31,7 @@ export const mutations = {
     })
   },
   SET_ITEM_LOADING(state, { group, value }) {
-    if (!Object.prototype.hasOwnProperty.call(group, '-')) {
+    if (!Object.prototype.hasOwnProperty.call(group, '_')) {
       return
     }
     group._.loading = value
