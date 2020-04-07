@@ -97,7 +97,7 @@ export default {
   },
   methods: {
     selectApplication(application) {
-      const type = this.$store.getters['application/getType'](application.type)
+      const type = this.$registry.get('application', application.type)
       type.select(application, this)
     },
   },

@@ -139,7 +139,7 @@ export default {
       this.setLoading(application, false)
     },
     getSelectedApplicationComponent(application) {
-      const type = this.$store.getters['application/getType'](application.type)
+      const type = this.$registry.get('application', application.type)
       return type.getSelectedSidebarComponent()
     },
   },

@@ -1,3 +1,5 @@
+import { Registerable } from '@baserow/modules/core/registry'
+
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 
@@ -5,15 +7,7 @@ import GridViewFieldText from '@baserow/modules/database/components/view/grid/Gr
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
 
-export class FieldType {
-  /**
-   * Must return a string with the unique name, this must be the same as the
-   * type used in the backend.
-   */
-  getType() {
-    return null
-  }
-
+export class FieldType extends Registerable {
   /**
    * The font awesome 5 icon name that is used as convenience for the user to
    * recognize certain view types. If you for example want the database
@@ -60,6 +54,7 @@ export class FieldType {
   }
 
   constructor() {
+    super()
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
@@ -102,10 +97,6 @@ export class TextFieldType extends FieldType {
     return 'text'
   }
 
-  getType() {
-    return TextFieldType.getType()
-  }
-
   getIconClass() {
     return 'font'
   }
@@ -121,15 +112,15 @@ export class TextFieldType extends FieldType {
   getGridViewFieldComponent() {
     return GridViewFieldText
   }
+
+  getEmptyValue(field) {
+    return field.text_default
+  }
 }
 
 export class NumberFieldType extends FieldType {
   static getType() {
     return 'number'
-  }
-
-  getType() {
-    return NumberFieldType.getType()
   }
 
   getIconClass() {
@@ -152,10 +143,6 @@ export class NumberFieldType extends FieldType {
 export class BooleanFieldType extends FieldType {
   static getType() {
     return 'boolean'
-  }
-
-  getType() {
-    return BooleanFieldType.getType()
   }
 
   getIconClass() {

@@ -1,10 +1,9 @@
-import { ViewType } from '@baserow/modules/database/viewTypes'
 import ViewService from '@baserow/modules/database/services/view'
 import { clone } from '@baserow/modules/core/utils/object'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 
-export function populateView(view, getters) {
-  const type = getters.getType(view.type)
+export function populateView(view, registry) {
+  const type = registry.get('view', view.type)
 
   view._ = {
     type: type.serialize(),
@@ -23,9 +22,6 @@ export const state = () => ({
 })
 
 export const mutations = {
-  REGISTER(state, view) {
-    state.types[view.type] = view
-  },
   SET_ITEMS(state, applications) {
     state.items = applications
   },
@@ -69,17 +65,6 @@ export const mutations = {
 
 export const actions = {
   /**
-   * Register a new view type with the registry. This is used for creating a new
-   * view type that users can create.
-   */
-  register({ dispatch, commit }, view) {
-    if (!(view instanceof ViewType)) {
-      throw new TypeError('The view must be an instance of ViewType.')
-    }
-
-    commit('REGISTER', view)
-  },
-  /**
    * Changes the loading state of a specific view.
    */
   setItemLoading({ commit }, { view, value }) {
@@ -97,7 +82,7 @@ export const actions = {
     try {
       const { data } = await ViewService.fetchAll(table.id)
       data.forEach((part, index, d) => {
-        populateView(data[index], getters)
+        populateView(data[index], this.$registry)
       })
       commit('SET_ITEMS', data)
       commit('SET_LOADING', false)
@@ -123,7 +108,7 @@ export const actions = {
       )
     }
 
-    if (!getters.typeExists(type)) {
+    if (!this.$registry.exists('view', type)) {
       throw new Error(`A view with type "${type}" doesn't exist.`)
     }
 
@@ -131,7 +116,7 @@ export const actions = {
     postData.type = type
 
     const { data } = await ViewService.create(table.id, postData)
-    populateView(data, getters)
+    populateView(data, this.$registry)
     commit('ADD_ITEM', data)
   },
   /**
@@ -228,15 +213,6 @@ export const getters = {
   },
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
-  },
-  typeExists: (state) => (type) => {
-    return Object.prototype.hasOwnProperty.call(state.types, type)
-  },
-  getType: (state) => (type) => {
-    if (!Object.prototype.hasOwnProperty.call(state.types, type)) {
-      throw new Error(`A view with type "${type}" doesn't exist.`)
-    }
-    return state.types[type]
   },
 }
 

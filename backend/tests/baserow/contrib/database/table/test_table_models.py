@@ -50,13 +50,11 @@ def test_get_table_model(data_fixture):
     assert color_field.db_column == f'field_{text_field.id}'
     assert color_field.default == 'white'
     assert color_field.null
-    assert color_field.blank
 
     assert isinstance(horsepower_field, models.IntegerField)
     assert horsepower_field.verbose_name == 'Horsepower'
     assert horsepower_field.db_column == f'field_{number_field.id}'
     assert horsepower_field.null
-    assert horsepower_field.blank
 
     assert isinstance(for_sale_field, models.BooleanField)
     assert for_sale_field.verbose_name == 'For sale'
@@ -73,7 +71,6 @@ def test_get_table_model(data_fixture):
     assert isinstance(sale_price_field, models.DecimalField)
     assert sale_price_field.decimal_places == 3
     assert sale_price_field.null
-    assert sale_price_field.blank
 
     model_2 = table.get_model(fields=[number_field], field_ids=[text_field.id],
                               attribute_names=True)

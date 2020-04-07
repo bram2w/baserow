@@ -1,9 +1,8 @@
-import { FieldType } from '@baserow/modules/database/fieldTypes'
 import FieldService from '@baserow/modules/database/services/field'
 import { clone } from '@baserow/modules/core/utils/object'
 
-export function populateField(field, getters) {
-  const type = getters.getType(field.type)
+export function populateField(field, registry) {
+  const type = registry.get('field', field.type)
 
   field._ = {
     type: type.serialize(),
@@ -21,9 +20,6 @@ export const state = () => ({
 })
 
 export const mutations = {
-  REGISTER(state, field) {
-    state.types[field.type] = field
-  },
   SET_ITEMS(state, applications) {
     state.items = applications
   },
@@ -70,17 +66,6 @@ export const mutations = {
 
 export const actions = {
   /**
-   * Register a new field type with the registry. This is used for creating a new
-   * field type that users can create.
-   */
-  register({ commit, getters }, field) {
-    if (!(field instanceof FieldType)) {
-      throw new TypeError('The field must be an instance of fieldType.')
-    }
-
-    commit('REGISTER', field)
-  },
-  /**
    * Changes the loading state of a specific field.
    */
   setItemLoading({ commit }, { field, value }) {
@@ -98,7 +83,7 @@ export const actions = {
     try {
       const { data } = await FieldService.fetchAll(table.id)
       data.forEach((part, index, d) => {
-        populateField(data[index], getters)
+        populateField(data[index], this.$registry)
       })
 
       const primaryIndex = data.findIndex((item) => item.primary === true)
@@ -119,10 +104,9 @@ export const actions = {
   /**
    * Creates a new field with the provided type for the given table.
    */
-  async create(
-    { commit, getters, rootGetters, dispatch },
-    { type, table, values }
-  ) {
+  async create(context, { type, table, values }) {
+    const { commit } = context
+
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
@@ -130,16 +114,25 @@ export const actions = {
       )
     }
 
-    if (!getters.typeExists(type)) {
+    if (!this.$registry.exists('field', type)) {
       throw new Error(`A field with type "${type}" doesn't exist.`)
     }
+
+    const fieldType = this.$registry.get('field', type)
 
     const postData = clone(values)
     postData.type = type
 
     let { data } = await FieldService.create(table.id, postData)
-    data = populateField(data, getters)
+    data = populateField(data, this.$registry)
     commit('ADD_ITEM', data)
+
+    // Call the field created event on all the registered views because they might
+    // need to change things in loaded data. For example the grid field will add the
+    // field to all of the rows that are in memory.
+    Object.values(this.$registry.getAll('view')).forEach((viewType) => {
+      viewType.fieldCreated(context, table, data, fieldType)
+    })
   },
   /**
    * Updates the values of the provided field.
@@ -152,7 +145,7 @@ export const actions = {
       )
     }
 
-    if (!getters.typeExists(type)) {
+    if (!this.$registry.exists('field', type)) {
       throw new Error(`A field with type "${type}" doesn't exist.`)
     }
 
@@ -160,7 +153,7 @@ export const actions = {
     postData.type = type
 
     let { data } = await FieldService.update(field.id, postData)
-    data = populateField(data, getters)
+    data = populateField(data, this.$registry)
     if (field.primary) {
       commit('SET_PRIMARY', data)
     } else {
@@ -198,15 +191,6 @@ export const getters = {
   },
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
-  },
-  typeExists: (state) => (type) => {
-    return Object.prototype.hasOwnProperty.call(state.types, type)
-  },
-  getType: (state) => (type) => {
-    if (!Object.prototype.hasOwnProperty.call(state.types, type)) {
-      throw new Error(`A field with type "${type}" doesn't exist.`)
-    }
-    return state.types[type]
   },
 }
 

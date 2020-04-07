@@ -1,4 +1,5 @@
 import axios from 'axios'
+import _ from 'lodash'
 
 import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
@@ -105,6 +106,12 @@ export const mutations = {
   },
   SET_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
+  },
+  ADD_FIELD(state, { field, value }) {
+    const name = `field_${field.id}`
+    state.rows.forEach((row) => {
+      row[name] = value
+    })
   },
 }
 
@@ -414,22 +421,21 @@ export const actions = {
     fields.forEach((field) => {
       const name = `field_${field.id}`
       if (!(name in values)) {
-        const fieldType = rootGetters['field/getType'](field._.type.type)
+        const fieldType = this.$registry.get('field', field._.type.type)
         const empty = fieldType.getEmptyValue(field)
-        if (empty !== null) {
-          values[name] = fieldType.getEmptyValue(field)
-        }
+        values[name] = empty
       }
     })
 
     // Populate the row and set the loading state to indicate that the row has not
     // yet been added.
-    populateRow(values)
-    values.id = 0
-    values._.loading = true
+    const row = _.assign({}, values)
+    populateRow(row)
+    row.id = 0
+    row._.loading = true
 
     commit('ADD_ROWS', {
-      rows: [values],
+      rows: [row],
       prependToRows: 0,
       appendToRows: 1,
       count: getters.getCount + 1,
@@ -445,6 +451,12 @@ export const actions = {
     // @TODO remove the correct row is the request fails.
     const { data } = await RowService.create(table.id, values)
     commit('FINALIZE_ROW', { index, id: data.id })
+  },
+  /**
+   * Adds a field with a provided value to the rows in memory.
+   */
+  addField({ commit }, { field, value = null }) {
+    commit('ADD_FIELD', { field, value })
   },
 }
 

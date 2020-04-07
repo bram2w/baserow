@@ -78,10 +78,12 @@ export default {
     }
   },
   computed: {
+    viewTypes() {
+      return this.$registry.getAll('view')
+    },
     ...mapState({
       isLoading: (state) => state.view.loading,
       isLoaded: (state) => state.view.loaded,
-      viewTypes: (state) => state.view.types,
       views: (state) => state.view.items,
     }),
   },

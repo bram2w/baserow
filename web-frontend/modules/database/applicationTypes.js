@@ -7,10 +7,6 @@ export class DatabaseApplicationType extends ApplicationType {
     return 'database'
   }
 
-  getType() {
-    return DatabaseApplicationType.getType()
-  }
-
   getIconClass() {
     return 'database'
   }

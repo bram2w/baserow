@@ -73,7 +73,7 @@ export default {
    * Prepares all the table, field and view data for the provided database, table and
    * view id.
    */
-  async asyncData({ store, params, error }) {
+  async asyncData({ store, params, error, app }) {
     // @TODO figure out why the id's aren't converted to an int in the route.
     const databaseId = parseInt(params.databaseId)
     const tableId = parseInt(params.tableId)
@@ -105,7 +105,7 @@ export default {
 
         // It might be possible that the view also has some stores that need to be
         // filled with initial data so we're going to call the fetch function here.
-        const type = store.getters['view/getType'](view.type)
+        const type = app.$registry.get('view', view.type)
         await type.fetch({ store }, view)
       } catch {
         return error({ statusCode: 404, message: 'View not found.' })
@@ -130,11 +130,11 @@ export default {
   },
   methods: {
     getViewComponent(view) {
-      const type = this.$store.getters['view/getType'](view.type)
+      const type = this.$registry.get('view', view.type)
       return type.getComponent()
     },
     getViewHeaderComponent(view) {
-      const type = this.$store.getters['view/getType'](view.type)
+      const type = this.$registry.get('view', view.type)
       return type.getHeaderComponent()
     },
   },

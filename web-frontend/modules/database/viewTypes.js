@@ -1,15 +1,8 @@
+import { Registerable } from '@baserow/modules/core/registry'
 import ViewForm from '@baserow/modules/database/components/view/ViewForm'
 import GridView from '@baserow/modules/database/components/view/grid/GridView'
 
-export class ViewType {
-  /**
-   * Must return a string with the unique name, this must be the same as the
-   * type used in the backend.
-   */
-  getType() {
-    return null
-  }
-
+export class ViewType extends Registerable {
   /**
    * The font awesome 5 icon name that is used as convenience for the user to
    * recognize certain view types. If you for example want the database
@@ -28,6 +21,7 @@ export class ViewType {
   }
 
   constructor() {
+    super()
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
@@ -86,6 +80,12 @@ export class ViewType {
   fetch() {}
 
   /**
+   * Method that is called when a field has been created. This can be useful to
+   * maintain data integrity for example to add the field to the grid view store.
+   */
+  fieldCreated(context, table, field, fieldType) {}
+
+  /**
    * @return object
    */
   serialize() {
@@ -102,10 +102,6 @@ export class GridViewType extends ViewType {
     return 'grid'
   }
 
-  getType() {
-    return GridViewType.getType()
-  }
-
   getIconClass() {
     return 'th'
   }
@@ -120,5 +116,10 @@ export class GridViewType extends ViewType {
 
   async fetch({ store }, view) {
     await store.dispatch('view/grid/fetchInitial', { gridId: view.id })
+  }
+
+  fieldCreated({ dispatch }, table, field, fieldType) {
+    const value = fieldType.getEmptyValue(field)
+    dispatch('view/grid/addField', { field, value }, { root: true })
   }
 }

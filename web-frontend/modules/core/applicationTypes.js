@@ -1,18 +1,11 @@
+import { Registerable } from '@baserow/modules/core/registry'
 import ApplicationForm from '@baserow/modules/core/components/application/ApplicationForm'
 
 /**
  * The application type base class that can be extended when creating a plugin
  * for the frontend.
  */
-export class ApplicationType {
-  /**
-   * Must return a string with the unique name, this must be the same as the
-   * type used in the backend.
-   */
-  getType() {
-    return null
-  }
-
+export class ApplicationType extends Registerable {
   /**
    * The font awesome 5 icon name that is used as convenience for the user to
    * recognize certain application types. If you for example want the database
@@ -58,6 +51,7 @@ export class ApplicationType {
   }
 
   constructor() {
+    super()
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
