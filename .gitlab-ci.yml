@@ -4,6 +4,7 @@ before_script:
 stages:
   - lint
   - test
+  - build
 
 web-frontend-eslint:
   stage: lint
@@ -54,3 +55,10 @@ backend-pytest:
     - make install-dev-dependencies
     - export PYTHONPATH=$CI_PROJECT_DIR/backend/src
     - make test
+
+backend-setup:
+  stage: build
+  image: python:3.6
+  script:
+    - pip install -e ./backend
+    - python -c 'import baserow'

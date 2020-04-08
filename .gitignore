@@ -88,5 +88,6 @@ backend/src/baserow/config/settings/local.py
 __pycache__
 .pytest_cache
 *.log
+*.egg-info
 
 docker-compose.override.yml

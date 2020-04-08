@@ -14,4 +14,5 @@ RUN apt-get -y install gnupg2
 
 RUN make install-dependencies
 
-ENTRYPOINT python src/baserow/manage.py migrate && python src/baserow/manage.py runserver 0.0.0.0:8000
+ENTRYPOINT python src/baserow/manage.py migrate && \
+           gunicorn --workers=3 -b 0.0.0.0:8000 baserow.config.wsgi
