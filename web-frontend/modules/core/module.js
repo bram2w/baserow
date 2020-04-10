@@ -42,7 +42,7 @@ export default function DatabaseModule(options) {
   )
   this.addServerMiddleware(staticMiddleware)
 
-  // Add the layouts
+  this.addLayout(path.resolve(__dirname, 'layouts/error.vue'), 'error')
   this.addLayout(path.resolve(__dirname, 'layouts/app.vue'), 'app')
   this.addLayout(path.resolve(__dirname, 'layouts/login.vue'), 'login')
 
