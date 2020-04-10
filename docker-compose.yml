@@ -33,15 +33,3 @@ services:
       - 3000:3000
     depends_on:
       - backend
-
-  sandbox:
-    build:
-      context: ./
-      dockerfile: ./sandbox/Dockerfile
-    volumes:
-      - ./web-frontend:/web-frontend
-      - ./backend:/backend
-      - ./sandbox:/sandbox
-    ports:
-      - 8001:8000
-      - 3001:3000

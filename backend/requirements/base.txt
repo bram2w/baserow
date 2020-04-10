@@ -5,3 +5,4 @@ djangorestframework-jwt==1.11.0
 psycopg2==2.8.4
 ipython==7.13.0
 Faker==4.0.2
+gunicorn==20.0.4
