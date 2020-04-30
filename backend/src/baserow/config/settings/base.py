@@ -74,6 +74,9 @@ DATABASES = {
     }
 }
 
+# Should contain the database connection name of the database where the user tables
+# are stored. This can be different than the default database because there are not
+# going to be any relations between the application schema and the user schema.
 USER_TABLE_DATABASE = 'default'
 
 # Password validation
@@ -129,12 +132,7 @@ REST_FRAMEWORK = {
     ),
 }
 
-CORS_ORIGIN_WHITELIST = (
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://backend:8000',
-    'http://sandbox:8000'
-)
+CORS_ORIGIN_ALLOW_ALL = True
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),

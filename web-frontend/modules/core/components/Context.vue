@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import { isElement } from '@baserow/modules/core/utils/dom'
+import { isElement, isDomElement } from '@baserow/modules/core/utils/dom'
 import MoveToBody from '@baserow/modules/core/mixins/moveToBody'
 
 export default {
@@ -55,7 +55,11 @@ export default {
      * body to check if the user has clicked outside the context.
      */
     show(target, vertical, horizontal, offset) {
-      const css = this.calculatePosition(target, vertical, horizontal, offset)
+      const isElementOrigin = isDomElement(target)
+
+      const css = isElementOrigin
+        ? this.calculatePositionElement(target, vertical, horizontal, offset)
+        : this.calculatePositionFixed(target, vertical, horizontal, offset)
 
       // Set the calculated positions of the context.
       for (const key in css) {
@@ -65,7 +69,7 @@ export default {
 
       // If we store the element who opened the context menu we can exclude the element
       // when clicked outside of this element.
-      this.opener = target
+      this.opener = isElementOrigin ? target : null
       this.open = true
 
       this.$el.clickOutsideEvent = (event) => {
@@ -103,7 +107,7 @@ export default {
      * Calculates the absolute position of the context based on the original clicked
      * element.
      */
-    calculatePosition(target, vertical, horizontal, offset) {
+    calculatePositionElement(target, vertical, horizontal, offset) {
       const targetRect = target.getBoundingClientRect()
       const contextRect = this.$el.getBoundingClientRect()
       const positions = { top: null, right: null, bottom: null, left: null }
@@ -171,6 +175,20 @@ export default {
       }
 
       return positions
+    },
+    /**
+     * Calculates the desired position based on the provided coordinates. For now this
+     * is only used by the row context menu, but because of the reserved space of the
+     * grid on the right and bottom there is always room for the context. Therefore we
+     * do not need to check if the context fits.
+     */
+    calculatePositionFixed(coordinates) {
+      return {
+        left: coordinates.left,
+        top: coordinates.top,
+        right: null,
+        bottom: null,
+      }
     },
   },
 }

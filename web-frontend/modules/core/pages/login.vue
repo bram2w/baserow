@@ -1,7 +1,9 @@
 <template>
   <div>
     <h1 class="box-title">
-      <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+      <nuxt-link :to="{ name: 'index' }">
+        <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+      </nuxt-link>
     </h1>
     <Error :error="error"></Error>
     <form @submit.prevent="login">

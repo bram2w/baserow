@@ -38,6 +38,7 @@
                 :key="'left-row-' + view.id + '-' + row.id"
                 class="grid-view-row"
                 :class="{ 'grid-view-row-loading': row._.loading }"
+                @contextmenu.prevent="showRowContext($event, row)"
               >
                 <div class="grid-view-column" style="width: 60px;">
                   <div class="grid-view-row-info">
@@ -78,7 +79,7 @@
             class="grid-view-column"
             :style="{ width: getLeftWidth() + 'px' }"
           >
-            <div class="grid-view-foot-info">@TODO</div>
+            <div class="grid-view-foot-info">{{ count }} rows</div>
           </div>
         </div>
       </div>
@@ -145,6 +146,7 @@
                 :key="'right-row-' + view.id + '-' + row.id"
                 class="grid-view-row"
                 :class="{ 'grid-view-row-loading': row._.loading }"
+                @contextmenu.prevent="showRowContext($event, row)"
               >
                 <GridViewField
                   v-for="field in fields"
@@ -176,6 +178,16 @@
         <div class="grid-view-foot"></div>
       </div>
     </div>
+    <Context ref="rowContext">
+      <ul class="context-menu">
+        <li>
+          <a @click="deleteRow(selectedRow)">
+            <i class="context-menu-icon fas fa-fw fa-trash"></i>
+            Delete row
+          </a>
+        </li>
+      </ul>
+    </Context>
   </div>
 </template>
 
@@ -220,6 +232,7 @@ export default {
     return {
       addHover: false,
       loading: true,
+      selectedRow: null,
     }
   },
   computed: {
@@ -279,6 +292,34 @@ export default {
           table: this.table,
           fields: this.fields,
           values: {},
+        })
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
+    },
+    showRowContext(event, row) {
+      this.selectedRow = row
+      this.$refs.rowContext.toggle(
+        {
+          top: event.clientY,
+          left: event.clientX,
+        },
+        'bottom',
+        'right',
+        0
+      )
+    },
+    async deleteRow(row) {
+      try {
+        this.$refs.rowContext.hide()
+        // We need a small helper function that calculates the current scrollTop because
+        // the delete action will recalculate the visible scroll range and buffer.
+        const getScrollTop = () => this.$refs.leftBody.scrollTop
+        await this.$store.dispatch('view/grid/delete', {
+          table: this.table,
+          grid: this.view,
+          row,
+          getScrollTop,
         })
       } catch (error) {
         notifyIf(error, 'row')

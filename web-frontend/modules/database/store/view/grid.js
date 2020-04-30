@@ -97,8 +97,13 @@ export const mutations = {
     state.rowsEndIndex = endIndex
     state.rowsTop = top
   },
-  DELETE_ROW_INDEX(state, index) {
-    state.rows.splice(index, 1)
+  DELETE_ROW(state, id) {
+    const index = state.rows.findIndex((item) => item.id === id)
+    state.count--
+    if (index !== -1) {
+      state.bufferLimit--
+      state.rows.splice(index, 1)
+    }
   },
   FINALIZE_ROW(state, { index, id }) {
     state.rows[index].id = id
@@ -112,6 +117,9 @@ export const mutations = {
     state.rows.forEach((row) => {
       row[name] = value
     })
+  },
+  SET_ROW_LOADING(state, { row, value }) {
+    row._.loading = value
   },
 }
 
@@ -451,6 +459,37 @@ export const actions = {
     // @TODO remove the correct row is the request fails.
     const { data } = await RowService.create(table.id, values)
     commit('FINALIZE_ROW', { index, id: data.id })
+  },
+  /**
+   * Deletes an existing row of the provided table. After deleting, the visible rows
+   * range and the buffer are recalculated because we might need to show different
+   * rows or add some rows to the buffer.
+   */
+  async delete(
+    { commit, dispatch, getters },
+    { table, grid, row, getScrollTop }
+  ) {
+    commit('SET_ROW_LOADING', { row, value: true })
+
+    try {
+      await RowService.delete(table.id, row.id)
+      commit('DELETE_ROW', row.id)
+
+      // We use the provided function to recalculate the scrollTop offset in order
+      // to get fresh data.
+      const scrollTop = getScrollTop()
+      const windowHeight = getters.getWindowHeight
+
+      dispatch('fetchByScrollTop', {
+        gridId: grid.id,
+        scrollTop,
+        windowHeight,
+      })
+      dispatch('visibleByScrollTop', { scrollTop, windowHeight })
+    } catch (error) {
+      commit('SET_ROW_LOADING', { row, value: false })
+      throw error
+    }
   },
   /**
    * Adds a field with a provided value to the rows in memory.

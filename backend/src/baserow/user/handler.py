@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 
 from baserow.core.handler import CoreHandler
-from baserow.core.registries import application_type_registry
+from baserow.core.registries import plugin_registry
 
 from .exceptions import UserAlreadyExist
 
@@ -34,8 +34,8 @@ class UserHandler:
         core_handler = CoreHandler()
         group_user = core_handler.create_group(user=user, name=f"{name}'s group")
 
-        # For each application type in the registry to call the user created events.
-        for registry in application_type_registry.registry.values():
-            registry.user_created(user, group_user.group)
+        # Call the user_created method for each plugin that is un the registry.
+        for plugin in plugin_registry.registry.values():
+            plugin.user_created(user, group_user.group)
 
         return user

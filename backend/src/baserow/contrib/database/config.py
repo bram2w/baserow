@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
-from baserow.core.registries import application_type_registry
+from baserow.core.registries import plugin_registry, application_type_registry
 
 from .views.registries import view_type_registry
 from .fields.registries import field_type_registry
@@ -10,6 +10,9 @@ class DatabaseConfig(AppConfig):
     name = 'baserow.contrib.database'
 
     def ready(self):
+        from .plugins import DatabasePlugin
+        plugin_registry.register(DatabasePlugin())
+
         from .fields.field_types import TextFieldType, NumberFieldType, BooleanFieldType
         field_type_registry.register(TextFieldType())
         field_type_registry.register(NumberFieldType())

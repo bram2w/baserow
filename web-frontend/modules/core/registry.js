@@ -28,6 +28,13 @@ export class Registry {
   }
 
   /**
+   * Registers an empty namespace.
+   */
+  registerNamespace(namespace) {
+    this.registry[namespace] = {}
+  }
+
+  /**
    * Registers a new Registerable object under the provided namespace in the registry.
    * If the namespace doesn't exist it will be created. It is common to register
    * instantiated classes here.
