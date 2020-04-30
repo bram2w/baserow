@@ -6,8 +6,13 @@ import groupStore from '@baserow/modules/core/store/group'
 import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 
-export default ({ store }, inject) => {
-  inject('registry', new Registry())
+export default ({ store, app }, inject) => {
+  const registry = new Registry()
+  registry.registerNamespace('plugin')
+  registry.registerNamespace('application')
+  registry.registerNamespace('view')
+  registry.registerNamespace('field')
+  inject('registry', registry)
 
   store.registerModule('application', applicationStore)
   store.registerModule('auth', authStore)

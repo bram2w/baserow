@@ -214,6 +214,9 @@ export const getters = {
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
   },
+  first(state) {
+    return state.items.length > 0 ? state.items[0] : null
+  },
 }
 
 export default {

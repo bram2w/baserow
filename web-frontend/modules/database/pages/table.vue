@@ -73,7 +73,7 @@ export default {
    * Prepares all the table, field and view data for the provided database, table and
    * view id.
    */
-  async asyncData({ store, params, error, app }) {
+  async asyncData({ store, params, error, redirect, app }) {
     // @TODO figure out why the id's aren't converted to an int in the route.
     const databaseId = parseInt(params.databaseId)
     const tableId = parseInt(params.tableId)
@@ -93,6 +93,22 @@ export default {
       data.table = table
     } catch (e) {
       return error({ statusCode: 404, message: 'Table not found.' })
+    }
+
+    // Because we do not have a dashboard for the table yet we're going to redirect to
+    // the first available view.
+    if (viewId === null) {
+      const firstView = store.getters['view/first']
+      if (firstView !== null) {
+        return redirect({
+          name: 'database-table',
+          params: {
+            databaseId: data.database.id,
+            tableId: data.table.id,
+            viewId: firstView.id,
+          },
+        })
+      }
     }
 
     // If a view id is provided and the table is selected we can select the view. The

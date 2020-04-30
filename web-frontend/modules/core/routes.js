@@ -26,4 +26,9 @@ export const routes = [
     path: '/style-guide',
     component: path.resolve(__dirname, 'pages/style-guide.vue'),
   },
+  {
+    name: 'health-check',
+    path: '/_health',
+    component: path.resolve(__dirname, 'pages/_health.vue'),
+  },
 ]

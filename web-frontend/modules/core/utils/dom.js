@@ -5,7 +5,25 @@
  * @returns boolean
  */
 export const isElement = (element, target) => {
-  return element === target || element.contains(target)
+  return element !== null && (element === target || element.contains(target))
+}
+
+/**
+ * Checks if the provided object is an html dom element.
+ *
+ * @returns boolean
+ */
+export const isDomElement = (obj) => {
+  try {
+    return obj instanceof HTMLElement
+  } catch (e) {
+    return (
+      typeof obj === 'object' &&
+      obj.nodeType === 1 &&
+      typeof obj.style === 'object' &&
+      typeof obj.ownerDocument === 'object'
+    )
+  }
 }
 
 /**

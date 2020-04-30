@@ -1,6 +1,8 @@
 import pytest
+from unittest.mock import MagicMock
 
 from baserow.core.models import Group
+from baserow.core.registries import plugin_registry
 from baserow.contrib.database.models import (
     Database, Table, GridView, TextField, BooleanField
 )
@@ -10,6 +12,9 @@ from baserow.user.handler import UserHandler
 
 @pytest.mark.django_db
 def test_create_user():
+    plugin_mock = MagicMock()
+    plugin_registry.registry['mock'] = plugin_mock
+
     user_handler = UserHandler()
 
     user = user_handler.create_user('Test1', 'test@test.nl', 'password')
@@ -36,6 +41,8 @@ def test_create_user():
 
     model_2 = tables[1].get_model()
     assert model_2.objects.all().count() == 3
+
+    plugin_mock.user_created.assert_called_with(user, group)
 
     with pytest.raises(UserAlreadyExist):
         user_handler.create_user('Test1', 'test@test.nl', 'password')

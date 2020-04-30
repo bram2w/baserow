@@ -122,6 +122,9 @@ export default {
           email: this.account.email,
           password: this.account.password,
         })
+        Object.values(this.$registry.getAll('plugin')).forEach((plugin) => {
+          plugin.userCreated(this.account, this)
+        })
         this.$nuxt.$router.push({ name: 'dashboard' })
       } catch (error) {
         this.loading = false

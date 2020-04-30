@@ -10,6 +10,7 @@
   text-decoration: none;
   border-radius: 3px;
   transition: padding 0.05s ease-in-out;
+  font-weight: 700;
 
   @include button-size(14px, 32px, 14px);
   @include button-style($color-primary-500, $color-primary-600);

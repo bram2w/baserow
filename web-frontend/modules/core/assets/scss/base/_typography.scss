@@ -40,6 +40,7 @@ h1,
 
   font-family: $logo-font-stack;
   font-size: 33px;
+  line-height: 130%;
   margin: 30px 0;
 }
 
@@ -48,6 +49,7 @@ h2,
   @extend %first-last-no-margin;
 
   font-size: 22px;
+  line-height: 130%;
   margin: 20px 0;
 }
 
@@ -56,5 +58,6 @@ h3,
   @extend %first-last-no-margin;
 
   font-size: 14px;
+  line-height: 130%;
   margin: 10px 0;
 }
