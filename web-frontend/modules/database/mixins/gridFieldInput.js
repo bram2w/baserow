@@ -26,6 +26,12 @@ export default {
      */
     select() {
       this.$el.keydownEvent = (event) => {
+        // If the tab key is pressed we don't want to do anything because the
+        // GridViewField component will select the next field.
+        if (event.keyCode === 9) {
+          return
+        }
+
         // If the enter key is pressed.
         if (event.keyCode === 13) {
           if (this.editing) {
