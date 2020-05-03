@@ -1,5 +1,5 @@
 <template>
-  <div class="grid-view-column" style="width: 200px;" @click="select($event)">
+  <div class="grid-view-column" style="width: 200px;" @click="select()">
     <component
       :is="getFieldComponent(field.type)"
       ref="column"
@@ -86,7 +86,7 @@ export default {
      * Method that is called when a user clicks on the grid field. It wil
      * @TODO improve speed somehow, maybe with the fastclick library.
      */
-    select(event) {
+    select() {
       const timestamp = new Date().getTime()
 
       if (this.selected) {
@@ -122,6 +122,25 @@ export default {
           }
         }
         document.body.addEventListener('click', this.$el.clickOutsideEvent)
+
+        // If the tab key is pressed want to select the next field. This is however out
+        // of the scope of the component so we emit the selectNext event that the
+        // GridView can handle.
+        this.$el.tabPressedEvent = (event) => {
+          if (event.keyCode !== 9) {
+            return
+          }
+
+          event.preventDefault()
+          this.$emit(event.shiftKey ? 'selectPrevious' : 'selectNext')
+        }
+        document.body.addEventListener('keydown', this.$el.tabPressedEvent)
+
+        // Emit the selected event so that the parent component can take an action like
+        // making sure that the element fits in the viewport.
+        this.$emit('selected', {
+          component: this,
+        })
       }
 
       this.clickTimestamp = timestamp
@@ -132,6 +151,7 @@ export default {
         this.selected = false
       })
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      document.body.removeEventListener('keydown', this.$el.tabPressedEvent)
     },
   },
 }

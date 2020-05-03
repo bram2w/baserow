@@ -50,9 +50,12 @@
                 </div>
                 <GridViewField
                   v-if="primary !== null"
+                  :ref="'row-' + row.id + '-field-' + primary.id"
                   :field="primary"
                   :row="row"
                   :table="table"
+                  @selected="selectedField(primary, $event.component)"
+                  @selectNext="selectNextField(row, primary, fields, primary)"
                 ></GridViewField>
               </div>
             </div>
@@ -150,12 +153,18 @@
               >
                 <GridViewField
                   v-for="field in fields"
+                  :ref="'row-' + row.id + '-field-' + field.id"
                   :key="
                     'right-row-field-' + view.id + '-' + row.id + '-' + field.id
                   "
                   :field="field"
                   :row="row"
                   :table="table"
+                  @selected="selectedField(field, $event.component)"
+                  @selectPrevious="
+                    selectNextField(row, field, fields, primary, true)
+                  "
+                  @selectNext="selectNextField(row, field, fields, primary)"
                 ></GridViewField>
               </div>
             </div>
@@ -324,6 +333,82 @@ export default {
       } catch (error) {
         notifyIf(error, 'row')
       }
+    },
+    /**
+     * When a field is selected we want to make sure it is visible so we might need to
+     * scroll a little bit. Because the primary fields are always visible we don't have
+     * to do anything when those are selected.
+     */
+    selectedField(field, component) {
+      if (field.primary) {
+        return
+      }
+
+      const container = this.$refs.right
+      const containerLeft = container.scrollLeft
+      const containerWidth = container.clientWidth
+      const containerRight = containerLeft + container.clientWidth
+
+      const element = component.$el
+      const elementLeft = element.offsetLeft
+      const elementWidth = element.offsetWidth
+      const elementRight = element.offsetLeft + element.offsetWidth
+
+      if (elementWidth >= containerWidth || elementLeft < containerLeft) {
+        // If the element doesn't fit in the viewport we just want to make sure the
+        // beginning is visible.
+        container.scrollLeft = elementLeft - 20
+        this.$refs.scrollbars.updateHorizontal()
+      } else if (elementRight > containerRight) {
+        // If the right side if the element isn't visible within the viewport.
+        // The +10 is a small padding.
+        container.scrollLeft = elementRight - containerWidth + 20
+        this.$refs.scrollbars.updateHorizontal()
+      }
+    },
+    /**
+     * This method is called when the next field must be selected. This can for example
+     * happen when the tab key is pressed. It tries to find the next field and will
+     * select that one.
+     */
+    selectNextField(row, field, fields, primary, previous = false) {
+      let nextFieldId = -1
+      if (field.primary && fields.length > 0 && !previous) {
+        // If the currently selected field is the primary we can just select the first
+        // field of the fields if there are any.
+        nextFieldId = fields[0].id
+      } else if (!field.primary) {
+        // First we need to know which index the currently selected field has in the
+        // fields list.
+        const index = fields.findIndex((f) => f.id === field.id)
+        if (!previous && fields.length > index + 1) {
+          // If we want to select the next field we can just check if the next index
+          // exists and read the id from there.
+          nextFieldId = fields[index + 1].id
+        } else if (previous && index > 0) {
+          // If we want to select the previous field we can just check if aren't already
+          // the first and read the id from the previous.
+          nextFieldId = fields[index - 1].id
+        } else if (previous && index === 0) {
+          // If we want to select the previous field and we already are the first index
+          // we just select the primary.
+          nextFieldId = primary.id
+        }
+      }
+
+      if (nextFieldId === -1) {
+        return
+      }
+
+      const current = this.$refs['row-' + row.id + '-field-' + field.id]
+      const next = this.$refs['row-' + row.id + '-field-' + nextFieldId]
+
+      if (next.length === 0 || current.length === 0) {
+        return
+      }
+
+      current[0].unselect()
+      next[0].select()
     },
   },
 }
