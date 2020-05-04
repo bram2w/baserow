@@ -1,6 +1,6 @@
 <template>
   <div
-    class="alert alert-with-shadow alert-has-icon"
+    class="alert alert-simple alert-with-shadow alert-has-icon"
     :class="notificationClass"
   >
     <a class="alert-close" @click="close(notification)">

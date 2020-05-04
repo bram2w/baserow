@@ -47,6 +47,23 @@
       color: $text;
     }
   }
+
+  &.alert-simple {
+    background-color: $white;
+    border-color: $color-neutral-200;
+
+    .alert-title {
+      color: $color-primary-900;
+    }
+
+    .alert-content {
+      color: $color-neutral-700;
+    }
+
+    .alert-close {
+      color: $color-neutral-500;
+    }
+  }
 }
 
 @mixin fixed-height($height, $font-size) {
