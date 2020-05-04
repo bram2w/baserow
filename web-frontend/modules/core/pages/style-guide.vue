@@ -165,6 +165,74 @@
               viverra urna. Praesent.
             </p>
           </div>
+
+          <div class="alert alert-simple alert-has-icon">
+            <div class="alert-icon">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </div>
+          <div class="alert alert-simple">
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent lobortis feugiat erat, nec volutpat nulla
+              tincidunt vel. In hac habitasse platea dictumst. Aenean fringilla
+              lacus nunc, non pharetra mauris pulvinar lacinia. Aenean ut sem
+              lacinia, sagittis quam sed, pellentesque orci. Aenean non
+              consequat mi. Nunc laoreet ligula a nunc eleifend, nec accumsan
+              felis euismod.
+            </p>
+          </div>
+          <div class="alert alert-simple alert-success alert-has-icon">
+            <div class="alert-icon">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </div>
+          <div
+            class="alert alert-simple alert-with-shadow alert-warning alert-has-icon"
+          >
+            <a href="#" class="alert-close">
+              <i class="fas fa-times"></i>
+            </a>
+            <div class="alert-icon">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </div>
+          <div class="alert alert-simple alert-error alert-has-icon">
+            <div class="alert-icon">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </div>
         </div>
         <div class="margin-bottom-3 style-guide-buttons">
           <a class="button">a.button</a>
@@ -539,7 +607,7 @@ export default {
   data() {
     return {
       checkbox: false,
-      dropdown: null,
+      dropdown: '',
     }
   },
   head() {
