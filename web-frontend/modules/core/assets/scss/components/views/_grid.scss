@@ -244,6 +244,29 @@
 
       border: 3px solid $color-primary-600;
     }
+
+    &.invalid {
+      border: 3px solid $color-error-400;
+      border-bottom: 0;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+  }
+
+  .grid-view-cell-error {
+    @extend %ellipsis;
+
+    @include absolute(100%, -3px, auto, -3px);
+
+    border: 3px solid $color-error-400;
+    border-top: 0;
+    background-color: $color-error-100;
+    color: $color-error-900;
+    padding: 0 6px;
+    line-height: 34px;
+    height: 34px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
 
   &.active-by {
