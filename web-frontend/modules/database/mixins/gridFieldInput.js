@@ -32,12 +32,19 @@ export default {
           return
         }
 
+        // If the escape key is pressed while editing we want to cancel the current
+        // input and undo the editing state.
+        if (event.keyCode === 27 && this.editing) {
+          this.cancel()
+          return
+        }
+
         // If the enter key is pressed.
         if (event.keyCode === 13) {
-          if (this.editing) {
+          if (this.editing && this.isValid()) {
             // While editing we want to save the changes.
             this.save()
-          } else {
+          } else if (!this.editing) {
             // If only selected we will start the editing mode.
             this.edit()
           }
@@ -82,14 +89,23 @@ export default {
      */
     save() {
       this.editing = false
+      const newValue = this.beforeSave(this.copy)
 
       // If the value hasn't changed we don't want to do anything.
-      if (this.copy === this.value) {
+      if (newValue === this.value) {
         return
       }
 
-      this.$emit('update', this.copy, this.value)
+      this.$emit('update', newValue, this.value)
       this.afterSave()
+    },
+    /**
+     * Cancels the current editing state and reverts the copy to the old value
+     * without saving.
+     */
+    cancel() {
+      this.editing = false
+      this.copy = this.value
     },
     /**
      * Method that is called after initiating the edit state. This can be overridden
@@ -97,9 +113,23 @@ export default {
      */
     afterEdit() {},
     /**
+     * This method is called before saving the value. Optionally the value can be
+     * changed or formatted here if necessary.
+     */
+    beforeSave(value) {
+      return value
+    },
+    /**
      * Method that is called after saving the value. This can be overridden in the
      * component.
      */
     afterSave() {},
+    /**
+     * Should return a boolean if the copy that is going to be saved is valid. If it
+     * returns false saving is not possible.
+     */
+    isValid() {
+      return true
+    },
   },
 }
