@@ -12,6 +12,9 @@ export function populateRow(row) {
 export const state = () => ({
   loading: false,
   loaded: false,
+  // Contains the custom field options per view. Things like the field width are
+  // stored here.
+  fieldOptions: {},
   // Contains the buffered rows that we keep in memory. Depending on the
   // scrollOffset rows will be added or removed from this buffer. Most of the times,
   // it will contain 3 times the bufferRequestSize in rows.
@@ -120,6 +123,18 @@ export const mutations = {
   },
   SET_ROW_LOADING(state, { row, value }) {
     row._.loading = value
+  },
+  REPLACE_ALL_FIELD_OPTIONS(state, fieldOptions) {
+    state.fieldOptions = fieldOptions
+  },
+  SET_FIELD_OPTIONS_OF_FIELD(state, { fieldId, values }) {
+    if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
+      _.assign(state.fieldOptions[fieldId], values)
+    } else {
+      state.fieldOptions = _.assign({}, state.fieldOptions, {
+        [fieldId]: values,
+      })
+    }
   },
 }
 
@@ -380,6 +395,7 @@ export const actions = {
       gridId,
       offset: 0,
       limit,
+      includeFieldOptions: true,
     })
     data.results.forEach((part, index) => {
       populateRow(data.results[index])
@@ -399,6 +415,7 @@ export const actions = {
       endIndex: data.count > 31 ? 31 : data.count,
       top: 0,
     })
+    commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
   },
   /**
    * Updates a grid view field value. It will immediately be updated in the store
@@ -497,6 +514,41 @@ export const actions = {
   addField({ commit }, { field, value = null }) {
     commit('ADD_FIELD', { field, value })
   },
+  /**
+   * Updates the field options of a given field and also makes an API request to the
+   * backend with the changed values. If the request fails the action is reverted.
+   */
+  async updateFieldOptionsOfField(
+    { commit },
+    { gridId, field, values, oldValues }
+  ) {
+    commit('SET_FIELD_OPTIONS_OF_FIELD', {
+      fieldId: field.id,
+      values,
+    })
+    const updateValues = { field_options: {} }
+    updateValues.field_options[field.id] = values
+
+    try {
+      await GridService.update({ gridId, values: updateValues })
+    } catch (error) {
+      commit('SET_FIELD_OPTIONS_OF_FIELD', {
+        fieldId: field.id,
+        values: oldValues,
+      })
+      throw error
+    }
+  },
+  /**
+   * Updates the field options of a given field in the store. So no API request to
+   * the backend is made.
+   */
+  setFieldOptionsOfField({ commit }, { field, values }) {
+    commit('SET_FIELD_OPTIONS_OF_FIELD', {
+      fieldId: field.id,
+      values,
+    })
+  },
 }
 
 export const getters = {
@@ -550,6 +602,9 @@ export const getters = {
   },
   getWindowHeight(state) {
     return state.windowHeight
+  },
+  getAllFieldOptions(state) {
+    return state.fieldOptions
   },
 }
 

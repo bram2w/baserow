@@ -4,7 +4,7 @@ from django.shortcuts import reverse
 
 
 @pytest.mark.django_db
-def test_list_views(api_client, data_fixture):
+def test_list_rows(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email='test@test.nl', password='password', first_name='Test1')
     table = data_fixture.create_database_table(user=user)
@@ -92,6 +92,7 @@ def test_list_views(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
+    assert response.status_code == 200
     assert response_json['count'] == 4
     assert response_json['previous']
     assert not response_json['next']
@@ -115,9 +116,11 @@ def test_list_views(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
+    assert response.status_code == 200
     assert response_json['count'] == 4
     assert response_json['results'][0]['id'] == row_1.id
     assert response_json['results'][1]['id'] == row_2.id
+    assert 'field_options' not in response_json
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
     response = api_client.get(
@@ -126,6 +129,7 @@ def test_list_views(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
+    assert response.status_code == 200
     assert response_json['count'] == 4
     assert response_json['results'][0]['id'] == row_3.id
 
@@ -145,3 +149,162 @@ def test_list_views(api_client, data_fixture):
     assert not response_json['previous']
     assert not response_json['next']
     assert len(response_json['results']) == 0
+
+
+@pytest.mark.django_db
+def test_list_rows_include_field_options(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, order=0, name='Color',
+                                                text_default='white')
+    grid = data_fixture.create_grid_view(table=table)
+
+    # The second field is deliberately created after the creation of the grid field
+    # so that the GridViewFieldOptions entry is not created. This should
+    # automatically be created when the page is fetched.
+    number_field = data_fixture.create_number_field(table=table, order=1,
+                                                    name='Horsepower')
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.get(
+        url,
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+    assert 'field_options' not in response_json
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.get(
+        url,
+        {'includes': 'field_options'},
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+    assert len(response_json['field_options']) == 2
+    assert response_json['field_options'][str(text_field.id)]['width'] == 200
+    assert response_json['field_options'][str(number_field.id)]['width'] == 200
+
+
+@pytest.mark.django_db
+def test_patch_grid_view(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table)
+    unknown_field = data_fixture.create_text_field()
+    grid = data_fixture.create_grid_view(table=table)
+    # The second field is deliberately created after the creation of the grid field
+    # so that the GridViewFieldOptions entry is not created. This should
+    # automatically be created when the page is fetched.
+    number_field = data_fixture.create_number_field(table=table)
+    grid_2 = data_fixture.create_grid_view()
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
+        {'field_options': {
+            text_field.id: {'width': 300}
+        }},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+    assert len(response_json['field_options']) == 2
+    assert response_json['field_options'][str(text_field.id)]['width'] == 300
+    assert response_json['field_options'][str(number_field.id)]['width'] == 200
+    options = grid.get_field_options()
+    assert len(options) == 2
+    assert options[0].field_id == text_field.id
+    assert options[0].width == 300
+    assert options[1].field_id == number_field.id
+    assert options[1].width == 200
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
+        {'field_options': {
+            text_field.id: {'width': 100},
+            number_field.id: {'width': 500}
+        }},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+    assert len(response_json['field_options']) == 2
+    assert response_json['field_options'][str(text_field.id)]['width'] == 100
+    assert response_json['field_options'][str(number_field.id)]['width'] == 500
+    options = grid.get_field_options()
+    assert len(options) == 2
+    assert options[0].field_id == text_field.id
+    assert options[0].width == 100
+    assert options[1].field_id == number_field.id
+    assert options[1].width == 500
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
+        {},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == 200
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
+        {'field_options': {
+            'RANDOM_FIELD': 'TEST'
+        }},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json['detail']['field_options'][0]['code'] == 'invalid_key'
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
+        {'field_options': {
+            99999: {'width': 100}
+        }},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json['error'] == 'ERROR_UNRELATED_FIELD'
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.patch(
+        url,
+        {'field_options': {1: {'width': 'abc'}}},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json['detail']['field_options'][0]['code'] == 'invalid_value'
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': 999})
+    response = api_client.patch(
+        url,
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == 404
+    assert response.json()['error'] == 'ERROR_GRID_DOES_NOT_EXIST'
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid_2.id})
+    response = api_client.patch(
+        url,
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'

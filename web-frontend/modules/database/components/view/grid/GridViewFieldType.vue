@@ -1,5 +1,5 @@
 <template>
-  <div class="grid-view-column" style="width: 200px;">
+  <div class="grid-view-column">
     <div
       class="grid-view-description"
       :class="{ 'grid-view-description-loading': field._.loading }"
@@ -47,6 +47,7 @@
           </li>
         </ul>
       </Context>
+      <slot></slot>
     </div>
   </div>
 </template>

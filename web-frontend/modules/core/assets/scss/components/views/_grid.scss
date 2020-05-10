@@ -72,6 +72,7 @@
   z-index: 3;
   width: 9px;
   height: 26px;
+  cursor: col-resize;
 
   &::before {
     content: "";
@@ -323,6 +324,7 @@
 
     z-index: 2;
     width: 9px;
+    cursor: col-resize;
 
     &::before {
       content: "";

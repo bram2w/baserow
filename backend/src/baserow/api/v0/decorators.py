@@ -153,3 +153,44 @@ def validate_body_custom_fields(registry, base_serializer_class=None,
             return func(*args, **kwargs)
         return func_wrapper
     return validate_decorator
+
+
+def allowed_includes(*allowed):
+    """
+    A view method decorator that checks which allowed includes are in the GET
+    parameters of the request. The allowed arguments are going to be added to the
+    view method kwargs and if they are in the includes GET parameter the value will
+    be True.
+
+    Imagine this request:
+
+    # GET /page/?include=cars,unrelated_stuff,bikes
+    @allowed_includes('cars', 'bikes', 'planes')
+    def get(request, cars, bikes, planes):
+        cars >> True
+        bikes >> True
+        planes >> False
+
+    # GET /page/?include=planes
+    @allowed_includes('cars', 'bikes', 'planes')
+    def get(request, cars, bikes, planes):
+        cars >> False
+        bikes >> False
+        planes >> True
+
+    :param allowed: Should have all the allowed include values.
+    :type allowed: list
+    """
+
+    def validate_decorator(func):
+        def func_wrapper(*args, **kwargs):
+            request = get_request(args)
+            raw_include = request.GET.get('includes', None)
+            includes = raw_include.split(',') if raw_include else []
+
+            for include in allowed:
+                kwargs[include] = include in includes
+
+            return func(*args, **kwargs)
+        return func_wrapper
+    return validate_decorator

@@ -182,9 +182,7 @@ def test_update_view(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    response_json = response.json()
-    assert response.status_code == 400
-    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response.status_code == 200
 
     url = reverse('api_v0:database:views:item', kwargs={'view_id': view.id})
     response = api_client.patch(

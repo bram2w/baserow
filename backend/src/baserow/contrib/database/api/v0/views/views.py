@@ -61,7 +61,7 @@ class ViewsView(APIView):
 
         table = self.get_table(request.user, table_id)
         view = ViewHandler().create_view(
-            request.user, table, data['type'], name=data['name'])
+            request.user, table, data.pop('type'), **data)
 
         serializer = view_type_registry.get_serializer(view, ViewSerializer)
         return Response(serializer.data)
