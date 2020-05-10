@@ -37,6 +37,10 @@
   margin-bottom: 40px;
 }
 
+.resizing-horizontal {
+  cursor: col-resize;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0);

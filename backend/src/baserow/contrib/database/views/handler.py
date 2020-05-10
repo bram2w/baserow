@@ -1,9 +1,10 @@
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
+from baserow.contrib.database.fields.models import Field
 
-from .exceptions import ViewDoesNotExist
+from .exceptions import ViewDoesNotExist, UnrelatedFieldError
 from .registries import view_type_registry
-from .models import View
+from .models import View, GridViewFieldOptions
 
 
 class ViewHandler:
@@ -117,3 +118,30 @@ class ViewHandler:
             raise UserNotInGroupError(user, group)
 
         view.delete()
+
+    def update_grid_view_field_options(self, grid_view, field_options, fields=None):
+        """
+        Updates the field options with the provided values if the field id exists in
+        the table related to the grid view.
+
+        :param grid_view: The grid view for which the field options need to be updated.
+        :type grid_view: Model
+        :param field_options: A dict with the field ids as the key and a dict
+            containing the values that need to be updated as value.
+        :type field_options: dict
+        :param fields: Optionally a list of fields can be provided so that they don't
+            have to be fetched again.
+        :type fields: None or list
+        """
+
+        if not fields:
+            fields = Field.objects.filter(table=grid_view.table)
+
+        allowed_field_ids = [field.id for field in fields]
+        for field_id, options in field_options.items():
+            if int(field_id) not in allowed_field_ids:
+                raise UnrelatedFieldError(f'The field id {field_id} is not related to '
+                                          f'the grid view.')
+            GridViewFieldOptions.objects.update_or_create(
+                grid_view=grid_view, field_id=field_id, defaults=options
+            )

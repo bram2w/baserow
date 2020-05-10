@@ -10,7 +10,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.test import APIRequestFactory
 
 from baserow.api.v0.decorators import (
-    map_exceptions, validate_body, validate_body_custom_fields
+    map_exceptions, validate_body, validate_body_custom_fields, allowed_includes
 )
 from baserow.core.models import Group
 from baserow.core.registry import (
@@ -233,3 +233,40 @@ def test_validate_body_custom_fields():
     func = MagicMock()
 
     validate_body_custom_fields(registry)(func)(*[object, request])
+
+
+def test_allowed_includes():
+    factory = APIRequestFactory()
+
+    request = Request(factory.get(
+        '/some-page/',
+        data={'includes': 'test_1,test_2'},
+    ))
+
+    @allowed_includes('test_1', 'test_3')
+    def test_1(self, request, test_1, test_3):
+        assert test_1
+        assert not test_3
+
+    test_1(None, request)
+
+    request = Request(factory.get(
+        '/some-page/',
+        data={'includes': 'test_3'},
+    ))
+
+    @allowed_includes('test_1', 'test_3')
+    def test_2(self, request, test_1, test_3):
+        assert not test_1
+        assert test_3
+
+    test_2(None, request)
+
+    request = Request(factory.get('/some-page/',))
+
+    @allowed_includes('test_1', 'test_3')
+    def test_3(self, request, test_1, test_3):
+        assert not test_1
+        assert not test_3
+
+    test_3(None, request)

@@ -121,5 +121,15 @@ export class GridViewType extends ViewType {
   fieldCreated({ dispatch }, table, field, fieldType) {
     const value = fieldType.getEmptyValue(field)
     dispatch('view/grid/addField', { field, value }, { root: true })
+    dispatch(
+      'view/grid/setFieldOptionsOfField',
+      {
+        field,
+        // The default values should be the same as in the `GridViewFieldOptions`
+        // model in the backend to stay consistent.
+        values: { width: 200 },
+      },
+      { root: true }
+    )
   }
 }

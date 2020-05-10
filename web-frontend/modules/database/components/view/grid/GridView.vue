@@ -4,29 +4,37 @@
       ref="scrollbars"
       horizontal="right"
       vertical="rightBody"
-      :style="{ left: getLeftWidth() + 'px' }"
+      :style="{ left: widths.left + 'px' }"
       @vertical="verticalScroll"
       @horizontal="horizontalScroll"
     ></Scrollbars>
-    <div class="grid-view-left" :style="{ width: getLeftWidth() + 'px' }">
-      <div class="grid-view-inner" :style="{ width: getLeftWidth() + 'px' }">
+    <div class="grid-view-left" :style="{ width: widths.left + 'px' }">
+      <div class="grid-view-inner" :style="{ width: widths.left + 'px' }">
         <div class="grid-view-head">
-          <div class="grid-view-column" style="width: 60px;"></div>
+          <div
+            class="grid-view-column"
+            :style="{ width: widths.leftReserved + 'px' }"
+          ></div>
           <GridViewFieldType
             v-if="primary !== null"
             :field="primary"
+            :style="{ width: widths.fields[primary.id] + 'px' }"
           ></GridViewFieldType>
         </div>
         <div ref="leftBody" class="grid-view-body">
           <div class="grid-view-body-inner">
             <div
               class="grid-view-placeholder"
-              style="width: 260px;"
-              :style="{ height: placeholderHeight + 'px' }"
+              :style="{
+                height: placeholderHeight + 'px',
+                width: widths.left + 'px',
+              }"
             >
               <div
                 class="grid-view-placeholder-column"
-                style="width: 260px;"
+                :style="{
+                  width: widths.left + 'px',
+                }"
               ></div>
             </div>
             <div
@@ -40,7 +48,10 @@
                 :class="{ 'grid-view-row-loading': row._.loading }"
                 @contextmenu.prevent="showRowContext($event, row)"
               >
-                <div class="grid-view-column" style="width: 60px;">
+                <div
+                  class="grid-view-column"
+                  :style="{ width: widths.leftReserved + 'px' }"
+                >
                   <div class="grid-view-row-info">
                     <div class="grid-view-row-count">{{ row.id }}</div>
                     <a href="#" class="grid-view-row-more">
@@ -54,6 +65,7 @@
                   :field="primary"
                   :row="row"
                   :table="table"
+                  :style="{ width: widths.fields[primary.id] + 'px' }"
                   @selected="selectedField(primary, $event.component)"
                   @selectNext="selectNextField(row, primary, fields, primary)"
                 ></GridViewField>
@@ -62,7 +74,7 @@
             <div class="grid-view-row">
               <div
                 class="grid-view-column"
-                :style="{ width: getLeftWidth() + 'px' }"
+                :style="{ width: widths.left + 'px' }"
               >
                 <a
                   class="grid-view-add-row"
@@ -78,10 +90,7 @@
           </div>
         </div>
         <div class="grid-view-foot">
-          <div
-            class="grid-view-column"
-            :style="{ width: getLeftWidth() + 'px' }"
-          >
+          <div class="grid-view-column" :style="{ width: widths.left + 'px' }">
             <div class="grid-view-foot-info">{{ count }} rows</div>
           </div>
         </div>
@@ -90,24 +99,42 @@
     <div
       ref="divider"
       class="grid-view-divider"
-      :style="{ left: getLeftWidth() + 'px' }"
+      :style="{ left: widths.left + 'px' }"
     ></div>
+    <GridViewFieldWidthHandle
+      class="grid-view-divider-width"
+      :style="{ left: widths.left + 'px' }"
+      :grid="view"
+      :field="primary"
+      :width="widths.fields[primary.id]"
+    ></GridViewFieldWidthHandle>
     <div
       ref="right"
       class="grid-view-right"
-      :style="{ left: getLeftWidth() + 'px' }"
+      :style="{ left: widths.left + 'px' }"
     >
       <div
         class="grid-view-inner"
-        :style="{ 'min-width': getRightWidth() + 'px' }"
+        :style="{ 'min-width': widths.right + 'px' }"
       >
         <div class="grid-view-head">
           <GridViewFieldType
             v-for="field in fields"
             :key="'right-head-field-' + view.id + '-' + field.id"
             :field="field"
-          ></GridViewFieldType>
-          <div class="grid-view-column" style="width: 100px;">
+            :style="{ width: widths.fields[field.id] + 'px' }"
+          >
+            <GridViewFieldWidthHandle
+              class="grid-view-description-width"
+              :grid="view"
+              :field="field"
+              :width="widths.fields[field.id]"
+            ></GridViewFieldWidthHandle>
+          </GridViewFieldType>
+          <div
+            class="grid-view-column"
+            :style="{ width: widths.rightAdd + 'px' }"
+          >
             <a
               ref="createFieldContextLink"
               class="grid-view-add-column"
@@ -129,14 +156,14 @@
               class="grid-view-placeholder"
               :style="{
                 height: placeholderHeight + 'px',
-                width: fields.length * 200 + 'px',
+                width: widths.rightFieldsOnly + 'px',
               }"
             >
               <div
-                v-for="(field, index) in fields"
-                :key="'right-placeholder-column-' + view.id + '-' + field.id"
+                v-for="(value, id) in widths.placeholderPositions"
+                :key="'right-placeholder-column-' + view.id + '-' + id"
                 class="grid-view-placeholder-column"
-                :style="{ left: (index + 1) * 200 - 1 + 'px' }"
+                :style="{ left: value - 1 + 'px' }"
               ></div>
             </div>
             <div
@@ -160,6 +187,7 @@
                   :field="field"
                   :row="row"
                   :table="table"
+                  :style="{ width: widths.fields[field.id] + 'px' }"
                   @selected="selectedField(field, $event.component)"
                   @selectPrevious="
                     selectNextField(row, field, fields, primary, true)
@@ -171,7 +199,7 @@
             <div class="grid-view-row">
               <div
                 class="grid-view-column"
-                :style="{ width: getRightWidth(true) + 'px' }"
+                :style="{ width: widths.rightFieldsOnly + 'px' }"
               >
                 <a
                   class="grid-view-add-row"
@@ -206,7 +234,9 @@ import { mapGetters } from 'vuex'
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
 import GridViewField from '@baserow/modules/database/components/view/grid/GridViewField'
+import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import _ from 'lodash'
 
 export default {
   name: 'GridView',
@@ -214,6 +244,7 @@ export default {
     CreateFieldContext,
     GridViewFieldType,
     GridViewField,
+    GridViewFieldWidthHandle,
   },
   props: {
     primary: {
@@ -242,6 +273,9 @@ export default {
       addHover: false,
       loading: true,
       selectedRow: null,
+      widths: {
+        fields: {},
+      },
     }
   },
   computed: {
@@ -251,7 +285,27 @@ export default {
       rowHeight: 'view/grid/getRowHeight',
       rowsTop: 'view/grid/getRowsTop',
       placeholderHeight: 'view/grid/getPlaceholderHeight',
+      fieldOptions: 'view/grid/getAllFieldOptions',
     }),
+  },
+  watch: {
+    // The field options contain the widths of the field. Every time one of the values
+    // changes we need to recalculate all the widths.
+    fieldOptions: {
+      deep: true,
+      handler(value) {
+        this.calculateWidths(this.primary, this.fields, value)
+      },
+    },
+    // If a field is added or removed we need to recalculate all the widths.
+    fields(value) {
+      this.calculateWidths(this.primary, this.fields, this.fieldOptions)
+    },
+  },
+  created() {
+    // We have to calculate the widths when the component is created so that we can
+    // render the page properly on the server side.
+    this.calculateWidths(this.primary, this.fields, this.fieldOptions)
   },
   methods: {
     scroll(pixelY, pixelX) {
@@ -284,16 +338,75 @@ export default {
       $divider.classList.toggle('shadow', canScroll && left > 0)
       $right.scrollLeft = left
     },
-    getLeftWidth() {
-      const space = 60
-      const left = 1 * 200
-      return space + left
+    /**
+     * Calculates the widths of all fields, left side, right side and place holder
+     * positions and returns the values in an object.
+     */
+    getCalculatedWidths(primary, fields, fieldOptions) {
+      const getFieldWidth = (fieldId) => {
+        return Object.prototype.hasOwnProperty.call(fieldOptions, fieldId)
+          ? fieldOptions[fieldId].width
+          : 200
+      }
+
+      // Calculate the widths left side of the grid view. This is the sticky side that
+      // contains the primary field and ids.
+      const leftReserved = 60
+      const leftFieldsOnly = getFieldWidth(primary.id)
+      const left = leftFieldsOnly + leftReserved
+
+      // Calculate the widths of the right side that contains all the other fields.
+      const rightAdd = 100
+      const rightReserved = 100
+      const rightFieldsOnly = fields.reduce(
+        (value, field) => getFieldWidth(field.id) + value,
+        0
+      )
+      const right = rightFieldsOnly + rightAdd + rightReserved
+
+      // Calculate the left positions of the placeholder columns. These are the gray
+      // vertical lines that are always visible, even when the data hasn't loaded yet.
+      let last = 0
+      const placeholderPositions = {}
+      fields.forEach((field) => {
+        last += getFieldWidth(field.id)
+        placeholderPositions[field.id] = last
+      })
+
+      const fieldWidths = {}
+      fieldWidths[primary.id] = getFieldWidth(primary.id)
+      fields.forEach((field) => {
+        fieldWidths[field.id] = getFieldWidth(field.id)
+      })
+
+      return {
+        left,
+        leftReserved,
+        leftFieldsOnly,
+        right,
+        rightReserved,
+        rightAdd,
+        rightFieldsOnly,
+        placeholderPositions,
+        fields: fieldWidths,
+      }
     },
-    getRightWidth(columnsOnly = false) {
-      const right = this.fields.length * 200
-      const add = 100
-      const space = 100
-      return right + (columnsOnly ? 0 : add + space)
+    /**
+     * This method is called when the fieldOptions or fields changes. The reason why we
+     * don't have smaller methods that are called from the template to calculate the
+     * widths is that because that would quickly result in thousands of function calls
+     * when the smallest things change in the data. This is a speed improving
+     * workaround.
+     */
+    calculateWidths(primary, fields, fieldOptions) {
+      _.assign(
+        this.widths,
+        this.getCalculatedWidths(primary, fields, fieldOptions)
+      )
+
+      if (this.$refs.scrollbars) {
+        this.$refs.scrollbars.update()
+      }
     },
     async addRow() {
       try {

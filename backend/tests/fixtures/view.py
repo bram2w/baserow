@@ -1,4 +1,5 @@
-from baserow.contrib.database.views.models import GridView
+from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
 
 
 class ViewFixtures:
@@ -12,4 +13,17 @@ class ViewFixtures:
         if 'order' not in kwargs:
             kwargs['order'] = 0
 
-        return GridView.objects.create(**kwargs)
+        grid_view = GridView.objects.create(**kwargs)
+        self.create_grid_view_field_options(grid_view)
+        return grid_view
+
+    def create_grid_view_field_options(self, grid_view, **kwargs):
+        return [
+            self.create_grid_view_field_option(grid_view, field, **kwargs)
+            for field in Field.objects.filter(table=grid_view.table)
+        ]
+
+    def create_grid_view_field_option(self, grid_view, field, **kwargs):
+        return GridViewFieldOptions.objects.create(
+            grid_view=grid_view, field=field, **kwargs
+        )
