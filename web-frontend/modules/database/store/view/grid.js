@@ -1,3 +1,4 @@
+import Vue from 'vue'
 import axios from 'axios'
 import _ from 'lodash'
 
@@ -5,7 +6,10 @@ import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 
 export function populateRow(row) {
-  row._ = { loading: false }
+  row._ = {
+    loading: false,
+    hover: false,
+  }
   return row
 }
 
@@ -118,7 +122,10 @@ export const mutations = {
   ADD_FIELD(state, { field, value }) {
     const name = `field_${field.id}`
     state.rows.forEach((row) => {
-      row[name] = value
+      // We have to use the Vue.set function here to make it reactive immediately.
+      // If we don't do this the value in the field components of the grid and modal
+      // don't have the correct value and will act strange.
+      Vue.set(row, name, value)
     })
   },
   SET_ROW_LOADING(state, { row, value }) {
@@ -135,6 +142,9 @@ export const mutations = {
         [fieldId]: values,
       })
     }
+  },
+  SET_ROW_HOVER(state, { row, value }) {
+    row._.hover = value
   },
 }
 
@@ -548,6 +558,9 @@ export const actions = {
       fieldId: field.id,
       values,
     })
+  },
+  setRowHover({ commit }, { row, value }) {
+    commit('SET_ROW_HOVER', { row, value })
   },
 }
 

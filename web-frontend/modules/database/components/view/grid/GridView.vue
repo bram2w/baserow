@@ -45,7 +45,12 @@
                 v-for="row in rows"
                 :key="'left-row-' + view.id + '-' + row.id"
                 class="grid-view-row"
-                :class="{ 'grid-view-row-loading': row._.loading }"
+                :class="{
+                  'grid-view-row-loading': row._.loading,
+                  'grid-view-row-hover': row._.hover,
+                }"
+                @mouseover="setRowHover(row, true)"
+                @mouseleave="setRowHover(row, false)"
                 @contextmenu.prevent="showRowContext($event, row)"
               >
                 <div
@@ -54,7 +59,10 @@
                 >
                   <div class="grid-view-row-info">
                     <div class="grid-view-row-count">{{ row.id }}</div>
-                    <a href="#" class="grid-view-row-more">
+                    <a
+                      class="grid-view-row-more"
+                      @click="$refs.rowEditModal.show(row)"
+                    >
                       <i class="fas fa-expand"></i>
                     </a>
                   </div>
@@ -68,6 +76,7 @@
                   :style="{ width: widths.fields[primary.id] + 'px' }"
                   @selected="selectedField(primary, $event.component)"
                   @selectNext="selectNextField(row, primary, fields, primary)"
+                  @update="updateValue"
                 ></GridViewField>
               </div>
             </div>
@@ -175,7 +184,12 @@
                 v-for="row in rows"
                 :key="'right-row-' + view.id + '-' + row.id"
                 class="grid-view-row"
-                :class="{ 'grid-view-row-loading': row._.loading }"
+                :class="{
+                  'grid-view-row-loading': row._.loading,
+                  'grid-view-row-hover': row._.hover,
+                }"
+                @mouseover="setRowHover(row, true)"
+                @mouseleave="setRowHover(row, false)"
                 @contextmenu.prevent="showRowContext($event, row)"
               >
                 <GridViewField
@@ -193,6 +207,7 @@
                     selectNextField(row, field, fields, primary, true)
                   "
                   @selectNext="selectNextField(row, field, fields, primary)"
+                  @update="updateValue"
                 ></GridViewField>
               </div>
             </div>
@@ -225,6 +240,13 @@
         </li>
       </ul>
     </Context>
+    <RowEditModal
+      ref="rowEditModal"
+      :table="table"
+      :primary="primary"
+      :fields="fields"
+      @update="updateValue"
+    ></RowEditModal>
   </div>
 </template>
 
@@ -235,6 +257,7 @@ import CreateFieldContext from '@baserow/modules/database/components/field/Creat
 import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
 import GridViewField from '@baserow/modules/database/components/view/grid/GridViewField'
 import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import _ from 'lodash'
 
@@ -245,6 +268,7 @@ export default {
     GridViewFieldType,
     GridViewField,
     GridViewFieldWidthHandle,
+    RowEditModal,
   },
   props: {
     primary: {
@@ -273,6 +297,7 @@ export default {
       addHover: false,
       loading: true,
       selectedRow: null,
+      lastHoveredRow: null,
       widths: {
         fields: {},
       },
@@ -308,6 +333,19 @@ export default {
     this.calculateWidths(this.primary, this.fields, this.fieldOptions)
   },
   methods: {
+    async updateValue({ field, row, value, oldValue }) {
+      try {
+        await this.$store.dispatch('view/grid/updateValue', {
+          table: this.table,
+          row,
+          field,
+          value,
+          oldValue,
+        })
+      } catch (error) {
+        notifyIf(error, 'field')
+      }
+    },
     scroll(pixelY, pixelX) {
       const $rightBody = this.$refs.rightBody
       const $right = this.$refs.right
@@ -412,7 +450,8 @@ export default {
       try {
         await this.$store.dispatch('view/grid/create', {
           table: this.table,
-          fields: this.fields,
+          // We need a list of all fields including the primary one here.
+          fields: [this.primary].concat(...this.fields),
           values: {},
         })
       } catch (error) {
@@ -522,6 +561,21 @@ export default {
 
       current[0].unselect()
       next[0].select()
+    },
+    setRowHover(row, value) {
+      // Sometimes the mouseleave is not triggered, but because you can hover only one
+      // row at a time we can remember which was hovered last and set the hover state to
+      // false if it differs.
+      if (this.lastHoveredRow !== null && this.lastHoveredRow.id !== row.id) {
+        this.$store.dispatch('view/grid/setRowHover', {
+          row: this.lastHoveredRow,
+          value: false,
+        })
+        this.lastHoveredRow = true
+      }
+
+      this.$store.dispatch('view/grid/setRowHover', { row, value })
+      this.lastHoveredRow = row
     },
   },
 }

@@ -2,7 +2,7 @@
   <div class="grid-view-column" @click="select()">
     <component
       :is="getFieldComponent(field.type)"
-      ref="column"
+      ref="field"
       :field="field"
       :value="row['field_' + field.id]"
       :selected="selected"
@@ -13,15 +13,10 @@
 
 <script>
 import { isElement } from '@baserow/modules/core/utils/dom'
-import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'GridViewField',
   props: {
-    table: {
-      type: Object,
-      required: true,
-    },
     field: {
       type: Object,
       required: true,
@@ -62,25 +57,12 @@ export default {
      * which will actually update the value via the store.
      */
     update(value, oldValue) {
-      this.$store
-        .dispatch('view/grid/updateValue', {
-          table: this.table,
-          row: this.row,
-          field: this.field,
-          value,
-          oldValue,
-        })
-        .catch((error) => {
-          notifyIf(error, 'column')
-        })
-        .then(() => {
-          this.$forceUpdate()
-        })
-
-      // This is needed because in some cases we do have a value yet, so a watcher of
-      // the value is not guaranteed. This will make sure the component shows the
-      // latest value.
-      this.$forceUpdate()
+      this.$emit('update', {
+        row: this.row,
+        field: this.field,
+        value,
+        oldValue,
+      })
     },
     /**
      * Method that is called when a user clicks on the grid field. It wil
@@ -97,7 +79,7 @@ export default {
           this.clickTimestamp !== null &&
           timestamp - this.clickTimestamp < 200
         ) {
-          this.$refs.column.doubleClick()
+          this.$refs.field.doubleClick()
         }
       } else {
         // If the field is not yet selected we can change the state to selected.
@@ -105,7 +87,7 @@ export default {
         this.$nextTick(() => {
           // Call the select method on the next tick because we want to wait for all
           // changes to have rendered.
-          this.$refs.column.select()
+          this.$refs.field.select()
         })
 
         // Register a body click event listener so that we can detect if a user has
@@ -146,7 +128,7 @@ export default {
       this.clickTimestamp = timestamp
     },
     unselect() {
-      this.$refs.column.beforeUnSelect()
+      this.$refs.field.beforeUnSelect()
       this.$nextTick(() => {
         this.selected = false
       })
