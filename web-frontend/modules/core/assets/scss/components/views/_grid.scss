@@ -82,7 +82,8 @@
     border-radius: 2px;
   }
 
-  &:hover::before {
+  &:hover::before,
+  &.dragging::before {
     background-color: $color-primary-500;
   }
 }
@@ -333,7 +334,8 @@
       @include absolute(0, 2px, 0, 2px);
     }
 
-    &:hover::before {
+    &:hover::before,
+    &.dragging::before {
       background-color: $color-primary-500;
     }
   }

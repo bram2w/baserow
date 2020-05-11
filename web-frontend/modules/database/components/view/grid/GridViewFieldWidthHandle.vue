@@ -1,5 +1,5 @@
 <template>
-  <div @mousedown="start($event)"></div>
+  <div :class="{ dragging: dragging }" @mousedown="start($event)"></div>
 </template>
 
 <script>
@@ -54,6 +54,7 @@ export default {
     },
     async up(event) {
       event.preventDefault()
+      this.dragging = false
       const difference = event.clientX - this.mouseStart
       const newWidth = Math.max(this.startWidth + difference, 100)
       window.removeEventListener('mousemove', this.$el.moveEvent)
