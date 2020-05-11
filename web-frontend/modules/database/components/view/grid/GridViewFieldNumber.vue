@@ -25,41 +25,16 @@
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
+import numberField from '@baserow/modules/database/mixins/numberField'
 
 export default {
-  mixins: [gridField, gridFieldInput],
+  mixins: [gridField, gridFieldInput, numberField],
   methods: {
-    getError() {
-      if (this.copy === null || this.copy === '') {
-        return null
-      }
-      if (isNaN(parseFloat(this.copy)) || !isFinite(this.copy)) {
-        return 'Invalid number'
-      }
-      return null
-    },
-    isValid() {
-      return this.getError() === null
-    },
     afterEdit() {
       this.$nextTick(() => {
         this.$refs.input.focus()
         this.$refs.input.selectionStart = this.$refs.input.selectionEnd = 100000
       })
-    },
-    beforeSave(value) {
-      if (value === '' || isNaN(value) || value === undefined) {
-        return null
-      }
-      const decimalPlaces =
-        this.field.number_type === 'DECIMAL'
-          ? this.field.number_decimal_places
-          : 0
-      let number = parseFloat(value)
-      if (!this.field.number_negative && number < 0) {
-        number = 0
-      }
-      return number.toFixed(decimalPlaces)
     },
   },
 }

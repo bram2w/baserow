@@ -7,6 +7,10 @@ import GridViewFieldText from '@baserow/modules/database/components/view/grid/Gr
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
 
+import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
+import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
+import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
+
 export class FieldType extends Registerable {
   /**
    * The font awesome 5 icon name that is used as convenience for the user to
@@ -37,9 +41,22 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * @TODO make this depending on the view type.
+   * This grid view field component should represent the related row value of this
+   * type. It will only be used in the grid view and it also responsible for editing
+   * the value.
    */
   getGridViewFieldComponent() {
+    throw new Error(
+      'Not implement error. This method should return a component.'
+    )
+  }
+
+  /**
+   * The row edit field should represent a the related row value of this type. It
+   * will be used in the row edit modal, but can also be used in other forms. It is
+   * responsible for editing the value.
+   */
+  getRowEditFieldComponent() {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
@@ -90,6 +107,13 @@ export class FieldType extends Registerable {
       name: this.name,
     }
   }
+
+  /**
+   * Should return a for humans readable representation of the value.
+   */
+  toHumanReadableString(field, value) {
+    return value
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -111,6 +135,10 @@ export class TextFieldType extends FieldType {
 
   getGridViewFieldComponent() {
     return GridViewFieldText
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldText
   }
 
   getEmptyValue(field) {
@@ -138,6 +166,10 @@ export class NumberFieldType extends FieldType {
   getGridViewFieldComponent() {
     return GridViewFieldNumber
   }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldNumber
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -155,6 +187,10 @@ export class BooleanFieldType extends FieldType {
 
   getGridViewFieldComponent() {
     return GridViewFieldBoolean
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldBoolean
   }
 
   getEmptyValue(field) {
