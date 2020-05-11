@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Prevent row context menu when right clicking on a field that's being edited.
 * Added row modal editing feature to the grid view.
 * Made it possible to resize the field width per view.
 * Added validation and formatting for the number field.
