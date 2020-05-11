@@ -3,6 +3,7 @@
     ref="cell"
     class="grid-view-cell"
     :class="{ active: selected, editing: editing }"
+    @contextmenu="stopContextIfEditing($event)"
   >
     <div v-show="!editing" class="grid-field-text">{{ value }}</div>
     <input

@@ -6,6 +6,7 @@
       editing: editing,
       invalid: editing && !isValid(),
     }"
+    @contextmenu="stopContextIfEditing($event)"
   >
     <div v-show="!editing" class="grid-field-number">{{ value }}</div>
     <template v-if="editing">

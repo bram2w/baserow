@@ -131,5 +131,15 @@ export default {
     isValid() {
       return true
     },
+    /**
+     * Small helper method that stops the propagation of the context menu when the
+     * field is being edited. Can be used on the element like:
+     * `@contextmenu="stopContextIfEditing($event)"`.
+     */
+    stopContextIfEditing(event) {
+      if (this.editing) {
+        event.stopPropagation()
+      }
+    },
   },
 }
