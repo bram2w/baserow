@@ -88,3 +88,10 @@ class GridViewFieldOptionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = GridViewFieldOptions
         fields = ('width',)
+
+
+class GridViewFilterSerializer(serializers.Serializer):
+    field_ids = serializers.ListField(allow_empty=False, required=False, default=None,
+                                      child=serializers.IntegerField())
+    row_ids = serializers.ListField(allow_empty=False,
+                                    child=serializers.IntegerField())

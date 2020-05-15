@@ -154,6 +154,11 @@ def test_get_field(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_update_field(api_client, data_fixture):
+    """
+    @TODO somehow trigger the CannotChangeFieldType and test if the correct
+        ERROR_CANNOT_CHANGE_FIELD_TYPE error is returned.
+    """
+
     user, token = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -261,8 +266,12 @@ def test_update_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
-    assert response_json['error'] == 'ERROR_CANNOT_CHANGE_FIELD_TYPE'
+    assert response.status_code == 200
+    assert response_json['name'] == 'Test 2'
+    assert response_json['type'] == 'boolean'
+    assert not 'number_type' in response_json
+    assert not 'number_decimal_places' in response_json
+    assert not 'number_negative' in response_json
 
 
 @pytest.mark.django_db

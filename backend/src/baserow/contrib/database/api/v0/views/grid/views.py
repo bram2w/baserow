@@ -18,6 +18,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GridView
 
 from .errors import ERROR_GRID_DOES_NOT_EXIST, ERROR_UNRELATED_FIELD
+from .serializers import GridViewFilterSerializer
 
 
 class GridViewView(APIView):
@@ -63,6 +64,26 @@ class GridViewView(APIView):
             response.data.update(**GridViewSerializer(view, context=context).data)
 
         return response
+
+    @map_exceptions({
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST
+    })
+    @validate_body(GridViewFilterSerializer)
+    def post(self, request, view_id, data):
+        """
+        Row filter endpoint that only lists the requested rows and optionally only the
+        requested fields.
+        """
+
+        view = ViewHandler().get_view(request.user, view_id, GridView)
+
+        model = view.table.get_model(field_ids=data['field_ids'])
+        results = model.objects.filter(pk__in=data['row_ids'])
+
+        serializer_class = get_row_serializer_class(model, RowSerializer)
+        serializer = serializer_class(results, many=True)
+        return Response(serializer.data)
 
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,

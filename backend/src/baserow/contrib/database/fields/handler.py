@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 
 from django.db import connections
 from django.db.utils import ProgrammingError, DataError
@@ -6,6 +7,7 @@ from django.conf import settings
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
+from baserow.contrib.database.db.schema import lenient_schema_editor
 
 from .exceptions import (
     PrimaryFieldAlreadyExists, CannotDeletePrimaryField, CannotChangeFieldType
@@ -92,6 +94,7 @@ class FieldHandler:
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
 
+        old_field = deepcopy(field)
         field_type = field_type_registry.get_by_model(field)
         from_model = field.table.get_model(field_ids=[], fields=[field])
         from_field_type = field_type.type
@@ -107,13 +110,16 @@ class FieldHandler:
         field = set_allowed_attrs(kwargs, allowed_fields, field)
         field.save()
 
-        # Change the field in the table schema.
         connection = connections[settings.USER_TABLE_DATABASE]
-        with connection.schema_editor() as schema_editor:
-            to_model = field.table.get_model(field_ids=[], fields=[field])
-            from_model_field = from_model._meta.get_field(field.db_column)
-            to_model_field = to_model._meta.get_field(field.db_column)
+        to_model = field.table.get_model(field_ids=[], fields=[field])
+        from_model_field = from_model._meta.get_field(field.db_column)
+        to_model_field = to_model._meta.get_field(field.db_column)
 
+        # Change the field in the table schema.
+        with lenient_schema_editor(
+            connection,
+            field_type.get_alter_column_type_function(connection, field)
+        ) as schema_editor:
             try:
                 schema_editor.alter_field(from_model, from_model_field, to_model_field)
             except (ProgrammingError, DataError):
@@ -125,6 +131,13 @@ class FieldHandler:
                           f'{from_field_type} to {new_type_name}.'
                 logger.error(message)
                 raise CannotChangeFieldType(message)
+
+        from_model_field_type = from_model_field.db_parameters(connection)['type']
+        to_model_field_type = to_model_field.db_parameters(connection)['type']
+        altered_column = from_model_field_type != to_model_field_type
+
+        field_type.after_update(field, old_field, to_model, from_model, connection,
+                                altered_column)
 
         return field
 

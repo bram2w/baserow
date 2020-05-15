@@ -16,6 +16,8 @@ export function populateRow(row) {
 export const state = () => ({
   loading: false,
   loaded: false,
+  // The last used grid id.
+  lastGridId: -1,
   // Contains the custom field options per view. Things like the field width are
   // stored here.
   fieldOptions: {},
@@ -53,6 +55,9 @@ export const mutations = {
   },
   SET_LOADED(state, value) {
     state.loaded = value
+  },
+  SET_LAST_GRID_ID(state, gridId) {
+    state.lastGridId = gridId
   },
   SET_SCROLL_TOP(state, { scrollTop, windowHeight }) {
     state.scrollTop = scrollTop
@@ -119,6 +124,14 @@ export const mutations = {
   SET_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
   },
+  UPDATE_ROWS(state, { rows }) {
+    rows.forEach((newRow) => {
+      const row = state.rows.find((row) => row.id === newRow.id)
+      if (row !== undefined) {
+        _.assign(row, newRow)
+      }
+    })
+  },
   ADD_FIELD(state, { field, value }) {
     const name = `field_${field.id}`
     state.rows.forEach((row) => {
@@ -171,6 +184,8 @@ export const actions = {
     { commit, getters, dispatch },
     { gridId, scrollTop, windowHeight }
   ) {
+    commit('SET_LAST_GRID_ID', gridId)
+
     // Calculate what the middle row index of the visible window based on the scroll
     // top.
     const middle = scrollTop + windowHeight / 2
@@ -398,6 +413,7 @@ export const actions = {
    * Fetches an initial set of rows and adds that data to the store.
    */
   async fetchInitial({ dispatch, commit, getters }, { gridId }) {
+    commit('SET_LAST_GRID_ID', gridId)
     commit('CLEAR_ROWS')
 
     const limit = getters.getBufferRequestSize * 2
@@ -562,6 +578,18 @@ export const actions = {
   setRowHover({ commit }, { row, value }) {
     commit('SET_ROW_HOVER', { row, value })
   },
+  /**
+   * Refreshes all the buffered data values of a given field. The new values are
+   * requested from the backend and replaced.
+   */
+  async refreshFieldValues({ commit, getters }, { field }) {
+    const rowIds = getters.getAllRows.map((row) => row.id)
+    const fieldIds = [field.id]
+    const gridId = getters.getLastGridId
+
+    const { data } = await GridService.filterRows({ gridId, rowIds, fieldIds })
+    commit('UPDATE_ROWS', { rows: data })
+  },
 }
 
 export const getters = {
@@ -570,6 +598,9 @@ export const getters = {
   },
   isLoaded(state) {
     return state.loaded
+  },
+  getLastGridId(state) {
+    return state.lastGridId
   },
   getCount(state) {
     return state.count
@@ -588,6 +619,9 @@ export const getters = {
   },
   getRowPadding(state) {
     return state.rowPadding
+  },
+  getAllRows(state) {
+    return state.rows
   },
   getRows(state) {
     return state.rows.slice(state.rowsStartIndex, state.rowsEndIndex)

@@ -99,6 +99,53 @@ class FieldType(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
 
         return None
 
+    def get_alter_column_type_function(self, connection, instance):
+        """
+        Can optionally return a SQL function as string to convert the old field's value
+        when changing the field type. If None is returned no function will be
+        applied. The connection can be used to see which engine is used, postgresql,
+        mysql or sqlite.
+
+        Example when a string is converted to a number, the function could be:
+        REGEXP_REPLACE(p_in, '[^0-9]', '', 'g') which would remove all non numeric
+        characters. The p_in variable is the old value as a string.
+
+        :param connection: The used connection. This can for example be used to check
+            the database engine type.
+        :type connection: DatabaseWrapper
+        :param instance: The new field instance.
+        :type instance: Field
+        :return: The SQL function to convert the value.
+        :rtype: None or str
+        """
+
+        return None
+
+    def after_update(self, field, old_field, model, old_model, connection,
+                     altered_column):
+        """
+        This hook is called right after a field has been updated. In some cases data
+        mutation still has to be done in order to maintain data integrity. For example
+        when the only the allowing of negative values has been changed for the number
+        field.
+
+        :param field: The updated field instance.
+        :type: field Field
+        :param old_field: The old field instance. It is not recommended to call the
+            save function as this will undo part of the changes that have been made.
+            This is just for comparing values.
+        :type old_field: Field
+        :param model: The generated model containing only the new field.
+        :type model: Model
+        :param old_model: The old generated model containing only the old field.
+        :type old_model: Model
+        :param connection: The connection used to make the database schema change.
+        :type connection: DatabaseWrapper
+        :param altered_column: Indicates whether the column has been altered in the
+            table. Sometimes data has to be updated if the column hasn't been altered.
+        :type altered_column: bool
+        """
+
 
 class FieldTypeRegistry(CustomFieldsRegistryMixin, ModelRegistryMixin, Registry):
     """
