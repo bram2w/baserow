@@ -189,6 +189,133 @@ def test_list_rows_include_field_options(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_filtered_rows(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, order=0, name='Color',
+                                                text_default='white')
+    number_field = data_fixture.create_number_field(table=table, order=1,
+                                                    name='Horsepower')
+    boolean_field = data_fixture.create_boolean_field(table=table, order=2,
+                                                      name='For sale')
+    grid = data_fixture.create_grid_view(table=table)
+    grid_2 = data_fixture.create_grid_view()
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': 999})
+    response = api_client.post(
+        url,
+        {'field_ids': [1], 'row_ids': [1]},
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == 404
+    assert response.json()['error'] == 'ERROR_GRID_DOES_NOT_EXIST'
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid_2.id})
+    response = api_client.post(
+        url,
+        {'field_ids': [1], 'row_ids': [1]},
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.post(
+        url,
+        {},
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == 400
+    assert response.json()['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.post(
+        url,
+        {
+            'field_ids': ['a', 'b'],
+            'row_ids': ['a', 'b']
+        },
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == 400
+    response_json = response.json()
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert len(response_json['detail']['field_ids']) == 2
+    assert len(response_json['detail']['row_ids']) == 2
+
+    model = grid.table.get_model()
+    row_1 = model.objects.create(**{
+        f'field_{text_field.id}': 'Green',
+        f'field_{number_field.id}': 10,
+        f'field_{boolean_field.id}': False
+    })
+    row_2 = model.objects.create()
+    row_3 = model.objects.create(**{
+        f'field_{text_field.id}': 'Orange',
+        f'field_{number_field.id}': 100,
+        f'field_{boolean_field.id}': True
+    })
+    row_4 = model.objects.create(**{
+        f'field_{text_field.id}': 'Purple',
+        f'field_{number_field.id}': 1000,
+        f'field_{boolean_field.id}': False
+    })
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.post(
+        url,
+        {
+            'field_ids': [text_field.id],
+            'row_ids': [row_1.id, row_2.id]
+        },
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+
+    assert len(response_json) == 2
+    assert response_json[0]['id'] == row_1.id
+    assert f'field_{text_field.id}' in response_json[0]
+    assert response_json[1]['id'] == row_2.id
+    assert f'field_{text_field.id}' in response_json[1]
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.post(
+        url,
+        {
+            'field_ids': [number_field.id, boolean_field.id],
+            'row_ids': [row_3.id]
+        },
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+
+    assert len(response_json) == 1
+    assert response_json[0]['id'] == row_3.id
+    assert f'field_{number_field.id}' in response_json[0]
+    assert f'field_{boolean_field.id}' in response_json[0]
+
+    url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.post(
+        url,
+        {
+            'row_ids': [row_3.id]
+        },
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+
+    assert len(response_json) == 1
+    assert response_json[0]['id'] == row_3.id
+    assert f'field_{text_field.id}' in response_json[0]
+    assert f'field_{number_field.id}' in response_json[0]
+    assert f'field_{boolean_field.id}' in response_json[0]
+
+
+@pytest.mark.django_db
 def test_patch_grid_view(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email='test@test.nl', password='password', first_name='Test1')

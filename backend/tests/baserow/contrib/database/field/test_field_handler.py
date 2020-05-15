@@ -1,8 +1,5 @@
 import pytest
-
-from django.db import transaction
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
+from decimal import Decimal
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -10,8 +7,7 @@ from baserow.contrib.database.fields.models import (
     Field, TextField, NumberField, BooleanField
 )
 from baserow.contrib.database.fields.exceptions import (
-    FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
-    CannotChangeFieldType
+    FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField
 )
 
 
@@ -113,100 +109,88 @@ def test_create_primary_field(data_fixture):
 
 @pytest.mark.django_db
 def test_update_field(data_fixture):
+    """
+    @TODO somehow trigger the CannotChangeFieldType and test if it is raised.
+    """
+
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     data_fixture.create_text_field(table=table, order=0)
-    text_field_2 = data_fixture.create_text_field(table=table, order=1)
+    field = data_fixture.create_text_field(table=table, order=1)
 
     handler = FieldHandler()
 
     with pytest.raises(UserNotInGroupError):
-        handler.update_field(user=user_2, field=text_field_2)
+        handler.update_field(user=user_2, field=field)
 
     with pytest.raises(ValueError):
         handler.update_field(user=user, field=object())
 
     with pytest.raises(FieldTypeDoesNotExist):
-        handler.update_field(user=user, field=text_field_2,
-                             new_type_name='NOT_EXISTING')
+        handler.update_field(user=user, field=field, new_type_name='NOT_EXISTING')
 
-    text_field_2 = handler.update_field(user=user, field=text_field_2, name='Test 1',
-                                        text_default='Test 2')
+    # Change some values of the text field and test if they have been changed.
+    field = handler.update_field(user=user, field=field, name='Text field',
+                                 text_default='Default value')
 
-    text_field_2.refresh_from_db()
-    assert text_field_2.name == 'Test 1'
-    assert text_field_2.text_default == 'Test 2'
+    assert field.name == 'Text field'
+    assert field.text_default == 'Default value'
+    assert isinstance(field, TextField)
 
-    table_model = table.get_model()
-    field_name = f'field_{text_field_2.id}'
-    instance = table_model.objects.create(**{field_name: 'Test'})
+    # Insert some rows to the table which should be converted later.
+    model = table.get_model()
+    model.objects.create(**{f'field_{field.id}': 'Text value'})
+    model.objects.create(**{f'field_{field.id}': '100.22'})
+    model.objects.create(**{f'field_{field.id}': '10'})
 
-    with pytest.raises(CannotChangeFieldType):
-        handler.update_field(user=user, field=text_field_2, new_type_name='number',
-                             number_type='DECIMAL')
+    # Change the field type to a number and test if the values have been changed.
+    field = handler.update_field(user=user, field=field, new_type_name='number',
+                                 name='Number field', number_type='INTEGER',
+                                 number_negative=False)
 
-    setattr(instance, field_name, '1')
-    instance.save()
+    assert field.name == 'Number field'
+    assert field.number_type == 'INTEGER'
+    assert field.number_negative == False
+    assert not hasattr(field, 'text_default')
 
-    number_field_2 = handler.update_field(user=user, field=text_field_2,
-                                          new_type_name='number', number_type='DECIMAL')
+    model = table.get_model()
+    rows = model.objects.all()
+    assert getattr(rows[0], f'field_{field.id}') == None
+    assert getattr(rows[1], f'field_{field.id}') == 100
+    assert getattr(rows[2], f'field_{field.id}') == 10
 
-    table_model = table.get_model()
-    with pytest.raises(ValidationError):
-        with transaction.atomic():
-            table_model.objects.create(**{field_name: 'Test 1'})
+    # Change the field type to a decimal and test if the values have been changed.
+    field = handler.update_field(user=user, field=field, new_type_name='number',
+                                 name='Price field', number_type='DECIMAL',
+                                 number_decimal_places=2, number_negative=True)
 
-    instance = table_model.objects.create(**{field_name: 2})
-    assert getattr(instance, field_name) == 2
+    assert field.name == 'Price field'
+    assert field.number_type == 'DECIMAL'
+    assert field.number_decimal_places == 2
+    assert field.number_negative == True
 
-    assert Field.objects.all().count() == 2
-    assert TextField.objects.all().count() == 1
-    assert NumberField.objects.all().count() == 1
-    assert BooleanField.objects.all().count() == 0
+    model = table.get_model()
+    rows = model.objects.all()
+    assert getattr(rows[0], f'field_{field.id}') == None
+    assert getattr(rows[1], f'field_{field.id}') == Decimal('100.00')
+    assert getattr(rows[2], f'field_{field.id}') == Decimal('10.00')
 
-    handler.update_field(user=user, field=number_field_2, new_type_name='number',
-                         number_type='DECIMAL', number_decimal_places=2,
-                         number_negative=True)
+    # Change the field type to a boolean and test if the values have been changed.
+    field = handler.update_field(user=user, field=field, new_type_name='boolean',
+                                 name='Active')
 
-    assert Field.objects.all().count() == 2
-    assert TextField.objects.all().count() == 1
-    assert NumberField.objects.all().count() == 1
-    assert BooleanField.objects.all().count() == 0
+    field.refresh_from_db()
+    assert field.name == 'Active'
+    assert not hasattr(field, 'number_type')
+    assert not hasattr(field, 'number_decimal_places')
+    assert not hasattr(field, 'number_negative')
 
-    number_field = NumberField.objects.all().first()
-    content_type = ContentType.objects.get_for_model(NumberField)
-    assert number_field.name == 'Test 1'
-    assert number_field.number_type == 'DECIMAL'
-    assert number_field.number_decimal_places == 2
-    assert number_field.number_negative
-    assert number_field.order == 1
-    assert number_field.content_type == content_type
-
-    handler.update_field(user=user, field=number_field, new_type_name='text',
-                         name='Test 2')
-
-    assert Field.objects.all().count() == 2
-    assert TextField.objects.all().count() == 2
-    assert NumberField.objects.all().count() == 0
-    assert BooleanField.objects.all().count() == 0
-
-    text_field = TextField.objects.all()[1:].first()
-    content_type = ContentType.objects.get_for_model(TextField)
-    assert text_field.name == 'Test 2'
-    assert text_field.order == 1
-    assert text_field.content_type == content_type
-
-    text_field = handler.update_field(user=user, field=text_field, name='Test 3')
-    assert text_field.name == 'Test 3'
-
-    number_field = handler.update_field(
-        user=user, field=text_field, new_type_name='number', number_type='DECIMAL',
-        number_decimal_places=2, number_negative=True
-    )
-
-    with pytest.raises(CannotChangeFieldType):
-        handler.update_field(user=user, field=number_field, new_type_name='boolean')
+    model = table.get_model()
+    rows = model.objects.all()
+    assert getattr(rows[0], f'field_{field.id}') == False
+    assert getattr(rows[1], f'field_{field.id}') == False
+    assert getattr(rows[2], f'field_{field.id}') == False
 
 
 @pytest.mark.django_db

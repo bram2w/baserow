@@ -130,14 +130,16 @@ export const actions = {
     // Call the field created event on all the registered views because they might
     // need to change things in loaded data. For example the grid field will add the
     // field to all of the rows that are in memory.
-    Object.values(this.$registry.getAll('view')).forEach((viewType) => {
-      viewType.fieldCreated(context, table, data, fieldType)
-    })
+    for (const viewType of Object.values(this.$registry.getAll('view'))) {
+      await viewType.fieldCreated(context, table, data, fieldType)
+    }
   },
   /**
    * Updates the values of the provided field.
    */
-  async update({ commit, dispatch, getters }, { field, type, values }) {
+  async update(context, { field, type, values }) {
+    const { commit } = context
+
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the values when ' +
@@ -149,6 +151,9 @@ export const actions = {
       throw new Error(`A field with type "${type}" doesn't exist.`)
     }
 
+    const fieldType = this.$registry.get('field', type)
+
+    const oldField = clone(field)
     const postData = clone(values)
     postData.type = type
 
@@ -158,6 +163,12 @@ export const actions = {
       commit('SET_PRIMARY', data)
     } else {
       commit('UPDATE_ITEM', { id: field.id, values: data })
+    }
+
+    // Call the field updated event on all the registered views because they might
+    // need to change things in loaded data. For example the changed rows.
+    for (const viewType of Object.values(this.$registry.getAll('view'))) {
+      await viewType.fieldUpdated(context, data, oldField, fieldType)
     }
   },
   /**

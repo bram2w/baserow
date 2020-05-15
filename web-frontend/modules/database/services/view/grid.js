@@ -33,6 +33,15 @@ export default {
 
     return client.get(`/database/views/grid/${gridId}/`, config)
   },
+  filterRows({ gridId, rowIds, fieldIds = null }) {
+    const data = { row_ids: rowIds }
+
+    if (fieldIds !== null) {
+      data.field_ids = fieldIds
+    }
+
+    return client.post(`/database/views/grid/${gridId}/`, data)
+  },
   update({ gridId, values }) {
     return client.patch(`/database/views/grid/${gridId}/`, values)
   },
