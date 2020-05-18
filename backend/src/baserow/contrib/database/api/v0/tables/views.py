@@ -51,7 +51,7 @@ class TablesView(APIView):
 
         database = self.get_database(request.user, database_id)
         table = TableHandler().create_table(
-            request.user, database, name=data['name'])
+            request.user, database, fill_initial=True, name=data['name'])
         serializer = TableSerializer(table)
         return Response(serializer.data)
 

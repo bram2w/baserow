@@ -6,7 +6,8 @@ from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
-from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.fields.models import TextField, BooleanField
+from baserow.contrib.database.views.models import GridView
 
 
 @pytest.mark.django_db
@@ -63,6 +64,20 @@ def test_create_database_table(data_fixture):
     assert model.objects.count() == 1
     row = model.objects.get(id=row.id)
     assert row.name == 'Test'
+
+
+@pytest.mark.django_db
+def test_fill_initial_table_data(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    table_handler = TableHandler()
+    table_handler.create_table(user, database, fill_initial=True, name='Table 1')
+
+    assert Table.objects.all().count() == 1
+    assert GridView.objects.all().count() == 1
+    assert TextField.objects.all().count() == 2
+    assert BooleanField.objects.all().count() == 1
 
 
 @pytest.mark.django_db

@@ -14,3 +14,4 @@
   format.
 * Update the field's data values when the type changes.
 * Implemented reset forgotten password functionality.
+* Fill a newly created table with some initial data.
