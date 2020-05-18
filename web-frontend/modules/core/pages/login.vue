@@ -46,6 +46,11 @@
               Sign up
             </nuxt-link>
           </li>
+          <li>
+            <nuxt-link :to="{ name: 'forgot-password' }">
+              Forgot password
+            </nuxt-link>
+          </li>
         </ul>
         <button
           :class="{ 'button-loading': loading }"

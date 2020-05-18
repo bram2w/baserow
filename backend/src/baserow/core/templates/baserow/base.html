@@ -1,0 +1,63 @@
+{% load mjml %}
+
+{% mjml %}
+  <mjml>
+    <mj-head>
+      <mj-font
+              href="https://fonts.googleapis.com/css?family=Open+Sans:400,600"
+              name="Open Sans"
+      ></mj-font>
+      <mj-font
+              href="https://fonts.googleapis.com/css?family=Montserrat:700"
+              name="Montserrat"
+      ></mj-font>
+      <mj-attributes>
+        <mj-class
+                name="title"
+                font-size="22px"
+                color="#062E47"
+                font-family="Montserrat"
+                font-weight="700"
+        />
+        <mj-class
+                name="text"
+                font-size="13px"
+                color="#062E47"
+                font-family="Open Sans"
+                line-height="170%"
+        />
+        <mj-class
+                name="button"
+                font-size="15px"
+                color="#ffffff"
+                font-family="Open Sans"
+                font-weight="600"
+                align="left"
+                background-color="#198DD6"
+                border-radius="4px"
+                inner-padding="12px 30px"
+        />
+        <mj-class
+                name="button-url"
+                font-size="12px"
+                color="#828A95"
+                font-family="Open Sans"
+        />
+      </mj-attributes>
+    </mj-head>
+    <mj-body>
+      <mj-section>
+        <mj-column>
+          <mj-image
+              align="left"
+              width="140px"
+              src="{{ public_web_frontend_url }}/img/logo.svg"
+              href="{{ public_web_frontend_url }}"
+              padding-bottom="0"
+          ></mj-image>
+        </mj-column>
+      </mj-section>
+      {% block body %}{% endblock %}
+    </mj-body>
+  </mjml>
+{% endmjml %}

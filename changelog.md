@@ -13,3 +13,4 @@
 * Fixed error when changing field type and the data value wasn't in the correct
   format.
 * Update the field's data values when the type changes.
+* Implemented reset forgotten password functionality.
