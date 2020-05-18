@@ -61,6 +61,8 @@ export const actions = {
 
     const { data } = await TableService.create(database.id, values)
     commit('ADD_ITEM', { database, table: data })
+
+    return data
   },
   /**
    * Update an existing table of the provided database with the provided tables.
