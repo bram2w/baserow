@@ -95,7 +95,7 @@ export const actions = {
     commit('SET_LOADING', true)
 
     try {
-      const { data } = await GroupService.fetchAll()
+      const { data } = await GroupService(this.$client).fetchAll()
       commit('SET_LOADED', true)
       commit('SET_ITEMS', data)
     } catch {
@@ -108,14 +108,14 @@ export const actions = {
    * Creates a new group with the given values.
    */
   async create({ commit }, values) {
-    const { data } = await GroupService.create(values)
+    const { data } = await GroupService(this.$client).create(values)
     commit('ADD_ITEM', data)
   },
   /**
    * Updates the values of the group with the provided id.
    */
   async update({ commit, dispatch }, { group, values }) {
-    const { data } = await GroupService.update(group.id, values)
+    const { data } = await GroupService(this.$client).update(group.id, values)
     // Create a dict with only the values we want to update.
     const update = Object.keys(values).reduce((result, key) => {
       result[key] = data[key]
@@ -128,7 +128,7 @@ export const actions = {
    */
   async delete({ commit, dispatch }, group) {
     try {
-      await GroupService.delete(group.id)
+      await GroupService(this.$client).delete(group.id)
       await dispatch('forceDelete', group)
     } catch (error) {
       // If the group to delete wasn't found we can just delete it from the

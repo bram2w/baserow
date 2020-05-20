@@ -1,4 +1,5 @@
-import { client } from '@baserow/modules/core/services/client'
+import axios from 'axios'
+
 import { lowerCaseFirst } from '@baserow/modules/core/utils/string'
 
 export class ResponseErrorMessage {
@@ -175,7 +176,20 @@ class ErrorHandler {
   }
 }
 
-export default function ({ store }) {
+export default function ({ store }, inject) {
+  const url =
+    process.client && process.env.publicBaseUrl
+      ? process.env.publicBaseUrl
+      : process.env.baseUrl
+  const client = axios.create({
+    baseURL: url,
+    withCredentials: false,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+  })
+
   // Create a request interceptor to add the authorization token to every
   // request if the user is authenticated.
   client.interceptors.request.use((config) => {
@@ -210,4 +224,6 @@ export default function ({ store }) {
       return Promise.reject(error)
     }
   )
+
+  inject('client', client)
 }

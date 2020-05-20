@@ -80,7 +80,7 @@ export const actions = {
     commit('UNSELECT', {})
 
     try {
-      const { data } = await ViewService.fetchAll(table.id)
+      const { data } = await ViewService(this.$client).fetchAll(table.id)
       data.forEach((part, index, d) => {
         populateView(data[index], this.$registry)
       })
@@ -115,7 +115,7 @@ export const actions = {
     const postData = clone(values)
     postData.type = type
 
-    const { data } = await ViewService.create(table.id, postData)
+    const { data } = await ViewService(this.$client).create(table.id, postData)
     populateView(data, this.$registry)
     commit('ADD_ITEM', data)
   },
@@ -123,7 +123,7 @@ export const actions = {
    * Updates the values of the view with the provided id.
    */
   async update({ commit, dispatch }, { view, values }) {
-    const { data } = await ViewService.update(view.id, values)
+    const { data } = await ViewService(this.$client).update(view.id, values)
     // Create a dict with only the values we want to update.
     const update = Object.keys(values).reduce((result, key) => {
       result[key] = data[key]
@@ -137,7 +137,7 @@ export const actions = {
    */
   async delete({ commit, dispatch }, view) {
     try {
-      await ViewService.delete(view.id)
+      await ViewService(this.$client).delete(view.id)
       dispatch('forceDelete', view)
     } catch (error) {
       // If the view to delete wasn't found we can just delete it from the

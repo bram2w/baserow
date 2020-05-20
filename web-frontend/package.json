@@ -1,6 +1,6 @@
 {
   "name": "baserow",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "Baserow web frontend",
   "author": "Bram Wiepjes (Cloud 3)",
