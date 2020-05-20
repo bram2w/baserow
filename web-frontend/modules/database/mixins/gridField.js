@@ -47,5 +47,14 @@ export default {
      * toggles its value for example.
      */
     doubleClick() {},
+    /**
+     * There are keyboard shortcuts to select the next or previous field. For
+     * example when the arrow or tab keys are pressed. The GridViewField component
+     * first asks if this is allowed by calling this function. If false is returned
+     * the next field is not going to be selected.
+     */
+    canSelectNext() {
+      return true
+    },
   },
 }

@@ -26,9 +26,10 @@ export default {
      */
     select() {
       this.$el.keydownEvent = (event) => {
-        // If the tab key is pressed we don't want to do anything because the
-        // GridViewField component will select the next field.
-        if (event.keyCode === 9) {
+        // If the tab or arrow keys are pressed we don't want to do anything because
+        // the GridViewField component will select the next field.
+        const ignoredKeys = [9, 37, 38, 39, 40]
+        if (ignoredKeys.includes(event.keyCode)) {
           return
         }
 
@@ -140,6 +141,14 @@ export default {
       if (this.editing) {
         event.stopPropagation()
       }
+    },
+    /**
+     * While editing we want to disable the arrow keys to select the next of
+     * previous field. The tab key stays enabled.
+     */
+    canSelectNext(event) {
+      const arrowKeys = [37, 38, 39, 40]
+      return !this.editing || !arrowKeys.includes(event.keyCode)
     },
   },
 }
