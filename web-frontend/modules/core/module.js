@@ -19,7 +19,7 @@ export default function DatabaseModule(options) {
   this.options.mode = 'universal'
 
   // Set the default head object, but override the configured head.
-  // @TODO if a child is a list the new children must be appended instead of overriden.
+  // @TODO if a child is a list the new children must be appended instead of overridden.
   this.options.head = _.merge({}, head, this.options.head)
 
   // Store must be true in order for the store to be injected into the context.
@@ -31,6 +31,25 @@ export default function DatabaseModule(options) {
   // The core depends on these modules.
   this.requireModule('@nuxtjs/axios')
   this.requireModule('cookie-universal-nuxt')
+  this.requireModule([
+    'nuxt-env',
+    {
+      keys: [
+        {
+          key: 'PRIVATE_BACKEND_URL',
+          default: 'http://backend:8000',
+        },
+        {
+          key: 'PUBLIC_BACKEND_URL',
+          default: 'http://localhost:8000',
+        },
+        {
+          key: 'PUBLIC_WEB_FRONTEND_URL',
+          default: 'http://localhost:3000',
+        },
+      ],
+    },
+  ])
 
   // Serve the static directory
   // @TODO we might need to change some things here for production. (See:
@@ -50,7 +69,6 @@ export default function DatabaseModule(options) {
     'middleware.js',
     'plugin.js',
     'plugins/auth.js',
-    'plugins/clientHandler.js',
     'plugins/global.js',
     'plugins/vuelidate.js',
   ]
@@ -58,6 +76,12 @@ export default function DatabaseModule(options) {
     this.addPlugin({
       src: path.resolve(__dirname, plugin),
     })
+  })
+
+  // The client handler depends on environment variables so the plugin must be added
+  // after the nuxt-env module's plugin.
+  this.appendPlugin({
+    src: path.resolve(__dirname, 'plugins/clientHandler.js'),
   })
 
   this.extendRoutes((configRoutes) => {
