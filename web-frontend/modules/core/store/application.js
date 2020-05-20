@@ -75,7 +75,7 @@ export const actions = {
     commit('SET_LOADING', true)
 
     try {
-      const { data } = await ApplicationService.fetchAll()
+      const { data } = await ApplicationService(this.$client).fetchAll()
       data.forEach((part, index, d) => {
         populateApplication(data[index], this.$registry)
       })
@@ -130,7 +130,10 @@ export const actions = {
     const postData = clone(values)
     postData.type = type
 
-    const { data } = await ApplicationService.create(group.id, postData)
+    const { data } = await ApplicationService(this.$client).create(
+      group.id,
+      postData
+    )
     populateApplication(data, this.$registry)
     commit('ADD_ITEM', data)
   },
@@ -138,7 +141,10 @@ export const actions = {
    * Updates the values of an existing application.
    */
   async update({ commit, dispatch, getters }, { application, values }) {
-    const { data } = await ApplicationService.update(application.id, values)
+    const { data } = await ApplicationService(this.$client).update(
+      application.id,
+      values
+    )
     // Create a dict with only the values we want to update.
     const update = Object.keys(values).reduce((result, key) => {
       result[key] = data[key]
@@ -151,7 +157,7 @@ export const actions = {
    */
   async delete({ commit, dispatch, getters }, application) {
     try {
-      await ApplicationService.delete(application.id)
+      await ApplicationService(this.$client).delete(application.id)
       const type = this.$registry.get('application', application.type)
       type.delete(application, this)
       commit('DELETE_ITEM', application.id)

@@ -59,14 +59,17 @@ export const actions = {
       )
     }
 
-    const { data } = await TableService.create(database.id, values)
+    const { data } = await TableService(this.$client).create(
+      database.id,
+      values
+    )
     commit('ADD_ITEM', { database, table: data })
   },
   /**
    * Update an existing table of the provided database with the provided tables.
    */
   async update({ commit, dispatch }, { database, table, values }) {
-    const { data } = await TableService.update(table.id, values)
+    const { data } = await TableService(this.$client).update(table.id, values)
     // Create a dict with only the values we want to update.
     const update = Object.keys(values).reduce((result, key) => {
       result[key] = data[key]
@@ -79,7 +82,7 @@ export const actions = {
    */
   async delete({ commit, dispatch }, { database, table }) {
     try {
-      await TableService.delete(table.id)
+      await TableService(this.$client).delete(table.id)
       return dispatch('forceDelete', { database, table })
     } catch (error) {
       if (error.response && error.response.status === 404) {

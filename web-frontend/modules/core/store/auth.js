@@ -31,7 +31,7 @@ export const actions = {
    * token to the state and start the refresh timeout to stay authenticated.
    */
   async login({ commit, dispatch }, { email, password }) {
-    const { data } = await AuthService.login(email, password)
+    const { data } = await AuthService(this.$client).login(email, password)
     setToken(data.token, this.app.$cookies)
     commit('SET_USER_DATA', data)
     dispatch('startRefreshTimeout')
@@ -41,7 +41,12 @@ export const actions = {
    * token to the state and start the refresh timeout to stay authenticated.
    */
   async register({ commit, dispatch }, { email, name, password }) {
-    const { data } = await AuthService.register(email, name, password, true)
+    const { data } = await AuthService(this.$client).register(
+      email,
+      name,
+      password,
+      true
+    )
     setToken(data.token, this.app.$cookies)
     commit('SET_USER_DATA', data)
     dispatch('startRefreshTimeout')
@@ -64,7 +69,7 @@ export const actions = {
    */
   async refresh({ commit, state, dispatch }, token) {
     try {
-      const { data } = await AuthService.refresh(token)
+      const { data } = await AuthService(this.$client).refresh(token)
       setToken(data.token, this.app.$cookies)
       commit('SET_USER_DATA', data)
       dispatch('startRefreshTimeout')
