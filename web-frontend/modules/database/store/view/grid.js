@@ -239,12 +239,13 @@ export const actions = {
       lastRequestOffset = requestOffset
       lastRequestLimit = requestLimit
       lastSource = axios.CancelToken.source()
-      lastRequest = GridService.fetchRows({
-        gridId,
-        offset: requestOffset,
-        limit: requestLimit,
-        cancelToken: lastSource.token,
-      })
+      lastRequest = GridService(this.$client)
+        .fetchRows({
+          gridId,
+          offset: requestOffset,
+          limit: requestLimit,
+          cancelToken: lastSource.token,
+        })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
             populateRow(data.results[index])
@@ -376,7 +377,7 @@ export const actions = {
     commit('CLEAR_ROWS')
 
     const limit = getters.getBufferRequestSize * 2
-    const { data } = await GridService.fetchRows({
+    const { data } = await GridService(this.$client).fetchRows({
       gridId,
       offset: 0,
       limit,
@@ -410,10 +411,12 @@ export const actions = {
 
     const values = {}
     values[`field_${field.id}`] = value
-    return RowService.update(table.id, row.id, values).catch((error) => {
-      commit('SET_VALUE', { row, field, value: oldValue })
-      throw error
-    })
+    return RowService(this.$client)
+      .update(table.id, row.id, values)
+      .catch((error) => {
+        commit('SET_VALUE', { row, field, value: oldValue })
+        throw error
+      })
   },
   /**
    * Creates a new row. Based on the default values of the fields a row is created
@@ -457,7 +460,7 @@ export const actions = {
     const index = getters.getRowsLength - 1
 
     // @TODO remove the correct row is the request fails.
-    const { data } = await RowService.create(table.id, values)
+    const { data } = await RowService(this.$client).create(table.id, values)
     commit('FINALIZE_ROW', { index, id: data.id })
   },
   /**
@@ -472,7 +475,7 @@ export const actions = {
     commit('SET_ROW_LOADING', { row, value: true })
 
     try {
-      await RowService.delete(table.id, row.id)
+      await RowService(this.$client).delete(table.id, row.id)
       commit('DELETE_ROW', row.id)
 
       // We use the provided function to recalculate the scrollTop offset in order

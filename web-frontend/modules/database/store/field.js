@@ -81,7 +81,7 @@ export const actions = {
     commit('UNSELECT', {})
 
     try {
-      const { data } = await FieldService.fetchAll(table.id)
+      const { data } = await FieldService(this.$client).fetchAll(table.id)
       data.forEach((part, index, d) => {
         populateField(data[index], this.$registry)
       })
@@ -123,7 +123,7 @@ export const actions = {
     const postData = clone(values)
     postData.type = type
 
-    let { data } = await FieldService.create(table.id, postData)
+    let { data } = await FieldService(this.$client).create(table.id, postData)
     data = populateField(data, this.$registry)
     commit('ADD_ITEM', data)
 
@@ -152,7 +152,7 @@ export const actions = {
     const postData = clone(values)
     postData.type = type
 
-    let { data } = await FieldService.update(field.id, postData)
+    let { data } = await FieldService(this.$client).update(field.id, postData)
     data = populateField(data, this.$registry)
     if (field.primary) {
       commit('SET_PRIMARY', data)
@@ -165,7 +165,7 @@ export const actions = {
    */
   async delete({ commit, dispatch }, field) {
     try {
-      await FieldService.delete(field.id)
+      await FieldService(this.$client).delete(field.id)
       dispatch('forceDelete', field)
     } catch (error) {
       // If the field to delete wasn't found we can just delete it from the
