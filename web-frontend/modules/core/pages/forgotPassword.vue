@@ -90,7 +90,7 @@ export default {
       this.hideError()
 
       try {
-        const resetUrl = `${process.env.publicWebFrontendUrl}/reset-password`
+        const resetUrl = `${this.$env.PUBLIC_WEB_FRONTEND_URL}/reset-password`
         await AuthService(this.$client).sendResetPasswordEmail(
           this.account.email,
           resetUrl

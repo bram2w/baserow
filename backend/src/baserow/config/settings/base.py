@@ -67,11 +67,11 @@ WSGI_APPLICATION = 'baserow.config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'baserow',
-        'USER': 'baserow',
-        'PASSWORD': 'baserow',
-        'HOST': 'db',
-        'PORT': '5432',
+        'NAME': os.getenv('DATABASE_NAME', 'baserow'),
+        'USER': os.getenv('DATABASE_USER', 'baserow'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'baserow'),
+        'HOST': os.getenv('DATABASE_HOST', 'db'),
+        'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
 }
 
@@ -147,14 +147,14 @@ DATABASE_ROUTERS = ('baserow.contrib.database.database_routers.TablesDatabaseRou
 
 MJML_BACKEND_MODE = 'tcpserver'
 MJML_TCPSERVERS = [
-    ('mjml', 28101),
+    (os.getenv('MJML_SERVER_HOST', 'mjml'), os.getenv('MJML_SERVER_PORT', 28101)),
 ]
 
-PUBLIC_BACKEND_DOMAIN = 'localhost:8000'
-PUBLIC_BACKEND_URL = 'http://localhost:8000'
-PUBLIC_WEB_FRONTEND_DOMAIN = 'localhost:3000'
-PUBLIC_WEB_FRONTEND_URL = 'http://localhost:3000'
+PUBLIC_BACKEND_DOMAIN = os.getenv('PUBLIC_BACKEND_DOMAIN', 'localhost:8000')
+PUBLIC_BACKEND_URL = os.getenv('PUBLIC_BACKEND_URL', 'http://localhost:8000')
+PUBLIC_WEB_FRONTEND_DOMAIN = os.getenv('PUBLIC_WEB_FRONTEND_DOMAIN', 'localhost:3000')
+PUBLIC_WEB_FRONTEND_URL = os.getenv('PUBLIC_WEB_FRONTEND_URL', 'http://localhost:3000')
 
-FROM_EMAIL = 'no-reply@localhost'
+FROM_EMAIL = os.getenv('FROM_EMAIL', 'no-reply@localhost')
 
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
