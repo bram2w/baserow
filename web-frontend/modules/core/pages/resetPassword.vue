@@ -99,7 +99,10 @@ export default {
 
       try {
         const token = this.$route.params.token
-        await AuthService.resetPassword(token, this.account.password)
+        await AuthService(this.$client).resetPassword(
+          token,
+          this.account.password
+        )
         this.success = true
         this.loading = false
       } catch (error) {

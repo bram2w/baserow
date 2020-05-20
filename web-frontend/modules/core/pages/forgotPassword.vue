@@ -91,7 +91,10 @@ export default {
 
       try {
         const resetUrl = `${process.env.publicWebFrontendUrl}/reset-password`
-        await AuthService.sendResetPasswordEmail(this.account.email, resetUrl)
+        await AuthService(this.$client).sendResetPasswordEmail(
+          this.account.email,
+          resetUrl
+        )
         this.success = true
         this.loading = false
       } catch (error) {
