@@ -26,7 +26,12 @@ export default {
      * they will be set to 0.
      */
     beforeSave(value) {
-      if (value === '' || isNaN(value) || value === undefined) {
+      if (
+        value === '' ||
+        isNaN(value) ||
+        value === undefined ||
+        value === null
+      ) {
         return null
       }
       const decimalPlaces =

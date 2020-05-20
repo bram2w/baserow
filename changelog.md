@@ -15,3 +15,4 @@
 * Update the field's data values when the type changes.
 * Implemented reset forgotten password functionality.
 * Fill a newly created table with some initial data.
+* Enabled the arrow keys to navigate through the fields in the grid view.

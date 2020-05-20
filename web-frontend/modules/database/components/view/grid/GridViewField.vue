@@ -105,18 +105,37 @@ export default {
         }
         document.body.addEventListener('click', this.$el.clickOutsideEvent)
 
-        // If the tab key is pressed want to select the next field. This is however out
-        // of the scope of the component so we emit the selectNext event that the
-        // GridView can handle.
-        this.$el.tabPressedEvent = (event) => {
-          if (event.keyCode !== 9) {
+        // If the tab or arrow keys are pressed we want to select the next field. This
+        // is however out of the scope of this component so we emit the selectNext
+        // event that the GridView can handle.
+        this.$el.keyPressedNextFieldEvent = (event) => {
+          // We will first ask if we can select the next field. If that is not allowed
+          // we don't do anything.
+          if (!this.$refs.field.canSelectNext(event)) {
             return
           }
 
-          event.preventDefault()
-          this.$emit(event.shiftKey ? 'selectPrevious' : 'selectNext')
+          const { keyCode } = event
+          const arrowKeysMapping = {
+            37: 'selectPrevious',
+            38: 'selectAbove',
+            39: 'selectNext',
+            40: 'selectBelow',
+          }
+          if (Object.keys(arrowKeysMapping).includes(keyCode.toString())) {
+            event.preventDefault()
+            this.$emit(arrowKeysMapping[keyCode])
+          }
+
+          if (keyCode === 9) {
+            event.preventDefault()
+            this.$emit(event.shiftKey ? 'selectPrevious' : 'selectNext')
+          }
         }
-        document.body.addEventListener('keydown', this.$el.tabPressedEvent)
+        document.body.addEventListener(
+          'keydown',
+          this.$el.keyPressedNextFieldEvent
+        )
 
         // Emit the selected event so that the parent component can take an action like
         // making sure that the element fits in the viewport.
@@ -133,7 +152,10 @@ export default {
         this.selected = false
       })
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
-      document.body.removeEventListener('keydown', this.$el.tabPressedEvent)
+      document.body.removeEventListener(
+        'keydown',
+        this.$el.keyPressedNextFieldEvent
+      )
     },
   },
 }
