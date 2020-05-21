@@ -18,3 +18,4 @@
 * Enabled the arrow keys to navigate through the fields in the grid view.
 * Fixed memory leak bug.
 * Use environment variables for all settings.
+* Normalize the users email address when signing up and signing in.

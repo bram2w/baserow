@@ -33,6 +33,15 @@ def test_create_user(client):
     assert response_failed.status_code == 400
     assert response_failed.json()['error'] == 'ERROR_EMAIL_ALREADY_EXISTS'
 
+    response_failed = client.post(reverse('api_v0:user:index'), {
+        'name': 'Test1',
+        'email': ' teSt@teST.nl ',
+        'password': 'test12'
+    }, format='json')
+
+    assert response_failed.status_code == 400
+    assert response_failed.json()['error'] == 'ERROR_EMAIL_ALREADY_EXISTS'
+
     response_failed_2 = client.post(reverse('api_v0:user:index'), {
         'email': 'test'
     }, format='json')
@@ -42,7 +51,7 @@ def test_create_user(client):
 
 @pytest.mark.django_db
 def test_send_reset_password_email(data_fixture, client, mailoutbox):
-    data_fixture.create_user(email='test@localhost')
+    data_fixture.create_user(email='test@localhost.nl')
 
     response = client.post(
         reverse('api_v0:user:send_reset_password_email'),
@@ -56,7 +65,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
     response = client.post(
         reverse('api_v0:user:send_reset_password_email'),
         {
-            'email': 'unknown@localhost',
+            'email': 'unknown@localhost.nl',
             'base_url': 'http://test.nl'
         },
         format='json'
@@ -67,7 +76,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
     response = client.post(
         reverse('api_v0:user:send_reset_password_email'),
         {
-            'email': 'test@localhost',
+            'email': 'test@localhost.nl',
             'base_url': 'http://test.nl'
         },
         format='json'
@@ -75,8 +84,19 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
     assert response.status_code == 204
     assert len(mailoutbox) == 1
 
+    response = client.post(
+        reverse('api_v0:user:send_reset_password_email'),
+        {
+            'email': ' teST@locAlhost.nl ',
+            'base_url': 'http://test.nl'
+        },
+        format='json'
+    )
+    assert response.status_code == 204
+    assert len(mailoutbox) == 2
+
     email = mailoutbox[0]
-    assert 'test@localhost' in email.to
+    assert 'test@localhost.nl' in email.to
     assert email.body.index('http://test.nl')
 
 
