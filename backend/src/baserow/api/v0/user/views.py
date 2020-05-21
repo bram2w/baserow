@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_jwt.settings import api_settings
+from rest_framework_jwt.views import ObtainJSONWebToken as RegularObtainJSONWebToken
 
 from baserow.api.v0.decorators import map_exceptions, validate_body
 from baserow.api.v0.errors import BAD_TOKEN_SIGNATURE, EXPIRED_TOKEN_SIGNATURE
@@ -13,13 +14,23 @@ from baserow.core.user.exceptions import UserAlreadyExist, UserNotFound
 
 from .serializers import (
     RegisterSerializer, UserSerializer, SendResetPasswordEmailBodyValidationSerializer,
-    ResetPasswordBodyValidationSerializer
+    ResetPasswordBodyValidationSerializer, NormalizedEmailWebTokenSerializer
 )
 from .errors import ERROR_ALREADY_EXISTS, ERROR_USER_NOT_FOUND
 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
+
+
+class ObtainJSONWebToken(RegularObtainJSONWebToken):
+    """
+    A slightly modified version of the ObtainJSONWebToken that uses an email as
+    username and normalizes that email address using the normalize_email_address
+    utility function.
+    """
+
+    serializer_class = NormalizedEmailWebTokenSerializer
 
 
 class UserView(APIView):

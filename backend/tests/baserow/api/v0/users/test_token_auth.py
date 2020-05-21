@@ -25,7 +25,6 @@ def test_token_auth(api_client, data_fixture):
         'password': 'password'
     }, format='json')
     json = response.json()
-
     assert response.status_code == 400
     assert len(json['non_field_errors']) > 0
 
@@ -34,7 +33,6 @@ def test_token_auth(api_client, data_fixture):
         'password': 'wrong_password'
     }, format='json')
     json = response.json()
-
     assert response.status_code == 400
     assert len(json['non_field_errors']) > 0
 
@@ -43,7 +41,17 @@ def test_token_auth(api_client, data_fixture):
         'password': 'password'
     },  format='json')
     json = response.json()
+    assert response.status_code == 200
+    assert 'token' in json
+    assert 'user' in json
+    assert json['user']['username'] == 'test@test.nl'
+    assert json['user']['first_name'] == 'Test1'
 
+    response = api_client.post(reverse('api_v0:user:token_auth'), {
+        'username': ' teSt@teSt.nL ',
+        'password': 'password'
+    },  format='json')
+    json = response.json()
     assert response.status_code == 200
     assert 'token' in json
     assert 'user' in json

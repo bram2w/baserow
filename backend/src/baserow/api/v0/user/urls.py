@@ -1,16 +1,16 @@
 from django.conf.urls import url
 
-from rest_framework_jwt.views import (
-    obtain_jwt_token, refresh_jwt_token, verify_jwt_token
-)
+from rest_framework_jwt.views import refresh_jwt_token, verify_jwt_token
 
-from .views import UserView, SendResetPasswordEmailView, ResetPasswordView
+from .views import (
+    UserView, SendResetPasswordEmailView, ResetPasswordView, ObtainJSONWebToken
+)
 
 
 app_name = 'baserow.api.v0.user'
 
 urlpatterns = [
-    url(r'^token-auth/$', obtain_jwt_token, name='token_auth'),
+    url(r'^token-auth/$', ObtainJSONWebToken.as_view(), name='token_auth'),
     url(r'^token-refresh/$', refresh_jwt_token, name='token_refresh'),
     url(r'^token-verify/$', verify_jwt_token, name='token_verify'),
     url(

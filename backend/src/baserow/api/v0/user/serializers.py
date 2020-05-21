@@ -1,5 +1,9 @@
 from rest_framework import serializers
+from rest_framework_jwt.serializers import JSONWebTokenSerializer
+
 from django.contrib.auth import get_user_model
+
+from baserow.core.user.utils import normalize_email_address
 
 User = get_user_model()
 
@@ -30,3 +34,15 @@ class SendResetPasswordEmailBodyValidationSerializer(serializers.Serializer):
 class ResetPasswordBodyValidationSerializer(serializers.Serializer):
     token = serializers.CharField()
     password = serializers.CharField()
+
+
+class NormalizedEmailField(serializers.EmailField):
+    def to_internal_value(self, data):
+        data = super().to_internal_value(data)
+        return normalize_email_address(data)
+
+
+class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields[self.username_field] = NormalizedEmailField()

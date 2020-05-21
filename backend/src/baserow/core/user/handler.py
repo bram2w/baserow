@@ -9,6 +9,7 @@ from baserow.core.registries import plugin_registry
 
 from .exceptions import UserAlreadyExist, UserNotFound
 from .emails import ResetPasswordEmail
+from .utils import normalize_email_address
 
 
 User = get_user_model()
@@ -36,6 +37,7 @@ class UserHandler:
             query = query.filter(id=user_id)
 
         if email:
+            email = normalize_email_address(email)
             query = query.filter(username=email)
 
         try:
@@ -56,6 +58,7 @@ class UserHandler:
         """
 
         try:
+            email = normalize_email_address(email)
             user = User(first_name=name, email=email, username=email)
             user.set_password(password)
             user.save()
