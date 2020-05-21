@@ -3,6 +3,8 @@ import json
 
 from unittest.mock import MagicMock
 
+from rest_framework.status import HTTP_404_NOT_FOUND
+
 from rest_framework import status, serializers
 from rest_framework.request import Request
 from rest_framework.parsers import JSONParser
@@ -69,7 +71,7 @@ def test_map_exceptions():
     assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
 
     @map_exceptions({
-        TemporaryException: ('ERROR_TEMPORARY_2', 404, 'Another message')
+        TemporaryException: ('ERROR_TEMPORARY_2', HTTP_404_NOT_FOUND, 'Another message')
     })
     def test_2():
         raise TemporaryException

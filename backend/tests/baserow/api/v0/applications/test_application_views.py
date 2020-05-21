@@ -1,5 +1,7 @@
 import pytest
 
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+
 from django.shortcuts import reverse
 
 from baserow.contrib.database.models import Database
@@ -23,7 +25,7 @@ def test_list_applications(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     assert len(response_json) == 3
@@ -42,7 +44,7 @@ def test_list_applications(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     assert len(response_json) == 4
@@ -56,7 +58,7 @@ def test_list_applications(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.get(
@@ -64,7 +66,7 @@ def test_list_applications(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
@@ -83,7 +85,7 @@ def test_create_application(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert response_json['detail']['type'][0]['code'] == 'invalid_choice'
 
@@ -93,7 +95,7 @@ def test_create_application(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     response = api_client.post(
         reverse('api_v0:applications:list', kwargs={'group_id': group_2.id}),
@@ -101,7 +103,7 @@ def test_create_application(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.post(
@@ -114,7 +116,7 @@ def test_create_application(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['type'] == 'database'
 
     database = Database.objects.filter()[0]
@@ -139,7 +141,7 @@ def test_get_application(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:applications:item',
@@ -149,7 +151,7 @@ def test_get_application(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:applications:item',
                   kwargs={'application_id': application.id})
@@ -159,7 +161,7 @@ def test_get_application(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['id'] == application.id
     assert response_json['group']['id'] == group.id
 
@@ -182,7 +184,7 @@ def test_update_application(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:applications:item',
@@ -193,7 +195,7 @@ def test_update_application(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:applications:item', kwargs={'application_id': application.id})
     response = api_client.patch(
@@ -203,7 +205,7 @@ def test_update_application(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
 
     url = reverse('api_v0:applications:item', kwargs={'application_id': application.id})
@@ -214,7 +216,7 @@ def test_update_application(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['id'] == application.id
     assert response_json['name'] == 'Test 1'
 
@@ -235,13 +237,13 @@ def test_delete_application(api_client, data_fixture):
                   kwargs={'application_id': application_2.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:applications:item',
                   kwargs={'application_id': 99999})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:applications:item', kwargs={'application_id': application.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')

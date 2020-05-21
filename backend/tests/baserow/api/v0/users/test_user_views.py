@@ -1,6 +1,8 @@
 import pytest
 from freezegun import freeze_time
 
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
 
@@ -18,7 +20,7 @@ def test_create_user(client):
         'password': 'test12'
     }, format='json')
 
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     user = User.objects.get(email='test@test.nl')
     assert user.first_name == 'Test1'
     assert user.email == 'test@test.nl'
@@ -59,7 +61,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
         format='json'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
 
     response = client.post(
@@ -112,7 +114,7 @@ def test_password_reset(data_fixture, client):
         format='json'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
 
     response = client.post(
@@ -124,7 +126,7 @@ def test_password_reset(data_fixture, client):
         format='json'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'BAD_TOKEN_SIGNATURE'
 
     with freeze_time('2020-01-01 12:00'):
@@ -140,7 +142,7 @@ def test_password_reset(data_fixture, client):
             format='json'
         )
         response_json = response.json()
-        assert response.status_code == 400
+        assert response.status_code == HTTP_400_BAD_REQUEST
         assert response_json['error'] == 'EXPIRED_TOKEN_SIGNATURE'
 
     with freeze_time('2020-01-01 12:00'):
@@ -156,7 +158,7 @@ def test_password_reset(data_fixture, client):
             format='json'
         )
         response_json = response.json()
-        assert response.status_code == 400
+        assert response.status_code == HTTP_400_BAD_REQUEST
         assert response_json['error'] == 'ERROR_USER_NOT_FOUND'
 
     with freeze_time('2020-01-01 12:00'):

@@ -2,6 +2,8 @@ from decimal import Decimal
 
 import pytest
 
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+
 from django.shortcuts import reverse
 
 
@@ -25,7 +27,7 @@ def test_create_row(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     response = api_client.post(
         reverse('api_v0:database:rows:list', kwargs={'table_id': table_2.id}),
@@ -33,7 +35,7 @@ def test_create_row(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.post(
@@ -48,7 +50,7 @@ def test_create_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert len(response_json['detail']) == 2
     assert response_json['detail'][f'field_{number_field.id}'][0]['code'] == 'min_value'
@@ -61,7 +63,7 @@ def test_create_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json_row_1 = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json_row_1[f'field_{text_field.id}'] == 'white'
     assert not response_json_row_1[f'field_{number_field.id}']
     assert response_json_row_1[f'field_{boolean_field.id}'] == False
@@ -78,7 +80,7 @@ def test_create_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json_row_2 = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json_row_2[f'field_{text_field.id}'] == 'white'
     assert not response_json_row_2[f'field_{number_field.id}']
     assert response_json_row_2[f'field_{boolean_field.id}'] == False
@@ -96,7 +98,7 @@ def test_create_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json_row_3 = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json_row_3[f'field_{text_field.id}'] == 'Green'
     assert response_json_row_3[f'field_{number_field.id}'] == 120
     assert response_json_row_3[f'field_{boolean_field.id}']
@@ -154,7 +156,7 @@ def test_update_row(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
     url = reverse('api_v0:database:rows:item', kwargs={
@@ -167,7 +169,7 @@ def test_update_row(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:rows:item', kwargs={
@@ -180,7 +182,7 @@ def test_update_row(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()['error'] == 'ERROR_ROW_DOES_NOT_EXIST'
 
     url = reverse('api_v0:database:rows:item', kwargs={
@@ -198,7 +200,7 @@ def test_update_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert len(response_json['detail']) == 2
     assert response_json['detail'][f'field_{number_field.id}'][0]['code'] == 'min_value'
@@ -219,7 +221,7 @@ def test_update_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json_row_1 = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json_row_1['id'] == row_1.id
     assert response_json_row_1[f'field_{text_field.id}'] == 'Green'
     assert response_json_row_1[f'field_{number_field.id}'] == 120
@@ -237,7 +239,7 @@ def test_update_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json_row_1 = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json_row_1[f'field_{text_field.id}'] == 'Orange'
     # Because the model is generated only for the field we want to change the other
     # fields are not included in the serializer.
@@ -264,7 +266,7 @@ def test_update_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json_row_2 = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json_row_2['id'] == row_2.id
     assert response_json_row_2[f'field_{text_field.id}'] == 'Blue'
     assert response_json_row_2[f'field_{number_field.id}'] == 50
@@ -290,7 +292,7 @@ def test_update_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json_row_2 = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json_row_2['id'] == row_2.id
     assert response_json_row_2[f'field_{text_field.id}'] == None
     assert response_json_row_2[f'field_{number_field.id}'] == None
@@ -320,7 +322,7 @@ def test_update_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json[f'field_{decimal_field.id}'] == '10.22'
 
     row_3.refresh_from_db()
@@ -346,7 +348,7 @@ def test_delete_row(api_client, data_fixture):
         'row_id': 9999
     })
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
     url = reverse('api_v0:database:rows:item', kwargs={
@@ -354,7 +356,7 @@ def test_delete_row(api_client, data_fixture):
         'row_id': 9999
     })
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()['error'] == 'ERROR_ROW_DOES_NOT_EXIST'
 
     url = reverse('api_v0:database:rows:item', kwargs={
@@ -362,7 +364,7 @@ def test_delete_row(api_client, data_fixture):
         'row_id': row_1.id
     })
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:rows:item', kwargs={
