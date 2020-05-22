@@ -212,6 +212,7 @@ export default function ({ store, app }, inject) {
       // Add the error message in the response to the error object.
       if (
         error.response &&
+        typeof error.response.data === 'object' &&
         'error' in error.response.data &&
         'detail' in error.response.data
       ) {
