@@ -1,5 +1,7 @@
 import pytest
 
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+
 from django.shortcuts import reverse
 
 from baserow.contrib.database.table.models import Table
@@ -17,7 +19,7 @@ def test_list_tables(api_client, data_fixture):
     url = reverse('api_v0:database:tables:list', kwargs={'database_id': database.id})
     response = api_client.get(url, HTTP_AUTHORIZATION=f'JWT {token}')
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert len(response_json) == 2
     assert response_json[0]['id'] == table_2.id
     assert response_json[1]['id'] == table_1.id
@@ -25,14 +27,14 @@ def test_list_tables(api_client, data_fixture):
     url = reverse('api_v0:database:tables:list', kwargs={'database_id': database_2.id})
     response = api_client.get(url, HTTP_AUTHORIZATION=f'JWT {token}')
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:tables:list', kwargs={'database_id': 9999})
     response = api_client.get(url, **{
         'HTTP_AUTHORIZATION': f'JWT {token}'
     })
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
@@ -48,7 +50,7 @@ def test_create_table(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     json_response = response.json()
 
     Table.objects.all().count() == 1
@@ -65,7 +67,7 @@ def test_create_table(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:tables:list', kwargs={'database_id': database.id})
@@ -75,7 +77,7 @@ def test_create_table(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
 
     url = reverse('api_v0:database:tables:list', kwargs={'database_id': 9999})
@@ -85,7 +87,7 @@ def test_create_table(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
@@ -96,7 +98,7 @@ def test_get_table(api_client, data_fixture):
 
     url = reverse('api_v0:database:tables:item', kwargs={'table_id': table_1.id})
     response = api_client.get(url, HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     json_response = response.json()
     assert json_response['id'] == table_1.id
     assert json_response['name'] == table_1.name
@@ -105,12 +107,12 @@ def test_get_table(api_client, data_fixture):
     url = reverse('api_v0:database:tables:item', kwargs={'table_id': table_2.id})
     response = api_client.get(url, HTTP_AUTHORIZATION=f'JWT {token}')
     json_response = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert json_response['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:tables:item', kwargs={'table_id': 9999})
     response = api_client.get(url, HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
@@ -126,7 +128,7 @@ def test_update_table(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     table_1.refresh_from_db()
@@ -142,7 +144,7 @@ def test_update_table(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:tables:item', kwargs={'table_id': table_1.id})
@@ -153,7 +155,7 @@ def test_update_table(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
 
     url = reverse('api_v0:database:tables:item', kwargs={'table_id': 999})
@@ -163,7 +165,7 @@ def test_update_table(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
@@ -181,12 +183,12 @@ def test_delete_table(api_client, data_fixture):
     url = reverse('api_v0:database:tables:item', kwargs={'table_id': table_2.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:tables:item', kwargs={'table_id': 9999})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
@@ -204,7 +206,7 @@ def test_get_database_application_with_tables(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert len(response_json['tables']) == 2
     assert response_json['tables'][0]['id'] == table_1.id
     assert response_json['tables'][1]['id'] == table_2.id

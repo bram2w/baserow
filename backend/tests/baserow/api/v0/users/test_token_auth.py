@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import patch
 from datetime import datetime
 
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+
 from django.shortcuts import reverse
 from django.contrib.auth import get_user_model
 
@@ -25,7 +27,7 @@ def test_token_auth(api_client, data_fixture):
         'password': 'password'
     }, format='json')
     json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert len(json['non_field_errors']) > 0
 
     response = api_client.post(reverse('api_v0:user:token_auth'), {
@@ -33,7 +35,7 @@ def test_token_auth(api_client, data_fixture):
         'password': 'wrong_password'
     }, format='json')
     json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert len(json['non_field_errors']) > 0
 
     response = api_client.post(reverse('api_v0:user:token_auth'), {
@@ -41,7 +43,7 @@ def test_token_auth(api_client, data_fixture):
         'password': 'password'
     },  format='json')
     json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert 'token' in json
     assert 'user' in json
     assert json['user']['username'] == 'test@test.nl'
@@ -52,7 +54,7 @@ def test_token_auth(api_client, data_fixture):
         'password': 'password'
     },  format='json')
     json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert 'token' in json
     assert 'user' in json
     assert json['user']['username'] == 'test@test.nl'
@@ -66,11 +68,11 @@ def test_token_refresh(api_client, data_fixture):
 
     response = api_client.post(reverse('api_v0:user:token_refresh'),
                                {'token': 'WRONG_TOKEN'}, format='json')
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
 
     response = api_client.post(reverse('api_v0:user:token_refresh'),
                                {'token': token}, format='json')
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert 'token' in response.json()
 
     with patch('rest_framework_jwt.utils.datetime') as mock_datetime:
@@ -80,4 +82,4 @@ def test_token_refresh(api_client, data_fixture):
 
         response = api_client.post(reverse('api_v0:user:token_refresh'),
                                    json={'token': token})
-        assert response.status_code == 400
+        assert response.status_code == HTTP_400_BAD_REQUEST

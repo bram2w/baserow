@@ -1,5 +1,7 @@
 import pytest
 
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+
 from django.shortcuts import reverse
 
 from baserow.contrib.database.views.models import GridView
@@ -21,7 +23,7 @@ def test_list_views(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     assert len(response_json) == 3
@@ -40,7 +42,7 @@ def test_list_views(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.get(
@@ -48,7 +50,7 @@ def test_list_views(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
@@ -67,7 +69,7 @@ def test_create_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert response_json['detail']['type'][0]['code'] == 'invalid_choice'
 
@@ -77,7 +79,7 @@ def test_create_view(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     response = api_client.post(
         reverse('api_v0:database:views:list', kwargs={'table_id': table_2.id}),
@@ -85,7 +87,7 @@ def test_create_view(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.post(
@@ -98,7 +100,7 @@ def test_create_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['type'] == 'grid'
 
     grid = GridView.objects.filter()[0]
@@ -122,7 +124,7 @@ def test_get_view(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:views:item', kwargs={'view_id': 99999})
@@ -131,7 +133,7 @@ def test_get_view(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:database:views:item', kwargs={'view_id': view.id})
     response = api_client.get(
@@ -140,7 +142,7 @@ def test_get_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['id'] == view.id
     assert response_json['type'] == 'grid'
     assert response_json['table']['id'] == table.id
@@ -163,7 +165,7 @@ def test_update_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:views:item', kwargs={'view_id': 999999})
@@ -173,7 +175,7 @@ def test_update_view(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:database:views:item', kwargs={'view_id': view.id})
     response = api_client.patch(
@@ -182,7 +184,7 @@ def test_update_view(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
 
     url = reverse('api_v0:database:views:item', kwargs={'view_id': view.id})
     response = api_client.patch(
@@ -192,7 +194,7 @@ def test_update_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['id'] == view.id
     assert response_json['name'] == 'Test 1'
 
@@ -212,12 +214,12 @@ def test_delete_view(api_client, data_fixture):
     url = reverse('api_v0:database:views:item', kwargs={'view_id': view_2.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:views:item', kwargs={'view_id': 99999})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:database:views:item', kwargs={'view_id': view.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')

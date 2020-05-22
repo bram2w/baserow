@@ -20,3 +20,4 @@
 * Fixed memory leak bug.
 * Use environment variables for all settings.
 * Normalize the users email address when signing up and signing in.
+* Use Django REST framework status code constants instead of integers.

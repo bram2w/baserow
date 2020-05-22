@@ -1,9 +1,5 @@
 import pytest
 
-from django.db import models
-
-from baserow.contrib.database.views.models import View
-
 
 @pytest.mark.django_db
 def test_grid_view_get_field_options(data_fixture):

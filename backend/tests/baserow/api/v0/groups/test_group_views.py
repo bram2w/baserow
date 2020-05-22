@@ -1,5 +1,7 @@
 import pytest
 
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+
 from django.shortcuts import reverse
 
 from baserow.core.models import Group, GroupUser
@@ -15,7 +17,7 @@ def test_list_groups(api_client, data_fixture):
     response = api_client.get(reverse('api_v0:groups:list'), **{
         'HTTP_AUTHORIZATION': f'JWT {token}'
     })
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json[0]['id'] == user_group_1.group.id
     assert response_json[0]['order'] == 1
@@ -30,7 +32,7 @@ def test_create_group(api_client, data_fixture):
     response = api_client.post(reverse('api_v0:groups:list'), {
         'name': 'Test 1'
     }, format='json', HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     json_response = response.json()
     group_user = GroupUser.objects.filter(user=user.id).first()
     assert group_user.order == 1
@@ -42,7 +44,7 @@ def test_create_group(api_client, data_fixture):
     response = api_client.post(reverse('api_v0:groups:list'), {
         'not_a_name': 'Test 1'
     }, format='json', HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
@@ -58,7 +60,7 @@ def test_update_group(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:groups:item', kwargs={'group_id': group_2.id})
     response = api_client.patch(
@@ -67,7 +69,7 @@ def test_update_group(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:groups:item', kwargs={'group_id': group.id})
@@ -77,7 +79,7 @@ def test_update_group(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     json_response = response.json()
 
     group.refresh_from_db()
@@ -98,14 +100,14 @@ def test_delete_group(api_client, data_fixture):
         url,
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:groups:item', kwargs={'group_id': group_2.id})
     response = api_client.delete(
         url,
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:groups:item', kwargs={'group_id': group.id})

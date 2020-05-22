@@ -1,5 +1,7 @@
 import pytest
 
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+
 from django.shortcuts import reverse
 
 
@@ -40,7 +42,7 @@ def test_list_rows(api_client, data_fixture):
         url,
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()['error'] == 'ERROR_GRID_DOES_NOT_EXIST'
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid_2.id})
@@ -48,7 +50,7 @@ def test_list_rows(api_client, data_fixture):
         url,
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
@@ -57,7 +59,7 @@ def test_list_rows(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['count'] == 4
     assert not response_json['previous']
     assert not response_json['next']
@@ -77,7 +79,7 @@ def test_list_rows(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['count'] == 4
     assert not response_json['previous']
     assert response_json['next']
@@ -92,7 +94,7 @@ def test_list_rows(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['count'] == 4
     assert response_json['previous']
     assert not response_json['next']
@@ -106,7 +108,7 @@ def test_list_rows(api_client, data_fixture):
         {'size': 2, 'page': 999},
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_INVALID_PAGE'
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
@@ -116,7 +118,7 @@ def test_list_rows(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['count'] == 4
     assert response_json['results'][0]['id'] == row_1.id
     assert response_json['results'][1]['id'] == row_2.id
@@ -129,7 +131,7 @@ def test_list_rows(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['count'] == 4
     assert response_json['results'][0]['id'] == row_3.id
 
@@ -144,7 +146,7 @@ def test_list_rows(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['count'] == 0
     assert not response_json['previous']
     assert not response_json['next']
@@ -172,7 +174,7 @@ def test_list_rows_include_field_options(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert 'field_options' not in response_json
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
@@ -182,7 +184,7 @@ def test_list_rows_include_field_options(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert len(response_json['field_options']) == 2
     assert response_json['field_options'][str(text_field.id)]['width'] == 200
     assert response_json['field_options'][str(number_field.id)]['width'] == 200
@@ -208,7 +210,7 @@ def test_list_filtered_rows(api_client, data_fixture):
         {'field_ids': [1], 'row_ids': [1]},
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()['error'] == 'ERROR_GRID_DOES_NOT_EXIST'
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid_2.id})
@@ -217,7 +219,7 @@ def test_list_filtered_rows(api_client, data_fixture):
         {'field_ids': [1], 'row_ids': [1]},
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
@@ -226,7 +228,7 @@ def test_list_filtered_rows(api_client, data_fixture):
         {},
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
@@ -238,7 +240,7 @@ def test_list_filtered_rows(api_client, data_fixture):
         },
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     response_json = response.json()
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert len(response_json['detail']['field_ids']) == 2
@@ -272,7 +274,7 @@ def test_list_filtered_rows(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
 
     assert len(response_json) == 2
     assert response_json[0]['id'] == row_1.id
@@ -290,7 +292,7 @@ def test_list_filtered_rows(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
 
     assert len(response_json) == 1
     assert response_json[0]['id'] == row_3.id
@@ -306,7 +308,7 @@ def test_list_filtered_rows(api_client, data_fixture):
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
 
     assert len(response_json) == 1
     assert response_json[0]['id'] == row_3.id
@@ -339,7 +341,7 @@ def test_patch_grid_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert len(response_json['field_options']) == 2
     assert response_json['field_options'][str(text_field.id)]['width'] == 300
     assert response_json['field_options'][str(number_field.id)]['width'] == 200
@@ -361,7 +363,7 @@ def test_patch_grid_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert len(response_json['field_options']) == 2
     assert response_json['field_options'][str(text_field.id)]['width'] == 100
     assert response_json['field_options'][str(number_field.id)]['width'] == 500
@@ -379,7 +381,7 @@ def test_patch_grid_view(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
     response = api_client.patch(
@@ -391,7 +393,7 @@ def test_patch_grid_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert response_json['detail']['field_options'][0]['code'] == 'invalid_key'
 
@@ -405,7 +407,7 @@ def test_patch_grid_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_UNRELATED_FIELD'
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid.id})
@@ -416,7 +418,7 @@ def test_patch_grid_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert response_json['detail']['field_options'][0]['code'] == 'invalid_value'
 
@@ -425,7 +427,7 @@ def test_patch_grid_view(api_client, data_fixture):
         url,
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()['error'] == 'ERROR_GRID_DOES_NOT_EXIST'
 
     url = reverse('api_v0:database:views:grid:list', kwargs={'view_id': grid_2.id})
@@ -433,5 +435,5 @@ def test_patch_grid_view(api_client, data_fixture):
         url,
         **{'HTTP_AUTHORIZATION': f'JWT {token}'}
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
