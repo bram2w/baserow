@@ -7,7 +7,8 @@ from rest_framework import serializers
 
 from .registries import FieldType
 from .models import (
-    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, NumberField, BooleanField
+    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, NumberField,
+    BooleanField
 )
 
 
@@ -27,6 +28,21 @@ class TextFieldType(FieldType):
 
     def random_value(self, instance, fake):
         return fake.name()
+
+
+class LongTextFieldType(FieldType):
+    type = 'long_text'
+    model_class = LongTextField
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.CharField(required=False, allow_null=True, allow_blank=True,
+                                     **kwargs)
+
+    def get_model_field(self, instance, **kwargs):
+        return models.TextField(blank=True, null=True, **kwargs)
+
+    def random_value(self, instance, fake):
+        return fake.text()
 
 
 class NumberFieldType(FieldType):
