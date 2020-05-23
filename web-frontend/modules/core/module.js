@@ -66,11 +66,11 @@ export default function DatabaseModule(options) {
   this.addLayout(path.resolve(__dirname, 'layouts/login.vue'), 'login')
 
   const plugins = [
-    'middleware.js',
-    'plugin.js',
     'plugins/auth.js',
     'plugins/global.js',
     'plugins/vuelidate.js',
+    'middleware.js',
+    'plugin.js',
   ]
   plugins.forEach((plugin) => {
     this.addPlugin({

@@ -7,10 +7,10 @@
   >
     <div v-show="!editing" class="grid-field-long-text">{{ value }}</div>
     <textarea
-      v-prevent-parent-scroll
       v-if="editing"
       ref="input"
       v-model="copy"
+      v-prevent-parent-scroll
       type="text"
       class="grid-field-long-text-textarea"
     />
