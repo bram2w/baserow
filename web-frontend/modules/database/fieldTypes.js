@@ -4,10 +4,12 @@ import FieldNumberSubForm from '@baserow/modules/database/components/field/Field
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
+import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
+import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 
@@ -126,7 +128,7 @@ export class TextFieldType extends FieldType {
   }
 
   getName() {
-    return 'Text'
+    return 'Single line text'
   }
 
   getFormComponent() {
@@ -143,6 +145,28 @@ export class TextFieldType extends FieldType {
 
   getEmptyValue(field) {
     return field.text_default
+  }
+}
+
+export class LongTextFieldType extends FieldType {
+  static getType() {
+    return 'long_text'
+  }
+
+  getIconClass() {
+    return 'align-left'
+  }
+
+  getName() {
+    return 'Long text'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldLongText
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldLongText
   }
 }
 

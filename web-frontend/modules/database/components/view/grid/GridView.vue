@@ -221,7 +221,10 @@
                 ></GridViewField>
               </div>
             </div>
-            <div class="grid-view-row">
+            <div
+              class="grid-view-row"
+              :style="{ width: widths.rightFieldsOnly + 'px' }"
+            >
               <div
                 class="grid-view-column"
                 :style="{ width: widths.rightFieldsOnly + 'px' }"

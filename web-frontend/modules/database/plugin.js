@@ -2,6 +2,7 @@ import { DatabaseApplicationType } from '@baserow/modules/database/applicationTy
 import { GridViewType } from '@baserow/modules/database/viewTypes'
 import {
   TextFieldType,
+  LongTextFieldType,
   NumberFieldType,
   BooleanFieldType,
 } from '@baserow/modules/database/fieldTypes'
@@ -20,6 +21,7 @@ export default ({ store, app }) => {
   app.$registry.register('application', new DatabaseApplicationType())
   app.$registry.register('view', new GridViewType())
   app.$registry.register('field', new TextFieldType())
+  app.$registry.register('field', new LongTextFieldType())
   app.$registry.register('field', new NumberFieldType())
   app.$registry.register('field', new BooleanFieldType())
 }

@@ -1,6 +1,10 @@
 import pytest
+
+from faker import Faker
+
 from decimal import Decimal
 
+from baserow.contrib.database.fields.models import LongTextField
 from baserow.contrib.database.fields.handler import FieldHandler
 
 
@@ -136,3 +140,28 @@ def test_alter_boolean_field_column_type(data_fixture):
 
     for index, value in enumerate(mapping.values()):
         assert getattr(rows[index], f'field_{field.id}') == value
+
+
+@pytest.mark.django_db
+def test_long_text_field_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table, order=1, name='name')
+
+    handler = FieldHandler()
+    handler.create_field(user=user, table=table, type_name='long_text',
+                         name='description')
+    field = handler.update_field(user=user, field=field, new_type_name='long_text')
+
+    assert len(LongTextField.objects.all()) == 2
+
+    fake = Faker()
+    text = fake.text()
+    model = table.get_model(attribute_names=True)
+    row = model.objects.create(description=text, name='Test')
+
+    assert row.description == text
+    assert row.name == 'Test'
+
+    handler.delete_field(user=user, field=field)
+    assert len(LongTextField.objects.all()) == 1

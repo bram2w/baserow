@@ -77,6 +77,10 @@ class TextField(Field):
     text_default = models.CharField(max_length=255, null=True, blank=True)
 
 
+class LongTextField(Field):
+    pass
+
+
 class NumberField(Field):
     number_type = models.CharField(max_length=32, choices=NUMBER_TYPE_CHOICES,
                                    default=NUMBER_TYPE_INTEGER)

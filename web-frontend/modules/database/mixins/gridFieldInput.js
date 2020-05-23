@@ -42,7 +42,11 @@ export default {
 
         // If the enter key is pressed.
         if (event.keyCode === 13) {
-          if (this.editing && this.isValid()) {
+          if (
+            this.editing &&
+            this.isValid() &&
+            this.canSaveByPressingEnter(event)
+          ) {
             // While editing we want to save the changes.
             this.save()
           } else if (!this.editing) {
@@ -73,7 +77,9 @@ export default {
      * we want to initiate the editing mode.
      */
     doubleClick() {
-      this.edit()
+      if (!this.editing) {
+        this.edit()
+      }
     },
     /**
      * Method that can be called to initiate the edit state.
@@ -149,6 +155,13 @@ export default {
     canSelectNext(event) {
       const arrowKeys = [37, 38, 39, 40]
       return !this.editing || !arrowKeys.includes(event.keyCode)
+    },
+    /**
+     * If true the value can be saved by pressing the enter key. This could for
+     * example be disabled for a long text field that can have multiple lines.
+     */
+    canSaveByPressingEnter(event) {
+      return true
     },
   },
 }
