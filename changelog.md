@@ -22,3 +22,4 @@
 * Normalize the users email address when signing up and signing in.
 * Use Django REST framework status code constants instead of integers.
 * Added long text field.
+* Fixed not refreshing token bug and improved authentication a little bit.

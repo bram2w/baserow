@@ -95,10 +95,12 @@ export const actions = {
     clearTimeout(this.refreshTimeout)
     commit('SET_REFRESHING', true)
 
+    // The token expires within an hour. We have to calculate how many seconds are
+    // left and 30 seconds before it expires we will refresh the token.
     this.refreshTimeout = setTimeout(() => {
       dispatch('refresh', getters.token)
       commit('SET_REFRESHING', false)
-    }, (getters.tokenExpireSeconds - 10) * 1000)
+    }, (getters.tokenExpireSeconds - 30) * 1000)
   },
 }
 
@@ -107,7 +109,7 @@ export const getters = {
     return !!state.user
   },
   isRefreshing(state) {
-    return state.refresh
+    return state.refreshing
   },
   token(state) {
     return state.token
