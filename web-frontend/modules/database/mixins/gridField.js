@@ -56,5 +56,31 @@ export default {
     canSelectNext() {
       return true
     },
+    /**
+     * If the user presses ctrl/cmd + c while a field is selected, the value is
+     * going to be copied to the clipboard. In some cases, for example when the user
+     * is editing the value, we do not want to copy the value. If false is returned
+     * the value won't be copied.
+     */
+    canCopy() {
+      return true
+    },
+    /**
+     * If the user presses ctrl/cmd + v while a field is selected, the value is
+     * overwritten with the data of the clipboard. In some cases, for example when the
+     * user is editing the value, we do not want to change the value. If false is
+     * returned the value won't be changed.
+     */
+    canPaste() {
+      return true
+    },
+    /**
+     * If the user presses delete or backspace while a field is selected, the value is
+     * deleted. In some cases, for example when the user is editing the value, we do
+     * not want to delete the value. If false is returned the value won't be changed.
+     */
+    canEmpty() {
+      return true
+    },
   },
 }

@@ -163,5 +163,14 @@ export default {
     canSaveByPressingEnter(event) {
       return true
     },
+    canCopy() {
+      return !this.editing
+    },
+    canPaste() {
+      return !this.editing
+    },
+    canEmpty() {
+      return !this.editing
+    },
   },
 }
