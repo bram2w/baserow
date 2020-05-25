@@ -116,6 +116,24 @@ export class FieldType extends Registerable {
   toHumanReadableString(field, value) {
     return value
   }
+
+  /**
+   * This hook is called before the field's value is copied to the clipboard.
+   * Optionally formatting can be done here. By default the value is always
+   * converted to a string.
+   */
+  prepareValueForCopy(field, value) {
+    return value.toString()
+  }
+
+  /**
+   * This hook is called before the field's value is overwritten by the clipboard
+   * data. That data might needs to be prepared so that the field accepts it.
+   * By default the text value if the clipboard data is used.
+   */
+  prepareValueForPaste(field, clipboardData) {
+    return clipboardData.getData('text')
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -194,6 +212,36 @@ export class NumberFieldType extends FieldType {
   getRowEditFieldComponent() {
     return RowEditFieldNumber
   }
+
+  /**
+   * First checks if the value is numeric, if that is the case, the number is going
+   * to be formatted.
+   */
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text')
+    if (isNaN(parseFloat(value)) || !isFinite(value)) {
+      return null
+    }
+    return this.constructor.formatNumber(field, value)
+  }
+
+  /**
+   * Formats the value based on the field's settings. The number will be rounded
+   * if to much decimal places are provided and if negative numbers aren't allowed
+   * they will be set to 0.
+   */
+  static formatNumber(field, value) {
+    if (value === '' || isNaN(value) || value === undefined || value === null) {
+      return null
+    }
+    const decimalPlaces =
+      field.number_type === 'DECIMAL' ? field.number_decimal_places : 0
+    let number = parseFloat(value)
+    if (!field.number_negative && number < 0) {
+      number = 0
+    }
+    return number.toFixed(decimalPlaces)
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -219,5 +267,15 @@ export class BooleanFieldType extends FieldType {
 
   getEmptyValue(field) {
     return false
+  }
+
+  /**
+   * Check if the clipboard data text contains a string that might indicate if the
+   * value is true.
+   */
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text').toLowerCase()
+    const allowed = ['1', 'y', 't', 'y', 'yes', 'true', 'on']
+    return allowed.includes(value)
   }
 }

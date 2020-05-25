@@ -1,3 +1,5 @@
+import { NumberFieldType } from '@baserow/modules/database/fieldTypes'
+
 /**
  * This mixin contains some method overrides for validating and formatting the
  * number field. This mixin is used in both the GridViewFieldNumber and
@@ -21,28 +23,11 @@ export default {
       return this.getError() === null
     },
     /**
-     * Formats the value based on the field's settings. The number will be rounded
-     * if to much decimal places are provided and if negative numbers aren't allowed
-     * they will be set to 0.
+     * Before the numeric value is saved we might need to do some formatting such that
+     * the value is conform the fields requirements.
      */
     beforeSave(value) {
-      if (
-        value === '' ||
-        isNaN(value) ||
-        value === undefined ||
-        value === null
-      ) {
-        return null
-      }
-      const decimalPlaces =
-        this.field.number_type === 'DECIMAL'
-          ? this.field.number_decimal_places
-          : 0
-      let number = parseFloat(value)
-      if (!this.field.number_negative && number < 0) {
-        number = 0
-      }
-      return number.toFixed(decimalPlaces)
+      return NumberFieldType.formatNumber(this.field, value)
     },
   },
 }

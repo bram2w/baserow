@@ -13,6 +13,7 @@
 
 <script>
 import { isElement } from '@baserow/modules/core/utils/dom'
+import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
 export default {
   name: 'GridViewField',
@@ -105,37 +106,75 @@ export default {
         }
         document.body.addEventListener('click', this.$el.clickOutsideEvent)
 
-        // If the tab or arrow keys are pressed we want to select the next field. This
-        // is however out of the scope of this component so we emit the selectNext
-        // event that the GridView can handle.
-        this.$el.keyPressedNextFieldEvent = (event) => {
-          // We will first ask if we can select the next field. If that is not allowed
-          // we don't do anything.
-          if (!this.$refs.field.canSelectNext(event)) {
-            return
-          }
-
-          const { keyCode } = event
+        // Event that is called when a key is pressed while the field is selected.
+        this.$el.keyDownEvent = (event) => {
+          // If the tab or arrow keys are pressed we want to select the next field. This
+          // is however out of the scope of this component so we emit the selectNext
+          // event that the GridView can handle.
+          const { keyCode, ctrlKey, metaKey } = event
           const arrowKeysMapping = {
             37: 'selectPrevious',
             38: 'selectAbove',
             39: 'selectNext',
             40: 'selectBelow',
           }
-          if (Object.keys(arrowKeysMapping).includes(keyCode.toString())) {
+          if (
+            Object.keys(arrowKeysMapping).includes(keyCode.toString()) &&
+            this.$refs.field.canSelectNext(event)
+          ) {
             event.preventDefault()
             this.$emit(arrowKeysMapping[keyCode])
           }
-
-          if (keyCode === 9) {
+          if (keyCode === 9 && this.$refs.field.canSelectNext(event)) {
             event.preventDefault()
             this.$emit(event.shiftKey ? 'selectPrevious' : 'selectNext')
           }
+
+          // Copies the value to the clipboard if ctrl/cmd + c is pressed.
+          if (
+            (ctrlKey || metaKey) &&
+            keyCode === 67 &&
+            this.$refs.field.canCopy(event)
+          ) {
+            const rawValue = this.row['field_' + this.field.id]
+            const value = this.$registry
+              .get('field', this.field.type)
+              .prepareValueForCopy(this.field, rawValue)
+            copyToClipboard(value)
+          }
+
+          // Removes the value if the backspace/delete key is pressed.
+          if (
+            (keyCode === 46 || keyCode === 8) &&
+            this.$refs.field.canEmpty(event)
+          ) {
+            event.preventDefault()
+            const value = this.$registry
+              .get('field', this.field.type)
+              .getEmptyValue(this.field)
+            const oldValue = this.row['field_' + this.field.id]
+            if (value !== oldValue) {
+              this.update(value, oldValue)
+            }
+          }
         }
-        document.body.addEventListener(
-          'keydown',
-          this.$el.keyPressedNextFieldEvent
-        )
+        document.body.addEventListener('keydown', this.$el.keyDownEvent)
+
+        // Updates the value of the field when a user pastes something in the field.
+        this.$el.pasteEvent = (event) => {
+          if (!this.$refs.field.canPaste(event)) {
+            return
+          }
+
+          const value = this.$registry
+            .get('field', this.field.type)
+            .prepareValueForPaste(this.field, event.clipboardData)
+          const oldValue = this.row['field_' + this.field.id]
+          if (value !== oldValue) {
+            this.update(value, oldValue)
+          }
+        }
+        document.addEventListener('paste', this.$el.pasteEvent)
 
         // Emit the selected event so that the parent component can take an action like
         // making sure that the element fits in the viewport.
@@ -152,11 +191,10 @@ export default {
         this.selected = false
       })
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
-      document.body.removeEventListener(
-        'keydown',
-        this.$el.keyPressedNextFieldEvent
-      )
+      document.body.removeEventListener('keydown', this.$el.keyDownEvent)
+      document.removeEventListener('paste', this.$el.pasteEvent)
     },
   },
 }
 </script>
+gl
