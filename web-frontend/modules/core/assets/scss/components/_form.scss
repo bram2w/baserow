@@ -50,6 +50,24 @@
   }
 }
 
+.input-with-icon {
+  position: relative;
+
+  .input {
+    padding-right: 32px;
+  }
+
+  i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    font-size: 12px;
+    line-height: 12px;
+    margin-top: -6px;
+    color: $color-neutral-300;
+  }
+}
+
 .checkbox {
   position: relative;
   height: 28px;

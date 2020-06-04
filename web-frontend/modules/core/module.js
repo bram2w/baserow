@@ -65,18 +65,15 @@ export default function DatabaseModule(options) {
   this.addLayout(path.resolve(__dirname, 'layouts/app.vue'), 'app')
   this.addLayout(path.resolve(__dirname, 'layouts/login.vue'), 'login')
 
-  const plugins = [
-    'plugins/auth.js',
-    'plugins/global.js',
-    'plugins/vuelidate.js',
-    'middleware.js',
-    'plugin.js',
-  ]
-  plugins.forEach((plugin) => {
-    this.addPlugin({
-      src: path.resolve(__dirname, plugin),
-    })
+  this.addPlugin({ src: path.resolve(__dirname, 'plugins/auth.js') })
+  this.addPlugin({ src: path.resolve(__dirname, 'plugins/global.js') })
+  this.addPlugin({ src: path.resolve(__dirname, 'plugins/vuelidate.js') })
+  this.addPlugin({
+    src: path.resolve(__dirname, 'plugins/vueDatepicker.js'),
+    ssr: false,
   })
+  this.addPlugin({ src: path.resolve(__dirname, 'middleware.js') })
+  this.addPlugin({ src: path.resolve(__dirname, 'plugin.js') })
 
   // The client handler depends on environment variables so the plugin must be added
   // after the nuxt-env module's plugin.

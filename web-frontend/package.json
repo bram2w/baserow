@@ -21,11 +21,13 @@
     "cross-env": "7.0.2",
     "jwt-decode": "2.2.0",
     "lodash": "4.17.15",
+    "moment": "^2.26.0",
     "node-sass": "4.13.1",
     "normalize-scss": "7.0.1",
     "nuxt": "2.12.1",
     "nuxt-env": "^0.1.0",
     "sass-loader": "8.0.2",
+    "vuejs-datepicker": "^1.6.2",
     "vuelidate": "0.7.5"
   },
   "devDependencies": {

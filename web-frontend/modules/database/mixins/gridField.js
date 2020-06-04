@@ -82,5 +82,15 @@ export default {
     canEmpty() {
       return true
     },
+    /**
+     * If the user clicks outside the cell, the cell is automatically unselected. In
+     * some cases, for example when you have a context menu as helper, you might not
+     * want to unselect when the user clicks in the context menu. The can be
+     * prevented by returned false here. The context menu lives at the root of the
+     * body element and not inside the cell.
+     */
+    canUnselectByClickingOutside() {
+      return true
+    },
   },
 }

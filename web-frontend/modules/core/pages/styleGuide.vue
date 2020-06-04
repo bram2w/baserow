@@ -49,6 +49,19 @@
             </div>
           </div>
           <div class="control">
+            <label class="control-label">Icon text field</label>
+            <div class="control-elements">
+              <div class="input-with-icon">
+                <input
+                  type="text"
+                  class="input"
+                  placeholder="Voer hier iets in"
+                />
+                <i class="fas fa-clock"></i>
+              </div>
+            </div>
+          </div>
+          <div class="control">
             <label class="control-label">Large text field</label>
             <div class="control-elements">
               <input
@@ -66,6 +79,19 @@
                 class="input input-large"
                 placeholder="Please enter your password"
               />
+            </div>
+          </div>
+          <div class="control">
+            <label class="control-label">Large password field</label>
+            <div class="control-elements">
+              <div class="input-with-icon">
+                <input
+                  type="password"
+                  class="input input-large"
+                  placeholder="Please enter your password"
+                />
+                <i class="fas fa-calculator"></i>
+              </div>
             </div>
           </div>
           <div class="control">
@@ -99,6 +125,22 @@
                   ></DropdownItem>
                 </Dropdown>
               </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control-label">Datepicker field</label>
+            <div class="control-elements">
+              value: {{ date }}
+              <br />
+              <br />
+              <client-only>
+                <date-picker
+                  v-model="date"
+                  :inline="true"
+                  :monday-first="true"
+                  class="datepicker"
+                ></date-picker>
+              </client-only>
             </div>
           </div>
         </div>
@@ -437,6 +479,45 @@
               </div>
             </div>
           </div>
+          <div class="context datepicker-context">
+            <client-only>
+              <date-picker
+                v-model="date"
+                :inline="true"
+                :monday-first="true"
+                class="datepicker"
+              ></date-picker>
+            </client-only>
+          </div>
+          <TimeSelectContext></TimeSelectContext>
+          <div class="time-select">
+            <ul>
+              <li>
+                <a href="#">00:00</a>
+              </li>
+              <li>
+                <a href="#">00:30</a>
+              </li>
+              <li>
+                <a href="#" class="active">01:00</a>
+              </li>
+              <li>
+                <a href="#">01:30</a>
+              </li>
+              <li>
+                <a href="#">02:00</a>
+              </li>
+              <li>
+                <a href="#">02:30</a>
+              </li>
+              <li>
+                <a href="#">03:00</a>
+              </li>
+              <li>
+                <a href="#">03:30</a>
+              </li>
+            </ul>
+          </div>
         </div>
         <div class="margin-bottom-3">
           <a class="button" @click="$refs.context1.toggle($event.target)">
@@ -608,6 +689,7 @@ export default {
     return {
       checkbox: false,
       dropdown: '',
+      date: '',
     }
   },
   head() {

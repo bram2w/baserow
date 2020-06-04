@@ -76,18 +76,18 @@ export default {
      * Event that is called when the user double clicks in the column. In this case
      * we want to initiate the editing mode.
      */
-    doubleClick() {
+    doubleClick(event = null) {
       if (!this.editing) {
-        this.edit()
+        this.edit(null, event)
       }
     },
     /**
      * Method that can be called to initiate the edit state.
      */
-    edit(value = null) {
+    edit(value = null, event = null) {
       this.editing = true
       this.copy = value === null ? this.value : value
-      this.afterEdit()
+      this.afterEdit(event)
     },
     /**
      * Method that can be called when in the editing state. It will bring the
