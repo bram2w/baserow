@@ -1,17 +1,22 @@
+import moment from 'moment'
+
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
+import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
+import GridViewFieldDate from '@baserow/modules/database/components/view/grid/GridViewFieldDate'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
+import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
 
 export class FieldType extends Registerable {
   /**
@@ -277,5 +282,46 @@ export class BooleanFieldType extends FieldType {
     const value = clipboardData.getData('text').toLowerCase()
     const allowed = ['1', 'y', 't', 'y', 'yes', 'true', 'on']
     return allowed.includes(value)
+  }
+}
+
+export class DateFieldType extends FieldType {
+  static getType() {
+    return 'date'
+  }
+
+  getIconClass() {
+    return 'calendar-alt'
+  }
+
+  getName() {
+    return 'Date'
+  }
+
+  getFormComponent() {
+    return FieldDateSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldDate
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldDate
+  }
+
+  /**
+   * Tries to parse the clipboard text value with moment and returns the date in the
+   * correct format for the field. If it can't be parsed null is returned.
+   */
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text').toUpperCase()
+    const date = moment.utc(value)
+
+    if (date.isValid()) {
+      return field.date_include_time ? date.format() : date.format('YYYY-MM-DD')
+    } else {
+      return null
+    }
   }
 }

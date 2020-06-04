@@ -11,6 +11,13 @@ import MoveToBody from '@baserow/modules/core/mixins/moveToBody'
 export default {
   name: 'Context',
   mixins: [MoveToBody],
+  props: {
+    hideOnClickOutside: {
+      type: Boolean,
+      default: true,
+      required: false,
+    },
+  },
   data() {
     return {
       open: false,
@@ -76,6 +83,8 @@ export default {
         if (
           // Check if the context menu is still open
           this.open &&
+          // If the prop allows it to be closed by clicking outside.
+          this.hideOnClickOutside &&
           // If the click was outside the context element because we want to ignore
           // clicks inside it.s
           !isElement(this.$el, event.target) &&

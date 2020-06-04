@@ -24,3 +24,4 @@
 * Added long text field.
 * Fixed not refreshing token bug and improved authentication a little bit.
 * Introduced copy, paste and delete functionality of selected fields.
+* Added date/datetime field.

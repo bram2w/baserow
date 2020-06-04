@@ -1,5 +1,5 @@
 <template>
-  <div class="grid-view-column" @click="select()">
+  <div class="grid-view-column" @click="select($event)">
     <component
       :is="getFieldComponent(field.type)"
       ref="field"
@@ -69,7 +69,7 @@ export default {
      * Method that is called when a user clicks on the grid field. It wil
      * @TODO improve speed somehow, maybe with the fastclick library.
      */
-    select() {
+    select(event) {
       const timestamp = new Date().getTime()
 
       if (this.selected) {
@@ -80,7 +80,7 @@ export default {
           this.clickTimestamp !== null &&
           timestamp - this.clickTimestamp < 200
         ) {
-          this.$refs.field.doubleClick()
+          this.$refs.field.doubleClick(event)
         }
       } else {
         // If the field is not yet selected we can change the state to selected.
@@ -88,7 +88,7 @@ export default {
         this.$nextTick(() => {
           // Call the select method on the next tick because we want to wait for all
           // changes to have rendered.
-          this.$refs.field.select()
+          this.$refs.field.select(event)
         })
 
         // Register a body click event listener so that we can detect if a user has
@@ -99,7 +99,9 @@ export default {
             // Check if the column is still selected.
             this.selected &&
             // If the click was outside the column element.
-            !isElement(this.$el, event.target)
+            !isElement(this.$el, event.target) &&
+            // If the child field allows to unselect when clicked outside.
+            this.$refs.field.canUnselectByClickingOutside(event)
           ) {
             this.unselect()
           }
@@ -130,7 +132,7 @@ export default {
             this.$emit(event.shiftKey ? 'selectPrevious' : 'selectNext')
           }
 
-          // Copies the value to the clipboard if ctrl/cmd + c is pressed.
+          // Copie the value to the clipboard if ctrl/cmd + c is pressed.
           if (
             (ctrlKey || metaKey) &&
             keyCode === 67 &&

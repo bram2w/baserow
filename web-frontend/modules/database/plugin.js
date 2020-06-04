@@ -5,6 +5,7 @@ import {
   LongTextFieldType,
   NumberFieldType,
   BooleanFieldType,
+  DateFieldType,
 } from '@baserow/modules/database/fieldTypes'
 
 import tableStore from '@baserow/modules/database/store/table'
@@ -24,4 +25,5 @@ export default ({ store, app }) => {
   app.$registry.register('field', new LongTextFieldType())
   app.$registry.register('field', new NumberFieldType())
   app.$registry.register('field', new BooleanFieldType())
+  app.$registry.register('field', new DateFieldType())
 }

@@ -246,6 +246,16 @@
     <Context ref="rowContext">
       <ul class="context-menu">
         <li>
+          <a
+            @click="
+              ;[$refs.rowEditModal.show(selectedRow), $refs.rowContext.hide()]
+            "
+          >
+            <i class="context-menu-icon fas fa-fw fa-expand"></i>
+            Enlarge row
+          </a>
+        </li>
+        <li>
           <a @click="deleteRow(selectedRow)">
             <i class="context-menu-icon fas fa-fw fa-trash"></i>
             Delete row

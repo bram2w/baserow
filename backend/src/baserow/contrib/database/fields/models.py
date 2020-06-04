@@ -20,6 +20,34 @@ NUMBER_DECIMAL_PLACES_CHOICES = (
     (5, '1.00000')
 )
 
+DATE_FORMAT = {
+    'EU': {
+        'name': 'European (D/M/Y)',
+        'format': '%d/%m/%Y'
+    },
+    'US': {
+        'name': 'US (M/D/Y)',
+        'format': '%m/%d/%Y'
+    },
+    'ISO': {
+        'name': 'ISO (Y-M-D)',
+        'format': '%Y-%m-%d'
+    },
+}
+DATE_FORMAT_CHOICES = [(k, v['name']) for k, v in DATE_FORMAT.items()]
+
+DATE_TIME_FORMAT = {
+    '24': {
+        'name': '24 hour',
+        'format': '%H:%M'
+    },
+    '12': {
+        'name': '12 hour',
+        'format': '%I:%M %p'
+    }
+}
+DATE_TIME_FORMAT_CHOICES = [(k, v['name']) for k, v in DATE_TIME_FORMAT.items()]
+
 
 def get_default_field_content_type():
     return ContentType.objects.get_for_model(Field)
@@ -102,3 +130,34 @@ class NumberField(Field):
 
 class BooleanField(Field):
     pass
+
+
+class DateField(Field):
+    date_format = models.CharField(
+        choices=DATE_FORMAT_CHOICES,
+        default=DATE_FORMAT_CHOICES[0][0],
+        max_length=32
+    )
+    date_include_time = models.BooleanField(default=False)
+    date_time_format = models.CharField(
+        choices=DATE_TIME_FORMAT_CHOICES,
+        default=DATE_TIME_FORMAT_CHOICES[0][0],
+        max_length=32
+    )
+
+    def get_python_format(self):
+        """
+        Returns the strftime format as a string based on the field's properties. This
+        could for example be '%Y-%m-%d %H:%I'.
+
+        :return: The strftime format based on the field's properties.
+        :rtype: str
+        """
+
+        date_format = DATE_FORMAT[self.date_format]['format']
+        time_format = DATE_TIME_FORMAT[self.date_time_format]['format']
+
+        if self.date_include_time:
+            return f'{date_format} {time_format}'
+        else:
+            return date_format
