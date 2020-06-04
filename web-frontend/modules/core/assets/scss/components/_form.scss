@@ -30,11 +30,13 @@
 }
 
 .input {
+  appearance: none;
   display: block;
   width: 100%;
   border: 1px solid $color-neutral-400;
   border-radius: 3px;
   padding: 8px 12px;
+  outline: none;
 
   &:active,
   &:focus {
