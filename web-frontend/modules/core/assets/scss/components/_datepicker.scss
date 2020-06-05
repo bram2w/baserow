@@ -1,0 +1,86 @@
+// This file changes the existing datepicker styling such that it is conform the style
+// of Baserow.
+
+.datepicker-context {
+  white-space: normal;
+}
+
+.vdp-datepicker.datepicker .vdp-datepicker__calendar {
+  border-radius: 6px;
+  border-color: $color-neutral-200;
+  width: 274px;
+  padding: 10px;
+
+  .prev,
+  .next {
+    font-size: 0;
+    cursor: pointer;
+
+    &::before {
+      @extend .fas;
+
+      @include fa-icon;
+      @include absolute(50%, auto, auto, 50%);
+
+      color: $color-primary-500;
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+      margin-left: -(32px / 2);
+      margin-top: -(32px / 2);
+      font-size: 11px;
+      text-indent: 0;
+    }
+
+    &::after {
+      display: none;
+    }
+  }
+
+  .prev::before {
+    content: fa-content($fa-var-chevron-left);
+  }
+
+  .next::before {
+    content: fa-content($fa-var-chevron-right);
+  }
+
+  .prev:not(.disabled):hover,
+  .next:not(.disabled):hover,
+  .up:not(.disabled):hover {
+    background-color: $color-neutral-100;
+    border-radius: 3px;
+  }
+
+  .cell.day,
+  .cell.day-header {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+  }
+
+  .cell:not(.blank):not(.disabled).day,
+  .cell:not(.blank):not(.disabled).month,
+  .cell:not(.blank):not(.disabled).year {
+    border-radius: 3px;
+
+    &:hover {
+      border-color: transparent;
+      background-color: $color-neutral-100;
+    }
+
+    &.selected {
+      border-color: transparent;
+      background-color: $color-primary-500;
+      color: $white;
+    }
+  }
+
+  .day-header {
+    color: $color-neutral-500;
+  }
+
+  .context-datepicker & {
+    border: none;
+  }
+}

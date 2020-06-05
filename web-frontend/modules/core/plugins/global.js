@@ -12,6 +12,7 @@ import Error from '@baserow/modules/core/components/Error'
 import lowercase from '@baserow/modules/core/filters/lowercase'
 
 import scroll from '@baserow/modules/core/directives/scroll'
+import preventParentScroll from '@baserow/modules/core/directives/preventParentScroll'
 
 Vue.component('Context', Context)
 Vue.component('Modal', Modal)
@@ -25,3 +26,4 @@ Vue.component('Error', Error)
 Vue.filter('lowercase', lowercase)
 
 Vue.directive('scroll', scroll)
+Vue.directive('preventParentScroll', preventParentScroll)

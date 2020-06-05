@@ -1,11 +1,22 @@
+import moment from 'moment'
+
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
+import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
+import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
+import GridViewFieldDate from '@baserow/modules/database/components/view/grid/GridViewFieldDate'
+
+import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
+import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
+import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
+import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
+import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
 
 export class FieldType extends Registerable {
   /**
@@ -37,9 +48,22 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * @TODO make this depending on the view type.
+   * This grid view field component should represent the related row value of this
+   * type. It will only be used in the grid view and it also responsible for editing
+   * the value.
    */
   getGridViewFieldComponent() {
+    throw new Error(
+      'Not implement error. This method should return a component.'
+    )
+  }
+
+  /**
+   * The row edit field should represent a the related row value of this type. It
+   * will be used in the row edit modal, but can also be used in other forms. It is
+   * responsible for editing the value.
+   */
+  getRowEditFieldComponent() {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
@@ -90,6 +114,31 @@ export class FieldType extends Registerable {
       name: this.name,
     }
   }
+
+  /**
+   * Should return a for humans readable representation of the value.
+   */
+  toHumanReadableString(field, value) {
+    return value
+  }
+
+  /**
+   * This hook is called before the field's value is copied to the clipboard.
+   * Optionally formatting can be done here. By default the value is always
+   * converted to a string.
+   */
+  prepareValueForCopy(field, value) {
+    return value.toString()
+  }
+
+  /**
+   * This hook is called before the field's value is overwritten by the clipboard
+   * data. That data might needs to be prepared so that the field accepts it.
+   * By default the text value if the clipboard data is used.
+   */
+  prepareValueForPaste(field, clipboardData) {
+    return clipboardData.getData('text')
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -102,7 +151,7 @@ export class TextFieldType extends FieldType {
   }
 
   getName() {
-    return 'Text'
+    return 'Single line text'
   }
 
   getFormComponent() {
@@ -113,8 +162,34 @@ export class TextFieldType extends FieldType {
     return GridViewFieldText
   }
 
+  getRowEditFieldComponent() {
+    return RowEditFieldText
+  }
+
   getEmptyValue(field) {
     return field.text_default
+  }
+}
+
+export class LongTextFieldType extends FieldType {
+  static getType() {
+    return 'long_text'
+  }
+
+  getIconClass() {
+    return 'align-left'
+  }
+
+  getName() {
+    return 'Long text'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldLongText
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldLongText
   }
 }
 
@@ -138,6 +213,40 @@ export class NumberFieldType extends FieldType {
   getGridViewFieldComponent() {
     return GridViewFieldNumber
   }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldNumber
+  }
+
+  /**
+   * First checks if the value is numeric, if that is the case, the number is going
+   * to be formatted.
+   */
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text')
+    if (isNaN(parseFloat(value)) || !isFinite(value)) {
+      return null
+    }
+    return this.constructor.formatNumber(field, value)
+  }
+
+  /**
+   * Formats the value based on the field's settings. The number will be rounded
+   * if to much decimal places are provided and if negative numbers aren't allowed
+   * they will be set to 0.
+   */
+  static formatNumber(field, value) {
+    if (value === '' || isNaN(value) || value === undefined || value === null) {
+      return null
+    }
+    const decimalPlaces =
+      field.number_type === 'DECIMAL' ? field.number_decimal_places : 0
+    let number = parseFloat(value)
+    if (!field.number_negative && number < 0) {
+      number = 0
+    }
+    return number.toFixed(decimalPlaces)
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -157,7 +266,62 @@ export class BooleanFieldType extends FieldType {
     return GridViewFieldBoolean
   }
 
+  getRowEditFieldComponent() {
+    return RowEditFieldBoolean
+  }
+
   getEmptyValue(field) {
     return false
+  }
+
+  /**
+   * Check if the clipboard data text contains a string that might indicate if the
+   * value is true.
+   */
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text').toLowerCase()
+    const allowed = ['1', 'y', 't', 'y', 'yes', 'true', 'on']
+    return allowed.includes(value)
+  }
+}
+
+export class DateFieldType extends FieldType {
+  static getType() {
+    return 'date'
+  }
+
+  getIconClass() {
+    return 'calendar-alt'
+  }
+
+  getName() {
+    return 'Date'
+  }
+
+  getFormComponent() {
+    return FieldDateSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldDate
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldDate
+  }
+
+  /**
+   * Tries to parse the clipboard text value with moment and returns the date in the
+   * correct format for the field. If it can't be parsed null is returned.
+   */
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text').toUpperCase()
+    const date = moment.utc(value)
+
+    if (date.isValid()) {
+      return field.date_include_time ? date.format() : date.format('YYYY-MM-DD')
+    } else {
+      return null
+    }
   }
 }

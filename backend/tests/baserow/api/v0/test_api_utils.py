@@ -22,6 +22,11 @@ class TemporarySerializer(serializers.Serializer):
     field_2 = serializers.ChoiceField(choices=('choice_1', 'choice_2'))
 
 
+class TemporarySerializerWithList(serializers.Serializer):
+    field_3 = serializers.IntegerField()
+    field_4 = serializers.ListField(child=serializers.IntegerField())
+
+
 class TemporaryInstance(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance):
     pass
 
@@ -74,6 +79,28 @@ def test_validate_data():
     assert validated_data['field_1'] == 'test'
     assert validated_data['field_2'] == 'choice_1'
     assert len(validated_data.items()) == 2
+
+    with pytest.raises(APIException) as api_exception_1:
+        validate_data(
+            TemporarySerializerWithList,
+            {'field_3': 'aaa', 'field_4': ['a', 'b']}
+        )
+
+    assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
+    assert api_exception_1.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert api_exception_1.value.detail['detail']['field_3'][0]['error'] == \
+           'A valid integer is required.'
+    assert api_exception_1.value.detail['detail']['field_3'][0]['code'] == 'invalid'
+
+    assert len(api_exception_1.value.detail['detail']['field_4']) == 2
+    assert api_exception_1.value.detail['detail']['field_4'][0][0]['error'] == \
+           'A valid integer is required.'
+    assert api_exception_1.value.detail['detail']['field_4'][0][0]['code'] == \
+           'invalid'
+    assert api_exception_1.value.detail['detail']['field_4'][1][0]['error'] == \
+           'A valid integer is required.'
+    assert api_exception_1.value.detail['detail']['field_4'][1][0]['code'] == \
+           'invalid'
 
 
 def test_validate_data_custom_fields():

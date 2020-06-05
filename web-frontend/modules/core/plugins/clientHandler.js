@@ -176,11 +176,11 @@ class ErrorHandler {
   }
 }
 
-export default function ({ store }, inject) {
+export default function ({ store, app }, inject) {
   const url =
-    process.client && process.env.publicBaseUrl
-      ? process.env.publicBaseUrl
-      : process.env.baseUrl
+    (process.client
+      ? app.$env.PUBLIC_BACKEND_URL
+      : app.$env.PRIVATE_BACKEND_URL) + '/api/v0'
   const client = axios.create({
     baseURL: url,
     withCredentials: false,
@@ -212,6 +212,7 @@ export default function ({ store }, inject) {
       // Add the error message in the response to the error object.
       if (
         error.response &&
+        typeof error.response.data === 'object' &&
         'error' in error.response.data &&
         'detail' in error.response.data
       ) {

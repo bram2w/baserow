@@ -1,8 +1,8 @@
 <template>
-  <div class="grid-view-column" style="width: 200px;" @click="select($event)">
+  <div class="grid-view-column" @click="select($event)">
     <component
       :is="getFieldComponent(field.type)"
-      ref="column"
+      ref="field"
       :field="field"
       :value="row['field_' + field.id]"
       :selected="selected"
@@ -13,15 +13,11 @@
 
 <script>
 import { isElement } from '@baserow/modules/core/utils/dom'
-import { notifyIf } from '@baserow/modules/core/utils/error'
+import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
 export default {
   name: 'GridViewField',
   props: {
-    table: {
-      type: Object,
-      required: true,
-    },
     field: {
       type: Object,
       required: true,
@@ -62,25 +58,12 @@ export default {
      * which will actually update the value via the store.
      */
     update(value, oldValue) {
-      this.$store
-        .dispatch('view/grid/updateValue', {
-          table: this.table,
-          row: this.row,
-          field: this.field,
-          value,
-          oldValue,
-        })
-        .catch((error) => {
-          notifyIf(error, 'column')
-        })
-        .then(() => {
-          this.$forceUpdate()
-        })
-
-      // This is needed because in some cases we do have a value yet, so a watcher of
-      // the value is not guaranteed. This will make sure the component shows the
-      // latest value.
-      this.$forceUpdate()
+      this.$emit('update', {
+        row: this.row,
+        field: this.field,
+        value,
+        oldValue,
+      })
     },
     /**
      * Method that is called when a user clicks on the grid field. It wil
@@ -97,7 +80,7 @@ export default {
           this.clickTimestamp !== null &&
           timestamp - this.clickTimestamp < 200
         ) {
-          this.$refs.column.doubleClick()
+          this.$refs.field.doubleClick(event)
         }
       } else {
         // If the field is not yet selected we can change the state to selected.
@@ -105,7 +88,7 @@ export default {
         this.$nextTick(() => {
           // Call the select method on the next tick because we want to wait for all
           // changes to have rendered.
-          this.$refs.column.select()
+          this.$refs.field.select(event)
         })
 
         // Register a body click event listener so that we can detect if a user has
@@ -116,23 +99,104 @@ export default {
             // Check if the column is still selected.
             this.selected &&
             // If the click was outside the column element.
-            !isElement(this.$el, event.target)
+            !isElement(this.$el, event.target) &&
+            // If the child field allows to unselect when clicked outside.
+            this.$refs.field.canUnselectByClickingOutside(event)
           ) {
             this.unselect()
           }
         }
         document.body.addEventListener('click', this.$el.clickOutsideEvent)
+
+        // Event that is called when a key is pressed while the field is selected.
+        this.$el.keyDownEvent = (event) => {
+          // If the tab or arrow keys are pressed we want to select the next field. This
+          // is however out of the scope of this component so we emit the selectNext
+          // event that the GridView can handle.
+          const { keyCode, ctrlKey, metaKey } = event
+          const arrowKeysMapping = {
+            37: 'selectPrevious',
+            38: 'selectAbove',
+            39: 'selectNext',
+            40: 'selectBelow',
+          }
+          if (
+            Object.keys(arrowKeysMapping).includes(keyCode.toString()) &&
+            this.$refs.field.canSelectNext(event)
+          ) {
+            event.preventDefault()
+            this.$emit(arrowKeysMapping[keyCode])
+          }
+          if (keyCode === 9 && this.$refs.field.canSelectNext(event)) {
+            event.preventDefault()
+            this.$emit(event.shiftKey ? 'selectPrevious' : 'selectNext')
+          }
+
+          // Copie the value to the clipboard if ctrl/cmd + c is pressed.
+          if (
+            (ctrlKey || metaKey) &&
+            keyCode === 67 &&
+            this.$refs.field.canCopy(event)
+          ) {
+            const rawValue = this.row['field_' + this.field.id]
+            const value = this.$registry
+              .get('field', this.field.type)
+              .prepareValueForCopy(this.field, rawValue)
+            copyToClipboard(value)
+          }
+
+          // Removes the value if the backspace/delete key is pressed.
+          if (
+            (keyCode === 46 || keyCode === 8) &&
+            this.$refs.field.canEmpty(event)
+          ) {
+            event.preventDefault()
+            const value = this.$registry
+              .get('field', this.field.type)
+              .getEmptyValue(this.field)
+            const oldValue = this.row['field_' + this.field.id]
+            if (value !== oldValue) {
+              this.update(value, oldValue)
+            }
+          }
+        }
+        document.body.addEventListener('keydown', this.$el.keyDownEvent)
+
+        // Updates the value of the field when a user pastes something in the field.
+        this.$el.pasteEvent = (event) => {
+          if (!this.$refs.field.canPaste(event)) {
+            return
+          }
+
+          const value = this.$registry
+            .get('field', this.field.type)
+            .prepareValueForPaste(this.field, event.clipboardData)
+          const oldValue = this.row['field_' + this.field.id]
+          if (value !== oldValue) {
+            this.update(value, oldValue)
+          }
+        }
+        document.addEventListener('paste', this.$el.pasteEvent)
+
+        // Emit the selected event so that the parent component can take an action like
+        // making sure that the element fits in the viewport.
+        this.$emit('selected', {
+          component: this,
+        })
       }
 
       this.clickTimestamp = timestamp
     },
     unselect() {
-      this.$refs.column.beforeUnSelect()
+      this.$refs.field.beforeUnSelect()
       this.$nextTick(() => {
         this.selected = false
       })
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      document.body.removeEventListener('keydown', this.$el.keyDownEvent)
+      document.removeEventListener('paste', this.$el.pasteEvent)
     },
   },
 }
 </script>
+gl

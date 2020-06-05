@@ -17,6 +17,16 @@ export const routes = [
     component: path.resolve(__dirname, 'pages/signup.vue'),
   },
   {
+    name: 'forgot-password',
+    path: '/forgot-password',
+    component: path.resolve(__dirname, 'pages/forgotPassword.vue'),
+  },
+  {
+    name: 'reset-password',
+    path: '/reset-password/:token',
+    component: path.resolve(__dirname, 'pages/resetPassword.vue'),
+  },
+  {
     name: 'dashboard',
     path: '/dashboard',
     component: path.resolve(__dirname, 'pages/dashboard.vue'),
@@ -24,7 +34,7 @@ export const routes = [
   {
     name: 'style-guide',
     path: '/style-guide',
-    component: path.resolve(__dirname, 'pages/style-guide.vue'),
+    component: path.resolve(__dirname, 'pages/styleGuide.vue'),
   },
   {
     name: 'health-check',

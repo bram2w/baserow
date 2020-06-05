@@ -4,6 +4,10 @@ from django.conf import settings
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.view_types import GridViewType
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.field_types import TextFieldType, BooleanFieldType
 
 from .models import Table
 from .exceptions import TableDoesNotExist
@@ -33,7 +37,7 @@ class TableHandler:
 
         return table
 
-    def create_table(self, user, database, **kwargs):
+    def create_table(self, user, database, fill_initial=False, **kwargs):
         """
         Creates a new table and a primary text field.
 
@@ -41,6 +45,9 @@ class TableHandler:
         :type user: User
         :param database: The database that the table instance belongs to.
         :type database: Database
+        :param fill_initial: Indicates whether an initial view, some fields and
+            some rows should be added.
+        :type fill_initial: bool
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
         :return: The created table instance.
@@ -64,7 +71,41 @@ class TableHandler:
             model = table.get_model()
             schema_editor.create_model(model)
 
+        if fill_initial:
+            self.fill_initial_table_data(user, table)
+
         return table
+
+    def fill_initial_table_data(self, user, table):
+        """
+        Fills the table with some initial data. A new table is expected that already
+        has the a primary field named 'name'.
+
+        :param user: The user on whose behalf the table is filled.
+        :type: user: User
+        :param table: The table that needs the initial data.
+        :type table: User
+        """
+
+        view_handler = ViewHandler()
+        field_handler = FieldHandler()
+
+        view = view_handler.create_view(user, table, GridViewType.type, name='Grid')
+        notes = field_handler.create_field(user, table, TextFieldType.type,
+                                           name='Notes')
+        active = field_handler.create_field(user, table, BooleanFieldType.type,
+                                            name='Active')
+
+        field_options = {
+            notes.id: {'width': 400},
+            active.id: {'width': 100}
+        }
+        fields = [notes, active]
+        view_handler.update_grid_view_field_options(view, field_options, fields=fields)
+
+        model = table.get_model(attribute_names=True)
+        model.objects.create(name='Tesla', active=True)
+        model.objects.create(name='Amazon', active=False)
 
     def update_table(self, user, table, **kwargs):
         """

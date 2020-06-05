@@ -22,6 +22,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'corsheaders',
+    'mjml',
 
     'baserow.core',
     'baserow.api.v0',
@@ -65,12 +66,12 @@ WSGI_APPLICATION = 'baserow.config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'baserow',
-        'USER': 'baserow',
-        'PASSWORD': 'baserow',
-        'HOST': 'db',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DATABASE_NAME', 'baserow'),
+        'USER': os.getenv('DATABASE_USER', 'baserow'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'baserow'),
+        'HOST': os.getenv('DATABASE_HOST', 'db'),
+        'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
 }
 
@@ -135,7 +136,7 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_ALLOW_ALL = True
 
 JWT_AUTH = {
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=60 * 60),
     'JWT_ALLOW_REFRESH': True,
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'baserow.api.v0.user.jwt.'
@@ -143,3 +144,17 @@ JWT_AUTH = {
 }
 
 DATABASE_ROUTERS = ('baserow.contrib.database.database_routers.TablesDatabaseRouter',)
+
+MJML_BACKEND_MODE = 'tcpserver'
+MJML_TCPSERVERS = [
+    (os.getenv('MJML_SERVER_HOST', 'mjml'), os.getenv('MJML_SERVER_PORT', 28101)),
+]
+
+PUBLIC_BACKEND_DOMAIN = os.getenv('PUBLIC_BACKEND_DOMAIN', 'localhost:8000')
+PUBLIC_BACKEND_URL = os.getenv('PUBLIC_BACKEND_URL', 'http://localhost:8000')
+PUBLIC_WEB_FRONTEND_DOMAIN = os.getenv('PUBLIC_WEB_FRONTEND_DOMAIN', 'localhost:3000')
+PUBLIC_WEB_FRONTEND_URL = os.getenv('PUBLIC_WEB_FRONTEND_URL', 'http://localhost:3000')
+
+FROM_EMAIL = os.getenv('FROM_EMAIL', 'no-reply@localhost')
+
+RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours

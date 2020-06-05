@@ -49,8 +49,47 @@ export default {
       binding.value(pixelY, pixelX)
     }
     el.addEventListener('wheel', el.scrollDirectiveEvent)
+
+    // The touch equivalent for the wheel event. It doesn't offer a native
+    // experience for the user, but it does make it usable.
+    let touching = false
+    let lastX = 0
+    let lastY = 0
+    el.scrollTouchStartEvent = (event) => {
+      touching = true
+      const touches = event.changedTouches
+      lastX = Math.round(touches[0].pageX)
+      lastY = Math.round(touches[0].pageY)
+    }
+    el.scrollTouchMoveEvent = (event) => {
+      if (touching) {
+        event.preventDefault()
+
+        const touches = event.targetTouches
+        const eventY = Math.round(touches[0].pageY)
+        const eventX = Math.round(touches[0].pageX)
+
+        if (eventY !== lastY || eventX !== lastX) {
+          const diffY = lastY - eventY
+          const diffX = lastX - eventX
+          binding.value(diffY, diffX)
+
+          lastY = eventY
+          lastX = eventX
+        }
+      }
+    }
+    el.scrollTouchEndEvent = () => {
+      touching = false
+    }
+    el.addEventListener('touchstart', el.scrollTouchStartEvent)
+    el.addEventListener('touchmove', el.scrollTouchMoveEvent)
+    el.addEventListener('touchend', el.scrollTouchEndEvent)
   },
   unbind(el) {
     el.removeEventListener('wheel', el.scrollDirectiveEvent)
+    el.removeEventListener('touchstart', el.scrollTouchStartEvent)
+    el.removeEventListener('touchmove', el.scrollTouchMoveEvent)
+    el.removeEventListener('touchend', el.scrollTouchEndEvent)
   },
 }

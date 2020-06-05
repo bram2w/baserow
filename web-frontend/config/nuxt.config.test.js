@@ -9,7 +9,6 @@ export default _.assign({}, base(), {
   dev: false,
   debug: false,
   env: {
-    // The API base url, this will be prepended to the urls of the remote calls.
-    baseUrl: 'http://localhost/api/v0',
+    PRIVATE_BACKEND_URL: 'http://localhost',
   },
 })

@@ -18,6 +18,19 @@ import gridField from '@baserow/modules/database/mixins/gridField'
 export default {
   mixins: [gridField],
   methods: {
+    select() {
+      // While the field is selected we want to toggle the value by pressing the enter
+      // key.
+      this.$el.keydownEvent = (event) => {
+        if (event.keyCode === 13) {
+          this.toggle(this.value)
+        }
+      }
+      document.body.addEventListener('keydown', this.$el.keydownEvent)
+    },
+    beforeUnSelect() {
+      document.body.removeEventListener('keydown', this.$el.keydownEvent)
+    },
     toggle(value) {
       if (!this.selected) {
         return

@@ -10,6 +10,12 @@ services:
     ports:
       - 5432:5432
 
+  mjml:
+    image: liminspace/mjml-tcpserver:latest
+    restart: always
+    ports:
+      - 28101:28101
+
   backend:
     container_name: backend
     build:
@@ -19,6 +25,7 @@ services:
       - 8000:8000
     depends_on:
       - db
+      - mjml
 
   web-frontend:
     container_name: web-frontend

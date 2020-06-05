@@ -86,6 +86,12 @@ export class ViewType extends Registerable {
   fieldCreated(context, table, field, fieldType) {}
 
   /**
+   * Method that is called when a field has been changed. This can be useful to
+   * maintain data integrity by updating the values.
+   */
+  fieldUpdated(context, field, oldField, fieldType) {}
+
+  /**
    * @return object
    */
   serialize() {
@@ -118,8 +124,22 @@ export class GridViewType extends ViewType {
     await store.dispatch('view/grid/fetchInitial', { gridId: view.id })
   }
 
-  fieldCreated({ dispatch }, table, field, fieldType) {
+  async fieldCreated({ dispatch }, table, field, fieldType) {
     const value = fieldType.getEmptyValue(field)
-    dispatch('view/grid/addField', { field, value }, { root: true })
+    await dispatch('view/grid/addField', { field, value }, { root: true })
+    await dispatch(
+      'view/grid/setFieldOptionsOfField',
+      {
+        field,
+        // The default values should be the same as in the `GridViewFieldOptions`
+        // model in the backend to stay consistent.
+        values: { width: 200 },
+      },
+      { root: true }
+    )
+  }
+
+  async fieldUpdated({ dispatch }, field, oldField, fieldType) {
+    await dispatch('view/grid/refreshFieldValues', { field }, { root: true })
   }
 }

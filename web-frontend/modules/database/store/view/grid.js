@@ -1,3 +1,4 @@
+import Vue from 'vue'
 import axios from 'axios'
 import _ from 'lodash'
 
@@ -5,13 +6,21 @@ import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 
 export function populateRow(row) {
-  row._ = { loading: false }
+  row._ = {
+    loading: false,
+    hover: false,
+  }
   return row
 }
 
 export const state = () => ({
   loading: false,
   loaded: false,
+  // The last used grid id.
+  lastGridId: -1,
+  // Contains the custom field options per view. Things like the field width are
+  // stored here.
+  fieldOptions: {},
   // Contains the buffered rows that we keep in memory. Depending on the
   // scrollOffset rows will be added or removed from this buffer. Most of the times,
   // it will contain 3 times the bufferRequestSize in rows.
@@ -46,6 +55,9 @@ export const mutations = {
   },
   SET_LOADED(state, value) {
     state.loaded = value
+  },
+  SET_LAST_GRID_ID(state, gridId) {
+    state.lastGridId = gridId
   },
   SET_SCROLL_TOP(state, { scrollTop, windowHeight }) {
     state.scrollTop = scrollTop
@@ -112,14 +124,40 @@ export const mutations = {
   SET_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
   },
+  UPDATE_ROWS(state, { rows }) {
+    rows.forEach((newRow) => {
+      const row = state.rows.find((row) => row.id === newRow.id)
+      if (row !== undefined) {
+        _.assign(row, newRow)
+      }
+    })
+  },
   ADD_FIELD(state, { field, value }) {
     const name = `field_${field.id}`
     state.rows.forEach((row) => {
-      row[name] = value
+      // We have to use the Vue.set function here to make it reactive immediately.
+      // If we don't do this the value in the field components of the grid and modal
+      // don't have the correct value and will act strange.
+      Vue.set(row, name, value)
     })
   },
   SET_ROW_LOADING(state, { row, value }) {
     row._.loading = value
+  },
+  REPLACE_ALL_FIELD_OPTIONS(state, fieldOptions) {
+    state.fieldOptions = fieldOptions
+  },
+  SET_FIELD_OPTIONS_OF_FIELD(state, { fieldId, values }) {
+    if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
+      _.assign(state.fieldOptions[fieldId], values)
+    } else {
+      state.fieldOptions = _.assign({}, state.fieldOptions, {
+        [fieldId]: values,
+      })
+    }
+  },
+  SET_ROW_HOVER(state, { row, value }) {
+    row._.hover = value
   },
 }
 
@@ -146,6 +184,8 @@ export const actions = {
     { commit, getters, dispatch },
     { gridId, scrollTop, windowHeight }
   ) {
+    commit('SET_LAST_GRID_ID', gridId)
+
     // Calculate what the middle row index of the visible window based on the scroll
     // top.
     const middle = scrollTop + windowHeight / 2
@@ -374,6 +414,7 @@ export const actions = {
    * Fetches an initial set of rows and adds that data to the store.
    */
   async fetchInitial({ dispatch, commit, getters }, { gridId }) {
+    commit('SET_LAST_GRID_ID', gridId)
     commit('CLEAR_ROWS')
 
     const limit = getters.getBufferRequestSize * 2
@@ -381,6 +422,7 @@ export const actions = {
       gridId,
       offset: 0,
       limit,
+      includeFieldOptions: true,
     })
     data.results.forEach((part, index) => {
       populateRow(data.results[index])
@@ -400,6 +442,7 @@ export const actions = {
       endIndex: data.count > 31 ? 31 : data.count,
       top: 0,
     })
+    commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
   },
   /**
    * Updates a grid view field value. It will immediately be updated in the store
@@ -500,6 +543,60 @@ export const actions = {
   addField({ commit }, { field, value = null }) {
     commit('ADD_FIELD', { field, value })
   },
+  /**
+   * Updates the field options of a given field and also makes an API request to the
+   * backend with the changed values. If the request fails the action is reverted.
+   */
+  async updateFieldOptionsOfField(
+    { commit },
+    { gridId, field, values, oldValues }
+  ) {
+    commit('SET_FIELD_OPTIONS_OF_FIELD', {
+      fieldId: field.id,
+      values,
+    })
+    const updateValues = { field_options: {} }
+    updateValues.field_options[field.id] = values
+
+    try {
+      await GridService(this.$client).update({ gridId, values: updateValues })
+    } catch (error) {
+      commit('SET_FIELD_OPTIONS_OF_FIELD', {
+        fieldId: field.id,
+        values: oldValues,
+      })
+      throw error
+    }
+  },
+  /**
+   * Updates the field options of a given field in the store. So no API request to
+   * the backend is made.
+   */
+  setFieldOptionsOfField({ commit }, { field, values }) {
+    commit('SET_FIELD_OPTIONS_OF_FIELD', {
+      fieldId: field.id,
+      values,
+    })
+  },
+  setRowHover({ commit }, { row, value }) {
+    commit('SET_ROW_HOVER', { row, value })
+  },
+  /**
+   * Refreshes all the buffered data values of a given field. The new values are
+   * requested from the backend and replaced.
+   */
+  async refreshFieldValues({ commit, getters }, { field }) {
+    const rowIds = getters.getAllRows.map((row) => row.id)
+    const fieldIds = [field.id]
+    const gridId = getters.getLastGridId
+
+    const { data } = await GridService(this.$client).filterRows({
+      gridId,
+      rowIds,
+      fieldIds,
+    })
+    commit('UPDATE_ROWS', { rows: data })
+  },
 }
 
 export const getters = {
@@ -508,6 +605,9 @@ export const getters = {
   },
   isLoaded(state) {
     return state.loaded
+  },
+  getLastGridId(state) {
+    return state.lastGridId
   },
   getCount(state) {
     return state.count
@@ -526,6 +626,9 @@ export const getters = {
   },
   getRowPadding(state) {
     return state.rowPadding
+  },
+  getAllRows(state) {
+    return state.rows
   },
   getRows(state) {
     return state.rows.slice(state.rowsStartIndex, state.rowsEndIndex)
@@ -553,6 +656,9 @@ export const getters = {
   },
   getWindowHeight(state) {
     return state.windowHeight
+  },
+  getAllFieldOptions(state) {
+    return state.fieldOptions
   },
 }
 

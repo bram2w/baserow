@@ -8,11 +8,11 @@ export default {
   data() {
     return {
       /**
-       * Indicates whether of the user is editing the value.
+       * Indicates whether the user is editing the value.
        */
       editing: false,
       /**
-       *  A temporary copy of the value when editing.
+       * A temporary copy of the value when editing.
        */
       copy: null,
     }
@@ -26,12 +26,30 @@ export default {
      */
     select() {
       this.$el.keydownEvent = (event) => {
+        // If the tab or arrow keys are pressed we don't want to do anything because
+        // the GridViewField component will select the next field.
+        const ignoredKeys = [9, 37, 38, 39, 40]
+        if (ignoredKeys.includes(event.keyCode)) {
+          return
+        }
+
+        // If the escape key is pressed while editing we want to cancel the current
+        // input and undo the editing state.
+        if (event.keyCode === 27 && this.editing) {
+          this.cancel()
+          return
+        }
+
         // If the enter key is pressed.
         if (event.keyCode === 13) {
-          if (this.editing) {
+          if (
+            this.editing &&
+            this.isValid() &&
+            this.canSaveByPressingEnter(event)
+          ) {
             // While editing we want to save the changes.
             this.save()
-          } else {
+          } else if (!this.editing) {
             // If only selected we will start the editing mode.
             this.edit()
           }
@@ -58,16 +76,18 @@ export default {
      * Event that is called when the user double clicks in the column. In this case
      * we want to initiate the editing mode.
      */
-    doubleClick() {
-      this.edit()
+    doubleClick(event = null) {
+      if (!this.editing) {
+        this.edit(null, event)
+      }
     },
     /**
      * Method that can be called to initiate the edit state.
      */
-    edit(value = null) {
+    edit(value = null, event = null) {
       this.editing = true
       this.copy = value === null ? this.value : value
-      this.afterEdit()
+      this.afterEdit(event)
     },
     /**
      * Method that can be called when in the editing state. It will bring the
@@ -76,14 +96,23 @@ export default {
      */
     save() {
       this.editing = false
+      const newValue = this.beforeSave(this.copy)
 
       // If the value hasn't changed we don't want to do anything.
-      if (this.copy === this.value) {
+      if (newValue === this.value) {
         return
       }
 
-      this.$emit('update', this.copy, this.value)
+      this.$emit('update', newValue, this.value)
       this.afterSave()
+    },
+    /**
+     * Cancels the current editing state and reverts the copy to the old value
+     * without saving.
+     */
+    cancel() {
+      this.editing = false
+      this.copy = this.value
     },
     /**
      * Method that is called after initiating the edit state. This can be overridden
@@ -91,9 +120,57 @@ export default {
      */
     afterEdit() {},
     /**
+     * This method is called before saving the value. Optionally the value can be
+     * changed or formatted here if necessary.
+     */
+    beforeSave(value) {
+      return value
+    },
+    /**
      * Method that is called after saving the value. This can be overridden in the
      * component.
      */
     afterSave() {},
+    /**
+     * Should return a boolean if the copy that is going to be saved is valid. If it
+     * returns false saving is not possible.
+     */
+    isValid() {
+      return true
+    },
+    /**
+     * Small helper method that stops the propagation of the context menu when the
+     * field is being edited. Can be used on the element like:
+     * `@contextmenu="stopContextIfEditing($event)"`.
+     */
+    stopContextIfEditing(event) {
+      if (this.editing) {
+        event.stopPropagation()
+      }
+    },
+    /**
+     * While editing we want to disable the arrow keys to select the next of
+     * previous field. The tab key stays enabled.
+     */
+    canSelectNext(event) {
+      const arrowKeys = [37, 38, 39, 40]
+      return !this.editing || !arrowKeys.includes(event.keyCode)
+    },
+    /**
+     * If true the value can be saved by pressing the enter key. This could for
+     * example be disabled for a long text field that can have multiple lines.
+     */
+    canSaveByPressingEnter(event) {
+      return true
+    },
+    canCopy() {
+      return !this.editing
+    },
+    canPaste() {
+      return !this.editing
+    },
+    canEmpty() {
+      return !this.editing
+    },
   },
 }

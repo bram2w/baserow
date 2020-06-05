@@ -19,5 +19,23 @@ export default (client) => {
         authenticate,
       })
     },
+    sendResetPasswordEmail(email, baseUrl) {
+      return client.post('/user/send-reset-password-email/', {
+        email,
+        base_url: baseUrl,
+      })
+    },
+    resetPassword(token, password) {
+      return client.post('/user/reset-password/', {
+        token,
+        password,
+      })
+    },
+    changePassword(oldPassword, newPassword) {
+      return client.post('/user/change-password/', {
+        old_password: oldPassword,
+        new_password: newPassword,
+      })
+    },
   }
 }

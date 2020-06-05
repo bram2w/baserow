@@ -1,5 +1,7 @@
 import pytest
 
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+
 from django.shortcuts import reverse
 
 from baserow.contrib.database.fields.models import Field, TextField, NumberField
@@ -21,7 +23,7 @@ def test_list_fields(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
     assert len(response_json) == 3
@@ -48,7 +50,7 @@ def test_list_fields(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.get(
@@ -56,7 +58,7 @@ def test_list_fields(api_client, data_fixture):
             'HTTP_AUTHORIZATION': f'JWT {token}'
         }
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db
@@ -75,7 +77,7 @@ def test_create_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert response_json['detail']['type'][0]['code'] == 'invalid_choice'
 
@@ -85,7 +87,7 @@ def test_create_field(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     response = api_client.post(
         reverse('api_v0:database:fields:list', kwargs={'table_id': table_2.id}),
@@ -93,7 +95,7 @@ def test_create_field(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     response = api_client.post(
@@ -103,7 +105,7 @@ def test_create_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['type'] == 'text'
 
     text = TextField.objects.filter()[0]
@@ -128,7 +130,7 @@ def test_get_field(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': 99999})
@@ -137,7 +139,7 @@ def test_get_field(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': text.id})
     response = api_client.get(
@@ -146,7 +148,7 @@ def test_get_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['id'] == text.id
     assert response_json['name'] == text.name
     assert not response_json['text_default']
@@ -154,6 +156,11 @@ def test_get_field(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_update_field(api_client, data_fixture):
+    """
+    @TODO somehow trigger the CannotChangeFieldType and test if the correct
+        ERROR_CANNOT_CHANGE_FIELD_TYPE error is returned.
+    """
+
     user, token = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -169,7 +176,7 @@ def test_update_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': 999999})
@@ -179,7 +186,7 @@ def test_update_field(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': text.id})
     response = api_client.patch(
@@ -188,7 +195,7 @@ def test_update_field(api_client, data_fixture):
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
 
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': text.id})
     response = api_client.patch(
@@ -198,7 +205,7 @@ def test_update_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['id'] == text.id
     assert response_json['name'] == 'Test 1'
     assert response_json['text_default'] == 'Something'
@@ -215,7 +222,7 @@ def test_update_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['name'] == 'Test 1'
     assert response_json['type'] == 'text'
 
@@ -227,7 +234,7 @@ def test_update_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['name'] == 'Test 1'
     assert response_json['type'] == 'number'
     assert response_json['number_type'] == 'INTEGER'
@@ -246,7 +253,7 @@ def test_update_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 200
+    assert response.status_code == HTTP_200_OK
     assert response_json['name'] == 'Test 1'
     assert response_json['type'] == 'number'
     assert response_json['number_type'] == 'DECIMAL'
@@ -261,8 +268,12 @@ def test_update_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     response_json = response.json()
-    assert response.status_code == 400
-    assert response_json['error'] == 'ERROR_CANNOT_CHANGE_FIELD_TYPE'
+    assert response.status_code == HTTP_200_OK
+    assert response_json['name'] == 'Test 2'
+    assert response_json['type'] == 'boolean'
+    assert not 'number_type' in response_json
+    assert not 'number_decimal_places' in response_json
+    assert not 'number_negative' in response_json
 
 
 @pytest.mark.django_db
@@ -277,12 +288,12 @@ def test_delete_field(api_client, data_fixture):
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': number.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': 99999})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
-    assert response.status_code == 404
+    assert response.status_code == HTTP_404_NOT_FOUND
 
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': text.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
@@ -298,5 +309,5 @@ def test_delete_field(api_client, data_fixture):
     url = reverse('api_v0:database:fields:item', kwargs={'field_id': primary.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     response_json = response.json()
-    assert response.status_code == 400
+    assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_CANNOT_DELETE_PRIMARY_FIELD'

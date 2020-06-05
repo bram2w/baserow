@@ -15,6 +15,10 @@
   }
 }
 
+.control-label-icon {
+  margin-right: 6px;
+}
+
 .control-context {
   color: $color-primary-900;
   margin-left: 6px;
@@ -26,11 +30,13 @@
 }
 
 .input {
+  appearance: none;
   display: block;
   width: 100%;
   border: 1px solid $color-neutral-400;
   border-radius: 3px;
   padding: 8px 12px;
+  outline: none;
 
   &:active,
   &:focus {
@@ -43,6 +49,24 @@
 
   &.input-error {
     border-color: $color-error-500;
+  }
+}
+
+.input-with-icon {
+  position: relative;
+
+  .input {
+    padding-right: 32px;
+  }
+
+  i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    font-size: 12px;
+    line-height: 12px;
+    margin-top: -6px;
+    color: $color-neutral-300;
   }
 }
 

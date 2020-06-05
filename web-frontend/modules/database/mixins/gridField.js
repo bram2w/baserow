@@ -47,5 +47,50 @@ export default {
      * toggles its value for example.
      */
     doubleClick() {},
+    /**
+     * There are keyboard shortcuts to select the next or previous field. For
+     * example when the arrow or tab keys are pressed. The GridViewField component
+     * first asks if this is allowed by calling this function. If false is returned
+     * the next field is not going to be selected.
+     */
+    canSelectNext() {
+      return true
+    },
+    /**
+     * If the user presses ctrl/cmd + c while a field is selected, the value is
+     * going to be copied to the clipboard. In some cases, for example when the user
+     * is editing the value, we do not want to copy the value. If false is returned
+     * the value won't be copied.
+     */
+    canCopy() {
+      return true
+    },
+    /**
+     * If the user presses ctrl/cmd + v while a field is selected, the value is
+     * overwritten with the data of the clipboard. In some cases, for example when the
+     * user is editing the value, we do not want to change the value. If false is
+     * returned the value won't be changed.
+     */
+    canPaste() {
+      return true
+    },
+    /**
+     * If the user presses delete or backspace while a field is selected, the value is
+     * deleted. In some cases, for example when the user is editing the value, we do
+     * not want to delete the value. If false is returned the value won't be changed.
+     */
+    canEmpty() {
+      return true
+    },
+    /**
+     * If the user clicks outside the cell, the cell is automatically unselected. In
+     * some cases, for example when you have a context menu as helper, you might not
+     * want to unselect when the user clicks in the context menu. The can be
+     * prevented by returned false here. The context menu lives at the root of the
+     * body element and not inside the cell.
+     */
+    canUnselectByClickingOutside() {
+      return true
+    },
   },
 }

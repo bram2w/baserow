@@ -45,6 +45,8 @@ backend-pytest:
   services:
     - name: postgres:11.3
       alias: db
+    - name: liminspace/mjml-tcpserver:latest
+      alias: mjml
   variables:
     POSTGRES_USER: baserow
     POSTGRES_PASSWORD: baserow

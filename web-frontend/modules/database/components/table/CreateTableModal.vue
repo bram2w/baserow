@@ -45,12 +45,21 @@ export default {
       this.hideError()
 
       try {
-        await this.$store.dispatch('table/create', {
+        const table = await this.$store.dispatch('table/create', {
           database: this.application,
           values,
         })
         this.loading = false
         this.hide()
+
+        // Redirect to the newly created table.
+        this.$nuxt.$router.push({
+          name: 'database-table',
+          params: {
+            databaseId: this.application.id,
+            tableId: table.id,
+          },
+        })
       } catch (error) {
         this.loading = false
         this.handleError(error, 'application')

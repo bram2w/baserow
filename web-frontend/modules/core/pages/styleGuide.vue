@@ -49,6 +49,19 @@
             </div>
           </div>
           <div class="control">
+            <label class="control-label">Icon text field</label>
+            <div class="control-elements">
+              <div class="input-with-icon">
+                <input
+                  type="text"
+                  class="input"
+                  placeholder="Voer hier iets in"
+                />
+                <i class="fas fa-clock"></i>
+              </div>
+            </div>
+          </div>
+          <div class="control">
             <label class="control-label">Large text field</label>
             <div class="control-elements">
               <input
@@ -66,6 +79,19 @@
                 class="input input-large"
                 placeholder="Please enter your password"
               />
+            </div>
+          </div>
+          <div class="control">
+            <label class="control-label">Large password field</label>
+            <div class="control-elements">
+              <div class="input-with-icon">
+                <input
+                  type="password"
+                  class="input input-large"
+                  placeholder="Please enter your password"
+                />
+                <i class="fas fa-calculator"></i>
+              </div>
             </div>
           </div>
           <div class="control">
@@ -99,6 +125,22 @@
                   ></DropdownItem>
                 </Dropdown>
               </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control-label">Datepicker field</label>
+            <div class="control-elements">
+              value: {{ date }}
+              <br />
+              <br />
+              <client-only>
+                <date-picker
+                  v-model="date"
+                  :inline="true"
+                  :monday-first="true"
+                  class="datepicker"
+                ></date-picker>
+              </client-only>
             </div>
           </div>
         </div>
@@ -154,6 +196,74 @@
             </p>
           </div>
           <div class="alert alert-error alert-has-icon">
+            <div class="alert-icon">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </div>
+
+          <div class="alert alert-simple alert-has-icon">
+            <div class="alert-icon">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </div>
+          <div class="alert alert-simple">
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent lobortis feugiat erat, nec volutpat nulla
+              tincidunt vel. In hac habitasse platea dictumst. Aenean fringilla
+              lacus nunc, non pharetra mauris pulvinar lacinia. Aenean ut sem
+              lacinia, sagittis quam sed, pellentesque orci. Aenean non
+              consequat mi. Nunc laoreet ligula a nunc eleifend, nec accumsan
+              felis euismod.
+            </p>
+          </div>
+          <div class="alert alert-simple alert-success alert-has-icon">
+            <div class="alert-icon">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </div>
+          <div
+            class="alert alert-simple alert-with-shadow alert-warning alert-has-icon"
+          >
+            <a href="#" class="alert-close">
+              <i class="fas fa-times"></i>
+            </a>
+            <div class="alert-icon">
+              <i class="fas fa-exclamation"></i>
+            </div>
+            <div class="alert-title">Notification message</div>
+            <p class="alert-content">
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </div>
+          <div class="alert alert-simple alert-error alert-has-icon">
             <div class="alert-icon">
               <i class="fas fa-exclamation"></i>
             </div>
@@ -369,6 +479,44 @@
               </div>
             </div>
           </div>
+          <div class="context datepicker-context">
+            <client-only>
+              <date-picker
+                v-model="date"
+                :inline="true"
+                :monday-first="true"
+                class="datepicker"
+              ></date-picker>
+            </client-only>
+          </div>
+          <div class="time-select">
+            <ul>
+              <li>
+                <a href="#">00:00</a>
+              </li>
+              <li>
+                <a href="#">00:30</a>
+              </li>
+              <li>
+                <a href="#" class="active">01:00</a>
+              </li>
+              <li>
+                <a href="#">01:30</a>
+              </li>
+              <li>
+                <a href="#">02:00</a>
+              </li>
+              <li>
+                <a href="#">02:30</a>
+              </li>
+              <li>
+                <a href="#">03:00</a>
+              </li>
+              <li>
+                <a href="#">03:30</a>
+              </li>
+            </ul>
+          </div>
         </div>
         <div class="margin-bottom-3">
           <a class="button" @click="$refs.context1.toggle($event.target)">
@@ -523,6 +671,59 @@
               fringilla. Praesent ut tincidunt dui.
             </p>
           </div>
+          <div class="modal-box modal-box-with-sidebar">
+            <a class="modal-close">
+              <i class="fas fa-times"></i>
+            </a>
+            <div class="modal-box-sidebar">
+              <div class="settings-head">
+                <div class="settings-head-icon">B</div>
+                <div class="settings-head-name">Settings</div>
+              </div>
+              <ul class="settings-nav">
+                <li>
+                  <a href="#" class="settings-nav-link">
+                    <i class="fas fa-user-circle settings-nav-icon"></i>
+                    Profile
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="settings-nav-link">
+                    <i class="fas fa-user settings-nav-icon"></i>
+                    Account
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="settings-nav-link active">
+                    <i class="fas fa-lock settings-nav-icon"></i>
+                    Password
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="settings-nav-link">
+                    <i class="fas fa-envelope settings-nav-icon"></i>
+                    Email
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="modal-box-content">
+              <h2 class="box-title">An example modal</h2>
+              <p>
+                Mauris dignissim massa ac justo consequat porttitor. Lorem ipsum
+                dolor sit amet, consectetur adipiscing elit. Mauris vel tellus
+                suscipit, gravida libero a, egestas urna. Quisque tellus nisi,
+                consequat et interdum non, posuere sed lacus. Morbi fermentum
+                lorem sed vestibulum tristique. Vivamus scelerisque molestie
+                ligula vel elementum. Etiam metus lacus, commodo sit amet
+                tristique luctus, pulvinar eget justo. Fusce sed vehicula dolor.
+                Aliquam sollicitudin fringilla augue, posuere maximus orci
+                sollicitudin a. Vestibulum egestas tristique nunc, tristique
+                dignissim mauris dictum imperdiet. Mauris ultrices ac eros at
+                fringilla. Praesent ut tincidunt dui.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -539,7 +740,8 @@ export default {
   data() {
     return {
       checkbox: false,
-      dropdown: null,
+      dropdown: '',
+      date: '',
     }
   },
   head() {

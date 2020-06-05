@@ -13,10 +13,15 @@ class DatabaseConfig(AppConfig):
         from .plugins import DatabasePlugin
         plugin_registry.register(DatabasePlugin())
 
-        from .fields.field_types import TextFieldType, NumberFieldType, BooleanFieldType
+        from .fields.field_types import (
+            TextFieldType, LongTextFieldType, NumberFieldType, BooleanFieldType,
+            DateFieldType
+        )
         field_type_registry.register(TextFieldType())
+        field_type_registry.register(LongTextFieldType())
         field_type_registry.register(NumberFieldType())
         field_type_registry.register(BooleanFieldType())
+        field_type_registry.register(DateFieldType())
 
         from .views.view_types import GridViewType
         view_type_registry.register(GridViewType())

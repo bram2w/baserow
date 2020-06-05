@@ -42,3 +42,6 @@ class UpdateViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = View
         fields = ('name',)
+        extra_kwargs = {
+            'name': {'required': False}
+        }
