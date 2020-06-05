@@ -671,6 +671,59 @@
               fringilla. Praesent ut tincidunt dui.
             </p>
           </div>
+          <div class="modal-box modal-box-with-sidebar">
+            <a class="modal-close">
+              <i class="fas fa-times"></i>
+            </a>
+            <div class="modal-box-sidebar">
+              <div class="settings-head">
+                <div class="settings-head-icon">B</div>
+                <div class="settings-head-name">Settings</div>
+              </div>
+              <ul class="settings-nav">
+                <li>
+                  <a href="#" class="settings-nav-link">
+                    <i class="fas fa-user-circle settings-nav-icon"></i>
+                    Profile
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="settings-nav-link">
+                    <i class="fas fa-user settings-nav-icon"></i>
+                    Account
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="settings-nav-link active">
+                    <i class="fas fa-lock settings-nav-icon"></i>
+                    Password
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="settings-nav-link">
+                    <i class="fas fa-envelope settings-nav-icon"></i>
+                    Email
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="modal-box-content">
+              <h2 class="box-title">An example modal</h2>
+              <p>
+                Mauris dignissim massa ac justo consequat porttitor. Lorem ipsum
+                dolor sit amet, consectetur adipiscing elit. Mauris vel tellus
+                suscipit, gravida libero a, egestas urna. Quisque tellus nisi,
+                consequat et interdum non, posuere sed lacus. Morbi fermentum
+                lorem sed vestibulum tristique. Vivamus scelerisque molestie
+                ligula vel elementum. Etiam metus lacus, commodo sit amet
+                tristique luctus, pulvinar eget justo. Fusce sed vehicula dolor.
+                Aliquam sollicitudin fringilla augue, posuere maximus orci
+                sollicitudin a. Vestibulum egestas tristique nunc, tristique
+                dignissim mauris dictum imperdiet. Mauris ultrices ac eros at
+                fringilla. Praesent ut tincidunt dui.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

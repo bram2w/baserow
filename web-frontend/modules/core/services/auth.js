@@ -31,5 +31,11 @@ export default (client) => {
         password,
       })
     },
+    changePassword(oldPassword, newPassword) {
+      return client.post('/user/change-password/', {
+        old_password: oldPassword,
+        new_password: newPassword,
+      })
+    },
   }
 }

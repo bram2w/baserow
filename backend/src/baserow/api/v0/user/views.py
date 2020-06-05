@@ -3,20 +3,25 @@ from itsdangerous.exc import BadSignature, SignatureExpired
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.views import ObtainJSONWebToken as RegularObtainJSONWebToken
 
 from baserow.api.v0.decorators import map_exceptions, validate_body
 from baserow.api.v0.errors import BAD_TOKEN_SIGNATURE, EXPIRED_TOKEN_SIGNATURE
 from baserow.core.user.handler import UserHandler
-from baserow.core.user.exceptions import UserAlreadyExist, UserNotFound
+from baserow.core.user.exceptions import (
+    UserAlreadyExist, UserNotFound, InvalidPassword
+)
 
 from .serializers import (
     RegisterSerializer, UserSerializer, SendResetPasswordEmailBodyValidationSerializer,
-    ResetPasswordBodyValidationSerializer, NormalizedEmailWebTokenSerializer
+    ResetPasswordBodyValidationSerializer, ChangePasswordBodyValidationSerializer,
+    NormalizedEmailWebTokenSerializer,
 )
-from .errors import ERROR_ALREADY_EXISTS, ERROR_USER_NOT_FOUND
+from .errors import (
+    ERROR_ALREADY_EXISTS, ERROR_USER_NOT_FOUND, ERROR_INVALID_OLD_PASSWORD
+)
 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -94,5 +99,23 @@ class ResetPasswordView(APIView):
 
         handler = UserHandler()
         handler.reset_password(data['token'], data['password'])
+
+        return Response('', status=204)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @transaction.atomic
+    @map_exceptions({
+        InvalidPassword: ERROR_INVALID_OLD_PASSWORD,
+    })
+    @validate_body(ChangePasswordBodyValidationSerializer)
+    def post(self, request, data):
+        """Changes the authenticated user's password if the old password is correct."""
+
+        handler = UserHandler()
+        handler.change_password(request.user, data['old_password'],
+                                data['new_password'])
 
         return Response('', status=204)

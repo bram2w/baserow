@@ -5,11 +5,21 @@
     class="modal-wrapper"
     @click="outside($event)"
   >
-    <div class="modal-box">
+    <div class="modal-box" :class="{ 'modal-box-with-sidebar': sidebar }">
       <a class="modal-close" @click="hide()">
         <i class="fas fa-times"></i>
       </a>
-      <slot></slot>
+      <template v-if="sidebar">
+        <div class="modal-box-sidebar">
+          <slot name="sidebar"></slot>
+        </div>
+        <div class="modal-box-content">
+          <slot name="content"></slot>
+        </div>
+      </template>
+      <template v-if="!sidebar">
+        <slot></slot>
+      </template>
     </div>
   </div>
 </template>
@@ -20,6 +30,13 @@ import MoveToBody from '@baserow/modules/core/mixins/moveToBody'
 export default {
   name: 'Modal',
   mixins: [MoveToBody],
+  props: {
+    sidebar: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+  },
   data() {
     return {
       open: false,

@@ -177,3 +177,51 @@ def test_password_reset(data_fixture, client):
 
     user.refresh_from_db()
     assert user.check_password('test')
+
+
+@pytest.mark.django_db
+def test_change_password(data_fixture, client):
+    user, token = data_fixture.create_user_and_token(
+        email='test@localhost',
+        password='test'
+    )
+
+    response = client.post(
+        reverse('api_v0:user:change_password'),
+        {},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+
+    response = client.post(
+        reverse('api_v0:user:change_password'),
+        {
+            'old_password': 'INCORRECT',
+            'new_password': 'new'
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_INVALID_OLD_PASSWORD'
+
+    user.refresh_from_db()
+    assert user.check_password('test')
+
+    response = client.post(
+        reverse('api_v0:user:change_password'),
+        {
+            'old_password': 'test',
+            'new_password': 'new'
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == 204
+
+    user.refresh_from_db()
+    assert user.check_password('new')

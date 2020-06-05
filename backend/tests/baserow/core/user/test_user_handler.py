@@ -9,7 +9,9 @@ from baserow.core.registries import plugin_registry
 from baserow.contrib.database.models import (
     Database, Table, GridView, TextField, BooleanField
 )
-from baserow.core.user.exceptions import UserAlreadyExist, UserNotFound
+from baserow.core.user.exceptions import (
+    UserAlreadyExist, UserNotFound, InvalidPassword
+)
 from baserow.core.user.handler import UserHandler
 
 @pytest.mark.django_db
@@ -127,3 +129,18 @@ def test_reset_password(data_fixture):
     with freeze_time('2020-01-02 12:00'):
         user = handler.reset_password(token, 'test')
         assert user.check_password('test')
+
+
+@pytest.mark.django_db
+def test_change_password(data_fixture):
+    user = data_fixture.create_user(email='test@localhost', password='test')
+    handler = UserHandler()
+
+    with pytest.raises(InvalidPassword):
+        handler.change_password(user, 'INCORRECT', 'new')
+
+    user.refresh_from_db()
+    assert user.check_password('test')
+
+    user = handler.change_password(user, 'test', 'new')
+    assert user.check_password('new')

@@ -4,3 +4,7 @@ class UserNotFound(Exception):
 
 class UserAlreadyExist(Exception):
     """Raised when a user could not be created because the email already exists."""
+
+
+class InvalidPassword(Exception):
+    """Raised when the provided password is incorrect."""

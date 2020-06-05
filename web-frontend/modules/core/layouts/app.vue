@@ -1,6 +1,7 @@
 <template>
   <div>
     <Notifications></Notifications>
+    <SettingsModal ref="settingsModal"></SettingsModal>
     <div :class="{ 'layout-collapsed': isCollapsed }" class="layout">
       <div class="layout-col-1 menu">
         <ul class="menu-items">
@@ -41,6 +42,19 @@
               <div class="context-menu-title">{{ name }}</div>
               <ul class="context-menu">
                 <li>
+                  <a
+                    @click="
+                      ;[
+                        $refs.settingsModal.show('password'),
+                        $refs.userContext.hide(),
+                      ]
+                    "
+                  >
+                    <i class="context-menu-icon fas fa-fw fa-cogs"></i>
+                    Settings
+                  </a>
+                </li>
+                <li>
                   <a @click="logoff()">
                     <i class="context-menu-icon fas fa-fw fa-sign-out-alt"></i>
                     Logoff
@@ -77,6 +91,7 @@
 <script>
 import { mapActions, mapGetters } from 'vuex'
 
+import SettingsModal from '@baserow/modules/core/components/settings/SettingsModal'
 import Notifications from '@baserow/modules/core/components/notifications/Notifications'
 import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
 import Sidebar from '@baserow/modules/core/components/sidebar/Sidebar'
@@ -88,6 +103,7 @@ export default {
   // applications.
   middleware: ['authenticated', 'groupsAndApplications'],
   components: {
+    SettingsModal,
     GroupsContext,
     Notifications,
     Sidebar,
