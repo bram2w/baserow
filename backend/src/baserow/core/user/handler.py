@@ -7,7 +7,7 @@ from django.db import IntegrityError
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import plugin_registry
 
-from .exceptions import UserAlreadyExist, UserNotFound
+from .exceptions import UserAlreadyExist, UserNotFound, InvalidPassword
 from .emails import ResetPasswordEmail
 from .utils import normalize_email_address
 
@@ -120,6 +120,31 @@ class UserHandler:
 
         user = self.get_user(user_id=user_id)
         user.set_password(password)
+        user.save()
+
+        return user
+
+    def change_password(self, user, old_password, new_password):
+        """
+        Changes the password of the provided user if the old password matches the
+        existing one.
+
+        :param user: The user for which the password needs to be changed.
+        :type user: User
+        :param old_password: The old password of the user. This must match with the
+            existing password else the InvalidPassword exception is raised.
+        :type old_password: str
+        :param new_password: The new password of the user. After changing the user
+            can only authenticate with this password.
+        :type new_password: str
+        :return: The changed user instance.
+        :rtype: User
+        """
+
+        if not user.check_password(old_password):
+            raise InvalidPassword('The provided old password is incorrect.')
+
+        user.set_password(new_password)
         user.save()
 
         return user

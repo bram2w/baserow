@@ -3,7 +3,8 @@ from django.conf.urls import url
 from rest_framework_jwt.views import refresh_jwt_token, verify_jwt_token
 
 from .views import (
-    UserView, SendResetPasswordEmailView, ResetPasswordView, ObtainJSONWebToken
+    UserView, SendResetPasswordEmailView, ResetPasswordView, ChangePasswordView,
+    ObtainJSONWebToken
 )
 
 
@@ -22,6 +23,11 @@ urlpatterns = [
         r'^reset-password/$',
         ResetPasswordView.as_view(),
         name='reset_password'
+    ),
+    url(
+        r'^change-password/$',
+        ChangePasswordView.as_view(),
+        name='change_password'
     ),
     url(r'^$', UserView.as_view(), name='index')
 ]

@@ -36,6 +36,11 @@ class ResetPasswordBodyValidationSerializer(serializers.Serializer):
     password = serializers.CharField()
 
 
+class ChangePasswordBodyValidationSerializer(serializers.Serializer):
+    old_password = serializers.CharField()
+    new_password = serializers.CharField()
+
+
 class NormalizedEmailField(serializers.EmailField):
     def to_internal_value(self, data):
         data = super().to_internal_value(data)
