@@ -94,7 +94,7 @@ class CoreHandler:
         :param group: The group that the application instance belongs to.
         :type group: Group
         :param type_name: The type name of the application. ApplicationType can be
-                          registered via the ApplicationTypeRegistry.
+            registered via the ApplicationTypeRegistry.
         :type type_name: str
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object

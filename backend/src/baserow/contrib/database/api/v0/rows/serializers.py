@@ -23,8 +23,7 @@ def get_row_serializer_class(model, base_class=None):
     :param model: The model for which to generate a serializer.
     :type model: Model
     :param base_class: The base serializer class that will be extended when
-                       generating the serializer. By default this is a regular
-                       ModelSerializer.
+        generating the serializer. By default this is a regular ModelSerializer.
     :type base_class: ModelSerializer
     :return: The generated serializer.
     :rtype: ModelSerializer

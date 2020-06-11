@@ -18,7 +18,7 @@ def extract_allowed(values, allowed_fields):
     :param values: A dict containing the values.
     :type dict:
     :param allowed_fields: A list containing the keys of the values that need to be
-                           extracted from the values.
+        extracted from the values.
     :type allowed_fields: list
     :return: The extracted values.
     :rtype: dict
@@ -56,7 +56,7 @@ def set_allowed_attrs(values, allowed_fields, instance):
     :param values: The dict containing the values.
     :type values: dict
     :param allowed_fields: A list containing the keys of the value that need to be set
-                           on the instance.
+        on the instance.
     :type allowed_fields: list
     :param instance: The instance of which the attributes must be updated.
     :type instance: object

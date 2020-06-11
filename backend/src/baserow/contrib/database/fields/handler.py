@@ -29,10 +29,10 @@ class FieldHandler:
         :param table: The table that the field belongs to.
         :type table: Table
         :param type_name: The type name of the field. Available types can be found in
-                          the field_type_registry.
+            the field_type_registry.
         :type type_name: str
         :param primary: Every table needs at least a primary field which cannot be
-                        deleted and is a representation of the whole row.
+            deleted and is a representation of the whole row.
         :type primary: bool
         :param kwargs: The field values that need to be set upon creation.
         :type kwargs: object

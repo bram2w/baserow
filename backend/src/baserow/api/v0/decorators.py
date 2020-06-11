@@ -118,10 +118,10 @@ def validate_body_custom_fields(registry, base_serializer_class=None,
     :param registry: The registry object where to get the type instance from.
     :type registry: Registry
     :param base_serializer_class: The base serializer class that will be used when
-                                  generating the serializer.
+        generating the serializer.
     :type base_serializer_class: ModelSerializer
     :param type_attribute_name: The attribute name containing the type value in the
-                                request data.
+        request data.
     :type type_attribute_name: str
     """
 
