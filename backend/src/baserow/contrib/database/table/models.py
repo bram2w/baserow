@@ -43,11 +43,11 @@ class Table(OrderableMixin, models.Model):
         :param fields: Extra table field instances that need to be added the model.
         :type fields: list
         :param field_ids: If provided only the fields with the ids in the list will be
-                          added to the model. This can be done to improve speed if for
-                          example only a single field needs to be mutated.
+            added to the model. This can be done to improve speed if for example only a
+            single field needs to be mutated.
         :type field_ids: None or list
         :param attribute_names: If True, the the model attributes will be based on the
-                                field name instead of the field id.
+            field name instead of the field id.
         :type attribute_names: bool
         :return: The generated model.
         :rtype: Model

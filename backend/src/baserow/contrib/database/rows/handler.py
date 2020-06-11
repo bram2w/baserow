@@ -18,7 +18,7 @@ class RowHandler:
         :param fields: The returned fields object from the get_model method.
         :type fields: dict
         :param values: The values that need to be prepared with the field id or the
-                       string 'field_{id}' as key.
+            string 'field_{id}' as key.
         :type values: dict
         :return: The prepared values with the field name as key.
         :rtype: dict
@@ -61,10 +61,10 @@ class RowHandler:
         :param table: The table for which to create a row for.
         :type table: Table
         :param values: The values that must be set upon creating the row. The keys must
-                       be the field ids.
+            be the field ids.
         :type values: dict
         :param model: If a model is already generated it can be provided here to avoid
-                      having to generate the model again.
+            having to generate the model again.
         :type model: Model
         :return: The created row instance.
         :rtype: Model

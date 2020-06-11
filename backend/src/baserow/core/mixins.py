@@ -11,10 +11,14 @@ class OrderableMixin:
     @classmethod
     def get_highest_order_of_queryset(cls, queryset, field='order'):
         """
+        Returns the highest existing value of the provided field.
 
-        :param queryset:
-        :param field:
-        :return:
+        :param queryset: The queryset containing the field to check.
+        :type queryset: QuerySet
+        :param field: The field name containing the value.
+        :type field: str
+        :return: The highest value in the queryset.
+        :rtype: int
         """
 
         return queryset.aggregate(
@@ -80,7 +84,7 @@ class PolymorphicContentTypeMixin:
         default values in the __dict__.
 
         :param new_model_class: The new model class that the instance must be converted
-                                to.
+            to.
         :type new_model_class: Model
         """
 

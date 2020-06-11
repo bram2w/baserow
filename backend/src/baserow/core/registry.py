@@ -73,7 +73,7 @@ class CustomFieldsInstanceMixin:
         :param model_instance: The instance for which the serializer must be generated.
         :type model_instance: Model
         :param base_class: The base serializer class that must be extended. For example
-                           common fields could be stored here.
+            common fields could be stored here.
         :type base_class: ModelSerializer
         :return: The instantiated generated model serializer.
         :rtype: ModelSerializer
@@ -200,7 +200,7 @@ class ModelRegistryMixin:
         Returns a registered instance of the given model class.
 
         :param model_instance: The value that must be or must be an instance of the
-                               model_class.
+            model_class.
         :type model_instance: Model or Model()
         :return: The registered instance.
         :rtype: Instance
@@ -226,7 +226,7 @@ class CustomFieldsRegistryMixin:
         :param model_instance: The instance for which the serializer must be generated.
         :type model_instance: Model
         :param base_class: The base serializer class that must be extended. For example
-                           common fields could be stored here.
+            common fields could be stored here.
         :type base_class: ModelSerializer
         :return: The instantiated generated model serializer.
         :rtype: ModelSerializer

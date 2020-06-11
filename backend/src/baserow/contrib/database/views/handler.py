@@ -18,8 +18,8 @@ class ViewHandler:
         :param view_id: The identifier of the view that must be returned.
         :type view_id: int
         :param view_model: If provided that models objects are used to select the
-                           view. This can for example be useful when you want to select
-                           a GridView or other child of the View model.
+            view. This can for example be useful when you want to select a GridView or
+            other child of the View model.
         :type view_model: View
         :return:
         """
