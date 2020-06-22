@@ -1,7 +1,7 @@
 <template>
   <div
     ref="cell"
-    class="grid-view-cell"
+    class="grid-view__cell"
     :class="{ active: selected, editing: editing }"
     @contextmenu="stopContextIfEditing($event)"
   >
@@ -9,14 +9,14 @@
       class="grid-field-date"
       :class="{ 'grid-field-date--has-time': field.date_include_time }"
     >
-      <div v-show="!editing" ref="dateDisplay" class="grid-field-date-date">
+      <div v-show="!editing" ref="dateDisplay" class="grid-field-date__date">
         {{ date }}
       </div>
       <div
         v-show="!editing"
         v-if="field.date_include_time"
         ref="timeDisplay"
-        class="grid-field-date-time"
+        class="grid-field-date__time"
       >
         {{ time }}
       </div>
@@ -25,7 +25,7 @@
           ref="date"
           v-model="date"
           type="text"
-          class="grid-field-date-date-input"
+          class="grid-field-date__date-input"
           :placeholder="getDatePlaceholder(field)"
           @keyup="updateDate(field, date)"
           @focus="focus($refs.dateContext, $event)"
@@ -52,7 +52,7 @@
             ref="time"
             v-model="time"
             type="text"
-            class="grid-field-date-time-input"
+            class="grid-field-date__time-input"
             :placeholder="getTimePlaceholder(field)"
             @keyup="updateTime(field, time)"
             @focus="focus($refs.timeContext, $event)"

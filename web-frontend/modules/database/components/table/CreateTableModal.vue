@@ -1,13 +1,13 @@
 <template>
   <Modal>
-    <h2 class="box-title">Create new table</h2>
+    <h2 class="box__title">Create new table</h2>
     <Error :error="error"></Error>
     <TableForm ref="tableForm" @submitted="submitted">
       <div class="actions">
         <div class="align-right">
           <button
-            class="button button-large"
-            :class="{ 'button-loading': loading }"
+            class="button button--large"
+            :class="{ 'button--loading': loading }"
             :disabled="loading"
           >
             Add table

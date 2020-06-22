@@ -1,11 +1,11 @@
 <template>
   <div>
     <div class="control">
-      <label class="control-label control-label-small">Number type</label>
-      <div class="control-elements">
+      <label class="control__label control__label--small">Number type</label>
+      <div class="control__elements">
         <Dropdown
           v-model="values.number_type"
-          :class="{ 'dropdown-error': $v.values.number_type.$error }"
+          :class="{ 'dropdown--error': $v.values.number_type.$error }"
           @hide="$v.values.number_type.$touch()"
         >
           <DropdownItem name="Integer (1)" value="INTEGER"></DropdownItem>
@@ -14,11 +14,11 @@
       </div>
     </div>
     <div v-show="values.number_type === 'DECIMAL'" class="control">
-      <label class="control-label control-label-small">Decimal places</label>
-      <div class="control-elements">
+      <label class="control__label control__label--small">Decimal places</label>
+      <div class="control__elements">
         <Dropdown
           v-model="values.number_decimal_places"
-          :class="{ 'dropdown-error': $v.values.number_decimal_places.$error }"
+          :class="{ 'dropdown--error': $v.values.number_decimal_places.$error }"
           @hide="$v.values.number_decimal_places.$touch()"
         >
           <DropdownItem name="1.0" :value="1"></DropdownItem>
@@ -30,7 +30,7 @@
       </div>
     </div>
     <div class="control">
-      <div class="control-elements">
+      <div class="control__elements">
         <Checkbox v-model="values.number_negative">Allow negative</Checkbox>
       </div>
     </div>

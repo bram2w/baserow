@@ -1,6 +1,6 @@
 <template>
   <Modal>
-    <h2 class="box-title">Create new {{ viewType.name | lowercase }}</h2>
+    <h2 class="box__title">Create new {{ viewType.name | lowercase }}</h2>
     <Error :error="error"></Error>
     <component
       :is="viewType.getViewFormComponent()"
@@ -10,8 +10,8 @@
       <div class="actions">
         <div class="align-right">
           <button
-            class="button button-large"
-            :class="{ 'button-loading': loading }"
+            class="button button--large"
+            :class="{ 'button--loading': loading }"
             :disabled="loading"
           >
             Add {{ viewType.name | lowercase }}

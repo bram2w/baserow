@@ -15,16 +15,16 @@
         <i class="dashboard__group-title-icon fas fa-caret-down"></i>
       </a>
       <Context ref="context">
-        <ul class="context-menu">
+        <ul class="context__menu">
           <li>
             <a @click="enableRename()">
-              <i class="context-menu-icon fas fa-fw fa-pen"></i>
+              <i class="context__menu-icon fas fa-fw fa-pen"></i>
               Rename group
             </a>
           </li>
           <li>
             <a @click="deleteGroup(group)">
-              <i class="context-menu-icon fas fa-fw fa-trash"></i>
+              <i class="context__menu-icon fas fa-fw fa-trash"></i>
               Delete group
             </a>
           </li>

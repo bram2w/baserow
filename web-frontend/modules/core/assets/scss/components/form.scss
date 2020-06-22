@@ -2,24 +2,24 @@
   margin-bottom: 20px;
 }
 
-.control-label {
+.control__label {
   display: block;
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 16px;
 
-  &.control-label-small {
+  &.control__label--small {
     font-size: 13px;
     font-weight: 700;
     margin-bottom: 4px;
   }
 }
 
-.control-label-icon {
+.control__label-icon {
   margin-right: 6px;
 }
 
-.control-context {
+.control__context {
   color: $color-primary-900;
   margin-left: 6px;
 
@@ -43,16 +43,16 @@
     border-color: $color-primary-500;
   }
 
-  &.input-large {
+  &.input--large {
     padding: 12px 12px;
   }
 
-  &.input-error {
+  &.input--error {
     border-color: $color-error-500;
   }
 }
 
-.input-with-icon {
+.input__with-icon {
   position: relative;
 
   .input {
@@ -116,12 +116,12 @@
     width: 100%;
   }
 
-  &.actions-right {
+  &.actions--right {
     justify-content: right;
   }
 }
 
-.action-links {
+.action__links {
   list-style: none;
   margin: 0;
   padding: 0;

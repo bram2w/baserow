@@ -3,12 +3,12 @@
   padding: 0;
   margin: 0 0 12px;
 
-  .tree-item & {
+  .tree__item & {
     padding-left: 8px;
   }
 }
 
-.tree-item {
+.tree__item {
   @extend %first-last-no-margin;
 
   position: relative;
@@ -19,7 +19,7 @@
     background-color: $color-primary-100;
   }
 
-  &.tree-item-loading::after {
+  &.tree__item--loading::after {
     content: " ";
 
     @include loading(14px);
@@ -27,13 +27,13 @@
   }
 }
 
-%tree-size {
+%tree__size {
   line-height: 32px;
   height: 32px;
 }
 
-.tree-action {
-  @extend %tree-size;
+.tree__action {
+  @extend %tree__size;
 
   padding: 0 32px 0 6px;
   border-radius: 3px;
@@ -42,13 +42,13 @@
     background-color: $color-neutral-100;
   }
 
-  .tree-item.active &:hover {
+  .tree__item.active &:hover {
     background-color: transparent;
   }
 }
 
-.tree-link {
-  @extend %tree-size;
+.tree__link {
+  @extend %tree__size;
   @extend %ellipsis;
 
   display: block;
@@ -60,8 +60,8 @@
   }
 }
 
-.tree-type {
-  @extend %tree-size;
+.tree__type {
+  @extend %tree__size;
 
   text-align: center;
   width: $fa-fw-width;
@@ -70,19 +70,19 @@
   font-size: 11px;
 }
 
-%sub-tree-size {
+%tree_sub-size {
   line-height: 28px;
   height: 28px;
 }
 
-.tree-subs {
+.tree__subs {
   list-style: none;
   padding: 0 0 2px 0;
   margin: 0;
 }
 
-.tree-sub {
-  @extend %sub-tree-size;
+.tree__sub {
+  @extend %tree_sub-size;
 
   position: relative;
   padding: 0 34px;
@@ -111,8 +111,8 @@
   }
 }
 
-.tree-sub-link {
-  @extend %sub-tree-size;
+.tree__sub-link {
+  @extend %tree_sub-size;
   @extend %ellipsis;
 
   color: $color-primary-900;
@@ -129,7 +129,7 @@
   }
 }
 
-.tree-sub-add {
+.tree__sub-add {
   display: inline-block;
   margin: 0 0 10px 10px;
   font-size: 12px;
@@ -141,7 +141,7 @@
   }
 }
 
-.tree-options {
+.tree__options {
   display: none;
   position: absolute;
   z-index: 1;
@@ -161,7 +161,7 @@
     display: block;
   }
 
-  .tree-item-loading > .tree-action > & {
+  .tree__item--loading > .tree__action > & {
     display: none;
   }
 }

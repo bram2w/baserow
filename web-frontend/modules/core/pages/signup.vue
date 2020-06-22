@@ -1,17 +1,17 @@
 <template>
   <div>
-    <h1 class="box-title">Sign up</h1>
+    <h1 class="box__title">Sign up</h1>
     <Error :error="error"></Error>
     <form @submit.prevent="register">
       <div class="control">
-        <label class="control-label">E-mail address</label>
-        <div class="control-elements">
+        <label class="control__label">E-mail address</label>
+        <div class="control__elements">
           <input
             ref="email"
             v-model="account.email"
-            :class="{ 'input-error': $v.account.email.$error }"
+            :class="{ 'input--error': $v.account.email.$error }"
             type="text"
-            class="input input-large"
+            class="input input--large"
             @blur="$v.account.email.$touch()"
           />
           <div v-if="$v.account.email.$error" class="error">
@@ -20,13 +20,13 @@
         </div>
       </div>
       <div class="control">
-        <label class="control-label">Your name</label>
-        <div class="control-elements">
+        <label class="control__label">Your name</label>
+        <div class="control__elements">
           <input
             v-model="account.name"
-            :class="{ 'input-error': $v.account.name.$error }"
+            :class="{ 'input--error': $v.account.name.$error }"
             type="text"
-            class="input input-large"
+            class="input input--large"
             @blur="$v.account.name.$touch()"
           />
           <div v-if="$v.account.name.$error" class="error">
@@ -35,13 +35,13 @@
         </div>
       </div>
       <div class="control">
-        <label class="control-label">Password</label>
-        <div class="control-elements">
+        <label class="control__label">Password</label>
+        <div class="control__elements">
           <input
             v-model="account.password"
-            :class="{ 'input-error': $v.account.password.$error }"
+            :class="{ 'input--error': $v.account.password.$error }"
             type="password"
-            class="input input-large"
+            class="input input--large"
             @blur="$v.account.password.$touch()"
           />
           <div v-if="$v.account.password.$error" class="error">
@@ -50,13 +50,13 @@
         </div>
       </div>
       <div class="control">
-        <label class="control-label">Repeat password</label>
-        <div class="control-elements">
+        <label class="control__label">Repeat password</label>
+        <div class="control__elements">
           <input
             v-model="account.passwordConfirm"
-            :class="{ 'input-error': $v.account.passwordConfirm.$error }"
+            :class="{ 'input--error': $v.account.passwordConfirm.$error }"
             type="password"
-            class="input input-large"
+            class="input input--large"
             @blur="$v.account.passwordConfirm.$touch()"
           />
           <div v-if="$v.account.passwordConfirm.$error" class="error">
@@ -65,7 +65,7 @@
         </div>
       </div>
       <div class="actions">
-        <ul class="action-links">
+        <ul class="action__links">
           <li>
             <nuxt-link :to="{ name: 'login' }">
               <i class="fas fa-arrow-left"></i>
@@ -74,8 +74,8 @@
           </li>
         </ul>
         <button
-          :class="{ 'button-loading': loading }"
-          class="button button-large"
+          :class="{ 'button--loading': loading }"
+          class="button button--large"
           :disabled="loading"
         >
           Sign up

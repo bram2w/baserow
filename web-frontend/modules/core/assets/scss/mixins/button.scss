@@ -1,0 +1,25 @@
+@mixin button-style($background, $active-background, $color: $white) {
+  background-color: $background;
+  color: $color;
+
+  &:active {
+    background-color: $active-background;
+  }
+
+  &.disabled,
+  &[disabled] {
+    background-color: $background;
+  }
+
+  &.button--loading {
+    background-color: $active-background;
+    color: $active-background;
+  }
+}
+
+@mixin button-size($font-size, $height, $left-right-space) {
+  font-size: $font-size;
+  height: $height;
+  line-height: $height;
+  padding: 0 $left-right-space;
+}

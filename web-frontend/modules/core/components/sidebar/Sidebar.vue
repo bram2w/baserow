@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="hasSelectedGroup">
-      <div class="sidebar-group-title">{{ selectedGroup.name }}</div>
+      <div class="sidebar__group-title">{{ selectedGroup.name }}</div>
       <ul class="tree">
         <SidebarApplication
           v-for="application in applications"
@@ -11,7 +11,7 @@
       </ul>
       <a
         ref="createApplicationContextLink"
-        class="sidebar-new"
+        class="sidebar__new"
         @click="
           $refs.createApplicationContext.toggle(
             $refs.createApplicationContextLink

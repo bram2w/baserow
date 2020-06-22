@@ -1,0 +1,44 @@
+.grid-field-date {
+  display: flex;
+  width: 100%;
+}
+
+%grid-field-date__date {
+  flex: 0 0 100%;
+  width: 100%;
+
+  .grid-field-date--has-time & {
+    width: 60%;
+    flex-basis: 60%;
+  }
+}
+
+%grid-field-date__time {
+  flex: 0 0 40%;
+  width: 40%;
+  padding-left: 0;
+}
+
+.grid-field-date__date {
+  @extend .grid-field-text;
+  @extend %grid-field-date__date;
+}
+
+.grid-field-date__time {
+  @extend .grid-field-text;
+  @extend %grid-field-date__time;
+}
+
+.grid-field-date__date-input {
+  @extend .grid-field-text__input;
+  @extend %grid-field-date__date;
+
+  min-width: 0;
+}
+
+.grid-field-date__time-input {
+  @extend .grid-field-text__input;
+  @extend %grid-field-date__time;
+
+  min-width: 0;
+}

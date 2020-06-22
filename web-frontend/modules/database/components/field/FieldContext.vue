@@ -1,10 +1,10 @@
 <template>
   <Context ref="context">
-    <ul class="context-menu">
+    <ul class="context__menu">
       <li>
         <a
           ref="updateFieldContextLink"
-          class="grid-view-description-options"
+          class="grid-view__description-options"
           @click="
             $refs.updateFieldContext.toggle(
               $refs.updateFieldContextLink,
@@ -14,7 +14,7 @@
             )
           "
         >
-          <i class="context-menu-icon fas fa-fw fa-pen"></i>
+          <i class="context__menu-icon fas fa-fw fa-pen"></i>
           Edit field
         </a>
         <UpdateFieldContext
@@ -25,7 +25,7 @@
       </li>
       <li v-if="!field.primary">
         <a @click="deleteField(field)">
-          <i class="context-menu-icon fas fa-fw fa-trash"></i>
+          <i class="context__menu-icon fas fa-fw fa-trash"></i>
           Delete field
         </a>
       </li>

@@ -1,15 +1,14 @@
 <template>
   <li
-    class="select-item"
+    class="select__item"
     :class="{
       active: view._.selected,
-      'select-item-loading': view._.loading,
+      'select__item--loading': view._.loading,
     }"
   >
-    <div class="loading-overlay"></div>
-    <a class="select-item-link" @click="selectView(view)">
+    <a class="select__item-link" @click="selectView(view)">
       <i
-        class="select-item-icon fas fa-fw color-primary"
+        class="select__item-icon fas fa-fw color-primary"
         :class="'fa-' + view._.type.iconClass"
       ></i>
       <Editable
@@ -20,22 +19,22 @@
     </a>
     <a
       ref="contextLink"
-      class="select-item-options"
+      class="select__item-options"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
     >
       <i class="fas fa-ellipsis-v"></i>
     </a>
     <Context ref="context">
-      <ul class="context-menu">
+      <ul class="context__menu">
         <li>
           <a @click="enableRename()">
-            <i class="context-menu-icon fas fa-fw fa-pen"></i>
+            <i class="context__menu-icon fas fa-fw fa-pen"></i>
             Rename view
           </a>
         </li>
         <li>
           <a @click="deleteView(view)">
-            <i class="context-menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon fas fa-fw fa-trash"></i>
             Delete view
           </a>
         </li>

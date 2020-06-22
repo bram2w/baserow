@@ -1,7 +1,7 @@
 <template>
   <div
     ref="cell"
-    class="grid-view-cell"
+    class="grid-view__cell"
     :class="{ active: selected, editing: editing }"
     @contextmenu="stopContextIfEditing($event)"
   >
@@ -11,7 +11,7 @@
       ref="input"
       v-model="copy"
       type="text"
-      class="grid-field-text-input"
+      class="grid-field-text__input"
     />
   </div>
 </template>

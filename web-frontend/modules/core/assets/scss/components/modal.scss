@@ -1,4 +1,4 @@
-.modal-wrapper {
+.modal__wrapper {
   @include absolute(0);
 
   overflow: auto;
@@ -6,7 +6,7 @@
   background-color: rgba($color-neutral-700, 0.16);
 }
 
-.modal-box {
+.modal__box {
   @extend .box;
 
   position: relative;
@@ -15,18 +15,18 @@
   background-color: $white;
   border-radius: 6px;
 
-  &.modal-box-with-sidebar {
+  &.modal__box--with-sidebar {
     display: flex;
     padding: 0;
     max-width: 860px;
   }
 
-  .box-title {
+  .box__title {
     margin-top: 0;
   }
 }
 
-.modal-box-sidebar {
+.modal__box-sidebar {
   flex: 0 0 200px;
   background-color: $color-neutral-50;
   border-right: 1px solid $color-neutral-200;
@@ -34,12 +34,12 @@
   border-bottom-left-radius: 6px;
 }
 
-.modal-box-content {
+.modal__box-content {
   width: 100%;
   padding: 32px 40px;
 }
 
-.modal-close {
+.modal__close {
   @include absolute(20px, 20px, auto, auto);
 
   font-size: 20px;
@@ -50,7 +50,7 @@
   }
 }
 
-.modal-head {
+.modal__head {
   padding-bottom: 24px;
   margin-bottom: 24px;
   border-bottom: solid 1px $color-neutral-200;

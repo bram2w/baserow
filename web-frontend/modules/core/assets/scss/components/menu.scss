@@ -6,17 +6,17 @@
   color: $white;
 }
 
-.menu-items {
+.menu__items {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.menu-item {
+.menu__item {
   margin: 10px;
 }
 
-.menu-link {
+.menu__link {
   position: relative;
   display: block;
   text-decoration: none;
@@ -35,7 +35,7 @@
   }
 }
 
-.menu-link-text {
+.menu__link-text {
   display: none;
   position: absolute;
   left: 36px;
@@ -54,7 +54,7 @@
   }
 }
 
-.menu-user-item {
+.menu__user-item {
   border-radius: 100%;
   background-color: $color-primary-500;
   color: $white;

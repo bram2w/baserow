@@ -1,9 +1,9 @@
 <template>
-  <li class="select-item" :class="{ hidden: !isVisible(query) }">
-    <a class="select-item-link" @click="select(value)">
+  <li class="select__item" :class="{ hidden: !isVisible(query) }">
+    <a class="select__item-link" @click="select(value)">
       <i
         v-if="icon"
-        class="select-item-icon fas fa-fw"
+        class="select__item-icon fas fa-fw"
         :class="'fa-' + icon"
       ></i>
       {{ name }}

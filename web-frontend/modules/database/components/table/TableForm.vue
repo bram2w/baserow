@@ -1,17 +1,17 @@
 <template>
   <form @submit.prevent="submit">
     <div class="control">
-      <label class="control-label">
+      <label class="control__label">
         <i class="fas fa-font"></i>
         Name
       </label>
-      <div class="control-elements">
+      <div class="control__elements">
         <input
           ref="name"
           v-model="values.name"
-          :class="{ 'input-error': $v.values.name.$error }"
+          :class="{ 'input--error': $v.values.name.$error }"
           type="text"
-          class="input input-large"
+          class="input input--large"
           @blur="$v.values.name.$touch()"
         />
         <div v-if="$v.values.name.$error" class="error">

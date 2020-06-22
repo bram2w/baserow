@@ -1,13 +1,13 @@
 <template>
   <Context>
-    <ul class="context-menu">
+    <ul class="context__menu">
       <li v-for="(applicationType, type) in applications" :key="type">
         <a
           :ref="'createApplicationModalToggle' + type"
           @click="toggleCreateApplicationModal(type)"
         >
           <i
-            class="context-menu-icon fas fa-fw"
+            class="context__menu-icon fas fa-fw"
             :class="'fa-' + applicationType.iconClass"
           ></i>
           {{ applicationType.name }}

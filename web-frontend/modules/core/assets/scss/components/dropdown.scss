@@ -3,7 +3,7 @@
   background-color: $white;
 }
 
-.dropdown-selected {
+.dropdown__selected {
   @extend %ellipsis;
 
   position: relative;
@@ -21,22 +21,22 @@
     border-color: $color-neutral-600;
   }
 
-  .dropdown-error & {
+  .dropdown--error & {
     border-color: $color-error-500;
   }
 }
 
-.dropdown-selected-icon {
+.dropdown__selected-icon {
   margin-right: 4px;
   color: $color-neutral-600;
 }
 
-.dropdown-toggle-icon {
+.dropdown__toggle-icon {
   @include absolute(0, 0, 0, auto);
   @include center-text(32px, 14px);
 }
 
-.dropdown-items {
+.dropdown__items {
   border: 1px solid $color-primary-500;
   border-radius: 3px;
   background-color: $white;
@@ -45,7 +45,7 @@
 
   @include absolute(0, 0, auto, 0);
 
-  .select-item.active:hover::after {
+  .select__item.active:hover::after {
     display: block;
   }
 }

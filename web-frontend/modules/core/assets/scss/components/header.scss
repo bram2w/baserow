@@ -5,7 +5,7 @@
   border-bottom: 2px solid $color-neutral-200;
 }
 
-.undo-redo a {
+.header__undo-redo a {
   @extend %first-last-no-margin;
 
   display: inline-block;
@@ -24,7 +24,7 @@
   }
 }
 
-.header-filter {
+.header__filter {
   @extend .clearfix;
 
   list-style: none;
@@ -32,14 +32,14 @@
   margin: auto 0;
 }
 
-.header-filter-item {
+.header__filter-item {
   @extend %first-last-no-margin;
 
   float: left;
   margin-left: 12px;
 }
 
-.header-filter-link {
+.header__filter-link {
   display: block;
   font-weight: 600;
   color: $color-primary-900;
@@ -54,7 +54,7 @@
   }
 }
 
-.header-filter-icon {
+.header__filter-icon {
   color: $color-primary-500;
   margin-right: 4px;
   font-size: 14px;
@@ -64,7 +64,7 @@
   }
 }
 
-.header-info {
+.header__info {
   @extend .clearfix;
 
   list-style: none;

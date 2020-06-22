@@ -8,25 +8,25 @@
   box-shadow: 0 2px 6px 0 rgba($black, 0.16);
 }
 
-.context-loading {
+.context--loading {
   display: flex;
   justify-content: center;
   padding: 32px 0;
 }
 
-.context-description {
+.context__description {
   padding: 32px 0;
   text-align: center;
 }
 
-.context-menu-title {
+.context__menu-title {
   color: $color-neutral-600;
   padding: 12px 8px 2px 8px;
   line-height: 13px;
   margin-bottom: 10px;
 }
 
-.context-menu {
+.context__menu {
   list-style: none;
   padding: 0;
   margin: 10px 0;
@@ -51,19 +51,19 @@
   }
 }
 
-.context-menu-icon {
+.context__menu-icon {
   font-size: 13px;
   color: $color-neutral-400;
   margin-right: 4px;
   text-align: left;
 }
 
-.context-form {
+.context__form {
   min-width: 260px;
   padding: 16px;
 }
 
-.context-form-actions {
+.context__form-actions {
   border-top: 1px solid $color-neutral-200;
   padding-top: 20px;
   margin-top: 20px;

@@ -120,8 +120,11 @@ class LongTextField(Field):
 
 
 class NumberField(Field):
-    number_type = models.CharField(max_length=32, choices=NUMBER_TYPE_CHOICES,
-                                   default=NUMBER_TYPE_INTEGER)
+    number_type = models.CharField(
+        max_length=32,
+        choices=NUMBER_TYPE_CHOICES,
+        default=NUMBER_TYPE_INTEGER
+    )
     number_decimal_places = models.IntegerField(
         choices=NUMBER_DECIMAL_PLACES_CHOICES,
         default=1,

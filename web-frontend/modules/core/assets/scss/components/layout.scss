@@ -6,7 +6,7 @@
   bottom: 0;
 }
 
-.layout-col-1 {
+.layout__col-1 {
   position: absolute;
   z-index: $z-index-layout-col-1;
   left: 0;
@@ -15,7 +15,7 @@
   width: 52px;
 }
 
-.layout-col-2 {
+.layout__col-2 {
   position: absolute;
   z-index: $z-index-layout-col-2;
   left: 52px;
@@ -23,12 +23,12 @@
   bottom: 0;
   width: 226px;
 
-  .layout-collapsed & {
+  .layout--collapsed & {
     display: none;
   }
 }
 
-.layout-col-3 {
+.layout__col-3 {
   position: absolute;
   z-index: $z-index-layout-col-3;
   left: 278px;
@@ -36,18 +36,18 @@
   bottom: 0;
   right: 0;
 
-  .layout-collapsed & {
+  .layout--collapsed & {
     left: 52px;
   }
 }
 
-.layout-col-3-scroll {
+.layout__col-3-scroll {
   @include absolute(0);
 
   overflow: auto;
 }
 
-.layout-col-3-1 {
+.layout__col-3-1 {
   position: absolute;
   z-index: $z-index-layout-col-3-1;
   left: 0;
@@ -56,7 +56,7 @@
   height: 52px;
 }
 
-.layout-col-3-2 {
+.layout__col-3-2 {
   position: absolute;
   z-index: $z-index-layout-col-3-2;
   left: 0;
@@ -65,10 +65,10 @@
   bottom: 0;
 }
 
-.layout-uncollapse {
+.layout__uncollapse {
   display: none;
 
-  .layout-collapsed & {
+  .layout--collapsed & {
     display: block;
   }
 }

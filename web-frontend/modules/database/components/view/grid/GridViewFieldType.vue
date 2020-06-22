@@ -1,16 +1,16 @@
 <template>
-  <div class="grid-view-column">
+  <div class="grid-view__column">
     <div
-      class="grid-view-description"
-      :class="{ 'grid-view-description-loading': field._.loading }"
+      class="grid-view__description"
+      :class="{ 'grid-view__description--loading': field._.loading }"
     >
-      <div class="grid-view-description-icon">
+      <div class="grid-view__description-icon">
         <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
       </div>
-      <div class="grid-view-description-name">{{ field.name }}</div>
+      <div class="grid-view__description-name">{{ field.name }}</div>
       <a
         ref="contextLink"
-        class="grid-view-description-options"
+        class="grid-view__description-options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
       >
         <i class="fas fa-caret-down"></i>

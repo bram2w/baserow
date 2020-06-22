@@ -8,11 +8,11 @@
       @vertical="verticalScroll"
       @horizontal="horizontalScroll"
     ></Scrollbars>
-    <div class="grid-view-left" :style="{ width: widths.left + 'px' }">
-      <div class="grid-view-inner" :style="{ width: widths.left + 'px' }">
-        <div class="grid-view-head">
+    <div class="grid-view__left" :style="{ width: widths.left + 'px' }">
+      <div class="grid-view__inner" :style="{ width: widths.left + 'px' }">
+        <div class="grid-view__head">
           <div
-            class="grid-view-column"
+            class="grid-view__column"
             :style="{ width: widths.leftReserved + 'px' }"
           ></div>
           <GridViewFieldType
@@ -21,46 +21,46 @@
             :style="{ width: widths.fields[primary.id] + 'px' }"
           ></GridViewFieldType>
         </div>
-        <div ref="leftBody" class="grid-view-body">
-          <div class="grid-view-body-inner">
+        <div ref="leftBody" class="grid-view__body">
+          <div class="grid-view__body-inner">
             <div
-              class="grid-view-placeholder"
+              class="grid-view__placeholder"
               :style="{
                 height: placeholderHeight + 'px',
                 width: widths.left + 'px',
               }"
             >
               <div
-                class="grid-view-placeholder-column"
+                class="grid-view__placeholder-column"
                 :style="{
                   width: widths.left + 'px',
                 }"
               ></div>
             </div>
             <div
-              class="grid-view-rows"
+              class="grid-view__rows"
               :style="{ transform: `translateY(${rowsTop}px)` }"
             >
               <div
                 v-for="row in rows"
                 :key="'left-row-' + view.id + '-' + row.id"
-                class="grid-view-row"
+                class="grid-view__row"
                 :class="{
-                  'grid-view-row-loading': row._.loading,
-                  'grid-view-row-hover': row._.hover,
+                  'grid-view__row--loading': row._.loading,
+                  'grid-view__row--hover': row._.hover,
                 }"
                 @mouseover="setRowHover(row, true)"
                 @mouseleave="setRowHover(row, false)"
                 @contextmenu.prevent="showRowContext($event, row)"
               >
                 <div
-                  class="grid-view-column"
+                  class="grid-view__column"
                   :style="{ width: widths.leftReserved + 'px' }"
                 >
-                  <div class="grid-view-row-info">
-                    <div class="grid-view-row-count">{{ row.id }}</div>
+                  <div class="grid-view__row-info">
+                    <div class="grid-view__row-count">{{ row.id }}</div>
                     <a
-                      class="grid-view-row-more"
+                      class="grid-view__row-more"
                       @click="$refs.rowEditModal.show(row)"
                     >
                       <i class="fas fa-expand"></i>
@@ -85,13 +85,13 @@
                 ></GridViewField>
               </div>
             </div>
-            <div class="grid-view-row">
+            <div class="grid-view__row">
               <div
-                class="grid-view-column"
+                class="grid-view__column"
                 :style="{ width: widths.left + 'px' }"
               >
                 <a
-                  class="grid-view-add-row"
+                  class="grid-view__add-row"
                   :class="{ hover: addHover }"
                   @mouseover="addHover = true"
                   @mouseleave="addHover = false"
@@ -103,20 +103,20 @@
             </div>
           </div>
         </div>
-        <div class="grid-view-foot">
-          <div class="grid-view-column" :style="{ width: widths.left + 'px' }">
-            <div class="grid-view-foot-info">{{ count }} rows</div>
+        <div class="grid-view__foot">
+          <div class="grid-view__column" :style="{ width: widths.left + 'px' }">
+            <div class="grid-view__foot-info">{{ count }} rows</div>
           </div>
         </div>
       </div>
     </div>
     <div
       ref="divider"
-      class="grid-view-divider"
+      class="grid-view__divider"
       :style="{ left: widths.left + 'px' }"
     ></div>
     <GridViewFieldWidthHandle
-      class="grid-view-divider-width"
+      class="grid-view__divider-width"
       :style="{ left: widths.left + 'px' }"
       :grid="view"
       :field="primary"
@@ -124,14 +124,14 @@
     ></GridViewFieldWidthHandle>
     <div
       ref="right"
-      class="grid-view-right"
+      class="grid-view__right"
       :style="{ left: widths.left + 'px' }"
     >
       <div
-        class="grid-view-inner"
+        class="grid-view__inner"
         :style="{ 'min-width': widths.right + 'px' }"
       >
-        <div class="grid-view-head">
+        <div class="grid-view__head">
           <GridViewFieldType
             v-for="field in fields"
             :key="'right-head-field-' + view.id + '-' + field.id"
@@ -139,19 +139,19 @@
             :style="{ width: widths.fields[field.id] + 'px' }"
           >
             <GridViewFieldWidthHandle
-              class="grid-view-description-width"
+              class="grid-view__description-width"
               :grid="view"
               :field="field"
               :width="widths.fields[field.id]"
             ></GridViewFieldWidthHandle>
           </GridViewFieldType>
           <div
-            class="grid-view-column"
+            class="grid-view__column"
             :style="{ width: widths.rightAdd + 'px' }"
           >
             <a
               ref="createFieldContextLink"
-              class="grid-view-add-column"
+              class="grid-view__add-column"
               @click="
                 $refs.createFieldContext.toggle($refs.createFieldContextLink)
               "
@@ -164,10 +164,10 @@
             ></CreateFieldContext>
           </div>
         </div>
-        <div ref="rightBody" class="grid-view-body">
-          <div class="grid-view-body-inner">
+        <div ref="rightBody" class="grid-view__body">
+          <div class="grid-view__body-inner">
             <div
-              class="grid-view-placeholder"
+              class="grid-view__placeholder"
               :style="{
                 height: placeholderHeight + 'px',
                 width: widths.rightFieldsOnly + 'px',
@@ -176,22 +176,22 @@
               <div
                 v-for="(value, id) in widths.placeholderPositions"
                 :key="'right-placeholder-column-' + view.id + '-' + id"
-                class="grid-view-placeholder-column"
+                class="grid-view__placeholder-column"
                 :style="{ left: value - 1 + 'px' }"
               ></div>
             </div>
             <div
-              class="grid-view-rows"
+              class="grid-view__rows"
               :style="{ transform: `translateY(${rowsTop}px)` }"
             >
               <!-- @TODO figure out a faster way to render the rows on scroll. -->
               <div
                 v-for="row in rows"
                 :key="'right-row-' + view.id + '-' + row.id"
-                class="grid-view-row"
+                class="grid-view__row"
                 :class="{
-                  'grid-view-row-loading': row._.loading,
-                  'grid-view-row-hover': row._.hover,
+                  'grid-view__row--loading': row._.loading,
+                  'grid-view__row--hover': row._.hover,
                 }"
                 @mouseover="setRowHover(row, true)"
                 @mouseleave="setRowHover(row, false)"
@@ -222,15 +222,15 @@
               </div>
             </div>
             <div
-              class="grid-view-row"
+              class="grid-view__row"
               :style="{ width: widths.rightFieldsOnly + 'px' }"
             >
               <div
-                class="grid-view-column"
+                class="grid-view__column"
                 :style="{ width: widths.rightFieldsOnly + 'px' }"
               >
                 <a
-                  class="grid-view-add-row"
+                  class="grid-view__add-row"
                   :class="{ hover: addHover }"
                   @mouseover="addHover = true"
                   @mouseleave="addHover = false"
@@ -240,24 +240,24 @@
             </div>
           </div>
         </div>
-        <div class="grid-view-foot"></div>
+        <div class="grid-view__foot"></div>
       </div>
     </div>
     <Context ref="rowContext">
-      <ul class="context-menu">
+      <ul class="context__menu">
         <li>
           <a
             @click="
               ;[$refs.rowEditModal.show(selectedRow), $refs.rowContext.hide()]
             "
           >
-            <i class="context-menu-icon fas fa-fw fa-expand"></i>
+            <i class="context__menu-icon fas fa-fw fa-expand"></i>
             Enlarge row
           </a>
         </li>
         <li>
           <a @click="deleteRow(selectedRow)">
-            <i class="context-menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon fas fa-fw fa-trash"></i>
             Delete row
           </a>
         </li>

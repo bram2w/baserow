@@ -1,16 +1,16 @@
 <template>
   <div
-    class="alert alert-simple alert-with-shadow alert-has-icon"
+    class="alert alert--simple alert--with-shadow alert--has-icon"
     :class="notificationClass"
   >
-    <a class="alert-close" @click="close(notification)">
+    <a class="alert__close" @click="close(notification)">
       <i class="fas fa-times"></i>
     </a>
-    <div class="alert-icon">
+    <div class="alert__icon">
       <i class="fas fa-exclamation"></i>
     </div>
-    <div class="alert-title">{{ notification.title }}</div>
-    <p class="alert-content">{{ notification.message }}</p>
+    <div class="alert__title">{{ notification.title }}</div>
+    <p class="alert__content">{{ notification.message }}</p>
   </div>
 </template>
 
@@ -25,7 +25,7 @@ export default {
   },
   computed: {
     notificationClass() {
-      return 'alert-' + this.notification.type
+      return 'alert--' + this.notification.type
     },
   },
   mounted() {

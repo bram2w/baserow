@@ -3,6 +3,7 @@ import logging
 from rest_framework import serializers
 
 from baserow.api.v0.utils import get_serializer_class
+from baserow.core.utils import model_default_values, dict_to_object
 from baserow.contrib.database.fields.registries import field_type_registry
 
 
@@ -83,9 +84,15 @@ def get_example_row_serializer_class(add_id=False):
                        'imported before the fields have been registered.')
 
     for i, field_type in enumerate(field_types):
+        # In order to generate a serializer we need a model instance. This method is
+        # called before Django has been loaded so it will result in errors when
+        # creating an instance. Therefore we create an object containing the default
+        # field values of the model. With the object we can generate the example
+        # serializer.
+        defaults = model_default_values(field_type.model_class)
+        instance = dict_to_object(defaults)
         fields[f'field_{i + 1}'] = field_type.get_serializer_field(
-            field_type.model_class(),
-            label='test22',
+            instance,
             help_text=f'This field represents the `{field_type.type}` field. The '
                       f'number in field_{i + 1} is in a normal request or response the '
                       f'id of the field.'

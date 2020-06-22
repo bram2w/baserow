@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="control">
-      <div class="control-elements">
+      <div class="control__elements">
         <input
           ref="text_default"
           v-model="values.text_default"
