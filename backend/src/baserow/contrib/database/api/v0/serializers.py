@@ -1,16 +1,23 @@
 from rest_framework import serializers
 
+from drf_spectacular.utils import extend_schema_field
+
 from baserow.api.v0.applications.serializers import ApplicationSerializer
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.api.v0.tables.serializers import TableSerializer
 
 
 class DatabaseSerializer(ApplicationSerializer):
-    tables = serializers.SerializerMethodField()
+    tables = serializers.SerializerMethodField(
+        help_text='This field is specific to the `database` application and contains '
+                  'an array of tables that are in the database.'
+    )
 
     class Meta(ApplicationSerializer.Meta):
+        ref_name = 'DatabaseApplication'
         fields = ApplicationSerializer.Meta.fields + ('tables',)
 
+    @extend_schema_field(TableSerializer(many=True))
     def get_tables(self, instance):
         """
         Because the the instance doesn't know at this point it is a Database we have to

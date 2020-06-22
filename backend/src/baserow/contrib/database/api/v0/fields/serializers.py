@@ -1,5 +1,8 @@
 from django.utils.functional import lazy
 
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
+
 from rest_framework import serializers
 
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -18,6 +21,7 @@ class FieldSerializer(serializers.ModelSerializer):
             }
         }
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
         # It could be that the field related to the instance is already in the context
         # else we can call the specific_class property to find it.
@@ -30,8 +34,10 @@ class FieldSerializer(serializers.ModelSerializer):
 
 
 class CreateFieldSerializer(serializers.ModelSerializer):
-    type = serializers.ChoiceField(choices=lazy(field_type_registry.get_types, list)(),
-                                   required=True)
+    type = serializers.ChoiceField(
+        choices=lazy(field_type_registry.get_types, list)(),
+        required=True
+    )
 
     class Meta:
         model = Field
@@ -39,9 +45,14 @@ class CreateFieldSerializer(serializers.ModelSerializer):
 
 
 class UpdateFieldSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(
+        choices=lazy(field_type_registry.get_types, list)(),
+        required=False
+    )
+
     class Meta:
         model = Field
-        fields = ('name',)
+        fields = ('name', 'type')
         extra_kwargs = {
-            'name': {'required': False}
+            'name': {'required': False},
         }

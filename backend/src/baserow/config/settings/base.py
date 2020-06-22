@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'mjml',
+    'drf_spectacular',
 
     'baserow.core',
     'baserow.api.v0',
@@ -125,12 +126,11 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'baserow.api.v0.openapi.AutoSchema',
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -141,6 +141,30 @@ JWT_AUTH = {
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
     'JWT_RESPONSE_PAYLOAD_HANDLER': 'baserow.api.v0.user.jwt.'
                                     'jwt_response_payload_handler'
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Baserow API spec',
+    'DESCRIPTION': '@TODO',
+    'CONTACT': {
+        'url': 'https://baserow.io/contact'
+    },
+    'LICENSE': {
+        'name': '@TODO',
+        'url': 'https://baserow.io'
+    },
+    'VERSION': '0.1.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'TAGS': [
+        {'name': 'User'},
+        {'name': 'Groups'},
+        {'name': 'Applications'},
+        {'name': 'Database tables'},
+        {'name': 'Database table fields'},
+        {'name': 'Database table views'},
+        {'name': 'Database table grid view'},
+        {'name': 'Database table rows'}
+    ],
 }
 
 DATABASE_ROUTERS = ('baserow.contrib.database.database_routers.TablesDatabaseRouter',)

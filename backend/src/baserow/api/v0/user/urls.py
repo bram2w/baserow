@@ -1,10 +1,8 @@
 from django.conf.urls import url
 
-from rest_framework_jwt.views import refresh_jwt_token, verify_jwt_token
-
 from .views import (
     UserView, SendResetPasswordEmailView, ResetPasswordView, ChangePasswordView,
-    ObtainJSONWebToken
+    ObtainJSONWebToken, RefreshJSONWebToken, VerifyJSONWebToken
 )
 
 
@@ -12,8 +10,8 @@ app_name = 'baserow.api.v0.user'
 
 urlpatterns = [
     url(r'^token-auth/$', ObtainJSONWebToken.as_view(), name='token_auth'),
-    url(r'^token-refresh/$', refresh_jwt_token, name='token_refresh'),
-    url(r'^token-verify/$', verify_jwt_token, name='token_verify'),
+    url(r'^token-refresh/$', RefreshJSONWebToken.as_view(), name='token_refresh'),
+    url(r'^token-verify/$', VerifyJSONWebToken.as_view(), name='token_verify'),
     url(
         r'^send-reset-password-email/$',
         SendResetPasswordEmailView.as_view(),

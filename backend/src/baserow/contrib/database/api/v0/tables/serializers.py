@@ -10,6 +10,9 @@ class TableSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'id': {
                 'read_only': True
+            },
+            'order': {
+                'help_text': 'Lowest first.'
             }
         }
 

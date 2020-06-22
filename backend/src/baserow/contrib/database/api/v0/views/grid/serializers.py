@@ -1,8 +1,11 @@
 from django.utils.translation import gettext_lazy as _
 
+from drf_spectacular.openapi import OpenApiSerializerFieldExtension
+
 from rest_framework import serializers
 
 from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
+from .schemas import grid_view_field_options_schema
 
 
 class GridViewFieldOptionsField(serializers.Field):
@@ -76,6 +79,16 @@ class GridViewFieldOptionsField(serializers.Field):
             return value
 
 
+class GridViewFieldOptionsFieldFix(OpenApiSerializerFieldExtension):
+    target_class = (
+        'baserow.contrib.database.api.v0.views.grid.serializers.'
+        'GridViewFieldOptionsField'
+    )
+
+    def map_serializer_field(self, auto_schema, direction):
+        return grid_view_field_options_schema
+
+
 class GridViewSerializer(serializers.ModelSerializer):
     field_options = GridViewFieldOptionsField(required=False)
 
@@ -91,7 +104,16 @@ class GridViewFieldOptionsSerializer(serializers.ModelSerializer):
 
 
 class GridViewFilterSerializer(serializers.Serializer):
-    field_ids = serializers.ListField(allow_empty=False, required=False, default=None,
-                                      child=serializers.IntegerField())
-    row_ids = serializers.ListField(allow_empty=False,
-                                    child=serializers.IntegerField())
+    field_ids = serializers.ListField(
+        allow_empty=False,
+        required=False,
+        default=None,
+        child=serializers.IntegerField(),
+        help_text='Only the fields related to the provided ids are added to the '
+                  'response. If None are provided all fields will be returned.'
+    )
+    row_ids = serializers.ListField(
+        allow_empty=False,
+        child=serializers.IntegerField(),
+        help_text='Only the rows related to the provided ids are added to the response.'
+    )

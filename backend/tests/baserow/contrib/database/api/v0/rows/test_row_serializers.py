@@ -1,6 +1,11 @@
 import pytest
 
-from baserow.contrib.database.api.v0.rows.serializers import get_row_serializer_class
+from rest_framework import serializers
+
+from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.api.v0.rows.serializers import (
+    get_row_serializer_class, get_example_row_serializer_class
+)
 
 
 @pytest.mark.django_db
@@ -136,3 +141,24 @@ def test_get_table_serializer(data_fixture):
     serializer_instance = serializer_class(data={f'field_{price_field.id}': 'abc'})
     assert not serializer_instance.is_valid()
     assert len(serializer_instance.errors[f'field_{price_field.id}']) == 1
+
+
+@pytest.mark.django_db
+def test_get_example_row_serializer_class():
+    request_serializer = get_example_row_serializer_class()
+    response_serializer = get_example_row_serializer_class(add_id=True)
+
+    assert len(request_serializer._declared_fields) == \
+           len(field_type_registry.registry.values())
+    assert len(response_serializer._declared_fields) == \
+           len(request_serializer._declared_fields) + 1
+    assert len(response_serializer._declared_fields) == \
+           len(field_type_registry.registry.values()) + 1
+
+    assert isinstance(response_serializer._declared_fields['id'],
+                      serializers.IntegerField)
+
+    # This assert depends on TextField to be added first in the
+    # `baserow.contrib.database.config` module.
+    assert isinstance(response_serializer._declared_fields['field_1'],
+                      serializers.CharField)

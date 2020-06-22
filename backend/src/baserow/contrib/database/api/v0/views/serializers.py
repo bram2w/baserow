@@ -1,5 +1,8 @@
 from django.utils.functional import lazy
 
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
+
 from rest_framework import serializers
 
 from baserow.contrib.database.api.v0.serializers import TableSerializer
@@ -20,6 +23,7 @@ class ViewSerializer(serializers.ModelSerializer):
             }
         }
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
         # It could be that the view related to the instance is already in the context
         # else we can call the specific_class property to find it.
@@ -31,7 +35,9 @@ class ViewSerializer(serializers.ModelSerializer):
 
 
 class CreateViewSerializer(serializers.ModelSerializer):
-    type = serializers.ChoiceField(choices=lazy(view_type_registry.get_types, list)())
+    type = serializers.ChoiceField(
+        choices=lazy(view_type_registry.get_types, list)()
+    )
 
     class Meta:
         model = View
