@@ -1,4 +1,4 @@
-.style-guide-wrapper {
+.style-guide__wrapper {
   @include absolute(0);
 
   z-index: $z-index-layout-col-3;
@@ -12,13 +12,13 @@
   padding: 40px 15px;
 }
 
-.style-guide-buttons {
+.style-guide__buttons {
   .button {
     margin-bottom: 8px;
   }
 }
 
-.style-guide-contexts {
+.style-guide__contexts {
   .context,
   .select,
   .time-select {

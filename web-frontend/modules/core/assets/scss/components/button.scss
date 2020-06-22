@@ -29,37 +29,37 @@
   }
 }
 
-.button-large {
+.button--large {
   @include button-size(15px, 44px, 28px);
 }
 
-.button-success {
+.button--success {
   @include button-style($color-success-500, $color-success-600);
 }
 
-.button-warning {
+.button--warning {
   @include button-style($color-warning-500, $color-warning-600);
 }
 
-.button-error {
+.button--error {
   @include button-style($color-error-500, $color-error-600);
 }
 
-.button-ghost {
+.button--ghost {
   @include button-style($white, $color-neutral-100, $color-primary-900);
 
   border-color: $color-neutral-400;
 }
 
-.button-icon {
+.button__icon {
   margin: 0 2px;
 
-  &.button-large {
+  &.button--large {
     margin: 0 3px;
   }
 }
 
-.button-loading {
+.button--loading {
   position: relative;
   cursor: wait;
   user-select: none;

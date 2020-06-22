@@ -1,5 +1,5 @@
 <template>
-  <div class="layout-col-3-scroll">
+  <div class="layout__col-3-scroll">
     <div v-if="groups.length === 0" class="placeholder">
       <div class="placeholder__icon">
         <i class="fas fa-layer-group"></i>
@@ -10,7 +10,7 @@
         a group, so in order to create them you need to create a group.
       </p>
       <div class="placeholder__action">
-        <a class="button button-large" @click="$refs.createGroupModal.show()">
+        <a class="button button--large" @click="$refs.createGroupModal.show()">
           <i class="fas fa-plus"></i>
           Create group
         </a>
@@ -23,7 +23,7 @@
         :group="group"
       ></DashboardGroup>
       <div>
-        <a class="button button-large" @click="$refs.createGroupModal.show()">
+        <a class="button button--large" @click="$refs.createGroupModal.show()">
           <i class="fas fa-plus"></i>
           Create group
         </a>

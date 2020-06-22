@@ -1,5 +1,5 @@
 <template>
-  <div class="grid-view-column" @click="select($event)">
+  <div class="grid-view__column" @click="select($event)">
     <component
       :is="getFieldComponent(field.type)"
       ref="field"

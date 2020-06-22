@@ -1,12 +1,12 @@
 <template>
-  <div class="control-elements">
-    <div class="field-date-container">
-      <div class="input-with-icon field-date">
+  <div class="control__elements">
+    <div class="field-date__container">
+      <div class="input__with-icon field-date">
         <input
           ref="date"
           v-model="date"
           type="text"
-          class="input input-large"
+          class="input input--large"
           :placeholder="getDatePlaceholder(field)"
           @keyup.enter="$refs.date.blur()"
           @keyup="updateDate(field, date)"
@@ -32,13 +32,13 @@
       </div>
       <div
         v-if="field.date_include_time"
-        class="input-with-icon field-date-time"
+        class="input__with-icon field-date__time"
       >
         <input
           ref="time"
           v-model="time"
           type="text"
-          class="input input-large"
+          class="input input--large"
           :placeholder="getTimePlaceholder(field)"
           @keyup.enter="$refs.time.blur()"
           @keyup="updateTime(field, time)"

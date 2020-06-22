@@ -1,10 +1,10 @@
 <template>
-  <div class="control-elements">
+  <div class="control__elements">
     <textarea
       ref="input"
       v-model="copy"
       type="text"
-      class="input input-large field-long-text"
+      class="input input--large field-long-text"
       @keyup.enter="$refs.input.blur()"
       @focus="select()"
       @blur="unselect()"

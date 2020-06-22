@@ -22,12 +22,12 @@
       <nuxt-link
         v-if="isAuthenticated"
         :to="{ name: 'dashboard' }"
-        class="button button-large"
+        class="button button--large"
       >
         <i class="fas fa-arrow-left"></i>
         Back to dashboard
       </nuxt-link>
-      <nuxt-link v-else :to="{ name: 'login' }" class="button button-large">
+      <nuxt-link v-else :to="{ name: 'login' }" class="button button--large">
         <i class="fas fa-arrow-left"></i>
         Back to login
       </nuxt-link>

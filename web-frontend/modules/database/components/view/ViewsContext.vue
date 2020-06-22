@@ -1,18 +1,18 @@
 <template>
   <Context ref="viewsContext" class="select">
-    <div class="select-search">
-      <i class="select-search-icon fas fa-search"></i>
+    <div class="select__search">
+      <i class="select__search-icon fas fa-search"></i>
       <input
         v-model="query"
         type="text"
-        class="select-search-input"
+        class="select__search-input"
         placeholder="Search views"
       />
     </div>
-    <div v-if="isLoading" class="context-loading">
+    <div v-if="isLoading" class="context--loading">
       <div class="loading"></div>
     </div>
-    <ul v-if="!isLoading && isLoaded && views.length > 0" class="select-items">
+    <ul v-if="!isLoading && isLoaded && views.length > 0" class="select__items">
       <ViewsContextItem
         v-for="view in search(views)"
         :key="view.id"
@@ -22,22 +22,22 @@
     </ul>
     <div
       v-if="!isLoading && isLoaded && views.length == 0"
-      class="context-description"
+      class="context__description"
     >
       No views found
     </div>
-    <div class="select-footer">
-      <div class="select-footer-multiple">
-        <div class="select-footer-multiple-label">Add a view:</div>
+    <div class="select__footer">
+      <div class="select__footer-multiple">
+        <div class="select__footer-multiple-label">Add a view:</div>
         <a
           v-for="(viewType, type) in viewTypes"
           :key="type"
           :ref="'createViewModalToggle' + type"
-          class="select-footer-multiple-item"
+          class="select__footer-multiple-item"
           @click="toggleCreateViewModal(type)"
         >
           <i
-            class="select-footer-multiple-icon fas"
+            class="select__footer-multiple-icon fas"
             :class="'fa-' + viewType.iconClass"
           ></i>
           {{ viewType.name }}

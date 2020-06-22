@@ -5,25 +5,25 @@
   padding: 32px 40px;
 }
 
-.box-title {
+.box__title {
   padding-bottom: 20px;
   border-bottom: 1px solid $color-neutral-200;
 }
 
-.box-message {
+.box__message {
   text-align: center;
 }
 
-.box-message-icon {
+.box__message-icon {
   font-size: 50px;
   color: $color-primary-500;
   margin-bottom: 30px;
 }
 
-.box-message-title {
+.box__message-title {
   margin-bottom: 30px;
 }
 
-.box-message-text {
+.box__message-text {
   color: $color-primary-900;
 }

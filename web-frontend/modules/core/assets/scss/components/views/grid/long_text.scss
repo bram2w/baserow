@@ -1,4 +1,4 @@
-.grid-view-cell--long-text.active.editing {
+.grid-field-long-text__cell.active.editing {
   bottom: auto;
   right: auto;
   height: auto;
@@ -14,7 +14,7 @@
   user-select: none;
 }
 
-.grid-field-long-text-textarea {
+.grid-field-long-text__textarea {
   line-height: 22px;
   font-size: 13px;
   padding: 5px 10px;

@@ -1,6 +1,6 @@
 from baserow.core.utils import (
     extract_allowed, set_allowed_attrs, to_pascal_case, to_snake_case,
-    remove_special_characters
+    remove_special_characters, dict_to_object
 )
 
 
@@ -45,3 +45,14 @@ def test_to_snake_case():
 def test_remove_special_characters():
     assert remove_special_characters('Test @#$% .. ;;') == 'Test'
     assert remove_special_characters('Test @#$% ..', remove_spaces=False) == 'Test  '
+
+
+def test_dict_to_object():
+    d1 = {'a': 'b', 'c': 'd'}
+    o1 = dict_to_object(d1)
+
+    assert o1.a == 'b'
+    assert o1.c == 'd'
+    assert not hasattr(o1, 'b')
+    assert not hasattr(o1, 'd')
+    assert not hasattr(o1, 'e')

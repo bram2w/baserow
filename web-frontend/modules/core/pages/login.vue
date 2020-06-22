@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="box-title">
+    <h1 class="box__title">
       <nuxt-link :to="{ name: 'index' }">
         <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
       </nuxt-link>
@@ -8,14 +8,14 @@
     <Error :error="error"></Error>
     <form @submit.prevent="login">
       <div class="control">
-        <label class="control-label">E-mail address</label>
-        <div class="control-elements">
+        <label class="control__label">E-mail address</label>
+        <div class="control__elements">
           <input
             ref="email"
             v-model="credentials.email"
-            :class="{ 'input-error': $v.credentials.email.$error }"
+            :class="{ 'input--error': $v.credentials.email.$error }"
             type="email"
-            class="input input-large"
+            class="input input--large"
             @blur="$v.credentials.email.$touch()"
           />
           <div v-if="$v.credentials.email.$error" class="error">
@@ -24,14 +24,14 @@
         </div>
       </div>
       <div class="control">
-        <label class="control-label">Password</label>
-        <div class="control-elements">
+        <label class="control__label">Password</label>
+        <div class="control__elements">
           <input
             ref="password"
             v-model="credentials.password"
-            :class="{ 'input-error': $v.credentials.password.$error }"
+            :class="{ 'input--error': $v.credentials.password.$error }"
             type="password"
-            class="input input-large"
+            class="input input--large"
             @blur="$v.credentials.password.$touch()"
           />
           <div v-if="$v.credentials.password.$error" class="error">
@@ -40,7 +40,7 @@
         </div>
       </div>
       <div class="actions">
-        <ul class="action-links">
+        <ul class="action__links">
           <li>
             <nuxt-link :to="{ name: 'signup' }">
               Sign up
@@ -53,8 +53,8 @@
           </li>
         </ul>
         <button
-          :class="{ 'button-loading': loading }"
-          class="button button-large"
+          :class="{ 'button--loading': loading }"
+          class="button button--large"
           :disabled="loading"
         >
           Sign in

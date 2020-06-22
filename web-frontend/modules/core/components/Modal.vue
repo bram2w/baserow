@@ -2,18 +2,18 @@
   <div
     v-if="open"
     ref="modalWrapper"
-    class="modal-wrapper"
+    class="modal__wrapper"
     @click="outside($event)"
   >
-    <div class="modal-box" :class="{ 'modal-box-with-sidebar': sidebar }">
-      <a class="modal-close" @click="hide()">
+    <div class="modal__box" :class="{ 'modal__box--with-sidebar': sidebar }">
+      <a class="modal__close" @click="hide()">
         <i class="fas fa-times"></i>
       </a>
       <template v-if="sidebar">
-        <div class="modal-box-sidebar">
+        <div class="modal__box-sidebar">
           <slot name="sidebar"></slot>
         </div>
-        <div class="modal-box-content">
+        <div class="modal__box-content">
           <slot name="content"></slot>
         </div>
       </template>

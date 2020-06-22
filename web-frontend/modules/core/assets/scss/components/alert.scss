@@ -6,17 +6,17 @@
 
   @include alert-style($color-primary-100, $color-primary-300, $color-primary-900, $color-primary-700, $color-primary-400);
 
-  &.alert-has-icon {
+  &.alert--has-icon {
     position: relative;
     padding-left: 80px;
   }
 
-  &.alert-with-shadow {
+  &.alert--with-shadow {
     box-shadow: 0 2px 6px 0 rgba($black, 0.16);
   }
 }
 
-.alert-icon {
+.alert__icon {
   position: absolute;
   left: 20px;
   top: 20px;
@@ -29,28 +29,28 @@
   border-radius: 100%;
 }
 
-.alert-title {
+.alert__title {
   font-size: 14px;
   font-weight: 700;
   margin-bottom: 8px;
 }
 
-.alert-content {
+.alert__content {
   margin: 0;
 }
 
-.alert-close {
+.alert__close {
   @include absolute(10px, 10px, auto, auto);
 }
 
-.alert-success {
+.alert--success {
   @include alert-style($color-success-100, $color-success-300, $color-success-900, $color-success-700, $color-success-400);
 }
 
-.alert-warning {
+.alert--warning {
   @include alert-style($color-warning-100, $color-warning-300, $color-warning-900, $color-warning-700, $color-warning-400);
 }
 
-.alert-error {
+.alert--error {
   @include alert-style($color-error-100, $color-error-300, $color-error-900, $color-error-700, $color-error-400);
 }

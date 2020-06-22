@@ -1,26 +1,26 @@
 <template>
   <div>
-    <h2 class="box-title">Change password</h2>
+    <h2 class="box__title">Change password</h2>
     <Error :error="error"></Error>
-    <div v-if="success" class="alert alert-success alert-has-icon">
-      <div class="alert-icon">
+    <div v-if="success" class="alert alert--success alert--has-icon">
+      <div class="alert__icon">
         <i class="fas fa-check"></i>
       </div>
-      <div class="alert-title">Password changed</div>
-      <p class="alert-content">
+      <div class="alert__title">Password changed</div>
+      <p class="alert__content">
         Your password has been changed. The next time you want to login, you
         have to use your new password.
       </p>
     </div>
     <form v-if="!success" @submit.prevent="changePassword">
       <div class="control">
-        <label class="control-label">Old password</label>
-        <div class="control-elements">
+        <label class="control__label">Old password</label>
+        <div class="control__elements">
           <input
             v-model="account.oldPassword"
-            :class="{ 'input-error': $v.account.oldPassword.$error }"
+            :class="{ 'input--error': $v.account.oldPassword.$error }"
             type="password"
-            class="input input-large"
+            class="input input--large"
             @blur="$v.account.oldPassword.$touch()"
           />
           <div v-if="$v.account.oldPassword.$error" class="error">
@@ -29,13 +29,13 @@
         </div>
       </div>
       <div class="control">
-        <label class="control-label">New password</label>
-        <div class="control-elements">
+        <label class="control__label">New password</label>
+        <div class="control__elements">
           <input
             v-model="account.newPassword"
-            :class="{ 'input-error': $v.account.newPassword.$error }"
+            :class="{ 'input--error': $v.account.newPassword.$error }"
             type="password"
-            class="input input-large"
+            class="input input--large"
             @blur="$v.account.newPassword.$touch()"
           />
           <div v-if="$v.account.newPassword.$error" class="error">
@@ -44,13 +44,13 @@
         </div>
       </div>
       <div class="control">
-        <label class="control-label">Repeat new password</label>
-        <div class="control-elements">
+        <label class="control__label">Repeat new password</label>
+        <div class="control__elements">
           <input
             v-model="account.passwordConfirm"
-            :class="{ 'input-error': $v.account.passwordConfirm.$error }"
+            :class="{ 'input--error': $v.account.passwordConfirm.$error }"
             type="password"
-            class="input input-large"
+            class="input input--large"
             @blur="$v.account.passwordConfirm.$touch()"
           />
           <div v-if="$v.account.passwordConfirm.$error" class="error">
@@ -58,10 +58,10 @@
           </div>
         </div>
       </div>
-      <div class="actions actions-right">
+      <div class="actions actions--right">
         <button
-          :class="{ 'button-loading': loading }"
-          class="button button-large"
+          :class="{ 'button--loading': loading }"
+          class="button button--large"
           :disabled="loading"
         >
           Change password

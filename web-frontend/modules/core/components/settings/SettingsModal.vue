@@ -1,18 +1,18 @@
 <template>
   <Modal :sidebar="true">
     <template v-slot:sidebar>
-      <div class="settings-head">
-        <div class="settings-head-icon">{{ nameAbbreviation }}</div>
-        <div class="settings-head-name">Settings</div>
+      <div class="settings__head">
+        <div class="settings__head-icon">{{ nameAbbreviation }}</div>
+        <div class="settings__head-name">Settings</div>
       </div>
-      <ul class="settings-nav">
+      <ul class="settings__nav">
         <li>
           <a
-            class="settings-nav-link"
+            class="settings__nav-link"
             :class="{ active: page === 'password' }"
             @click="setPage('password')"
           >
-            <i class="fas fa-lock settings-nav-icon"></i>
+            <i class="fas fa-lock settings__nav-icon"></i>
             Password
           </a>
         </li>

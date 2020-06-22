@@ -1,7 +1,7 @@
 <template>
   <div
     ref="cell"
-    class="grid-view-cell grid-view-cell--long-text"
+    class="grid-view__cell grid-field-long-text__cell"
     :class="{ active: selected, editing: editing }"
     @contextmenu="stopContextIfEditing($event)"
   >
@@ -12,7 +12,7 @@
       v-model="copy"
       v-prevent-parent-scroll
       type="text"
-      class="grid-field-long-text-textarea"
+      class="grid-field-long-text__textarea"
     />
   </div>
 </template>

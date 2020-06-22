@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Added OpenAPI docs.
+* Refactored all SCSS classes to BEM naming.
 
 ## Released (2020-08-06)
 

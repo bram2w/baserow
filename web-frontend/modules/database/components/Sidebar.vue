@@ -1,6 +1,6 @@
 <template>
   <div>
-    <ul class="tree-subs">
+    <ul class="tree__subs">
       <SidebarItem
         v-for="table in application.tables"
         :key="table.id"
@@ -8,7 +8,7 @@
         :table="table"
       ></SidebarItem>
     </ul>
-    <a class="tree-sub-add" @click="$refs.createTableModal.show()">
+    <a class="tree__sub-add" @click="$refs.createTableModal.show()">
       <i class="fas fa-plus"></i>
       Create table
     </a>

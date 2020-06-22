@@ -1,10 +1,10 @@
-.settings-head {
+.settings__head {
   display: flex;
   align-items: center;
   padding: 16px;
 }
 
-.settings-head-icon {
+.settings__head-icon {
   flex: 0 0 32px;
   border-radius: 100%;
   margin-right: 16px;
@@ -15,17 +15,17 @@
   @include center-text(32px, 18px);
 }
 
-.settings-head-name {
+.settings__head-name {
   font-weight: 600;
 }
 
-.settings-nav {
+.settings__nav {
   list-style: none;
   margin: 0;
   padding: 0 0 16px;
 }
 
-.settings-nav-link {
+.settings__nav-link {
   @extend %ellipsis;
 
   position: relative;
@@ -47,7 +47,7 @@
   }
 }
 
-.settings-nav-icon {
+.settings__nav-icon {
   position: absolute;
   left: 19px;
   top: 50%;

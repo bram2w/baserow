@@ -1,9 +1,9 @@
 <template>
   <div>
     <Notifications></Notifications>
-    <div class="box-page-header"></div>
+    <div class="box-page__header"></div>
     <div class="box-page">
-      <div class="box login-page login-page-login">
+      <div class="box">
         <nuxt />
       </div>
     </div>

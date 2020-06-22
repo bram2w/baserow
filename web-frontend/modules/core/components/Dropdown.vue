@@ -1,10 +1,10 @@
 <template>
   <div class="dropdown">
-    <a class="dropdown-selected" @click="show()">
+    <a class="dropdown__selected" @click="show()">
       <template v-if="hasValue()">
         <i
           v-if="icon"
-          class="dropdown-selected-icon fas"
+          class="dropdown__selected-icon fas"
           :class="'fa-' + icon"
         ></i>
         {{ name }}
@@ -12,21 +12,21 @@
       <template v-if="!hasValue()">
         Make a choice
       </template>
-      <i class="dropdown-toggle-icon fas fa-caret-down"></i>
+      <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
-    <div class="dropdown-items" :class="{ hidden: !open }">
-      <div class="select-search">
-        <i class="select-search-icon fas fa-search"></i>
+    <div class="dropdown__items" :class="{ hidden: !open }">
+      <div class="select__search">
+        <i class="select__search-icon fas fa-search"></i>
         <input
           ref="search"
           v-model="query"
           type="text"
-          class="select-search-input"
+          class="select__search-input"
           placeholder="Search field types"
           @keyup="search(query)"
         />
       </div>
-      <ul class="select-items">
+      <ul class="select__items">
         <slot></slot>
       </ul>
     </div>

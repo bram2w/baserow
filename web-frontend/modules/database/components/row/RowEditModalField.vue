@@ -1,14 +1,14 @@
 <template>
   <div class="control">
-    <label class="control-label">
+    <label class="control__label">
       <i
-        class="fas control-label-icon"
+        class="fas control__label-icon"
         :class="'fa-' + field._.type.iconClass"
       ></i>
       {{ field.name }}
       <a
         ref="contextLink"
-        class="control-context"
+        class="control__context"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 0)"
       >
         <i class="fas fa-caret-down"></i>
