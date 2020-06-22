@@ -21,14 +21,27 @@ class UserSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=32)
-    email = serializers.EmailField()
+    email = serializers.EmailField(
+        help_text='The email address is also going to be the username.'
+    )
     password = serializers.CharField(max_length=32)
-    authenticate = serializers.BooleanField(required=False, default=False)
+    authenticate = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text='Indicates whether an authentication token should be generated and '
+                  'be included in the response.'
+    )
 
 
 class SendResetPasswordEmailBodyValidationSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    base_url = serializers.URLField()
+    email = serializers.EmailField(
+        help_text='The email address of the user that has requested a password reset.'
+    )
+    base_url = serializers.URLField(
+        help_text='The base URL where the user can reset his password. The reset '
+                  'token is going to be appended to the base_url (base_url '
+                  '\'/token\').'
+    )
 
 
 class ResetPasswordBodyValidationSerializer(serializers.Serializer):

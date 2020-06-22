@@ -5,9 +5,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+
 from baserow.api.v0.decorators import validate_body_custom_fields, map_exceptions
 from baserow.api.v0.utils import validate_data_custom_fields, type_from_data_or_registry
 from baserow.api.v0.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.v0.utils import PolymorphicCustomFieldRegistrySerializer
+from baserow.api.v0.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.api.v0.fields.errors import (
@@ -41,6 +46,34 @@ class FieldsView(APIView):
 
         return table
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='table_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Returns only the fields of the table related to the '
+                            'provided value.'
+            )
+        ],
+        tags=['Database table fields'],
+        operation_id='list_database_table_fields',
+        description=(
+            'Lists all the fields of the table related to the provided parameter if '
+            'the user has access to the related database\'s group. A table consists of '
+            'fields and each field can have a different type. Each type can have '
+            'different properties. A field is comparable with a regular table\'s '
+            'column.'
+        ),
+        responses={
+            200: PolymorphicCustomFieldRegistrySerializer(
+                field_type_registry,
+                FieldSerializer,
+                many=True
+            ),
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+        }
+    )
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
@@ -59,6 +92,38 @@ class FieldsView(APIView):
         ]
         return Response(data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='table_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Creates a new field for the provided table related to the '
+                            'value.'
+            )
+        ],
+        tags=['Database table fields'],
+        operation_id='create_database_table_field',
+        description=(
+            'Creates a new field for the table related to the provided `table_id` '
+            'parameter if the authorized user has access to the related database\'s '
+            'group. Depending on the type, different properties can optionally be '
+            'set.'
+        ),
+        request=PolymorphicCustomFieldRegistrySerializer(
+            field_type_registry,
+            CreateFieldSerializer
+        ),
+        responses={
+            200: PolymorphicCustomFieldRegistrySerializer(
+                field_type_registry,
+                FieldSerializer
+            ),
+            400: get_error_schema([
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+            ])
+        }
+    )
     @transaction.atomic
     @validate_body_custom_fields(
         field_type_registry, base_serializer_class=CreateFieldSerializer)
@@ -80,6 +145,30 @@ class FieldsView(APIView):
 class FieldView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='field_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Returns the field related to the provided value.'
+            )
+        ],
+        tags=['Database table fields'],
+        operation_id='get_database_table_field',
+        description=(
+            'Returns the existing field if the authorized user has access to the '
+            'related database\'s group. Depending on the type different properties'
+            'could be returned.'
+        ),
+        responses={
+            200: PolymorphicCustomFieldRegistrySerializer(
+                field_type_registry,
+                FieldSerializer
+            ),
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+        }
+    )
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
@@ -98,6 +187,42 @@ class FieldView(APIView):
         serializer = field_type_registry.get_serializer(field, FieldSerializer)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='field_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Updates the field related to the provided value.'
+            )
+        ],
+        tags=['Database table fields'],
+        operation_id='update_database_table_field',
+        description=(
+            'Updates the existing field if the authorized user has access to the '
+            'related database\'s group. The type can also be changed and depending on '
+            'that type, different additional properties can optionally be set. If you '
+            'change the field type it could happen that the data conversion fails, in '
+            'that case the `ERROR_CANNOT_CHANGE_FIELD_TYPE` is returned, but this '
+            'rarely happens. If a data value cannot be converted it is set to `null` '
+            'so data might go lost.'
+        ),
+        request=PolymorphicCustomFieldRegistrySerializer(
+            field_type_registry,
+            UpdateFieldSerializer
+        ),
+        responses={
+            200: PolymorphicCustomFieldRegistrySerializer(
+                field_type_registry,
+                FieldSerializer
+            ),
+            400: get_error_schema([
+                'ERROR_USER_NOT_IN_GROUP',
+                'ERROR_CANNOT_CHANGE_FIELD_TYPE',
+                'ERROR_REQUEST_BODY_VALIDATION'
+            ])
+        }
+    )
     @transaction.atomic
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
@@ -120,6 +245,30 @@ class FieldView(APIView):
         serializer = field_type_registry.get_serializer(field, FieldSerializer)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='field_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Deletes the field related to the provided value.'
+            )
+        ],
+        tags=['Database table fields'],
+        operation_id='delete_database_table_field',
+        description=(
+            'Deletes the existing field if the authorized user has access to the '
+            'related database\'s group. Note that all the related data to that field '
+            'is also deleted. Primary fields cannot be deleted because their value '
+            'represents the row.'
+        ),
+        responses={
+            204: None,
+            400: get_error_schema([
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_CANNOT_DELETE_PRIMARY_FIELD'
+            ])
+        }
+    )
     @transaction.atomic
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,

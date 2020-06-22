@@ -5,8 +5,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+
 from baserow.api.v0.decorators import validate_body, map_exceptions
 from baserow.api.v0.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.v0.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
@@ -30,6 +34,31 @@ class TablesView(APIView):
 
         return database
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='database_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Returns only tables that are related to the provided '
+                            'value.'
+            )
+        ],
+        tags=['Database tables'],
+        operation_id='list_database_tables',
+        description=(
+            'Lists all the tables that are in the database related to the '
+            '`database_id` parameter if the user has access to the database\'s group. '
+            'A table is exactly as the name suggests. It can hold multiple fields, '
+            'each having their own type and multiple rows. They can be added via the '
+            '**create_database_table_field** and **create_database_table_row** '
+            'endpoints.'
+        ),
+        responses={
+            200: TableSerializer(many=True),
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+        }
+    )
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
@@ -41,6 +70,31 @@ class TablesView(APIView):
         serializer = TableSerializer(tables, many=True)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='database_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Creates a table for the database related to the provided '
+                            'value.'
+            )
+        ],
+        tags=['Database tables'],
+        operation_id='create_database_table',
+        description=(
+            'Creates a new table for the database related to the provided '
+            '`database_id` parameter if the authorized user has access to the '
+            'database\'s group.'
+        ),
+        request=TableCreateUpdateSerializer,
+        responses={
+            200: TableSerializer,
+            400: get_error_schema([
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+            ])
+        }
+    )
     @transaction.atomic
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
@@ -71,6 +125,26 @@ class TableView(APIView):
 
         return table
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='table_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Returns the table related to the provided value.'
+            )
+        ],
+        tags=['Database tables'],
+        operation_id='get_database_table',
+        description=(
+            'Returns the requested table if the authorized user has access to the '
+            'related database\'s group.'
+        ),
+        responses={
+            200: TableSerializer,
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+        }
+    )
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
@@ -81,6 +155,29 @@ class TableView(APIView):
         serializer = TableSerializer(table)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='table_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Updates the table related to the provided value.'
+            )
+        ],
+        tags=['Database tables'],
+        operation_id='update_database_table',
+        description=(
+            'Updates the existing table if the authorized user has access to the '
+            'related database\'s group.'
+        ),
+        request=TableCreateUpdateSerializer,
+        responses={
+            200: TableSerializer,
+            400: get_error_schema([
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+            ])
+        }
+    )
     @transaction.atomic
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
@@ -97,6 +194,26 @@ class TableView(APIView):
         serializer = TableSerializer(table)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='table_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Deletes the table related to the provided value.'
+            )
+        ],
+        tags=['Database tables'],
+        operation_id='delete_database_table',
+        description=(
+            'Deletes the existing table if the authorized user has access to the '
+            'related database\'s group.'
+        ),
+        responses={
+            204: None,
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+        }
+    )
     @transaction.atomic
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP

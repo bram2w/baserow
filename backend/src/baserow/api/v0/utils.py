@@ -150,9 +150,13 @@ def get_serializer_class(model, field_names, field_overrides=None,
     """
 
     model_ = model
+    meta_ref_name = model_.__name__
 
     if not field_overrides:
         field_overrides = {}
+
+    if base_class:
+        meta_ref_name += base_class.__name__
 
     if not base_class:
         base_class = ModelSerializer
@@ -164,6 +168,7 @@ def get_serializer_class(model, field_names, field_overrides=None,
         field_names = list(extends_meta.fields) + list(field_names)
 
     class Meta(extends_meta):
+        ref_name = meta_ref_name
         model = model_
         fields = list(field_names)
 
@@ -173,3 +178,30 @@ def get_serializer_class(model, field_names, field_overrides=None,
         attrs.update(field_overrides)
 
     return type(str(model_.__name__ + 'Serializer'), (base_class, ), attrs)
+
+
+class PolymorphicCustomFieldRegistrySerializer:
+    """
+    A placeholder class for the `PolymorphicCustomFieldRegistrySerializerExtension`
+    extension class.
+    """
+
+    def __init__(self, registry, base_class, type_field_name='type', many=False):
+        self.read_only = False
+        self.registry = registry
+        self.base_class = base_class
+        self.type_field_name = type_field_name
+        self.many = many
+
+
+class PolymorphicMappingSerializer:
+    """
+    A placeholder class for the `PolymorphicMappingSerializerExtension` extension class.
+    """
+
+    def __init__(self, component_name, mapping, type_field_name='type', many=False):
+        self.read_only = False
+        self.component_name = component_name
+        self.mapping = mapping
+        self.type_field_name = type_field_name
+        self.many = many

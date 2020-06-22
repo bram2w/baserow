@@ -26,4 +26,7 @@ class GroupUserSerializer(serializers.ModelSerializer):
 
 
 class OrderGroupsSerializer(serializers.Serializer):
-    groups = serializers.ListField(child=serializers.IntegerField())
+    groups = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text='Group ids in the desired order.'
+    )

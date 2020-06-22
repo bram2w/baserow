@@ -1,5 +1,8 @@
 from django.utils.functional import lazy
 
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.openapi import OpenApiTypes
+
 from rest_framework import serializers
 
 from baserow.api.v0.groups.serializers import GroupSerializer
@@ -9,7 +12,7 @@ from baserow.core.models import Application
 
 class ApplicationSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
-    group = GroupSerializer()
+    group = GroupSerializer(help_text='The group that the application belongs to.')
 
     class Meta:
         model = Application
@@ -20,6 +23,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             }
         }
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
         # It could be that the application related to the instance is already in the
         # context else we can call the specific_class property to find it.

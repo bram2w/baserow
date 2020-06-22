@@ -1,6 +1,12 @@
+import logging
+
 from rest_framework import serializers
 
 from baserow.api.v0.utils import get_serializer_class
+from baserow.contrib.database.fields.registries import field_type_registry
+
+
+logger = logging.getLogger(__name__)
 
 
 class RowSerializer(serializers.ModelSerializer):
@@ -36,3 +42,56 @@ def get_row_serializer_class(model, base_class=None):
         for field in field_objects.values()
     }
     return get_serializer_class(model, field_names, field_overrides, base_class)
+
+
+def get_example_row_serializer_class(add_id=False):
+    """
+    Generates a serializer containing a field for each field type. It is only used for
+    example purposes in the openapi documentation.
+
+    :param add_id: Indicates whether the id field should be added. This could for
+        example differ for request or response documentation.
+    :type add_id: bool
+    :return: Generated serializer containing a field for each field type.
+    :rtype: Serializer
+    """
+
+    if not hasattr(get_example_row_serializer_class, 'cache'):
+        get_example_row_serializer_class.cache = {}
+
+    class_name = (
+        'ExampleRowResponseSerializer'
+        if add_id else
+        'ExampleRowRequestSerializer'
+    )
+
+    if class_name in get_example_row_serializer_class.cache:
+        return get_example_row_serializer_class.cache[class_name]
+
+    fields = {}
+
+    if add_id:
+        fields['id'] = serializers.IntegerField(
+            read_only=True,
+            help_text='The unique identifier of the row in the table.'
+        )
+
+    field_types = field_type_registry.registry.values()
+
+    if len(field_types) == 0:
+        logger.warning('The field types appear to be empty. This module is probably '
+                       'imported before the fields have been registered.')
+
+    for i, field_type in enumerate(field_types):
+        fields[f'field_{i + 1}'] = field_type.get_serializer_field(
+            field_type.model_class(),
+            label='test22',
+            help_text=f'This field represents the `{field_type.type}` field. The '
+                      f'number in field_{i + 1} is in a normal request or response the '
+                      f'id of the field.'
+        )
+
+    class_object = type(class_name, (serializers.Serializer,), fields)
+    get_example_row_serializer_class.cache[class_name] = class_object
+
+    return class_object

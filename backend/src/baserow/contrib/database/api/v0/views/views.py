@@ -5,9 +5,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+
 from baserow.api.v0.decorators import validate_body_custom_fields, map_exceptions
 from baserow.api.v0.utils import validate_data_custom_fields
 from baserow.api.v0.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.v0.utils import PolymorphicCustomFieldRegistrySerializer
+from baserow.api.v0.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.registries import view_type_registry
@@ -33,6 +38,36 @@ class ViewsView(APIView):
 
         return table
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='table_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Returns only views of the table related to the provided '
+                            'value.'
+            )
+        ],
+        tags=['Database table views'],
+        operation_id='list_database_table_views',
+        description=(
+            'Lists all views of the table related to the provided `table_id` if the '
+            'user has access to the related database\'s group. A table can have '
+            'multiple views. Each view can display the data in a different way. For '
+            'example the `grid` view shows the in a spreadsheet like way. That type '
+            'has custom endpoints for data retrieval and manipulation. In the future '
+            'other views types like a calendar or Kanban are going to be added. Each '
+            'type can have different properties.'
+        ),
+        responses={
+            200: PolymorphicCustomFieldRegistrySerializer(
+                view_type_registry,
+                ViewSerializer,
+                many=True
+            ),
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+        }
+    )
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
@@ -50,6 +85,38 @@ class ViewsView(APIView):
         ]
         return Response(data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='table_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Creates a view for the table related to the provided '
+                            'value.'
+            )
+        ],
+        tags=['Database table views'],
+        operation_id='create_database_table_view',
+        description=(
+            'Creates a new view for the table related to the provided `table_id` '
+            'parameter if the authorized user has access to the related database\'s '
+            'group. Depending on the type, different properties can optionally be '
+            'set.'
+        ),
+        request=PolymorphicCustomFieldRegistrySerializer(
+            view_type_registry,
+            CreateViewSerializer
+        ),
+        responses={
+            200: PolymorphicCustomFieldRegistrySerializer(
+                view_type_registry,
+                ViewSerializer
+            ),
+            400: get_error_schema([
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+            ])
+        }
+    )
     @transaction.atomic
     @validate_body_custom_fields(
         view_type_registry, base_serializer_class=CreateViewSerializer)
@@ -70,6 +137,30 @@ class ViewsView(APIView):
 class ViewView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='view_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Returns the view related to the provided value.'
+            )
+        ],
+        tags=['Database table views'],
+        operation_id='get_database_table_view',
+        description=(
+            'Returns the existing view if the authorized user has access to the '
+            'related database\'s group. Depending on the type different properties'
+            'could be returned.'
+        ),
+        responses={
+            200: PolymorphicCustomFieldRegistrySerializer(
+                view_type_registry,
+                ViewSerializer
+            ),
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+        }
+    )
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
@@ -88,6 +179,36 @@ class ViewView(APIView):
         serializer = view_type_registry.get_serializer(view, ViewSerializer)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='view_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Updates the view related to the provided value.'
+            )
+        ],
+        tags=['Database table views'],
+        operation_id='update_database_table_view',
+        description=(
+            'Updates the existing view if the authorized user has access to the '
+            'related database\'s group. The type cannot be changed. It depends on the '
+            'existing type which properties can be changed.'
+        ),
+        request=PolymorphicCustomFieldRegistrySerializer(
+            view_type_registry,
+            UpdateViewSerializer
+        ),
+        responses={
+            200: PolymorphicCustomFieldRegistrySerializer(
+                view_type_registry,
+                ViewSerializer
+            ),
+            400: get_error_schema([
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+            ])
+        }
+    )
     @transaction.atomic
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
@@ -111,6 +232,28 @@ class ViewView(APIView):
         serializer = view_type_registry.get_serializer(view, ViewSerializer)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='view_id',
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description='Deletes the view related to the provided value.'
+            )
+        ],
+        tags=['Database table views'],
+        operation_id='delete_database_table_view',
+        description=(
+            'Deletes the existing view if the authorized user has access to the '
+            'related database\'s group. Note that all the related settings of the '
+            'view are going to be deleted also. The data stays intact after deleting '
+            'the view because this is related to the table and not the view.'
+        ),
+        responses={
+            204: None,
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+        }
+    )
     @transaction.atomic
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP

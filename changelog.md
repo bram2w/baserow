@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* Added OpenAPI docs.
+
+## Released (2020-08-06)
+
 * Fixed not handling 500 errors.
 * Prevent row context menu when right clicking on a field that's being edited.
 * Added row modal editing feature to the grid view.
