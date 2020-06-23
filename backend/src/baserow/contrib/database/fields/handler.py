@@ -36,6 +36,9 @@ class FieldHandler:
         :type primary: bool
         :param kwargs: The field values that need to be set upon creation.
         :type kwargs: object
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        :raises PrimaryFieldAlreadyExists: When we try to create a primary field,
+            but one already exists.
         :return: The created field instance.
         :rtype: Field
         """
@@ -83,6 +86,12 @@ class FieldHandler:
         :type new_type_name: str
         :param kwargs: The field values that need to be updated
         :type kwargs: object
+        :raises ValueError: When the provided field is not an instance of Field.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        :raises CannotChangeFieldType: When the database server responds with an
+            error while trying to change the field type. This should rarely happen
+            because of the lenient schema editor, which replaces the value with null
+            if it ould not be converted.
         :return: The updated field instance.
         :rtype: Field
         """
@@ -149,6 +158,10 @@ class FieldHandler:
         :type user: User
         :param field: The field instance that needs to be deleted.
         :type field: Field
+        :raises ValueError: When the provided field is not an instance of Field.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        :raises CannotDeletePrimaryField: When we try to delete the primary field
+            which cannot be deleted.
         """
 
         if not isinstance(field, Field):

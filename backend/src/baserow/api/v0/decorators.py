@@ -91,6 +91,9 @@ def validate_body(serializer_class):
 
     :param serializer_class: The serializer that must be used for validating.
     :type serializer_class: Serializer
+    :raises ValueError: When the `data` attribute is already in the kwargs. This
+        decorator tries to add the `data` attribute, but cannot do that if it is
+        already present.
     """
 
     def validate_decorator(func):
@@ -123,6 +126,10 @@ def validate_body_custom_fields(registry, base_serializer_class=None,
     :param type_attribute_name: The attribute name containing the type value in the
         request data.
     :type type_attribute_name: str
+    :raises RequestBodyValidationException: When the `type` is not provided.
+    :raises ValueError: When the `data` attribute is already in the kwargs. This
+        decorator tries to add the `data` attribute, but cannot do that if it is
+        already present.
     """
 
     def validate_decorator(func):

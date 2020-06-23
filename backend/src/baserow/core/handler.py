@@ -30,6 +30,8 @@ class CoreHandler:
         :type user: User
         :param group: The group instance that must be updated.
         :type group: Group
+        :raises ValueError: If one of the provided parameters is invalid.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated group
         :rtype: Group
         """
@@ -53,6 +55,8 @@ class CoreHandler:
         :type: user: User
         :param group: The group instance that must be deleted.
         :type: group: Group
+        :raises ValueError: If one of the provided parameters is invalid.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(group, Group):
@@ -98,6 +102,7 @@ class CoreHandler:
         :type type_name: str
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created application instance.
         :rtype: Application
         """
@@ -126,6 +131,8 @@ class CoreHandler:
         :type application: Application
         :param kwargs: The fields that need to be updated.
         :type kwargs: object
+        :raises ValueError: If one of the provided parameters is invalid.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated application instance.
         :rtype: Application
         """
@@ -149,6 +156,8 @@ class CoreHandler:
         :type user: User
         :param application: The application instance that needs to be deleted.
         :type application: Application
+        :raises ValueError: If one of the provided parameters is invalid.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(application, Application):

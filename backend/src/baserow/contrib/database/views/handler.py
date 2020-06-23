@@ -20,6 +20,8 @@ class ViewHandler:
         :param view_model: If provided that models objects are used to select the
             view. This can for example be useful when you want to select a GridView or
             other child of the View model.
+        :raises ViewDoesNotExist: When the view with the provided id does not exist.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :type view_model: View
         :return:
         """
@@ -52,6 +54,7 @@ class ViewHandler:
         :type type_name: str
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created view instance.
         :rtype: View
         """
@@ -82,6 +85,8 @@ class ViewHandler:
         :type view: View
         :param kwargs: The fields that need to be updated.
         :type kwargs: object
+        :raises ValueError: When the provided view not an instance of View.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated view instance.
         :rtype: View
         """
@@ -108,6 +113,8 @@ class ViewHandler:
         :type user: User
         :param view: The view instance that needs to be deleted.
         :type view: View
+        :raises ViewDoesNotExist: When the view with the provided id does not exist.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(view, View):
@@ -132,6 +139,8 @@ class ViewHandler:
         :param fields: Optionally a list of fields can be provided so that they don't
             have to be fetched again.
         :type fields: None or list
+        :raises UnrelatedFieldError: When the provided field id is not related to the
+            provided view.
         """
 
         if not fields:
