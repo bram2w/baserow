@@ -5,6 +5,9 @@
 * Added raises attribute to the docstrings.
 * Added OpenAPI docs.
 * Refactored all SCSS classes to BEM naming.
+* Use the new long text field, date field and view's field options for the example 
+  tables when creating a new account. Also use the long text field when creating a new 
+  table.
 
 ## Released (2020-08-06)
 

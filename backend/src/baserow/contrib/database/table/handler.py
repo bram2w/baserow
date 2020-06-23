@@ -7,7 +7,9 @@ from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.field_types import TextFieldType, BooleanFieldType
+from baserow.contrib.database.fields.field_types import (
+    LongTextFieldType, BooleanFieldType
+)
 
 from .models import Table
 from .exceptions import TableDoesNotExist
@@ -94,7 +96,7 @@ class TableHandler:
         field_handler = FieldHandler()
 
         view = view_handler.create_view(user, table, GridViewType.type, name='Grid')
-        notes = field_handler.create_field(user, table, TextFieldType.type,
+        notes = field_handler.create_field(user, table, LongTextFieldType.type,
                                            name='Notes')
         active = field_handler.create_field(user, table, BooleanFieldType.type,
                                             name='Active')

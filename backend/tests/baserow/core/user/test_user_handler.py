@@ -7,8 +7,9 @@ from itsdangerous.exc import SignatureExpired, BadSignature
 from baserow.core.models import Group
 from baserow.core.registries import plugin_registry
 from baserow.contrib.database.models import (
-    Database, Table, GridView, TextField, BooleanField
+    Database, Table, GridView, TextField, LongTextField, BooleanField, DateField
 )
+from baserow.contrib.database.views.models import GridViewFieldOptions
 from baserow.core.user.exceptions import (
     UserAlreadyExist, UserNotFound, InvalidPassword
 )
@@ -55,7 +56,10 @@ def test_create_user():
     assert Table.objects.all().count() == 2
     assert GridView.objects.all().count() == 2
     assert TextField.objects.all().count() == 3
+    assert LongTextField.objects.all().count() == 1
     assert BooleanField.objects.all().count() == 2
+    assert DateField.objects.all().count() == 1
+    assert GridViewFieldOptions.objects.all().count() == 3
 
     tables = Table.objects.all().order_by('id')
 
