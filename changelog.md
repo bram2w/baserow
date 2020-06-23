@@ -8,6 +8,7 @@
 * Use the new long text field, date field and view's field options for the example 
   tables when creating a new account. Also use the long text field when creating a new 
   table.
+* Removed not needed api v0 namespace in url and python module.
 
 ## Released (2020-08-06)
 

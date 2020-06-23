@@ -1,6 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
 
-from baserow.api.v0.utils import get_serializer_class
+from baserow.api.utils import get_serializer_class
 
 from .exceptions import InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
 
@@ -86,7 +86,7 @@ class CustomFieldsInstanceMixin:
 
 
 class APIUrlsInstanceMixin:
-    def get_api_v0_urls(self):
+    def get_api_urls(self):
         """
         If needed custom api related urls to the instance can be added here.
 
@@ -266,5 +266,5 @@ class APIUrlsRegistryMixin:
 
         api_urls = []
         for types in self.registry.values():
-            api_urls += types.get_api_v0_urls()
+            api_urls += types.get_api_urls()
         return api_urls

@@ -18,7 +18,7 @@ class TemporaryApplicationType1(ApplicationType):
     type = 'temporary_1'
     model_class = FakeModel
 
-    def get_api_v0_urls(self):
+    def get_api_urls(self):
         return ['url_1', 'url_2']
 
 
@@ -26,7 +26,7 @@ class TemporaryApplicationType2(ApplicationType):
     type = 'temporary_2'
     model_class = FakeModel2
 
-    def get_api_v0_urls(self):
+    def get_api_urls(self):
         return ['url_3']
 
 

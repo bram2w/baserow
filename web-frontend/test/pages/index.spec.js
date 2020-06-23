@@ -12,7 +12,7 @@ describe('index redirect', () => {
     // Because the token 'test1' exists it will be refreshed immediately, the
     // refresh endpoint is stubbed so that it will always provide a valid
     // unexpired token.
-    moxios.stubRequest('http://localhost/api/v0/user/token-refresh/', {
+    moxios.stubRequest('http://localhost/api/user/token-refresh/', {
       status: 200,
       response: {
         token:

@@ -11,9 +11,9 @@ class Plugin(APIUrlsInstanceMixin, Instance):
     registry. It must be extended so customisation can be done. Each plugin can register
     urls to the root and to the api.
 
-    The added API urls will be available under the namespace 'api_v0'. So if a url
+    The added API urls will be available under the namespace 'api'. So if a url
     with name 'example' is returned by the method it will available under
-    reverse('api_v0:example').
+    reverse('api:example').
 
     Example:
         from django.http import HttpResponse
@@ -32,7 +32,7 @@ class Plugin(APIUrlsInstanceMixin, Instance):
                 ]
 
             # Will be added to the API.
-            def get_api_v0_urls(self):
+            def get_api_urls(self):
                 return [
                     path('application-type/', include(api_urls, namespace=self.type)),
                 ]
@@ -110,9 +110,9 @@ class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, Instance):
     needed so that the user can set custom settings per application instance he has
     created.
 
-    The added API urls will be available under the namespace 'api_v0'. So if a url
+    The added API urls will be available under the namespace 'api'. So if a url
     with name 'example' is returned by the method it will available under
-    reverse('api_v0:example').
+    reverse('api:example').
 
     Example:
         from baserow.core.models import Application
@@ -125,7 +125,7 @@ class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, Instance):
             type = 'a-unique-type-name'
             model_class = ExampleApplicationModel
 
-            def get_api_v0_urls(self):
+            def get_api_urls(self):
                 return [
                     path('application-type/', include(api_urls, namespace=self.type)),
                 ]
