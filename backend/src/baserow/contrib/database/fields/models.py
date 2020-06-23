@@ -137,6 +137,7 @@ class NumberField(Field):
 
     def save(self, *args, **kwargs):
         """Check if the number_type and number_decimal_places has a valid choice."""
+
         if not any(self.number_type in _tuple for _tuple in NUMBER_TYPE_CHOICES):
             raise ValueError(f'{self.number_type} is not a valid choice.')
         if not any(

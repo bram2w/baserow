@@ -65,6 +65,7 @@ def validate_data_custom_fields(type_name, registry, data, base_serializer_class
     :type base_serializer_class: ModelSerializer
     :param type_attribute_name: The attribute key name that contains the type value.
     :type type_attribute_name: str
+    :raises RequestBodyValidationException: When the type is not a valid choice.
     :return: The validated data.
     :rtype: dict
     """
@@ -95,6 +96,7 @@ def get_request(args):
 
     :param args: A list containing the original arguments of the called view method.
     :type args: list
+    :raises ValueError: When the request has not been found in the args.
     :return: The extracted request object.
     :rtype: Request
     """

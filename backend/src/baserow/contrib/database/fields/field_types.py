@@ -177,6 +177,8 @@ class DateFieldType(FieldType):
         :type value: str, date or datetime
         :return: The date or datetime field with the correct value.
         :rtype: date or datetime(tzinfo=UTC)
+        :raises ValidationError: When the provided date string could not be converted
+            to a date object.
         """
 
         if not value:

@@ -22,6 +22,8 @@ class TableHandler:
         :type user: User
         :param table_id: The identifier of the table that must be returned.
         :type table_id: int
+        :raises TableDoesNotExist: When the table with the provided id does not exist.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The requested table of the provided id.
         :rtype: Table
         """
@@ -50,6 +52,7 @@ class TableHandler:
         :type fill_initial: bool
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created table instance.
         :rtype: Table
         """
@@ -117,6 +120,8 @@ class TableHandler:
         :type table: Table
         :param kwargs: The fields that need to be updated.
         :type kwargs: object
+        :raises ValueError: When the provided table is not an instance of Table.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated table instance.
         :rtype: Table
         """
@@ -140,6 +145,8 @@ class TableHandler:
         :type user: User
         :param table: The table instance that needs to be deleted.
         :type table: Table
+        :raises ValueError: When the provided table is not an instance of Table.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(table, Table):
