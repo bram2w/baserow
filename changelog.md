@@ -9,6 +9,8 @@
   tables when creating a new account. Also use the long text field when creating a new 
   table.
 * Removed not needed api v0 namespace in url and python module.
+* Fixed keeping the datepicker visible in the grid view when selecting a date for the 
+  first time.
 
 ## Released (2020-08-06)
 

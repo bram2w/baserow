@@ -43,6 +43,7 @@
               :value="copy"
               class="datepicker"
               @input="chooseDate(field, $event)"
+              @selected="preventNextUnselect = true"
             ></date-picker>
           </client-only>
         </Context>
@@ -81,6 +82,11 @@ import dateField from '@baserow/modules/database/mixins/dateField'
 export default {
   components: { TimeSelectContext },
   mixins: [gridField, gridFieldInput, dateField],
+  data() {
+    return {
+      preventNextUnselect: false,
+    }
+  },
   methods: {
     /**
      * When the user initializes the editing state we automatically want to focus on
@@ -108,6 +114,16 @@ export default {
      * inside one of these contexts.
      */
     canUnselectByClickingOutside(event) {
+      // A small hack that checks if the next unselect must be prevented. Unfortunately
+      // this is needed because in some cases the date picker refreshes all his child
+      // elements. Because that is done we can't simply check if the date context
+      // contains the event target. That would result in hiding the date picker when we
+      // don't want to do that. This makes sure that the date picker stays visible.
+      if (this.editing && this.preventNextUnselect) {
+        this.preventNextUnselect = false
+        return false
+      }
+
       return (
         !this.editing ||
         (!isElement(this.$refs.dateContext.$el, event.target) &&
