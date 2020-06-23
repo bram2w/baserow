@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
 
     'baserow.core',
-    'baserow.api.v0',
+    'baserow.api',
     'baserow.contrib.database'
 ]
 
@@ -130,7 +130,7 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
-    'DEFAULT_SCHEMA_CLASS': 'baserow.api.v0.openapi.AutoSchema',
+    'DEFAULT_SCHEMA_CLASS': 'baserow.api.openapi.AutoSchema'
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -139,7 +139,7 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=60 * 60),
     'JWT_ALLOW_REFRESH': True,
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
-    'JWT_RESPONSE_PAYLOAD_HANDLER': 'baserow.api.v0.user.jwt.'
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'baserow.api.user.jwt.'
                                     'jwt_response_payload_handler'
 }
 
