@@ -9,6 +9,14 @@ class UserNotInGroupError(Exception):
             super().__init__('The user doesn\'t belong to the group', *args, **kwargs)
 
 
+class GroupDoesNotExist(Exception):
+    """Raised when trying to get a group that does not exist."""
+
+
+class ApplicationDoesNotExist(Exception):
+    """Raised when trying to get an application that does not exist."""
+
+
 class InstanceTypeAlreadyRegistered(Exception):
     """
     Raised when the instance model instance is already registered in the registry.

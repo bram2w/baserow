@@ -10,7 +10,8 @@ from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.db.schema import lenient_schema_editor
 
 from .exceptions import (
-    PrimaryFieldAlreadyExists, CannotDeletePrimaryField, CannotChangeFieldType
+    PrimaryFieldAlreadyExists, CannotDeletePrimaryField, CannotChangeFieldType,
+    FieldDoesNotExist
 )
 from .registries import field_type_registry
 from .models import Field
@@ -20,6 +21,47 @@ logger = logging.getLogger(__name__)
 
 
 class FieldHandler:
+    def get_field(self, user, field_id, field_model=None, base_queryset=None):
+        """
+        Selects a field with a given id from the database.
+
+        :param user: The user on whose behalf the field is requested.
+        :type user: User
+        :param field_id: The identifier of the field that must be returned.
+        :type field_id: int
+        :param field_model: If provided that model's objects are used to select the
+            field. This can for example be useful when you want to select a TextField or
+            other child of the Field model.
+        :type field_model: Field
+        :param base_queryset: The base queryset from where to select the group
+            object. This can for example be used to do a `select_related`. Note that
+            if this is used the `field_model` parameter doesn't work anymore.
+        :type base_queryset: Queryset
+        :raises FieldDoesNotExist: When the field with the provided id does not exist.
+        :raises UserNotInGroupError: When the user does not belong to the field.
+        :return: The requested field instance of the provided id.
+        :rtype: Field
+        """
+
+        if not field_model:
+            field_model = Field
+
+        if not base_queryset:
+            base_queryset = field_model.objects
+
+        try:
+            field = base_queryset.select_related('table__database__group').get(
+                id=field_id
+            )
+        except Field.DoesNotExist:
+            raise FieldDoesNotExist(f'The field with id {field_id} does not exist.')
+
+        group = field.table.database.group
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        return field
+
     def create_field(self, user, table, type_name, primary=False, **kwargs):
         """
         Creates a new field with the given type for a table.

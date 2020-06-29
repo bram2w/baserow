@@ -11,6 +11,7 @@
 * Removed not needed api v0 namespace in url and python module.
 * Fixed keeping the datepicker visible in the grid view when selecting a date for the 
   first time.
+* Improved API 404 errors by providing a machine readable error.
 
 ## Released (2020-08-06)
 

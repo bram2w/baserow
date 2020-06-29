@@ -61,6 +61,7 @@ def test_update_group(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_GROUP_DOES_NOT_EXIST'
 
     url = reverse('api:groups:item', kwargs={'group_id': group_2.id})
     response = api_client.patch(
@@ -101,6 +102,7 @@ def test_delete_group(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_GROUP_DOES_NOT_EXIST'
 
     url = reverse('api:groups:item', kwargs={'group_id': group_2.id})
     response = api_client.delete(

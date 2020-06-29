@@ -35,6 +35,7 @@ def test_list_tables(api_client, data_fixture):
         'HTTP_AUTHORIZATION': f'JWT {token}'
     })
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_APPLICATION_DOES_NOT_EXIST'
 
 
 @pytest.mark.django_db
@@ -88,6 +89,7 @@ def test_create_table(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_APPLICATION_DOES_NOT_EXIST'
 
 
 @pytest.mark.django_db
@@ -113,6 +115,7 @@ def test_get_table(api_client, data_fixture):
     url = reverse('api:database:tables:item', kwargs={'table_id': 9999})
     response = api_client.get(url, HTTP_AUTHORIZATION=f'JWT {token}')
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
 
 @pytest.mark.django_db
@@ -166,6 +169,7 @@ def test_update_table(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
 
 @pytest.mark.django_db
@@ -189,6 +193,7 @@ def test_delete_table(api_client, data_fixture):
     url = reverse('api:database:tables:item', kwargs={'table_id': 9999})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
 
 @pytest.mark.django_db
