@@ -67,6 +67,7 @@ def test_list_applications(api_client, data_fixture):
         }
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_GROUP_DOES_NOT_EXIST'
 
 
 @pytest.mark.django_db
@@ -96,6 +97,7 @@ def test_create_application(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_GROUP_DOES_NOT_EXIST'
 
     response = api_client.post(
         reverse('api:applications:list', kwargs={'group_id': group_2.id}),
@@ -152,6 +154,7 @@ def test_get_application(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_APPLICATION_DOES_NOT_EXIST'
 
     url = reverse('api:applications:item',
                   kwargs={'application_id': application.id})
@@ -196,6 +199,7 @@ def test_update_application(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_APPLICATION_DOES_NOT_EXIST'
 
     url = reverse('api:applications:item', kwargs={'application_id': application.id})
     response = api_client.patch(
@@ -244,6 +248,7 @@ def test_delete_application(api_client, data_fixture):
                   kwargs={'application_id': 99999})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_APPLICATION_DOES_NOT_EXIST'
 
     url = reverse('api:applications:item', kwargs={'application_id': application.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')

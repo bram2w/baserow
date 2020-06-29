@@ -1,5 +1,4 @@
 from django.db import transaction
-from django.shortcuts import get_object_or_404
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,28 +10,20 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
+from baserow.core.exceptions import UserNotInGroupError, ApplicationDoesNotExist
+from baserow.core.handler import CoreHandler
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
 
 from .serializers import TableSerializer, TableCreateUpdateSerializer
+from .errors import ERROR_TABLE_DOES_NOT_EXIST
 
 
 class TablesView(APIView):
     permission_classes = (IsAuthenticated,)
-
-    @staticmethod
-    def get_database(user, database_id):
-        database = get_object_or_404(
-            Database.objects.select_related('group'),
-            pk=database_id
-        )
-
-        if not database.group.has_user(user):
-            raise UserNotInGroupError(user, database.group)
-
-        return database
 
     @extend_schema(
         parameters=[
@@ -56,16 +47,21 @@ class TablesView(APIView):
         ),
         responses={
             200: TableSerializer(many=True),
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_APPLICATION_DOES_NOT_EXIST'])
         }
     )
     @map_exceptions({
+        ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, database_id):
         """Lists all the tables of a database."""
 
-        database = self.get_database(request.user, database_id)
+        database = CoreHandler().get_application(
+            request.user, database_id,
+            base_queryset=Database.objects
+        )
         tables = Table.objects.filter(database=database)
         serializer = TableSerializer(tables, many=True)
         return Response(serializer.data)
@@ -92,18 +88,23 @@ class TablesView(APIView):
             200: TableSerializer,
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_APPLICATION_DOES_NOT_EXIST'])
         }
     )
     @transaction.atomic
     @map_exceptions({
+        ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     @validate_body(TableCreateUpdateSerializer)
     def post(self, request, data, database_id):
         """Creates a new table in a database."""
 
-        database = self.get_database(request.user, database_id)
+        database = CoreHandler().get_application(
+            request.user, database_id,
+            base_queryset=Database.objects
+        )
         table = TableHandler().create_table(
             request.user, database, fill_initial=True, name=data['name'])
         serializer = TableSerializer(table)
@@ -112,18 +113,6 @@ class TablesView(APIView):
 
 class TableView(APIView):
     permission_classes = (IsAuthenticated,)
-
-    @staticmethod
-    def get_table(user, table_id):
-        table = get_object_or_404(
-            Table.objects.select_related('database__group'),
-            pk=table_id
-        )
-
-        if not table.database.group.has_user(user):
-            raise UserNotInGroupError(user, table.database.group)
-
-        return table
 
     @extend_schema(
         parameters=[
@@ -142,16 +131,18 @@ class TableView(APIView):
         ),
         responses={
             200: TableSerializer,
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
     )
     @map_exceptions({
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, table_id):
         """Responds with a serialized table instance."""
 
-        table = self.get_table(request.user, table_id)
+        table = TableHandler().get_table(request.user, table_id)
         serializer = TableSerializer(table)
         return Response(serializer.data)
 
@@ -175,11 +166,13 @@ class TableView(APIView):
             200: TableSerializer,
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
     )
     @transaction.atomic
     @map_exceptions({
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     @validate_body(TableCreateUpdateSerializer)
@@ -188,7 +181,7 @@ class TableView(APIView):
 
         table = TableHandler().update_table(
             request.user,
-            self.get_table(request.user, table_id),
+            TableHandler().get_table(request.user, table_id),
             name=data['name']
         )
         serializer = TableSerializer(table)
@@ -211,11 +204,13 @@ class TableView(APIView):
         ),
         responses={
             204: None,
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
     )
     @transaction.atomic
     @map_exceptions({
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, table_id):
@@ -223,6 +218,6 @@ class TableView(APIView):
 
         TableHandler().delete_table(
             request.user,
-            self.get_table(request.user, table_id)
+            TableHandler().get_table(request.user, table_id)
         )
         return Response(status=204)

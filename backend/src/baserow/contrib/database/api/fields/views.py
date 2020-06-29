@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from django.db import transaction
 
 from rest_framework.views import APIView
@@ -14,12 +13,15 @@ from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.utils import PolymorphicCustomFieldRegistrySerializer
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroupError
-from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.api.fields.errors import (
-    ERROR_CANNOT_DELETE_PRIMARY_FIELD, ERROR_CANNOT_CHANGE_FIELD_TYPE
+    ERROR_CANNOT_DELETE_PRIMARY_FIELD, ERROR_CANNOT_CHANGE_FIELD_TYPE,
+    ERROR_FIELD_DOES_NOT_EXIST
 )
 from baserow.contrib.database.fields.exceptions import (
-    CannotDeletePrimaryField, CannotChangeFieldType
+    CannotDeletePrimaryField, CannotChangeFieldType, FieldDoesNotExist
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -32,19 +34,6 @@ from .serializers import (
 
 class FieldsView(APIView):
     permission_classes = (IsAuthenticated,)
-
-    @staticmethod
-    def get_table(user, table_id):
-        table = get_object_or_404(
-            Table.objects.select_related('database__group'),
-            id=table_id
-        )
-
-        group = table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
-
-        return table
 
     @extend_schema(
         parameters=[
@@ -71,10 +60,12 @@ class FieldsView(APIView):
                 FieldSerializer,
                 many=True
             ),
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
     )
     @map_exceptions({
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, table_id):
@@ -83,7 +74,7 @@ class FieldsView(APIView):
         has access to that group.
         """
 
-        table = self.get_table(request.user, table_id)
+        table = TableHandler().get_table(request.user, table_id)
         fields = Field.objects.filter(table=table).select_related('content_type')
 
         data = [
@@ -121,20 +112,22 @@ class FieldsView(APIView):
             ),
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
     )
     @transaction.atomic
     @validate_body_custom_fields(
         field_type_registry, base_serializer_class=CreateFieldSerializer)
     @map_exceptions({
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def post(self, request, data, table_id):
         """Creates a new field for a table."""
 
         type_name = data.pop('type')
-        table = self.get_table(request.user, table_id)
+        table = TableHandler().get_table(request.user, table_id)
         field = FieldHandler().create_field(
             request.user, table, type_name, **data)
 
@@ -166,24 +159,18 @@ class FieldView(APIView):
                 field_type_registry,
                 FieldSerializer
             ),
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_FIELD_DOES_NOT_EXIST'])
         }
     )
     @map_exceptions({
+        FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, field_id):
         """Selects a single field and responds with a serialized version."""
 
-        field = get_object_or_404(
-            Field.objects.select_related('table__database__group'),
-            pk=field_id
-        )
-
-        group = field.table.database.group
-        if not group.has_user(request.user):
-            raise UserNotInGroupError(request.user, group)
-
+        field = FieldHandler().get_field(request.user, field_id)
         serializer = field_type_registry.get_serializer(field, FieldSerializer)
         return Response(serializer.data)
 
@@ -220,20 +207,21 @@ class FieldView(APIView):
                 'ERROR_USER_NOT_IN_GROUP',
                 'ERROR_CANNOT_CHANGE_FIELD_TYPE',
                 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_FIELD_DOES_NOT_EXIST'])
         }
     )
     @transaction.atomic
     @map_exceptions({
+        FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         CannotChangeFieldType: ERROR_CANNOT_CHANGE_FIELD_TYPE
     })
     def patch(self, request, field_id):
         """Updates the field if the user belongs to the group."""
 
-        field = get_object_or_404(
-            Field.objects.select_related('table__database__group').select_for_update(),
-            pk=field_id
+        field = FieldHandler().get_field(
+            request.user, field_id, base_queryset=Field.objects.select_for_update()
         ).specific
 
         type_name = type_from_data_or_registry(request.data, field_type_registry, field)
@@ -266,21 +254,20 @@ class FieldView(APIView):
             204: None,
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_CANNOT_DELETE_PRIMARY_FIELD'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_FIELD_DOES_NOT_EXIST'])
         }
     )
     @transaction.atomic
     @map_exceptions({
+        FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         CannotDeletePrimaryField: ERROR_CANNOT_DELETE_PRIMARY_FIELD
     })
     def delete(self, request, field_id):
         """Deletes an existing field if the user belongs to the group."""
 
-        field = get_object_or_404(
-            Field.objects.select_related('table__database__group'),
-            pk=field_id
-        )
+        field = FieldHandler().get_field(request.user, field_id)
         FieldHandler().delete_field(request.user, field)
 
         return Response(status=204)

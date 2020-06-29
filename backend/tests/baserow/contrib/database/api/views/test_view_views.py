@@ -51,6 +51,7 @@ def test_list_views(api_client, data_fixture):
         }
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
 
 @pytest.mark.django_db
@@ -80,6 +81,7 @@ def test_create_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
     response = api_client.post(
         reverse('api:database:views:list', kwargs={'table_id': table_2.id}),
@@ -176,6 +178,7 @@ def test_update_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_VIEW_DOES_NOT_EXIST'
 
     url = reverse('api:database:views:item', kwargs={'view_id': view.id})
     response = api_client.patch(
@@ -220,6 +223,7 @@ def test_delete_view(api_client, data_fixture):
     url = reverse('api:database:views:item', kwargs={'view_id': 99999})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_VIEW_DOES_NOT_EXIST'
 
     url = reverse('api:database:views:item', kwargs={'view_id': view.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')

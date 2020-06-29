@@ -28,6 +28,7 @@ def test_create_row(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table_2.id}),

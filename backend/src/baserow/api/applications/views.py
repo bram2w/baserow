@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from django.db import transaction
 
 from rest_framework.views import APIView
@@ -9,12 +8,15 @@ from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 
 from baserow.api.decorators import validate_body, map_exceptions
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
 from baserow.api.schemas import get_error_schema
 from baserow.api.utils import PolymorphicMappingSerializer
-from baserow.core.models import Group, Application
+from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
+from baserow.core.models import Application
 from baserow.core.handler import CoreHandler
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import (
+    UserNotInGroupError, GroupDoesNotExist, ApplicationDoesNotExist
+)
 from baserow.core.registries import application_type_registry
 
 from .serializers import (
@@ -75,18 +77,6 @@ class AllApplicationsView(APIView):
 class ApplicationsView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    @staticmethod
-    def get_group(request, group_id):
-        group = get_object_or_404(
-            Group,
-            id=group_id
-        )
-
-        if not group.has_user(request.user):
-            raise UserNotInGroupError(request.user, group)
-
-        return group
-
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -111,10 +101,12 @@ class ApplicationsView(APIView):
                 application_type_serializers,
                 many=True
             ),
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_GROUP_DOES_NOT_EXIST'])
         }
     )
     @map_exceptions({
+        GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, group_id):
@@ -124,9 +116,10 @@ class ApplicationsView(APIView):
         returned.
         """
 
-        applications = Application.objects.select_related('content_type', 'group')
-        group = self.get_group(request, group_id)
-        applications = applications.filter(group=group)
+        group = CoreHandler().get_group(request.user, group_id)
+        applications = Application.objects.select_related(
+            'content_type', 'group'
+        ).filter(group=group)
 
         data = [
             get_application_serializer(application).data
@@ -160,18 +153,22 @@ class ApplicationsView(APIView):
             ),
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+            ]),
+            404: get_error_schema([
+                'ERROR_GROUP_DOES_NOT_EXIST'
             ])
         },
     )
     @transaction.atomic
     @validate_body(ApplicationCreateSerializer)
     @map_exceptions({
+        GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def post(self, request, data, group_id):
         """Creates a new application for a user."""
 
-        group = self.get_group(request, group_id)
+        group = CoreHandler().get_group(request.user, group_id)
         application = CoreHandler().create_application(
             request.user, group, data['type'], name=data['name'])
 
@@ -205,23 +202,18 @@ class ApplicationView(APIView):
             ),
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_APPLICATION_DOES_NOT_EXIST'])
         },
     )
     @map_exceptions({
+        ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, application_id):
         """Selects a single application and responds with a serialized version."""
 
-        application = get_object_or_404(
-            Application.objects.select_related('content_type', 'group'),
-            pk=application_id
-        )
-
-        if not application.group.has_user(request.user):
-            raise UserNotInGroupError(request.user, application.group)
-
+        application = CoreHandler().get_application(request.user, application_id)
         return Response(get_application_serializer(application).data)
 
     @extend_schema(
@@ -249,20 +241,22 @@ class ApplicationView(APIView):
             ),
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_APPLICATION_DOES_NOT_EXIST'])
         },
     )
     @transaction.atomic
     @validate_body(ApplicationUpdateSerializer)
     @map_exceptions({
+        ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def patch(self, request, data, application_id):
         """Updates the application if the user belongs to the group."""
 
-        application = get_object_or_404(
-            Application.objects.select_related('group').select_for_update(),
-            pk=application_id
+        application = CoreHandler().get_application(
+            request.user, application_id,
+            base_queryset=Application.objects.select_for_update()
         )
         application = CoreHandler().update_application(
             request.user, application, name=data['name'])
@@ -288,19 +282,21 @@ class ApplicationView(APIView):
         ),
         responses={
             204: None,
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_APPLICATION_DOES_NOT_EXIST'])
         },
     )
     @transaction.atomic
     @map_exceptions({
+        ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, application_id):
         """Deletes an existing application if the user belongs to the group."""
 
-        application = get_object_or_404(
-            Application.objects.select_related('group'),
-            pk=application_id
+        application = CoreHandler().get_application(
+            request.user, application_id,
+            base_queryset=Application.objects.select_for_update()
         )
         CoreHandler().delete_application(request.user, application)
 

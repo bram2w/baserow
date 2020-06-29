@@ -14,12 +14,17 @@ from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.utils import PolymorphicCustomFieldRegistrySerializer
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroupError
+from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 
 from .serializers import ViewSerializer, CreateViewSerializer, UpdateViewSerializer
+from .errors import ERROR_VIEW_DOES_NOT_EXIST
 
 
 class ViewsView(APIView):
@@ -65,10 +70,12 @@ class ViewsView(APIView):
                 ViewSerializer,
                 many=True
             ),
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
     )
     @map_exceptions({
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, table_id):
@@ -77,7 +84,7 @@ class ViewsView(APIView):
         has access to that group.
         """
 
-        table = self.get_table(request.user, table_id)
+        table = TableHandler().get_table(request.user, table_id)
         views = View.objects.filter(table=table).select_related('content_type')
         data = [
             view_type_registry.get_serializer(view, ViewSerializer).data
@@ -114,19 +121,21 @@ class ViewsView(APIView):
             ),
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
     )
     @transaction.atomic
     @validate_body_custom_fields(
         view_type_registry, base_serializer_class=CreateViewSerializer)
     @map_exceptions({
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def post(self, request, data, table_id):
         """Creates a new view for a user."""
 
-        table = self.get_table(request.user, table_id)
+        table = TableHandler().get_table(request.user, table_id)
         view = ViewHandler().create_view(
             request.user, table, data.pop('type'), **data)
 
@@ -158,24 +167,18 @@ class ViewView(APIView):
                 view_type_registry,
                 ViewSerializer
             ),
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_VIEW_DOES_NOT_EXIST'])
         }
     )
     @map_exceptions({
+        ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, view_id):
         """Selects a single view and responds with a serialized version."""
 
-        view = get_object_or_404(
-            View.objects.select_related('table__database__group'),
-            pk=view_id
-        )
-
-        group = view.table.database.group
-        if not group.has_user(request.user):
-            raise UserNotInGroupError(request.user, group)
-
+        view = ViewHandler().get_view(request.user, view_id)
         serializer = view_type_registry.get_serializer(view, ViewSerializer)
         return Response(serializer.data)
 
@@ -206,21 +209,19 @@ class ViewView(APIView):
             ),
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            ]),
+            404: get_error_schema(['ERROR_VIEW_DOES_NOT_EXIST'])
         }
     )
     @transaction.atomic
     @map_exceptions({
+        ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def patch(self, request, view_id):
         """Updates the view if the user belongs to the group."""
 
-        view = get_object_or_404(
-            View.objects.select_related('table__database__group').select_for_update(),
-            pk=view_id
-        ).specific
-
+        view = ViewHandler().get_view(request.user, view_id).specific
         view_type = view_type_registry.get_by_model(view)
         data = validate_data_custom_fields(
             view_type.type, view_type_registry, request.data,
@@ -251,20 +252,19 @@ class ViewView(APIView):
         ),
         responses={
             204: None,
-            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP'])
+            400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
+            404: get_error_schema(['ERROR_VIEW_DOES_NOT_EXIST'])
         }
     )
     @transaction.atomic
     @map_exceptions({
+        ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, view_id):
         """Deletes an existing view if the user belongs to the group."""
 
-        view = get_object_or_404(
-            View.objects.select_related('table__database__group'),
-            pk=view_id
-        )
+        view = ViewHandler().get_view(request.user, view_id)
         ViewHandler().delete_view(request.user, view)
 
         return Response(status=204)

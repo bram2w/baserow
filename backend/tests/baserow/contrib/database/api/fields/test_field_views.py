@@ -59,6 +59,7 @@ def test_list_fields(api_client, data_fixture):
         }
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
 
 @pytest.mark.django_db
@@ -88,6 +89,7 @@ def test_create_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
 
     response = api_client.post(
         reverse('api:database:fields:list', kwargs={'table_id': table_2.id}),
@@ -140,6 +142,7 @@ def test_get_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_FIELD_DOES_NOT_EXIST'
 
     url = reverse('api:database:fields:item', kwargs={'field_id': text.id})
     response = api_client.get(
@@ -187,6 +190,7 @@ def test_update_field(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_FIELD_DOES_NOT_EXIST'
 
     url = reverse('api:database:fields:item', kwargs={'field_id': text.id})
     response = api_client.patch(
@@ -294,6 +298,7 @@ def test_delete_field(api_client, data_fixture):
     url = reverse('api:database:fields:item', kwargs={'field_id': 99999})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_FIELD_DOES_NOT_EXIST'
 
     url = reverse('api:database:fields:item', kwargs={'field_id': text.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
