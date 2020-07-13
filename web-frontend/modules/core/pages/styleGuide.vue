@@ -44,7 +44,7 @@
               <input
                 type="text"
                 class="input"
-                placeholder="Voer hier iets in"
+                placeholder="Enter something here"
               />
             </div>
           </div>
@@ -55,7 +55,7 @@
                 <input
                   type="text"
                   class="input"
-                  placeholder="Voer hier iets in"
+                  placeholder="Enter something here"
                 />
                 <i class="fas fa-clock"></i>
               </div>
@@ -67,7 +67,7 @@
               <input
                 type="text"
                 class="input input--large"
-                placeholder="Voer hier iets in"
+                placeholder="Enter something here"
               />
             </div>
           </div>
