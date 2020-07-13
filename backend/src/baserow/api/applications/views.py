@@ -20,12 +20,15 @@ from baserow.core.exceptions import (
 from baserow.core.registries import application_type_registry
 
 from .serializers import (
-    ApplicationCreateSerializer, ApplicationUpdateSerializer, get_application_serializer
+    ApplicationSerializer, ApplicationCreateSerializer, ApplicationUpdateSerializer,
+    get_application_serializer
 )
 
 
 application_type_serializers = {
-    application_type.type: application_type.instance_serializer_class
+    application_type.type: (
+        application_type.instance_serializer_class or ApplicationSerializer
+    )
     for application_type in application_type_registry.registry.values()
 }
 

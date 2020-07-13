@@ -2,6 +2,7 @@ version: "3"
 
 services:
   db:
+    container_name: db
     image: postgres:11.3
     environment:
       - POSTGRES_USER=baserow
@@ -11,6 +12,7 @@ services:
       - 5432:5432
 
   mjml:
+    container_name: mjml
     image: liminspace/mjml-tcpserver:latest
     restart: always
     ports:
@@ -40,3 +42,8 @@ services:
       - 3000:3000
     depends_on:
       - backend
+
+networks:
+  default:
+    external:
+      name: baserow_default

@@ -198,9 +198,6 @@ def allowed_includes(*allowed):
             for include in allowed:
                 kwargs[include] = include in includes
 
-            print(args)
-            print(kwargs)
-
             return func(*args, **kwargs)
         return func_wrapper
     return validate_decorator

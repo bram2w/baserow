@@ -2,6 +2,7 @@ version: "3"
 
 services:
   db:
+    container_name: baserow-demo-db
     image: postgres:11.3
     environment:
       - POSTGRES_USER=baserow
@@ -11,13 +12,14 @@ services:
       - 5432:5432
 
   mjml:
+    container_name: baserow-demo-mjml
     image: liminspace/mjml-tcpserver:latest
     restart: always
     ports:
       - 28101:28101
 
   backend:
-    container_name: backend
+    container_name: baserow-demo-backend
     build:
       context: ./backend/
       dockerfile: Dockerfile.demo
@@ -28,7 +30,7 @@ services:
       - mjml
 
   web-frontend:
-    container_name: web-frontend
+    container_name: baserow-demo-web-frontend
     build:
       context: ./web-frontend/
       dockerfile: Dockerfile.demo
