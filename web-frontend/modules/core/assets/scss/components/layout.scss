@@ -1,0 +1,74 @@
+.layout {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.layout__col-1 {
+  position: absolute;
+  z-index: $z-index-layout-col-1;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 52px;
+}
+
+.layout__col-2 {
+  position: absolute;
+  z-index: $z-index-layout-col-2;
+  left: 52px;
+  top: 0;
+  bottom: 0;
+  width: 226px;
+
+  .layout--collapsed & {
+    display: none;
+  }
+}
+
+.layout__col-3 {
+  position: absolute;
+  z-index: $z-index-layout-col-3;
+  left: 278px;
+  top: 0;
+  bottom: 0;
+  right: 0;
+
+  .layout--collapsed & {
+    left: 52px;
+  }
+}
+
+.layout__col-3-scroll {
+  @include absolute(0);
+
+  overflow: auto;
+}
+
+.layout__col-3-1 {
+  position: absolute;
+  z-index: $z-index-layout-col-3-1;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 52px;
+}
+
+.layout__col-3-2 {
+  position: absolute;
+  z-index: $z-index-layout-col-3-2;
+  left: 0;
+  top: 52px;
+  right: 0;
+  bottom: 0;
+}
+
+.layout__uncollapse {
+  display: none;
+
+  .layout--collapsed & {
+    display: block;
+  }
+}

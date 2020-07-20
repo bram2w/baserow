@@ -4,8 +4,7 @@ from baserow.core.registries import ApplicationType
 
 from .models import Database
 from .table.handler import TableHandler
-from .api.v0 import urls as api_urls
-from .api.v0.serializers import DatabaseSerializer
+from .api.serializers import DatabaseSerializer
 
 
 class DatabaseApplicationType(ApplicationType):
@@ -25,7 +24,9 @@ class DatabaseApplicationType(ApplicationType):
         for table in database_tables:
             table_handler.delete_table(user, table)
 
-    def get_api_v0_urls(self):
+    def get_api_urls(self):
+        from .api import urls as api_urls
+
         return [
             path('database/', include(api_urls, namespace=self.type)),
         ]

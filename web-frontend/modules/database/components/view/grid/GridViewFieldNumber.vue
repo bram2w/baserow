@@ -1,6 +1,6 @@
 <template>
   <div
-    class="grid-view-cell"
+    class="grid-view__cell"
     :class="{
       active: selected,
       editing: editing,
@@ -14,9 +14,9 @@
         ref="input"
         v-model="copy"
         type="text"
-        class="grid-field-number-input"
+        class="grid-field-number__input"
       />
-      <div v-show="!isValid()" class="grid-view-cell-error align-right">
+      <div v-show="!isValid()" class="grid-view__cell--error align-right">
         {{ getError() }}
       </div>
     </template>

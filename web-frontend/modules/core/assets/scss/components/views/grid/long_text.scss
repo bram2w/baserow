@@ -1,0 +1,30 @@
+.grid-field-long-text__cell.active.editing {
+  bottom: auto;
+  right: auto;
+  height: auto;
+  min-width: calc(100% + 6px);
+}
+
+.grid-field-long-text {
+  @extend %ellipsis;
+
+  @include fixed-height(32px, 13px);
+
+  padding: 0 10px;
+  user-select: none;
+}
+
+.grid-field-long-text__textarea {
+  line-height: 22px;
+  font-size: 13px;
+  padding: 5px 10px;
+  border: 0;
+  background: none;
+  min-height: 22px * 5 + 10px;
+  min-width: 100%;
+  background-color: $white;
+
+  &:focus {
+    outline: 0;
+  }
+}

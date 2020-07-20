@@ -1,11 +1,11 @@
 <template>
   <div>
     <div class="control">
-      <label class="control-label control-label-small">Date format</label>
-      <div class="control-elements">
+      <label class="control__label control__label--small">Date format</label>
+      <div class="control__elements">
         <Dropdown
           v-model="values.date_format"
-          :class="{ 'dropdown-error': $v.values.date_format.$error }"
+          :class="{ 'dropdown--error': $v.values.date_format.$error }"
           @hide="$v.values.date_format.$touch()"
         >
           <DropdownItem name="European (20/02/2020)" value="EU"></DropdownItem>
@@ -15,16 +15,16 @@
       </div>
     </div>
     <div class="control">
-      <div class="control-elements">
+      <div class="control__elements">
         <Checkbox v-model="values.date_include_time">Include time</Checkbox>
       </div>
     </div>
     <div v-show="values.date_include_time" class="control">
-      <label class="control-label control-label-small">Time format</label>
-      <div class="control-elements">
+      <label class="control__label control__label--small">Time format</label>
+      <div class="control__elements">
         <Dropdown
           v-model="values.date_time_format"
-          :class="{ 'dropdown-error': $v.values.date_time_format.$error }"
+          :class="{ 'dropdown--error': $v.values.date_time_format.$error }"
           @hide="$v.values.date_time_format.$touch()"
         >
           <DropdownItem name="24 hour (23:00)" value="24"></DropdownItem>

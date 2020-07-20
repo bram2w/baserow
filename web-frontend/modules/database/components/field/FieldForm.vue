@@ -1,11 +1,11 @@
 <template>
-  <form class="context-form" @submit.prevent="submit">
+  <form class="context__form" @submit.prevent="submit">
     <div class="control">
-      <div class="control-elements">
+      <div class="control__elements">
         <input
           ref="name"
           v-model="values.name"
-          :class="{ 'input-error': $v.values.name.$error }"
+          :class="{ 'input--error': $v.values.name.$error }"
           type="text"
           class="input"
           placeholder="Name"
@@ -17,10 +17,10 @@
       </div>
     </div>
     <div class="control">
-      <div class="control-elements">
+      <div class="control__elements">
         <Dropdown
           v-model="values.type"
-          :class="{ 'dropdown-error': $v.values.type.$error }"
+          :class="{ 'dropdown--error': $v.values.type.$error }"
           @hide="$v.values.type.$touch()"
         >
           <DropdownItem

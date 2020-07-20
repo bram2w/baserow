@@ -180,7 +180,7 @@ export default function ({ store, app }, inject) {
   const url =
     (process.client
       ? app.$env.PUBLIC_BACKEND_URL
-      : app.$env.PRIVATE_BACKEND_URL) + '/api/v0'
+      : app.$env.PRIVATE_BACKEND_URL) + '/api'
   const client = axios.create({
     baseURL: url,
     withCredentials: false,

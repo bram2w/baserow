@@ -1,0 +1,25 @@
+.grid-field-text {
+  @extend %ellipsis;
+
+  @include fixed-height(32px, 13px);
+
+  padding: 0 10px;
+  user-select: none;
+}
+
+.grid-field-text__input {
+  @include fixed-height(32px, 13px);
+
+  width: 100%;
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  display: inline-block;
+  vertical-align: middle;
+  background: none;
+  white-space: normal;
+
+  &:focus {
+    outline: 0;
+  }
+}

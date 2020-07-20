@@ -1,0 +1,176 @@
+.select {
+  @extend .context;
+
+  max-width: 360px;
+}
+
+.select__search {
+  position: relative;
+  border-bottom: 1px solid $color-neutral-200;
+}
+
+.select__search-icon {
+  color: $color-neutral-300;
+
+  @include absolute(0, auto, auto, 0);
+  @include center-text(32px, 14px, 36px);
+}
+
+.select__search-input {
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 0 12px 0 36px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+
+  @include fixed-height(36px, 14px);
+}
+
+.select__items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: (4 * 36px) + 20px; // we show max 8 items
+  overflow: auto;
+
+  &::before,
+  &::after {
+    content: "";
+    display: block;
+    height: 10px;
+    width: 100%;
+  }
+}
+
+%select__item-size {
+  @include fixed-height(32px, 14px);
+}
+
+.select__item {
+  @extend %select__item-size;
+
+  position: relative;
+  margin: 0 8px 4px 8px;
+  padding: 0 32px 0 10px;
+  border-radius: 3px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &:hover {
+    background-color: $color-neutral-100;
+  }
+
+  &.select__item--loading::before {
+    content: " ";
+
+    @include loading(14px);
+    @include absolute(9px, 9px, auto, auto);
+  }
+
+  &.active {
+    background-color: $color-primary-100;
+
+    &:not(.select__item--loading)::after {
+      @extend .fas;
+      @extend %select__item-size;
+
+      content: fa-content($fa-var-check-circle);
+      width: 32px;
+      text-align: center;
+      color: $color-success-500;
+
+      @include absolute(0, 0, auto, auto);
+    }
+
+    &:hover::after {
+      display: none;
+    }
+  }
+}
+
+.select__item-link {
+  @extend %ellipsis;
+  @extend %select__item-size;
+
+  display: block;
+  color: $color-primary-900;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.select__item-icon {
+  margin-right: 6px;
+}
+
+.select__item-options {
+  @extend %select__item-size;
+
+  display: none;
+  text-align: center;
+  width: 32px;
+  color: $color-neutral-300;
+
+  @include absolute(0, 0, auto, auto);
+
+  &:hover {
+    color: $color-neutral-700;
+  }
+
+  :not(.select__item--loading):hover > & {
+    display: block;
+  }
+}
+
+.select__footer {
+  border-top: 1px solid $color-neutral-200;
+}
+
+.select__footer-button {
+  display: block;
+  padding: 0 12px;
+  color: $color-neutral-600;
+
+  @include fixed-height(36px, 14px);
+
+  .fas {
+    margin-right: 6px;
+  }
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+  }
+}
+
+.select__footer-multiple {
+  display: flex;
+  padding: 8px 12px;
+}
+
+.select__footer-multiple-label {
+  @extend %select__item-size;
+}
+
+.select__footer-multiple-item {
+  @extend %select__item-size;
+
+  margin-left: 8px;
+  padding: 0 10px;
+  color: $color-primary-900;
+  border-radius: 3px;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+}
+
+.select__footer-multiple-icon {
+  color: $color-neutral-300;
+  margin-right: 4px;
+}

@@ -1,17 +1,17 @@
 <template>
   <div>
     <div v-if="!success">
-      <h1 class="box-title">Reset password</h1>
+      <h1 class="box__title">Reset password</h1>
       <Error :error="error"></Error>
       <form @submit.prevent="resetPassword">
         <div class="control">
-          <label class="control-label">New password</label>
-          <div class="control-elements">
+          <label class="control__label">New password</label>
+          <div class="control__elements">
             <input
               v-model="account.password"
-              :class="{ 'input-error': $v.account.password.$error }"
+              :class="{ 'input--error': $v.account.password.$error }"
               type="password"
-              class="input input-large"
+              class="input input--large"
               @blur="$v.account.password.$touch()"
             />
             <div v-if="$v.account.password.$error" class="error">
@@ -20,13 +20,13 @@
           </div>
         </div>
         <div class="control">
-          <label class="control-label">Repeat new password</label>
-          <div class="control-elements">
+          <label class="control__label">Repeat new password</label>
+          <div class="control__elements">
             <input
               v-model="account.passwordConfirm"
-              :class="{ 'input-error': $v.account.passwordConfirm.$error }"
+              :class="{ 'input--error': $v.account.passwordConfirm.$error }"
               type="password"
-              class="input input-large"
+              class="input input--large"
               @blur="$v.account.passwordConfirm.$touch()"
             />
             <div v-if="$v.account.passwordConfirm.$error" class="error">
@@ -35,7 +35,7 @@
           </div>
         </div>
         <div class="actions">
-          <ul class="action-links">
+          <ul class="action__links">
             <li>
               <nuxt-link :to="{ name: 'login' }">
                 <i class="fas fa-arrow-left"></i>
@@ -44,8 +44,8 @@
             </li>
           </ul>
           <button
-            :class="{ 'button-loading': loading }"
-            class="button button-large"
+            :class="{ 'button--loading': loading }"
+            class="button button--large"
             :disabled="loading"
           >
             Change password
@@ -54,12 +54,12 @@
         </div>
       </form>
     </div>
-    <div v-if="success" class="box-message">
-      <div class="box-message-icon">
+    <div v-if="success" class="box__message">
+      <div class="box__message-icon">
         <i class="fas fa-check"></i>
       </div>
-      <h1 class="box-message-title">Password changed</h1>
-      <nuxt-link :to="{ name: 'login' }" class="button button-large">
+      <h1 class="box__message-title">Password changed</h1>
+      <nuxt-link :to="{ name: 'login' }" class="button button--large">
         <i class="fas fa-arrow-left"></i>
         Back to login
       </nuxt-link>

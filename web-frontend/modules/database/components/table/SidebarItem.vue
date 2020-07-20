@@ -1,5 +1,5 @@
 <template>
-  <li class="tree-sub" :class="{ active: table._.selected }">
+  <li class="tree__sub" :class="{ active: table._.selected }">
     <nuxt-link
       :to="{
         name: 'database-table',
@@ -8,7 +8,7 @@
           tableId: table.id,
         },
       }"
-      class="tree-sub-link"
+      class="tree__sub-link"
     >
       <Editable
         ref="rename"
@@ -18,23 +18,23 @@
     </nuxt-link>
     <a
       v-show="!database._.loading"
-      class="tree-options"
+      class="tree__options"
       @click="$refs.context.toggle($event.currentTarget, 'bottom', 'right', 0)"
     >
       <i class="fas fa-ellipsis-v"></i>
     </a>
     <Context ref="context">
-      <div class="context-menu-title">{{ table.name }}</div>
-      <ul class="context-menu">
+      <div class="context__menu-title">{{ table.name }}</div>
+      <ul class="context__menu">
         <li>
           <a @click="enableRename()">
-            <i class="context-menu-icon fas fa-fw fa-pen"></i>
+            <i class="context__menu-icon fas fa-fw fa-pen"></i>
             Rename
           </a>
         </li>
         <li>
           <a @click="deleteTable(database, table)">
-            <i class="context-menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon fas fa-fw fa-trash"></i>
             Delete
           </a>
         </li>

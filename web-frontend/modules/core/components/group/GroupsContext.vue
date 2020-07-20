@@ -1,18 +1,21 @@
 <template>
   <Context ref="groupsContext" class="select">
-    <div class="select-search">
-      <i class="select-search-icon fas fa-search"></i>
+    <div class="select__search">
+      <i class="select__search-icon fas fa-search"></i>
       <input
         v-model="query"
         type="text"
-        class="select-search-input"
+        class="select__search-input"
         placeholder="Search groups"
       />
     </div>
-    <div v-if="isLoading" class="context-loading">
+    <div v-if="isLoading" class="context--loading">
       <div class="loading"></div>
     </div>
-    <ul v-if="!isLoading && isLoaded && groups.length > 0" class="select-items">
+    <ul
+      v-if="!isLoading && isLoaded && groups.length > 0"
+      class="select__items"
+    >
       <GroupsContextItem
         v-for="group in searchAndSort(groups)"
         :key="group.id"
@@ -22,12 +25,12 @@
     </ul>
     <div
       v-if="!isLoading && isLoaded && groups.length == 0"
-      class="context-description"
+      class="context__description"
     >
       No results found
     </div>
-    <div class="select-footer">
-      <a class="select-footer-button" @click="$refs.createGroupModal.show()">
+    <div class="select__footer">
+      <a class="select__footer-button" @click="$refs.createGroupModal.show()">
         <i class="fas fa-plus"></i>
         Create group
       </a>

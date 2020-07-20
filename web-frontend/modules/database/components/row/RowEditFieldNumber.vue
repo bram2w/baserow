@@ -1,11 +1,11 @@
 <template>
-  <div class="control-elements">
+  <div class="control__elements">
     <input
       ref="input"
       v-model="copy"
       type="text"
-      class="input input-large field-number"
-      :class="{ 'input-error': !isValid() }"
+      class="input input--large field-number"
+      :class="{ 'input--error': !isValid() }"
       @keyup.enter="$refs.input.blur()"
       @focus="select()"
       @blur="unselect()"

@@ -18,7 +18,7 @@ class RowHandler:
         :param fields: The returned fields object from the get_model method.
         :type fields: dict
         :param values: The values that need to be prepared with the field id or the
-                       string 'field_{id}' as key.
+            string 'field_{id}' as key.
         :type values: dict
         :return: The prepared values with the field name as key.
         :rtype: dict
@@ -61,11 +61,12 @@ class RowHandler:
         :param table: The table for which to create a row for.
         :type table: Table
         :param values: The values that must be set upon creating the row. The keys must
-                       be the field ids.
+            be the field ids.
         :type values: dict
         :param model: If a model is already generated it can be provided here to avoid
-                      having to generate the model again.
+            having to generate the model again.
         :type model: Model
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created row instance.
         :rtype: Model
         """
@@ -95,8 +96,11 @@ class RowHandler:
         :type row_id: int
         :param values: The values that must be updated. The keys must be the field ids.
         :type values: dict
-        :param model:
-        :type model:
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :type model: Model
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The updated row instance.
         :rtype: Model
         """
@@ -137,6 +141,8 @@ class RowHandler:
         :type table: Table
         :param row_id: The id of the row that must be deleted.
         :type row_id: int
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
         group = table.database.group

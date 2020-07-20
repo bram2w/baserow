@@ -4,8 +4,61 @@ from django.db import connection
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser, Application
-from baserow.core.exceptions import UserNotInGroupError, ApplicationTypeDoesNotExist
+from baserow.core.exceptions import (
+    UserNotInGroupError, ApplicationTypeDoesNotExist, GroupDoesNotExist,
+    ApplicationDoesNotExist
+)
 from baserow.contrib.database.models import Database, Table
+
+
+@pytest.mark.django_db
+def test_get_group(data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    group_1 = data_fixture.create_group(user=user_1)
+
+    handler = CoreHandler()
+
+    with pytest.raises(GroupDoesNotExist):
+        handler.get_group(user=user_1, group_id=0)
+
+    with pytest.raises(UserNotInGroupError):
+        handler.get_group(user=user_2, group_id=group_1.id)
+
+    group_1_copy = handler.get_group(user=user_1, group_id=group_1.id)
+    assert group_1_copy.id == group_1.id
+
+    # If the error is raised we know for sure that the query has resolved.
+    with pytest.raises(AttributeError):
+        handler.get_group(
+            user=user_1, group_id=group_1.id,
+            base_queryset=Group.objects.prefetch_related('UNKNOWN')
+        )
+
+
+@pytest.mark.django_db
+def test_get_group_user(data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    group_1 = data_fixture.create_group(user=user_1)
+
+    handler = CoreHandler()
+
+    with pytest.raises(GroupDoesNotExist):
+        handler.get_group_user(user=user_1, group_id=0)
+
+    with pytest.raises(UserNotInGroupError):
+        handler.get_group_user(user=user_2, group_id=group_1.id)
+
+    group_user_1_copy = handler.get_group_user(user=user_1, group_id=group_1.id)
+    assert group_user_1_copy.group_id == group_1.id
+
+    # If the error is raised we know for sure that the query has resolved.
+    with pytest.raises(AttributeError):
+        handler.get_group_user(
+            user=user_1, group_id=group_1.id,
+            base_queryset=GroupUser.objects.prefetch_related('UNKNOWN')
+        )
 
 
 @pytest.mark.django_db
@@ -105,6 +158,33 @@ def test_order_groups(data_fixture):
     ug_3.refresh_from_db()
 
     assert [1, 2, 3] == [ug_2.order, ug_1.order, ug_3.order]
+
+
+@pytest.mark.django_db
+def test_get_application(data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    application_1 = data_fixture.create_database_application(user=user_1)
+
+    handler = CoreHandler()
+
+    with pytest.raises(ApplicationDoesNotExist):
+        handler.get_application(user=user_1, application_id=0)
+
+    with pytest.raises(UserNotInGroupError):
+        handler.get_application(user=user_2, application_id=application_1.id)
+
+    application_1_copy = handler.get_application(
+        user=user_1, application_id=application_1.id
+    )
+    assert application_1_copy.id == application_1.id
+    assert isinstance(application_1_copy, Application)
+
+    database_1_copy = handler.get_application(
+        user=user_1, application_id=application_1.id, base_queryset=Database.objects
+    )
+    assert database_1_copy.id == application_1.id
+    assert isinstance(database_1_copy, Database)
 
 
 @pytest.mark.django_db

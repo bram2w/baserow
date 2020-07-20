@@ -1,7 +1,7 @@
 <template>
-  <div class="control-elements">
+  <div class="control__elements">
     <div
-      class="field-boolean-checkbox"
+      class="field-boolean__checkbox"
       :class="{ active: value }"
       @click="toggle(value)"
     >

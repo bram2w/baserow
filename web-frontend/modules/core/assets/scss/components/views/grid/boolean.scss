@@ -1,0 +1,24 @@
+.grid-field-boolean {
+  height: 32px;
+  display: flex;
+}
+
+.grid-field-boolean__checkbox {
+  margin: auto;
+  border-radius: 3px;
+  color: $color-success-600;
+
+  @include center-text(18px, 11px);
+
+  .grid-view__cell.active & {
+    border: 1px solid $color-neutral-300;
+  }
+
+  .grid-field-boolean__checkbox-icon {
+    visibility: hidden;
+  }
+
+  &.active .grid-field-boolean__checkbox-icon {
+    visibility: visible;
+  }
+}

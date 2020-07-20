@@ -61,9 +61,13 @@ class Field(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
     """
 
     table = models.ForeignKey('database.Table', on_delete=models.CASCADE)
-    order = models.PositiveIntegerField()
+    order = models.PositiveIntegerField(help_text='Lowest first.')
     name = models.CharField(max_length=255)
-    primary = models.BooleanField(default=False)
+    primary = models.BooleanField(
+        default=False,
+        help_text='Indicates if the field is a primary field. If `true` the field '
+                  'cannot be deleted and the value should represent the whole row.'
+    )
     content_type = models.ForeignKey(
         ContentType,
         verbose_name='content type',
@@ -102,7 +106,13 @@ class Field(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
 
 
 class TextField(Field):
-    text_default = models.CharField(max_length=255, null=True, blank=True)
+    text_default = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text='If set, this value is going to be added every time a new row '
+                  'created.'
+    )
 
 
 class LongTextField(Field):
@@ -110,14 +120,24 @@ class LongTextField(Field):
 
 
 class NumberField(Field):
-    number_type = models.CharField(max_length=32, choices=NUMBER_TYPE_CHOICES,
-                                   default=NUMBER_TYPE_INTEGER)
-    number_decimal_places = models.IntegerField(choices=NUMBER_DECIMAL_PLACES_CHOICES,
-                                                default=1)
-    number_negative = models.BooleanField(default=False)
+    number_type = models.CharField(
+        max_length=32,
+        choices=NUMBER_TYPE_CHOICES,
+        default=NUMBER_TYPE_INTEGER
+    )
+    number_decimal_places = models.IntegerField(
+        choices=NUMBER_DECIMAL_PLACES_CHOICES,
+        default=1,
+        help_text='The amount of digits allowed after the point.'
+    )
+    number_negative = models.BooleanField(
+        default=False,
+        help_text='Indicates if negative values are allowed.'
+    )
 
     def save(self, *args, **kwargs):
         """Check if the number_type and number_decimal_places has a valid choice."""
+
         if not any(self.number_type in _tuple for _tuple in NUMBER_TYPE_CHOICES):
             raise ValueError(f'{self.number_type} is not a valid choice.')
         if not any(
@@ -136,13 +156,18 @@ class DateField(Field):
     date_format = models.CharField(
         choices=DATE_FORMAT_CHOICES,
         default=DATE_FORMAT_CHOICES[0][0],
-        max_length=32
+        max_length=32,
+        help_text='EU (20/02/2020), US (02/20/2020) or ISO (2020-02-20)'
     )
-    date_include_time = models.BooleanField(default=False)
+    date_include_time = models.BooleanField(
+        default=False,
+        help_text='Indicates if the field also includes a time.'
+    )
     date_time_format = models.CharField(
         choices=DATE_TIME_FORMAT_CHOICES,
         default=DATE_TIME_FORMAT_CHOICES[0][0],
-        max_length=32
+        max_length=32,
+        help_text='24 (14:30) or 12 (02:30 PM)'
     )
 
     def get_python_format(self):

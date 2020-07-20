@@ -1,0 +1,27 @@
+.grid-field-number {
+  @extend %ellipsis;
+
+  @include fixed-height(32px, 13px);
+
+  text-align: right;
+  padding: 0 10px;
+  user-select: none;
+}
+
+.grid-field-number__input {
+  @include fixed-height(32px, 13px);
+
+  width: 100%;
+  margin: 0;
+  padding: 0 10px;
+  border: 0;
+  display: inline-block;
+  vertical-align: middle;
+  background: none;
+  white-space: normal;
+  text-align: right;
+
+  &:focus {
+    outline: 0;
+  }
+}

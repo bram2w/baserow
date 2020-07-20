@@ -14,9 +14,9 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
     will have his own model that must extend the View model, this is needed so that the
     user can set custom settings per view instance he has created.
 
-    The added API urls will be available under the namespace 'api_v0:database:views'.
+    The added API urls will be available under the namespace 'api:database:views'.
     So if a url with name 'example' is returned by the method it will available under
-    reverse('api_v0:database:views:example').
+    reverse('api:database:views:example').
 
     Example:
         from baserow.contrib.database.views.models import View
@@ -34,7 +34,7 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
                 'example_ordering': serializers.CharField()
             }
 
-            def get_api_v0_urls(self):
+            def get_api_urls(self):
                 return [
                     path('view-type/', include(api_urls, namespace=self.type)),
                 ]

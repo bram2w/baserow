@@ -1,6 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
 
-from baserow.api.v0.utils import get_serializer_class
+from baserow.api.utils import get_serializer_class
 
 from .exceptions import InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
 
@@ -50,6 +50,7 @@ class CustomFieldsInstanceMixin:
         """
         Returns a model serializer class based on this type field names and overrides.
 
+        :raises ValueError: If the object does not have a `model_class` attribute.
         :return: The generated model serializer class.
         :rtype: ModelSerializer
         """
@@ -73,7 +74,7 @@ class CustomFieldsInstanceMixin:
         :param model_instance: The instance for which the serializer must be generated.
         :type model_instance: Model
         :param base_class: The base serializer class that must be extended. For example
-                           common fields could be stored here.
+            common fields could be stored here.
         :type base_class: ModelSerializer
         :return: The instantiated generated model serializer.
         :rtype: ModelSerializer
@@ -85,7 +86,7 @@ class CustomFieldsInstanceMixin:
 
 
 class APIUrlsInstanceMixin:
-    def get_api_v0_urls(self):
+    def get_api_urls(self):
         """
         If needed custom api related urls to the instance can be added here.
 
@@ -135,6 +136,8 @@ class Registry(object):
 
         :param type_name: The unique name of the registered instance.
         :type type_name: str
+        :raises InstanceTypeDoesNotExist: If the instance with the provided `type_name`
+            does not exist in the registry.
         :return: The requested instance.
         :rtype: InstanceModelInstance
         """
@@ -161,6 +164,9 @@ class Registry(object):
 
         :param instance: The instance that needs to be registered.
         :type instance: Instance
+        :raises ValueError: When the provided instance is not an instance of Instance.
+        :raises InstanceTypeAlreadyRegistered: When the instance's type has already
+            been registered.
         """
 
         if not isinstance(instance, Instance):
@@ -180,6 +186,8 @@ class Registry(object):
 
         :param value: The instance or type name.
         :type value: Instance or str
+        :raises ValueError: If the provided value is not an instance of Instance or
+            string containing the type name.
         """
 
         if isinstance(value, Instance):
@@ -200,8 +208,10 @@ class ModelRegistryMixin:
         Returns a registered instance of the given model class.
 
         :param model_instance: The value that must be or must be an instance of the
-                               model_class.
+            model_class.
         :type model_instance: Model or Model()
+        :raises InstanceTypeDoesNotExist: When the provided model instance is not
+            found in the registry.
         :return: The registered instance.
         :rtype: Instance
         """
@@ -226,8 +236,10 @@ class CustomFieldsRegistryMixin:
         :param model_instance: The instance for which the serializer must be generated.
         :type model_instance: Model
         :param base_class: The base serializer class that must be extended. For example
-                           common fields could be stored here.
+            common fields could be stored here.
         :type base_class: ModelSerializer
+        :raises ValueError: When the `get_by_model` method was not found, which could
+            indicate the `ModelRegistryMixin` has not been mixed in.
         :return: The instantiated generated model serializer.
         :rtype: ModelSerializer
         """
@@ -254,5 +266,5 @@ class APIUrlsRegistryMixin:
 
         api_urls = []
         for types in self.registry.values():
-            api_urls += types.get_api_v0_urls()
+            api_urls += types.get_api_urls()
         return api_urls

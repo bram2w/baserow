@@ -1,17 +1,17 @@
 <template>
   <div class="scrollbars">
-    <div v-if="verticalShow" class="scrollbar-vertical-wrapper">
+    <div v-if="verticalShow" class="scrollbars__vertical-wrapper">
       <div
         ref="scrollbarVertical"
-        class="scrollbar-vertical"
+        class="scrollbars__vertical"
         :style="{ top: verticalTop + '%', height: verticalHeight + '%' }"
         @mousedown="mouseDownVertical($event)"
       ></div>
     </div>
-    <div v-if="horizontalShow" class="scrollbar-horizontal-wrapper">
+    <div v-if="horizontalShow" class="scrollbars__horizontal-wrapper">
       <div
         ref="scrollbarHorizontal"
-        class="scrollbar-horizontal"
+        class="scrollbars__horizontal"
         :style="{ left: horizontalLeft + '%', width: horizontalWidth + '%' }"
         @mousedown="mouseDownHorizontal($event)"
       ></div>

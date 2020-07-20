@@ -24,6 +24,9 @@ class UserHandler:
         :type user_id: int
         :param email: The username, which is their email address, of the user.
         :type email: str
+        :raises ValueError: When neither a `user_id` or `email` has been provided.
+        :raises UserNotFound: When the user with the provided parameters has not been
+            found.
         :return: The requested user.
         :rtype: User
         """
@@ -53,6 +56,8 @@ class UserHandler:
         :param name: The name of the new user.
         :param email: The e-mail address of the user, this is also the username.
         :param password: The password of the user.
+        :raises: UserAlreadyExist: When a user with the provided username (email)
+            already exists.
         :return: The user object.
         :rtype: User
         """
@@ -111,6 +116,10 @@ class UserHandler:
         :type token: str
         :param password: The new password of the user.
         :type password: str
+        :raises BadSignature: When the provided token has a bad signature.
+        :raises SignatureExpired: When the provided token's signature has expired.
+        :raises UserNotFound: When a user related to the provided token has not been
+            found.
         :return: The updated user instance.
         :rtype: User
         """
@@ -137,6 +146,7 @@ class UserHandler:
         :param new_password: The new password of the user. After changing the user
             can only authenticate with this password.
         :type new_password: str
+        :raises InvalidPassword: When the provided old password is incorrect.
         :return: The changed user instance.
         :rtype: User
         """

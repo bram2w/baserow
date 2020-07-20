@@ -1,6 +1,8 @@
 <template>
   <Modal>
-    <h2 class="box-title">Create new {{ applicationType.name | lowercase }}</h2>
+    <h2 class="box__title">
+      Create new {{ applicationType.name | lowercase }}
+    </h2>
     <Error :error="error"></Error>
     <component
       :is="applicationType.getApplicationFormComponent()"
@@ -10,8 +12,8 @@
       <div class="actions">
         <div class="align-right">
           <button
-            class="button button-large"
-            :class="{ 'button-loading': loading }"
+            class="button button--large"
+            :class="{ 'button--loading': loading }"
             :disabled="loading"
           >
             Add {{ applicationType.name | lowercase }}

@@ -1,0 +1,39 @@
+.scrollbars {
+  @include absolute(0);
+
+  z-index: 100;
+  pointer-events: none;
+}
+
+.scrollbars__vertical-wrapper {
+  @include absolute(3px, 3px, 3px, auto);
+
+  width: $scrollbar-size;
+}
+
+.scrollbars__horizontal-wrapper {
+  @include absolute(auto, 3px, 3px, 3px);
+
+  height: $scrollbar-size;
+}
+
+%scrollbar {
+  background-color: $color-neutral-900;
+  opacity: 0.6;
+  border-radius: 3px;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+}
+
+.scrollbars__vertical {
+  @extend %scrollbar;
+
+  @include absolute(auto, 0, auto, 0);
+}
+
+.scrollbars__horizontal {
+  @extend %scrollbar;
+
+  @include absolute(0, auto, 0, auto);
+}

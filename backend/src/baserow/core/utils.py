@@ -1,5 +1,9 @@
 import re
 
+from collections import namedtuple
+
+from django.db.models.fields import NOT_PROVIDED
+
 
 def extract_allowed(values, allowed_fields):
     """
@@ -18,7 +22,7 @@ def extract_allowed(values, allowed_fields):
     :param values: A dict containing the values.
     :type dict:
     :param allowed_fields: A list containing the keys of the values that need to be
-                           extracted from the values.
+        extracted from the values.
     :type allowed_fields: list
     :return: The extracted values.
     :rtype: dict
@@ -56,7 +60,7 @@ def set_allowed_attrs(values, allowed_fields, instance):
     :param values: The dict containing the values.
     :type values: dict
     :param allowed_fields: A list containing the keys of the value that need to be set
-                           on the instance.
+        on the instance.
     :type allowed_fields: list
     :param instance: The instance of which the attributes must be updated.
     :type instance: object
@@ -113,3 +117,42 @@ def remove_special_characters(value, remove_spaces=True):
         for character in value
         if character.isalnum() or (character == ' ' and not remove_spaces)
     )
+
+
+def model_default_values(model_class, not_provided=None):
+    """
+    Figures out which default values the fields of a model have and returns those
+    as a dict.
+
+    :param model_class: The model that contains the fields for which we need to get
+        the default values.
+    :type model_class: Model
+    :return: A dict containing the field name as a key and the default value as value.
+    :rtype: dict
+    """
+
+    return {
+        field.name: (
+            field.default
+            if field.default is not NOT_PROVIDED else
+            not_provided
+        )
+        for field in model_class._meta.get_fields()
+        if hasattr(field, 'default')
+    }
+
+
+def dict_to_object(values, name='Struct'):
+    """
+    Converts a dict to an object.
+
+    :param values: The dict containing the values that need to be converted to an
+        object.
+    :type values:
+    :param name: The name of the object.
+    :type name: str
+    :return: The object with the same attributes as the provided values.
+    :rtype: object
+    """
+
+    return namedtuple(name, values.keys())(*values.values())

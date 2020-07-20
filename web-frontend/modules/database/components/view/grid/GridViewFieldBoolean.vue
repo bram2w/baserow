@@ -1,12 +1,12 @@
 <template>
-  <div class="grid-view-cell" :class="{ active: selected }">
+  <div class="grid-view__cell" :class="{ active: selected }">
     <div class="grid-field-boolean">
       <div
-        class="grid-field-checkbox"
+        class="grid-field-boolean__checkbox"
         :class="{ active: value }"
         @click="toggle(value)"
       >
-        <i class="fas fa-check check"></i>
+        <i class="fas fa-check grid-field-boolean__checkbox-icon"></i>
       </div>
     </div>
   </div>

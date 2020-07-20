@@ -1,0 +1,138 @@
+.control {
+  margin-bottom: 20px;
+}
+
+.control__label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 16px;
+
+  &.control__label--small {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+}
+
+.control__label-icon {
+  margin-right: 6px;
+}
+
+.control__context {
+  color: $color-primary-900;
+  margin-left: 6px;
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-500;
+  }
+}
+
+.input {
+  appearance: none;
+  display: block;
+  width: 100%;
+  border: 1px solid $color-neutral-400;
+  border-radius: 3px;
+  padding: 8px 12px;
+  outline: none;
+
+  &:active,
+  &:focus {
+    border-color: $color-primary-500;
+  }
+
+  &.input--large {
+    padding: 12px 12px;
+  }
+
+  &.input--error {
+    border-color: $color-error-500;
+  }
+}
+
+.input__with-icon {
+  position: relative;
+
+  .input {
+    padding-right: 32px;
+  }
+
+  i {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    font-size: 12px;
+    line-height: 12px;
+    margin-top: -6px;
+    color: $color-neutral-300;
+  }
+}
+
+.checkbox {
+  position: relative;
+  height: 28px;
+  line-height: 28px;
+  padding-left: 24px;
+  cursor: pointer;
+
+  &::before {
+    @include absolute(5px, auto, 0, 0);
+
+    content: "";
+    font-family: $font-awesome-font-family;
+    font-weight: $font-awesome-font-weight;
+    border: 1px solid $color-neutral-400;
+    border-radius: 3px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    background-color: $white;
+    color: $color-success-600;
+  }
+
+  &.active::before {
+    content: fa-content($fa-var-check);
+  }
+}
+
+.error {
+  margin-top: 6px;
+  color: $color-error-500;
+}
+
+.actions {
+  @extend %first-last-no-margin;
+
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  margin: 30px 0;
+
+  > div {
+    width: 100%;
+  }
+
+  &.actions--right {
+    justify-content: right;
+  }
+}
+
+.action__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: inline;
+    margin-right: 20px;
+    white-space: nowrap;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}

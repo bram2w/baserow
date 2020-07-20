@@ -2,9 +2,72 @@ from .models import Group, GroupUser, Application
 from .exceptions import UserNotInGroupError
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
+from .exceptions import GroupDoesNotExist, ApplicationDoesNotExist
 
 
 class CoreHandler:
+    def get_group(self, user, group_id, base_queryset=None):
+        """
+        Selects a group with a given id from the database.
+
+        :param user: The user on whose behalf the group is requested.
+        :type user: User
+        :param group_id: The identifier of the group that must be returned.
+        :type group_id: int
+        :param base_queryset: The base queryset from where to select the group
+            object. This can for example be used to do a `prefetch_related`.
+        :type base_queryset: Queryset
+        :raises GroupDoesNotExist: When the group with the provided id does not exist.
+        :raises UserNotInGroupError: When the user does not belong to the group.
+        :return: The requested group instance of the provided id.
+        :rtype: Group
+        """
+
+        if not base_queryset:
+            base_queryset = Group.objects
+
+        try:
+            group = base_queryset.get(id=group_id)
+        except Group.DoesNotExist:
+            raise GroupDoesNotExist(f'The group with id {group_id} does not exist.')
+
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        return group
+
+    def get_group_user(self, user, group_id, base_queryset=None):
+        """
+        Selects a group user object for the given user and group_id from the database.
+
+        :param user: The user on whose behalf the group is requested.
+        :type user: User
+        :param group_id: The identifier of the group that must be returned.
+        :type group_id: int
+        :param base_queryset: The base queryset from where to select the group user
+            object. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
+        :raises GroupDoesNotExist: When the group with the provided id does not exist.
+        :raises UserNotInGroupError: When the user does not belong to the group.
+        :return: The requested group user instance of the provided group_id.
+        :rtype: GroupUser
+        """
+
+        if not base_queryset:
+            base_queryset = GroupUser.objects
+
+        try:
+            group_user = base_queryset.select_related('group').get(
+                user=user, group_id=group_id
+            )
+        except GroupUser.DoesNotExist:
+            if Group.objects.filter(pk=group_id).exists():
+                raise UserNotInGroupError(user)
+            else:
+                raise GroupDoesNotExist(f'The group with id {group_id} does not exist.')
+
+        return group_user
+
     def create_group(self, user, **kwargs):
         """
         Creates a new group for an existing user.
@@ -30,6 +93,8 @@ class CoreHandler:
         :type user: User
         :param group: The group instance that must be updated.
         :type group: Group
+        :raises ValueError: If one of the provided parameters is invalid.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated group
         :rtype: Group
         """
@@ -53,6 +118,8 @@ class CoreHandler:
         :type: user: User
         :param group: The group instance that must be deleted.
         :type: group: Group
+        :raises ValueError: If one of the provided parameters is invalid.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(group, Group):
@@ -85,6 +152,41 @@ class CoreHandler:
                 group_id=group_id
             ).update(order=index + 1)
 
+    def get_application(self, user, application_id, base_queryset=None):
+        """
+        Selects an application with a given id from the database.
+
+        :param user: The user on whose behalf the application is requested.
+        :type user: User
+        :param application_id: The identifier of the application that must be returned.
+        :type application_id: int
+        :param base_queryset: The base queryset from where to select the application
+            object. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
+        :raises ApplicationDoesNotExist: When the application with the provided id
+            does not exist.
+        :raises UserNotInGroupError: When the user does not belong to the group.
+        :return: The requested application instance of the provided id.
+        :rtype: Application
+        """
+
+        if not base_queryset:
+            base_queryset = Application.objects
+
+        try:
+            application = base_queryset.select_related(
+                'group', 'content_type'
+            ).get(id=application_id)
+        except Application.DoesNotExist:
+            raise ApplicationDoesNotExist(
+                f'The application with id {application_id} does not exist.'
+            )
+
+        if not application.group.has_user(user):
+            raise UserNotInGroupError(user, application.group)
+
+        return application
+
     def create_application(self, user, group, type_name, **kwargs):
         """
         Creates a new application based on the provided type.
@@ -94,10 +196,11 @@ class CoreHandler:
         :param group: The group that the application instance belongs to.
         :type group: Group
         :param type_name: The type name of the application. ApplicationType can be
-                          registered via the ApplicationTypeRegistry.
+            registered via the ApplicationTypeRegistry.
         :type type_name: str
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created application instance.
         :rtype: Application
         """
@@ -126,6 +229,8 @@ class CoreHandler:
         :type application: Application
         :param kwargs: The fields that need to be updated.
         :type kwargs: object
+        :raises ValueError: If one of the provided parameters is invalid.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated application instance.
         :rtype: Application
         """
@@ -149,6 +254,8 @@ class CoreHandler:
         :type user: User
         :param application: The application instance that needs to be deleted.
         :type application: Application
+        :raises ValueError: If one of the provided parameters is invalid.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(application, Application):

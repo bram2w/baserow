@@ -1,7 +1,3 @@
-<template>
-  <div>{{ test }}</div>
-</template>
-
 <script>
 export default {
   fetch({ store, redirect }) {

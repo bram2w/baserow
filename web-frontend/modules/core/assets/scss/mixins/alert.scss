@@ -1,0 +1,41 @@
+@mixin alert-style($background, $border, $title, $text, $icon-border) {
+  background-color: $background;
+  border-color: $border;
+
+  .alert__icon {
+    border-color: $icon-border;
+  }
+
+  .alert__title {
+    color: $title;
+  }
+
+  .alert__content {
+    color: $text;
+  }
+
+  .alert__close {
+    color: $title;
+
+    &:hover {
+      color: $text;
+    }
+  }
+
+  &.alert--simple {
+    background-color: $white;
+    border-color: $color-neutral-200;
+
+    .alert__title {
+      color: $color-primary-900;
+    }
+
+    .alert__content {
+      color: $color-neutral-700;
+    }
+
+    .alert__close {
+      color: $color-neutral-500;
+    }
+  }
+}

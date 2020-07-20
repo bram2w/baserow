@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="!success">
-      <h1 class="box-title">Forgot password</h1>
+      <h1 class="box__title">Forgot password</h1>
       <p>
         Please enter your e-mail address in the form. If we find an account then
         we will send an e-mail with a link to reset your password.
@@ -9,14 +9,14 @@
       <Error :error="error"></Error>
       <form @submit.prevent="sendLink">
         <div class="control">
-          <label class="control-label">E-mail address</label>
-          <div class="control-elements">
+          <label class="control__label">E-mail address</label>
+          <div class="control__elements">
             <input
               ref="email"
               v-model="account.email"
-              :class="{ 'input-error': $v.account.email.$error }"
+              :class="{ 'input--error': $v.account.email.$error }"
               type="text"
-              class="input input-large"
+              class="input input--large"
               :disabled="success"
               @blur="$v.account.email.$touch()"
             />
@@ -26,7 +26,7 @@
           </div>
         </div>
         <div class="actions">
-          <ul class="action-links">
+          <ul class="action__links">
             <li>
               <nuxt-link :to="{ name: 'login' }">
                 <i class="fas fa-arrow-left"></i>
@@ -35,8 +35,8 @@
             </li>
           </ul>
           <button
-            :class="{ 'button-loading': loading }"
-            class="button button-large"
+            :class="{ 'button--loading': loading }"
+            class="button button--large"
             :disabled="loading || success"
           >
             Send link
@@ -45,15 +45,15 @@
         </div>
       </form>
     </div>
-    <div v-if="success" class="box-message">
-      <div class="box-message-icon">
+    <div v-if="success" class="box__message">
+      <div class="box__message-icon">
         <i class="fas fa-paper-plane"></i>
       </div>
-      <p class="box-message-text">
+      <p class="box__message-text">
         If your email address exists in our database, you will receive a
         password reset link at your email address in a few minutes.
       </p>
-      <nuxt-link :to="{ name: 'login' }" class="button button-large">
+      <nuxt-link :to="{ name: 'login' }" class="button button--large">
         <i class="fas fa-arrow-left"></i>
         Back to login
       </nuxt-link>

@@ -1,15 +1,15 @@
 <template>
   <li
-    class="tree-item"
+    class="tree__item"
     :class="{
       active: application._.selected,
-      'tree-item-loading': application._.loading,
+      'tree__item--loading': application._.loading,
     }"
   >
-    <div class="tree-action">
-      <a class="tree-link" @click="selectApplication(application)">
+    <div class="tree__action">
+      <a class="tree__link" @click="selectApplication(application)">
         <i
-          class="tree-type fas"
+          class="tree__type fas"
           :class="'fa-' + application._.type.iconClass"
         ></i>
         <Editable
@@ -20,23 +20,23 @@
       </a>
       <a
         ref="contextLink"
-        class="tree-options"
+        class="tree__options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
       >
         <i class="fas fa-ellipsis-v"></i>
       </a>
       <Context ref="context">
-        <div class="context-menu-title">{{ application.name }}</div>
-        <ul class="context-menu">
+        <div class="context__menu-title">{{ application.name }}</div>
+        <ul class="context__menu">
           <li>
             <a @click="enableRename()">
-              <i class="context-menu-icon fas fa-fw fa-pen"></i>
+              <i class="context__menu-icon fas fa-fw fa-pen"></i>
               Rename {{ application._.type.name | lowercase }}
             </a>
           </li>
           <li>
             <a @click="deleteApplication(application)">
-              <i class="context-menu-icon fas fa-fw fa-trash"></i>
+              <i class="context__menu-icon fas fa-fw fa-trash"></i>
               Delete {{ application._.type.name | lowercase }}
             </a>
           </li>

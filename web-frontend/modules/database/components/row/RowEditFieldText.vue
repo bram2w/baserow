@@ -1,10 +1,10 @@
 <template>
-  <div class="control-elements">
+  <div class="control__elements">
     <input
       ref="input"
       v-model="copy"
       type="text"
-      class="input input-large"
+      class="input input--large"
       @keyup.enter="$refs.input.blur()"
       @focus="select()"
       @blur="unselect()"

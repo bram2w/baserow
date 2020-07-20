@@ -1,7 +1,7 @@
 <template>
   <div
     ref="cell"
-    class="grid-view-cell"
+    class="grid-view__cell"
     :class="{ active: selected, editing: editing }"
     @contextmenu="stopContextIfEditing($event)"
   >
@@ -9,14 +9,14 @@
       class="grid-field-date"
       :class="{ 'grid-field-date--has-time': field.date_include_time }"
     >
-      <div v-show="!editing" ref="dateDisplay" class="grid-field-date-date">
+      <div v-show="!editing" ref="dateDisplay" class="grid-field-date__date">
         {{ date }}
       </div>
       <div
         v-show="!editing"
         v-if="field.date_include_time"
         ref="timeDisplay"
-        class="grid-field-date-time"
+        class="grid-field-date__time"
       >
         {{ time }}
       </div>
@@ -25,7 +25,7 @@
           ref="date"
           v-model="date"
           type="text"
-          class="grid-field-date-date-input"
+          class="grid-field-date__date-input"
           :placeholder="getDatePlaceholder(field)"
           @keyup="updateDate(field, date)"
           @focus="focus($refs.dateContext, $event)"
@@ -43,6 +43,7 @@
               :value="copy"
               class="datepicker"
               @input="chooseDate(field, $event)"
+              @selected="preventNextUnselect = true"
             ></date-picker>
           </client-only>
         </Context>
@@ -52,7 +53,7 @@
             ref="time"
             v-model="time"
             type="text"
-            class="grid-field-date-time-input"
+            class="grid-field-date__time-input"
             :placeholder="getTimePlaceholder(field)"
             @keyup="updateTime(field, time)"
             @focus="focus($refs.timeContext, $event)"
@@ -81,6 +82,11 @@ import dateField from '@baserow/modules/database/mixins/dateField'
 export default {
   components: { TimeSelectContext },
   mixins: [gridField, gridFieldInput, dateField],
+  data() {
+    return {
+      preventNextUnselect: false,
+    }
+  },
   methods: {
     /**
      * When the user initializes the editing state we automatically want to focus on
@@ -108,6 +114,16 @@ export default {
      * inside one of these contexts.
      */
     canUnselectByClickingOutside(event) {
+      // A small hack that checks if the next unselect must be prevented. Unfortunately
+      // this is needed because in some cases the date picker refreshes all his child
+      // elements. Because that is done we can't simply check if the date context
+      // contains the event target. That would result in hiding the date picker when we
+      // don't want to do that. This makes sure that the date picker stays visible.
+      if (this.editing && this.preventNextUnselect) {
+        this.preventNextUnselect = false
+        return false
+      }
+
       return (
         !this.editing ||
         (!isElement(this.$refs.dateContext.$el, event.target) &&

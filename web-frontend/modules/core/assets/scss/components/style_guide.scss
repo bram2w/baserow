@@ -1,0 +1,30 @@
+.style-guide__wrapper {
+  @include absolute(0);
+
+  z-index: $z-index-layout-col-3;
+  overflow: auto;
+}
+
+.style-guide {
+  margin: 0 auto;
+  max-width: 100%;
+  width: 1200px;
+  padding: 40px 15px;
+}
+
+.style-guide__buttons {
+  .button {
+    margin-bottom: 8px;
+  }
+}
+
+.style-guide__contexts {
+  .context,
+  .select,
+  .time-select {
+    display: inline-block;
+    position: relative;
+    margin-right: 40px;
+    vertical-align: top;
+  }
+}

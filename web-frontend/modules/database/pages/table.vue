@@ -1,23 +1,23 @@
 <template>
   <div>
-    <header class="layout-col-3-1 header">
-      <ul class="header-filter">
-        <li class="header-filter-item">
+    <header class="layout__col-3-1 header">
+      <ul class="header__filter">
+        <li class="header__filter-item">
           <a
             ref="viewsSelectToggle"
-            class="header-filter-link"
+            class="header__filter-link"
             @click="$refs.viewsContext.toggle($refs.viewsSelectToggle)"
           >
             <span v-if="hasSelectedView">
               <i
-                class="header-filter-icon fas"
+                class="header__filter-icon fas"
                 :class="'fa-' + selectedView._.type.iconClass"
               ></i>
               {{ selectedView.name }}
             </span>
             <span v-if="!hasSelectedView">
               <i
-                class="header-filter-icon header-filter-icon-no-choice fas fa-caret-square-down"
+                class="header__filter-icon header-filter-icon-no-choice fas fa-caret-square-down"
               ></i>
               Choose view
             </span>
@@ -35,12 +35,12 @@
           :primary="primary"
         />
       </template>
-      <ul class="header-info">
+      <ul class="header__info">
         <li>{{ database.name }}</li>
         <li>{{ table.name }}</li>
       </ul>
     </header>
-    <div class="layout-col-3-2 content">
+    <div class="layout__col-3-2 content">
       <template v-if="hasSelectedView">
         <component
           :is="getViewComponent(selectedView)"

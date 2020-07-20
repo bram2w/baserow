@@ -67,6 +67,8 @@ def lenient_schema_editor(connection, alert_column_type_function=None):
         convert the data value to the the new type. The function will have the variable
         `p_in` as old value.
     :type alert_column_type_function: None or str
+    :raises ValueError: When the provided connection is not supported. For now only
+        `postgresql` is supported.
     """
 
     vendor_schema_editor_mapping = {'postgresql': PostgresqlLenientDatabaseSchemaEditor}

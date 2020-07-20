@@ -1,15 +1,10 @@
 <template>
   <Context ref="context">
-    <FieldForm
-      ref="form"
-      class="context-form"
-      :default-values="field"
-      @submitted="submit"
-    >
-      <div class="context-form-actions">
+    <FieldForm ref="form" :default-values="field" @submitted="submit">
+      <div class="context__form-actions">
         <button
           class="button"
-          :class="{ 'button-loading': loading }"
+          :class="{ 'button--loading': loading }"
           :disabled="loading"
         >
           Change

@@ -1,0 +1,397 @@
+.grid-view {
+  @include absolute(0);
+
+  overflow: hidden;
+
+  .scrollbars__vertical-wrapper {
+    // We don't want to scrollbar to go over the header and footer.
+    top: 33 + 3px;
+    bottom: 48 + 3px;
+  }
+}
+
+.grid-view__left,
+.grid-view__right {
+  @include absolute(0, auto);
+
+  z-index: 1;
+  overflow: hidden;
+}
+
+.grid-view__inner {
+  @include absolute(0);
+
+  overflow: hidden;
+}
+
+// The width of the first column can be adjusted that is why it is specified in the html
+// file.
+.grid-view__left {
+  left: 0;
+  background-color: $color-neutral-50;
+}
+
+// The width of the first column can be adjusted that is why the left offset is
+// specified in the html file.
+.grid-view__right {
+  right: 0;
+}
+
+// The divider has not left property because the width of the left column can be
+// adjusted that is why it is specified in the html file.
+.grid-view__divider {
+  @include absolute(0, auto);
+
+  z-index: 3;
+  width: 4px;
+  border-left: 1px solid $color-neutral-300;
+  overflow: hidden;
+  pointer-events: none;
+
+  &::before {
+    display: none;
+    content: "";
+
+    @include absolute(0, auto, 0, 0);
+
+    width: 4px;
+    left: -4px;
+    background-color: black;
+    box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  &.shadow::before {
+    display: block;
+  }
+}
+
+.grid-view__divider-width {
+  @include absolute(3px, auto, auto, auto);
+
+  margin-left: -4.5px;
+  z-index: 3;
+  width: 9px;
+  height: 26px;
+  cursor: col-resize;
+
+  &::before {
+    content: "";
+
+    @include absolute(0, 2px, 0, 2px);
+
+    border-radius: 2px;
+  }
+
+  &:hover::before,
+  &.dragging::before {
+    background-color: $color-primary-500;
+  }
+}
+
+.grid-view__head {
+  @include absolute(0, 0, auto, 0);
+
+  height: 33px;
+  background-color: $color-neutral-50;
+  border-bottom: 1px solid $color-neutral-200;
+}
+
+.grid-view__body {
+  position: absolute;
+  left: 0;
+  top: 33px;
+  right: 0;
+  bottom: 48px;
+  overflow: hidden;
+}
+
+.grid-view__body-inner {
+  padding-bottom: 100px;
+}
+
+.grid-view__foot {
+  @include absolute(auto, 0, 0, 0);
+
+  height: 48px;
+  background-color: $color-neutral-50;
+  border-top: 1px solid $color-neutral-200;
+}
+
+.grid-view__foot-info {
+  padding: 10px;
+}
+
+.grid-view__placeholder {
+  position: relative;
+  background-color: $white;
+  background-image:
+    linear-gradient(
+      0deg,
+      $color-neutral-200 1.52%,
+      $white 1.52%,
+      $white 50%,
+      $color-neutral-200 50%,
+      $color-neutral-200 51.52%,
+      $white 51.52%,
+      $white 100%
+    );
+  background-size: 66px 66px;
+}
+
+.grid-view__placeholder-column {
+  @include absolute(0, auto, 0, auto);
+
+  border-right: 1px solid $color-neutral-200;
+
+  .grid-view__left & {
+    border-right: none;
+  }
+}
+
+.grid-view__rows {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+}
+
+.grid-view__row {
+  @extend .clearfix;
+
+  position: relative;
+  height: 32px + 1px;
+}
+
+// Because the width of a column can be adjusted it is specified in the html file.
+.grid-view__column {
+  position: relative;
+  float: left;
+  height: 32px + 1px;
+  border-right: 1px solid $color-neutral-200;
+  border-bottom: 1px solid $color-neutral-200;
+
+  .grid-view__head & {
+    height: 32px;
+    border-bottom: none;
+    background-color: $color-neutral-100;
+  }
+
+  .grid-view__foot & {
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .grid-view__left & {
+    border-right: none;
+  }
+}
+
+.grid-view__row-info {
+  @include absolute(0);
+
+  background-color: $white;
+  padding: 0 24px 0 6px;
+  line-height: 32px;
+}
+
+.grid-view__row-count {
+  @extend %ellipsis;
+
+  position: relative;
+  width: 100%;
+
+  .grid-view__row--loading & {
+    color: $white;
+
+    &::after {
+      @include loading();
+      @include absolute(50%, auto, auto, 0);
+
+      content: "";
+      margin-top: -0.7rem;
+    }
+  }
+}
+
+.grid-view__row-more {
+  @include absolute((32px - 18px) / 2, 4px, 0 auto);
+  @include center-text(18px, 11px);
+
+  color: $color-neutral-400;
+  border-radius: 100%;
+  display: none;
+
+  .grid-view__row--hover & {
+    display: block;
+  }
+
+  &:hover {
+    background-color: $color-primary-100;
+    color: $color-primary-800;
+  }
+}
+
+.grid-view__cell {
+  @include absolute(0);
+
+  background-color: $white;
+
+  &.active {
+    @include absolute(-2px);
+
+    z-index: 2;
+    border: 2px solid $color-primary-500;
+    border-radius: 2px;
+
+    &.editing {
+      @include absolute(-3px);
+
+      border: 3px solid $color-primary-600;
+    }
+
+    &.invalid {
+      border: 3px solid $color-error-400;
+      border-bottom: 0;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+  }
+
+  .grid-view__cell--error {
+    @extend %ellipsis;
+
+    @include absolute(100%, -3px, auto, -3px);
+
+    border: 3px solid $color-error-400;
+    border-top: 0;
+    background-color: $color-error-100;
+    color: $color-error-900;
+    padding: 0 6px;
+    line-height: 34px;
+    height: 34px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+  }
+
+  &.active-by {
+    border-color: $color-success-500;
+  }
+
+  .grid-view__cell--active-by {
+    @include absolute(-8px, 0, auto, auto);
+    @include fixed-height(18px, 12px);
+
+    background-color: $color-success-500;
+    color: $white;
+    border-radius: 3px;
+    padding: 0 3px;
+    transform: translateX(50%);
+
+    .icon {
+      font-size: 9px;
+    }
+  }
+}
+
+.grid-view__description {
+  padding: 0 30px;
+  line-height: 32px;
+
+  .grid-view__description-icon,
+  .grid-view__description-options {
+    line-height: inherit;
+    width: 30px;
+    color: $color-neutral-600;
+  }
+
+  .grid-view__description-icon {
+    @include absolute(0, auto, 0, 0);
+
+    padding-left: 10px;
+    text-align: left;
+  }
+
+  .grid-view__description-options {
+    @include absolute(0, 4px, 0, auto);
+
+    text-align: center;
+    display: block;
+
+    &:hover {
+      color: $color-neutral-900;
+    }
+  }
+
+  .grid-view__description-width {
+    @include absolute(3px, -4.5px, 3px, auto);
+
+    z-index: 2;
+    width: 9px;
+    cursor: col-resize;
+
+    &::before {
+      content: "";
+      border-radius: 2px;
+
+      @include absolute(0, 2px, 0, 2px);
+    }
+
+    &:hover::before,
+    &.dragging::before {
+      background-color: $color-primary-500;
+    }
+  }
+
+  .grid-view__description-name {
+    @extend %ellipsis;
+  }
+
+  &.grid-view__description--loading {
+    &::after {
+      @include loading();
+      @include absolute(50%, 12px, auto, auto);
+
+      content: "";
+      margin-top: -0.7rem;
+    }
+
+    .grid-view__description-options {
+      display: none;
+    }
+  }
+}
+
+.grid-view__add-column {
+  display: block;
+  line-height: 32px;
+  text-align: center;
+  color: $color-neutral-900;
+
+  &:hover {
+    background-color: $color-primary-100;
+  }
+}
+
+.grid-view__add-column-placeholder {
+  display: none;
+
+  &.hover {
+    display: block;
+  }
+}
+
+.grid-view__add-row {
+  display: block;
+  line-height: 32px;
+  height: 32px;
+  color: $color-neutral-900;
+  background-color: $white;
+
+  &:hover,
+  &.hover {
+    background-color: $color-primary-100;
+  }
+
+  .grid-view__left & {
+    padding-left: 10px;
+  }
+}

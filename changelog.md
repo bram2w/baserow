@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## Released (2020-07-20)
+
+* Added raises attribute to the docstrings.
+* Added OpenAPI docs.
+* Refactored all SCSS classes to BEM naming.
+* Use the new long text field, date field and view's field options for the example 
+  tables when creating a new account. Also use the long text field when creating a new 
+  table.
+* Removed not needed api v0 namespace in url and python module.
+* Fixed keeping the datepicker visible in the grid view when selecting a date for the 
+  first time.
+* Improved API 404 errors by providing a machine readable error.
+* Added documentation markdown files.
+* Added cookiecutter plugin boilerplate.
+
+## Released (2020-06-08)
+
 * Fixed not handling 500 errors.
 * Prevent row context menu when right clicking on a field that's being edited.
 * Added row modal editing feature to the grid view.
