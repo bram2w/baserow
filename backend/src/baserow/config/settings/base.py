@@ -5,7 +5,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '0s0@+(p7&qip7spd%l1$sp%ne*e(2hk1jv!6&mq^d+&40m+24j'
+SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_SECRET_IN_PRODUCTION'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -145,15 +145,15 @@ JWT_AUTH = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Baserow API spec',
-    'DESCRIPTION': '@TODO',
+    'DESCRIPTION': '',
     'CONTACT': {
         'url': 'https://baserow.io/contact'
     },
     'LICENSE': {
-        'name': '@TODO',
-        'url': 'https://baserow.io'
+        'name': 'MIT',
+        'url': 'https://gitlab.com/bramw/baserow/-/blob/master/LICENSE'
     },
-    'VERSION': '0.1.0',
+    'VERSION': '0.2.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'TAGS': [
         {'name': 'User'},
