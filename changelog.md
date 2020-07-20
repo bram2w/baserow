@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Released (2020-07-20)
+
 * Added raises attribute to the docstrings.
 * Added OpenAPI docs.
 * Refactored all SCSS classes to BEM naming.
