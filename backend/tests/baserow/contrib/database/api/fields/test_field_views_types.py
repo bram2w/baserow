@@ -11,6 +11,29 @@ from baserow.contrib.database.fields.models import LongTextField, DateField
 
 
 @pytest.mark.django_db
+def test_text_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table,
+        order=0,
+        name='Old name',
+        text_default='Default'
+    )
+
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': text_field.id}),
+        {'name': 'New name'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['text_default'] == 'Default'
+
+
+@pytest.mark.django_db
 def test_long_text_field_type(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email='test@test.nl', password='password', first_name='Test1')
