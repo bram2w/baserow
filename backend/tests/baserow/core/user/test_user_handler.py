@@ -11,7 +11,7 @@ from baserow.contrib.database.models import (
 )
 from baserow.contrib.database.views.models import GridViewFieldOptions
 from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword
+    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLDomainNotAllowed
 )
 from baserow.core.user.handler import UserHandler
 
@@ -80,8 +80,11 @@ def test_send_reset_password_email(data_fixture, mailoutbox):
     user = data_fixture.create_user(email='test@localhost')
     handler = UserHandler()
 
+    with pytest.raises(BaseURLDomainNotAllowed):
+        handler.send_reset_password_email(user, 'http://test.nl/reset-password')
+
     signer = handler.get_reset_password_signer()
-    handler.send_reset_password_email(user, 'http://localhost/reset-password')
+    handler.send_reset_password_email(user, 'http://localhost:3000/reset-password')
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
@@ -91,7 +94,7 @@ def test_send_reset_password_email(data_fixture, mailoutbox):
     assert 'test@localhost' in email.to
 
     html_body = email.alternatives[0][0]
-    search_url = 'http://localhost/reset-password/'
+    search_url = 'http://localhost:3000/reset-password/'
     start_url_index = html_body.index(search_url)
 
     assert start_url_index != -1

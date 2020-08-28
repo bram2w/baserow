@@ -5,6 +5,8 @@
 * Added field that can link to the row of another table.
 * Fixed bug where the text_default value changed to None if not provided in a patch
   request.
+* Block non web frontend domains in the base url when requesting a password reset
+  email.
 
 ## Released (2020-07-20)
 
