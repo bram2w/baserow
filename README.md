@@ -23,6 +23,14 @@ you the powers of a developer without leaving your browser.
 * Runs in your browser.
 * Alternative to Airtable.
 
+## Become a sponsor
+
+If you would like to get new features faster then you might want to consider becoming
+a sponsor. By becoming a sponsor we can spend more time on Baserow which means faster
+development.
+
+[Become a GitHub Sponsor](https://github.com/sponsors/bram2w)
+
 ## Try out a demo
 
 If you just want to try out Baserow, you can create an account on the SaaS version at
@@ -101,3 +109,5 @@ Distributes under the MIT license. See `LICENSE` for more information.
 The official repository can be found at https://gitlab.com/bramw/baserow.
 
 The changelog can be found [here](./changelog.md).
+
+Become a GitHub Sponsor [here](https://github.com/sponsors/bram2w).
