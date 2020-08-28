@@ -19,7 +19,7 @@ export default {
      * text field 'Random string' etc.
      */
     value: {
-      type: [String, Number, Object, Boolean],
+      type: [String, Number, Object, Boolean, Array],
       required: false,
     },
     /**
@@ -90,6 +90,14 @@ export default {
      * body element and not inside the cell.
      */
     canUnselectByClickingOutside() {
+      return true
+    },
+    /**
+     * It must be possible for a field to ignore all key combinations. For example when
+     * it is possible for a field to open a modal to select some data, the
+     * backspace/delete key should not empty the field at that moment.
+     */
+    canKeyDown() {
       return true
     },
   },

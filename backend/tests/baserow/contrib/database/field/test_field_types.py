@@ -9,8 +9,8 @@ from django.utils.timezone import make_aware, datetime
 
 from baserow.contrib.database.fields.field_types import DateFieldType
 from baserow.contrib.database.fields.models import LongTextField, DateField
-from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.rows.handler import RowHandler
 
 
 @pytest.mark.django_db

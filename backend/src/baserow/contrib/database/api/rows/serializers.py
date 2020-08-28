@@ -20,7 +20,7 @@ class RowSerializer(serializers.ModelSerializer):
         }
 
 
-def get_row_serializer_class(model, base_class=None):
+def get_row_serializer_class(model, base_class=None, is_response=False):
     """
     Generates a Django rest framework model serializer based on the available fields
     that belong to this model. For each table field, used to generate this serializer,
@@ -32,6 +32,10 @@ def get_row_serializer_class(model, base_class=None):
     :param base_class: The base serializer class that will be extended when
         generating the serializer. By default this is a regular ModelSerializer.
     :type base_class: ModelSerializer
+    :param is_response: Indicates if the serializer is going to be used for a response
+        instead of handling input data. If that is the case other serializer fields
+        might be used depending on the field type.
+    :type is_response: bool
     :return: The generated serializer.
     :rtype: ModelSerializer
     """
@@ -39,7 +43,10 @@ def get_row_serializer_class(model, base_class=None):
     field_objects = model._field_objects
     field_names = [field['name'] for field in field_objects.values()]
     field_overrides = {
-        field['name']: field['type'].get_serializer_field(field['field'])
+        field['name']:
+            field['type'].get_response_serializer_field(field['field'])
+            if is_response else
+            field['type'].get_serializer_field(field['field'])
         for field in field_objects.values()
     }
     return get_serializer_class(model, field_names, field_overrides, base_class)
@@ -91,12 +98,16 @@ def get_example_row_serializer_class(add_id=False):
         # serializer.
         defaults = model_default_values(field_type.model_class)
         instance = dict_to_object(defaults)
-        fields[f'field_{i + 1}'] = field_type.get_serializer_field(
-            instance,
-            help_text=f'This field represents the `{field_type.type}` field. The '
-                      f'number in field_{i + 1} is in a normal request or response the '
-                      f'id of the field.'
-        )
+        kwargs = {
+            'help_text': f'This field represents the `{field_type.type}` field. The '
+                         f'number in field_{i + 1} is in a normal request or response '
+                         f'the id of the field. '
+                         f'{field_type.get_serializer_help_text(instance)}'
+        }
+        get_field_method = \
+            'get_response_serializer_field' if add_id else 'get_serializer_field'
+        serializer_field = getattr(field_type, get_field_method)(instance, **kwargs)
+        fields[f'field_{i + 1}'] = serializer_field
 
     class_object = type(class_name, (serializers.Serializer,), fields)
     get_example_row_serializer_class.cache[class_name] = class_object

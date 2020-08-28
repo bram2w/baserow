@@ -452,8 +452,11 @@ export const actions = {
   updateValue({ commit, dispatch }, { table, row, field, value, oldValue }) {
     commit('SET_VALUE', { row, field, value })
 
+    const fieldType = this.$registry.get('field', field._.type.type)
+    const newValue = fieldType.prepareValueForUpdate(field, value)
+
     const values = {}
-    values[`field_${field.id}`] = value
+    values[`field_${field.id}`] = newValue
     return RowService(this.$client)
       .update(table.id, row.id, values)
       .catch((error) => {

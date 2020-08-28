@@ -109,7 +109,7 @@ class GridViewView(APIView):
         view = ViewHandler().get_view(request.user, view_id, GridView)
 
         model = view.table.get_model()
-        queryset = model.objects.all().order_by('id')
+        queryset = model.objects.all().enhance_by_fields().order_by('id')
 
         if LimitOffsetPagination.limit_query_param in request.GET:
             paginator = LimitOffsetPagination()
@@ -117,7 +117,8 @@ class GridViewView(APIView):
             paginator = PageNumberPagination()
 
         page = paginator.paginate_queryset(queryset, request, self)
-        serializer_class = get_row_serializer_class(model, RowSerializer)
+        serializer_class = get_row_serializer_class(model, RowSerializer,
+                                                    is_response=True)
         serializer = serializer_class(page, many=True)
 
         response = paginator.get_paginated_response(serializer.data)
@@ -182,7 +183,8 @@ class GridViewView(APIView):
         model = view.table.get_model(field_ids=data['field_ids'])
         results = model.objects.filter(pk__in=data['row_ids'])
 
-        serializer_class = get_row_serializer_class(model, RowSerializer)
+        serializer_class = get_row_serializer_class(model, RowSerializer,
+                                                    is_response=True)
         serializer = serializer_class(results, many=True)
         return Response(serializer.data)
 

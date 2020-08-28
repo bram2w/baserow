@@ -127,9 +127,14 @@ class FieldsView(APIView):
         """Creates a new field for a table."""
 
         type_name = data.pop('type')
+        field_type = field_type_registry.get(type_name)
         table = TableHandler().get_table(request.user, table_id)
-        field = FieldHandler().create_field(
-            request.user, table, type_name, **data)
+
+        # Because each field type can raise custom exceptions while creating the
+        # field we need to be able to map those to the correct API exceptions which are
+        # defined in the type.
+        with field_type.map_api_exceptions():
+            field = FieldHandler().create_field(request.user, table, type_name, **data)
 
         serializer = field_type_registry.get_serializer(field, FieldSerializer)
         return Response(serializer.data)
@@ -223,12 +228,16 @@ class FieldView(APIView):
         field = FieldHandler().get_field(
             request.user, field_id, base_queryset=Field.objects.select_for_update()
         ).specific
-
         type_name = type_from_data_or_registry(request.data, field_type_registry, field)
+        field_type = field_type_registry.get(type_name)
         data = validate_data_custom_fields(type_name, field_type_registry, request.data,
                                            base_serializer_class=UpdateFieldSerializer)
 
-        field = FieldHandler().update_field(request.user, field, type_name, **data)
+        # Because each field type can raise custom exceptions at while updating the
+        # field we need to be able to map those to the correct API exceptions which are
+        # defined in the type.
+        with field_type.map_api_exceptions():
+            field = FieldHandler().update_field(request.user, field, type_name, **data)
 
         serializer = field_type_registry.get_serializer(field, FieldSerializer)
         return Response(serializer.data)

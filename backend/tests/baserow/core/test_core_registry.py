@@ -3,11 +3,12 @@ import pytest
 from django.core.exceptions import ImproperlyConfigured
 
 from rest_framework.serializers import IntegerField, ModelSerializer
+from rest_framework.exceptions import APIException
 
 from baserow.contrib.database.models import Database
 from baserow.core.registry import (
     Instance, ModelInstanceMixin, Registry, ModelRegistryMixin,
-    CustomFieldsInstanceMixin, CustomFieldsRegistryMixin
+    CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, MapAPIExceptionsInstanceMixin
 )
 from baserow.core.exceptions import (
     InstanceTypeAlreadyRegistered, InstanceTypeDoesNotExist
@@ -109,6 +110,27 @@ def test_registry_get():
         registry.get_by_model(FakeModel2())
 
     assert registry.get_types() == ['temporary_1']
+
+
+def test_api_exceptions_api_mixins():
+    class FakeInstance(MapAPIExceptionsInstanceMixin, Instance):
+        type = 'fake_instance'
+        api_exceptions_map = {
+            ValueError: 'RANDOM_ERROR'
+        }
+
+    instance = FakeInstance()
+
+    with pytest.raises(Exception):
+        with instance.map_api_exceptions():
+            raise Exception('Failing normally here')
+
+    with pytest.raises(APIException) as e:
+        with instance.map_api_exceptions():
+            raise ValueError('Should be converted.')
+
+    assert e.value.detail['error'] == 'RANDOM_ERROR'
+    assert e.value.detail['detail'] == ''
 
 
 @pytest.mark.django_db

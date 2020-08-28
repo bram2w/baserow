@@ -2,8 +2,68 @@ from django.db import models
 
 from baserow.core.mixins import OrderableMixin
 from baserow.core.utils import to_pascal_case, remove_special_characters
-from baserow.contrib.database.config import DatabaseConfig
 from baserow.contrib.database.fields.registries import field_type_registry
+
+
+class TableModelQuerySet(models.QuerySet):
+    def enhance_by_fields(self):
+        """
+        Enhances the queryset based on the `enhance_queryset` for each field in the
+        table. For example the `link_row` field adds the `prefetch_related` to prevent
+        N queries per row. This helper should only be used when multiple rows are going
+        to be fetched.
+
+        :return: The enhanced queryset.
+        :rtype: QuerySet
+        """
+
+        for field_object in self.model._field_objects.values():
+            self = field_object['type'].enhance_queryset(
+                self,
+                field_object['field'],
+                field_object['name']
+            )
+        return self
+
+    def search_all_fields(self, search):
+        """
+        Searches very broad in all supported fields with the given search query. If the
+        primary key value matches then that result would be returned and if a char/text
+        field contains the search query then that result would be returned.
+
+        :param search: The search query.
+        :type search: str
+        :return: The queryset containing the search queries.
+        :rtype: QuerySet
+        """
+
+        search_queries = models.Q()
+
+        for field in self.model._meta.get_fields():
+            if (
+                isinstance(field, models.CharField) or
+                isinstance(field, models.TextField)
+            ):
+                search_queries = search_queries | models.Q(**{
+                    f'{field.name}__icontains': search
+                })
+            elif (
+                isinstance(field, models.AutoField) or
+                isinstance(field, models.IntegerField)
+            ):
+                try:
+                    search_queries = search_queries | models.Q(**{
+                        f'{field.name}': int(search)
+                    })
+                except ValueError:
+                    pass
+
+        return self.filter(search_queries) if len(search_queries) > 0 else self
+
+
+class TableModelManager(models.Manager):
+    def get_queryset(self):
+        return TableModelQuerySet(self.model, using=self._db)
 
 
 class Table(OrderableMixin, models.Model):
@@ -36,9 +96,13 @@ class Table(OrderableMixin, models.Model):
 
         return name
 
-    def get_model(self, fields=None, field_ids=None, attribute_names=False):
+    def get_model(self, fields=None, field_ids=None, attribute_names=False,
+                  manytomany_models=None):
         """
-        Generates a django model based on available fields that belong to this table.
+        Generates a temporary Django model based on available fields that belong to
+        this table. Note that the model will not be registered with the apps because
+        of the `DatabaseConfig.prevent_generated_model_for_registering` hack. We do
+        not want to the model cached because models with the same name can differ.
 
         :param fields: Extra table field instances that need to be added the model.
         :type fields: list
@@ -49,6 +113,10 @@ class Table(OrderableMixin, models.Model):
         :param attribute_names: If True, the the model attributes will be based on the
             field name instead of the field id.
         :type attribute_names: bool
+        :param manytomany_models: In some cases with related fields a model has to be
+            generated in order to generate that model. In order to prevent a
+            recursion loop we cache the generated models and pass those along.
+        :type manytomany_models: dict
         :return: The generated model.
         :rtype: Model
         """
@@ -56,7 +124,10 @@ class Table(OrderableMixin, models.Model):
         if not fields:
             fields = []
 
-        app_label = f'{DatabaseConfig.name}_tables'
+        if not manytomany_models:
+            manytomany_models = {}
+
+        app_label = 'database_table'
         meta = type('Meta', (), {
             'managed': False,
             'db_table': f'database_table_{self.id}',
@@ -68,9 +139,13 @@ class Table(OrderableMixin, models.Model):
             '__module__': 'database.models',
             # An indication that the model is a generated table model.
             '_generated_table_model': True,
+            '_table_id': self.id,
             # An object containing the table fields, field types and the chosen names
             # with the table field id as key.
-            '_field_objects': {}
+            '_field_objects': {},
+            # We are using our own table model manager to implement some queryset
+            # helpers.
+            'objects': TableModelManager()
         }
 
         # Construct a query to fetch all the fields of that table.
@@ -123,7 +198,8 @@ class Table(OrderableMixin, models.Model):
             # All the kwargs that are passed to the `get_model_field` method are going
             # to be passed along to the model field.
             attrs[field_name] = field_type.get_model_field(
-                field, db_column=field.db_column, verbose_name=field.name)
+                field, db_column=field.db_column, verbose_name=field.name
+            )
 
         # Create the model class.
         model = type(
@@ -132,9 +208,17 @@ class Table(OrderableMixin, models.Model):
             attrs
         )
 
-        # Immediately remove the model from the cache because it is used only once.
-        model_name = model._meta.model_name
-        all_models = model._meta.apps.all_models
-        del all_models[app_label][model_name]
+        # In some situations the field can only be added once the model class has been
+        # generated. So for each field we will call the after_model_generation with
+        # the generated model as argument in order to do this. This is for example used
+        # by the link row field. It can also be used to make other changes to the
+        # class.
+        for field_id, field_object in attrs['_field_objects'].items():
+            field_object['type'].after_model_generation(
+                field_object['field'],
+                model,
+                field_object['name'],
+                manytomany_models
+            )
 
         return model

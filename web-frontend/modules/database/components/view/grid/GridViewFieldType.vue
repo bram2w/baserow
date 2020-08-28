@@ -15,7 +15,7 @@
       >
         <i class="fas fa-caret-down"></i>
       </a>
-      <FieldContext ref="context" :field="field"></FieldContext>
+      <FieldContext ref="context" :table="table" :field="field"></FieldContext>
       <slot></slot>
     </div>
   </div>
@@ -28,6 +28,10 @@ export default {
   name: 'GridViewFieldType',
   components: { FieldContext },
   props: {
+    table: {
+      type: Object,
+      required: true,
+    },
     field: {
       type: Object,
       required: true,

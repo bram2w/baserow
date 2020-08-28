@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Added field that can link to the row of another table.
+
 ## Released (2020-07-20)
 
 * Added raises attribute to the docstrings.

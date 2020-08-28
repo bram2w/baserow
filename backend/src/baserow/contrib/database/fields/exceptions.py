@@ -25,3 +25,16 @@ class CannotDeletePrimaryField(Exception):
 
 class CannotChangeFieldType(Exception):
     """Raised if the field type cannot be altered."""
+
+
+class LinkRowTableNotProvided(Exception):
+    """
+    Raised when a link row field is trying to be created without the provided link
+    row table.
+    """
+
+
+class LinkRowTableNotInSameDatabase(Exception):
+    """
+    Raised when the desired link row table is not in the same database as the table.
+    """

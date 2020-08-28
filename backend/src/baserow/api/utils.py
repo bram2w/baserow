@@ -1,11 +1,67 @@
+from contextlib import contextmanager
+
 from django.utils.encoding import force_text
 
+from rest_framework import status
+from rest_framework.exceptions import APIException
 from rest_framework.serializers import ModelSerializer
 from rest_framework.request import Request
 
 from baserow.core.exceptions import InstanceTypeDoesNotExist
 
 from .exceptions import RequestBodyValidationException
+
+
+@contextmanager
+def map_exceptions(mapping):
+    """
+    This utility function simplifies mapping uncaught exceptions to a standard api
+    response exception.
+
+    Example:
+      with map_api_exceptions({ SomeException: 'ERROR_1' }):
+          raise SomeException('This is a test')
+
+      HTTP/1.1 400
+      {
+        "error": "ERROR_1",
+        "detail": "This is a test"
+      }
+
+    Example 2:
+      with map_api_exceptions({ SomeException: ('ERROR_1', 404, 'Other message') }):
+          raise SomeException('This is a test')
+
+      HTTP/1.1 404
+      {
+        "error": "ERROR_1",
+        "detail": "Other message"
+      }
+    """
+
+    try:
+        yield
+    except tuple(mapping.keys()) as e:
+        value = mapping.get(e.__class__)
+        status_code = status.HTTP_400_BAD_REQUEST
+        detail = ''
+
+        if isinstance(value, str):
+            error = value
+        if isinstance(value, tuple):
+            error = value[0]
+            if len(value) > 1 and value[1] is not None:
+                status_code = value[1]
+            if len(value) > 2 and value[2] is not None:
+                detail = value[2]
+
+        exc = APIException({
+            'error': error,
+            'detail': detail
+        })
+        exc.status_code = status_code
+
+        raise exc
 
 
 def validate_data(serializer_class, data):
