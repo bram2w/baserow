@@ -1,6 +1,9 @@
 <template>
   <div class="scrollbars">
-    <div v-if="verticalShow" class="scrollbars__vertical-wrapper">
+    <div
+      v-if="vertical !== null && verticalShow"
+      class="scrollbars__vertical-wrapper"
+    >
       <div
         ref="scrollbarVertical"
         class="scrollbars__vertical"
@@ -8,7 +11,10 @@
         @mousedown="mouseDownVertical($event)"
       ></div>
     </div>
-    <div v-if="horizontalShow" class="scrollbars__horizontal-wrapper">
+    <div
+      v-if="horizontal !== null && horizontalShow"
+      class="scrollbars__horizontal-wrapper"
+    >
       <div
         ref="scrollbarHorizontal"
         class="scrollbars__horizontal"
@@ -34,16 +40,18 @@ export default {
      * in the parent component.
      */
     vertical: {
-      required: true,
+      required: false,
       type: String,
+      default: null,
     },
     /**
      * The horizontal property should be the reference of the vertical scrollable
      * element in the parent component.
      */
     horizontal: {
-      required: true,
+      required: false,
       type: String,
+      default: null,
     },
   },
   data() {
@@ -84,8 +92,12 @@ export default {
   },
   methods: {
     update() {
-      this.updateVertical()
-      this.updateHorizontal()
+      if (this.vertical !== null) {
+        this.updateVertical()
+      }
+      if (this.horizontal !== null) {
+        this.updateHorizontal()
+      }
     },
     /**
      * Method that updates the visibility, height and top position of the vertical

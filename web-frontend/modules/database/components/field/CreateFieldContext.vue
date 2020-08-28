@@ -1,6 +1,6 @@
 <template>
   <Context ref="context">
-    <FieldForm ref="form" @submitted="submit">
+    <FieldForm ref="form" :table="table" @submitted="submit">
       <div class="context__form-actions">
         <button
           class="button"

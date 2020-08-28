@@ -1,5 +1,7 @@
 import pytest
 
+from unittest.mock import MagicMock
+
 from django.db import models
 
 from baserow.contrib.database.table.models import Table
@@ -128,3 +130,74 @@ def test_get_table_model(data_fixture):
     assert fields[text_field_2.id]['field'].id == text_field_2.id
     assert fields[text_field_2.id]['type'].type == 'text'
     assert fields[text_field_2.id]['name'] == f'field_{text_field_2.id}'
+
+
+@pytest.mark.django_db
+def test_enhance_by_fields_queryset(data_fixture):
+    table = data_fixture.create_database_table(name='Cars')
+    field = data_fixture.create_text_field(table=table, order=0, name='Color')
+
+    model = table.get_model(attribute_names=True)
+    mocked_type = MagicMock()
+
+    model._field_objects[field.id]['type'] = mocked_type
+    model.objects.all().enhance_by_fields()
+
+    mocked_type.enhance_queryset.assert_called()
+
+
+@pytest.mark.django_db
+def test_search_all_fields_queryset(data_fixture):
+    table = data_fixture.create_database_table(name='Cars')
+    data_fixture.create_text_field(table=table, order=0, name='Name')
+    data_fixture.create_text_field(table=table, order=1, name='Color')
+    data_fixture.create_number_field(table=table, order=2, name='Price')
+    data_fixture.create_long_text_field(table=table, order=3, name='Description')
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create(
+        name='BMW',
+        color='Blue',
+        price=10000,
+        description='This is the fastest car there is.'
+    )
+    row_2 = model.objects.create(
+        name='Audi',
+        color='Orange',
+        price=20000,
+        description='This is the most expensive car we have.'
+    )
+    row_3 = model.objects.create(
+        name='Volkswagen',
+        color='White',
+        price=5000,
+        description='The oldest car that we have.'
+    )
+
+    results = model.objects.all().search_all_fields('FASTEST')
+    assert row_1 in results
+
+    results = model.objects.all().search_all_fields('car')
+    assert len(results) == 3
+    assert row_1 in results
+    assert row_2 in results
+    assert row_3 in results
+
+    results = model.objects.all().search_all_fields('oldest')
+    assert len(results) == 1
+    assert row_3 in results
+
+    results = model.objects.all().search_all_fields('Audi')
+    assert len(results) == 1
+    assert row_2 in results
+
+    results = model.objects.all().search_all_fields(row_1.id)
+    assert len(results) == 1
+    assert row_1 in results
+
+    results = model.objects.all().search_all_fields(row_3.id)
+    assert len(results) == 1
+    assert row_3 in results
+
+    results = model.objects.all().search_all_fields('white car')
+    assert len(results) == 0

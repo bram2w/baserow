@@ -1,5 +1,11 @@
 <template>
-  <li class="select__item" :class="{ hidden: !isVisible(query) }">
+  <li
+    class="select__item"
+    :class="{
+      hidden: !isVisible(query),
+      active: isActive(value),
+    }"
+  >
     <a class="select__item-link" @click="select(value)">
       <i
         v-if="icon"
@@ -44,6 +50,9 @@ export default {
     isVisible(query) {
       const regex = new RegExp('(' + query + ')', 'i')
       return this.name.match(regex)
+    },
+    isActive(value) {
+      return this.$parent.value === value
     },
   },
 }

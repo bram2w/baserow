@@ -14,7 +14,6 @@ services:
   mjml:
     container_name: mjml
     image: liminspace/mjml-tcpserver:latest
-    restart: always
     ports:
       - 28101:28101
 

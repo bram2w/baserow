@@ -1,7 +1,7 @@
 from django.utils.functional import lazy
 
 from drf_spectacular.utils import extend_schema_field
-from drf_spectacular.openapi import OpenApiTypes
+from drf_spectacular.types import OpenApiTypes
 
 from rest_framework import serializers
 
@@ -56,3 +56,18 @@ class UpdateFieldSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'name': {'required': False},
         }
+
+
+class LinkRowValueSerializer(serializers.Serializer):
+    id = serializers.IntegerField(help_text='The unique identifier of the row in the '
+                                            'related table.')
+
+    def __init__(self, *args, **kwargs):
+        value_field_name = kwargs.pop('value_field_name', 'value')
+        super().__init__(*args, **kwargs)
+        self.fields['value'] = serializers.CharField(
+            help_text='The primary field\'s value as a string of the row in the '
+                      'related table.',
+            source=value_field_name,
+            required=False
+        )

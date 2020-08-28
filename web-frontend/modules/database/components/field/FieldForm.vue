@@ -40,6 +40,7 @@
       <component
         :is="getFormComponent(values.type)"
         ref="childForm"
+        :table="table"
         :default-values="defaultValues"
       />
     </template>
@@ -56,6 +57,12 @@ import form from '@baserow/modules/core/mixins/form'
 export default {
   name: 'FieldForm',
   mixins: [form],
+  props: {
+    table: {
+      type: Object,
+      required: true,
+    },
+  },
   data() {
     return {
       allowedValues: ['name', 'type'],

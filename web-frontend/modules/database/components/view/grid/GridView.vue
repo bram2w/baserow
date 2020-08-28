@@ -17,6 +17,7 @@
           ></div>
           <GridViewFieldType
             v-if="primary !== null"
+            :table="table"
             :field="primary"
             :style="{ width: widths.fields[primary.id] + 'px' }"
           ></GridViewFieldType>
@@ -135,6 +136,7 @@
           <GridViewFieldType
             v-for="field in fields"
             :key="'right-head-field-' + view.id + '-' + field.id"
+            :table="table"
             :field="field"
             :style="{ width: widths.fields[field.id] + 'px' }"
           >

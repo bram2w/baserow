@@ -5,15 +5,18 @@ import { Registerable } from '@baserow/modules/core/registry'
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
+import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
+import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/GridViewFieldLinkRow'
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
 import GridViewFieldDate from '@baserow/modules/database/components/view/grid/GridViewFieldDate'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
+import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
@@ -139,6 +142,15 @@ export class FieldType extends Registerable {
   prepareValueForPaste(field, clipboardData) {
     return clipboardData.getData('text')
   }
+
+  /**
+   * Optionally the value can be prepared just before the update API call is being
+   * made. The new value is not going to saved in the store it is just for preparing
+   * the value such that it fits the requirements of the API endpoint.
+   */
+  prepareValueForUpdate(field, value) {
+    return value
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -190,6 +202,60 @@ export class LongTextFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldLongText
+  }
+}
+
+export class LinkRowFieldType extends FieldType {
+  static getType() {
+    return 'link_row'
+  }
+
+  getIconClass() {
+    return 'plug'
+  }
+
+  getName() {
+    return 'Link to table'
+  }
+
+  getFormComponent() {
+    return FieldLinkRowSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldLinkRow
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldLinkRow
+  }
+
+  getEmptyValue(field) {
+    return []
+  }
+
+  prepareValueForCopy(field, value) {
+    return JSON.stringify({
+      tableId: field.link_row_table,
+      value,
+    })
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const values = JSON.parse(clipboardData.getData('text'))
+    if (field.link_row_table === values.tableId) {
+      return values.value
+    }
+    return []
+  }
+
+  /**
+   * The structure for updating is slightly different than what we need for displaying
+   * the value because the display value does not have to be included. Here we convert
+   * the array[object] structure to an array[id] structure.
+   */
+  prepareValueForUpdate(field, value) {
+    return value.map((item) => (typeof item === 'object' ? item.id : item))
   }
 }
 

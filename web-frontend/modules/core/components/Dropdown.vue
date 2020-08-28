@@ -22,7 +22,7 @@
           v-model="query"
           type="text"
           class="select__search-input"
-          placeholder="Search field types"
+          :placeholder="searchText"
           @keyup="search(query)"
         />
       </div>
@@ -42,7 +42,13 @@ export default {
   props: {
     value: {
       type: [String, Number, Boolean, Object],
-      required: true,
+      required: false,
+      default: null,
+    },
+    searchText: {
+      type: String,
+      required: false,
+      default: 'Search',
     },
   },
   data() {

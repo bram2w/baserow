@@ -3,6 +3,7 @@ import pytest
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
+from django.db import models
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.rows.handler import RowHandler
@@ -18,6 +19,36 @@ def test_get_field_ids_from_dict():
         'abc': 'Not included',
         'fieldd_3': 'Not included'
     }) == [1, 2, 3]
+
+
+@pytest.mark.django_db
+def test_extract_manytomany_values(data_fixture):
+    row_handler = RowHandler()
+
+    class TemporaryModel1(models.Model):
+        class Meta:
+            app_label = 'test'
+
+    class TemporaryModel2(models.Model):
+        field_1 = models.CharField()
+        field_2 = models.ManyToManyField(TemporaryModel1)
+
+        class Meta:
+            app_label = 'test'
+
+    values = {
+        'field_1': 'Value 1',
+        'field_2': ['Value 2']
+    }
+
+    values, manytomany_values = row_handler.extract_manytomany_values(
+        values, TemporaryModel2
+    )
+
+    assert len(values.keys()) == 1
+    assert 'field_1' in values
+    assert len(manytomany_values.keys()) == 1
+    assert 'field_2' in manytomany_values
 
 
 @pytest.mark.django_db
@@ -133,4 +164,3 @@ def test_delete_row(data_fixture):
 
     handler.delete_row(user=user, table=table, row_id=row.id)
     assert model.objects.all().count() == 1
-

@@ -1,13 +1,16 @@
-from rest_framework import status
-from rest_framework.exceptions import APIException
-
-from .utils import get_request, validate_data, validate_data_custom_fields
+from .utils import (
+    map_exceptions as map_exceptions_utility, get_request, validate_data,
+    validate_data_custom_fields
+)
 from .exceptions import RequestBodyValidationException
 
 
 def map_exceptions(exceptions):
     """
     This decorator simplifies mapping specific exceptions to a standard api response.
+    Note that this decorator uses the map_exception function from baserow.api.utils
+    which has the same name and basically does the same only this works in the form of
+    a decorator.
 
     Example:
       @map_exceptions({ SomeException: 'ERROR_1' })
@@ -34,29 +37,8 @@ def map_exceptions(exceptions):
 
     def map_exceptions_decorator(func):
         def func_wrapper(*args, **kwargs):
-            try:
+            with map_exceptions_utility(exceptions):
                 return func(*args, **kwargs)
-            except tuple(exceptions.keys()) as e:
-                value = exceptions.get(e.__class__)
-                status_code = status.HTTP_400_BAD_REQUEST
-                detail = ''
-
-                if isinstance(value, str):
-                    error = value
-                if isinstance(value, tuple):
-                    error = value[0]
-                    if len(value) > 1 and value[1] is not None:
-                        status_code = value[1]
-                    if len(value) > 2 and value[2] is not None:
-                        detail = value[2]
-
-                exc = APIException({
-                    'error': error,
-                    'detail': detail
-                })
-                exc.status_code = status_code
-
-                raise exc
         return func_wrapper
     return map_exceptions_decorator
 

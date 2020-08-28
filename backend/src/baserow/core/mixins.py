@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.fields import NOT_PROVIDED
 from django.contrib.contenttypes.models import ContentType
 from django.utils.functional import cached_property
 
@@ -88,8 +89,8 @@ class PolymorphicContentTypeMixin:
         :type new_model_class: Model
         """
 
-        old_fields = set([f.name for f in self._meta.get_fields()])
-        new_fields = set([f.name for f in new_model_class._meta.get_fields()])
+        old_fields = set([f for f in self._meta.get_fields()])
+        new_fields = set([f for f in new_model_class._meta.get_fields()])
         field_names_to_remove = old_fields - new_fields
         field_names_to_add = new_fields - old_fields
 
@@ -97,11 +98,22 @@ class PolymorphicContentTypeMixin:
         self.__class__ = new_model_class
         self.content_type = ContentType.objects.get_for_model(new_model_class)
 
-        for name in field_names_to_remove:
-            del self.__dict__[name]
+        def get_field_name(field):
+            if isinstance(field, models.ForeignKey):
+                return f'{field.name}_id'
+            return field.name
 
-        for name in field_names_to_add:
-            self.__dict__[name] = new_model_class._meta.get_field(name).default
+        for field in field_names_to_remove:
+            name = get_field_name(field)
+            if name in self.__dict__:
+                del self.__dict__[name]
+
+        for field in field_names_to_add:
+            name = get_field_name(field)
+            field = new_model_class._meta.get_field(name)
+            if hasattr(field, 'default'):
+                self.__dict__[name] = \
+                    field.default if field.default != NOT_PROVIDED else None
 
         # Because the field type has changed we need to invalidate the cached
         # properties so that they wont return the values of the old type.

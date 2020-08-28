@@ -98,6 +98,12 @@ export default {
           if (
             // Check if the column is still selected.
             this.selected &&
+            // Check if the event has the 'preventFieldCellUnselect' attribute which
+            // if true should prevent the field from being unselected.
+            !(
+              'preventFieldCellUnselect' in event &&
+              event.preventFieldCellUnselect
+            ) &&
             // If the click was outside the column element.
             !isElement(this.$el, event.target) &&
             // If the child field allows to unselect when clicked outside.
@@ -110,6 +116,12 @@ export default {
 
         // Event that is called when a key is pressed while the field is selected.
         this.$el.keyDownEvent = (event) => {
+          // When for example a related modal is open all the key combinations must be
+          // ignored because the focus is not in the cell.
+          if (!this.$refs.field.canKeyDown(event)) {
+            return
+          }
+
           // If the tab or arrow keys are pressed we want to select the next field. This
           // is however out of the scope of this component so we emit the selectNext
           // event that the GridView can handle.
