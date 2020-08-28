@@ -108,8 +108,8 @@ class Field(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
 class TextField(Field):
     text_default = models.CharField(
         max_length=255,
-        null=True,
         blank=True,
+        default='',
         help_text='If set, this value is going to be added every time a new row '
                   'created.'
     )

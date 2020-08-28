@@ -33,11 +33,11 @@ class TextFieldType(FieldType):
 
     def get_serializer_field(self, instance, **kwargs):
         return serializers.CharField(required=False, allow_null=True, allow_blank=True,
-                                     default=instance.text_default, **kwargs)
+                                     default=instance.text_default or None, **kwargs)
 
     def get_model_field(self, instance, **kwargs):
-        return models.TextField(default=instance.text_default, blank=True, null=True,
-                                **kwargs)
+        return models.TextField(default=instance.text_default or None, blank=True,
+                                null=True, **kwargs)
 
     def random_value(self, instance, fake, cache):
         return fake.name()
