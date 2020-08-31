@@ -106,6 +106,8 @@ Created by Bram Wiepjes (Baserow) - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
+Version: 0.3.0
+
 The official repository can be found at https://gitlab.com/bramw/baserow.
 
 The changelog can be found [here](./changelog.md).
