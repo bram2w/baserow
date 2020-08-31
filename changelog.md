@@ -8,6 +8,7 @@
 * Block non web frontend domains in the base url when requesting a password reset
   email.
 * Increased the amount of password characters to 256 when signing up.
+* Show machine readable error message when the signature has expired.
 
 ## Released (2020-07-20)
 
