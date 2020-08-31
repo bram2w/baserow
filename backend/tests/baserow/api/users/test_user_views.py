@@ -50,6 +50,27 @@ def test_create_user(client):
 
     assert response_failed_2.status_code == 400
 
+    long_password = 'x' * 256
+    response = client.post(reverse('api:user:index'), {
+        'name': 'Test2',
+        'email': 'test2@test.nl',
+        'password': long_password
+    }, format='json')
+    assert response.status_code == HTTP_200_OK
+    user = User.objects.get(email='test2@test.nl')
+    assert user.check_password(long_password)
+
+    long_password = 'x' * 257
+    response = client.post(reverse('api:user:index'), {
+        'name': 'Test2',
+        'email': 'test2@test.nl',
+        'password': long_password
+    }, format='json')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json['detail']['password'][0]['code'] == 'max_length'
+
 
 @pytest.mark.django_db
 def test_send_reset_password_email(data_fixture, client, mailoutbox):
