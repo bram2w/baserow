@@ -2,7 +2,7 @@ import pytest
 
 from datetime import datetime
 
-from baserow.contrib.database.fields.models import DateField
+from baserow.contrib.database.fields.models import DateField, LinkRowField
 
 
 @pytest.mark.django_db
@@ -59,3 +59,31 @@ def test_date_field_get_python_format():
     assert d.strftime(eu_time_12.get_python_format()) == '01/10/2020 02:30 PM'
     assert d.strftime(us_time_12.get_python_format()) == '10/01/2020 02:30 PM'
     assert d.strftime(iso_time_12.get_python_format()) == '2020-10-01 02:30 PM'
+
+
+@pytest.mark.django_db
+def test_link_row_field(data_fixture):
+    table = data_fixture.create_database_table()
+    table_2 = data_fixture.create_database_table(database=table.database)
+
+    assert LinkRowField.objects.create(
+        name='Test1', table=table, link_row_table=table_2, order=1
+    ).link_row_relation_id == 1
+    assert LinkRowField.objects.create(
+        name='Test1', table=table, link_row_table=table_2, order=1
+    ).link_row_relation_id == 2
+    assert LinkRowField.objects.create(
+        name='Test1', table=table, link_row_table=table_2, order=1
+    ).link_row_relation_id == 3
+
+    field = LinkRowField.objects.create(
+        name='Test1', table=table, link_row_table=table_2, order=1
+    )
+    field.link_row_relation_id = 100
+    field.save()
+
+    assert field.through_table_name == 'database_relation_100'
+
+    assert LinkRowField.objects.create(
+        name='Test1', table=table, link_row_table=table_2, order=1
+    ).link_row_relation_id == 101

@@ -52,3 +52,5 @@ Everything related to custom plugin development.
   calendar, Kanban board or however you like by creating a view type.
 * [Create database table field](./plugins/field-type.md): You can store data in a 
   custom format by creating a field type.
+* [Creata a field converter](./plugins/field-converter.md): Converters can alter a 
+  field and convert the related data for specific field changes.

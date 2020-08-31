@@ -1,0 +1,61 @@
+.field-link-row__items {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.field-link-row__item {
+  padding: 0 5px;
+  margin-bottom: 5px;
+  background-color: $color-primary-100;
+  border-radius: 3px;
+  display: flex;
+
+  @include fixed-height(22px, 13px);
+
+  &:not(:last-child) {
+    margin-right: 5px;
+  }
+}
+
+.field-link-row__name {
+  @extend %ellipsis;
+
+  max-width: 200px;
+
+  &.field-link-row__name--unnamed {
+    color: $color-neutral-600;
+  }
+}
+
+.field-link-row__remove {
+  color: $color-primary-900;
+  margin-left: 5px;
+  font-size: 11px;
+  padding: 0 2px;
+
+  &:hover {
+    color: $color-neutral-500;
+  }
+}
+
+.field-link-row__add {
+  display: inline-block;
+  padding: 0 5px;
+  background-color: $color-primary-100;
+  border-radius: 3px;
+  color: $color-primary-900;
+
+  @include fixed-height(22px, 13px);
+
+  &:hover {
+    background-color: $color-primary-200;
+    text-decoration: none;
+  }
+}
+
+.field-link-row__add-icon {
+  font-size: 12px;
+}

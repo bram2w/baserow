@@ -18,7 +18,7 @@ export default {
      * text field 'Random string' etc.
      */
     value: {
-      type: [String, Number, Object, Boolean],
+      type: [String, Number, Object, Boolean, Array],
       required: false,
     },
   },

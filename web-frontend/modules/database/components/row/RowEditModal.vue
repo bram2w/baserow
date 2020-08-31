@@ -8,6 +8,7 @@
         v-for="field in getFields(fields, primary)"
         :ref="'field-' + field.id"
         :key="'row-edit-field-' + field.id"
+        :table="table"
         :field="field"
         :row="row"
         @update="update"

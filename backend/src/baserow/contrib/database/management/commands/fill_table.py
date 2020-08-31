@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from faker import Faker
 
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.rows.handler import RowHandler
 
 
 class Command(BaseCommand):
@@ -20,6 +21,8 @@ class Command(BaseCommand):
         table_id = options['table_id']
         limit = options['limit']
         fake = Faker()
+        row_handler = RowHandler()
+        cache = {}
 
         try:
             table = Table.objects.get(pk=table_id)
@@ -36,12 +39,22 @@ class Command(BaseCommand):
             values = {
                 f'field_{field_id}': field_object['type'].random_value(
                     field_object['field'],
-                    fake
+                    fake,
+                    cache
                 )
                 for field_id, field_object in model._field_objects.items()
             }
 
+            values, manytomany_values = row_handler.extract_manytomany_values(
+                values, model
+            )
+
             # Insert the row with the randomly created values.
-            model.objects.create(**values)
+            instance = model.objects.create(**values)
+
+            # Changes the set of the manytomany values.
+            for field_name, value in manytomany_values.items():
+                if value and len(value) > 0:
+                    getattr(instance, field_name).set(value)
 
         self.stdout.write(self.style.SUCCESS(f"{limit} rows have been inserted."))

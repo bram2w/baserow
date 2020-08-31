@@ -81,7 +81,7 @@ export default {
       )
     },
     /**
-     * Resets the form to its original state.
+     * Resets the form and the child forms to its original state.
      */
     reset() {
       Object.assign(
@@ -89,7 +89,17 @@ export default {
         this.$options.data.call(this).values,
         this.getDefaultValues()
       )
-      this.$v.$reset()
+
+      if ('$v' in this) {
+        this.$v.$reset()
+      }
+
+      // Also reset the child forms.
+      for (const child of this.$children) {
+        if ('isFormValid' in child) {
+          child.reset()
+        }
+      }
     },
   },
 }

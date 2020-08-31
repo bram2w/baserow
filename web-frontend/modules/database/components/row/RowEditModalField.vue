@@ -14,7 +14,7 @@
         <i class="fas fa-caret-down"></i>
       </a>
     </label>
-    <FieldContext ref="context" :field="field"></FieldContext>
+    <FieldContext ref="context" :table="table" :field="field"></FieldContext>
     <component
       :is="getFieldComponent(field.type)"
       ref="field"
@@ -32,6 +32,10 @@ export default {
   name: 'RowEditModalField',
   components: { FieldContext },
   props: {
+    table: {
+      type: Object,
+      required: true,
+    },
     field: {
       type: Object,
       required: true,

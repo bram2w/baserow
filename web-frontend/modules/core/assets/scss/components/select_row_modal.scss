@@ -1,0 +1,243 @@
+.select-row-modal {
+  .modal__box {
+    padding: 0;
+  }
+
+  .modal__close {
+    z-index: 2;
+    top: 10px;
+  }
+}
+
+.select-row-modal__initial-loading {
+  position: relative;
+  height: 44px + 33px + (33px * 10) + 44px;
+
+  &::after {
+    content: '';
+    z-index: 5;
+    margin: -7px auto auto -7px;
+
+    @include loading(14px);
+    @include absolute(50%, auto, auto, 50%);
+  }
+}
+
+.select-row-modal__loading {
+  position: relative;
+
+  &::before {
+    content: '';
+    z-index: 4;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+
+    @include absolute(0, 0, 0, 0);
+  }
+
+  &::after {
+    content: '';
+    z-index: 5;
+    margin: -7px auto auto -7px;
+
+    @include loading(14px);
+    @include absolute(50%, auto, auto, 50%);
+  }
+}
+
+.select-row-modal__search {
+  position: relative;
+  z-index: 1;
+  border-bottom: solid 2px $color-neutral-200;
+}
+
+.select-row-modal__search-icon {
+  color: $color-neutral-300;
+  z-index: 2;
+
+  @include absolute(auto, auto, auto, 16px);
+  @include fixed-height(44px, 13px);
+}
+
+.select-row-modal__search-input {
+  position: relative;
+  z-index: 1;
+  padding-left: 44px;
+  border: 0;
+
+  @include fixed-height(44px, 14px);
+}
+
+.select-row-modal__rows {
+  position: relative;
+  height: 33px + (33px * 10) + 44px;
+  background-color: $color-neutral-100;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  overflow: hidden;
+}
+
+.select-row-modal__left {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 240px + 1px;
+  border-right: solid 1px $color-neutral-300;
+
+  @include absolute(0, auto, 0, 0);
+}
+
+.select-row-modal__right {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+
+  @include absolute(0, 0, 0, 240px + 1px);
+}
+
+.select-row-modal__head {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.select-row-modal__field {
+  @extend %ellipsis;
+
+  flex: 0 0 200px;
+  background-color: $color-neutral-100;
+  border-bottom: 1px solid $color-neutral-200;
+  padding: 0 10px;
+
+  @include fixed-height(33px, 13px);
+
+  .select-row-modal__right & {
+    border-right: 1px solid $color-neutral-200;
+  }
+
+  &.select-row-modal__field--first {
+    flex-basis: 40px;
+    border-right: none;
+  }
+}
+
+.select-row-modal__field-icon {
+  margin-right: 6px;
+}
+
+.select-row-modal__body {
+  // Nothing
+}
+
+.select-row-modal__row {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.select-row-modal__cell {
+  position: relative;
+  flex: 0 0 200px;
+  background-color: $white;
+  height: 33px;
+  border-bottom: 1px solid $color-neutral-200;
+
+  .select-row-modal__right & {
+    border-right: 1px solid $color-neutral-200;
+  }
+
+  &.select-row-modal__cell--first {
+    @extend %ellipsis;
+
+    flex-basis: 40px;
+    line-height: 32px;
+    padding-left: 8px;
+  }
+}
+
+.select-row-modal__row--hover {
+  cursor: pointer;
+
+  .select-row-modal__cell,
+  .grid-view__cell {
+    background-color: $color-primary-100;
+  }
+}
+
+.select-row-modal__row--selected {
+  cursor: initial;
+
+  .select-row-modal__cell,
+  .grid-view__cell {
+    background-color: $color-neutral-50;
+  }
+}
+
+.select-row-modal__foot {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding: 0 10px;
+  height: 44px;
+  background-color: $color-neutral-50;
+  border-top: solid 1px $color-neutral-200;
+}
+
+.select-row-modal__pagination {
+  display: flex;
+  align-items: center;
+}
+
+.select-row-modal__pagination-name {
+  margin-right: 14px;
+}
+
+.select-row-modal__pagination-group {
+  display: flex;
+  border: solid 1px $color-neutral-400;
+  border-radius: 3px;
+  overflow: hidden;
+  background-color: $white;
+
+  > * {
+    @include fixed-height(24px, 12px);
+
+    &:not(:last-child) {
+      border-right: solid 1px $color-neutral-400;
+    }
+  }
+}
+
+.select-row-modal__pagination-button {
+  color: $color-primary-900;
+  text-align: center;
+  padding: 0 10px;
+
+  &:hover {
+    background-color: $color-neutral-100;
+  }
+
+  &.select-row-modal__pagination-button--disabled {
+    cursor: initial;
+    background-color: $color-neutral-100;
+  }
+}
+
+.select-row-modal__pagination-page-input {
+  border: 0;
+  border-radius: 0;
+  width: 40px;
+  text-align: center;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+.select-row-modal__pagination-count {
+  padding: 0 10px;
+  color: $color-neutral-500;
+  border-right: solid 1px $color-neutral-400;
+}

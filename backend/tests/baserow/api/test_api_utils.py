@@ -3,17 +3,22 @@ import pytest
 from rest_framework import status, serializers
 from rest_framework.exceptions import APIException
 from rest_framework.serializers import CharField
+from rest_framework.status import HTTP_404_NOT_FOUND
 
 from baserow.core.models import Group
 from baserow.core.registry import (
     Instance, Registry, CustomFieldsInstanceMixin, ModelInstanceMixin
 )
 from baserow.api.utils import (
-    validate_data, validate_data_custom_fields, get_serializer_class
+    map_exceptions, validate_data, validate_data_custom_fields, get_serializer_class
 )
 
 
 class TemporaryException(Exception):
+    pass
+
+
+class TemporaryException2(Exception):
     pass
 
 
@@ -47,6 +52,41 @@ class TemporaryInstanceType2(TemporaryInstance):
 
 class TemporaryTypeRegistry(Registry):
     name = 'temporary'
+
+
+def test_map_exceptions():
+    with pytest.raises(APIException) as api_exception_1:
+        with map_exceptions({ TemporaryException: 'ERROR_TEMPORARY' }):
+            raise TemporaryException
+
+    assert api_exception_1.value.detail['error'] == 'ERROR_TEMPORARY'
+    assert api_exception_1.value.detail['detail'] == ''
+    assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
+
+    with pytest.raises(APIException) as api_exception_2:
+        with map_exceptions({
+            TemporaryException: (
+                'ERROR_TEMPORARY_2',
+                HTTP_404_NOT_FOUND,
+                'Another message'
+            )
+        }):
+            raise TemporaryException
+
+    assert api_exception_2.value.detail['error'] == 'ERROR_TEMPORARY_2'
+    assert api_exception_2.value.detail['detail'] == 'Another message'
+    assert api_exception_2.value.status_code == status.HTTP_404_NOT_FOUND
+
+    with pytest.raises(TemporaryException2):
+        with map_exceptions({
+            TemporaryException: 'ERROR_TEMPORARY_3'
+        }):
+            raise TemporaryException2
+
+    with map_exceptions({
+        TemporaryException: 'ERROR_TEMPORARY_4'
+    }):
+        pass
 
 
 def test_validate_data():

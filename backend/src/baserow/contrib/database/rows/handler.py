@@ -1,6 +1,7 @@
 import re
 
 from django.db import transaction
+from django.db.models.fields.related import ManyToManyField
 from django.conf import settings
 
 from baserow.core.exceptions import UserNotInGroupError
@@ -52,6 +53,34 @@ class RowHandler:
             if str(key).isnumeric() or field_pattern.match(str(key))
         ]
 
+    def extract_manytomany_values(self, values, model):
+        """
+        Extracts the ManyToMany values out of the values because they need to be
+        created and updated in a different way compared to a regular value.
+
+        :param values: The values where to extract the manytomany values from.
+        :type values: dict
+        :param model: The model containing the fields. They key, which is also the
+            field name, is used to check in the model if the value is a ManyToMany
+            value.
+        :type model: Model
+        :return: The values without the manytomany values and the manytomany values
+            in another dict.
+        :rtype: dict, dict
+        """
+
+        manytomany_values = {}
+
+        for name, value in values.items():
+            model_field = model._meta.get_field(name)
+            if isinstance(model_field, ManyToManyField):
+                manytomany_values[name] = values[name]
+
+        for name in manytomany_values.keys():
+            del values[name]
+
+        return values, manytomany_values
+
     def create_row(self, user, table, values=None, model=None):
         """
         Creates a new row for a given table with the provided values.
@@ -81,8 +110,15 @@ class RowHandler:
         if not model:
             model = table.get_model()
 
-        kwargs = self.prepare_values(model._field_objects, values)
-        return model.objects.create(**kwargs)
+        values = self.prepare_values(model._field_objects, values)
+        values, manytomany_values = self.extract_manytomany_values(values, model)
+
+        instance = model.objects.create(**values)
+
+        for name, value in manytomany_values.items():
+            getattr(instance, name).set(value)
+
+        return instance
 
     def update_row(self, user, table, row_id, values, model=None):
         """
@@ -123,11 +159,15 @@ class RowHandler:
                 raise RowDoesNotExist(f'The row with id {row_id} does not exist.')
 
             values = self.prepare_values(model._field_objects, values)
+            values, manytomany_values = self.extract_manytomany_values(values, model)
 
             for name, value in values.items():
                 setattr(row, name, value)
 
             row.save()
+
+            for name, value in manytomany_values.items():
+                getattr(row, name).set(value)
 
         return row
 

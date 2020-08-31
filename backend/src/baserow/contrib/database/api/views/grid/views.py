@@ -10,13 +10,12 @@ from baserow.api.decorators import map_exceptions, allowed_includes, validate_bo
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
-from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class, RowSerializer
 )
 from baserow.contrib.database.api.rows.serializers import (
-    get_example_row_serializer_class
+    get_example_row_serializer_class, example_pagination_row_serializer_class
 )
 from baserow.contrib.database.api.views.grid.serializers import GridViewSerializer
 from baserow.contrib.database.views.exceptions import (
@@ -84,9 +83,7 @@ class GridViewView(APIView):
             'the fields type.'
         ),
         responses={
-            200: get_example_pagination_serializer_class(
-                get_example_row_serializer_class(True)
-            ),
+            200: example_pagination_row_serializer_class,
             400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
             404: get_error_schema(['ERROR_GRID_DOES_NOT_EXIST'])
         }
@@ -109,7 +106,7 @@ class GridViewView(APIView):
         view = ViewHandler().get_view(request.user, view_id, GridView)
 
         model = view.table.get_model()
-        queryset = model.objects.all().order_by('id')
+        queryset = model.objects.all().enhance_by_fields().order_by('id')
 
         if LimitOffsetPagination.limit_query_param in request.GET:
             paginator = LimitOffsetPagination()
@@ -117,7 +114,8 @@ class GridViewView(APIView):
             paginator = PageNumberPagination()
 
         page = paginator.paginate_queryset(queryset, request, self)
-        serializer_class = get_row_serializer_class(model, RowSerializer)
+        serializer_class = get_row_serializer_class(model, RowSerializer,
+                                                    is_response=True)
         serializer = serializer_class(page, many=True)
 
         response = paginator.get_paginated_response(serializer.data)
@@ -182,7 +180,8 @@ class GridViewView(APIView):
         model = view.table.get_model(field_ids=data['field_ids'])
         results = model.objects.filter(pk__in=data['row_ids'])
 
-        serializer_class = get_row_serializer_class(model, RowSerializer)
+        serializer_class = get_row_serializer_class(model, RowSerializer,
+                                                    is_response=True)
         serializer = serializer_class(results, many=True)
         return Response(serializer.data)
 

@@ -14,7 +14,6 @@ services:
   mjml:
     container_name: {{ cookiecutter.project_slug }}-mjml
     image: liminspace/mjml-tcpserver:latest
-    restart: always
     ports:
       - 28101:28101
 

@@ -1,6 +1,11 @@
 <template>
   <Context ref="context">
-    <FieldForm ref="form" :default-values="field" @submitted="submit">
+    <FieldForm
+      ref="form"
+      :table="table"
+      :default-values="field"
+      @submitted="submit"
+    >
       <div class="context__form-actions">
         <button
           class="button"
@@ -24,6 +29,10 @@ export default {
   components: { FieldForm },
   mixins: [context],
   props: {
+    table: {
+      type: Object,
+      required: true,
+    },
     field: {
       type: Object,
       required: true,

@@ -1,6 +1,8 @@
+import contextlib
+
 from django.core.exceptions import ImproperlyConfigured
 
-from baserow.api.utils import get_serializer_class
+from baserow.api.utils import get_serializer_class, map_exceptions
 
 from .exceptions import InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
 
@@ -111,6 +113,43 @@ class APIUrlsInstanceMixin:
         """
 
         return []
+
+
+class MapAPIExceptionsInstanceMixin:
+    """
+    Example:
+        class ExampleInstance(MapAPIExceptionsInstanceMixin, Instance):
+            type = 'example'
+            api_exceptions_map = {
+                SomeSpecificException: 'API_ERROR'
+            }
+
+        # If the exception is raised while inside the with map_api_exceptions() the
+        # following HTTP response can be expected.
+
+        instance = ExampleInstance()
+        with instance.map_api_exceptions():
+            raise SomeSpecificException('Reason')
+
+        HTTP/1.1 400
+        {
+            "error": "API_ERROR",
+            "detail": ""
+        }
+    """
+
+    api_exceptions_map = {}
+
+    @contextlib.contextmanager
+    def map_api_exceptions(self):
+        """
+        The map_api_exceptions method can be used to map uncaught exceptions to
+        certain api error responses. These API exceptions should be defined in the
+        api_exceptions_map.
+        """
+
+        with map_exceptions(self.api_exceptions_map):
+            yield
 
 
 class Registry(object):

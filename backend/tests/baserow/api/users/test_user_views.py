@@ -50,6 +50,27 @@ def test_create_user(client):
 
     assert response_failed_2.status_code == 400
 
+    long_password = 'x' * 256
+    response = client.post(reverse('api:user:index'), {
+        'name': 'Test2',
+        'email': 'test2@test.nl',
+        'password': long_password
+    }, format='json')
+    assert response.status_code == HTTP_200_OK
+    user = User.objects.get(email='test2@test.nl')
+    assert user.check_password(long_password)
+
+    long_password = 'x' * 257
+    response = client.post(reverse('api:user:index'), {
+        'name': 'Test2',
+        'email': 'test2@test.nl',
+        'password': long_password
+    }, format='json')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json['detail']['password'][0]['code'] == 'max_length'
+
 
 @pytest.mark.django_db
 def test_send_reset_password_email(data_fixture, client, mailoutbox):
@@ -68,7 +89,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
         reverse('api:user:send_reset_password_email'),
         {
             'email': 'unknown@localhost.nl',
-            'base_url': 'http://test.nl'
+            'base_url': 'http://localhost:3000'
         },
         format='json'
     )
@@ -83,6 +104,19 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
         },
         format='json'
     )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_DOMAIN_URL_IS_NOT_ALLOWED'
+    assert len(mailoutbox) == 0
+
+    response = client.post(
+        reverse('api:user:send_reset_password_email'),
+        {
+            'email': 'test@localhost.nl',
+            'base_url': 'http://localhost:3000'
+        },
+        format='json'
+    )
     assert response.status_code == 204
     assert len(mailoutbox) == 1
 
@@ -90,7 +124,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
         reverse('api:user:send_reset_password_email'),
         {
             'email': ' teST@locAlhost.nl ',
-            'base_url': 'http://test.nl'
+            'base_url': 'http://localhost:3000'
         },
         format='json'
     )
@@ -99,7 +133,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
 
     email = mailoutbox[0]
     assert 'test@localhost.nl' in email.to
-    assert email.body.index('http://test.nl')
+    assert email.body.index('http://localhost:3000')
 
 
 @pytest.mark.django_db

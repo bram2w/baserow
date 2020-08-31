@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+* Added field that can link to the row of another table.
+* Fixed bug where the text_default value changed to None if not provided in a patch
+  request.
+* Block non web frontend domains in the base url when requesting a password reset
+  email.
+* Increased the amount of password characters to 256 when signing up.
+* Show machine readable error message when the signature has expired.
+
 ## Released (2020-07-20)
 
 * Added raises attribute to the docstrings.

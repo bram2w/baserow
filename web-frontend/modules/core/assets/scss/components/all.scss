@@ -16,12 +16,14 @@
 @import 'fields/number';
 @import 'fields/long_text';
 @import 'fields/date';
+@import 'fields/link_row';
 @import 'views/grid';
 @import 'views/grid/text';
 @import 'views/grid/long_text';
 @import 'views/grid/boolean';
 @import 'views/grid/number';
 @import 'views/grid/date';
+@import 'views/grid/link_row';
 @import 'box_page';
 @import 'loading';
 @import 'notifications';
@@ -31,3 +33,4 @@
 @import 'datepicker';
 @import 'time_select';
 @import 'settings';
+@import 'select_row_modal';

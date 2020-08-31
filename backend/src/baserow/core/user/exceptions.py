@@ -8,3 +8,10 @@ class UserAlreadyExist(Exception):
 
 class InvalidPassword(Exception):
     """Raised when the provided password is incorrect."""
+
+
+class BaseURLDomainNotAllowed(Exception):
+    """
+    Raised when the provided base url is not allowed when requesting a password
+    reset email.
+    """

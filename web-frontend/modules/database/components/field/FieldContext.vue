@@ -19,6 +19,7 @@
         </a>
         <UpdateFieldContext
           ref="updateFieldContext"
+          :table="table"
           :field="field"
           @update="$refs.context.hide()"
         ></UpdateFieldContext>
@@ -43,6 +44,10 @@ export default {
   components: { UpdateFieldContext },
   mixins: [context],
   props: {
+    table: {
+      type: Object,
+      required: true,
+    },
     field: {
       type: Object,
       required: true,

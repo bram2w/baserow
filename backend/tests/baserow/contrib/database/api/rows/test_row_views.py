@@ -8,6 +8,136 @@ from django.shortcuts import reverse
 
 
 @pytest.mark.django_db
+def test_list_rows(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table()
+    field_1 = data_fixture.create_text_field(name='Name', table=table, primary=True)
+    field_2 = data_fixture.create_number_field(name='Price', table=table)
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create(name='Product 1', price=50)
+    row_2 = model.objects.create(name='Product 2/3', price=100)
+    row_3 = model.objects.create(name='Product 3', price=150)
+    row_4 = model.objects.create(name='Last product', price=200)
+
+    response = api_client.get(
+        reverse('api:database:rows:list', kwargs={'table_id': 999999}),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
+
+    response = api_client.get(
+        reverse('api:database:rows:list', kwargs={'table_id': table_2.id}),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+    response = api_client.get(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 4
+    assert len(response_json['results']) == 4
+    assert response_json['results'][0]['id'] == row_1.id
+    assert response_json['results'][0][f'field_{field_1.id}'] == 'Product 1'
+    assert response_json['results'][0][f'field_{field_2.id}'] == 50
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?size=2&page=1',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 4
+    assert len(response_json['results']) == 2
+    assert response_json['results'][0]['id'] == row_1.id
+    assert response_json['results'][1]['id'] == row_2.id
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?size=2&page=2',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 4
+    assert len(response_json['results']) == 2
+    assert response_json['results'][0]['id'] == row_3.id
+    assert response_json['results'][1]['id'] == row_4.id
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?size=2&page=3',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_INVALID_PAGE'
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?search=Product 1',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 1
+    assert len(response_json['results']) == 1
+    assert response_json['results'][0]['id'] == row_1.id
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?search=1',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 1
+    assert len(response_json['results']) == 1
+    assert response_json['results'][0]['id'] == row_1.id
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?search=3',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 2
+    assert len(response_json['results']) == 2
+    assert response_json['results'][0]['id'] == row_2.id
+    assert response_json['results'][1]['id'] == row_3.id
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?search=200',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 1
+    assert len(response_json['results']) == 1
+    assert response_json['results'][0]['id'] == row_4.id
+
+
+@pytest.mark.django_db
 def test_create_row(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)

@@ -108,8 +108,8 @@ class Field(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
 class TextField(Field):
     text_default = models.CharField(
         max_length=255,
-        null=True,
         blank=True,
+        default='',
         help_text='If set, this value is going to be added every time a new row '
                   'created.'
     )
@@ -186,3 +186,48 @@ class DateField(Field):
             return f'{date_format} {time_format}'
         else:
             return date_format
+
+
+class LinkRowField(Field):
+    link_row_table = models.ForeignKey(
+        'database.Table',
+        on_delete=models.CASCADE,
+        help_text='The table that the field has a relation with.',
+        blank=True
+    )
+    link_row_related_field = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        help_text='The relation field in the other table.',
+        null=True,
+        blank=True
+    )
+    link_row_relation_id = models.IntegerField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        """
+        Every LinkRow needs to have a unique relation id that is shared with the
+        related link row field in the other table.
+        """
+
+        if self.link_row_relation_id is None:
+            last_id = LinkRowField.objects.all().aggregate(
+                largest=models.Max('link_row_relation_id')
+            )['largest'] or 0
+            self.link_row_relation_id = last_id + 1
+
+        super().save(*args, **kwargs)
+
+    @property
+    def through_table_name(self):
+        """
+        Generating a unique through table name based on the relation id.
+
+        :return: The table name of the through model.
+        :rtype: string
+        """
+
+        if not self.link_row_relation_id:
+            raise ValueError('The link row field does not yet have a relation id.')
+
+        return f'database_relation_{self.link_row_relation_id}'
