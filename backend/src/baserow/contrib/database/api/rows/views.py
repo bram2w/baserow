@@ -12,12 +12,14 @@ from baserow.api.decorators import map_exceptions
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
-from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
+from baserow.contrib.database.api.rows.serializers import (
+    example_pagination_row_serializer_class
+)
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 
@@ -73,9 +75,7 @@ class RowsView(APIView):
             'user has provided and the format of it depends on the fields type.'
         ),
         responses={
-            200: get_example_pagination_serializer_class(
-                get_example_row_serializer_class(True)
-            ),
+            200: example_pagination_row_serializer_class,
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP',
                 'ERROR_REQUEST_BODY_VALIDATION'

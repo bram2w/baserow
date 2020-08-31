@@ -3,6 +3,7 @@ import logging
 from rest_framework import serializers
 
 from baserow.api.utils import get_serializer_class
+from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.core.utils import model_default_values, dict_to_object
 from baserow.contrib.database.fields.registries import field_type_registry
 
@@ -113,3 +114,8 @@ def get_example_row_serializer_class(add_id=False):
     get_example_row_serializer_class.cache[class_name] = class_object
 
     return class_object
+
+
+example_pagination_row_serializer_class = get_example_pagination_serializer_class(
+    get_example_row_serializer_class(True)
+)
