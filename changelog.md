@@ -7,6 +7,7 @@
   request.
 * Block non web frontend domains in the base url when requesting a password reset
   email.
+* Increased the amount of password characters to 256 when signing up.
 
 ## Released (2020-07-20)
 

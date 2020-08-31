@@ -44,8 +44,19 @@
             class="input input--large"
             @blur="$v.account.password.$touch()"
           />
-          <div v-if="$v.account.password.$error" class="error">
+          <div
+            v-if="$v.account.password.$error && !$v.account.password.required"
+            class="error"
+          >
             A password is required.
+          </div>
+          <div
+            v-if="$v.account.password.$error && !$v.account.password.maxLength"
+            class="error"
+          >
+            A maximum of
+            {{ $v.account.password.$params.maxLength.max }} characters is
+            allowed here.
           </div>
         </div>
       </div>
@@ -87,7 +98,13 @@
 </template>
 
 <script>
-import { required, email, sameAs, minLength } from 'vuelidate/lib/validators'
+import {
+  required,
+  email,
+  sameAs,
+  minLength,
+  maxLength,
+} from 'vuelidate/lib/validators'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
@@ -149,7 +166,10 @@ export default {
         required,
         minLength: minLength(2),
       },
-      password: { required },
+      password: {
+        required,
+        maxLength: maxLength(256),
+      },
       passwordConfirm: {
         sameAsPassword: sameAs('password'),
       },

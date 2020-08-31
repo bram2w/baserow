@@ -24,7 +24,7 @@ class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField(
         help_text='The email address is also going to be the username.'
     )
-    password = serializers.CharField(max_length=32)
+    password = serializers.CharField(max_length=256)
     authenticate = serializers.BooleanField(
         required=False,
         default=False,
