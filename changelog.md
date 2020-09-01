@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* Added contribution guidelines.
+
+## Released (2020-08-31)
+
 * Added field that can link to the row of another table.
 * Fixed bug where the text_default value changed to None if not provided in a patch
   request.
