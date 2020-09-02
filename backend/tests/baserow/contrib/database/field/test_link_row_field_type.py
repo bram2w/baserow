@@ -220,6 +220,12 @@ def test_link_row_field_type_rows(data_fixture):
         f'field_{link_row_field.id}': [customers_row_1.id],
     })
 
+    example_table.name = 'Example2'
+    example_table.save()
+
+    customers_table.name = 'Customers2'
+    customers_table.save()
+
     row_1_all = getattr(row, f'field_{link_row_field.id}').all()
     row_2_all = getattr(row_2, f'field_{link_row_field.id}').all()
     row_1_ids = [i.id for i in row_1_all]
