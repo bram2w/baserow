@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+* Prevent adding a new line to the long text field in the grid view when selecting the
+  cell by pressing the enter key.
+
+## Released (2020-09-02)
+
 * Added contribution guidelines.
 * Fixed bug where it was not possible to change the table name when it contained a link
   row field.
