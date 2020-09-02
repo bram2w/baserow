@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+* Added contribution guidelines.
+* Fixed bug where it was not possible to change the table name when it contained a link
+  row field.
+
+## Released (2020-08-31)
+
 * Added field that can link to the row of another table.
 * Fixed bug where the text_default value changed to None if not provided in a patch
   request.

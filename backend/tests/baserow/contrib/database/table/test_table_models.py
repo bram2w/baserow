@@ -20,15 +20,6 @@ def test_group_user_get_next_order(data_fixture):
 
 
 @pytest.mark.django_db
-def test_model_class_name(data_fixture):
-    table_1 = data_fixture.create_database_table(name='Some test table')
-    assert table_1.model_class_name == 'SomeTestTable'
-
-    table_2 = data_fixture.create_database_table(name='3 Some test @ table')
-    assert table_2.model_class_name == 'Table3SomeTestTable'
-
-
-@pytest.mark.django_db
 def test_get_table_model(data_fixture):
     table = data_fixture.create_database_table(name='Cars')
     text_field = data_fixture.create_text_field(table=table, order=0, name='Color',
@@ -39,6 +30,7 @@ def test_get_table_model(data_fixture):
                                                       name='For sale')
 
     model = table.get_model(attribute_names=True)
+    assert model.__name__ == f'Table{table.id}Model'
     assert model._generated_table_model
     assert model._meta.db_table == f'database_table_{table.id}'
     assert len(model._meta.get_fields()) == 4

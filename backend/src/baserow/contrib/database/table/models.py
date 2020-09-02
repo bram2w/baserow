@@ -1,7 +1,6 @@
 from django.db import models
 
 from baserow.core.mixins import OrderableMixin
-from baserow.core.utils import to_pascal_case, remove_special_characters
 from baserow.contrib.database.fields.registries import field_type_registry
 
 
@@ -78,23 +77,6 @@ class Table(OrderableMixin, models.Model):
     def get_last_order(cls, database):
         queryset = Table.objects.filter(database=database)
         return cls.get_highest_order_of_queryset(queryset) + 1
-
-    @property
-    def model_class_name(self):
-        """
-        Generates a pascal case based class name based on the table name.
-
-        :return: The generated model class name.
-        :rtype: str
-        """
-
-        name = remove_special_characters(self.name, False)
-        name = to_pascal_case(name)
-
-        if name[0].isnumeric():
-            name = f'Table{name}'
-
-        return name
 
     def get_model(self, fields=None, field_ids=None, attribute_names=False,
                   manytomany_models=None):
@@ -203,7 +185,7 @@ class Table(OrderableMixin, models.Model):
 
         # Create the model class.
         model = type(
-            str(f'{self.model_class_name}TableModel'),
+            str(f'Table{self.pk}Model'),
             (models.Model,),
             attrs
         )
