@@ -51,12 +51,12 @@ export default {
             this.save()
           } else if (!this.editing) {
             // If only selected we will start the editing mode.
-            this.edit()
+            this.edit(null, event)
           }
         } else if (!this.editing && isCharacterKeyPress(event)) {
           // If another key was pressed while not editing we want to replace the
           // exiting value with something new.
-          this.edit('')
+          this.edit('', event)
         }
       }
       document.body.addEventListener('keydown', this.$el.keydownEvent)
