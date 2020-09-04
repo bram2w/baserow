@@ -3,11 +3,11 @@
     <a class="dropdown__selected" @click="show()">
       <template v-if="hasValue()">
         <i
-          v-if="icon"
+          v-if="selectedIcon"
           class="dropdown__selected-icon fas"
-          :class="'fa-' + icon"
+          :class="'fa-' + selectedIcon"
         ></i>
-        {{ name }}
+        {{ selectedName }}
       </template>
       <template v-if="!hasValue()">
         Make a choice
@@ -51,29 +51,20 @@ export default {
       default: 'Search',
     },
   },
+  computed: {
+    selectedName() {
+      return this.getSelectedProperty(this.value, 'name')
+    },
+    selectedIcon() {
+      return this.getSelectedProperty(this.value, 'icon')
+    },
+  },
   data() {
     return {
       open: false,
       name: null,
       icon: null,
       query: '',
-    }
-  },
-  watch: {
-    /**
-     * If the value changes we have to update the visible name and icon.
-     */
-    value(newValue) {
-      this.setDisplayValue(newValue)
-    },
-  },
-  /**
-   * When the dropdown first loads we have to check if there already is a value, if
-   * there is, we have to update the displayed name and icon.
-   */
-  mounted() {
-    if (this.hasValue()) {
-      this.setDisplayValue(this.value)
     }
   },
   methods: {
@@ -141,15 +132,17 @@ export default {
       })
     },
     /**
-     * Changes the selected name and icon of the dropdown based on the provided value.
+     * Loops over all children to see if any of the values match with given value. If
+     * so the requested property of the child is returned
      */
-    setDisplayValue(value) {
-      this.$children.forEach((item) => {
+    getSelectedProperty(value, property) {
+      for (const i in this.$children) {
+        const item = this.$children[i]
         if (item.value === value) {
-          this.name = item.name
-          this.icon = item.icon
+          return item[property]
         }
-      })
+      }
+      return ''
     },
   },
 }

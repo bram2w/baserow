@@ -426,7 +426,10 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
         {
             'name': 'Link 1',
             'type': 'link_row',
-            'link_row_table': customers_table.id
+            'link_row_table': customers_table.id,
+            # The `link_row_related_field` is a read_only field so we deliberately set
+            # an unknown id to see if it is ignored.
+            'link_row_related_field': 999999,
         },
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
@@ -441,6 +444,9 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
 
     field = LinkRowField.objects.all().order_by('id').first()
     related_field = LinkRowField.objects.all().order_by('id').last()
+
+    assert response_json['link_row_related_field'] == related_field.id
+    assert response_json['link_row_related_field'] != 999999
 
     # Check if the correct fields are correctly linked.
     assert field.table.id == table.id
@@ -459,6 +465,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json['name'] == 'Link 1'
     assert response_json['type'] == 'link_row'
     assert response_json['link_row_table'] == customers_table.id
+    assert response_json['link_row_related_field'] == related_field.id
 
     # Just fetching the related field and check if is has the correct values.
     response = api_client.get(
@@ -469,6 +476,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['name'] == 'Example'
     assert response_json['link_row_table'] == table.id
+    assert response_json['link_row_related_field'] == field.id
 
     # Only updating the name of the field without changing anything else
     response = api_client.patch(
@@ -482,8 +490,23 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json['name'] == 'Link new name'
     assert response_json['type'] == 'link_row'
     assert response_json['link_row_table'] == customers_table.id
+    assert response_json['link_row_related_field'] == related_field.id
 
-    # Only updating the name of the field without changing anything else
+    # Only try to update the link_row_related_field, but this is a read only field so
+    # nothing should happen.
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': field_id}),
+        {'link_row_related_field': 9999},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['name'] == 'Link new name'
+    assert response_json['type'] == 'link_row'
+    assert response_json['link_row_table'] == customers_table.id
+    assert response_json['link_row_related_field'] == related_field.id
+
     response = api_client.patch(
         reverse('api:database:fields:item', kwargs={'field_id': field_id}),
         {'link_row_table': cars_table.id},
@@ -495,6 +518,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
     assert response_json['name'] == 'Link new name'
     assert response_json['type'] == 'link_row'
     assert response_json['link_row_table'] == cars_table.id
+    assert response_json['link_row_related_field'] == related_field.id
 
     field.refresh_from_db()
     related_field.refresh_from_db()

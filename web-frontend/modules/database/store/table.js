@@ -98,7 +98,15 @@ export const actions = {
    * Delete the table from the store only. It will not send a request for deleting
    * to the server.
    */
-  forceDelete({ commit, dispatch }, { database, table }) {
+  forceDelete(context, { database, table }) {
+    const { commit, rootGetters } = context
+
+    // Call the table deleted event on all fields.
+    rootGetters['field/getAll'].forEach((field) => {
+      const fieldType = this.$registry.get('field', field.type)
+      fieldType.tableDeleted(context, field, table, database)
+    })
+
     if (table._.selected) {
       // Redirect back to the dashboard because the table doesn't exist anymore.
       this.$router.push({ name: 'dashboard' })
