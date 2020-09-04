@@ -151,6 +151,13 @@ export class FieldType extends Registerable {
   prepareValueForUpdate(field, value) {
     return value
   }
+
+  /**
+   * A hook that is called when a table is deleted. Some fields depend on other tables
+   * than the table that they belong to. So action might be required when that table
+   * is deleted.
+   */
+  tableDeleted(context, field, table, database) {}
 }
 
 export class TextFieldType extends FieldType {
@@ -256,6 +263,17 @@ export class LinkRowFieldType extends FieldType {
    */
   prepareValueForUpdate(field, value) {
     return value.map((item) => (typeof item === 'object' ? item.id : item))
+  }
+
+  /**
+   * When a table is deleted it might be the case that this is the related table of
+   * the field. If so it means that this field has already been deleted and it needs
+   * to be removed from the store without making an API call.
+   */
+  tableDeleted({ dispatch }, field, table, database) {
+    if (field.link_row_table === table.id) {
+      dispatch('field/forceDelete', field, { root: true })
+    }
   }
 }
 

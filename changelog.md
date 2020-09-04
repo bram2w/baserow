@@ -4,6 +4,11 @@
 
 * Prevent adding a new line to the long text field in the grid view when selecting the
   cell by pressing the enter key.
+* Fixed The table X is not found in the store error.
+* Fixed bug where the selected name of the dropdown was not updated when that name was
+  changed.
+* Fixed bug where the link row field is not removed from the store when the related
+  table is deleted.
 
 ## Released (2020-09-02)
 

@@ -88,7 +88,7 @@ export default {
         }
       }
 
-      throw new Error(`The table ${tableId} is not found in the store.`)
+      return []
     },
   },
   mounted() {

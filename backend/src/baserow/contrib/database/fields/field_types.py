@@ -245,7 +245,10 @@ class LinkRowFieldType(FieldType):
     model_class = LinkRowField
     allowed_fields = ['link_row_table', 'link_row_related_field',
                       'link_row_relation_id']
-    serializer_field_names = ['link_row_table']
+    serializer_field_names = ['link_row_table', 'link_row_related_field']
+    serializer_field_overrides = {
+        'link_row_related_field': serializers.PrimaryKeyRelatedField(read_only=True)
+    }
     api_exceptions_map = {
         LinkRowTableNotProvided: ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
         LinkRowTableNotInSameDatabase: ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE

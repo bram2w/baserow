@@ -203,6 +203,9 @@ export const getters = {
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
   },
+  getAll(state) {
+    return state.items
+  },
 }
 
 export default {
