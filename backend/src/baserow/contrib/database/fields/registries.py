@@ -3,6 +3,7 @@ from baserow.core.registry import (
     CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, MapAPIExceptionsInstanceMixin,
     APIUrlsRegistryMixin, APIUrlsInstanceMixin
 )
+
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 
 

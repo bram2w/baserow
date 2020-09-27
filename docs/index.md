@@ -50,6 +50,8 @@ Everything related to custom plugin development.
   type? Here you find how to do that.
 * [Create database table view](./plugins/view-type.md): Display table data like a 
   calendar, Kanban board or however you like by creating a view type.
+* [Create database table view filter](./plugins/view-filter-type.md): Filter the rows
+  of a view with custom conditions.
 * [Create database table field](./plugins/field-type.md): You can store data in a 
   custom format by creating a field type.
 * [Creata a field converter](./plugins/field-converter.md): Converters can alter a 

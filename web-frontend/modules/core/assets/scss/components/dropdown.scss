@@ -11,7 +11,7 @@
   width: 100%;
   border: 1px solid $color-neutral-400;
   border-radius: 3px;
-  padding: 0 40px 0 12px;
+  padding: 0 32px 0 12px;
   color: $color-primary-900;
 
   @include fixed-height(32px, 13px);
@@ -47,5 +47,9 @@
 
   .select__item.active:hover::after {
     display: block;
+  }
+
+  .dropdown--floating & {
+    right: auto;
   }
 }

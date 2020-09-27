@@ -8,6 +8,19 @@ import {
   BooleanFieldType,
   DateFieldType,
 } from '@baserow/modules/database/fieldTypes'
+import {
+  EqualViewFilterType,
+  NotEqualViewFilterType,
+  DateEqualViewFilterType,
+  DateNotEqualViewFilterType,
+  ContainsViewFilterType,
+  ContainsNotViewFilterType,
+  HigherThanViewFilterType,
+  LowerThanViewFilterType,
+  BooleanViewFilterType,
+  EmptyViewFilterType,
+  NotEmptyViewFilterType,
+} from '@baserow/modules/database/viewFilters'
 
 import tableStore from '@baserow/modules/database/store/table'
 import viewStore from '@baserow/modules/database/store/view'
@@ -22,6 +35,17 @@ export default ({ store, app }) => {
 
   app.$registry.register('application', new DatabaseApplicationType())
   app.$registry.register('view', new GridViewType())
+  app.$registry.register('viewFilter', new EqualViewFilterType())
+  app.$registry.register('viewFilter', new NotEqualViewFilterType())
+  app.$registry.register('viewFilter', new DateEqualViewFilterType())
+  app.$registry.register('viewFilter', new DateNotEqualViewFilterType())
+  app.$registry.register('viewFilter', new ContainsViewFilterType())
+  app.$registry.register('viewFilter', new ContainsNotViewFilterType())
+  app.$registry.register('viewFilter', new HigherThanViewFilterType())
+  app.$registry.register('viewFilter', new LowerThanViewFilterType())
+  app.$registry.register('viewFilter', new BooleanViewFilterType())
+  app.$registry.register('viewFilter', new EmptyViewFilterType())
+  app.$registry.register('viewFilter', new NotEmptyViewFilterType())
   app.$registry.register('field', new TextFieldType())
   app.$registry.register('field', new LongTextFieldType())
   app.$registry.register('field', new LinkRowFieldType())

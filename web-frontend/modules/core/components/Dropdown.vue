@@ -15,7 +15,7 @@
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <div class="dropdown__items" :class="{ hidden: !open }">
-      <div class="select__search">
+      <div v-if="showSearch" class="select__search">
         <i class="select__search-icon fas fa-search"></i>
         <input
           ref="search"
@@ -26,7 +26,7 @@
           @keyup="search(query)"
         />
       </div>
-      <ul class="select__items">
+      <ul ref="items" class="select__items">
         <slot></slot>
       </ul>
     </div>
@@ -50,6 +50,20 @@ export default {
       required: false,
       default: 'Search',
     },
+    showSearch: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+  },
+  data() {
+    return {
+      loaded: false,
+      open: false,
+      name: null,
+      icon: null,
+      query: '',
+    }
   },
   computed: {
     selectedName() {
@@ -59,13 +73,19 @@ export default {
       return this.getSelectedProperty(this.value, 'icon')
     },
   },
-  data() {
-    return {
-      open: false,
-      name: null,
-      icon: null,
-      query: '',
-    }
+  watch: {
+    value() {
+      this.$nextTick(() => {
+        // When the value changes we want to forcefully reload the selectName and
+        // selectedIcon a little bit later because the children might have changed.
+        this.forceRefreshSelectedValue()
+      })
+    },
+  },
+  mounted() {
+    // When the component is mounted we want to forcefully reload the selectedName and
+    // selectedIcon.
+    this.forceRefreshSelectedValue()
   },
   methods: {
     /**
@@ -82,9 +102,19 @@ export default {
       this.open = true
       this.$emit('show')
 
-      // We have to wait for the input to be visible before we can focus.
       this.$nextTick(() => {
-        this.$refs.search.focus()
+        // We have to wait for the input to be visible before we can focus.
+        this.showSearch && this.$refs.search.focus()
+
+        // Scroll to the selected child.
+        this.$children.forEach((child) => {
+          if (child.value === this.value) {
+            this.$refs.items.scrollTop =
+              child.$el.offsetTop -
+              child.$el.clientHeight -
+              Math.round(this.$refs.items.clientHeight / 2)
+          }
+        })
       })
 
       // If the user clicks outside the dropdown while the list of choices of open we
@@ -143,6 +173,18 @@ export default {
         }
       }
       return ''
+    },
+    /**
+     * A nasty hack, but in some cases the $children have not yet been loaded when the
+     * `selectName` and `selectIcon` are computed. This would result in an empty
+     * initial value of the Dropdown because the correct value can't be extracted from
+     * the DropdownItem. With this hack we force the computed properties to recompute
+     * when the component is mounted. At this moment the $children have been added.
+     */
+    forceRefreshSelectedValue() {
+      this._computedWatchers.selectedName.run()
+      this._computedWatchers.selectedIcon.run()
+      this.$forceUpdate()
     },
   },
 }

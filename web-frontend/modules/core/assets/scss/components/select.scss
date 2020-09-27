@@ -89,6 +89,10 @@
       display: none;
     }
   }
+
+  &.disabled:hover {
+    background-color: transparent;
+  }
 }
 
 .select__item-link {
@@ -100,6 +104,14 @@
 
   &:hover {
     text-decoration: none;
+  }
+
+  .select__item.disabled & {
+    color: $color-neutral-400;
+
+    &:hover {
+      cursor: inherit;
+    }
   }
 }
 

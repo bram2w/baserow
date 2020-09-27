@@ -5,6 +5,14 @@ from baserow.core.mixins import OrderableMixin, PolymorphicContentTypeMixin
 from baserow.contrib.database.fields.models import Field
 
 
+FILTER_TYPE_AND = 'AND'
+FILTER_TYPE_OR = 'OR'
+FILTER_TYPES = (
+    (FILTER_TYPE_AND, 'And'),
+    (FILTER_TYPE_OR, 'Or')
+)
+
+
 def get_default_view_content_type():
     return ContentType.objects.get_for_model(View)
 
@@ -19,6 +27,13 @@ class View(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
         related_name='database_views',
         on_delete=models.SET(get_default_view_content_type)
     )
+    filter_type = models.CharField(
+        max_length=3,
+        choices=FILTER_TYPES,
+        default=FILTER_TYPE_AND,
+        help_text='Indicates whether all the rows should apply to all filters (AND) '
+                  'or to any filter (OR).'
+    )
 
     class Meta:
         ordering = ('order',)
@@ -27,6 +42,34 @@ class View(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
     def get_last_order(cls, table):
         queryset = View.objects.filter(table=table)
         return cls.get_highest_order_of_queryset(queryset) + 1
+
+
+class ViewFilter(models.Model):
+    view = models.ForeignKey(
+        View,
+        on_delete=models.CASCADE,
+        help_text='The view to which the filter applies. Each view can have his own '
+                  'filters.'
+    )
+    field = models.ForeignKey(
+        'database.Field',
+        on_delete=models.CASCADE,
+        help_text='The field of which the value must be compared to the filter value.'
+    )
+    type = models.CharField(
+        max_length=48,
+        help_text='Indicates how the field\'s value must be compared to the filter\'s '
+                  'value. The filter is always in this order `field` `type` `value` '
+                  '(example: `field_1` `contains` `Test`).'
+    )
+    value = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text='The filter value that must be compared to the field\'s value.'
+    )
+
+    class Meta:
+        ordering = ('id',)
 
 
 class GridView(View):

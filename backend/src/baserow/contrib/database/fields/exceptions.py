@@ -11,6 +11,10 @@ class FieldTypeDoesNotExist(InstanceTypeDoesNotExist):
     pass
 
 
+class FieldNotInTable(Exception):
+    """Raised when the field does not belong to a table."""
+
+
 class FieldDoesNotExist(Exception):
     """Raised when the requested field does not exist."""
 

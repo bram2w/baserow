@@ -75,7 +75,6 @@ export default {
           },
         })
       } catch (error) {
-        this.$refs.rename.set(event.oldValue)
         notifyIf(error, 'view')
       }
 
@@ -94,23 +93,14 @@ export default {
       this.setLoading(view, false)
     },
     selectView(view) {
-      this.setLoading(view, true)
+      this.$nuxt.$router.push({
+        name: 'database-table',
+        params: {
+          viewId: view.id,
+        },
+      })
 
-      this.$nuxt.$router.push(
-        {
-          name: 'database-table',
-          params: {
-            viewId: view.id,
-          },
-        },
-        () => {
-          this.setLoading(view, false)
-          this.$emit('selected')
-        },
-        () => {
-          this.setLoading(view, false)
-        }
-      )
+      this.$emit('selected')
     },
   },
 }

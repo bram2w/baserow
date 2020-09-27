@@ -24,6 +24,7 @@
           @update="$refs.context.hide()"
         ></UpdateFieldContext>
       </li>
+      <slot></slot>
       <li v-if="!field.primary">
         <a @click="deleteField(field)">
           <i class="context__menu-icon fas fa-fw fa-trash"></i>

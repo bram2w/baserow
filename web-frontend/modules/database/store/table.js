@@ -12,6 +12,9 @@ export function populateTable(table) {
 }
 
 export const state = () => ({
+  // Indicates whether the table is loading. This is used to show a loading
+  // animation when switching between views.
+  loading: false,
   selected: {},
 })
 
@@ -41,9 +44,15 @@ export const mutations = {
     const index = database.tables.findIndex((item) => item.id === id)
     database.tables.splice(index, 1)
   },
+  SET_LOADING(state, value) {
+    state.loading = value
+  },
 }
 
 export const actions = {
+  setLoading({ commit }, value) {
+    commit('SET_LOADING', value)
+  },
   /**
    * Create a new table based on the provided values and add it to the tables
    * of the provided database.
@@ -125,32 +134,13 @@ export const actions = {
       return { database, table }
     }
 
-    // A small helper to change the loading state of the database application.
-    const setDatabaseLoading = (database, value) => {
-      return dispatch(
-        'application/setItemLoading',
-        { application: database, value },
-        { root: true }
-      )
-    }
-
-    await setDatabaseLoading(database, true)
-
-    try {
-      await axios.all([
-        dispatch('view/fetchAll', table, { root: true }),
-        dispatch('field/fetchAll', table, { root: true }),
-      ])
-
-      await dispatch('application/clearChildrenSelected', null, { root: true })
-      commit('SET_SELECTED', { database, table })
-
-      setDatabaseLoading(database, false)
-      return { database, table }
-    } catch (error) {
-      setDatabaseLoading(database, false)
-      throw error
-    }
+    await axios.all([
+      dispatch('view/fetchAll', table, { root: true }),
+      dispatch('field/fetchAll', table, { root: true }),
+    ])
+    await dispatch('application/clearChildrenSelected', null, { root: true })
+    commit('SET_SELECTED', { database, table })
+    return { database, table }
   },
   /**
    * Selects a table based on the provided database (application) and table id. The

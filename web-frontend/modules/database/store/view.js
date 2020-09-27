@@ -1,6 +1,18 @@
+import _ from 'lodash'
+
+import { uuid } from '@baserow/modules/core/utils/string'
 import ViewService from '@baserow/modules/database/services/view'
+import FilterService from '@baserow/modules/database/services/filter'
 import { clone } from '@baserow/modules/core/utils/object'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+
+export function populateFilter(filter) {
+  filter._ = {
+    hover: false,
+    loading: false,
+  }
+  return filter
+}
 
 export function populateView(view, registry) {
   const type = registry.get('view', view.type)
@@ -10,6 +22,15 @@ export function populateView(view, registry) {
     selected: false,
     loading: false,
   }
+
+  if (Object.prototype.hasOwnProperty.call(view, 'filters')) {
+    view.filters.forEach((filter) => {
+      populateFilter(filter)
+    })
+  } else {
+    view.filters = []
+  }
+
   return type.populate(view)
 }
 
@@ -61,6 +82,35 @@ export const mutations = {
     })
     state.selected = {}
   },
+  ADD_FILTER(state, { view, filter }) {
+    view.filters.push(filter)
+  },
+  FINALIZE_FILTER(state, { view, oldId, id }) {
+    const index = view.filters.findIndex((item) => item.id === oldId)
+    if (index !== -1) {
+      view.filters[index].id = id
+      view.filters[index]._.loading = false
+    }
+  },
+  DELETE_FILTER(state, { view, id }) {
+    const index = view.filters.findIndex((item) => item.id === id)
+    if (index !== -1) {
+      view.filters.splice(index, 1)
+    }
+  },
+  DELETE_FIELD_FILTERS(state, { view, fieldId }) {
+    for (let i = view.filters.length - 1; i >= 0; i--) {
+      if (view.filters[i].field === fieldId) {
+        view.filters.splice(i, 1)
+      }
+    }
+  },
+  UPDATE_FILTER(state, { filter, values }) {
+    Object.assign(filter, filter, values)
+  },
+  SET_FILTER_LOADING(state, { filter, value }) {
+    filter._.loading = value
+  },
 }
 
 export const actions = {
@@ -80,7 +130,7 @@ export const actions = {
     commit('UNSELECT', {})
 
     try {
-      const { data } = await ViewService(this.$client).fetchAll(table.id)
+      const { data } = await ViewService(this.$client).fetchAll(table.id, true)
       data.forEach((part, index, d) => {
         populateView(data[index], this.$registry)
       })
@@ -123,13 +173,24 @@ export const actions = {
    * Updates the values of the view with the provided id.
    */
   async update({ commit, dispatch }, { view, values }) {
-    const { data } = await ViewService(this.$client).update(view.id, values)
-    // Create a dict with only the values we want to update.
-    const update = Object.keys(values).reduce((result, key) => {
-      result[key] = data[key]
-      return result
-    }, {})
-    commit('UPDATE_ITEM', { id: view.id, values: update })
+    const oldValues = {}
+    const newValues = {}
+    Object.keys(values).forEach((name) => {
+      if (Object.prototype.hasOwnProperty.call(view, name)) {
+        oldValues[name] = view[name]
+        newValues[name] = values[name]
+      }
+    })
+
+    commit('UPDATE_ITEM', { id: view.id, values: newValues })
+
+    try {
+      await ViewService(this.$client).update(view.id, values)
+      commit('SET_ITEM_LOADING', { view, value: false })
+    } catch (error) {
+      commit('UPDATE_ITEM', { id: view.id, values: oldValues })
+      throw error
+    }
   },
   /**
    * Deletes an existing view with the provided id. A request to the server is first
@@ -202,6 +263,105 @@ export const actions = {
     }
     return dispatch('select', view)
   },
+  /**
+   * Changes the loading state of a specific filter.
+   */
+  setFilterLoading({ commit }, { filter, value }) {
+    commit('SET_FILTER_LOADING', { filter, value })
+  },
+  /**
+   * Creates a new filter and adds it to the store right away. If the API call succeeds
+   * the row ID will be added, but if it fails it will be removed from the store.
+   */
+  async createFilter({ commit }, { view, field, values, emitEvent = true }) {
+    // If the type is not provided we are going to choose the first available type.
+    if (!Object.prototype.hasOwnProperty.call(values, 'type')) {
+      const viewFilterTypes = this.$registry.getAll('viewFilter')
+      const compatibleType = Object.values(viewFilterTypes).find(
+        (viewFilterType) => {
+          return viewFilterType.compatibleFieldTypes.includes(field.type)
+        }
+      )
+      if (compatibleType === undefined) {
+        throw new Error(
+          `No compatible filter type could be found for field' ${field.type}`
+        )
+      }
+      values.type = compatibleType.type
+    }
+
+    const filter = _.assign({}, values)
+    populateFilter(filter)
+    filter.id = uuid()
+    filter._.loading = true
+
+    commit('ADD_FILTER', { view, filter })
+
+    try {
+      const { data } = await FilterService(this.$client).create(view.id, values)
+      commit('FINALIZE_FILTER', { view, oldId: filter.id, id: data.id })
+
+      if (emitEvent) {
+        this.$bus.$emit('view-filter-created', { view, filter })
+      }
+    } catch (error) {
+      commit('DELETE_FILTER', { view, id: filter.id })
+      throw error
+    }
+
+    return { filter }
+  },
+  /**
+   * Updates the filter values in the store right away. If the API call fails the
+   * changes will be undone.
+   */
+  async updateFilter({ commit }, { filter, values }) {
+    commit('SET_FILTER_LOADING', { filter, value: true })
+
+    const oldValues = {}
+    const newValues = {}
+    Object.keys(values).forEach((name) => {
+      if (Object.prototype.hasOwnProperty.call(filter, name)) {
+        oldValues[name] = filter[name]
+        newValues[name] = values[name]
+      }
+    })
+
+    commit('UPDATE_FILTER', { filter, values: newValues })
+
+    try {
+      await FilterService(this.$client).update(filter.id, values)
+      commit('SET_FILTER_LOADING', { filter, value: false })
+    } catch (error) {
+      commit('UPDATE_FILTER', { filter, values: oldValues })
+      commit('SET_FILTER_LOADING', { filter, value: false })
+      throw error
+    }
+  },
+  /**
+   * Deletes an existing filter. A request to the server will be made first and
+   * after that it will be deleted.
+   */
+  async deleteFilter({ commit }, { view, filter }) {
+    commit('SET_FILTER_LOADING', { filter, value: true })
+
+    try {
+      await FilterService(this.$client).delete(filter.id)
+      commit('DELETE_FILTER', { view, id: filter.id })
+    } catch (error) {
+      commit('SET_FILTER_LOADING', { filter, value: false })
+      throw error
+    }
+  },
+  /**
+   * When a field is deleted the related filters are also automatically deleted in the
+   * backend so they need to be removed here.
+   */
+  deleteFieldFilters({ commit, getters }, { field }) {
+    getters.getAll.forEach((view) => {
+      commit('DELETE_FIELD_FILTERS', { view, fieldId: field.id })
+    })
+  },
 }
 
 export const getters = {
@@ -216,6 +376,9 @@ export const getters = {
   },
   first(state) {
     return state.items.length > 0 ? state.items[0] : null
+  },
+  getAll(state) {
+    return state.items
   },
 }
 

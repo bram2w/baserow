@@ -1,21 +1,12 @@
 <template>
   <li class="tree__sub" :class="{ active: table._.selected }">
-    <nuxt-link
-      :to="{
-        name: 'database-table',
-        params: {
-          databaseId: database.id,
-          tableId: table.id,
-        },
-      }"
-      class="tree__sub-link"
-    >
+    <a class="tree__sub-link" @click.prevent="selectTable(database, table)">
       <Editable
         ref="rename"
         :value="table.name"
         @change="renameTable(database, table, $event)"
       ></Editable>
-    </nuxt-link>
+    </a>
     <a
       v-show="!database._.loading"
       class="tree__options"
@@ -64,6 +55,25 @@ export default {
         application: database,
         value,
       })
+    },
+    selectTable(database, table) {
+      this.setLoading(database, true)
+
+      this.$nuxt.$router.push(
+        {
+          name: 'database-table',
+          params: {
+            databaseId: database.id,
+            tableId: table.id,
+          },
+        },
+        () => {
+          this.setLoading(database, false)
+        },
+        () => {
+          this.setLoading(database, false)
+        }
+      )
     },
     async deleteTable(database, table) {
       this.$refs.context.hide()

@@ -4,9 +4,10 @@
     :class="{
       hidden: !isVisible(query),
       active: isActive(value),
+      disabled: disabled,
     }"
   >
-    <a class="select__item-link" @click="select(value)">
+    <a class="select__item-link" @click="select(value, disabled)">
       <i
         v-if="icon"
         class="select__item-icon fas fa-fw"
@@ -34,6 +35,11 @@ export default {
       required: false,
       default: null,
     },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -41,8 +47,10 @@ export default {
     }
   },
   methods: {
-    select(value) {
-      this.$parent.select(value)
+    select(value, disabled) {
+      if (!disabled) {
+        this.$parent.select(value)
+      }
     },
     search(query) {
       this.query = query

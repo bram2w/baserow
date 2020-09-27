@@ -1,3 +1,5 @@
+import _ from 'lodash'
+
 import FieldService from '@baserow/modules/database/services/field'
 import { clone } from '@baserow/modules/core/utils/object'
 
@@ -36,7 +38,7 @@ export const mutations = {
     state.loaded = value
   },
   SET_PRIMARY(state, item) {
-    state.primary = item
+    state.primary = _.assign(state.primary || {}, item)
   },
   ADD_ITEM(state, item) {
     state.items.push(item)
@@ -177,6 +179,7 @@ export const actions = {
   async delete({ commit, dispatch }, field) {
     try {
       await FieldService(this.$client).delete(field.id)
+      this.$bus.$emit('field-deleted', { field })
       dispatch('forceDelete', field)
     } catch (error) {
       // If the field to delete wasn't found we can just delete it from the
@@ -189,9 +192,11 @@ export const actions = {
     }
   },
   /**
-   * Forcibly remove the field from the items  without calling the server.
+   * Remove the field from the items without calling the server.
    */
   forceDelete({ commit, dispatch }, field) {
+    // Also delete the related filters if there are any.
+    dispatch('view/deleteFieldFilters', { field }, { root: true })
     commit('DELETE_ITEM', field.id)
   },
 }
@@ -202,6 +207,9 @@ export const getters = {
   },
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
+  },
+  getPrimary: (state) => {
+    return state.primary
   },
   getAll(state) {
     return state.items

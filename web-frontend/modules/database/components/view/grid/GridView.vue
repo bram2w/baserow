@@ -18,8 +18,11 @@
           <GridViewFieldType
             v-if="primary !== null"
             :table="table"
+            :view="view"
             :field="primary"
+            :filters="view.filters"
             :style="{ width: widths.fields[primary.id] + 'px' }"
+            @refresh="$emit('refresh')"
           ></GridViewFieldType>
         </div>
         <div ref="leftBody" class="grid-view__body">
@@ -49,17 +52,26 @@
                 :class="{
                   'grid-view__row--loading': row._.loading,
                   'grid-view__row--hover': row._.hover,
+                  'grid-view__row--filter-warning': !row._.matchFilters,
                 }"
                 @mouseover="setRowHover(row, true)"
                 @mouseleave="setRowHover(row, false)"
                 @contextmenu.prevent="showRowContext($event, row)"
               >
                 <div
+                  v-if="!row._.matchFilters"
+                  class="grid-view__row-filter-warning"
+                >
+                  Row does not match filters
+                </div>
+                <div
                   class="grid-view__column"
                   :style="{ width: widths.leftReserved + 'px' }"
                 >
                   <div class="grid-view__row-info">
-                    <div class="grid-view__row-count">{{ row.id }}</div>
+                    <div class="grid-view__row-count">
+                      {{ row.id }}
+                    </div>
                     <a
                       class="grid-view__row-more"
                       @click="$refs.rowEditModal.show(row)"
@@ -74,7 +86,8 @@
                   :field="primary"
                   :row="row"
                   :style="{ width: widths.fields[primary.id] + 'px' }"
-                  @selected="selectedField(primary, $event.component)"
+                  @selected="selectedField(primary, $event)"
+                  @unselected="unselectedField(primary, $event)"
                   @selectNext="selectNextField(row, primary, fields, primary)"
                   @selectAbove="
                     selectNextField(row, primary, fields, primary, 'above')
@@ -83,6 +96,7 @@
                     selectNextField(row, primary, fields, primary, 'below')
                   "
                   @update="updateValue"
+                  @edit="editValue"
                 ></GridViewField>
               </div>
             </div>
@@ -137,8 +151,11 @@
             v-for="field in fields"
             :key="'right-head-field-' + view.id + '-' + field.id"
             :table="table"
+            :view="view"
             :field="field"
+            :filters="view.filters"
             :style="{ width: widths.fields[field.id] + 'px' }"
+            @refresh="$emit('refresh')"
           >
             <GridViewFieldWidthHandle
               class="grid-view__description-width"
@@ -194,6 +211,7 @@
                 :class="{
                   'grid-view__row--loading': row._.loading,
                   'grid-view__row--hover': row._.hover,
+                  'grid-view__row--filter-warning': !row._.matchFilters,
                 }"
                 @mouseover="setRowHover(row, true)"
                 @mouseleave="setRowHover(row, false)"
@@ -208,7 +226,8 @@
                   :field="field"
                   :row="row"
                   :style="{ width: widths.fields[field.id] + 'px' }"
-                  @selected="selectedField(field, $event.component)"
+                  @selected="selectedField(field, $event)"
+                  @unselected="unselectedField(field, $event)"
                   @selectPrevious="
                     selectNextField(row, field, fields, primary, 'previous')
                   "
@@ -220,6 +239,7 @@
                     selectNextField(row, field, fields, primary, 'below')
                   "
                   @update="updateValue"
+                  @edit="editValue"
                 ></GridViewField>
               </div>
             </div>
@@ -243,6 +263,17 @@
           </div>
         </div>
         <div class="grid-view__foot"></div>
+      </div>
+    </div>
+    <div
+      v-if="view.filters.length > 0 && count === 0"
+      class="grid-view__filtered-no-results"
+    >
+      <div class="grid-view__filtered-no-results-icon">
+        <i class="fas fa-filter"></i>
+      </div>
+      <div class="grid-view__filtered-no-results-content">
+        Rows are filtered
       </div>
     </div>
     <Context ref="rowContext">
@@ -271,6 +302,7 @@
       :primary="primary"
       :fields="fields"
       @update="updateValue"
+      @hidden="rowEditModalHidden"
     ></RowEditModal>
   </div>
 </template>
@@ -320,7 +352,6 @@ export default {
   data() {
     return {
       addHover: false,
-      loading: true,
       selectedRow: null,
       lastHoveredRow: null,
       widths: {
@@ -357,11 +388,40 @@ export default {
     // render the page properly on the server side.
     this.calculateWidths(this.primary, this.fields, this.fieldOptions)
   },
+  beforeMount() {
+    this.$bus.$on('field-deleted', this.fieldDeleted)
+  },
+  beforeDestroy() {
+    this.$bus.$off('field-deleted', this.fieldDeleted)
+  },
   methods: {
+    /**
+     * When a field is deleted we need to check if that field was related to any
+     * filters. If that is the case then the view needs to be refreshed so we can see
+     * fresh results.
+     */
+    fieldDeleted({ field }) {
+      const filterIndex = this.view.filters.findIndex((filter) => {
+        return filter.field === field.id
+      })
+      if (filterIndex > -1) {
+        this.$emit('refresh')
+      }
+    },
+    /**
+     * This method is called from the parent component when the data in the view has
+     * been reset. This can for example happen when a user filters.
+     */
+    refresh() {
+      this.$refs.leftBody.scrollTop = 0
+      this.$refs.rightBody.scrollTop = 0
+      this.$refs.scrollbars.update()
+    },
     async updateValue({ field, row, value, oldValue }) {
       try {
         await this.$store.dispatch('view/grid/updateValue', {
           table: this.table,
+          view: this.view,
           row,
           field,
           value,
@@ -370,6 +430,19 @@ export default {
       } catch (error) {
         notifyIf(error, 'field')
       }
+    },
+    /**
+     * Called when a value is edited, but not yet saved. Here we can do a preliminary
+     * check to see if the values matches the filters.
+     */
+    editValue({ field, row, value, oldValue }) {
+      const overrides = {}
+      overrides[`field_${field.id}`] = value
+      this.$store.dispatch('view/grid/updateMatchFilters', {
+        view: this.view,
+        row,
+        overrides,
+      })
     },
     scroll(pixelY, pixelX) {
       const $rightBody = this.$refs.rightBody
@@ -474,6 +547,7 @@ export default {
     async addRow() {
       try {
         await this.$store.dispatch('view/grid/create', {
+          view: this.view,
           table: this.table,
           // We need a list of all fields including the primary one here.
           fields: [this.primary].concat(...this.fields),
@@ -515,7 +589,7 @@ export default {
      * When a field is selected we want to make sure it is visible in the viewport, so
      * we might need to scroll a little bit.
      */
-    selectedField(field, component) {
+    selectedField(field, { component, row }) {
       const element = component.$el
       const verticalContainer = this.$refs.rightBody
       const horizontalContainer = this.$refs.right
@@ -565,6 +639,16 @@ export default {
         )
         this.$refs.scrollbars.updateHorizontal()
       }
+
+      this.$store.dispatch('view/grid/addRowSelectedBy', { row, field })
+    },
+    unselectedField(field, { row }) {
+      this.$store.dispatch('view/grid/removeRowSelectedBy', {
+        grid: this.view,
+        row,
+        field,
+        getScrollTop: () => this.$refs.leftBody.scrollTop,
+      })
     },
     /**
      * This method is called when the next field must be selected. This can for example
@@ -645,6 +729,19 @@ export default {
 
       this.$store.dispatch('view/grid/setRowHover', { row, value })
       this.lastHoveredRow = row
+    },
+    /**
+     * When the modal hides and the related row does not match the filters anymore it
+     * must be deleted.
+     */
+    rowEditModalHidden({ row }) {
+      if (row._.selectedBy.length === 0 && !row._.matchFilters) {
+        this.$store.dispatch('view/grid/forceDelete', {
+          grid: this.view,
+          row,
+          getScrollTop: () => this.$refs.leftBody.scrollTop,
+        })
+      }
     },
   },
 }

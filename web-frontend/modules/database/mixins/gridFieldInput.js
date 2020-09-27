@@ -17,6 +17,13 @@ export default {
       copy: null,
     }
   },
+  watch: {
+    copy(value) {
+      if (this.editing) {
+        this.$emit('edit', value, this.value)
+      }
+    },
+  },
   methods: {
     /**
      * Event that is called when the column is selected. Here we will add an event
@@ -113,6 +120,7 @@ export default {
     cancel() {
       this.editing = false
       this.copy = this.value
+      this.$emit('edit', this.value, this.value)
     },
     /**
      * Method that is called after initiating the edit state. This can be overridden

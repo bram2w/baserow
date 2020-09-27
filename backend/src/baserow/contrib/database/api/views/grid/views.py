@@ -103,10 +103,14 @@ class GridViewView(APIView):
         `field_options` are provided in the includes GET parameter.
         """
 
-        view = ViewHandler().get_view(request.user, view_id, GridView)
+        view_handler = ViewHandler()
+        view = view_handler.get_view(request.user, view_id, GridView)
 
         model = view.table.get_model()
         queryset = model.objects.all().enhance_by_fields().order_by('id')
+
+        # Applies the view filters to the queryset if there are any.
+        queryset = view_handler.apply_filters(view, queryset)
 
         if LimitOffsetPagination.limit_query_param in request.GET:
             paginator = LimitOffsetPagination()

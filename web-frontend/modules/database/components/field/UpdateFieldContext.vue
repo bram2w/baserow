@@ -25,7 +25,7 @@ import FieldForm from '@baserow/modules/database/components/field/FieldForm'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
-  name: 'CreateFieldContext',
+  name: 'UpdateFieldContext',
   components: { FieldForm },
   mixins: [context],
   props: {
