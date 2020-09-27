@@ -27,6 +27,11 @@ export default {
       newValue: '',
     }
   },
+  watch: {
+    value(value) {
+      this.set(value)
+    },
+  },
   mounted() {
     this.set(this.value)
   },

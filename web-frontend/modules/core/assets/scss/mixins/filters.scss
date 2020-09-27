@@ -1,0 +1,8 @@
+@mixin filter-dropdown-width($width) {
+  flex: 0 0 $width;
+
+  .dropdown,
+  .dropdown__selected {
+    width: $width;
+  }
+}

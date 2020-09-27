@@ -14,3 +14,8 @@ ERROR_LINK_ROW_TABLE_NOT_PROVIDED = (
     'The `link_row_table` must be provided.'
 )
 ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE = 'ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE'
+ERROR_FIELD_NOT_IN_TABLE = (
+    'ERROR_FIELD_NOT_IN_TABLE',
+    HTTP_400_BAD_REQUEST,
+    'The provided field does not belong in the related table.'
+)

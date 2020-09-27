@@ -105,10 +105,13 @@ export default {
     /**
      * Hide the context menu and make sure the body event is removed.
      */
-    hide() {
+    hide(emit = true) {
       this.opener = null
       this.open = false
-      this.$emit('hidden')
+
+      if (emit) {
+        this.$emit('hidden')
+      }
 
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
     },

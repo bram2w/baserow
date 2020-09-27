@@ -1,5 +1,5 @@
 <template>
-  <Modal>
+  <Modal @hidden="$emit('hidden', { row })">
     <h2 v-if="primary !== undefined" class="box__title">
       {{ getHeading(primary, row) }}
     </h2>

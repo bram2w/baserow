@@ -1,21 +1,29 @@
 <template>
   <div>
     <header class="layout__col-3-1 header">
-      <ul class="header__filter">
-        <li class="header__filter-item">
+      <div v-show="tableLoading" class="header__loading"></div>
+      <ul v-show="!tableLoading" class="header__filter">
+        <li class="header__filter-item header__filter-item--grids">
           <a
             ref="viewsSelectToggle"
             class="header__filter-link"
-            @click="$refs.viewsContext.toggle($refs.viewsSelectToggle)"
+            @click="
+              $refs.viewsContext.toggle(
+                $refs.viewsSelectToggle,
+                'bottom',
+                'left',
+                4
+              )
+            "
           >
-            <span v-if="hasSelectedView">
+            <span v-if="hasSelectedView()">
               <i
-                class="header__filter-icon fas"
-                :class="'fa-' + selectedView._.type.iconClass"
+                class="header__filter-icon header-filter-icon--view fas"
+                :class="'fa-' + view._.type.iconClass"
               ></i>
-              {{ selectedView.name }}
+              {{ view.name }}
             </span>
-            <span v-if="!hasSelectedView">
+            <span v-else>
               <i
                 class="header__filter-icon header-filter-icon-no-choice fas fa-caret-square-down"
               ></i>
@@ -24,41 +32,52 @@
           </a>
           <ViewsContext ref="viewsContext" :table="table"></ViewsContext>
         </li>
+        <li v-if="view._.type.canFilter" class="header__filter-item">
+          <ViewFilter
+            :view="view"
+            :fields="fields"
+            :primary="primary"
+            @changed="refresh()"
+          ></ViewFilter>
+        </li>
       </ul>
-      <template v-if="hasSelectedView">
-        <component
-          :is="getViewHeaderComponent(selectedView)"
-          :database="database"
-          :table="table"
-          :view="selectedView"
-          :fields="fields"
-          :primary="primary"
-        />
-      </template>
-      <ul class="header__info">
+      <component
+        :is="getViewHeaderComponent(view)"
+        v-if="hasSelectedView()"
+        :database="database"
+        :table="table"
+        :view="view"
+        :fields="fields"
+        :primary="primary"
+      />
+      <ul v-show="!tableLoading" class="header__info">
         <li>{{ database.name }}</li>
         <li>{{ table.name }}</li>
       </ul>
     </header>
     <div class="layout__col-3-2 content">
-      <template v-if="hasSelectedView">
-        <component
-          :is="getViewComponent(selectedView)"
-          :database="database"
-          :table="table"
-          :view="selectedView"
-          :fields="fields"
-          :primary="primary"
-        />
-      </template>
+      <component
+        :is="getViewComponent(view)"
+        v-if="hasSelectedView()"
+        v-show="!tableLoading"
+        ref="view"
+        :database="database"
+        :table="table"
+        :view="view"
+        :fields="fields"
+        :primary="primary"
+        @refresh="refresh()"
+      />
+      <div v-if="viewLoading" class="loading-overlay"></div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex'
+import { mapState } from 'vuex'
 
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
+import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -68,16 +87,24 @@ export default {
   layout: 'app',
   components: {
     ViewsContext,
+    ViewFilter,
   },
+  /**
+   * Because there is no hook that is called before the route changes, we need the
+   * tableLoading middleware to change the table loading state. This change will get
+   * rendered right away. This allows us to have a custom loading animation when
+   * switching views.
+   */
+  middleware: ['tableLoading'],
   /**
    * Prepares all the table, field and view data for the provided database, table and
    * view id.
    */
-  async asyncData({ store, params, error, redirect, app }) {
+  async asyncData({ store, params, error, app }) {
     // @TODO figure out why the id's aren't converted to an int in the route.
     const databaseId = parseInt(params.databaseId)
     const tableId = parseInt(params.tableId)
-    const viewId = params.viewId ? parseInt(params.viewId) : null
+    let viewId = params.viewId ? parseInt(params.viewId) : null
     const data = {}
 
     // Try to find the table in the already fetched applications by the
@@ -95,20 +122,16 @@ export default {
       return error({ statusCode: 404, message: 'Table not found.' })
     }
 
+    // After selecting the table the fields become available which need to be added to
+    // the data.
+    data.fields = store.getters['field/getAll']
+    data.primary = store.getters['field/getPrimary']
+
     // Because we do not have a dashboard for the table yet we're going to redirect to
     // the first available view.
-    if (viewId === null) {
-      const firstView = store.getters['view/first']
-      if (firstView !== null) {
-        return redirect({
-          name: 'database-table',
-          params: {
-            databaseId: data.database.id,
-            tableId: data.table.id,
-            viewId: firstView.id,
-          },
-        })
-      }
+    const firstView = store.getters['view/first']
+    if (viewId === null && firstView !== null) {
+      viewId = firstView.id
     }
 
     // If a view id is provided and the table is selected we can select the view. The
@@ -130,16 +153,35 @@ export default {
 
     return data
   },
+  data() {
+    return {
+      // Shows a small spinning loading animation when the view is being refreshed.
+      viewLoading: false,
+    }
+  },
   computed: {
     ...mapState({
-      selectedView: (state) => state.view.selected,
-      fields: (state) => state.field.items,
-      primary: (state) => state.field.primary,
-    }),
-    ...mapGetters({
-      hasSelectedView: 'view/hasSelected',
+      // We need the tableLoading state to show a small loading animation when
+      // switching between views. Because some of the data will be populated by
+      // the asyncData function and some by mapping the state of a store it could look
+      // a bit strange for the user when switching between views because not all data
+      // renders at the same time. That is why we show this loading animation. Store
+      // changes are always rendered right away.
+      tableLoading: (state) => state.table.loading,
     }),
   },
+  /**
+   * The beforeCreate hook is called right after the asyncData finishes and when the
+   * page has been rendered for the first time. The perfect moment to stop the table
+   * loading animation.
+   */
+  beforeCreate() {
+    this.$store.dispatch('table/setLoading', false)
+  },
+  /**
+   * When the user leaves to another page we want to unselect the selected table. This
+   * way it will not be highlighted the left sidebar.
+   */
   beforeRouteLeave(to, from, next) {
     this.$store.dispatch('table/unselect')
     next()
@@ -152,6 +194,31 @@ export default {
     getViewHeaderComponent(view) {
       const type = this.$registry.get('view', view.type)
       return type.getHeaderComponent()
+    },
+    /**
+     * Refreshes the whole view. All data will be reloaded and it will visually look
+     * the same as seeing the view for the first time.
+     */
+    async refresh() {
+      this.viewLoading = true
+      const type = this.$registry.get('view', this.view.type)
+      await type.fetch({ store: this.$store }, this.view)
+      if (
+        Object.prototype.hasOwnProperty.call(this.$refs, 'view') &&
+        Object.prototype.hasOwnProperty.call(this.$refs.view, 'refresh')
+      ) {
+        this.$refs.view.refresh()
+      }
+      this.$nextTick(() => {
+        this.viewLoading = false
+      })
+    },
+    /**
+     * Indicates if there is a selected view by checking if the view object has been
+     * populated.
+     */
+    hasSelectedView() {
+      return Object.prototype.hasOwnProperty.call(this.view, '_')
     },
   },
   head() {

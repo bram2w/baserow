@@ -70,7 +70,7 @@ export default {
     /**
      * Hide the modal.
      */
-    hide() {
+    hide(emit = true) {
       // This is a temporary fix. What happens is the model is opened by a context menu
       // item and the user closes the modal, the element is first deleted and then the
       // click outside event of the context is fired. It then checks if the click was
@@ -80,7 +80,11 @@ export default {
       setTimeout(() => {
         this.open = false
       })
-      this.$emit('hidden')
+
+      if (emit) {
+        this.$emit('hidden')
+      }
+
       window.removeEventListener('keyup', this.keyup)
     },
     /**
@@ -93,7 +97,7 @@ export default {
       }
     },
     /**
-     *
+     * When the escape key is pressed the modal needs to be hidden.
      */
     keyup(event) {
       if (event.keyCode === 27) {

@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 from baserow.core.registries import plugin_registry, application_type_registry
 
-from .views.registries import view_type_registry
+from .views.registries import view_type_registry, view_filter_type_registry
 from .fields.registries import field_type_registry, field_converter_registry
 
 
@@ -59,6 +59,24 @@ class DatabaseConfig(AppConfig):
 
         from .views.view_types import GridViewType
         view_type_registry.register(GridViewType())
+
+        from .views.view_filters import (
+            EqualViewFilterType, NotEqualViewFilterType, EmptyViewFilterType,
+            NotEmptyViewFilterType, DateEqualViewFilterType, DateNotEqualViewFilterType,
+            HigherThanViewFilterType, LowerThanViewFilterType, ContainsViewFilterType,
+            ContainsNotViewFilterType, BooleanViewFilterType
+        )
+        view_filter_type_registry.register(EqualViewFilterType())
+        view_filter_type_registry.register(NotEqualViewFilterType())
+        view_filter_type_registry.register(ContainsViewFilterType())
+        view_filter_type_registry.register(ContainsNotViewFilterType())
+        view_filter_type_registry.register(HigherThanViewFilterType())
+        view_filter_type_registry.register(LowerThanViewFilterType())
+        view_filter_type_registry.register(DateEqualViewFilterType())
+        view_filter_type_registry.register(DateNotEqualViewFilterType())
+        view_filter_type_registry.register(BooleanViewFilterType())
+        view_filter_type_registry.register(EmptyViewFilterType())
+        view_filter_type_registry.register(NotEmptyViewFilterType())
 
         from .application_types import DatabaseApplicationType
         application_type_registry.register(DatabaseApplicationType())

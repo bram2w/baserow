@@ -1,3 +1,5 @@
+import Vue from 'vue'
+
 import { Registry } from '@baserow/modules/core/registry'
 
 import applicationStore from '@baserow/modules/core/store/application'
@@ -7,6 +9,8 @@ import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 
 export default ({ store, app }, inject) => {
+  inject('bus', new Vue())
+
   const registry = new Registry()
   registry.registerNamespace('plugin')
   registry.registerNamespace('application')

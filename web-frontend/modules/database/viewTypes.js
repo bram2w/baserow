@@ -20,11 +20,20 @@ export class ViewType extends Registerable {
     return null
   }
 
+  /**
+   * Indicates whether it is possible to filter the rows. If true the filter context
+   * menu is added to the header.
+   */
+  canFilter() {
+    return true
+  }
+
   constructor() {
     super()
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
+    this.canFilter = this.canFilter()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -99,6 +108,7 @@ export class ViewType extends Registerable {
       type: this.type,
       iconClass: this.iconClass,
       name: this.name,
+      canFilter: this.canFilter,
     }
   }
 }

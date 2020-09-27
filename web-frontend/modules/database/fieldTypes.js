@@ -21,6 +21,8 @@ import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEdit
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
 
+import { trueString } from '@baserow/modules/database/utils/constants'
+
 export class FieldType extends Registerable {
   /**
    * The font awesome 5 icon name that is used as convenience for the user to
@@ -363,9 +365,8 @@ export class BooleanFieldType extends FieldType {
    * value is true.
    */
   prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData.getData('text').toLowerCase()
-    const allowed = ['1', 'y', 't', 'y', 'yes', 'true', 'on']
-    return allowed.includes(value)
+    const value = clipboardData.getData('text').toLowerCase().trim()
+    return trueString.includes(value)
   }
 }
 

@@ -123,6 +123,73 @@
                     value="choice-3"
                     icon="database"
                   ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="times"
+                    :disabled="true"
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Dropdown</label>
+            <div class="control__elements">
+              value: {{ dropdown }}
+              <br />
+              <br />
+              <div style="width: 200px;">
+                <Dropdown v-model="dropdown" :show-search="false">
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="pencil"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="database"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="times"
+                    :disabled="true"
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Very long dropdown</label>
+            <div class="control__elements">
+              <div style="width: 200px;">
+                <Dropdown v-model="longDropdown">
+                  <DropdownItem
+                    v-for="i in [
+                      0,
+                      1,
+                      2,
+                      3,
+                      4,
+                      5,
+                      6,
+                      7,
+                      8,
+                      9,
+                      10,
+                      11,
+                      12,
+                      13,
+                      14,
+                      15,
+                    ]"
+                    :key="i"
+                    :name="'Choice ' + i"
+                    :value="i"
+                  ></DropdownItem>
                 </Dropdown>
               </div>
             </div>
@@ -757,6 +824,7 @@ export default {
     return {
       checkbox: false,
       dropdown: '',
+      longDropdown: '0',
       date: '',
     }
   },

@@ -3,7 +3,10 @@ from baserow.core.registry import (
     CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, APIUrlsRegistryMixin,
     APIUrlsInstanceMixin
 )
-from .exceptions import ViewTypeAlreadyRegistered, ViewTypeDoesNotExist
+from .exceptions import (
+    ViewTypeAlreadyRegistered, ViewTypeDoesNotExist, ViewFilterTypeAlreadyRegistered,
+    ViewFilterTypeDoesNotExist
+)
 
 
 class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMixin,
@@ -42,6 +45,12 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
         view_type_registry.register(ExampleViewType())
     """
 
+    can_filter = True
+    """
+    Defines if the view supports filters. If not, it will not be possible to add filter
+    to the view.
+    """
+
 
 class ViewTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,
                        ModelRegistryMixin, Registry):
@@ -56,6 +65,70 @@ class ViewTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,
     already_registered_exception_class = ViewTypeAlreadyRegistered
 
 
+class ViewFilterType(Instance):
+    """
+    This abstract class represents a view filter type that can be added to the view
+    filter type registry. It must be extended so customisation can be done. Each view
+    filter type will have its own type names and rules. The get_filter method should
+    be overwritten and should return a Q object that can be applied to the queryset
+    later.
+
+    Example:
+        from baserow.contrib.database.views.registry import (
+            ViewFilterType, view_filter_type_registry
+        )
+
+        class ExampleViewFilterType(ViewFilterType):
+            type = 'equal'
+            compatible_field_types = ['text', 'long_text']
+
+            def get_filter(self, field_name, value):
+                return Q(**{
+                    field_name: value
+                })
+
+        view_filter_type_registry.register(ExampleViewFilterType())
+    """
+
+    compatible_field_types = []
+    """
+    Defines which field types are compatible with the filter. Only the supported ones
+    can be used in combination with the field.
+    """
+
+    def get_filter(self, field_name, value, model_field):
+        """
+        Should return a Q object containing the requested filtering based on the
+        provided arguments.
+
+        :param field_name: The name of the field that needs to be filtered.
+        :type field_name: str
+        :param value: The value that the field must be compared to.
+        :type value: str
+        :param model_field: The field extracted form the model.
+        :type model_field: models.Field
+        :return: The Q object that does the filtering. This will later be added to the
+            queryset in the correct way.
+        :rtype: Q
+        """
+
+        raise NotImplementedError('Each must have his own get_filter method.')
+
+
+class ViewFilterTypeRegistry(Registry):
+    """
+    With the view filter type registry is is possible to register new view filter
+    types. A view filter type is an abstractions that allows different types of
+    filtering for rows in a view. It is possible to add multiple view filters to a view
+    and all the rows must match those filters.
+    """
+
+    name = 'view_filter'
+    does_not_exist_exception_class = ViewFilterTypeDoesNotExist
+    already_registered_exception_class = ViewFilterTypeAlreadyRegistered
+
+
 # A default view type registry is created here, this is the one that is used
 # throughout the whole Baserow application to add a new view type.
 view_type_registry = ViewTypeRegistry()
+view_filter_type_registry = ViewFilterTypeRegistry()

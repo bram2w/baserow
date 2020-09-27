@@ -66,7 +66,7 @@ export default {
    * removed and that the element is removed from the body.
    */
   destroyed() {
-    this.hide()
+    this.hide(false)
 
     if (this.$el.parentNode) {
       this.$el.parentNode.removeChild(this.$el)
