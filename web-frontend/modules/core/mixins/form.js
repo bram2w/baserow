@@ -41,6 +41,15 @@ export default {
     },
     submit() {
       this.$v.$touch()
+
+      // Also touch all the child forms so that all the error messages are going to
+      // be displayed.
+      for (const child of this.$children) {
+        if ('isFormValid' in child && '$v' in child) {
+          child.$v.$touch()
+        }
+      }
+
       if (this.isFormValid()) {
         this.$emit('submitted', this.getFormValues())
       }
