@@ -10,6 +10,8 @@
 * Fixed bug where the link row field is not removed from the store when the related
   table is deleted.
 * Added filtering of rows per view.
+* Fixed bug where the error message of the 'Select a table to link to' was not always
+  displayed.
 
 ## Released (2020-09-02)
 
