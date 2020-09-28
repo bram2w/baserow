@@ -9,8 +9,8 @@ from django.db.models import Q, IntegerField, BooleanField
 from django.db.models.fields.related import ManyToManyField
 
 from baserow.contrib.database.fields.field_types import (
-    TextFieldType, LongTextFieldType, NumberFieldType, DateFieldType, LinkRowFieldType,
-    BooleanFieldType
+    TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType, DateFieldType,
+    LinkRowFieldType, BooleanFieldType
 )
 
 from .registries import ViewFilterType
@@ -33,6 +33,7 @@ class EqualViewFilterType(ViewFilterType):
     compatible_field_types = [
         TextFieldType.type,
         LongTextFieldType.type,
+        URLFieldType.type,
         NumberFieldType.type,
         BooleanFieldType.type
     ]
@@ -67,7 +68,8 @@ class ContainsViewFilterType(ViewFilterType):
     type = 'contains'
     compatible_field_types = [
         TextFieldType.type,
-        LongTextFieldType.type
+        LongTextFieldType.type,
+        URLFieldType.type,
     ]
 
     def get_filter(self, field_name, value, model_field):
@@ -242,6 +244,7 @@ class EmptyViewFilterType(ViewFilterType):
     compatible_field_types = [
         TextFieldType.type,
         LongTextFieldType.type,
+        URLFieldType.type,
         NumberFieldType.type,
         BooleanFieldType.type,
         DateFieldType.type,

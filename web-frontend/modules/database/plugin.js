@@ -3,6 +3,7 @@ import { GridViewType } from '@baserow/modules/database/viewTypes'
 import {
   TextFieldType,
   LongTextFieldType,
+  URLFieldType,
   LinkRowFieldType,
   NumberFieldType,
   BooleanFieldType,
@@ -52,4 +53,5 @@ export default ({ store, app }) => {
   app.$registry.register('field', new NumberFieldType())
   app.$registry.register('field', new BooleanFieldType())
   app.$registry.register('field', new DateFieldType())
+  app.$registry.register('field', new URLFieldType())
 }

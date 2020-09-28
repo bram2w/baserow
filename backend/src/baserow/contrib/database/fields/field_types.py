@@ -6,6 +6,7 @@ from dateutil.parser import ParserError
 from datetime import datetime, date
 
 from django.db import models
+from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware
 
@@ -19,8 +20,8 @@ from baserow.contrib.database.api.fields.errors import (
 from .handler import FieldHandler
 from .registries import FieldType
 from .models import (
-    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, NumberField,
-    BooleanField, DateField, LinkRowField
+    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
+    NumberField, BooleanField, DateField, LinkRowField
 )
 from .exceptions import LinkRowTableNotInSameDatabase, LinkRowTableNotProvided
 
@@ -56,6 +57,41 @@ class LongTextFieldType(FieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.text()
+
+
+class URLFieldType(FieldType):
+    type = 'url'
+    model_class = URLField
+
+    def prepare_value_for_db(self, instance, value):
+        if value == '' or value is None:
+            return ''
+
+        validator = URLValidator()
+        validator(value)
+        return value
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.URLField(required=False, allow_null=True, allow_blank=True,
+                                    **kwargs)
+
+    def get_model_field(self, instance, **kwargs):
+        return models.URLField(default='', blank=True, null=True, **kwargs)
+
+    def random_value(self, instance, fake, cache):
+        return fake.url()
+
+    def get_alter_column_type_function(self, connection, instance):
+        if connection.vendor == 'postgresql':
+            return r"""(
+            case
+                when p_in::text ~* '(https?|ftps?)://(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)?'
+                then p_in::text
+                else ''
+                end
+            )"""
+
+        return super().get_alter_column_type_function(connection, instance)
 
 
 class NumberFieldType(FieldType):
