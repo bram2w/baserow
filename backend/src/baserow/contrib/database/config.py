@@ -44,11 +44,12 @@ class DatabaseConfig(AppConfig):
         plugin_registry.register(DatabasePlugin())
 
         from .fields.field_types import (
-            TextFieldType, LongTextFieldType, NumberFieldType, BooleanFieldType,
-            DateFieldType, LinkRowFieldType
+            TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType,
+            BooleanFieldType, DateFieldType, LinkRowFieldType
         )
         field_type_registry.register(TextFieldType())
         field_type_registry.register(LongTextFieldType())
+        field_type_registry.register(URLFieldType())
         field_type_registry.register(NumberFieldType())
         field_type_registry.register(BooleanFieldType())
         field_type_registry.register(DateFieldType())

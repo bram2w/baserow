@@ -1,5 +1,6 @@
 import moment from 'moment'
 
+import { isValidURL } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
@@ -9,6 +10,7 @@ import FieldLinkRowSubForm from '@baserow/modules/database/components/field/Fiel
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
+import GridViewFieldURL from '@baserow/modules/database/components/view/grid/GridViewFieldURL'
 import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/GridViewFieldLinkRow'
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
@@ -16,6 +18,7 @@ import GridViewFieldDate from '@baserow/modules/database/components/view/grid/Gr
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
+import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL'
 import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
@@ -408,5 +411,32 @@ export class DateFieldType extends FieldType {
     } else {
       return null
     }
+  }
+}
+
+export class URLFieldType extends FieldType {
+  static getType() {
+    return 'url'
+  }
+
+  getIconClass() {
+    return 'link'
+  }
+
+  getName() {
+    return 'URL'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldURL
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldURL
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text')
+    return isValidURL(value) ? value : ''
   }
 }

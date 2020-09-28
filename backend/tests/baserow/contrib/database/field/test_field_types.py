@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware, datetime
 
 from baserow.contrib.database.fields.field_types import DateFieldType
-from baserow.contrib.database.fields.models import LongTextField, DateField
+from baserow.contrib.database.fields.models import LongTextField, URLField, DateField
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 
@@ -170,6 +170,108 @@ def test_long_text_field_type(data_fixture):
 
     handler.delete_field(user=user, field=field)
     assert len(LongTextField.objects.all()) == 1
+
+
+@pytest.mark.django_db
+def test_url_field_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(user=user, database=table.database)
+    field = data_fixture.create_text_field(table=table, order=1, name='name')
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    field_2 = field_handler.create_field(user=user, table=table, type_name='url',
+                                         name='url')
+    number = field_handler.create_field(user=user, table=table, type_name='number',
+                                        name='number')
+
+    assert len(URLField.objects.all()) == 1
+    model = table.get_model(attribute_names=True)
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            'url': 'invalid_url'
+        }, model=model)
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            'url': 'httpss'
+        }, model=model)
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            'url': 'httpss'
+        }, model=model)
+
+    row_0 = row_handler.create_row(user=user, table=table, values={
+        'name': 'http://test.nl',
+        'url': 'https://baserow.io',
+        'number': 5
+    }, model=model)
+    row_1 = row_handler.create_row(user=user, table=table, values={
+        'name': 'http;//',
+        'url': 'http://localhost',
+        'number': 10
+    }, model=model)
+    row_2 = row_handler.create_row(user=user, table=table, values={
+        'name': 'bram@test.nl',
+        'url': 'http://www.baserow.io'
+    }, model=model)
+    row_3 = row_handler.create_row(user=user, table=table, values={
+        'name': 'NOT A URL',
+        'url': 'http://www.baserow.io/blog/building-a-database'
+    }, model=model)
+    row_4 = row_handler.create_row(user=user, table=table, values={
+        'name': 'ftps://www.complex.website.com?querystring=test&something=else',
+        'url': ''
+    }, model=model)
+    row_5 = row_handler.create_row(user=user, table=table, values={
+        'url': None,
+    }, model=model)
+    row_6 = row_handler.create_row(user=user, table=table, values={}, model=model)
+
+    # Convert to text field to a url field so we can check how the conversion of values
+    # went.
+    field_handler.update_field(user=user, field=field, new_type_name='url')
+    field_handler.update_field(user=user, field=number, new_type_name='url')
+
+    model = table.get_model(attribute_names=True)
+    rows = model.objects.all()
+
+    assert rows[0].name == 'http://test.nl'
+    assert rows[0].url == 'https://baserow.io'
+    assert rows[0].number == ''
+
+    assert rows[1].name == ''
+    assert rows[1].url == 'http://localhost'
+    assert rows[1].number == ''
+
+    assert rows[2].name == ''
+    assert rows[2].url == 'http://www.baserow.io'
+    assert rows[2].number == ''
+
+    assert rows[3].name == ''
+    assert rows[3].url == 'http://www.baserow.io/blog/building-a-database'
+    assert rows[3].number == ''
+
+    assert (
+        rows[4].name == 'ftps://www.complex.website.com?querystring=test&something=else'
+    )
+    assert rows[4].url == ''
+    assert rows[4].number == ''
+
+    assert rows[5].name == ''
+    assert rows[5].url == ''
+    assert rows[5].number == ''
+
+    assert rows[6].name == ''
+    assert rows[6].url == ''
+    assert rows[6].number == ''
+
+    field_handler.delete_field(user=user, field=field_2)
+    assert len(URLField.objects.all()) == 2
 
 
 @pytest.mark.django_db

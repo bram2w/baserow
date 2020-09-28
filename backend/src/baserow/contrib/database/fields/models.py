@@ -119,6 +119,10 @@ class LongTextField(Field):
     pass
 
 
+class URLField(Field):
+    pass
+
+
 class NumberField(Field):
     number_type = models.CharField(
         max_length=32,
