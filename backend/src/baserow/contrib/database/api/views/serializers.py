@@ -9,7 +9,7 @@ from baserow.contrib.database.api.serializers import TableSerializer
 from baserow.contrib.database.views.registries import (
     view_type_registry, view_filter_type_registry
 )
-from baserow.contrib.database.views.models import View, ViewFilter
+from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
 
 
 class ViewFilterSerializer(serializers.ModelSerializer):
@@ -53,14 +53,46 @@ class UpdateViewFilterSerializer(serializers.ModelSerializer):
         }
 
 
+class ViewSortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewSort
+        fields = ('id', 'view', 'field', 'order')
+        extra_kwargs = {
+            'id': {
+                'read_only': True
+            }
+        }
+
+
+class CreateViewSortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewSort
+        fields = ('field', 'order')
+        extra_kwargs = {
+            'order': {'default': ViewSort._meta.get_field('order').default},
+        }
+
+
+class UpdateViewSortSerializer(serializers.ModelSerializer):
+    class Meta(CreateViewFilterSerializer.Meta):
+        model = ViewSort
+        fields = ('field', 'order')
+        extra_kwargs = {
+            'field': {'required': False},
+            'order': {'required': False}
+        }
+
+
 class ViewSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
     table = TableSerializer()
     filters = ViewFilterSerializer(many=True, source='viewfilter_set')
+    sortings = ViewSortSerializer(many=True, source='viewsort_set')
 
     class Meta:
         model = View
-        fields = ('id', 'name', 'order', 'type', 'table', 'filter_type', 'filters')
+        fields = ('id', 'name', 'order', 'type', 'table', 'filter_type', 'filters',
+                  'sortings')
         extra_kwargs = {
             'id': {
                 'read_only': True
@@ -69,10 +101,14 @@ class ViewSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         include_filters = kwargs.pop('filters') if 'filters' in kwargs else False
+        include_sortings = kwargs.pop('sortings') if 'sortings' in kwargs else False
         super().__init__(*args, **kwargs)
 
         if not include_filters:
             self.fields.pop('filters')
+
+        if not include_sortings:
+            self.fields.pop('sortings')
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):

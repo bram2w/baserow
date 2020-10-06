@@ -13,6 +13,7 @@
 * Fixed bug where the error message of the 'Select a table to link to' was not always
   displayed.
 * Added URL field.
+* Added sorting of rows per view.
 
 ## Released (2020-09-02)
 

@@ -179,7 +179,7 @@
   position: relative;
   height: 32px + 1px;
 
-  &.grid-view__row--filter-warning::before {
+  &.grid-view__row--warning::before {
     @include absolute(-2px, -2px, -2px, -2px);
 
     content: '';
@@ -189,7 +189,7 @@
   }
 }
 
-.grid-view__row-filter-warning {
+.grid-view__row-warning {
   @include absolute(auto, auto, -20px, 0);
   @include fixed-height(20px, 12px);
 
@@ -222,11 +222,19 @@
     border-right: none;
   }
 
+  &.grid-view__column--sorted::after,
   &.grid-view__column--filtered::after {
     content: '';
-    background-color: rgba($color-success-100, 0.5);
 
     @include absolute(0, 0, 0, 0);
+  }
+
+  &.grid-view__column--sorted::after {
+    background-color: rgba($color-warning-100, 0.8);
+  }
+
+  &.grid-view__column--filtered::after {
+    background-color: rgba($color-success-100, 0.5);
   }
 }
 

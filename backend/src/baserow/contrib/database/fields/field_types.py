@@ -289,6 +289,7 @@ class LinkRowFieldType(FieldType):
         LinkRowTableNotProvided: ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
         LinkRowTableNotInSameDatabase: ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE
     }
+    can_sort_in_view = False
 
     def enhance_queryset(self, queryset, field, name):
         """

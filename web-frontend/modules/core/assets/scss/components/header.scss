@@ -91,6 +91,10 @@
   &.active {
     background-color: $color-success-200;
   }
+
+  &.active--warning {
+    background-color: $color-warning-200;
+  }
 }
 
 .header__filter-icon {

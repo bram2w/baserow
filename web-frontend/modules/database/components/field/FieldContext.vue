@@ -21,7 +21,7 @@
           ref="updateFieldContext"
           :table="table"
           :field="field"
-          @update="$refs.context.hide()"
+          @update=";[$emit('update'), $refs.context.hide()]"
         ></UpdateFieldContext>
       </li>
       <slot></slot>
@@ -63,9 +63,16 @@ export default {
       this.setLoading(field, true)
 
       try {
-        await this.$store.dispatch('field/delete', field)
+        await this.$store.dispatch('field/deleteCall', field)
+        this.$emit('delete')
+        this.$store.dispatch('field/forceDelete', field)
       } catch (error) {
-        notifyIf(error, 'field')
+        if (error.response && error.response.status === 404) {
+          this.$emit('delete')
+          this.$store.dispatch('field/forceDelete', field)
+        } else {
+          notifyIf(error, 'field')
+        }
       }
 
       this.setLoading(field, false)

@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, F
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
@@ -8,11 +8,12 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 
 from .exceptions import (
     ViewDoesNotExist, UnrelatedFieldError, ViewFilterDoesNotExist,
-    ViewFilterNotSupported, ViewFilterTypeNotAllowedForField
+    ViewFilterNotSupported, ViewFilterTypeNotAllowedForField, ViewSortDoesNotExist,
+    ViewSortNotSupported, ViewSortFieldAlreadyExist, ViewSortFieldNotSupported
 )
 from .registries import view_type_registry, view_filter_type_registry
 from .models import (
-    View, GridViewFieldOptions, ViewFilter, FILTER_TYPE_AND, FILTER_TYPE_OR
+    View, GridViewFieldOptions, ViewFilter, ViewSort, FILTER_TYPE_AND, FILTER_TYPE_OR
 )
 
 
@@ -172,6 +173,30 @@ class ViewHandler:
                 grid_view=grid_view, field_id=field_id, defaults=options
             )
 
+    def field_type_changed(self, field):
+        """
+        This method is called by the FieldHandler when the field type of a field has
+        changed. It could be that the field has filters or sortings that are not
+        compatible anymore. If that is the case then those need to be removed.
+
+        :param field: The new field object.
+        :type field: Field
+        """
+
+        field_type = field_type_registry.get_by_model(field.specific_class)
+
+        # If the new field type does not support sorting then all sortings will be
+        # removed.
+        if not field_type.can_sort_in_view:
+            field.viewsort_set.all().delete()
+
+        # Check which filters are not compatible anymore and remove those.
+        for filter in field.viewfilter_set.all():
+            filter_type = view_filter_type_registry.get(filter.type)
+
+            if field_type.type not in filter_type.compatible_field_types:
+                filter.delete()
+
     def apply_filters(self, view, queryset):
         """
         Applies the view's filter to the given queryset.
@@ -191,7 +216,7 @@ class ViewHandler:
         # If the model does not have the `_field_objects` property then it is not a
         # generated table model which is not supported.
         if not hasattr(model, '_field_objects'):
-            raise ValueError('A queryset of the a table model is required.')
+            raise ValueError('A queryset of the table model is required.')
 
         q_filters = Q()
 
@@ -270,7 +295,8 @@ class ViewHandler:
         :param value: The value that the filter must apply to.
         :type value: str
         :raises UserNotInGroupError: When the user does not belong to the related group.
-        :raises ViewFilterNotSupported: When the provided view does not support filters.
+        :raises ViewFilterNotSupported: When the provided view does not support
+            filtering.
         :raises ViewFilterTypeNotAllowedForField: When the field does not support the
             filter type.
         :raises FieldNotInTable:  When the provided field does not belong to the
@@ -326,7 +352,8 @@ class ViewHandler:
         :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises ViewFilterTypeNotAllowedForField: When the field does not supports the
             filter type.
-        :raises FieldNotInTable: When the does not support the filter type.
+        :raises FieldNotInTable: When the provided field does not belong to the
+            view's table.
         :return: The updated view filter instance.
         :rtype: ViewFilter
         """
@@ -379,3 +406,219 @@ class ViewHandler:
             raise UserNotInGroupError(user, group)
 
         view_filter.delete()
+
+    def apply_sorting(self, view, queryset):
+        """
+        Applies the view's sorting to the given queryset. The first sort, which for now
+        is the first created, will always be applied first. Secondary sortings are
+        going to be applied if the values of the first sort rows are the same.
+
+        Example:
+
+        id | field_1 | field_2
+        1  | Bram    | 20
+        2  | Bram    | 10
+        3  | Elon    | 30
+
+        If we are going to sort ascending on field_1 and field_2 the resulting ids are
+        going to be 2, 1 and 3 in that order.
+
+        :param view: The view where to fetch the sorting from.
+        :type view: View
+        :param queryset: The queryset where the sorting need to be applied to.
+        :type queryset: QuerySet
+        :raises ValueError: When the queryset's model is not a table model or if the
+            table model does not contain the one of the fields.
+        :return: The queryset where the sorting has been applied to.
+        :type: QuerySet
+        """
+
+        model = queryset.model
+
+        # If the model does not have the `_field_objects` property then it is not a
+        # generated table model which is not supported.
+        if not hasattr(model, '_field_objects'):
+            raise ValueError('A queryset of the table model is required.')
+
+        order_by = []
+
+        for view_filter in view.viewsort_set.all():
+            # If the to be sort field is not present in the `_field_objects` we
+            # cannot filter so we raise a ValueError.
+            if view_filter.field_id not in model._field_objects:
+                raise ValueError(f'The table model does not contain field '
+                                 f'{view_filter.field_id}.')
+
+            field_name = model._field_objects[view_filter.field_id]['name']
+            order = F(field_name)
+
+            if view_filter.order == 'ASC':
+                order = order.asc(nulls_first=True)
+            else:
+                order = order.desc(nulls_last=True)
+
+            order_by.append(order)
+
+        order_by.append('id')
+        queryset = queryset.order_by(*order_by)
+
+        return queryset
+
+    def get_sort(self, user, view_sort_id):
+        """
+        Returns an existing view sort with the given id.
+
+        :param user: The user on whose behalf the view sort is requested.
+        :type user: User
+        :param view_sort_id: The id of the view sort.
+        :type view_sort_id: int
+        :raises ViewSortDoesNotExist: The the requested view does not exists.
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        :return: The requested view sort instance.
+        :type: ViewSort
+        """
+
+        try:
+            view_sort = ViewSort.objects.select_related(
+                'view__table__database__group'
+            ).get(
+                pk=view_sort_id
+            )
+        except ViewSort.DoesNotExist:
+            raise ViewSortDoesNotExist(
+                f'The view sort with id {view_sort_id} does not exist.'
+            )
+
+        group = view_sort.view.table.database.group
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        return view_sort
+
+    def create_sort(self, user, view, field, order):
+        """
+        Creates a new view sort.
+
+        :param user: The user on whose behalf the view sort is created.
+        :type user: User
+        :param view: The view for which the sort needs to be created.
+        :type: View
+        :param field: The field that needs to be sorted.
+        :type field: Field
+        :param order: The desired order, can either be ascending (A to Z) or
+            descending (Z to A).
+        :type order: str
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        :raises ViewSortNotSupported: When the provided view does not support sorting.
+        :raises FieldNotInTable:  When the provided field does not belong to the
+            provided view's table.
+        :return: The created view sort instance.
+        :rtype: ViewSort
+        """
+
+        group = view.table.database.group
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        # Check if view supports sorting.
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        if not view_type.can_sort:
+            raise ViewSortNotSupported(
+                f'Sorting is not supported for {view_type.type} views.'
+            )
+
+        # Check if the field supports sorting.
+        field_type = field_type_registry.get_by_model(field.specific_class)
+        if not field_type.can_sort_in_view:
+            raise ViewSortFieldNotSupported(f'The field {field.pk} does not support '
+                                            f'sorting.')
+
+        # Check if field belongs to the grid views table
+        if not view.table.field_set.filter(id=field.pk).exists():
+            raise FieldNotInTable(f'The field {field.pk} does not belong to table '
+                                  f'{view.table.id}.')
+
+        # Check if the field already exists as sort
+        if view.viewsort_set.filter(field_id=field.pk).exists():
+            raise ViewSortFieldAlreadyExist(f'A sort with the field {field.pk} '
+                                            f'already exists.')
+
+        return ViewSort.objects.create(
+            view=view,
+            field=field,
+            order=order
+        )
+
+    def update_sort(self, user, view_sort, **kwargs):
+        """
+        Updates the values of an existing view sort.
+
+        :param user: The user on whose behalf the view sort is updated.
+        :type user: User
+        :param view_sort: The view sort that needs to be updated.
+        :type view_sort: ViewSort
+        :param kwargs: The values that need to be updated, allowed values are
+            `field` and `order`.
+        :type kwargs: dict
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        :raises FieldNotInTable: When the field does not support sorting.
+        :return: The updated view sort instance.
+        :rtype: ViewSort
+        """
+
+        group = view_sort.view.table.database.group
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        field = kwargs.get('field', view_sort.field)
+        order = kwargs.get('order', view_sort.order)
+
+        # If the field has changed we need to check if the field belongs to the table.
+        if (
+            field.id != view_sort.field_id and
+            not view_sort.view.table.field_set.filter(id=field.pk).exists()
+        ):
+            raise FieldNotInTable(f'The field {field.pk} does not belong to table '
+                                  f'{view_sort.view.table.id}.')
+
+        # If the field has changed we need to check if the new field type supports
+        # sorting.
+        field_type = field_type_registry.get_by_model(field.specific_class)
+        if (
+            field.id != view_sort.field_id and
+            not field_type.can_sort_in_view
+        ):
+            raise ViewSortFieldNotSupported(f'The field {field.pk} does not support '
+                                            f'sorting.')
+
+        # If the field has changed we need to check if the new field doesn't already
+        # exist as sort.
+        if (
+            field.id != view_sort.field_id and
+            view_sort.view.viewsort_set.filter(field_id=field.pk).exists()
+        ):
+            raise ViewSortFieldAlreadyExist(f'A sort with the field {field.pk} '
+                                            f'already exists.')
+
+        view_sort.field = field
+        view_sort.order = order
+        view_sort.save()
+
+        return view_sort
+
+    def delete_sort(self, user, view_sort):
+        """
+        Deletes an existing view sort.
+
+        :param user: The user on whose behalf the view sort is deleted.
+        :type user: User
+        :param view_sort: The view sort instance that needs to be deleted.
+        :type view_sort: ViewSort
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        """
+
+        group = view_sort.view.table.database.group
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        view_sort.delete()

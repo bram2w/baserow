@@ -1,6 +1,6 @@
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.views.models import (
-    GridView, GridViewFieldOptions, ViewFilter
+    GridView, GridViewFieldOptions, ViewFilter, ViewSort
 )
 
 
@@ -44,3 +44,15 @@ class ViewFixtures:
             kwargs['value'] = self.fake.name()
 
         return ViewFilter.objects.create(**kwargs)
+
+    def create_view_sort(self, user=None, **kwargs):
+        if 'view' not in kwargs:
+            kwargs['view'] = self.create_grid_view(user)
+
+        if 'field' not in kwargs:
+            kwargs['field'] = self.create_text_field(table=kwargs['view'].table)
+
+        if 'order' not in kwargs:
+            kwargs['order'] = 'ASC'
+
+        return ViewSort.objects.create(**kwargs)

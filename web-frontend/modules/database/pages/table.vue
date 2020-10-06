@@ -2,7 +2,7 @@
   <div>
     <header class="layout__col-3-1 header">
       <div v-show="tableLoading" class="header__loading"></div>
-      <ul v-show="!tableLoading" class="header__filter">
+      <ul v-if="!tableLoading" class="header__filter">
         <li class="header__filter-item header__filter-item--grids">
           <a
             ref="viewsSelectToggle"
@@ -40,6 +40,14 @@
             @changed="refresh()"
           ></ViewFilter>
         </li>
+        <li v-if="view._.type.canSort" class="header__filter-item">
+          <ViewSort
+            :view="view"
+            :fields="fields"
+            :primary="primary"
+            @changed="refresh()"
+          ></ViewSort>
+        </li>
       </ul>
       <component
         :is="getViewHeaderComponent(view)"
@@ -50,7 +58,7 @@
         :fields="fields"
         :primary="primary"
       />
-      <ul v-show="!tableLoading" class="header__info">
+      <ul v-if="!tableLoading" class="header__info">
         <li>{{ database.name }}</li>
         <li>{{ table.name }}</li>
       </ul>
@@ -58,8 +66,7 @@
     <div class="layout__col-3-2 content">
       <component
         :is="getViewComponent(view)"
-        v-if="hasSelectedView()"
-        v-show="!tableLoading"
+        v-if="hasSelectedView() && !tableLoading"
         ref="view"
         :database="database"
         :table="table"
@@ -78,6 +85,7 @@ import { mapState } from 'vuex'
 
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
+import ViewSort from '@baserow/modules/database/components/view/ViewSort'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -88,6 +96,7 @@ export default {
   components: {
     ViewsContext,
     ViewFilter,
+    ViewSort,
   },
   /**
    * Because there is no hook that is called before the route changes, we need the
@@ -202,12 +211,12 @@ export default {
     async refresh() {
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
-      await type.fetch({ store: this.$store }, this.view)
+      await type.refresh({ store: this.$store }, this.view)
       if (
         Object.prototype.hasOwnProperty.call(this.$refs, 'view') &&
         Object.prototype.hasOwnProperty.call(this.$refs.view, 'refresh')
       ) {
-        this.$refs.view.refresh()
+        await this.$refs.view.refresh()
       }
       this.$nextTick(() => {
         this.viewLoading = false

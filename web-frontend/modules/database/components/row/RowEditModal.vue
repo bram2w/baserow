@@ -12,6 +12,8 @@
         :field="field"
         :row="row"
         @update="update"
+        @field-updated="$emit('field-updated')"
+        @field-deleted="$emit('field-deleted')"
       ></RowEditModalField>
       <div class="actions">
         <a
