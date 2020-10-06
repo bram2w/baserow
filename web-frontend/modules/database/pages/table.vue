@@ -16,7 +16,7 @@
               )
             "
           >
-            <span v-if="hasSelectedView()">
+            <span v-if="hasSelectedView">
               <i
                 class="header__filter-icon header-filter-icon--view fas"
                 :class="'fa-' + view._.type.iconClass"
@@ -32,7 +32,10 @@
           </a>
           <ViewsContext ref="viewsContext" :table="table"></ViewsContext>
         </li>
-        <li v-if="view._.type.canFilter" class="header__filter-item">
+        <li
+          v-if="hasSelectedView && view._.type.canFilter"
+          class="header__filter-item"
+        >
           <ViewFilter
             :view="view"
             :fields="fields"
@@ -40,7 +43,10 @@
             @changed="refresh()"
           ></ViewFilter>
         </li>
-        <li v-if="view._.type.canSort" class="header__filter-item">
+        <li
+          v-if="hasSelectedView && view._.type.canSort"
+          class="header__filter-item"
+        >
           <ViewSort
             :view="view"
             :fields="fields"
@@ -51,7 +57,7 @@
       </ul>
       <component
         :is="getViewHeaderComponent(view)"
-        v-if="hasSelectedView()"
+        v-if="hasSelectedView"
         :database="database"
         :table="table"
         :view="view"
@@ -66,7 +72,7 @@
     <div class="layout__col-3-2 content">
       <component
         :is="getViewComponent(view)"
-        v-if="hasSelectedView() && !tableLoading"
+        v-if="hasSelectedView && !tableLoading"
         ref="view"
         :database="database"
         :table="table"
@@ -169,6 +175,16 @@ export default {
     }
   },
   computed: {
+    /**
+     * Indicates if there is a selected view by checking if the view object has been
+     * populated.
+     */
+    hasSelectedView() {
+      return (
+        this.view !== undefined &&
+        Object.prototype.hasOwnProperty.call(this.view, '_')
+      )
+    },
     ...mapState({
       // We need the tableLoading state to show a small loading animation when
       // switching between views. Because some of the data will be populated by
@@ -221,13 +237,6 @@ export default {
       this.$nextTick(() => {
         this.viewLoading = false
       })
-    },
-    /**
-     * Indicates if there is a selected view by checking if the view object has been
-     * populated.
-     */
-    hasSelectedView() {
-      return Object.prototype.hasOwnProperty.call(this.view, '_')
     },
   },
   head() {
