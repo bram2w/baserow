@@ -8,6 +8,7 @@ from django.conf import settings
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.db.schema import lenient_schema_editor
+from baserow.contrib.database.views.handler import ViewHandler
 
 from .exceptions import (
     PrimaryFieldAlreadyExists, CannotDeletePrimaryField, CannotChangeFieldType,
@@ -163,11 +164,16 @@ class FieldHandler:
         from_field_type = field_type.type
 
         # If the provided field type does not match with the current one we need to
-        # migrate the field to the new type.
+        # migrate the field to the new type. Because the type has changed we also need
+        # to remove all view filters.
         if new_type_name and field_type.type != new_type_name:
             field_type = field_type_registry.get(new_type_name)
             new_model_class = field_type.model_class
             field.change_polymorphic_type_to(new_model_class)
+
+            # If the field type changes it could be that some dependencies,
+            # like filters or sortings need to be changed.
+            ViewHandler().field_type_changed(field)
 
         allowed_fields = ['name'] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)

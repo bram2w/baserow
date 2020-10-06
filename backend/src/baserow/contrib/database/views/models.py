@@ -12,6 +12,13 @@ FILTER_TYPES = (
     (FILTER_TYPE_OR, 'Or')
 )
 
+SORT_ORDER_ASC = 'ASC'
+SORT_ORDER_DESC = 'DESC'
+SORT_ORDER_CHOICES = (
+    (SORT_ORDER_ASC, 'Ascending'),
+    (SORT_ORDER_DESC, 'Descending')
+)
+
 
 def get_default_view_content_type():
     return ContentType.objects.get_for_model(View)
@@ -66,6 +73,30 @@ class ViewFilter(models.Model):
         max_length=255,
         blank=True,
         help_text='The filter value that must be compared to the field\'s value.'
+    )
+
+    class Meta:
+        ordering = ('id',)
+
+
+class ViewSort(models.Model):
+    view = models.ForeignKey(
+        View,
+        on_delete=models.CASCADE,
+        help_text='The view to which the sort applies. Each view can have his own '
+                  'sortings.'
+    )
+    field = models.ForeignKey(
+        'database.Field',
+        on_delete=models.CASCADE,
+        help_text='The field that must be sorted on.'
+    )
+    order = models.CharField(
+        max_length=4,
+        choices=SORT_ORDER_CHOICES,
+        help_text='Indicates the sort order direction. ASC (Ascending) is from A to Z '
+                  'and DESC (Descending) is from Z to A.',
+        default=SORT_ORDER_ASC,
     )
 
     class Meta:

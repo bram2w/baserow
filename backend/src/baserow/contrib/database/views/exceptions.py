@@ -40,3 +40,19 @@ class ViewFilterTypeDoesNotExist(InstanceTypeDoesNotExist):
 
 class ViewFilterTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
     """Raised when the view filter type is already registered in the registry."""
+
+
+class ViewSortDoesNotExist(Exception):
+    """Raised when trying to get a view sort that does not exist."""
+
+
+class ViewSortNotSupported(Exception):
+    """Raised when the view type does not support sorting."""
+
+
+class ViewSortFieldAlreadyExist(Exception):
+    """Raised when a view sort with the field type already exists."""
+
+
+class ViewSortFieldNotSupported(Exception):
+    """Raised when a field does not supports sorting in a view."""

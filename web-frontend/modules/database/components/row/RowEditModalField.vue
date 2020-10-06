@@ -14,7 +14,13 @@
         <i class="fas fa-caret-down"></i>
       </a>
     </label>
-    <FieldContext ref="context" :table="table" :field="field"></FieldContext>
+    <FieldContext
+      ref="context"
+      :table="table"
+      :field="field"
+      @update="$emit('field-updated')"
+      @delete="$emit('field-deleted')"
+    ></FieldContext>
     <component
       :is="getFieldComponent(field.type)"
       ref="field"

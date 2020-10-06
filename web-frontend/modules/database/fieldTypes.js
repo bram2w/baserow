@@ -85,11 +85,20 @@ export class FieldType extends Registerable {
     return null
   }
 
+  /**
+   * Indicates whether or not it is possible to sort in a view.
+   */
+  getCanSortInView() {
+    return true
+  }
+
   constructor() {
     super()
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
+    this.sortIndicator = this.getSortIndicator()
+    this.canSortInView = this.getCanSortInView()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -120,6 +129,8 @@ export class FieldType extends Registerable {
       type: this.type,
       iconClass: this.iconClass,
       name: this.name,
+      sortIndicator: this.sortIndicator,
+      canSortInView: this.canSortInView,
     }
   }
 
@@ -128,6 +139,26 @@ export class FieldType extends Registerable {
    */
   toHumanReadableString(field, value) {
     return value
+  }
+
+  /**
+   * Should return a sort function that is unique for the field type.
+   */
+  getSort() {
+    throw new Error(
+      'Not implement error. This method should by a sort function.'
+    )
+  }
+
+  /**
+   * Should return a visualisation of how the sort function is going to work. For
+   * example ['text', 'A', 'Z'] will result in 'A -> Z' as ascending and 'Z -> A'
+   * descending visualisation for the user. It is also possible to use a Font Awesome
+   * icon here by changing the first value to 'icon'. For example
+   * ['icon', 'square', 'check-square'].
+   */
+  getSortIndicator() {
+    return ['text', 'A', 'Z']
   }
 
   /**
@@ -193,6 +224,17 @@ export class TextFieldType extends FieldType {
   getEmptyValue(field) {
     return field.text_default
   }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -214,6 +256,17 @@ export class LongTextFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldLongText
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
   }
 }
 
@@ -244,6 +297,10 @@ export class LinkRowFieldType extends FieldType {
 
   getEmptyValue(field) {
     return []
+  }
+
+  getCanSortInView() {
+    return false
   }
 
   prepareValueForCopy(field, value) {
@@ -307,6 +364,23 @@ export class NumberFieldType extends FieldType {
     return RowEditFieldNumber
   }
 
+  getSortIndicator() {
+    return ['text', '1', '9']
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const numberA = parseFloat(a[name])
+      const numberB = parseFloat(b[name])
+
+      if (isNaN(numberA) || isNaN(numberB)) {
+        return -1
+      }
+
+      return order === 'ASC' ? numberA - numberB : numberB - numberA
+    }
+  }
+
   /**
    * First checks if the value is numeric, if that is the case, the number is going
    * to be formatted.
@@ -363,6 +437,18 @@ export class BooleanFieldType extends FieldType {
     return false
   }
 
+  getSortIndicator() {
+    return ['icon', 'square', 'check-square']
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const intA = +a[name]
+      const intB = +b[name]
+      return order === 'ASC' ? intA - intB : intB - intA
+    }
+  }
+
   /**
    * Check if the clipboard data text contains a string that might indicate if the
    * value is true.
@@ -396,6 +482,22 @@ export class DateFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldDate
+  }
+
+  getSortIndicator() {
+    return ['text', '1', '9']
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      if (a[name] === null || b[name] === null) {
+        return -1
+      }
+
+      const timeA = new Date(a[name]).getTime()
+      const timeB = new Date(b[name]).getTime()
+      return order === 'ASC' ? timeA - timeB : timeB - timeA
+    }
   }
 
   /**
@@ -438,5 +540,16 @@ export class URLFieldType extends FieldType {
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
     return isValidURL(value) ? value : ''
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
   }
 }

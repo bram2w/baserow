@@ -162,6 +162,8 @@ SPECTACULAR_SETTINGS = {
         {'name': 'Database tables'},
         {'name': 'Database table fields'},
         {'name': 'Database table views'},
+        {'name': 'Database table view filters'},
+        {'name': 'Database table view sortings'},
         {'name': 'Database table grid view'},
         {'name': 'Database table rows'}
     ],

@@ -47,8 +47,14 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
 
     can_filter = True
     """
-    Defines if the view supports filters. If not, it will not be possible to add filter
-    to the view.
+    Indicates if the view supports filters. If not, it will not be possible to add
+    filter to the view.
+    """
+
+    can_sort = True
+    """
+    Indicates if the view support sortings. If not, it will not be possible to add a
+    sort to the view.
     """
 
 

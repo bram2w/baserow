@@ -28,6 +28,7 @@
     "nuxt": "2.12.1",
     "nuxt-env": "^0.1.0",
     "sass-loader": "8.0.2",
+    "thenby": "^1.3.4",
     "vuejs-datepicker": "^1.6.2",
     "vuelidate": "0.7.5"
   },

@@ -5,6 +5,7 @@ import _ from 'lodash'
 import { uuid } from '@baserow/modules/core/utils/string'
 import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
+import { getRowSortFunction } from '@baserow/modules/database/utils/view'
 
 export function populateRow(row) {
   row._ = {
@@ -12,6 +13,7 @@ export function populateRow(row) {
     hover: false,
     selectedBy: [],
     matchFilters: true,
+    matchSortings: true,
   }
   return row
 }
@@ -120,6 +122,21 @@ export const mutations = {
       state.rows.splice(index, 1)
     }
   },
+  DELETE_ROW_MOVED_UP(state, id) {
+    const index = state.rows.findIndex((item) => item.id === id)
+    if (index !== -1) {
+      state.bufferStartIndex++
+      state.bufferLimit--
+      state.rows.splice(index, 1)
+    }
+  },
+  DELETE_ROW_MOVED_DOWN(state, id) {
+    const index = state.rows.findIndex((item) => item.id === id)
+    if (index !== -1) {
+      state.bufferLimit--
+      state.rows.splice(index, 1)
+    }
+  },
   FINALIZE_ROW(state, { index, id }) {
     state.rows[index].id = id
     state.rows[index]._.loading = false
@@ -132,6 +149,17 @@ export const mutations = {
       const row = state.rows.find((row) => row.id === newRow.id)
       if (row !== undefined) {
         _.assign(row, newRow)
+      }
+    })
+  },
+  SORT_ROWS(state, sortFunction) {
+    state.rows.sort(sortFunction)
+
+    // Because all the rows have been sorted again we can safely asume they are all in
+    // the right order again.
+    state.rows.forEach((row) => {
+      if (!row._.matchSortings) {
+        row._.matchSortings = true
       }
     })
   },
@@ -164,6 +192,9 @@ export const mutations = {
   },
   SET_ROW_MATCH_FILTERS(state, { row, value }) {
     row._.matchFilters = value
+  },
+  SET_ROW_MATCH_SORTINGS(state, { row, value }) {
+    row._.matchSortings = value
   },
   ADD_ROW_SELECTED_BY(state, { row, fieldId }) {
     if (!row._.selectedBy.includes(fieldId)) {
@@ -462,6 +493,41 @@ export const actions = {
     commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
   },
   /**
+   * Refreshes the current state with fresh data. It keeps the scroll offset the same
+   * if possible. This can be used when a new filter or sort is created.
+   */
+  async refresh({ dispatch, commit, getters }, { gridId }) {
+    const response = await GridService(this.$client).fetchCount(gridId)
+    const count = response.data.count
+
+    const limit = getters.getBufferRequestSize * 3
+    const bufferEndIndex = getters.getBufferEndIndex
+    const offset =
+      count >= bufferEndIndex
+        ? getters.getBufferStartIndex
+        : Math.max(0, count - limit)
+
+    const { data } = await GridService(this.$client).fetchRows({
+      gridId,
+      offset,
+      limit,
+    })
+
+    // If there are results we can replace the existing rows so that the user stays
+    // at the same scroll offset.
+    data.results.forEach((part, index) => {
+      populateRow(data.results[index])
+    })
+    await commit('ADD_ROWS', {
+      rows: data.results,
+      prependToRows: -getters.getBufferLimit,
+      appendToRows: data.results.length,
+      count: data.count,
+      bufferStartIndex: offset,
+      bufferLimit: data.results.length,
+    })
+  },
+  /**
    * Checks if the given row still matches the given view filters. The row's
    * matchFilters value is updated accordingly. It is also possible to provide some
    * override values that not actually belong to the row to do some preliminary checks.
@@ -493,16 +559,42 @@ export const actions = {
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
   /**
+   * Checks if the given row index is still the same. The row's matchSortings value is
+   * updated accordingly. It is also possible to provide some override values that not
+   * actually belong to the row to do some preliminary checks.
+   */
+  updateMatchSortings(
+    { commit, getters, rootGetters },
+    { view, row, fields, primary, overrides = {} }
+  ) {
+    const values = JSON.parse(JSON.stringify(row))
+    Object.keys(overrides).forEach((key) => {
+      values[key] = overrides[key]
+    })
+
+    const allRows = getters.getAllRows
+    const currentIndex = getters.getAllRows.findIndex((r) => r.id === row.id)
+    const sortedRows = JSON.parse(JSON.stringify(allRows))
+    sortedRows[currentIndex] = values
+    sortedRows.sort(
+      getRowSortFunction(this.$registry, view.sortings, fields, primary)
+    )
+    const newIndex = sortedRows.findIndex((r) => r.id === row.id)
+
+    commit('SET_ROW_MATCH_SORTINGS', { row, value: currentIndex === newIndex })
+  },
+  /**
    * Updates a grid view field value. It will immediately be updated in the store
    * and only if the change request fails it will reverted to give a faster
    * experience for the user.
    */
   async updateValue(
     { commit, dispatch },
-    { table, view, row, field, value, oldValue }
+    { table, view, row, field, fields, primary, value, oldValue }
   ) {
     commit('SET_VALUE', { row, field, value })
     dispatch('updateMatchFilters', { view, row })
+    dispatch('updateMatchSortings', { view, fields, primary, row })
 
     const fieldType = this.$registry.get('field', field._.type.type)
     const newValue = fieldType.prepareValueForUpdate(field, value)
@@ -590,10 +682,20 @@ export const actions = {
   /**
    * Deletes a row from the store without making a request to the backend. Note that
    * this should only be used if the row really isn't visible in the view anymore.
-   * Otherwise wrong data could be fetched later.
+   * Otherwise wrong data could be fetched later. This action can also be used when a
+   * row has been moved outside the current buffer.
    */
-  forceDelete({ commit, dispatch, getters }, { grid, row, getScrollTop }) {
-    commit('DELETE_ROW', row.id)
+  forceDelete(
+    { commit, dispatch, getters },
+    { grid, row, getScrollTop, moved = false }
+  ) {
+    if (moved === 'up') {
+      commit('DELETE_ROW_MOVED_UP', row.id)
+    } else if (moved === 'down') {
+      commit('DELETE_ROW_MOVED_DOWN', row.id)
+    } else {
+      commit('DELETE_ROW', row.id)
+    }
 
     // We use the provided function to recalculate the scrollTop offset in order
     // to get fresh data.
@@ -665,29 +767,46 @@ export const actions = {
    */
   removeRowSelectedBy(
     { dispatch, commit },
-    { grid, row, field, getScrollTop }
+    { grid, row, field, fields, primary, getScrollTop }
   ) {
     commit('REMOVE_ROW_SELECTED_BY', { row, fieldId: field.id })
-
-    if (row._.selectedBy.length === 0 && !row._.matchFilters) {
-      dispatch('forceDelete', { grid, row, getScrollTop })
-    }
+    dispatch('refreshRow', { grid, row, fields, primary, getScrollTop })
   },
   /**
-   * Refreshes all the buffered data values of a given field. The new values are
-   * requested from the backend and replaced.
+   * The row is going to be removed or repositioned if the matchFilters and
+   * matchSortings state is false. It will make the state correct.
    */
-  async refreshFieldValues({ commit, getters }, { field }) {
-    const rowIds = getters.getAllRows.map((row) => row.id)
-    const fieldIds = [field.id]
-    const gridId = getters.getLastGridId
+  refreshRow(
+    { dispatch, commit, getters },
+    { grid, row, fields, primary, getScrollTop }
+  ) {
+    if (row._.selectedBy.length === 0 && !row._.matchFilters) {
+      dispatch('forceDelete', { grid, row, getScrollTop })
+      return
+    }
 
-    const { data } = await GridService(this.$client).filterRows({
-      gridId,
-      rowIds,
-      fieldIds,
-    })
-    commit('UPDATE_ROWS', { rows: data })
+    if (row._.selectedBy.length === 0 && !row._.matchSortings) {
+      const sortFunction = getRowSortFunction(
+        this.$registry,
+        grid.sortings,
+        fields,
+        primary
+      )
+      commit('SORT_ROWS', sortFunction)
+
+      // We cannot know for sure if the row has been moved outside the scope of the
+      // current buffer. Therefore if the row is at the beginning or the end of the
+      // buffer we are going to remove it. This doesn't matter because the
+      // fetchByScrollTop action, which is called in the forceDelete action, will fix
+      // the buffer automatically.
+      const up = getters.isFirst(row.id) && getters.getBufferStartIndex > 0
+      const down =
+        getters.isLast(row.id) && getters.getBufferEndIndex < getters.getCount
+      if (up || down) {
+        const moved = up ? 'up' : 'down'
+        dispatch('forceDelete', { grid, row, getScrollTop, moved })
+      }
+    }
   },
 }
 
@@ -751,6 +870,14 @@ export const getters = {
   },
   getAllFieldOptions(state) {
     return state.fieldOptions
+  },
+  isFirst: (state) => (id) => {
+    const index = state.rows.findIndex((row) => row.id === id)
+    return index === 0
+  },
+  isLast: (state) => (id) => {
+    const index = state.rows.findIndex((row) => row.id === id)
+    return index === state.rows.length - 1
   },
 }
 

@@ -1,6 +1,6 @@
 export default (client) => {
   return {
-    fetchAll(tableId, includeFilters = false) {
+    fetchAll(tableId, includeFilters = false, includeSortings = false) {
       const config = {
         params: {},
       }
@@ -8,6 +8,10 @@ export default (client) => {
 
       if (includeFilters) {
         includes.push('filters')
+      }
+
+      if (includeSortings) {
+        includes.push('sortings')
       }
 
       if (includes.length > 0) {

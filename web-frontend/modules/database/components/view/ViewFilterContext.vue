@@ -42,7 +42,7 @@
           @input="updateFilter(filter, { field: $event })"
         >
           <DropdownItem
-            :key="'filter-field-' + primary.id + '-' + primary.id"
+            :key="'filter-field-' + filter.id + '-' + primary.id"
             :name="primary.name"
             :value="primary.id"
             :disabled="hasCompatibleFilterTypes(primary, filterTypes)"
@@ -205,9 +205,15 @@ export default {
      * because some filter types are not compatible with certain field types.
      */
     async updateFilter(filter, values) {
-      const field = values.field || filter.field
-      const type = values.type || filter.type
-      const value = values.value || filter.value
+      const field = Object.prototype.hasOwnProperty.call(values, 'field')
+        ? values.field
+        : filter.field
+      const type = Object.prototype.hasOwnProperty.call(values, 'type')
+        ? values.type
+        : filter.type
+      const value = Object.prototype.hasOwnProperty.call(values, 'value')
+        ? values.value
+        : filter.value
 
       // If the field has changed we need to check if the filter type is compatible
       // and if not we are going to choose the first compatible type.

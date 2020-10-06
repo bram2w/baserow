@@ -2,17 +2,18 @@ import pytest
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.models import View, GridView, ViewFilter
+from baserow.contrib.database.views.models import View, GridView, ViewFilter, ViewSort
 from baserow.contrib.database.views.registries import (
     view_type_registry, view_filter_type_registry
 )
 from baserow.contrib.database.views.exceptions import (
     ViewTypeDoesNotExist, ViewDoesNotExist, UnrelatedFieldError,
     ViewFilterDoesNotExist, ViewFilterNotSupported, ViewFilterTypeNotAllowedForField,
-    ViewFilterTypeDoesNotExist
+    ViewFilterTypeDoesNotExist, ViewSortDoesNotExist, ViewSortNotSupported,
+    ViewSortFieldAlreadyExist, ViewSortFieldNotSupported
 )
 from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 
 
@@ -172,6 +173,33 @@ def test_update_grid_view_field_options(data_fixture):
     assert options_4[1].field_id == field_2.id
     assert options_4[2].width == 50
     assert options_4[2].field_id == field_4.id
+
+
+@pytest.mark.django_db
+def test_field_type_changed(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(user=user, database=table.database)
+    text_field = data_fixture.create_text_field(table=table)
+    grid_view = data_fixture.create_grid_view(table=table)
+    contains_filter = data_fixture.create_view_filter(view=grid_view, field=text_field,
+                                                      type='contains', value='test')
+    sort = data_fixture.create_view_sort(view=grid_view, field=text_field, order='ASC')
+
+    field_handler = FieldHandler()
+    long_text_field = field_handler.update_field(user=user, field=text_field,
+                                                 new_type_name='long_text')
+    assert ViewFilter.objects.all().count() == 1
+    assert ViewSort.objects.all().count() == 1
+
+    field_handler.update_field(user=user, field=long_text_field, new_type_name='number')
+    assert ViewFilter.objects.all().count() == 0
+    assert ViewSort.objects.all().count() == 1
+
+    field_handler.update_field(user=user, field=long_text_field,
+                               new_type_name='link_row', link_row_table=table_2)
+    assert ViewFilter.objects.all().count() == 0
+    assert ViewSort.objects.all().count() == 0
 
 
 @pytest.mark.django_db
@@ -455,3 +483,261 @@ def test_delete_filter(data_fixture):
 
     assert ViewFilter.objects.all().count() == 1
     assert ViewFilter.objects.filter(pk=filter_1.pk).count() == 0
+
+
+@pytest.mark.django_db
+def test_apply_sortings(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    boolean_field = data_fixture.create_boolean_field(table=table)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    view_handler = ViewHandler()
+
+    model = table.get_model()
+    row_1 = model.objects.create(**{
+        f'field_{text_field.id}': 'Aaa',
+        f'field_{number_field.id}': 30,
+        f'field_{boolean_field.id}': True
+    })
+    row_2 = model.objects.create(**{
+        f'field_{text_field.id}': 'Aaa',
+        f'field_{number_field.id}': 20,
+        f'field_{boolean_field.id}': True
+    })
+    row_3 = model.objects.create(**{
+        f'field_{text_field.id}': 'Aaa',
+        f'field_{number_field.id}': 10,
+        f'field_{boolean_field.id}': False
+    })
+    row_4 = model.objects.create(**{
+        f'field_{text_field.id}': 'Bbbb',
+        f'field_{number_field.id}': 60,
+        f'field_{boolean_field.id}': False
+    })
+    row_5 = model.objects.create(**{
+        f'field_{text_field.id}': 'Cccc',
+        f'field_{number_field.id}': 50,
+        f'field_{boolean_field.id}': False
+    })
+    row_6 = model.objects.create(**{
+        f'field_{text_field.id}': 'Dddd',
+        f'field_{number_field.id}': 40,
+        f'field_{boolean_field.id}': True
+    })
+
+    # Without any sortings.
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_1.id, row_2.id, row_3.id, row_4.id, row_5.id, row_6.id]
+
+    sort = data_fixture.create_view_sort(view=grid_view, field=text_field,
+                                         order='ASC')
+
+    # Should raise a value error if the modal doesn't have the _field_objects property.
+    with pytest.raises(ValueError):
+        view_handler.apply_sorting(grid_view, GridView.objects.all())
+
+    # Should raise a value error if the field is not included in the model.
+    with pytest.raises(ValueError):
+        view_handler.apply_sorting(
+            grid_view,
+            table.get_model(field_ids=[]).objects.all()
+        )
+
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_1.id, row_2.id, row_3.id, row_4.id, row_5.id, row_6.id]
+
+    sort.order = 'DESC'
+    sort.save()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_6.id, row_5.id, row_4.id, row_1.id, row_2.id, row_3.id]
+
+    sort.order = 'ASC'
+    sort.field_id = number_field.id
+    sort.save()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_3.id, row_2.id, row_1.id, row_6.id, row_5.id, row_4.id]
+
+    sort.field_id = boolean_field.id
+    sort.save()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_3.id, row_4.id, row_5.id, row_1.id, row_2.id, row_6.id]
+
+    sort.field_id = text_field.id
+    sort.save()
+    sort_2 = data_fixture.create_view_sort(view=grid_view, field=number_field,
+                                           order='ASC')
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_3.id, row_2.id, row_1.id, row_4.id, row_5.id, row_6.id]
+
+    sort.field_id = text_field.id
+    sort.save()
+    sort_2.field_id = boolean_field
+    sort_2.order = 'DESC'
+    sort_2.save()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_1.id, row_2.id, row_3.id, row_4.id, row_5.id, row_6.id]
+
+    sort.field_id = text_field.id
+    sort.order = 'DESC'
+    sort.save()
+    sort_2.field_id = boolean_field
+    sort_2.order = 'ASC'
+    sort_2.save()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_6.id, row_5.id, row_4.id, row_3.id, row_1.id, row_2.id]
+
+    sort.field_id = number_field.id
+    sort.save()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_4.id, row_5.id, row_6.id, row_1.id, row_2.id, row_3.id]
+
+
+@pytest.mark.django_db
+def test_get_sort(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    equal_sort = data_fixture.create_view_sort(user=user)
+
+    handler = ViewHandler()
+
+    with pytest.raises(ViewSortDoesNotExist):
+        handler.get_sort(user=user, view_sort_id=99999)
+
+    with pytest.raises(UserNotInGroupError):
+        handler.get_sort(user=user_2, view_sort_id=equal_sort.id)
+
+    sort = handler.get_sort(user=user, view_sort_id=equal_sort.id)
+
+    assert sort.id == equal_sort.id
+    assert sort.view_id == equal_sort.view_id
+    assert sort.field_id == equal_sort.field_id
+    assert sort.order == equal_sort.order
+
+
+@pytest.mark.django_db
+def test_create_sort(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    text_field = data_fixture.create_text_field(table=grid_view.table)
+    text_field_2 = data_fixture.create_text_field(table=grid_view.table)
+    link_row_field = data_fixture.create_link_row_field(table=grid_view.table)
+    other_field = data_fixture.create_text_field()
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.create_sort(user=user_2, view=grid_view, field=text_field,
+                            order='ASC')
+
+    grid_view_type = view_type_registry.get('grid')
+    grid_view_type.can_sort = False
+    with pytest.raises(ViewSortNotSupported):
+        handler.create_sort(user=user, view=grid_view, field=text_field,
+                            order='ASC')
+    grid_view_type.can_sort = True
+
+    with pytest.raises(ViewSortFieldNotSupported):
+        handler.create_sort(user=user, view=grid_view, field=link_row_field,
+                            order='ASC')
+
+    with pytest.raises(FieldNotInTable):
+        handler.create_sort(user=user, view=grid_view, field=other_field,
+                            order='ASC')
+
+    view_sort = handler.create_sort(user=user, view=grid_view, field=text_field,
+                                    order='ASC')
+
+    assert ViewSort.objects.all().count() == 1
+    first = ViewSort.objects.all().first()
+
+    assert view_sort.id == first.id
+    assert view_sort.view_id == grid_view.id
+    assert view_sort.field_id == text_field.id
+    assert view_sort.order == 'ASC'
+
+    with pytest.raises(ViewSortFieldAlreadyExist):
+        handler.create_sort(user=user, view=grid_view, field=text_field, order='ASC')
+
+    view_sort_2 = handler.create_sort(user=user, view=grid_view, field=text_field_2,
+                                      order='DESC')
+    assert view_sort_2.view_id == grid_view.id
+    assert view_sort_2.field_id == text_field_2.id
+    assert view_sort_2.order == 'DESC'
+    assert ViewSort.objects.all().count() == 2
+
+
+@pytest.mark.django_db
+def test_update_sort(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    text_field = data_fixture.create_text_field(table=grid_view.table)
+    long_text_field = data_fixture.create_long_text_field(table=grid_view.table)
+    link_row_field = data_fixture.create_link_row_field(table=grid_view.table)
+    other_field = data_fixture.create_text_field()
+    view_sort = data_fixture.create_view_sort(
+        view=grid_view,
+        field=long_text_field,
+        order='ASC',
+    )
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.update_sort(user=user_2, view_sort=view_sort)
+
+    with pytest.raises(ViewSortFieldNotSupported):
+        handler.update_sort(user=user, view_sort=view_sort, field=link_row_field)
+
+    with pytest.raises(FieldNotInTable):
+        handler.update_sort(user=user, view_sort=view_sort, field=other_field)
+
+    updated_sort = handler.update_sort(user=user, view_sort=view_sort,
+                                       order='DESC')
+    assert updated_sort.order == 'DESC'
+    assert updated_sort.field_id == long_text_field.id
+    assert updated_sort.view_id == grid_view.id
+
+    updated_sort = handler.update_sort(user=user, view_sort=updated_sort,
+                                       order='ASC', field=text_field)
+    assert updated_sort.order == 'ASC'
+    assert updated_sort.field_id == text_field.id
+    assert updated_sort.view_id == grid_view.id
+
+    view_sort_2 = data_fixture.create_view_sort(view=grid_view, field=long_text_field)
+
+    with pytest.raises(ViewSortFieldAlreadyExist):
+        handler.update_sort(user=user, view_sort=view_sort, order='ASC',
+                            field=long_text_field)
+
+
+@pytest.mark.django_db
+def test_delete_sort(data_fixture):
+    user = data_fixture.create_user()
+    sort_1 = data_fixture.create_view_sort(user=user)
+    sort_2 = data_fixture.create_view_sort()
+
+    assert ViewSort.objects.all().count() == 2
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.delete_sort(user=user, view_sort=sort_2)
+
+    handler.delete_sort(user=user, view_sort=sort_1)
+
+    assert ViewSort.objects.all().count() == 1
+    assert ViewSort.objects.filter(pk=sort_1.pk).count() == 0

@@ -36,6 +36,9 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         field_type_registry.register(ExampleFieldType())
     """
 
+    can_sort_in_view = True
+    """Indicates whether is is possible to sort on a field in a view."""
+
     def prepare_value_for_db(self, instance, value):
         """
         When a row is created or updated all the values are going to be prepared for the

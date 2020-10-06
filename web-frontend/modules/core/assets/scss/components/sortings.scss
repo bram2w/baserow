@@ -1,4 +1,4 @@
-.filters {
+.sortings {
   padding: 12px;
 
   .dropdown__selected {
@@ -6,22 +6,22 @@
   }
 }
 
-.filters__none {
+.sortings__none {
   padding: 4px;
   margin-bottom: 6px;
 }
 
-.filters__none-title {
+.sortings__none-title {
   font-weight: 700;
   font-size: 14px;
   margin-bottom: 10px;
 }
 
-.filters__none-description {
+.sortings__none-description {
   font-size: 13px;
 }
 
-.filters__item {
+.sortings__item {
   position: relative;
   display: flex;
   align-items: center;
@@ -32,7 +32,7 @@
     margin-bottom: 6px;
   }
 
-  &.filters__item--loading {
+  &.sortings__item--loading {
     padding-left: 32px;
 
     &::before {
@@ -45,7 +45,7 @@
   }
 }
 
-.filters__remove {
+.sortings__remove {
   flex: 0 0 32px;
   width: 32px;
   color: $color-primary-900;
@@ -57,14 +57,14 @@
     color: $color-neutral-500;
   }
 
-  .filters__item--loading & {
+  .sortings__item--loading & {
     display: none;
   }
 }
 
-.filters__operator {
-  flex: 0 0 72px;
-  width: 72px;
+.sortings__description {
+  flex: 0 0 50px;
+  width: 50px;
   margin-right: 10px;
 
   span {
@@ -72,30 +72,52 @@
   }
 }
 
-.filters__field {
+.sortings__field {
   margin-right: 10px;
+  flex: 0 0 120px;
 
-  @include filter-dropdown-width(100px);
+  .dropdown,
+  .dropdown__selected {
+    width: 120px;
+  }
 }
 
-.filters__type {
-  margin-right: 10px;
-
-  @include filter-dropdown-width(100px);
+.sortings__order {
+  display: flex;
 }
 
-.filters__value {
-  flex: 0 0;
+.sortings__order-item {
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  line-height: 32px;
+  border-radius: 3px;
+  color: $color-neutral-900;
+  width: 80px;
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+  }
+
+  &.active {
+    background-color: $color-primary-100;
+  }
+
+  &:not(:last-child) {
+    margin-right: 10px;
+  }
+
+  > div {
+    font-weight: 700;
+
+    &:not(:last-child) {
+      margin-right: 8px;
+    }
+  }
 }
 
-.filters__value-input {
-  width: 130px;
-  padding-top: 0;
-  padding-bottom: 0;
-  line-height: 30px;
-}
-
-.filters__add {
+.sortings__add {
   display: inline-block;
   margin: 12px 0 6px 4px;
 

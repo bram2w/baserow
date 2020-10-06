@@ -28,12 +28,21 @@ export class ViewType extends Registerable {
     return true
   }
 
+  /**
+   * Indicates whether it is possible to sort the rows. If true the sort context menu
+   * is added to the header.
+   */
+  canSort() {
+    return true
+  }
+
   constructor() {
     super()
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
     this.canFilter = this.canFilter()
+    this.canSort = this.canSort()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -89,6 +98,14 @@ export class ViewType extends Registerable {
   fetch() {}
 
   /**
+   * Should refresh the data inside a few. This is method could be called when a filter
+   * or sort has been changed or when a field is updated or deleted. It should keep the
+   * state as much the same as it was before. So for example the scroll offset should
+   * stay the same if possible.
+   */
+  refresh() {}
+
+  /**
    * Method that is called when a field has been created. This can be useful to
    * maintain data integrity for example to add the field to the grid view store.
    */
@@ -109,6 +126,7 @@ export class ViewType extends Registerable {
       iconClass: this.iconClass,
       name: this.name,
       canFilter: this.canFilter,
+      canSort: this.canSort,
     }
   }
 }
@@ -134,6 +152,10 @@ export class GridViewType extends ViewType {
     await store.dispatch('view/grid/fetchInitial', { gridId: view.id })
   }
 
+  async refresh({ store }, view) {
+    await store.dispatch('view/grid/refresh', { gridId: view.id })
+  }
+
   async fieldCreated({ dispatch }, table, field, fieldType) {
     const value = fieldType.getEmptyValue(field)
     await dispatch('view/grid/addField', { field, value }, { root: true })
@@ -147,9 +169,5 @@ export class GridViewType extends ViewType {
       },
       { root: true }
     )
-  }
-
-  async fieldUpdated({ dispatch }, field, oldField, fieldType) {
-    await dispatch('view/grid/refreshFieldValues', { field }, { root: true })
   }
 }

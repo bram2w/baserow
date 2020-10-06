@@ -52,24 +52,30 @@
                 :class="{
                   'grid-view__row--loading': row._.loading,
                   'grid-view__row--hover': row._.hover,
-                  'grid-view__row--filter-warning': !row._.matchFilters,
+                  'grid-view__row--warning':
+                    !row._.matchFilters || !row._.matchSortings,
                 }"
                 @mouseover="setRowHover(row, true)"
                 @mouseleave="setRowHover(row, false)"
                 @contextmenu.prevent="showRowContext($event, row)"
               >
                 <div
-                  v-if="!row._.matchFilters"
-                  class="grid-view__row-filter-warning"
+                  v-if="!row._.matchFilters || !row._.matchSortings"
+                  class="grid-view__row-warning"
                 >
-                  Row does not match filters
+                  <template v-if="!row._.matchFilters">
+                    Row does not match filters
+                  </template>
+                  <template v-else-if="!row._.matchSortings">
+                    Row has moved
+                  </template>
                 </div>
                 <div
                   class="grid-view__column"
                   :style="{ width: widths.leftReserved + 'px' }"
                 >
                   <div class="grid-view__row-info">
-                    <div class="grid-view__row-count">
+                    <div class="grid-view__row-count" :title="row.id">
                       {{ row.id }}
                     </div>
                     <a
@@ -211,7 +217,8 @@
                 :class="{
                   'grid-view__row--loading': row._.loading,
                   'grid-view__row--hover': row._.hover,
-                  'grid-view__row--filter-warning': !row._.matchFilters,
+                  'grid-view__row--warning':
+                    !row._.matchFilters || !row._.matchSortings,
                 }"
                 @mouseover="setRowHover(row, true)"
                 @mouseleave="setRowHover(row, false)"
@@ -303,6 +310,8 @@
       :fields="fields"
       @update="updateValue"
       @hidden="rowEditModalHidden"
+      @field-updated="$emit('refresh')"
+      @field-deleted="$emit('refresh')"
     ></RowEditModal>
   </div>
 </template>
@@ -397,14 +406,17 @@ export default {
   methods: {
     /**
      * When a field is deleted we need to check if that field was related to any
-     * filters. If that is the case then the view needs to be refreshed so we can see
-     * fresh results.
+     * filters or sortings. If that is the case then the view needs to be refreshed so
+     * we can see fresh results.
      */
     fieldDeleted({ field }) {
       const filterIndex = this.view.filters.findIndex((filter) => {
         return filter.field === field.id
       })
-      if (filterIndex > -1) {
+      const sortIndex = this.view.sortings.findIndex((sort) => {
+        return sort.field === field.id
+      })
+      if (filterIndex > -1 || sortIndex > -1) {
         this.$emit('refresh')
       }
     },
@@ -412,16 +424,22 @@ export default {
      * This method is called from the parent component when the data in the view has
      * been reset. This can for example happen when a user filters.
      */
-    refresh() {
-      this.$refs.leftBody.scrollTop = 0
-      this.$refs.rightBody.scrollTop = 0
-      this.$refs.scrollbars.update()
+    async refresh() {
+      await this.$store.dispatch('view/grid/visibleByScrollTop', {
+        scrollTop: this.$refs.rightBody.scrollTop,
+        windowHeight: this.$refs.rightBody.clientHeight,
+      })
+      this.$nextTick(() => {
+        this.$refs.scrollbars.update()
+      })
     },
     async updateValue({ field, row, value, oldValue }) {
       try {
         await this.$store.dispatch('view/grid/updateValue', {
           table: this.table,
           view: this.view,
+          fields: this.fields,
+          primary: this.primary,
           row,
           field,
           value,
@@ -440,6 +458,13 @@ export default {
       overrides[`field_${field.id}`] = value
       this.$store.dispatch('view/grid/updateMatchFilters', {
         view: this.view,
+        row,
+        overrides,
+      })
+      this.$store.dispatch('view/grid/updateMatchSortings', {
+        view: this.view,
+        fields: this.fields,
+        primary: this.primary,
         row,
         overrides,
       })
@@ -645,6 +670,8 @@ export default {
     unselectedField(field, { row }) {
       this.$store.dispatch('view/grid/removeRowSelectedBy', {
         grid: this.view,
+        fields: this.fields,
+        primary: this.primary,
         row,
         field,
         getScrollTop: () => this.$refs.leftBody.scrollTop,
@@ -735,13 +762,13 @@ export default {
      * must be deleted.
      */
     rowEditModalHidden({ row }) {
-      if (row._.selectedBy.length === 0 && !row._.matchFilters) {
-        this.$store.dispatch('view/grid/forceDelete', {
-          grid: this.view,
-          row,
-          getScrollTop: () => this.$refs.leftBody.scrollTop,
-        })
-      }
+      this.$store.dispatch('view/grid/refreshRow', {
+        grid: this.view,
+        fields: this.fields,
+        primary: this.primary,
+        row,
+        getScrollTop: () => this.$refs.leftBody.scrollTop,
+      })
     },
   },
 }
