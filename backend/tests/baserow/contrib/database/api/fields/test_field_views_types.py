@@ -7,7 +7,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD
 
 from django.shortcuts import reverse
 
-from baserow.contrib.database.fields.models import LongTextField, DateField
+from baserow.contrib.database.fields.models import LongTextField, URLField, DateField
 
 
 @pytest.mark.django_db
@@ -124,6 +124,97 @@ def test_long_text_field_type(api_client, data_fixture):
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
     assert response.status_code == HTTP_204_NO_CONTENT
     assert LongTextField.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_url_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    table = data_fixture.create_database_table(user=user)
+
+    response = api_client.post(
+        reverse('api:database:fields:list', kwargs={'table_id': table.id}),
+        {'name': 'URL', 'type': 'url'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['type'] == 'url'
+    assert URLField.objects.all().count() == 1
+    field_id = response_json['id']
+
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': field_id}),
+        {'name': 'URL2'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': 'https://test.nl'
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == 'https://test.nl'
+
+    model = table.get_model(attribute_names=True)
+    row = model.objects.all().last()
+    assert row.url2 == 'https://test.nl'
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': ''
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == ''
+
+    row = model.objects.all().last()
+    assert row.url2 == ''
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': None
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == ''
+
+    row = model.objects.all().last()
+    assert row.url2 == ''
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == ''
+
+    row = model.objects.all().last()
+    assert row.url2 == ''
+
+    url = reverse('api:database:fields:item', kwargs={'field_id': field_id})
+    response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert URLField.objects.all().count() == 0
 
 
 @pytest.mark.django_db

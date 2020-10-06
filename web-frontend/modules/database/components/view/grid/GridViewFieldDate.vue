@@ -98,6 +98,7 @@ export default {
       this.$nextTick(() => {
         const input =
           event !== null &&
+          event.type === 'click' &&
           this.field.date_include_time &&
           event.target === this.$refs.timeDisplay
             ? this.$refs.time

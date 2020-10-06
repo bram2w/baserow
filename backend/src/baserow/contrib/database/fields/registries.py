@@ -3,6 +3,7 @@ from baserow.core.registry import (
     CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, MapAPIExceptionsInstanceMixin,
     APIUrlsRegistryMixin, APIUrlsInstanceMixin
 )
+
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 
 
@@ -34,6 +35,9 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
 
         field_type_registry.register(ExampleFieldType())
     """
+
+    can_sort_in_view = True
+    """Indicates whether is is possible to sort on a field in a view."""
 
     def prepare_value_for_db(self, instance, value):
         """

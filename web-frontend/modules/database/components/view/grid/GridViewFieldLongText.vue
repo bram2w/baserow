@@ -24,7 +24,11 @@ import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
 export default {
   mixins: [gridField, gridFieldInput],
   methods: {
-    afterEdit() {
+    afterEdit(event) {
+      // If the enter key is pressed we do not want to add a new line to the textarea.
+      if (event.type === 'keydown' && event.keyCode === 13) {
+        event.preventDefault()
+      }
       this.$nextTick(() => {
         this.$refs.input.focus()
         this.$refs.input.selectionStart = this.$refs.input.selectionEnd = 100000

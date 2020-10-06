@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+* Prevent adding a new line to the long text field in the grid view when selecting the
+  cell by pressing the enter key.
+* Fixed The table X is not found in the store error.
+* Fixed bug where the selected name of the dropdown was not updated when that name was
+  changed.
+* Fixed bug where the link row field is not removed from the store when the related
+  table is deleted.
+* Added filtering of rows per view.
+* Fixed bug where the error message of the 'Select a table to link to' was not always
+  displayed.
+* Added URL field.
+* Added sorting of rows per view.
+
+## Released (2020-09-02)
+
 * Added contribution guidelines.
 * Fixed bug where it was not possible to change the table name when it contained a link
   row field.

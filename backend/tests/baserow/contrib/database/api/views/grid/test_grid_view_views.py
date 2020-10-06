@@ -135,6 +135,44 @@ def test_list_rows(api_client, data_fixture):
     assert response_json['count'] == 4
     assert response_json['results'][0]['id'] == row_3.id
 
+    sort = data_fixture.create_view_sort(view=grid, field=text_field, order='ASC')
+    url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.get(
+        url,
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 4
+    assert response_json['results'][0]['id'] == row_1.id
+    assert response_json['results'][1]['id'] == row_3.id
+    assert response_json['results'][2]['id'] == row_4.id
+    assert response_json['results'][3]['id'] == row_2.id
+    sort.delete()
+
+    filter = data_fixture.create_view_filter(view=grid, field=text_field, value='Green')
+    url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.get(
+        url,
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 1
+    assert len(response_json['results']) == 1
+    assert response_json['results'][0]['id'] == row_1.id
+    filter.delete()
+
+    url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.get(
+        url,
+        data={'count': ''},
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    response_json = response.json()
+    assert response_json['count'] == 4
+    assert len(response_json.keys()) == 1
+
     row_1.delete()
     row_2.delete()
     row_3.delete()

@@ -1,5 +1,5 @@
 <template>
-  <Modal>
+  <Modal @hidden="$emit('hidden', { row })">
     <h2 v-if="primary !== undefined" class="box__title">
       {{ getHeading(primary, row) }}
     </h2>
@@ -12,6 +12,8 @@
         :field="field"
         :row="row"
         @update="update"
+        @field-updated="$emit('field-updated')"
+        @field-deleted="$emit('field-deleted')"
       ></RowEditModalField>
       <div class="actions">
         <a

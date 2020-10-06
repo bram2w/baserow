@@ -1,5 +1,6 @@
 import moment from 'moment'
 
+import { isValidURL } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
@@ -9,6 +10,7 @@ import FieldLinkRowSubForm from '@baserow/modules/database/components/field/Fiel
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
+import GridViewFieldURL from '@baserow/modules/database/components/view/grid/GridViewFieldURL'
 import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/GridViewFieldLinkRow'
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
@@ -16,10 +18,13 @@ import GridViewFieldDate from '@baserow/modules/database/components/view/grid/Gr
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
+import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL'
 import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
+
+import { trueString } from '@baserow/modules/database/utils/constants'
 
 export class FieldType extends Registerable {
   /**
@@ -80,11 +85,20 @@ export class FieldType extends Registerable {
     return null
   }
 
+  /**
+   * Indicates whether or not it is possible to sort in a view.
+   */
+  getCanSortInView() {
+    return true
+  }
+
   constructor() {
     super()
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
+    this.sortIndicator = this.getSortIndicator()
+    this.canSortInView = this.getCanSortInView()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -115,6 +129,8 @@ export class FieldType extends Registerable {
       type: this.type,
       iconClass: this.iconClass,
       name: this.name,
+      sortIndicator: this.sortIndicator,
+      canSortInView: this.canSortInView,
     }
   }
 
@@ -123,6 +139,26 @@ export class FieldType extends Registerable {
    */
   toHumanReadableString(field, value) {
     return value
+  }
+
+  /**
+   * Should return a sort function that is unique for the field type.
+   */
+  getSort() {
+    throw new Error(
+      'Not implement error. This method should by a sort function.'
+    )
+  }
+
+  /**
+   * Should return a visualisation of how the sort function is going to work. For
+   * example ['text', 'A', 'Z'] will result in 'A -> Z' as ascending and 'Z -> A'
+   * descending visualisation for the user. It is also possible to use a Font Awesome
+   * icon here by changing the first value to 'icon'. For example
+   * ['icon', 'square', 'check-square'].
+   */
+  getSortIndicator() {
+    return ['text', 'A', 'Z']
   }
 
   /**
@@ -151,6 +187,13 @@ export class FieldType extends Registerable {
   prepareValueForUpdate(field, value) {
     return value
   }
+
+  /**
+   * A hook that is called when a table is deleted. Some fields depend on other tables
+   * than the table that they belong to. So action might be required when that table
+   * is deleted.
+   */
+  tableDeleted(context, field, table, database) {}
 }
 
 export class TextFieldType extends FieldType {
@@ -181,6 +224,17 @@ export class TextFieldType extends FieldType {
   getEmptyValue(field) {
     return field.text_default
   }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -202,6 +256,17 @@ export class LongTextFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldLongText
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
   }
 }
 
@@ -234,6 +299,10 @@ export class LinkRowFieldType extends FieldType {
     return []
   }
 
+  getCanSortInView() {
+    return false
+  }
+
   prepareValueForCopy(field, value) {
     return JSON.stringify({
       tableId: field.link_row_table,
@@ -256,6 +325,17 @@ export class LinkRowFieldType extends FieldType {
    */
   prepareValueForUpdate(field, value) {
     return value.map((item) => (typeof item === 'object' ? item.id : item))
+  }
+
+  /**
+   * When a table is deleted it might be the case that this is the related table of
+   * the field. If so it means that this field has already been deleted and it needs
+   * to be removed from the store without making an API call.
+   */
+  tableDeleted({ dispatch }, field, table, database) {
+    if (field.link_row_table === table.id) {
+      dispatch('field/forceDelete', field, { root: true })
+    }
   }
 }
 
@@ -282,6 +362,23 @@ export class NumberFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldNumber
+  }
+
+  getSortIndicator() {
+    return ['text', '1', '9']
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const numberA = parseFloat(a[name])
+      const numberB = parseFloat(b[name])
+
+      if (isNaN(numberA) || isNaN(numberB)) {
+        return -1
+      }
+
+      return order === 'ASC' ? numberA - numberB : numberB - numberA
+    }
   }
 
   /**
@@ -340,14 +437,25 @@ export class BooleanFieldType extends FieldType {
     return false
   }
 
+  getSortIndicator() {
+    return ['icon', 'square', 'check-square']
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const intA = +a[name]
+      const intB = +b[name]
+      return order === 'ASC' ? intA - intB : intB - intA
+    }
+  }
+
   /**
    * Check if the clipboard data text contains a string that might indicate if the
    * value is true.
    */
   prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData.getData('text').toLowerCase()
-    const allowed = ['1', 'y', 't', 'y', 'yes', 'true', 'on']
-    return allowed.includes(value)
+    const value = clipboardData.getData('text').toLowerCase().trim()
+    return trueString.includes(value)
   }
 }
 
@@ -376,6 +484,22 @@ export class DateFieldType extends FieldType {
     return RowEditFieldDate
   }
 
+  getSortIndicator() {
+    return ['text', '1', '9']
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      if (a[name] === null || b[name] === null) {
+        return -1
+      }
+
+      const timeA = new Date(a[name]).getTime()
+      const timeB = new Date(b[name]).getTime()
+      return order === 'ASC' ? timeA - timeB : timeB - timeA
+    }
+  }
+
   /**
    * Tries to parse the clipboard text value with moment and returns the date in the
    * correct format for the field. If it can't be parsed null is returned.
@@ -388,6 +512,44 @@ export class DateFieldType extends FieldType {
       return field.date_include_time ? date.format() : date.format('YYYY-MM-DD')
     } else {
       return null
+    }
+  }
+}
+
+export class URLFieldType extends FieldType {
+  static getType() {
+    return 'url'
+  }
+
+  getIconClass() {
+    return 'link'
+  }
+
+  getName() {
+    return 'URL'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldURL
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldURL
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text')
+    return isValidURL(value) ? value : ''
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
     }
   }
 }

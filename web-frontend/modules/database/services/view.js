@@ -1,7 +1,24 @@
 export default (client) => {
   return {
-    fetchAll(tableId) {
-      return client.get(`/database/views/table/${tableId}/`)
+    fetchAll(tableId, includeFilters = false, includeSortings = false) {
+      const config = {
+        params: {},
+      }
+      const includes = []
+
+      if (includeFilters) {
+        includes.push('filters')
+      }
+
+      if (includeSortings) {
+        includes.push('sortings')
+      }
+
+      if (includes.length > 0) {
+        config.params.includes = includes.join(',')
+      }
+
+      return client.get(`/database/views/table/${tableId}/`, config)
     },
     create(tableId, values) {
       return client.post(`/database/views/table/${tableId}/`, values)

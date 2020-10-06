@@ -148,6 +148,25 @@
   }
 }
 
+.grid-view__filtered-no-results {
+  @include absolute(50%, auto, auto, 50%);
+
+  margin: -33px 0 0 -150px;
+  width: 300px;
+  height: 66px;
+  text-align: center;
+}
+
+.grid-view__filtered-no-results-icon {
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+.grid-view__filtered-no-results-content {
+  font-size: 24px;
+  font-weight: 700;
+}
+
 .grid-view__rows {
   position: absolute;
   z-index: 1;
@@ -159,6 +178,25 @@
 
   position: relative;
   height: 32px + 1px;
+
+  &.grid-view__row--warning::before {
+    @include absolute(-2px, -2px, -2px, -2px);
+
+    content: '';
+    z-index: 2;
+    border: 2px solid $color-warning-500;
+    pointer-events: none;
+  }
+}
+
+.grid-view__row-warning {
+  @include absolute(auto, auto, -20px, 0);
+  @include fixed-height(20px, 12px);
+
+  z-index: 1;
+  background-color: $color-warning-500;
+  color: $white;
+  padding: 0 4px;
 }
 
 // Because the width of a column can be adjusted it is specified in the html file.
@@ -182,6 +220,21 @@
 
   .grid-view__left & {
     border-right: none;
+  }
+
+  &.grid-view__column--sorted::after,
+  &.grid-view__column--filtered::after {
+    content: '';
+
+    @include absolute(0, 0, 0, 0);
+  }
+
+  &.grid-view__column--sorted::after {
+    background-color: rgba($color-warning-100, 0.8);
+  }
+
+  &.grid-view__column--filtered::after {
+    background-color: rgba($color-success-100, 0.5);
   }
 }
 
@@ -293,6 +346,8 @@
 }
 
 .grid-view__description {
+  position: relative;
+  z-index: 1;
   padding: 0 30px;
   line-height: 32px;
 

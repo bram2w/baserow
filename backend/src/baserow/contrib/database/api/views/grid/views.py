@@ -39,6 +39,10 @@ class GridViewView(APIView):
                             'table.'
             ),
             OpenApiParameter(
+                name='count', location=OpenApiParameter.PATH, type=OpenApiTypes.NONE,
+                description='If provided only the count will be returned.'
+            ),
+            OpenApiParameter(
                 name='include', location=OpenApiParameter.QUERY, type=OpenApiTypes.STR,
                 description=(
                     'Can contain `field_options` which will add an object with the '
@@ -80,7 +84,12 @@ class GridViewView(APIView):
             'list them all. In the example all field types are listed, but normally '
             'the number in field_{id} key is going to be the id of the field. '
             'The value is what the user has provided and the format of it depends on '
-            'the fields type.'
+            'the fields type.\n'
+            '\n'
+            'The filters and sortings are automatically applied. To get a full '
+            'overview of the applied filters and sortings you can use the '
+            '`list_database_table_view_filters` and '
+            '`list_database_table_view_sortings` endpoints.'
         ),
         responses={
             200: example_pagination_row_serializer_class,
@@ -103,10 +112,18 @@ class GridViewView(APIView):
         `field_options` are provided in the includes GET parameter.
         """
 
-        view = ViewHandler().get_view(request.user, view_id, GridView)
+        view_handler = ViewHandler()
+        view = view_handler.get_view(request.user, view_id, GridView)
 
         model = view.table.get_model()
         queryset = model.objects.all().enhance_by_fields().order_by('id')
+
+        # Applies the view filters and sortings to the queryset if there are any.
+        queryset = view_handler.apply_filters(view, queryset)
+        queryset = view_handler.apply_sorting(view, queryset)
+
+        if 'count' in request.GET:
+            return Response({'count': queryset.count()})
 
         if LimitOffsetPagination.limit_query_param in request.GET:
             paginator = LimitOffsetPagination()

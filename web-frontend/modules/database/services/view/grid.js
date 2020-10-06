@@ -32,6 +32,15 @@ export default (client) => {
 
       return client.get(`/database/views/grid/${gridId}/`, config)
     },
+    fetchCount(gridId) {
+      const config = {
+        params: {
+          count: true,
+        },
+      }
+
+      return client.get(`/database/views/grid/${gridId}/`, config)
+    },
     filterRows({ gridId, rowIds, fieldIds = null }) {
       const data = { row_ids: rowIds }
 

@@ -7,6 +7,7 @@
       :value="row['field_' + field.id]"
       :selected="selected"
       @update="update"
+      @edit="edit"
     />
   </div>
 </template>
@@ -59,6 +60,19 @@ export default {
      */
     update(value, oldValue) {
       this.$emit('update', {
+        row: this.row,
+        field: this.field,
+        value,
+        oldValue,
+      })
+    },
+    /**
+     * If the grid field components emits an edit event then the user has changed the
+     * value without saving it yet. This is for example used to check in real time if
+     * the value still matches the filters.
+     */
+    edit(value, oldValue) {
+      this.$emit('edit', {
         row: this.row,
         field: this.field,
         value,
@@ -194,6 +208,8 @@ export default {
         // making sure that the element fits in the viewport.
         this.$emit('selected', {
           component: this,
+          row: this.row,
+          field: this.field,
         })
       }
 
@@ -203,6 +219,10 @@ export default {
       this.$refs.field.beforeUnSelect()
       this.$nextTick(() => {
         this.selected = false
+        this.$emit('unselected', {
+          row: this.row,
+          field: this.field,
+        })
       })
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
       document.body.removeEventListener('keydown', this.$el.keyDownEvent)
@@ -211,4 +231,3 @@ export default {
   },
 }
 </script>
-gl
