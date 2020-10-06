@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* Fixed error when there is no view.
+
+## Released (2020-10-06)
+
 * Prevent adding a new line to the long text field in the grid view when selecting the
   cell by pressing the enter key.
 * Fixed The table X is not found in the store error.
