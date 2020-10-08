@@ -5,12 +5,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_SECRET_IN_PRODUCTION'
+SECRET_KEY = os.getenv('SECRET_KEY', 'CHANGE_THIS_TO_SOMETHING_SECRET_IN_PRODUCTION')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', 'backend', 'sandbox']
+
+# Add PUBLIC_BACKEND_DOMAIN to ALLOWED_HOSTS if it already exists
+PUBLIC_BACKEND_DOMAIN = os.getenv('PUBLIC_BACKEND_DOMAIN')
+
+if PUBLIC_BACKEND_DOMAIN:
+    ALLOWED_HOSTS.append(PUBLIC_BACKEND_DOMAIN)
 
 
 INSTALLED_APPS = [
