@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Fixed error when there is no view.
+* Added Ubuntu installation guide documentation.
 
 ## Released (2020-10-06)
 

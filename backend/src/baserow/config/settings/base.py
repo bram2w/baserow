@@ -12,13 +12,6 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', 'backend', 'sandbox']
 
-# Add PUBLIC_BACKEND_DOMAIN to ALLOWED_HOSTS if it already exists
-PUBLIC_BACKEND_DOMAIN = os.getenv('PUBLIC_BACKEND_DOMAIN')
-
-if PUBLIC_BACKEND_DOMAIN:
-    ALLOWED_HOSTS.append(PUBLIC_BACKEND_DOMAIN)
-
-
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -190,3 +183,6 @@ PUBLIC_WEB_FRONTEND_URL = os.getenv('PUBLIC_WEB_FRONTEND_URL', 'http://localhost
 FROM_EMAIL = os.getenv('FROM_EMAIL', 'no-reply@localhost')
 
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
+
+if PUBLIC_BACKEND_DOMAIN:
+    ALLOWED_HOSTS.append(PUBLIC_BACKEND_DOMAIN)
