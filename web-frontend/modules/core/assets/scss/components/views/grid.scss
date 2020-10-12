@@ -244,6 +244,10 @@
   background-color: $white;
   padding: 0 24px 0 6px;
   line-height: 32px;
+
+  .grid-view__row--selected & {
+    background-color: $color-neutral-50;
+  }
 }
 
 .grid-view__row-count {
@@ -306,6 +310,14 @@
       border-bottom: 0;
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
+    }
+  }
+
+  .grid-view__row--selected & {
+    background-color: $color-neutral-50;
+
+    &.active {
+      background-color: $white;
     }
   }
 

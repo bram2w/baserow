@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Highlight the row of a selected cell.
 * Fixed error when there is no view.
 * Added Ubuntu installation guide documentation.
 
