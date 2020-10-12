@@ -1,7 +1,7 @@
 # Backend API
 
-Because Baserow has been divided into two components, the **backend** and the 
-**web-frontend**, they have to communicate with each other via a REST API. This page
+Baserow is divided into two components, the **backend** and the 
+**web-frontend**, which talk to each other via a REST API. This page
 contains some documentation about those endpoints and how to use them. These endpoints
 should never be used to show data on your own website because that would mean you have
 to expose your credentials or JWT token. They should only be used the make changes in
@@ -46,7 +46,7 @@ created. The provided email address will be your username. More information abou
 endpoint can be found in the API spec at 
 https://api.baserpw.io/api/redoc/#operation/create_user.
 
-Now that you have created an account we need a JWT token to authorize each following
+Now that you have created an account, you need a JWT token to authorize each following
 request. This can be requested using the following example.
 
 ```
@@ -67,10 +67,10 @@ curl -X POST -H 'Content-Type: application/json' -i https://api.baserow.io/api/u
 }'
 ```
 
-If you inspect the JSON response you will notice a key named token. The value is the 
+If you inspect the JSON response you will notice a key named 'token'. The value is the 
 token that you need for all the other requests. More information about this endpoint
 can be found in the API spec at https://api.baserow.io/api/redoc/#operation/token_auth.
-You can simple provide an `Authorization` header containing `JWT {TOKEN}` to authorize. 
+You can simply provide an `Authorization` header containing `JWT {TOKEN}` to authorize. 
 The token will be valid for 60 minutes and can be refreshed before that time using the
 https://api.baserow.io/api/redoc/#operation/token_refresh endpoint.
 
@@ -94,7 +94,7 @@ curl -X GET -H 'Content-Type: application/json' -H 'Authorization: JWT {YOUR_TOK
 
 ### 415 Unsupported Media Type
 
-If you ever get the error "Unsupported media type", you most likely need to the 
+If you ever get the error "Unsupported media type", you most likely need to add the 
 following HTTP header to your request. This is so that the server knows your body is in 
 JSON format.
 

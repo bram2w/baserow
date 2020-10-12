@@ -1,8 +1,8 @@
 # Development environment
 
 If you want to contribute to Baserow you need to setup the development environment on 
-your local computer. The best way to do this is via `docker-compose` so that can start
-with the least amount of hassle.
+your local computer. The best way to do this is via `docker-compose` so that you can start
+the app with the least amount of hassle.
 
 ## Installing requirements
 
@@ -54,10 +54,11 @@ Cloning into 'baserow'...
 $ cd baserow
 ```
 
-Now that we have our copy and we moved inside the newly created `baserow` directory, we 
-can get started. You just have to execute the `docker-compose up` command in detached 
-mode. It might take a while for the command finishes, this is because the image has to 
-be created from scratch.
+Now that we have our copy of the repo and have changed directories to the newly 
+created `baserow`, we can bring up the containers. You just have to execute the 
+docker-compose command using the `docker-compose.demo.yml` file. It might take a 
+while for the command finishes, this is because the image has to be created from 
+scratch.
 
 ```
 $ docker network create baserow_default
@@ -72,8 +73,8 @@ Starting web-frontend   ... done
 
 ## Starting backend development server
 
-Now that you have your development environment up and running you can start by applying
-all the database migrations and starting the backend's development server. You need to
+Now that you have your development environment up and running, you need to apply
+all the database migrations and start the backend's development server. You need to
 execute the bash command of the backend container first. Because Baserow is not 
 installed as a dependency you have to use the manage.py file in the source directory.
 
@@ -85,17 +86,17 @@ Running migrations:
 $ python src/baserow/manage.py runserver 0.0.0.0:8000
 ```
 
-Now that the server is running you should should see a response containing a message
-"Authentication credentials were not provided." if you visit 
-http://localhost:8000/api/groups/ with your browser. If you want to see the API spec, 
+After executing these commands, the server is running. If you visit 
+http://localhost:8000/api/groups/ in your browser you should see the response 
+"Authentication credentials were not provided." If you want to see the API spec, 
 you can visit http://localhost:8000/api/redoc/.
 
 ## Starting web frontend development server
 
 Now that the backend server is up and running you can start the web-frontend 
 development server. Open a new tab in your terminal and execute the bash command of the
-web-frontend container first. After that you can install all the dependencies as they
-need to live on your host's file system.
+web-frontend container first. After that you need to install all the dependencies that
+the web-frontend app relies on.
 
 ```
 $ docker exec -it web-frontend bash
@@ -108,6 +109,7 @@ http://localhost:3000 in your browser which should show the Baserow login page.
 
 ## Keep the servers running.
 
-Both servers need to keep running while you are developing. They also monitor file 
-changes and update automatically so you don't need to worry about that. Go and make 
-some changes yourself. You should see the result right away.
+Both the web-frontend and backend containers need to keep running while you are
+developing. They also monitor file changes and update automatically so you don't need
+to worry about reloading. Go and make some changes yourself. You should see the result
+right away.
