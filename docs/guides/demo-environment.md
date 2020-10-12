@@ -48,10 +48,11 @@ Cloning into 'baserow'...
 $ cd baserow
 ```
 
-Now that we have our copy and we moved inside the newly created `baserow` directory, we 
-can get started. You just have to execute the docker-compose command using the 
-`docker-compose.demo.yml` file. It might take a while for the command finishes, this is 
-because the image has to be created from scratch.
+Now that we have our copy of the repo and have changed directories to the newly 
+created `baserow`, we can bring up the containers. You just have to execute the 
+docker-compose command using the `docker-compose.demo.yml` file. It might take a 
+while for the command finishes, this is because the image has to be created from 
+scratch.
 
 ```
 $ docker network create baserow_demo_default
@@ -64,8 +65,8 @@ Starting backend        ... done
 Starting web-frontend   ... done
 ```
 
-Once everything has finished and you can visit http://localhost:3000 in your browser
-and you should be redirected to the login screen. Via here you can create a new account
+Once everything has finished, you can visit http://localhost:3000 in your browser
+and you should be redirected to the login screen. From here you can create a new account
 and start using the software.
 
 > I strongly discourage running these images in production. These are just for demo
