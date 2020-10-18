@@ -19,6 +19,13 @@
   margin-right: 6px;
 }
 
+.control__description {
+  font-size: 13px;
+  line-height: 160%;
+  color: $color-neutral-600;
+  margin-bottom: 16px;
+}
+
 .control__context {
   color: $color-primary-900;
   margin-left: 6px;
@@ -50,6 +57,13 @@
   &.input--error {
     border-color: $color-error-500;
   }
+}
+
+.textarea--modal {
+  resize: vertical;
+  height: 22px * 6;
+  line-height: 22px;
+  font-size: 13px;
 }
 
 .input__with-icon {

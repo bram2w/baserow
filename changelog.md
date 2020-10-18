@@ -6,6 +6,7 @@
 * Fixed error when there is no view.
 * Added Ubuntu installation guide documentation.
 * Added Email field.
+* Added importer abstraction including a CSV and tabular paste importer.
 
 ## Released (2020-10-06)
 

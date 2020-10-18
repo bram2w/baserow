@@ -3,7 +3,12 @@ export default (client) => {
     fetchAll(databaseId) {
       return client.get(`/database/tables/database/${databaseId}/`)
     },
-    create(databaseId, values) {
+    create(databaseId, values, initialData = null, firstRowHeader = false) {
+      if (initialData !== null) {
+        values.data = initialData
+        values.first_row_header = firstRowHeader
+      }
+
       return client.post(`/database/tables/database/${databaseId}/`, values)
     },
     get(tableId) {
