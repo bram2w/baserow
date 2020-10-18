@@ -45,11 +45,12 @@ class DatabaseConfig(AppConfig):
 
         from .fields.field_types import (
             TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType,
-            BooleanFieldType, DateFieldType, LinkRowFieldType
+            BooleanFieldType, DateFieldType, LinkRowFieldType, EmailFieldType
         )
         field_type_registry.register(TextFieldType())
         field_type_registry.register(LongTextFieldType())
         field_type_registry.register(URLFieldType())
+        field_type_registry.register(EmailFieldType())
         field_type_registry.register(NumberFieldType())
         field_type_registry.register(BooleanFieldType())
         field_type_registry.register(DateFieldType())

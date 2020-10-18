@@ -235,3 +235,7 @@ class LinkRowField(Field):
             raise ValueError('The link row field does not yet have a relation id.')
 
         return f'database_relation_{self.link_row_relation_id}'
+
+
+class EmailField(Field):
+    pass

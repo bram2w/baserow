@@ -8,7 +8,9 @@ from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware, datetime
 
 from baserow.contrib.database.fields.field_types import DateFieldType
-from baserow.contrib.database.fields.models import LongTextField, URLField, DateField
+from baserow.contrib.database.fields.models import (
+    LongTextField, URLField, DateField, EmailField
+)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 
@@ -384,3 +386,98 @@ def test_date_field_type(data_fixture):
     field_handler.delete_field(user=user, field=date_field_2)
 
     assert len(DateField.objects.all()) == 0
+
+
+@pytest.mark.django_db
+def test_email_field_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(user=user, database=table.database)
+    field = data_fixture.create_text_field(table=table, order=1, name='name')
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    field_2 = field_handler.create_field(user=user, table=table, type_name='email',
+                                         name='email')
+    number = field_handler.create_field(user=user, table=table, type_name='number',
+                                        name='number')
+
+    assert len(EmailField.objects.all()) == 1
+    model = table.get_model(attribute_names=True)
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            'email': 'invalid_email'
+        }, model=model)
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            'email': 'invalid@email'
+        }, model=model)
+
+    row_0 = row_handler.create_row(user=user, table=table, values={
+        'name': 'a.very.STRANGE@email.address.coM',
+        'email': 'test@test.nl',
+        'number': 5
+    }, model=model)
+    row_1 = row_handler.create_row(user=user, table=table, values={
+        'name': 'someuser',
+        'email': 'some@user.com',
+        'number': 10
+    }, model=model)
+    row_2 = row_handler.create_row(user=user, table=table, values={
+        'name': 'http://www.baserow.io',
+        'email': 'bram@test.nl'
+    }, model=model)
+    row_3 = row_handler.create_row(user=user, table=table, values={
+        'name': 'NOT AN EMAIL',
+        'email': 'something@example.com'
+    }, model=model)
+    row_4 = row_handler.create_row(user=user, table=table, values={
+        'name': 'testing@nowhere.org',
+        'email': ''
+    }, model=model)
+    row_5 = row_handler.create_row(user=user, table=table, values={
+        'email': None,
+    }, model=model)
+    row_6 = row_handler.create_row(user=user, table=table, values={}, model=model)
+
+    # Convert the text field to a url field so we can check how the conversion of
+    # values went.
+    field_handler.update_field(user=user, field=field, new_type_name='email')
+    field_handler.update_field(user=user, field=number, new_type_name='email')
+
+    model = table.get_model(attribute_names=True)
+    rows = model.objects.all()
+
+    assert rows[0].name == 'a.very.STRANGE@email.address.coM'
+    assert rows[0].email == 'test@test.nl'
+    assert rows[0].number == ''
+
+    assert rows[1].name == ''
+    assert rows[1].email == 'some@user.com'
+    assert rows[1].number == ''
+
+    assert rows[2].name == ''
+    assert rows[2].email == 'bram@test.nl'
+    assert rows[2].number == ''
+
+    assert rows[3].name == ''
+    assert rows[3].email == 'something@example.com'
+    assert rows[3].number == ''
+
+    assert rows[4].name == 'testing@nowhere.org'
+    assert rows[4].email == ''
+    assert rows[4].number == ''
+
+    assert rows[5].name == ''
+    assert rows[5].email == ''
+    assert rows[5].number == ''
+
+    assert rows[6].name == ''
+    assert rows[6].email == ''
+    assert rows[6].number == ''
+
+    field_handler.delete_field(user=user, field=field_2)
+    assert len(EmailField.objects.all()) == 2

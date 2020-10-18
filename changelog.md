@@ -4,6 +4,7 @@
 
 * Fixed error when there is no view.
 * Added Ubuntu installation guide documentation.
+* Added Email field.
 
 ## Released (2020-10-06)
 

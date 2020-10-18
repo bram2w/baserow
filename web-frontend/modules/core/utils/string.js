@@ -47,3 +47,8 @@ export const isValidURL = (str) => {
   ) // fragment locator
   return !!pattern.test(str)
 }
+
+export const isValidEmail = (str) => {
+  const pattern = new RegExp('[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}', 'i') // check email format
+  return !!pattern.test(str)
+}

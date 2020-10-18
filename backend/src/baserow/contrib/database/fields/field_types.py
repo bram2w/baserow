@@ -6,7 +6,7 @@ from dateutil.parser import ParserError
 from datetime import datetime, date
 
 from django.db import models
-from django.core.validators import URLValidator
+from django.core.validators import URLValidator, EmailValidator
 from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware
 
@@ -21,7 +21,7 @@ from .handler import FieldHandler
 from .registries import FieldType
 from .models import (
     NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
-    NumberField, BooleanField, DateField, LinkRowField
+    NumberField, BooleanField, DateField, LinkRowField, EmailField
 )
 from .exceptions import LinkRowTableNotInSameDatabase, LinkRowTableNotProvided
 
@@ -548,3 +548,42 @@ class LinkRowFieldType(FieldType):
             values.append(instance.id)
 
         return values
+
+
+class EmailFieldType(FieldType):
+    type = 'email'
+    model_class = EmailField
+
+    def prepare_value_for_db(self, instance, value):
+        if value == '' or value is None:
+            return ''
+
+        validator = EmailValidator()
+        validator(value)
+        return value
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.EmailField(
+            required=False,
+            allow_null=True,
+            allow_blank=True,
+            **kwargs
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return models.EmailField(default='', blank=True, null=True, **kwargs)
+
+    def random_value(self, instance, fake, cache):
+        return fake.email()
+
+    def get_alter_column_type_function(self, connection, instance):
+        if connection.vendor == 'postgresql':
+            return r"""(
+            case
+                when p_in::text ~* '[A-Z0-9._+-]+@[A-Z0-9.-]+\.[A-Z]{2,}'
+                then p_in::text
+                else ''
+                end
+            )"""
+
+        return super().get_alter_column_type_function(connection, instance)
