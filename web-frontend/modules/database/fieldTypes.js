@@ -1,6 +1,6 @@
 import moment from 'moment'
 
-import { isValidURL } from '@baserow/modules/core/utils/string'
+import { isValidURL, isValidEmail } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
@@ -11,6 +11,7 @@ import FieldLinkRowSubForm from '@baserow/modules/database/components/field/Fiel
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
 import GridViewFieldURL from '@baserow/modules/database/components/view/grid/GridViewFieldURL'
+import GridViewFieldEmail from '@baserow/modules/database/components/view/grid/GridViewFieldEmail'
 import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/GridViewFieldLinkRow'
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
@@ -19,6 +20,7 @@ import GridViewFieldDate from '@baserow/modules/database/components/view/grid/Gr
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
 import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL'
+import RowEditFieldEmail from '@baserow/modules/database/components/row/RowEditFieldEmail'
 import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
@@ -540,6 +542,44 @@ export class URLFieldType extends FieldType {
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
     return isValidURL(value) ? value : ''
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+}
+
+export class EmailFieldType extends FieldType {
+  static getType() {
+    return 'email'
+  }
+
+  getIconClass() {
+    return 'at'
+  }
+
+  getName() {
+    return 'Email'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldEmail
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldEmail
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text')
+    return isValidEmail(value) ? value : ''
   }
 
   getSort(name, order) {
