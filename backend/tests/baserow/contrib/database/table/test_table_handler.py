@@ -5,7 +5,9 @@ from django.db import connection
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.exceptions import (
+    TableDoesNotExist, InvalidInitialTableData
+)
 from baserow.contrib.database.fields.models import (
     TextField, LongTextField, BooleanField
 )
@@ -69,12 +71,12 @@ def test_create_database_table(data_fixture):
 
 
 @pytest.mark.django_db
-def test_fill_initial_table_data(data_fixture):
+def test_fill_example_table_data(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
     table_handler = TableHandler()
-    table_handler.create_table(user, database, fill_initial=True, name='Table 1')
+    table_handler.create_table(user, database, fill_example=True, name='Table 1')
 
     assert Table.objects.all().count() == 1
     assert GridView.objects.all().count() == 1
@@ -82,6 +84,88 @@ def test_fill_initial_table_data(data_fixture):
     assert LongTextField.objects.all().count() == 1
     assert BooleanField.objects.all().count() == 1
     assert GridViewFieldOptions.objects.all().count() == 2
+
+
+@pytest.mark.django_db
+def test_fill_table_with_initial_data(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+
+    table_handler = TableHandler()
+
+    with pytest.raises(InvalidInitialTableData):
+        table_handler.create_table(user, database, name='Table 1', data=[])
+
+    with pytest.raises(InvalidInitialTableData):
+        table_handler.create_table(user, database, name='Table 1', data=[[]])
+
+    data = [
+        ['A', 'B', 'C', 'D'],
+        ['1-1', '1-2', '1-3', '1-4', '1-5'],
+        ['2-1', '2-2', '2-3'],
+        ['3-1', '3-2'],
+    ]
+    table = table_handler.create_table(user, database, name='Table 1', data=data,
+                                       first_row_header=True)
+
+    text_fields = TextField.objects.filter(table=table)
+    assert text_fields[0].name == 'A'
+    assert text_fields[1].name == 'B'
+    assert text_fields[2].name == 'C'
+    assert text_fields[3].name == 'D'
+    assert text_fields[4].name == 'Field 5'
+
+    assert GridView.objects.all().count() == 1
+
+    model = table.get_model()
+    results = model.objects.all()
+
+    assert getattr(results[0], f'field_{text_fields[0].id}') == '1-1'
+    assert getattr(results[0], f'field_{text_fields[1].id}') == '1-2'
+    assert getattr(results[0], f'field_{text_fields[2].id}') == '1-3'
+    assert getattr(results[0], f'field_{text_fields[3].id}') == '1-4'
+    assert getattr(results[0], f'field_{text_fields[4].id}') == '1-5'
+
+    assert getattr(results[1], f'field_{text_fields[0].id}') == '2-1'
+    assert getattr(results[1], f'field_{text_fields[1].id}') == '2-2'
+    assert getattr(results[1], f'field_{text_fields[2].id}') == '2-3'
+    assert getattr(results[1], f'field_{text_fields[3].id}') == ''
+    assert getattr(results[1], f'field_{text_fields[4].id}') == ''
+
+    assert getattr(results[2], f'field_{text_fields[0].id}') == '3-1'
+    assert getattr(results[2], f'field_{text_fields[1].id}') == '3-2'
+    assert getattr(results[2], f'field_{text_fields[2].id}') == ''
+    assert getattr(results[2], f'field_{text_fields[3].id}') == ''
+    assert getattr(results[2], f'field_{text_fields[4].id}') == ''
+
+    data = [
+        ['1-1'],
+        ['2-1', '2-2', '2-3'],
+        ['3-1', '3-2'],
+    ]
+    table = table_handler.create_table(user, database, name='Table 2', data=data,
+                                       first_row_header=False)
+
+    text_fields = TextField.objects.filter(table=table)
+    assert text_fields[0].name == 'Field 1'
+    assert text_fields[1].name == 'Field 2'
+    assert text_fields[2].name == 'Field 3'
+
+    assert GridView.objects.all().count() == 2
+
+    model = table.get_model()
+    results = model.objects.all()
+
+    assert getattr(results[0], f'field_{text_fields[0].id}') == '1-1'
+    assert getattr(results[0], f'field_{text_fields[1].id}') == ''
+    assert getattr(results[0], f'field_{text_fields[2].id}') == ''
+
+    assert getattr(results[1], f'field_{text_fields[0].id}') == '2-1'
+    assert getattr(results[1], f'field_{text_fields[1].id}') == '2-2'
+    assert getattr(results[1], f'field_{text_fields[2].id}') == '2-3'
+
+    assert getattr(results[2], f'field_{text_fields[0].id}') == '3-1'
+    assert getattr(results[2], f'field_{text_fields[1].id}') == '3-2'
 
 
 @pytest.mark.django_db

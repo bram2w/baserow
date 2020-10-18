@@ -12,7 +12,7 @@ from baserow.contrib.database.fields.field_types import (
 )
 
 from .models import Table
-from .exceptions import TableDoesNotExist
+from .exceptions import TableDoesNotExist, InvalidInitialTableData
 
 
 class TableHandler:
@@ -41,7 +41,8 @@ class TableHandler:
 
         return table
 
-    def create_table(self, user, database, fill_initial=False, **kwargs):
+    def create_table(self, user, database, fill_example=False, data=None,
+                     first_row_header=True, **kwargs):
         """
         Creates a new table and a primary text field.
 
@@ -49,9 +50,16 @@ class TableHandler:
         :type user: User
         :param database: The database that the table instance belongs to.
         :type database: Database
-        :param fill_initial: Indicates whether an initial view, some fields and
-            some rows should be added.
-        :type fill_initial: bool
+        :param fill_example: Indicates whether an initial view, some fields and
+            some rows should be added. Works only if no data is provided.
+        :type fill_example: bool
+        :param data: A list containing all the rows that need to be inserted is
+            expected. All the values of the row are going to be converted to a string
+            and will be inserted in the database.
+        :type: initial_data: None or list[list[str]
+        :param first_row_header: Indicates if the first row are the fields. The names
+            of these rows are going to be used as fields.
+        :type first_row_header: bool
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
         :raises UserNotInGroupError: When the user does not belong to the related group.
@@ -62,13 +70,30 @@ class TableHandler:
         if not database.group.has_user(user):
             raise UserNotInGroupError(user, database.group)
 
+        if data is not None:
+            fields, data = self.normalize_initial_table_data(data, first_row_header)
+
         table_values = extract_allowed(kwargs, ['name'])
         last_order = Table.get_last_order(database)
         table = Table.objects.create(database=database, order=last_order,
                                      **table_values)
 
-        # Create a primary text field for the table.
-        TextField.objects.create(table=table, order=0, primary=True, name='Name')
+        if data is not None:
+            # If the initial data has been provided we will create those fields before
+            # creating the model so that we the whole table schema is created right
+            # away.
+            for index, name in enumerate(fields):
+                fields[index] = TextField.objects.create(
+                    table=table,
+                    order=index,
+                    primary=index == 0,
+                    name=name
+                )
+
+        else:
+            # If no initial data is provided we want to create a primary text field for
+            # the table.
+            TextField.objects.create(table=table, order=0, primary=True, name='Name')
 
         # Create the table schema in the database database.
         connection = connections[settings.USER_TABLE_DATABASE]
@@ -76,15 +101,81 @@ class TableHandler:
             model = table.get_model()
             schema_editor.create_model(model)
 
-        if fill_initial:
-            self.fill_initial_table_data(user, table)
+        if data is not None:
+            self.fill_initial_table_data(user, table, fields, data, model)
+        elif fill_example:
+            self.fill_example_table_data(user, table)
 
         return table
 
-    def fill_initial_table_data(self, user, table):
+    def normalize_initial_table_data(self, data, first_row_header):
         """
-        Fills the table with some initial data. A new table is expected that already
-        has the a primary field named 'name'.
+        Normalizes the provided initial table data. The amount of columns will be made
+        equal for each row. The header and the rows will also be separated.
+
+        :param data: A list containing all the provided rows.
+        :type data: list
+        :param first_row_header: Indicates if the first row is the header. For each
+            of these header columns a field is going to be created.
+        :type first_row_header: bool
+        :return: A list containing the field names and a list containing all the rows.
+        :rtype: list, list
+        :raises InvalidInitialTableData: When the data doesn't contain a column or row.
+        """
+
+        if len(data) == 0:
+            raise InvalidInitialTableData('At least one row should be provided.')
+
+        largest_column_count = len(max(data, key=len))
+
+        if largest_column_count == 0:
+            raise InvalidInitialTableData('At least one column should be provided.')
+
+        fields = data.pop(0) if first_row_header else []
+
+        for i in range(len(fields), largest_column_count):
+            fields.append(f'Field {i + 1}')
+
+        for row in data:
+            for i in range(len(row), largest_column_count):
+                row.append('')
+
+        return fields, data
+
+    def fill_initial_table_data(self, user, table, fields, data, model):
+        """
+        Fills the provided table with the normalized data that needs to be created upon
+        creation of the table.
+
+        :param user: The user on whose behalf the table is created.
+        :type user: User`
+        :param table: The newly created table where the initial data has to be inserted
+            into.
+        :type table: Table
+        :param fields: A list containing the field names.
+        :type fields: list
+        :param data: A list containing the rows that need to be inserted.
+        :type data: list
+        :param model: The generated table model of the table that needs to be filled
+            with initial data.
+        :type model: TableModel
+        """
+
+        ViewHandler().create_view(user, table, GridViewType.type, name='Grid')
+
+        bulk_data = [
+            model(**{
+                f'field_{fields[index].id}': str(value)
+                for index, value in enumerate(row)
+            })
+            for row in data
+        ]
+        model.objects.bulk_create(bulk_data)
+
+    def fill_example_table_data(self, user, table):
+        """
+        Fills the table with some initial example data. A new table is expected that
+        already has the a primary field named 'name'.
 
         :param user: The user on whose behalf the table is filled.
         :type: user: User

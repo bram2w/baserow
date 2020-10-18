@@ -23,6 +23,10 @@ import {
   EmptyViewFilterType,
   NotEmptyViewFilterType,
 } from '@baserow/modules/database/viewFilters'
+import {
+  CSVImporterType,
+  PasteImporterType,
+} from '@baserow/modules/database/importerTypes'
 
 import tableStore from '@baserow/modules/database/store/table'
 import viewStore from '@baserow/modules/database/store/view'
@@ -56,4 +60,6 @@ export default ({ store, app }) => {
   app.$registry.register('field', new DateFieldType())
   app.$registry.register('field', new URLFieldType())
   app.$registry.register('field', new EmailFieldType())
+  app.$registry.register('importer', new CSVImporterType())
+  app.$registry.register('importer', new PasteImporterType())
 }

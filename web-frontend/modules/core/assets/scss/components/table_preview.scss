@@ -1,0 +1,37 @@
+.table-preview__container {
+  overflow-x: auto;
+  max-width: 100%;
+  border: solid 1px $color-neutral-300;
+}
+
+.table-preview {
+  background-color: $white;
+}
+
+.table-preview__row {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.table-preview__column {
+  @extend %ellipsis;
+
+  flex: 0 0 200px;
+  line-height: 33px;
+  height: 33px;
+  padding: 0 10px;
+  border-right: solid 1px $color-neutral-200;
+
+  .table-preview__head & {
+    background-color: $color-neutral-100;
+  }
+
+  .table-preview__row:not(:last-child) & {
+    border-bottom: solid 1px $color-neutral-200;
+  }
+}
+
+.table-preview__more {
+  line-height: 33px;
+  padding: 0 10px;
+}

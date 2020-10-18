@@ -16,10 +16,12 @@ from baserow.core.handler import CoreHandler
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.exceptions import (
+    TableDoesNotExist, InvalidInitialTableData
+)
 
-from .serializers import TableSerializer, TableCreateUpdateSerializer
-from .errors import ERROR_TABLE_DOES_NOT_EXIST
+from .serializers import TableSerializer, TableCreateSerializer, TableUpdateSerializer
+from .errors import ERROR_TABLE_DOES_NOT_EXIST, ERROR_INVALID_INITIAL_TABLE_DATA
 
 
 class TablesView(APIView):
@@ -83,7 +85,7 @@ class TablesView(APIView):
             '`database_id` parameter if the authorized user has access to the '
             'database\'s group.'
         ),
-        request=TableCreateUpdateSerializer,
+        request=TableCreateSerializer,
         responses={
             200: TableSerializer,
             400: get_error_schema([
@@ -95,9 +97,10 @@ class TablesView(APIView):
     @transaction.atomic
     @map_exceptions({
         ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA
     })
-    @validate_body(TableCreateUpdateSerializer)
+    @validate_body(TableCreateSerializer)
     def post(self, request, data, database_id):
         """Creates a new table in a database."""
 
@@ -106,7 +109,11 @@ class TablesView(APIView):
             base_queryset=Database.objects
         )
         table = TableHandler().create_table(
-            request.user, database, fill_initial=True, name=data['name'])
+            request.user,
+            database,
+            fill_example=True,
+            **data
+        )
         serializer = TableSerializer(table)
         return Response(serializer.data)
 
@@ -161,7 +168,7 @@ class TableView(APIView):
             'Updates the existing table if the authorized user has access to the '
             'related database\'s group.'
         ),
-        request=TableCreateUpdateSerializer,
+        request=TableUpdateSerializer,
         responses={
             200: TableSerializer,
             400: get_error_schema([
@@ -175,7 +182,7 @@ class TableView(APIView):
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
-    @validate_body(TableCreateUpdateSerializer)
+    @validate_body(TableUpdateSerializer)
     def patch(self, request, data, table_id):
         """Updates the values a table instance."""
 
