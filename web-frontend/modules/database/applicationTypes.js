@@ -47,9 +47,9 @@ export class DatabaseApplicationType extends ApplicationType {
       })
     } else {
       $store.dispatch('notification/error', {
-        title: 'Could select the database.',
+        title: "Couldn't select the database.",
         message:
-          "The database could be selected because it doesn't have any tables. Use " +
+          "The database couldn't be selected because it doesn't have any tables. Use " +
           'the sidebar to create one.',
       })
     }
