@@ -63,6 +63,7 @@ export default {
       name: null,
       icon: null,
       query: '',
+      hover: null,
     }
   },
   computed: {
@@ -93,13 +94,14 @@ export default {
      * @return {boolean}
      */
     hasValue() {
-      return !!this.value
+      return this.value === 0 ? true : !!this.value
     },
     /**
      * Shows the lists of choices, so a user can change the value.
      */
     show() {
       this.open = true
+      this.hover = this.value
       this.$emit('show')
 
       this.$nextTick(() => {
@@ -131,6 +133,30 @@ export default {
         }
       }
       document.body.addEventListener('click', this.$el.clickOutsideEvent)
+
+      this.$el.keydownEvent = (event) => {
+        if (
+          // Check if the context menu is still open
+          this.open &&
+          // Check if the user has hit either of the keys we care about. If not,
+          // ignore.
+          (event.code === 'ArrowUp' || event.code === 'ArrowDown')
+        ) {
+          // Prevent scrolling up and down while pressing the up and down key.
+          event.stopPropagation()
+          event.preventDefault()
+          this.handleUpAndDownArrowPress(event)
+        }
+        // Allow the Enter key to select the value that is currently being hovered
+        // over.
+        if (this.open && event.code === 'Enter') {
+          // Prevent submitting the whole form when pressing the enter key while the
+          // dropdown is open.
+          event.preventDefault()
+          this.select(this.hover)
+        }
+      }
+      document.body.addEventListener('keydown', this.$el.keydownEvent)
     },
     /**
      * Hides the list of choices
@@ -144,6 +170,7 @@ export default {
       this.search(this.query)
 
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     /**
      * Selects a new value which will also be
@@ -185,6 +212,90 @@ export default {
       this._computedWatchers.selectedName.run()
       this._computedWatchers.selectedIcon.run()
       this.$forceUpdate()
+    },
+    /**
+     * Method that is called when the arrow up or arrow down key is pressed. Based on
+     * the index of the current child, the next child enabled child is set as hover.
+     */
+    handleUpAndDownArrowPress(event) {
+      const hoverIndex = this.$children.findIndex(
+        (item) => item.value === this.hover
+      )
+      const nextItem = this.getNextChild(hoverIndex, event)
+
+      if (nextItem) {
+        this.hover = nextItem.value
+        this.$refs.items.scrollTop = this.getScrollTopAmountForNextChild(
+          nextItem
+        )
+      }
+    },
+    /**
+     * Recursively calculate the next enabled child index based on the arrow up or
+     * arrow down event.
+     */
+    getNextChild(currentIndex, event) {
+      // Derive our new index based off of the key pressed
+      if (event.code === 'ArrowUp') {
+        currentIndex--
+      }
+      if (event.code === 'ArrowDown') {
+        currentIndex++
+      }
+
+      // Check if the new index is invalid
+      if (currentIndex < 0 || currentIndex > this.$children.length - 1) {
+        return null
+      }
+
+      const nextItem = this.$children[currentIndex]
+      if (nextItem.disabled) {
+        // If the expected nextItem is disabled, we want to skip over it
+        return this.getNextChild(currentIndex, event)
+      }
+      return nextItem
+    },
+    /**
+     * When scrolling up and down between options with the keyboard, this
+     * method calculates the expected behavior to the user considering
+     * disabled items that need to be skipped and a limited dropdown
+     * window in which to scroll
+     */
+    getScrollTopAmountForNextChild(itemToScrollTo) {
+      // If the element to scroll to is below the current dropdown's
+      // bottom scroll position, then scroll so that the item to scroll to
+      // is the last viewable item in the dropdown window.
+      if (
+        itemToScrollTo.$el.offsetTop >
+        this.$refs.items.scrollTop + this.$refs.items.clientHeight
+      ) {
+        return (
+          itemToScrollTo.$el.offsetTop -
+          itemToScrollTo.$el.clientHeight -
+          (this.$refs.items.clientHeight - itemToScrollTo.$el.clientHeight)
+        )
+      }
+
+      // If the element to scroll to is above our current scroll position
+      // in the window, we need to scroll to the item and position it as
+      // the top item in the scroll window.
+      if (
+        itemToScrollTo.$el.offsetTop <
+        this.$refs.items.scrollTop + this.$refs.items.offsetTop
+      ) {
+        // To figure out how much to scroll, we need the top and bottom
+        // margin of the element we're scrolling to
+        const style =
+          itemToScrollTo.$el.currentStyle ||
+          window.getComputedStyle(itemToScrollTo.$el)
+        return (
+          itemToScrollTo.$el.offsetTop -
+          this.$refs.search.clientHeight -
+          (parseInt(style.marginTop) + parseInt(style.marginBottom))
+        )
+      }
+
+      return this.$refs.items.scrollTop
     },
   },
 }

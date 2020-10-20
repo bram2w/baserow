@@ -5,9 +5,14 @@
       hidden: !isVisible(query),
       active: isActive(value),
       disabled: disabled,
+      hover: isHovering(value),
     }"
   >
-    <a class="select__item-link" @click="select(value, disabled)">
+    <a
+      class="select__item-link"
+      @click="select(value, disabled)"
+      @mousemove="hover(value, disabled)"
+    >
       <i
         v-if="icon"
         class="select__item-icon fas fa-fw"
@@ -52,6 +57,11 @@ export default {
         this.$parent.select(value)
       }
     },
+    hover(value, disabled) {
+      if (!disabled && this.$parent.hover !== value) {
+        this.$parent.hover = value
+      }
+    },
     search(query) {
       this.query = query
     },
@@ -61,6 +71,9 @@ export default {
     },
     isActive(value) {
       return this.$parent.value === value
+    },
+    isHovering(value) {
+      return this.$parent.hover === value
     },
   },
 }

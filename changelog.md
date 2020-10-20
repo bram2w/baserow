@@ -7,6 +7,7 @@
 * Added Ubuntu installation guide documentation.
 * Added Email field.
 * Added importer abstraction including a CSV and tabular paste importer.
+* Added ability to navigate dropdown menus with arrow keys
 
 ## Released (2020-10-06)
 
