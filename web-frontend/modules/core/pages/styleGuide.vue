@@ -189,6 +189,7 @@
                     :key="i"
                     :name="'Choice ' + i"
                     :value="i"
+                    :disabled="i === 7"
                   ></DropdownItem>
                 </Dropdown>
               </div>
