@@ -2,6 +2,14 @@
   padding: 30px;
 }
 
+.dashboard__alert {
+  margin: 30px 30px 0 30px;
+}
+
+.dashboard__alert-button {
+  margin-top: 12px;
+}
+
 .dashboard__group {
   border: 1px solid $color-neutral-200;
   background-color: $white;
