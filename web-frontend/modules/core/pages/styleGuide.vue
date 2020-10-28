@@ -754,6 +754,26 @@
               dignissim mauris dictum imperdiet. Mauris ultrices ac eros at
               fringilla. Praesent ut tincidunt dui.
             </p>
+            <div class="delete-section">
+              <div class="delete-section__label">
+                <div class="delete-section__label-icon">
+                  <i class="fas fa-exclamation"></i>
+                </div>
+                Will also be permanently deleted
+              </div>
+              <ul class="delete-section__list">
+                <li>
+                  <i class="delete-section__list-icon fas fa-database"></i>
+                  Vehicles
+                  <small>including 12 tables</small>
+                </li>
+                <li>
+                  <i class="delete-section__list-icon fas fa-database"></i>
+                  Webshop
+                  <small>including 12 tables</small>
+                </li>
+              </ul>
+            </div>
           </div>
           <div class="modal__box modal__box--with-sidebar">
             <a class="modal__close">

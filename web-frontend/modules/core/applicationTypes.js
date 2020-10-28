@@ -50,6 +50,28 @@ export class ApplicationType extends Registerable {
     return null
   }
 
+  /**
+   * Should return an array where the first element is the describing name of the
+   * dependents in singular and the second element in plural. Can be null if there
+   * aren't any dependants.
+   *
+   * Example: ['table', 'tables']
+   * Result in singular: There is 1 table
+   * Result in plural: There are 2 tables
+   */
+  getDependentsName() {
+    return [null, null]
+  }
+
+  /**
+   * When deleting or listing an application we might want to give a quick overview
+   * which children / dependents there are. This method should return a list
+   * containing an object with an id, iconClass and name.
+   */
+  getDependents() {
+    return []
+  }
+
   constructor() {
     super()
     this.type = this.getType()

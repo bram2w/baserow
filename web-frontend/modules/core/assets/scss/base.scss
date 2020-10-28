@@ -15,6 +15,11 @@ a {
   cursor: pointer;
 }
 
+b,
+strong {
+  font-weight: 700;
+}
+
 *,
 *::before,
 *::after {

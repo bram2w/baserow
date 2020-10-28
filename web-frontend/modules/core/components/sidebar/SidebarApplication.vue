@@ -35,12 +35,16 @@
             </a>
           </li>
           <li>
-            <a @click="deleteApplication(application)">
+            <a @click="deleteApplication()">
               <i class="context__menu-icon fas fa-fw fa-trash"></i>
               Delete {{ application._.type.name | lowercase }}
             </a>
           </li>
         </ul>
+        <DeleteApplicationModal
+          ref="deleteApplicationModal"
+          :application="application"
+        />
       </Context>
     </div>
     <template
@@ -58,9 +62,11 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import DeleteApplicationModal from './DeleteApplicationModal'
 
 export default {
   name: 'SidebarApplication',
+  components: { DeleteApplicationModal },
   props: {
     application: {
       type: Object,
@@ -126,17 +132,9 @@ export default {
         }
       )
     },
-    async deleteApplication(application) {
+    deleteApplication() {
       this.$refs.context.hide()
-      this.setLoading(application, true)
-
-      try {
-        await this.$store.dispatch('application/delete', application)
-      } catch (error) {
-        notifyIf(error, 'application')
-      }
-
-      this.setLoading(application, false)
+      this.$refs.deleteApplicationModal.show()
     },
     getSelectedApplicationComponent(application) {
       const type = this.$registry.get('application', application.type)

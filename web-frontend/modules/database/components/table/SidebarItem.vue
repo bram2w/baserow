@@ -24,21 +24,28 @@
           </a>
         </li>
         <li>
-          <a @click="deleteTable(database, table)">
+          <a @click="deleteTable()">
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
             Delete
           </a>
         </li>
       </ul>
+      <DeleteTableModal
+        ref="deleteTableModal"
+        :database="database"
+        :table="table"
+      />
     </Context>
   </li>
 </template>
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import DeleteTableModal from './DeleteTableModal'
 
 export default {
   name: 'SidebarItem',
+  components: { DeleteTableModal },
   props: {
     database: {
       type: Object,
@@ -75,17 +82,9 @@ export default {
         }
       )
     },
-    async deleteTable(database, table) {
+    deleteTable() {
       this.$refs.context.hide()
-      this.setLoading(database, true)
-
-      try {
-        await this.$store.dispatch('table/delete', { database, table })
-      } catch (error) {
-        notifyIf(error, 'table')
-      }
-
-      this.setLoading(database, false)
+      this.$refs.deleteTableModal.show()
     },
     enableRename() {
       this.$refs.context.hide()

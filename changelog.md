@@ -7,7 +7,9 @@
 * Added Ubuntu installation guide documentation.
 * Added Email field.
 * Added importer abstraction including a CSV and tabular paste importer.
-* Added ability to navigate dropdown menus with arrow keys
+* Added ability to navigate dropdown menus with arrow keys.
+* Added confirmation modals when the user wants to delete a group, application, table,
+  view or field.
 * Fixed bug in the web-frontend URL validation where a '*' was invalidates.
 
 ## Released (2020-10-06)
