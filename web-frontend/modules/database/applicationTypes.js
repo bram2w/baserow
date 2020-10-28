@@ -19,6 +19,20 @@ export class DatabaseApplicationType extends ApplicationType {
     return Sidebar
   }
 
+  getDependentsName() {
+    return ['table', 'tables']
+  }
+
+  getDependents(database) {
+    return database.tables.map((table) => {
+      return {
+        id: table.id,
+        iconClass: 'table',
+        name: table.name,
+      }
+    })
+  }
+
   populate(application) {
     const values = super.populate(application)
     values.tables.forEach((object, index, tables) => populateTable(object))

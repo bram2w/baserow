@@ -33,22 +33,25 @@
           </a>
         </li>
         <li>
-          <a @click="deleteView(view)">
+          <a @click="deleteView()">
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
             Delete view
           </a>
         </li>
       </ul>
     </Context>
+    <DeleteViewModal ref="deleteViewModal" :view="view" />
   </li>
 </template>
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import DeleteViewModal from './DeleteViewModal'
 
 export default {
   name: 'ViewsContextItem',
+  components: { DeleteViewModal },
   mixins: [context],
   props: {
     view: {
@@ -80,17 +83,9 @@ export default {
 
       this.setLoading(view, false)
     },
-    async deleteView(view) {
+    deleteView() {
       this.$refs.context.hide()
-      this.setLoading(view, true)
-
-      try {
-        await this.$store.dispatch('view/delete', view)
-      } catch (error) {
-        notifyIf(error, 'view')
-      }
-
-      this.setLoading(view, false)
+      this.$refs.deleteViewModal.show()
     },
     selectView(view) {
       this.$nuxt.$router.push({

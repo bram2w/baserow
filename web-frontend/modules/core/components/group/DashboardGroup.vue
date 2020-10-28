@@ -29,6 +29,7 @@
             </a>
           </li>
         </ul>
+        <DeleteGroupModal ref="deleteGroupModal" :group="group" />
       </Context>
     </h2>
     <ul class="dashboard__group-items">
@@ -79,10 +80,14 @@
 import { mapGetters } from 'vuex'
 
 import CreateApplicationContext from '@baserow/modules/core/components/application/CreateApplicationContext'
+import DeleteGroupModal from '@baserow/modules/core/components/group/DeleteGroupModal'
 import editGroup from '@baserow/modules/core/mixins/editGroup'
 
 export default {
-  components: { CreateApplicationContext },
+  components: {
+    CreateApplicationContext,
+    DeleteGroupModal,
+  },
   mixins: [editGroup],
   props: {
     group: {
