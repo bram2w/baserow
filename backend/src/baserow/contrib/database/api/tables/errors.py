@@ -13,6 +13,11 @@ ERROR_INVALID_INITIAL_TABLE_DATA = (
     HTTP_400_BAD_REQUEST,
     'The provided table data must at least contain one row and one column.'
 )
+ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP = (
+    'ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP',
+    HTTP_400_BAD_REQUEST,
+    'The provided table does not belong to the related group.'
+)
 ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED = (
     'ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED',
     HTTP_400_BAD_REQUEST,

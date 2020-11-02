@@ -27,6 +27,7 @@ import {
   CSVImporterType,
   PasteImporterType,
 } from '@baserow/modules/database/importerTypes'
+import { APITokenSettingsType } from '@baserow/modules/database/settingsTypes'
 
 import tableStore from '@baserow/modules/database/store/table'
 import viewStore from '@baserow/modules/database/store/view'
@@ -62,4 +63,5 @@ export default ({ store, app }) => {
   app.$registry.register('field', new EmailFieldType())
   app.$registry.register('importer', new CSVImporterType())
   app.$registry.register('importer', new PasteImporterType())
+  app.$registry.register('settings', new APITokenSettingsType())
 }

@@ -152,7 +152,7 @@ SPECTACULAR_SETTINGS = {
         'name': 'MIT',
         'url': 'https://gitlab.com/bramw/baserow/-/blob/master/LICENSE'
     },
-    'VERSION': '0.3.1',
+    'VERSION': '0.4.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'TAGS': [
         {'name': 'User'},
@@ -164,7 +164,8 @@ SPECTACULAR_SETTINGS = {
         {'name': 'Database table view filters'},
         {'name': 'Database table view sortings'},
         {'name': 'Database table grid view'},
-        {'name': 'Database table rows'}
+        {'name': 'Database table rows'},
+        {'name': 'Database tokens'}
     ],
 }
 
@@ -185,6 +186,7 @@ if PUBLIC_BACKEND_DOMAIN:
 
 FROM_EMAIL = os.getenv('FROM_EMAIL', 'no-reply@localhost')
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
+ROW_PAGE_SIZE_LIMIT = 200  # Indicates how many rows can be requested at once.
 
 # The amount of rows that can be imported when creating a table.
 INITIAL_TABLE_DATA_LIMIT = None

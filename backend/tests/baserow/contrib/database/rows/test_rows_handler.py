@@ -103,6 +103,43 @@ def test_create_row(data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_row(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(name='Car', user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name='Name', text_default='Test'
+    )
+    speed_field = data_fixture.create_number_field(
+        table=table, name='Max speed', number_negative=True
+    )
+    price_field = data_fixture.create_number_field(
+        table=table, name='Price', number_type='DECIMAL', number_decimal_places=2,
+        number_negative=False
+    )
+
+    handler = RowHandler()
+    row = handler.create_row(user=user, table=table, values={
+        f'field_{name_field.id}': 'Tesla',
+        f'field_{speed_field.id}': 240,
+        f'field_{price_field.id}': Decimal('59999.99')
+    })
+
+    with pytest.raises(UserNotInGroupError):
+        handler.get_row(user=user_2, table=table, row_id=row.id)
+
+    with pytest.raises(RowDoesNotExist):
+        handler.get_row(user=user, table=table, row_id=99999)
+
+    row_tmp = handler.get_row(user=user, table=table, row_id=row.id)
+
+    assert row_tmp.id == row.id
+    assert getattr(row_tmp, f'field_{name_field.id}') == 'Tesla'
+    assert getattr(row_tmp, f'field_{speed_field.id}') == 240
+    assert getattr(row_tmp, f'field_{price_field.id}') == Decimal('59999.99')
+
+
+@pytest.mark.django_db
 def test_update_row(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()

@@ -6,13 +6,15 @@ from .fields.models import (
     Field, TextField, NumberField, LongTextField, BooleanField, DateField, LinkRowField,
     URLField, EmailField
 )
+from .tokens.models import Token, TokenPermission
 
 __all__ = [
     'Database',
     'Table',
     'View', 'GridView', 'GridViewFieldOptions', 'ViewFilter',
     'Field', 'TextField', 'NumberField', 'LongTextField', 'BooleanField', 'DateField',
-    'LinkRowField', 'URLField', 'EmailField'
+    'LinkRowField', 'URLField', 'EmailField',
+    'Token', 'TokenPermission'
 ]
 
 

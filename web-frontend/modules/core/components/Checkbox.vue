@@ -1,5 +1,5 @@
 <template>
-  <div class="checkbox" :class="{ active: value }" @click="toggle(value)">
+  <div class="checkbox" :class="classNames" @click="toggle(value)">
     <slot></slot>
   </div>
 </template>
@@ -12,6 +12,17 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+  },
+  computed: {
+    classNames() {
+      return {
+        'checkbox--has-content': Object.prototype.hasOwnProperty.call(
+          this.$slots,
+          'default'
+        ),
+        active: this.value === true,
+      }
     },
   },
   methods: {

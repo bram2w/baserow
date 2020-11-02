@@ -1,0 +1,159 @@
+.api-token {
+  border: solid 1px $color-neutral-200;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.api-token__key {
+  display: flex;
+  align-items: center;
+  margin: 10px 8px;
+}
+
+.api-token__key-name {
+  margin-right: 10px;
+  font-size: 13px;
+}
+
+.api-token__key-value {
+  font-family: monospace;
+  margin-right: 10px;
+  background-color: $color-neutral-100;
+  padding: 0 6px;
+  border-radius: 3px;
+
+  @include fixed-height(26px, 10px);
+}
+
+.api-token__key-visible {
+  margin-right: 10px;
+}
+
+.api-token__key-visible,
+.api-token__key-copy {
+  position: relative;
+  color: $color-primary-900;
+  user-select: none;
+  border-radius: 3px;
+
+  @include center-text(26px, 11px);
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+}
+
+.api-token__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: $color-neutral-100;
+  padding: 16px 0 16px 16px;
+}
+
+.api-token__info {
+  flex-grow: 1;
+  overflow: hidden;
+  margin-right: 20px;
+}
+
+.api-token__name {
+  display: flex;
+  min-width: 0;
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.api-token__name-content {
+  @extend %ellipsis;
+}
+
+.api-token__more {
+  font-size: 14px;
+  padding: 0 6px;
+  margin-left: 6px;
+  border-radius: 3px;
+  color: $color-primary-900;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-200;
+  }
+}
+
+.api-token__details {
+  display: flex;
+  min-width: 0;
+}
+
+.api-token__group {
+  @extend %ellipsis;
+
+  color: $color-neutral-600;
+  font-size: 12px;
+}
+
+.api-token__expand {
+  white-space: nowrap;
+  padding: 0 6px;
+  user-select: none;
+}
+
+.api-token__permissions {
+  flex: 0 0 260px;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+}
+
+.api-token__permission {
+  flex: 0 0 25%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.api-token__body {
+  display: none;
+  border-top: solid 1px $color-neutral-200;
+
+  &.api-token__body--open {
+    display: block;
+  }
+}
+
+.api-token__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &:hover {
+    background-color: $color-neutral-50;
+  }
+}
+
+.api-token__database,
+.api-token__table {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
+  margin-right: 20px;
+  padding: 0 16px;
+  font-size: 13px;
+  line-height: 40px;
+
+  div {
+    @extend %ellipsis;
+  }
+}
+
+.api-token__database {
+  font-weight: 600;
+}
+
+.api-token__table {
+  padding-left: 32px;
+}

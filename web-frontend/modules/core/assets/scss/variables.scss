@@ -80,3 +80,12 @@ $z-index-notifications: 8 !default;
 $base-font-family: $text-font-stack !default;
 $font-awesome-font-family: 'Font Awesome 5 Free', sans-serif !default;
 $font-awesome-font-weight: 900 !default;
+
+// API docs variables
+$api-docs-nav-width: 240px;
+$api-docs-header-height: 52px;
+$api-docs-header-z-index: 4;
+$api-docs-databases-z-index: 5;
+$api-docs-nav-z-index: 2;
+$api-docs-body-z-index: 3;
+$api-docs-background-z-index: 1;

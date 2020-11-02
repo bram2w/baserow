@@ -14,4 +14,14 @@ export const routes = [
       return p
     },
   },
+  {
+    name: 'database-api-docs',
+    path: '/api/docs',
+    component: path.resolve(__dirname, 'pages/APIDocs.vue'),
+  },
+  {
+    name: 'database-api-docs-detail',
+    path: '/api/docs/database/:databaseId',
+    component: path.resolve(__dirname, 'pages/APIDocsDatabase.vue'),
+  },
 ]

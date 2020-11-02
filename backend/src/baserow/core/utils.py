@@ -1,4 +1,6 @@
 import re
+import random
+import string
 
 from collections import namedtuple
 
@@ -156,3 +158,20 @@ def dict_to_object(values, name='Struct'):
     """
 
     return namedtuple(name, values.keys())(*values.values())
+
+
+def random_string(length):
+    """
+    Generates a random string with a given length containing letters and digits.
+
+    :param length: The amount of characters in the string.
+    :type length: int
+    :return: The randomly generated string
+    :type: str
+    """
+
+    return ''.join(
+        random.SystemRandom().choice(
+            string.ascii_letters + string.digits
+        ) for _ in range(length)
+    )

@@ -1,5 +1,6 @@
 import { ApplicationType } from '@baserow/modules/core/applicationTypes'
 import Sidebar from '@baserow/modules/database/components/Sidebar'
+import Context from '@baserow/modules/database/components/Context'
 import { populateTable } from '@baserow/modules/database/store/table'
 
 export class DatabaseApplicationType extends ApplicationType {
@@ -17,6 +18,10 @@ export class DatabaseApplicationType extends ApplicationType {
 
   getSelectedSidebarComponent() {
     return Sidebar
+  }
+
+  getContextComponent() {
+    return Context
   }
 
   getDependentsName() {

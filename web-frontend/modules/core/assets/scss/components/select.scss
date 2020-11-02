@@ -54,6 +54,7 @@
   margin: 0 8px 4px 8px;
   padding: 0 32px 0 10px;
   border-radius: 3px;
+  user-select: none;
 
   &:last-child {
     margin-bottom: 0;
@@ -146,6 +147,7 @@
   display: block;
   padding: 0 12px;
   color: $color-neutral-600;
+  user-select: none;
 
   @include fixed-height(36px, 14px);
 
