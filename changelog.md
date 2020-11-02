@@ -1,6 +1,18 @@
 # Changelog
 
-## Unreleased
+## Released (2020-11-02)
+
+* Highlight the row of a selected cell.
+* Fixed error when there is no view.
+* Added Ubuntu installation guide documentation.
+* Added Email field.
+* Added importer abstraction including a CSV and tabular paste importer.
+* Added ability to navigate dropdown menus with arrow keys.
+* Added confirmation modals when the user wants to delete a group, application, table,
+  view or field.
+* Fixed bug in the web-frontend URL validation where a '*' was invalidates.
+
+## Released (2020-10-06)
 
 * Prevent adding a new line to the long text field in the grid view when selecting the
   cell by pressing the enter key.

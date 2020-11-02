@@ -12,7 +12,8 @@
           "include",
           "mixin",
           "return",
-          "extend"
+          "extend",
+          "for"
         ]
       }
     ]

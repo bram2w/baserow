@@ -3,6 +3,39 @@
     <h2 class="box__title">Create new table</h2>
     <Error :error="error"></Error>
     <TableForm ref="tableForm" @submitted="submitted">
+      <div class="control">
+        <label class="control__label">
+          Would you like to import existing data?
+        </label>
+        <div class="control__elements">
+          <ul class="choice-items">
+            <li>
+              <a
+                class="choice-items__link"
+                :class="{ active: importer === '' }"
+                @click="importer = ''"
+              >
+                <i class="choice-items__icon fas fa-clone"></i>
+                Start with an empty table
+              </a>
+            </li>
+            <li v-for="importerType in importerTypes" :key="importerType.type">
+              <a
+                class="choice-items__link"
+                :class="{ active: importer === importerType.type }"
+                @click="importer = importerType.type"
+              >
+                <i
+                  class="choice-items__icon fas"
+                  :class="'fa-' + importerType.iconClass"
+                ></i>
+                {{ importerType.name }}
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <component :is="importerComponent" />
       <div class="actions">
         <div class="align-right">
           <button
@@ -37,17 +70,52 @@ export default {
   data() {
     return {
       loading: false,
+      importer: '',
     }
   },
+  computed: {
+    importerTypes() {
+      return this.$registry.getAll('importer')
+    },
+    importerComponent() {
+      return this.importer === ''
+        ? null
+        : this.$registry.get('importer', this.importer).getFormComponent()
+    },
+  },
   methods: {
+    hide(...args) {
+      modal.methods.hide.call(this, ...args)
+      this.importer = ''
+    },
+    /**
+     * When the form is submitted we try to extract the initial data and first row
+     * header setting from the values. An importer could have added those, but they
+     * need to be removed from the values.
+     */
     async submitted(values) {
       this.loading = true
       this.hideError()
+
+      let firstRowHeader = false
+      let data = null
+
+      if (Object.prototype.hasOwnProperty.call(values, 'firstRowHeader')) {
+        firstRowHeader = values.firstRowHeader
+        delete values.firstRowHeader
+      }
+
+      if (Object.prototype.hasOwnProperty.call(values, 'data')) {
+        data = JSON.parse(values.data)
+        delete values.data
+      }
 
       try {
         const table = await this.$store.dispatch('table/create', {
           database: this.application,
           values,
+          initialData: data,
+          firstRowHeader,
         })
         this.loading = false
         this.hide()

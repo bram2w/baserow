@@ -105,6 +105,24 @@
             </div>
           </div>
           <div class="control">
+            <label class="control__label">Switch field</label>
+            <div class="control__elements">
+              value: {{ switchValue }}
+              <br />
+              <br />
+              <SwitchInput v-model="switchValue"></SwitchInput>
+              <SwitchInput v-model="switchValue">With text</SwitchInput>
+              <SwitchInput v-model="switchUnknown">With text</SwitchInput>
+              <SwitchInput v-model="switchValue" :large="true"></SwitchInput>
+              <SwitchInput v-model="switchValue" :large="true">
+                With text
+              </SwitchInput>
+              <SwitchInput v-model="switchUnknown" :large="true">
+                With text
+              </SwitchInput>
+            </div>
+          </div>
+          <div class="control">
             <label class="control__label">Dropdown</label>
             <div class="control__elements">
               value: {{ dropdown }}
@@ -189,6 +207,7 @@
                     :key="i"
                     :name="'Choice ' + i"
                     :value="i"
+                    :disabled="i === 7"
                   ></DropdownItem>
                 </Dropdown>
               </div>
@@ -753,6 +772,26 @@
               dignissim mauris dictum imperdiet. Mauris ultrices ac eros at
               fringilla. Praesent ut tincidunt dui.
             </p>
+            <div class="delete-section">
+              <div class="delete-section__label">
+                <div class="delete-section__label-icon">
+                  <i class="fas fa-exclamation"></i>
+                </div>
+                Will also be permanently deleted
+              </div>
+              <ul class="delete-section__list">
+                <li>
+                  <i class="delete-section__list-icon fas fa-database"></i>
+                  Vehicles
+                  <small>including 12 tables</small>
+                </li>
+                <li>
+                  <i class="delete-section__list-icon fas fa-database"></i>
+                  Webshop
+                  <small>including 12 tables</small>
+                </li>
+              </ul>
+            </div>
           </div>
           <div class="modal__box modal__box--with-sidebar">
             <a class="modal__close">
@@ -823,6 +862,8 @@ export default {
   data() {
     return {
       checkbox: false,
+      switchValue: false,
+      switchUnknown: 2,
       dropdown: '',
       longDropdown: '0',
       date: '',

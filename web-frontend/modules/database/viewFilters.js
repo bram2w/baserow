@@ -92,7 +92,7 @@ export class EqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'number']
+    return ['text', 'long_text', 'url', 'email', 'number']
   }
 
   matches(rowValue, filterValue) {
@@ -120,7 +120,7 @@ export class NotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'number']
+    return ['text', 'long_text', 'url', 'email', 'number']
   }
 
   matches(rowValue, filterValue) {
@@ -148,7 +148,7 @@ export class ContainsViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url']
+    return ['text', 'long_text', 'url', 'email']
   }
 
   matches(rowValue, filterValue) {
@@ -172,7 +172,7 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url']
+    return ['text', 'long_text', 'url', 'email']
   }
 
   matches(rowValue, filterValue) {
@@ -336,7 +336,16 @@ export class EmptyViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'number', 'date', 'boolean', 'link_row']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'date',
+      'boolean',
+      'link_row',
+    ]
   }
 
   matches(rowValue, filterValue) {
@@ -363,7 +372,16 @@ export class NotEmptyViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'number', 'date', 'boolean', 'link_row']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'date',
+      'boolean',
+      'link_row',
+    ]
   }
 
   matches(rowValue, filterValue) {

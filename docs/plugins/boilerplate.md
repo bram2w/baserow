@@ -8,7 +8,7 @@ directory as the plugin so that it can install Baserow as a dependency.
 ## Creating plugin
 
 Before the cookiecutter plugin boilerplate template can be used you first need to 
-clone into the Baserow repository and install cookiecutter. In this example I will 
+clone the Baserow repository and install cookiecutter. In this example I will 
 assume you are working in an empty directory at `~/baserow` and that you have installed 
 python and pip.
 
@@ -67,12 +67,12 @@ $ baserow runserver 0.0.0.0:8000
 Once that is running you can verify if the server is running by visiting 
 http://localhost:8001/api/groups/ in your browser. You should see a JSON response 
 containing "Authentication credentials were not provided.". This means that everything
-is working! Second we can install the node dependencies and start the nuxt development
+is working! Second we can install the node dependencies and start the Nuxt development
 server. Open a new tab/window of your terminal and execute the following commands.
 
 > It could happen that you get a module not found error when are trying to start the
 > Nuxt development server. This will most likely be because Baserow has been installed
-> as a link dependency and this means that Baserow needs his own node_modules in order 
+> as a link dependency and this means that Baserow needs its own node_modules in order 
 > to work. Execute the following command inside the web-frontend container to resolve
 > the issue: `(cd /baserow/web-frontend && yarn install)`.
 
@@ -189,7 +189,7 @@ The linters on the web-frontend side should run automatically when the developme
 server is running. You can also run the linters manually by running the following 
 commands in the correct container.
 
-* `make lint-python` (backend): all the python will be checked with flake8.
+* `make lint-python` (backend): all the python code will be checked with flake8.
 * `make eslint` (web-frontend): all the javascript code will be checked with eslint.
 * `make stylelint` (web-frontend): all the scss code will be checked with stylelint.
 

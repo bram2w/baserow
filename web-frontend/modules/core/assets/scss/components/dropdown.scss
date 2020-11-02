@@ -45,6 +45,18 @@
 
   @include absolute(0, 0, auto, 0);
 
+  .select__item:hover {
+    background-color: transparent;
+  }
+
+  .select__item.hover {
+    background-color: $color-neutral-100;
+  }
+
+  .select__item.active {
+    background-color: $color-primary-100;
+  }
+
   .select__item.active:hover::after {
     display: block;
   }

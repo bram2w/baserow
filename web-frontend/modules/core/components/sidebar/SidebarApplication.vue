@@ -28,6 +28,10 @@
       <Context ref="context">
         <div class="context__menu-title">{{ application.name }}</div>
         <ul class="context__menu">
+          <component
+            :is="contextComponent"
+            :application="application"
+          ></component>
           <li>
             <a @click="enableRename()">
               <i class="context__menu-icon fas fa-fw fa-pen"></i>
@@ -35,12 +39,16 @@
             </a>
           </li>
           <li>
-            <a @click="deleteApplication(application)">
+            <a @click="deleteApplication()">
               <i class="context__menu-icon fas fa-fw fa-trash"></i>
               Delete {{ application._.type.name | lowercase }}
             </a>
           </li>
         </ul>
+        <DeleteApplicationModal
+          ref="deleteApplicationModal"
+          :application="application"
+        />
       </Context>
     </div>
     <template
@@ -49,7 +57,7 @@
       "
     >
       <component
-        :is="getSelectedApplicationComponent(application)"
+        :is="selectedApplicationComponent"
         :application="application"
       ></component>
     </template>
@@ -58,13 +66,27 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import DeleteApplicationModal from './DeleteApplicationModal'
 
 export default {
   name: 'SidebarApplication',
+  components: { DeleteApplicationModal },
   props: {
     application: {
       type: Object,
       required: true,
+    },
+  },
+  computed: {
+    selectedApplicationComponent() {
+      return this.$registry
+        .get('application', this.application.type)
+        .getSelectedSidebarComponent()
+    },
+    contextComponent() {
+      return this.$registry
+        .get('application', this.application.type)
+        .getContextComponent()
     },
   },
   methods: {
@@ -126,21 +148,9 @@ export default {
         }
       )
     },
-    async deleteApplication(application) {
+    deleteApplication() {
       this.$refs.context.hide()
-      this.setLoading(application, true)
-
-      try {
-        await this.$store.dispatch('application/delete', application)
-      } catch (error) {
-        notifyIf(error, 'application')
-      }
-
-      this.setLoading(application, false)
-    },
-    getSelectedApplicationComponent(application) {
-      const type = this.$registry.get('application', application.type)
-      return type.getSelectedSidebarComponent()
+      this.$refs.deleteApplicationModal.show()
     },
   },
 }

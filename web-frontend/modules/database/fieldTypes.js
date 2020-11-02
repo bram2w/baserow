@@ -1,6 +1,6 @@
 import moment from 'moment'
 
-import { isValidURL } from '@baserow/modules/core/utils/string'
+import { isValidURL, isValidEmail } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
@@ -11,6 +11,7 @@ import FieldLinkRowSubForm from '@baserow/modules/database/components/field/Fiel
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/GridViewFieldLongText'
 import GridViewFieldURL from '@baserow/modules/database/components/view/grid/GridViewFieldURL'
+import GridViewFieldEmail from '@baserow/modules/database/components/view/grid/GridViewFieldEmail'
 import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/GridViewFieldLinkRow'
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
@@ -19,6 +20,7 @@ import GridViewFieldDate from '@baserow/modules/database/components/view/grid/Gr
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
 import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFieldURL'
+import RowEditFieldEmail from '@baserow/modules/database/components/row/RowEditFieldEmail'
 import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
@@ -194,6 +196,39 @@ export class FieldType extends Registerable {
    * is deleted.
    */
   tableDeleted(context, field, table, database) {}
+
+  /**
+   * Should return a string indicating which data type is expected. (e.g. string). The
+   * value is shown in the documentation above the description.
+   */
+  getDocsDataType(field) {
+    throw new Error('The docs data type must be set.')
+  }
+
+  /**
+   * Should return a single line description explaining which value is expected for
+   * the field. The value is shown in the overview of fields.
+   */
+  getDocsDescription(field) {
+    throw new Error('The docs description must be set.')
+  }
+
+  /**
+   * Should return an example value of the data. Will be shown in the request and
+   * response examples.
+   */
+  getDocsRequestExample(field) {
+    throw new Error('The docs example must be set.')
+  }
+
+  /**
+   * If the response value differs from the accepted value as request then an
+   * alternative can be provided here. By default the request example is returned
+   * here.
+   */
+  getDocsResponseExample(field) {
+    return this.getDocsRequestExample(field)
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -235,6 +270,18 @@ export class TextFieldType extends FieldType {
         : stringB.localeCompare(stringA)
     }
   }
+
+  getDocsDataType(field) {
+    return 'string'
+  }
+
+  getDocsDescription(field) {
+    return 'Accepts single line text.'
+  }
+
+  getDocsRequestExample(field) {
+    return 'string'
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -267,6 +314,18 @@ export class LongTextFieldType extends FieldType {
         ? stringA.localeCompare(stringB)
         : stringB.localeCompare(stringA)
     }
+  }
+
+  getDocsDataType(field) {
+    return 'string'
+  }
+
+  getDocsDescription(field) {
+    return 'Accepts multi line text.'
+  }
+
+  getDocsRequestExample(field) {
+    return 'string'
   }
 }
 
@@ -336,6 +395,32 @@ export class LinkRowFieldType extends FieldType {
     if (field.link_row_table === table.id) {
       dispatch('field/forceDelete', field, { root: true })
     }
+  }
+
+  getDocsDataType(field) {
+    return 'array'
+  }
+
+  getDocsDescription(field) {
+    return (
+      `Accepts an array containing the identifiers of the related rows from table ` +
+      `${field.link_row_table}. All identifiers must be provided every time the ` +
+      `relations are updated. If an empty array is provided all relations will be ` +
+      `deleted.`
+    )
+  }
+
+  getDocsRequestExample(field) {
+    return [1]
+  }
+
+  getDocsResponseExample(field) {
+    return [
+      {
+        id: 0,
+        value: 'string',
+      },
+    ]
   }
 }
 
@@ -410,6 +495,36 @@ export class NumberFieldType extends FieldType {
     }
     return number.toFixed(decimalPlaces)
   }
+
+  getDocsDataType(field) {
+    return field.number_type === 'DECIMAL' ? 'decimal' : 'integer'
+  }
+
+  getDocsDescription(field) {
+    let description = 'Accepts a '
+
+    if (!field.number_negative) {
+      description += 'positive '
+    }
+
+    description +=
+      field.number_type === 'DECIMAL'
+        ? `decimal with ${field.number_decimal_places} places after the dot.`
+        : 'number.'
+
+    return description
+  }
+
+  getDocsRequestExample(field) {
+    if (field.number_type === 'DECIMAL') {
+      let number = '0.'
+      for (let i = 1; i <= field.number_decimal_places; i++) {
+        number += '0'
+      }
+      return number
+    }
+    return 0
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -456,6 +571,18 @@ export class BooleanFieldType extends FieldType {
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text').toLowerCase().trim()
     return trueString.includes(value)
+  }
+
+  getDocsDataType(field) {
+    return 'boolean'
+  }
+
+  getDocsDescription(field) {
+    return 'Accepts a boolean.'
+  }
+
+  getDocsRequestExample(field) {
+    return true
   }
 }
 
@@ -514,6 +641,20 @@ export class DateFieldType extends FieldType {
       return null
     }
   }
+
+  getDocsDataType(field) {
+    return 'date'
+  }
+
+  getDocsDescription(field) {
+    return field.date_include_time
+      ? 'Accepts a date time in ISO format.'
+      : 'Accepts a date in ISO format.'
+  }
+
+  getDocsRequestExample(field) {
+    return field.date_include_time ? '2020-01-01T12:00:00Z' : '2020-01-01'
+  }
 }
 
 export class URLFieldType extends FieldType {
@@ -551,5 +692,67 @@ export class URLFieldType extends FieldType {
         ? stringA.localeCompare(stringB)
         : stringB.localeCompare(stringA)
     }
+  }
+
+  getDocsDataType(field) {
+    return 'string'
+  }
+
+  getDocsDescription(field) {
+    return 'Accepts a string that must be a URL.'
+  }
+
+  getDocsRequestExample(field) {
+    return 'https://baserow.io'
+  }
+}
+
+export class EmailFieldType extends FieldType {
+  static getType() {
+    return 'email'
+  }
+
+  getIconClass() {
+    return 'at'
+  }
+
+  getName() {
+    return 'Email'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldEmail
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldEmail
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const value = clipboardData.getData('text')
+    return isValidEmail(value) ? value : ''
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+
+  getDocsDataType(field) {
+    return 'string'
+  }
+
+  getDocsDescription(field) {
+    return 'Accepts a string that must be an email address.'
+  }
+
+  getDocsRequestExample(field) {
+    return 'example@baserow.io'
   }
 }

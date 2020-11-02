@@ -50,6 +50,7 @@
                 :key="'left-row-' + view.id + '-' + row.id"
                 class="grid-view__row"
                 :class="{
+                  'grid-view__row--selected': row._.selectedBy.length > 0,
                   'grid-view__row--loading': row._.loading,
                   'grid-view__row--hover': row._.hover,
                   'grid-view__row--warning':
@@ -215,6 +216,7 @@
                 :key="'right-row-' + view.id + '-' + row.id"
                 class="grid-view__row"
                 :class="{
+                  'grid-view__row--selected': row._.selectedBy.length > 0,
                   'grid-view__row--loading': row._.loading,
                   'grid-view__row--hover': row._.hover,
                   'grid-view__row--warning':

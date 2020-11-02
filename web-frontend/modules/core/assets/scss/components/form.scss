@@ -19,6 +19,13 @@
   margin-right: 6px;
 }
 
+.control__description {
+  font-size: 13px;
+  line-height: 160%;
+  color: $color-neutral-600;
+  margin-bottom: 16px;
+}
+
 .control__context {
   color: $color-primary-900;
   margin-left: 6px;
@@ -52,6 +59,13 @@
   }
 }
 
+.textarea--modal {
+  resize: vertical;
+  height: 22px * 6;
+  line-height: 22px;
+  font-size: 13px;
+}
+
 .input__with-icon {
   position: relative;
 
@@ -74,8 +88,13 @@
   position: relative;
   height: 28px;
   line-height: 28px;
-  padding-left: 24px;
+  padding-left: 18px;
   cursor: pointer;
+  user-select: none;
+
+  &.checkbox--has-content {
+    padding-left: 24px;
+  }
 
   &::before {
     @include absolute(5px, auto, 0, 0);
@@ -95,6 +114,93 @@
 
   &.active::before {
     content: fa-content($fa-var-check);
+  }
+}
+
+.switch {
+  position: relative;
+  line-height: 28px;
+  height: 28px;
+  padding-left: 22px;
+  cursor: pointer;
+  user-select: none;
+
+  &.switch--static {
+    cursor: initial;
+    user-select: initial;
+  }
+
+  &.switch--has-content {
+    padding-left: 28px;
+  }
+
+  &::before {
+    content: "";
+    border-radius: 12px;
+    width: 22px;
+    height: 12px;
+    background-color: $color-neutral-200;
+
+    @include absolute(9px, auto, auto, 0);
+  }
+
+  &::after {
+    content: "";
+    border-radius: 100%;
+    width: 6px;
+    height: 6px;
+    background-color: $white;
+    transition: left 0.085s ease-in;
+
+    @include absolute(12px, auto, auto, 4px);
+  }
+
+  &.active {
+    &::before {
+      background-color: $color-success-500;
+    }
+
+    &::after {
+      left: 12px;
+    }
+  }
+
+  &.unknown {
+    &::before {
+      background-color: $color-warning-500;
+    }
+
+    &::after {
+      left: 8px;
+    }
+  }
+
+  &.switch--large {
+    padding-left: 28px;
+
+    &.switch--has-content {
+      padding-left: 36px;
+    }
+
+    &::before {
+      top: 6px;
+      height: 16px;
+      width: 28px;
+    }
+
+    &::after {
+      top: 10px;
+      width: 7px;
+      height: 7px;
+    }
+
+    &.active::after {
+      left: 17px;
+    }
+
+    &.unknown::after {
+      left: 10.5px;
+    }
   }
 }
 

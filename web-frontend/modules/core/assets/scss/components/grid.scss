@@ -1,0 +1,27 @@
+.row {
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin: 0 -#{$grid-width};
+}
+
+.col {
+  box-sizing: border-box;
+  flex-grow: 1;
+  flex-basis: 0;
+  max-width: 100%;
+  padding: 0 $grid-width;
+}
+
+@for $i from 1 through $grid-columns {
+  .col-#{$i} {
+    flex-basis: 100% / $grid-columns * $i;
+    max-width: 100% / $grid-columns * $i;
+  }
+
+  .col-offset-#{$i} {
+    margin-left: 100% / $grid-columns * $i;
+  }
+}

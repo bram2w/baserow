@@ -41,17 +41,9 @@ export default {
 
       this.setLoading(group, false)
     },
-    async deleteGroup(group) {
+    deleteGroup(group) {
       this.$refs.context.hide()
-      this.setLoading(group, true)
-
-      try {
-        await this.$store.dispatch('group/delete', group)
-      } catch (error) {
-        notifyIf(error, 'group')
-      }
-
-      this.setLoading(group, false)
+      this.$refs.deleteGroupModal.show()
     },
   },
 }

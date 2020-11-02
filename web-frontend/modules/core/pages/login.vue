@@ -96,7 +96,12 @@ export default {
           email: this.credentials.email,
           password: this.credentials.password,
         })
-        this.$nuxt.$router.push({ name: 'dashboard' })
+        const { original } = this.$route.query
+        if (original) {
+          this.$nuxt.$router.push(original)
+        } else {
+          this.$nuxt.$router.push({ name: 'dashboard' })
+        }
       } catch (error) {
         if (error.handler) {
           const response = error.handler.response
@@ -126,6 +131,12 @@ export default {
   head() {
     return {
       title: 'Login',
+      link: [
+        {
+          rel: 'canonical',
+          href: this.$env.PUBLIC_WEB_FRONTEND_URL + this.$route.path,
+        },
+      ],
     }
   },
   validations: {

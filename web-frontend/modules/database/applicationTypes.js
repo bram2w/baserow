@@ -1,5 +1,6 @@
 import { ApplicationType } from '@baserow/modules/core/applicationTypes'
 import Sidebar from '@baserow/modules/database/components/Sidebar'
+import Context from '@baserow/modules/database/components/Context'
 import { populateTable } from '@baserow/modules/database/store/table'
 
 export class DatabaseApplicationType extends ApplicationType {
@@ -17,6 +18,24 @@ export class DatabaseApplicationType extends ApplicationType {
 
   getSelectedSidebarComponent() {
     return Sidebar
+  }
+
+  getContextComponent() {
+    return Context
+  }
+
+  getDependentsName() {
+    return ['table', 'tables']
+  }
+
+  getDependents(database) {
+    return database.tables.map((table) => {
+      return {
+        id: table.id,
+        iconClass: 'table',
+        name: table.name,
+      }
+    })
   }
 
   populate(application) {
@@ -47,9 +66,9 @@ export class DatabaseApplicationType extends ApplicationType {
       })
     } else {
       $store.dispatch('notification/error', {
-        title: 'Could select the database.',
+        title: "Couldn't select the database.",
         message:
-          "The database could be selected because it doesn't have any tables. Use " +
+          "The database couldn't be selected because it doesn't have any tables. Use " +
           'the sidebar to create one.',
       })
     }

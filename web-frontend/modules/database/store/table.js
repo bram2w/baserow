@@ -57,7 +57,10 @@ export const actions = {
    * Create a new table based on the provided values and add it to the tables
    * of the provided database.
    */
-  async create({ commit, dispatch }, { database, values }) {
+  async create(
+    { commit, dispatch },
+    { database, values, initialData = null, firstRowHeader = true }
+  ) {
     const type = DatabaseApplicationType.getType()
 
     // Check if the provided database (application) has the correct type.
@@ -70,7 +73,9 @@ export const actions = {
 
     const { data } = await TableService(this.$client).create(
       database.id,
-      values
+      values,
+      initialData,
+      firstRowHeader
     )
     commit('ADD_ITEM', { database, table: data })
 

@@ -35,15 +35,18 @@
           </a>
         </li>
       </ul>
+      <DeleteGroupModal ref="deleteGroupModal" :group="group" />
     </Context>
   </li>
 </template>
 
 <script>
+import DeleteGroupModal from '@baserow/modules/core/components/group/DeleteGroupModal'
 import editGroup from '@baserow/modules/core/mixins/editGroup'
 
 export default {
   name: 'GroupsContextItem',
+  components: { DeleteGroupModal },
   mixins: [editGroup],
   props: {
     group: {

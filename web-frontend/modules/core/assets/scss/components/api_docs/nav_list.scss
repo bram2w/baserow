@@ -1,0 +1,39 @@
+.api-docs__nav-list {
+  list-style: none;
+  margin: 20px;
+  padding: 0;
+
+  li:not(:last-child) {
+    margin-bottom: 20px;
+  }
+}
+
+.api-docs__nav-link {
+  font-size: 14px;
+  font-weight: 700;
+  color: $color-primary-900;
+
+  &:hover {
+    text-decoration: none;
+    color: $color-primary-700;
+  }
+
+  &.active {
+    color: $color-primary-500;
+  }
+
+  .api-docs__nav-sub & {
+    font-size: 13px;
+    font-weight: 400;
+  }
+}
+
+.api-docs__nav-sub {
+  list-style: none;
+  margin: 15px;
+  padding: 0;
+
+  &:not(.open) {
+    display: none;
+  }
+}

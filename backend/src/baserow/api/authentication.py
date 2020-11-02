@@ -1,5 +1,7 @@
 import jwt
 
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
+
 from django.utils.translation import ugettext as _
 
 from rest_framework import exceptions
@@ -41,3 +43,17 @@ class JSONWebTokenAuthentication(JWTJSONWebTokenAuthentication):
         user = self.authenticate_credentials(payload)
 
         return user, jwt_value
+
+
+class JSONWebTokenAuthenticationExtension(OpenApiAuthenticationExtension):
+    target_class = 'baserow.api.authentication.JSONWebTokenAuthentication'
+    name = 'JWT'
+    match_subclasses = True
+    priority = -1
+
+    def get_security_definition(self, auto_schema):
+        return {
+            'type': 'http',
+            'scheme': 'bearer',
+            'bearerFormat': 'JWT your_token',
+        }
