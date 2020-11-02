@@ -156,6 +156,16 @@ export default {
      * when the CSV doesn't have any entries the appropriate error will be shown.
      */
     reload() {
+      const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
+      const count = this.rawData.split(/\r\n|\r|\n/).length
+      if (limit !== null && count > limit) {
+        this.values.data = ''
+        this.error = `It is not possible to import more than ${limit} rows.`
+        this.preview = {}
+        this.$emit('input', this.value)
+        return
+      }
+
       Papa.parse(this.rawData, {
         delimiter: this.columnSeparator === 'auto' ? '' : this.columnSeparator,
         complete: (data) => {

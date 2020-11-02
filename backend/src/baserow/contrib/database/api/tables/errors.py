@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 
@@ -10,4 +12,10 @@ ERROR_INVALID_INITIAL_TABLE_DATA = (
     'ERROR_INVALID_INITIAL_TABLE_DATA',
     HTTP_400_BAD_REQUEST,
     'The provided table data must at least contain one row and one column.'
+)
+ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED = (
+    'ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED',
+    HTTP_400_BAD_REQUEST,
+    f'The initial table data limit has been exceeded. You can provide a maximum of '
+    f'{settings.INITIAL_TABLE_DATA_LIMIT} rows.'
 )

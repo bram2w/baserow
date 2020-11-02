@@ -12,7 +12,9 @@ from baserow.contrib.database.fields.field_types import (
 )
 
 from .models import Table
-from .exceptions import TableDoesNotExist, InvalidInitialTableData
+from .exceptions import (
+    TableDoesNotExist, InvalidInitialTableData, InitialTableDataLimitExceeded
+)
 
 
 class TableHandler:
@@ -125,6 +127,13 @@ class TableHandler:
 
         if len(data) == 0:
             raise InvalidInitialTableData('At least one row should be provided.')
+
+        limit = settings.INITIAL_TABLE_DATA_LIMIT
+        if limit and len(data) > limit:
+            raise InitialTableDataLimitExceeded(
+                f'It is not possible to import more than '
+                f'{settings.INITIAL_TABLE_DATA_LIMIT} rows when creating a table.'
+            )
 
         largest_column_count = len(max(data, key=len))
 

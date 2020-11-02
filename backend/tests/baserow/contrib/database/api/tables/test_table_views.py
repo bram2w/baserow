@@ -3,6 +3,7 @@ import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from django.shortcuts import reverse
+from django.conf import settings
 
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.table.models import Table
@@ -126,6 +127,23 @@ def test_create_table_with_data(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_INVALID_INITIAL_TABLE_DATA'
+
+    limit = settings.INITIAL_TABLE_DATA_LIMIT
+    settings.INITIAL_TABLE_DATA_LIMIT = 2
+    url = reverse('api:database:tables:list', kwargs={'database_id': database.id})
+    response = api_client.post(
+        url,
+        {
+            'name': 'Test 1',
+            'data': [[], [], []]
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED'
+    settings.INITIAL_TABLE_DATA_LIMIT = limit
 
     url = reverse('api:database:tables:list', kwargs={'database_id': database.id})
     response = api_client.post(

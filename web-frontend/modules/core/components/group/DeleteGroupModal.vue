@@ -16,7 +16,7 @@
           going to be permanently deleted:</span
         >
       </p>
-      <div class="delete-section" v-if="applications.length > 0">
+      <div v-if="applications.length > 0" class="delete-section">
         <div class="delete-section__label">
           <div class="delete-section__label-icon">
             <i class="fas fa-exclamation"></i>

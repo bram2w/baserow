@@ -87,6 +87,16 @@ export default {
         return
       }
 
+      const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
+      const count = this.content.split(/\r\n|\r|\n/).length
+      if (limit !== null && count > limit) {
+        this.values.data = ''
+        this.error = `It is not possible to import more than ${limit} rows.`
+        this.preview = {}
+        this.$emit('input', this.value)
+        return
+      }
+
       Papa.parse(this.content, {
         delimiter: '\t',
         complete: (data) => {

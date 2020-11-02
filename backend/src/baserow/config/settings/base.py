@@ -180,9 +180,13 @@ PUBLIC_BACKEND_URL = os.getenv('PUBLIC_BACKEND_URL', 'http://localhost:8000')
 PUBLIC_WEB_FRONTEND_DOMAIN = os.getenv('PUBLIC_WEB_FRONTEND_DOMAIN', 'localhost:3000')
 PUBLIC_WEB_FRONTEND_URL = os.getenv('PUBLIC_WEB_FRONTEND_URL', 'http://localhost:3000')
 
-FROM_EMAIL = os.getenv('FROM_EMAIL', 'no-reply@localhost')
-
-RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
-
 if PUBLIC_BACKEND_DOMAIN:
     ALLOWED_HOSTS.append(PUBLIC_BACKEND_DOMAIN)
+
+FROM_EMAIL = os.getenv('FROM_EMAIL', 'no-reply@localhost')
+RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
+
+# The amount of rows that can be imported when creating a table.
+INITIAL_TABLE_DATA_LIMIT = None
+if 'INITIAL_TABLE_DATA_LIMIT' in os.environ:
+    INITIAL_TABLE_DATA_LIMIT = int(os.getenv('INITIAL_TABLE_DATA_LIMIT'))

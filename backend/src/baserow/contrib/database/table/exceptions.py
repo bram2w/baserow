@@ -4,3 +4,10 @@ class TableDoesNotExist(Exception):
 
 class InvalidInitialTableData(Exception):
     """Raised when the provided initial table data does not contain a column or row."""
+
+
+class InitialTableDataLimitExceeded(Exception):
+    """
+    Raised when the initial table data limit has been exceeded when creating a new
+    table.
+    """

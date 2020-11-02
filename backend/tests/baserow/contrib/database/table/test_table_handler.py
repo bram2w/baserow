@@ -1,12 +1,13 @@
 import pytest
 
 from django.db import connection
+from django.conf import settings
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import (
-    TableDoesNotExist, InvalidInitialTableData
+    TableDoesNotExist, InvalidInitialTableData, InitialTableDataLimitExceeded
 )
 from baserow.contrib.database.fields.models import (
     TextField, LongTextField, BooleanField
@@ -98,6 +99,14 @@ def test_fill_table_with_initial_data(data_fixture):
 
     with pytest.raises(InvalidInitialTableData):
         table_handler.create_table(user, database, name='Table 1', data=[[]])
+
+    limit = settings.INITIAL_TABLE_DATA_LIMIT
+    settings.INITIAL_TABLE_DATA_LIMIT = 2
+
+    with pytest.raises(InitialTableDataLimitExceeded):
+        table_handler.create_table(user, database, name='Table 1', data=[[], [], []])
+
+    settings.INITIAL_TABLE_DATA_LIMIT = limit
 
     data = [
         ['A', 'B', 'C', 'D'],
