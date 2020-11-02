@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Released (2020-11-02)
 
 * Highlight the row of a selected cell.
 * Fixed error when there is no view.
