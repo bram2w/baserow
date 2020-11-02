@@ -17,11 +17,14 @@ from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import (
-    TableDoesNotExist, InvalidInitialTableData
+    TableDoesNotExist, InvalidInitialTableData, InitialTableDataLimitExceeded
 )
 
 from .serializers import TableSerializer, TableCreateSerializer, TableUpdateSerializer
-from .errors import ERROR_TABLE_DOES_NOT_EXIST, ERROR_INVALID_INITIAL_TABLE_DATA
+from .errors import (
+    ERROR_TABLE_DOES_NOT_EXIST, ERROR_INVALID_INITIAL_TABLE_DATA,
+    ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED
+)
 
 
 class TablesView(APIView):
@@ -89,7 +92,9 @@ class TablesView(APIView):
         responses={
             200: TableSerializer,
             400: get_error_schema([
-                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',
+                'ERROR_INVALID_INITIAL_TABLE_DATA',
+                'ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED'
             ]),
             404: get_error_schema(['ERROR_APPLICATION_DOES_NOT_EXIST'])
         }
@@ -98,7 +103,8 @@ class TablesView(APIView):
     @map_exceptions({
         ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
-        InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA
+        InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA,
+        InitialTableDataLimitExceeded: ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED
     })
     @validate_body(TableCreateSerializer)
     def post(self, request, data, database_id):

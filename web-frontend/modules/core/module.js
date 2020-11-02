@@ -47,6 +47,10 @@ export default function DatabaseModule(options) {
           key: 'PUBLIC_WEB_FRONTEND_URL',
           default: 'http://localhost:3000',
         },
+        {
+          key: 'INITIAL_TABLE_DATA_LIMIT',
+          default: null,
+        },
       ],
     },
   ])
