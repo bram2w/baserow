@@ -1,6 +1,6 @@
 from baserow.core.utils import (
     extract_allowed, set_allowed_attrs, to_pascal_case, to_snake_case,
-    remove_special_characters, dict_to_object
+    remove_special_characters, dict_to_object, random_string
 )
 
 
@@ -56,3 +56,8 @@ def test_dict_to_object():
     assert not hasattr(o1, 'b')
     assert not hasattr(o1, 'd')
     assert not hasattr(o1, 'e')
+
+
+def test_random_string():
+    assert len(random_string(32)) == 32
+    assert random_string(32) != random_string(32)

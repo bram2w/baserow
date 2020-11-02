@@ -8,6 +8,11 @@ export default function ({ req, store, redirect }) {
 
   // If the user is not authenticated we will redirect him to the login page.
   if (!store.getters['auth/isAuthenticated']) {
-    redirect({ name: 'login' })
+    const query = {}
+    if (req) {
+      query.original = encodeURI(req.originalUrl)
+    }
+
+    redirect({ name: 'login', query })
   }
 }

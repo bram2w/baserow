@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.conf import settings
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,15 +14,19 @@ from baserow.api.pagination import PageNumberPagination
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroupError
+from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
-from baserow.contrib.database.table.handler import TableHandler
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
 from baserow.contrib.database.api.rows.serializers import (
     example_pagination_row_serializer_class
 )
+from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
+from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 
 from .serializers import (
     RowSerializer, get_example_row_serializer_class, get_row_serializer_class
@@ -29,6 +34,7 @@ from .serializers import (
 
 
 class RowsView(APIView):
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
@@ -78,16 +84,18 @@ class RowsView(APIView):
             200: example_pagination_row_serializer_class,
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP',
-                'ERROR_REQUEST_BODY_VALIDATION'
+                'ERROR_REQUEST_BODY_VALIDATION',
+                'ERROR_PAGE_SIZE_LIMIT',
+                'ERROR_INVALID_PAGE'
             ]),
-            404: get_error_schema([
-                'ERROR_TABLE_DOES_NOT_EXIST'
-            ])
+            401: get_error_schema(['ERROR_NO_PERMISSION_TO_TABLE']),
+            404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
     )
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
-        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
     })
     def get(self, request, table_id):
         """
@@ -96,6 +104,8 @@ class RowsView(APIView):
         """
 
         table = TableHandler().get_table(request.user, table_id)
+        TokenHandler().check_table_permissions(request, 'read', table, False)
+
         model = table.get_model()
         search = request.GET.get('search')
 
@@ -104,7 +114,7 @@ class RowsView(APIView):
         if search:
             queryset = queryset.search_all_fields(search)
 
-        paginator = PageNumberPagination()
+        paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)
         serializer_class = get_row_serializer_class(model, RowSerializer,
                                                     is_response=True)
@@ -142,6 +152,7 @@ class RowsView(APIView):
                 'ERROR_USER_NOT_IN_GROUP',
                 'ERROR_REQUEST_BODY_VALIDATION'
             ]),
+            401: get_error_schema(['ERROR_NO_PERMISSION_TO_TABLE']),
             404: get_error_schema([
                 'ERROR_TABLE_DOES_NOT_EXIST'
             ])
@@ -150,7 +161,8 @@ class RowsView(APIView):
     @transaction.atomic
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
-        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
     })
     def post(self, request, table_id):
         """
@@ -159,6 +171,7 @@ class RowsView(APIView):
         """
 
         table = TableHandler().get_table(request.user, table_id)
+        TokenHandler().check_table_permissions(request, 'create', table, False)
         model = table.get_model()
 
         validation_serializer = get_row_serializer_class(model)
@@ -173,7 +186,67 @@ class RowsView(APIView):
 
 
 class RowView(APIView):
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
     permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name='table_id', location=OpenApiParameter.PATH, type=OpenApiTypes.INT,
+                description='Returns the row of the table related to the provided '
+                            'value.'
+            ),
+            OpenApiParameter(
+                name='row_id', location=OpenApiParameter.PATH, type=OpenApiTypes.INT,
+                description='Returns the row related the provided value.'
+            )
+        ],
+        tags=['Database table rows'],
+        operation_id='get_database_table_row',
+        description=(
+            'Fetches an existing row from the table if the user has access to the '
+            'related table\'s group. The properties of the returned row depend on '
+            'which fields the table has. For a complete overview of fields use the '
+            '**list_database_table_fields** endpoint to list them all. In the example '
+            'all field types are listed, but normally the number in field_{id} key is '
+            'going to be the id of the field. The value is what the user has provided '
+            'and the format of it depends on the fields type.'
+        ),
+        responses={
+            200: get_example_row_serializer_class(True),
+            400: get_error_schema([
+                'ERROR_USER_NOT_IN_GROUP',
+                'ERROR_REQUEST_BODY_VALIDATION'
+            ]),
+            401: get_error_schema(['ERROR_NO_PERMISSION_TO_TABLE']),
+            404: get_error_schema([
+                'ERROR_TABLE_DOES_NOT_EXIST',
+                'ERROR_ROW_DOES_NOT_EXIST'
+            ])
+        }
+    )
+    @map_exceptions({
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+        RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
+    })
+    def get(self, request, table_id, row_id):
+        """
+        Responds with a serializer version of the row related to the provided row_id
+        and table_id.
+        """
+
+        table = TableHandler().get_table(request.user, table_id)
+        TokenHandler().check_table_permissions(request, 'read', table, False)
+
+        model = table.get_model()
+        row = RowHandler().get_row(request.user, table, row_id, model)
+        serializer_class = get_row_serializer_class(model, RowSerializer,
+                                                    is_response=True)
+        serializer = serializer_class(row)
+
+        return Response(serializer.data)
 
     @extend_schema(
         parameters=[
@@ -208,6 +281,7 @@ class RowView(APIView):
                 'ERROR_USER_NOT_IN_GROUP',
                 'ERROR_REQUEST_BODY_VALIDATION'
             ]),
+            401: get_error_schema(['ERROR_NO_PERMISSION_TO_TABLE']),
             404: get_error_schema([
                 'ERROR_TABLE_DOES_NOT_EXIST',
                 'ERROR_ROW_DOES_NOT_EXIST'
@@ -218,7 +292,8 @@ class RowView(APIView):
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST
+        RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
     })
     def patch(self, request, table_id, row_id):
         """
@@ -227,6 +302,7 @@ class RowView(APIView):
         """
 
         table = TableHandler().get_table(request.user, table_id)
+        TokenHandler().check_table_permissions(request, 'update', table, False)
 
         # Small side effect of generating the model for only the fields that need to
         # change is that the response it not going to contain the other fields. It is
@@ -276,14 +352,17 @@ class RowView(APIView):
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST
+        RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
     })
     def delete(self, request, table_id, row_id):
         """
-        Deletes an existing row with the given row_id for table with the given table_id.
+        Deletes an existing row with the given row_id for table with the given
+        table_id.
         """
 
         table = TableHandler().get_table(request.user, table_id)
+        TokenHandler().check_table_permissions(request, 'delete', table, False)
         RowHandler().delete_row(request.user, table, row_id)
 
         return Response(status=204)

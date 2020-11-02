@@ -274,7 +274,6 @@ def test_create_table_with_data(api_client, data_fixture):
     assert results.count() == 0
 
 
-
 @pytest.mark.django_db
 def test_get_table(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()

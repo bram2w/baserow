@@ -6,20 +6,23 @@
         <div class="settings__head-name">Settings</div>
       </div>
       <ul class="settings__nav">
-        <li>
+        <li v-for="setting in registeredSettings" :key="setting.type">
           <a
             class="settings__nav-link"
-            :class="{ active: page === 'password' }"
-            @click="setPage('password')"
+            :class="{ active: page === setting.type }"
+            @click="setPage(setting.type)"
           >
-            <i class="fas fa-lock settings__nav-icon"></i>
-            Password
+            <i
+              class="fas settings__nav-icon"
+              :class="'fa-' + setting.iconClass"
+            ></i>
+            {{ setting.name }}
           </a>
         </li>
       </ul>
     </template>
     <template v-slot:content>
-      <PasswordSettings v-if="isPage('password')"></PasswordSettings>
+      <component :is="settingPageComponent"></component>
     </template>
   </Modal>
 </template>
@@ -32,7 +35,7 @@ import modal from '@baserow/modules/core/mixins/modal'
 import PasswordSettings from '@baserow/modules/core/components/settings/PasswordSettings'
 
 export default {
-  name: 'AccountModal',
+  name: 'SettingsModal',
   components: { PasswordSettings },
   mixins: [modal],
   data() {
@@ -41,6 +44,15 @@ export default {
     }
   },
   computed: {
+    registeredSettings() {
+      return this.$registry.getAll('settings')
+    },
+    settingPageComponent() {
+      const active = Object.values(this.$registry.getAll('settings')).find(
+        (setting) => setting.type === this.page
+      )
+      return active ? active.getComponent() : null
+    },
     ...mapGetters({
       nameAbbreviation: 'auth/getNameAbbreviation',
     }),

@@ -34,6 +34,7 @@
   padding: 0 20px 0 50px;
   border-left: solid 4px transparent;
   color: $color-primary-900;
+  user-select: none;
 
   &:hover {
     text-decoration: none;

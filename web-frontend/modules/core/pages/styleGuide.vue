@@ -105,6 +105,24 @@
             </div>
           </div>
           <div class="control">
+            <label class="control__label">Switch field</label>
+            <div class="control__elements">
+              value: {{ switchValue }}
+              <br />
+              <br />
+              <SwitchInput v-model="switchValue"></SwitchInput>
+              <SwitchInput v-model="switchValue">With text</SwitchInput>
+              <SwitchInput v-model="switchUnknown">With text</SwitchInput>
+              <SwitchInput v-model="switchValue" :large="true"></SwitchInput>
+              <SwitchInput v-model="switchValue" :large="true">
+                With text
+              </SwitchInput>
+              <SwitchInput v-model="switchUnknown" :large="true">
+                With text
+              </SwitchInput>
+            </div>
+          </div>
+          <div class="control">
             <label class="control__label">Dropdown</label>
             <div class="control__elements">
               value: {{ dropdown }}
@@ -844,6 +862,8 @@ export default {
   data() {
     return {
       checkbox: false,
+      switchValue: false,
+      switchUnknown: 2,
       dropdown: '',
       longDropdown: '0',
       date: '',

@@ -169,9 +169,6 @@ export default {
         notifyIf(error, 'view')
       }
     },
-    tmp() {
-      console.log('received delete')
-    },
   },
 }
 </script>

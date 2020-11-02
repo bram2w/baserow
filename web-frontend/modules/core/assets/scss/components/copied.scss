@@ -1,0 +1,25 @@
+.copied {
+  display: none;
+  width: 72px;
+  line-height: 32px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: $white;
+  border-radius: 16px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 400;
+  margin-left: -36px;
+  margin-top: -16px;
+
+  @include absolute(50%, auto, auto, 50%);
+
+  &.copied--show {
+    display: block;
+    opacity: 1;
+    transition: opacity 1s ease-out;
+  }
+
+  &.copied--hide {
+    opacity: 0;
+  }
+}

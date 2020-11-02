@@ -81,6 +81,39 @@ class RowHandler:
 
         return values, manytomany_values
 
+    def get_row(self, user, table, row_id, model=None):
+        """
+        Fetches a single row from the provided table.
+
+        :param user: The user of whose behalf the row is requested.
+        :type user: User
+        :param table: The table where the row must be fetched from.
+        :type table: Table
+        :param row_id: The id of the row that must be fetched.
+        :type row_id: int
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :type model: Model
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        :raises RowDoesNotExist: When the row with the provided id does not exist.
+        :return: The requested row instance.
+        :rtype: Model
+        """
+
+        if not model:
+            model = table.get_model()
+
+        group = table.database.group
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        try:
+            row = model.objects.get(id=row_id)
+        except model.DoesNotExist:
+            raise RowDoesNotExist(f'The row with id {row_id} does not exist.')
+
+        return row
+
     def create_row(self, user, table, values=None, model=None):
         """
         Creates a new row for a given table with the provided values.

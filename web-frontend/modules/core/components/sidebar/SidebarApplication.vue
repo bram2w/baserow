@@ -28,6 +28,10 @@
       <Context ref="context">
         <div class="context__menu-title">{{ application.name }}</div>
         <ul class="context__menu">
+          <component
+            :is="contextComponent"
+            :application="application"
+          ></component>
           <li>
             <a @click="enableRename()">
               <i class="context__menu-icon fas fa-fw fa-pen"></i>
@@ -53,7 +57,7 @@
       "
     >
       <component
-        :is="getSelectedApplicationComponent(application)"
+        :is="selectedApplicationComponent"
         :application="application"
       ></component>
     </template>
@@ -71,6 +75,18 @@ export default {
     application: {
       type: Object,
       required: true,
+    },
+  },
+  computed: {
+    selectedApplicationComponent() {
+      return this.$registry
+        .get('application', this.application.type)
+        .getSelectedSidebarComponent()
+    },
+    contextComponent() {
+      return this.$registry
+        .get('application', this.application.type)
+        .getContextComponent()
     },
   },
   methods: {
@@ -135,10 +151,6 @@ export default {
     deleteApplication() {
       this.$refs.context.hide()
       this.$refs.deleteApplicationModal.show()
-    },
-    getSelectedApplicationComponent(application) {
-      const type = this.$registry.get('application', application.type)
-      return type.getSelectedSidebarComponent()
     },
   },
 }
