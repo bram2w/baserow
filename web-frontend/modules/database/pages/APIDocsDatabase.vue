@@ -1,9 +1,9 @@
 <template>
   <div class="api-docs">
-    <div class="api-docs__header">
-      <a class="api-docs__logo">
+    <div ref="header" class="api-docs__header">
+      <nuxt-link :to="{ name: 'index' }" class="api-docs__logo">
         <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
-      </a>
+      </nuxt-link>
       <a
         ref="databasesToggle"
         class="api-docs__switch"
@@ -150,7 +150,7 @@
         </li>
       </ul>
     </div>
-    <div ref="body" class="api-docs__body">
+    <div class="api-docs__body">
       <div class="api-docs__item">
         <div class="api-docs__left">
           <h2 id="section-introduction" class="api-docs__heading-2">
@@ -595,13 +595,13 @@ export default {
     // navigation item must be updated.
     this.$el.scrollEvent = () => this.updateNav()
     this.$el.resizeEvent = () => this.updateNav()
-    this.$refs.body.addEventListener('scroll', this.$el.scrollEvent)
+    window.addEventListener('scroll', this.$el.scrollEvent)
     window.addEventListener('resize', this.$el.resizeEvent)
     this.updateNav()
   },
   beforeDestroy() {
     document.body.removeEventListener('click', this.$el.clickOutsideEvent)
-    this.$refs.body.removeEventListener('scroll', this.$el.scrollEvent)
+    window.removeEventListener('scroll', this.$el.scrollEvent)
     window.removeEventListener('resize', this.$el.resizeEvent)
   },
   methods: {
@@ -610,15 +610,14 @@ export default {
      * navigation item is active based on the scroll position of the available ids.
      */
     updateNav() {
-      const body = this.$refs.body
+      const body = document.documentElement
       const sections = body.querySelectorAll('[id]')
-      const margin = 40
       sections.forEach((section, index) => {
-        const top = section.offsetTop - margin
+        const top = section.offsetTop
         const nextIndex = (index + 1).toString()
         const next =
           nextIndex in sections
-            ? sections[nextIndex].offsetTop - margin
+            ? sections[nextIndex].offsetTop
             : body.scrollHeight
         if (top <= body.scrollTop && body.scrollTop < next) {
           this.navActive = section.id
@@ -626,8 +625,9 @@ export default {
       })
     },
     navigate(to) {
-      const section = this.$refs.body.querySelector(`[id='${to}']`)
-      this.$refs.body.scrollTop = section.offsetTop - 20
+      const section = document.querySelector(`[id='${to}']`)
+      document.documentElement.scrollTop =
+        section.offsetTop - 20 + this.$refs.header.clientHeight
     },
     /**
      * Generates an example request object based on the available fields of the table.
@@ -656,6 +656,11 @@ export default {
     getItemURL(table) {
       return this.getListURL(table) + '{row_id}/'
     },
+  },
+  head() {
+    return {
+      title: `API Documentation ${this.database.name}`,
+    }
   },
 }
 </script>

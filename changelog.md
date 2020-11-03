@@ -1,5 +1,7 @@
 # Changelog
 
+* Fixed API docs scrollbar size issue.
+
 ## Released (2020-11-02)
 
 * Highlight the row of a selected cell.
@@ -11,6 +13,7 @@
 * Added confirmation modals when the user wants to delete a group, application, table,
   view or field.
 * Fixed bug in the web-frontend URL validation where a '*' was invalidates.
+* Made it possible to publicly expose the table data via a REST API.
 
 ## Released (2020-10-06)
 

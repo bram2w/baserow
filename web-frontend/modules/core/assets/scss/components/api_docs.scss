@@ -1,17 +1,17 @@
 @import 'api_docs/all';
 
 .api-docs {
+  position: relative;
   background-color: $white;
-
-  @include absolute(0, 0, 0, 0);
+  padding: $api-docs-header-height 0 1px $api-docs-nav-width;
 
   &::after {
     content: '';
-    width: calc(40% - #{$api-docs-nav-width * 0.4});
+    width: calc(45% - #{$api-docs-nav-width * 0.45});
     background-color: $color-neutral-600;
     z-index: $api-docs-background-z-index;
 
-    @include absolute($api-docs-header-height, 0, 0, auto);
+    @include absolute(0, 0, 0, auto);
   }
 }
 
@@ -22,8 +22,10 @@
   background-color: $white;
   border-bottom: 2px solid $color-neutral-200;
   z-index: $api-docs-header-z-index;
-
-  @include absolute(0, 0, auto, 0);
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
 }
 
 .api-docs__logo {
@@ -66,8 +68,10 @@
   overflow-y: auto;
   width: 262px;
   box-shadow: 1px 0 4px 0 rgba($black, 0.16);
-
-  @include absolute(0, auto, 0, 0);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
 }
 
 .api-docs__databases-inner {
@@ -80,15 +84,15 @@
   border-right: solid 1px $color-neutral-200;
   overflow: auto;
   z-index: $api-docs-nav-z-index;
-
-  @include absolute($api-docs-header-height, auto, 0, 0);
+  position: fixed;
+  top: $api-docs-header-height;
+  bottom: 0;
+  left: 0;
 }
 
 .api-docs__body {
-  overflow: auto;
+  position: relative;
   z-index: $api-docs-body-z-index;
-
-  @include absolute($api-docs-header-height, 0, 0, $api-docs-nav-width);
 }
 
 .api-docs__item {
@@ -97,13 +101,13 @@
 }
 
 .api-docs__left {
-  width: 60%;
+  width: 55%;
   padding: 0 34px;
 }
 
 .api-docs__right {
-  width: 40%;
-  padding: 0 34px;
+  width: 45%;
+  padding: 0 20px;
 }
 
 .api-docs__content {

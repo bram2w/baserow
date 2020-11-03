@@ -7,7 +7,7 @@
 
 .api-docs__example {
   position: relative;
-  padding: 20px;
+  padding: 16px;
   background-color: $color-neutral-100;
 }
 
@@ -22,7 +22,8 @@
 
 .api-docs__example-request {
   display: flex;
-  margin: -10px 0;
+  margin: -6px 0;
+  padding-right: 40px;
 }
 
 .api-docs__example-request-type {
@@ -32,8 +33,8 @@
   text-transform: uppercase;
   background-color: $color-neutral-500;
   color: $white;
-  padding: 0 12px;
-  margin-right: 12px;
+  padding: 0 10px;
+  margin-right: 10px;
 
   &.api-docs__example-request-type--success {
     background-color: $color-success-500;
@@ -58,7 +59,7 @@
   flex: 1;
   min-width: 0;
   line-height: 30px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .api-docs__example-type {
