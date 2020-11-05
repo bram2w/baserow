@@ -36,6 +36,7 @@ def test_get_view(data_fixture):
     assert view.id == grid.id
     assert view.name == grid.name
     assert view.filter_type == 'AND'
+    assert not view.filters_disabled
     assert isinstance(view, View)
 
     view = handler.get_view(user=user, view_id=grid.id, view_model=GridView)
@@ -43,6 +44,7 @@ def test_get_view(data_fixture):
     assert view.id == grid.id
     assert view.name == grid.name
     assert view.filter_type == 'AND'
+    assert not view.filters_disabled
     assert isinstance(view, GridView)
 
     # If the error is raised we know for sure that the query has resolved.
@@ -58,6 +60,7 @@ def test_create_view(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(user=user)
 
     handler = ViewHandler()
     handler.create_view(user=user, table=table, type_name='grid', name='Test grid')
@@ -70,6 +73,32 @@ def test_create_view(data_fixture):
     assert grid.order == 1
     assert grid.table == table
     assert grid.filter_type == 'AND'
+    assert not grid.filters_disabled
+
+    handler.create_view(user=user, table=table, type_name='grid',
+                        name='Something else', filter_type='OR', filters_disabled=True)
+
+    assert View.objects.all().count() == 2
+    assert GridView.objects.all().count() == 2
+
+    grid = GridView.objects.all().last()
+    assert grid.name == 'Something else'
+    assert grid.order == 2
+    assert grid.table == table
+    assert grid.filter_type == 'OR'
+    assert grid.filters_disabled
+
+    grid = handler.create_view(user=user, table=table_2, type_name='grid', name='Name',
+                               filter_type='OR', filters_disabled=False)
+
+    assert View.objects.all().count() == 3
+    assert GridView.objects.all().count() == 3
+
+    assert grid.name == 'Name'
+    assert grid.order == 1
+    assert grid.table == table_2
+    assert grid.filter_type == 'OR'
+    assert not grid.filters_disabled
 
     with pytest.raises(UserNotInGroupError):
         handler.create_view(user=user_2, table=table, type_name='grid', name='')
@@ -97,11 +126,14 @@ def test_update_view(data_fixture):
 
     grid.refresh_from_db()
     assert grid.name == 'Test 1'
+    assert grid.filter_type == 'AND'
+    assert not grid.filters_disabled
 
-    handler.update_view(user=user, view=grid, filter_type='OR')
+    handler.update_view(user=user, view=grid, filter_type='OR', filters_disabled=True)
 
     grid.refresh_from_db()
     assert grid.filter_type == 'OR'
+    assert grid.filters_disabled
 
 
 @pytest.mark.django_db
@@ -333,6 +365,14 @@ def test_apply_filters(data_fixture):
     assert len(rows) == 2
     assert rows[0].id == row_2.id
     assert rows[1].id == row_4.id
+
+    grid_view.filters_disabled = True
+    grid_view.save()
+    rows = view_handler.apply_filters(grid_view, model.objects.all())
+    assert rows[0].id == row_1.id
+    assert rows[1].id == row_2.id
+    assert rows[2].id == row_3.id
+    assert rows[3].id == row_4.id
 
 
 @pytest.mark.django_db

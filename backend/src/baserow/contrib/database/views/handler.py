@@ -84,7 +84,11 @@ class ViewHandler:
         # Figure out which model to use for the given view type.
         view_type = view_type_registry.get(type_name)
         model_class = view_type.model_class
-        allowed_fields = ['name', 'filter_type'] + view_type.allowed_fields
+        allowed_fields = [
+            'name',
+            'filter_type',
+            'filters_disabled'
+        ] + view_type.allowed_fields
         view_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
@@ -117,7 +121,11 @@ class ViewHandler:
             raise UserNotInGroupError(user, group)
 
         view_type = view_type_registry.get_by_model(view)
-        allowed_fields = ['name', 'filter_type'] + view_type.allowed_fields
+        allowed_fields = [
+            'name',
+            'filter_type',
+            'filters_disabled'
+        ] + view_type.allowed_fields
         view = set_allowed_attrs(kwargs, allowed_fields, view)
         view.save()
 
@@ -217,6 +225,10 @@ class ViewHandler:
         # generated table model which is not supported.
         if not hasattr(model, '_field_objects'):
             raise ValueError('A queryset of the table model is required.')
+
+        # If the filter are disabled we don't have to do anything with the queryset.
+        if view.filters_disabled:
+            return queryset
 
         q_filters = Q()
 

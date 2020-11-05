@@ -6,6 +6,26 @@
   border-radius: 6px;
   border: 1px solid $color-neutral-200;
   box-shadow: 0 2px 6px 0 rgba($black, 0.16);
+
+  &.context--loading-overlay {
+    &::before {
+      content: '';
+      border-radius: 6px;
+      background-color: rgba(0, 0, 0, 0.16);
+      z-index: 2;
+
+      @include absolute(0, 0, 0, 0);
+    }
+
+    &::after {
+      content: '';
+      z-index: 2;
+      margin: -7px auto auto -7px;
+
+      @include loading(14px);
+      @include absolute(50%, auto, auto, 50%);
+    }
+  }
 }
 
 .context--loading {
