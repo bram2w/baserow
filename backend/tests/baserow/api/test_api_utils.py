@@ -56,7 +56,7 @@ class TemporaryTypeRegistry(Registry):
 
 def test_map_exceptions():
     with pytest.raises(APIException) as api_exception_1:
-        with map_exceptions({ TemporaryException: 'ERROR_TEMPORARY' }):
+        with map_exceptions({TemporaryException: 'ERROR_TEMPORARY'}):
             raise TemporaryException
 
     assert api_exception_1.value.detail['error'] == 'ERROR_TEMPORARY'
@@ -94,8 +94,9 @@ def test_validate_data():
         validate_data(TemporarySerializer, {'field_1': 'test'})
 
     assert api_exception_1.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_1.value.detail['detail']['field_2'][0]['error'] == \
+    assert api_exception_1.value.detail['detail']['field_2'][0]['error'] == (
            'This field is required.'
+    )
     assert api_exception_1.value.detail['detail']['field_2'][0]['code'] == 'required'
     assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -106,10 +107,12 @@ def test_validate_data():
         )
 
     assert api_exception_2.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_2.value.detail['detail']['field_2'][0]['error'] == \
+    assert api_exception_2.value.detail['detail']['field_2'][0]['error'] == (
            '"wrong" is not a valid choice.'
-    assert api_exception_2.value.detail['detail']['field_2'][0]['code'] == \
+    )
+    assert api_exception_2.value.detail['detail']['field_2'][0]['code'] == (
            'invalid_choice'
+    )
     assert api_exception_2.value.status_code == status.HTTP_400_BAD_REQUEST
 
     validated_data = validate_data(
@@ -128,19 +131,24 @@ def test_validate_data():
 
     assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
     assert api_exception_1.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_1.value.detail['detail']['field_3'][0]['error'] == \
+    assert api_exception_1.value.detail['detail']['field_3'][0]['error'] == (
            'A valid integer is required.'
+    )
     assert api_exception_1.value.detail['detail']['field_3'][0]['code'] == 'invalid'
 
     assert len(api_exception_1.value.detail['detail']['field_4']) == 2
-    assert api_exception_1.value.detail['detail']['field_4'][0][0]['error'] == \
+    assert api_exception_1.value.detail['detail']['field_4'][0][0]['error'] == (
            'A valid integer is required.'
-    assert api_exception_1.value.detail['detail']['field_4'][0][0]['code'] == \
+    )
+    assert api_exception_1.value.detail['detail']['field_4'][0][0]['code'] == (
            'invalid'
-    assert api_exception_1.value.detail['detail']['field_4'][1][0]['error'] == \
+    )
+    assert api_exception_1.value.detail['detail']['field_4'][1][0]['error'] == (
            'A valid integer is required.'
-    assert api_exception_1.value.detail['detail']['field_4'][1][0]['code'] == \
+    )
+    assert api_exception_1.value.detail['detail']['field_4'][1][0]['code'] == (
            'invalid'
+    )
 
 
 def test_validate_data_custom_fields():
@@ -152,8 +160,9 @@ def test_validate_data_custom_fields():
         validate_data_custom_fields('NOT_EXISTING', registry, {})
 
     assert api_exception.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception.value.detail['detail']['type'][0]['error'] == \
+    assert api_exception.value.detail['detail']['type'][0]['error'] == (
            '"NOT_EXISTING" is not a valid choice.'
+    )
     assert api_exception.value.detail['detail']['type'][0]['code'] == 'invalid_choice'
     assert api_exception.value.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -161,8 +170,9 @@ def test_validate_data_custom_fields():
         validate_data_custom_fields('temporary_2', registry, {})
 
     assert api_exception_2.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_2.value.detail['detail']['name'][0]['error'] == \
+    assert api_exception_2.value.detail['detail']['name'][0]['error'] == (
            'This field is required.'
+    )
     assert api_exception_2.value.detail['detail']['name'][0]['code'] == 'required'
     assert api_exception_2.value.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -170,8 +180,9 @@ def test_validate_data_custom_fields():
         validate_data_custom_fields('temporary_2', registry, {'name': 'test1'})
 
     assert api_exception_3.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_3.value.detail['detail']['name'][0]['error'] == \
+    assert api_exception_3.value.detail['detail']['name'][0]['error'] == (
            'A valid integer is required.'
+    )
     assert api_exception_3.value.detail['detail']['name'][0]['code'] == 'invalid'
     assert api_exception_3.value.status_code == status.HTTP_400_BAD_REQUEST
 

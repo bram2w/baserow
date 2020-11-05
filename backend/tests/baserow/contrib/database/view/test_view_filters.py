@@ -265,7 +265,7 @@ def test_contains_filter_type(data_fixture):
         f'field_{text_field.id}': 'My name is John Doe.',
         f'field_{long_text_field.id}': 'Long text that is not empty.',
     })
-    row_2 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{text_field.id}': '',
         f'field_{long_text_field.id}': '',
     })
@@ -487,7 +487,7 @@ def test_higher_than_filter_type(data_fixture):
         f'field_{integer_field.id}': 10,
         f'field_{decimal_field.id}': 20.20,
     })
-    row_2 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{integer_field.id}': None,
         f'field_{decimal_field.id}': None,
     })
@@ -633,7 +633,7 @@ def test_lower_than_filter_type(data_fixture):
         f'field_{integer_field.id}': 10,
         f'field_{decimal_field.id}': 20.20,
     })
-    row_2 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{integer_field.id}': None,
         f'field_{decimal_field.id}': None,
     })
@@ -782,11 +782,11 @@ def test_date_equal_filter_type(data_fixture):
         f'field_{date_field.id}': date(2019, 1, 1),
         f'field_{date_time_field.id}': make_aware(datetime(2020, 6, 17, 1, 30, 5), utc)
     })
-    row_3 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{date_field.id}': None,
         f'field_{date_time_field.id}': None
     })
-    row_4 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{date_field.id}': date(2010, 1, 1),
         f'field_{date_time_field.id}': make_aware(datetime(2010, 2, 4, 2, 45, 45), utc)
     })
@@ -1130,7 +1130,7 @@ def test_not_empty_filter_type(data_fixture):
     model = table.get_model()
     utc = timezone('UTC')
 
-    row = model.objects.create(**{
+    model.objects.create(**{
         f'field_{text_field.id}': '',
         f'field_{long_text_field.id}': '',
         f'field_{integer_field.id}': None,

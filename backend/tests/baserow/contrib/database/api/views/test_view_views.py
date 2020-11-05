@@ -82,7 +82,7 @@ def test_list_views_including_filters(api_client, data_fixture):
     filter_1 = data_fixture.create_view_filter(view=view_1, field=field_1)
     filter_2 = data_fixture.create_view_filter(view=view_1, field=field_2)
     filter_3 = data_fixture.create_view_filter(view=view_2, field=field_1)
-    filter_4 = data_fixture.create_view_filter(view=view_3, field=field_3)
+    data_fixture.create_view_filter(view=view_3, field=field_3)
 
     response = api_client.get(
         '{}'.format(reverse(
@@ -132,7 +132,7 @@ def test_list_views_including_sortings(api_client, data_fixture):
     sort_1 = data_fixture.create_view_sort(view=view_1, field=field_1)
     sort_2 = data_fixture.create_view_sort(view=view_1, field=field_2)
     sort_3 = data_fixture.create_view_sort(view=view_2, field=field_1)
-    sort_4 = data_fixture.create_view_sort(view=view_3, field=field_3)
+    data_fixture.create_view_sort(view=view_3, field=field_3)
 
     response = api_client.get(
         '{}'.format(reverse(
@@ -425,7 +425,7 @@ def test_update_view(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['id'] == view.id
     assert response_json['filter_type'] == 'AND'
-    assert response_json['filters_disabled'] == True
+    assert response_json['filters_disabled'] is True
     assert response_json['filters'][0]['id'] == filter_1.id
     assert response_json['sortings'] == []
 
@@ -470,8 +470,8 @@ def test_list_view_filters(api_client, data_fixture):
     view_3 = data_fixture.create_grid_view(table=table_2, order=1)
     filter_1 = data_fixture.create_view_filter(view=view_1, field=field_1)
     filter_2 = data_fixture.create_view_filter(view=view_1, field=field_2)
-    filter_3 = data_fixture.create_view_filter(view=view_2, field=field_1)
-    filter_4 = data_fixture.create_view_filter(view=view_3, field=field_3)
+    data_fixture.create_view_filter(view=view_2, field=field_1)
+    data_fixture.create_view_filter(view=view_3, field=field_3)
 
     response = api_client.get(
         reverse(
@@ -816,7 +816,7 @@ def test_update_view_filter(api_client, data_fixture):
             'api:database:views:filter_item',
             kwargs={'view_filter_id': filter_1.id}
         ),
-        {'type': 'equal',},
+        {'type': 'equal'},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
@@ -836,7 +836,7 @@ def test_update_view_filter(api_client, data_fixture):
             'api:database:views:filter_item',
             kwargs={'view_filter_id': filter_1.id}
         ),
-        {'value': 'test 3',},
+        {'value': 'test 3'},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
@@ -857,7 +857,7 @@ def test_update_view_filter(api_client, data_fixture):
             'api:database:views:filter_item',
             kwargs={'view_filter_id': filter_1.id}
         ),
-        {'value': '',},
+        {'value': ''},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
@@ -914,11 +914,11 @@ def test_list_view_sortings(api_client, data_fixture):
     field_2 = data_fixture.create_text_field(table=table_1)
     field_3 = data_fixture.create_text_field(table=table_2)
     view_1 = data_fixture.create_grid_view(table=table_1, order=1)
-    view_2 = data_fixture.create_grid_view(table=table_1, order=2)
+    data_fixture.create_grid_view(table=table_1, order=2)
     view_3 = data_fixture.create_grid_view(table=table_2, order=1)
     sort_1 = data_fixture.create_view_sort(view=view_1, field=field_1)
     sort_2 = data_fixture.create_view_sort(view=view_1, field=field_2)
-    sort_4 = data_fixture.create_view_sort(view=view_3, field=field_3)
+    data_fixture.create_view_sort(view=view_3, field=field_3)
 
     response = api_client.get(
         reverse(
@@ -1273,7 +1273,7 @@ def test_update_view_sort(api_client, data_fixture):
             'api:database:views:sort_item',
             kwargs={'view_sort_id': sort_1.id}
         ),
-        {'order': 'DESC',},
+        {'order': 'DESC'},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )

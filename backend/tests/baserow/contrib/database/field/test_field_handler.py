@@ -186,12 +186,12 @@ def test_update_field(data_fixture):
 
     assert field.name == 'Number field'
     assert field.number_type == 'INTEGER'
-    assert field.number_negative == False
+    assert field.number_negative is False
     assert not hasattr(field, 'text_default')
 
     model = table.get_model()
     rows = model.objects.all()
-    assert getattr(rows[0], f'field_{field.id}') == None
+    assert getattr(rows[0], f'field_{field.id}') is None
     assert getattr(rows[1], f'field_{field.id}') == 100
     assert getattr(rows[2], f'field_{field.id}') == 10
 
@@ -203,11 +203,11 @@ def test_update_field(data_fixture):
     assert field.name == 'Price field'
     assert field.number_type == 'DECIMAL'
     assert field.number_decimal_places == 2
-    assert field.number_negative == True
+    assert field.number_negative is True
 
     model = table.get_model()
     rows = model.objects.all()
-    assert getattr(rows[0], f'field_{field.id}') == None
+    assert getattr(rows[0], f'field_{field.id}') is None
     assert getattr(rows[1], f'field_{field.id}') == Decimal('100.00')
     assert getattr(rows[2], f'field_{field.id}') == Decimal('10.00')
 
@@ -223,9 +223,9 @@ def test_update_field(data_fixture):
 
     model = table.get_model()
     rows = model.objects.all()
-    assert getattr(rows[0], f'field_{field.id}') == False
-    assert getattr(rows[1], f'field_{field.id}') == False
-    assert getattr(rows[2], f'field_{field.id}') == False
+    assert getattr(rows[0], f'field_{field.id}') is False
+    assert getattr(rows[1], f'field_{field.id}') is False
+    assert getattr(rows[2], f'field_{field.id}') is False
 
 
 @pytest.mark.django_db

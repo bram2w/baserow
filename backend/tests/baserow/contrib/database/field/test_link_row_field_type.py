@@ -42,10 +42,10 @@ def test_link_row_field_type(data_fixture):
     cars_primary_field = field_handler.create_field(
         user=user, table=cars_table, type_name='text', name='Name', primary=True
     )
-    cars_row_1 = row_handler.create_row(user=user, table=cars_table, values={
+    row_handler.create_row(user=user, table=cars_table, values={
         f'field_{cars_primary_field.id}': 'BMW'
     })
-    cars_row_2 = row_handler.create_row(user=user, table=cars_table, values={
+    row_handler.create_row(user=user, table=cars_table, values={
         f'field_{cars_primary_field.id}': 'Audi'
     })
 
@@ -339,13 +339,13 @@ def test_link_row_enhance_queryset(data_fixture, django_assert_num_queries):
     customers_row_2 = row_handler.create_row(user=user, table=customers_table)
     customers_row_3 = row_handler.create_row(user=user, table=customers_table)
 
-    row = row_handler.create_row(user=user, table=example_table, values={
+    row_handler.create_row(user=user, table=example_table, values={
         f'field_{link_row_field.id}': [customers_row_1.id, customers_row_2.id],
     })
-    row_2 = row_handler.create_row(user=user, table=example_table, values={
+    row_handler.create_row(user=user, table=example_table, values={
         f'field_{link_row_field.id}': [customers_row_1.id],
     })
-    row_3 = row_handler.create_row(user=user, table=example_table, values={
+    row_handler.create_row(user=user, table=example_table, values={
         f'field_{link_row_field.id}': [customers_row_3.id],
     })
 
@@ -545,7 +545,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
                                                          database=database)
     grid = data_fixture.create_grid_view(table=example_table)
 
-    example_primary = data_fixture.create_text_field(
+    data_fixture.create_text_field(
         name='Name',
         table=example_table,
         primary=True

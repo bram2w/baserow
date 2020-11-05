@@ -262,8 +262,8 @@ def test_create_row(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json_row_1[f'field_{text_field.id}'] == 'white'
     assert not response_json_row_1[f'field_{number_field.id}']
-    assert response_json_row_1[f'field_{boolean_field.id}'] == False
-    assert response_json_row_1[f'field_{text_field_2.id}'] == None
+    assert response_json_row_1[f'field_{boolean_field.id}'] is False
+    assert response_json_row_1[f'field_{text_field_2.id}'] is None
 
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),
@@ -279,7 +279,7 @@ def test_create_row(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json_row_2[f'field_{text_field.id}'] == 'white'
     assert not response_json_row_2[f'field_{number_field.id}']
-    assert response_json_row_2[f'field_{boolean_field.id}'] == False
+    assert response_json_row_2[f'field_{boolean_field.id}'] is False
     assert response_json_row_2[f'field_{text_field_2.id}'] == ''
 
     response = api_client.post(
@@ -325,29 +325,29 @@ def test_create_row(api_client, data_fixture):
     row_1 = rows[0]
     assert row_1.id == response_json_row_1['id']
     assert getattr(row_1, f'field_{text_field.id}') == 'white'
-    assert getattr(row_1, f'field_{number_field.id}') == None
-    assert getattr(row_1, f'field_{boolean_field.id}') == False
-    assert getattr(row_1, f'field_{text_field_2.id}') == None
+    assert getattr(row_1, f'field_{number_field.id}') is None
+    assert getattr(row_1, f'field_{boolean_field.id}') is False
+    assert getattr(row_1, f'field_{text_field_2.id}') is None
 
     row_2 = rows[1]
     assert row_2.id == response_json_row_2['id']
     assert getattr(row_2, f'field_{text_field.id}') == 'white'
-    assert getattr(row_2, f'field_{number_field.id}') == None
-    assert getattr(row_2, f'field_{boolean_field.id}') == False
-    assert getattr(row_1, f'field_{text_field_2.id}') == None
+    assert getattr(row_2, f'field_{number_field.id}') is None
+    assert getattr(row_2, f'field_{boolean_field.id}') is False
+    assert getattr(row_1, f'field_{text_field_2.id}') is None
 
     row_3 = rows[2]
     assert row_3.id == response_json_row_3['id']
     assert getattr(row_3, f'field_{text_field.id}') == 'Green'
     assert getattr(row_3, f'field_{number_field.id}') == 120
-    assert getattr(row_3, f'field_{boolean_field.id}') == True
+    assert getattr(row_3, f'field_{boolean_field.id}') is True
     assert getattr(row_3, f'field_{text_field_2.id}') == 'Not important'
 
     row_4 = rows[3]
     assert row_4.id == response_json_row_4['id']
     assert getattr(row_4, f'field_{text_field.id}') == 'Purple'
     assert getattr(row_4, f'field_{number_field.id}') == 240
-    assert getattr(row_4, f'field_{boolean_field.id}') == True
+    assert getattr(row_4, f'field_{boolean_field.id}') is True
     assert getattr(row_4, f'field_{text_field_2.id}') == ''
 
 
@@ -455,7 +455,7 @@ def test_get_row(api_client, data_fixture):
     assert response_json['id'] == row_1.id
     assert response_json[f'field_{text_field.id}'] == 'Green'
     assert response_json[f'field_{number_field.id}'] == 120
-    assert response_json[f'field_{boolean_field.id}'] == False
+    assert response_json[f'field_{boolean_field.id}'] is False
 
     url = reverse('api:database:rows:item', kwargs={
         'table_id': table.id,
@@ -471,7 +471,7 @@ def test_get_row(api_client, data_fixture):
     assert response_json['id'] == row_2.id
     assert response_json[f'field_{text_field.id}'] == 'Purple'
     assert response_json[f'field_{number_field.id}'] == 240
-    assert response_json[f'field_{boolean_field.id}'] == True
+    assert response_json[f'field_{boolean_field.id}'] is True
 
 
 @pytest.mark.django_db
@@ -600,12 +600,12 @@ def test_update_row(api_client, data_fixture):
     assert response_json_row_1['id'] == row_1.id
     assert response_json_row_1[f'field_{text_field.id}'] == 'Green'
     assert response_json_row_1[f'field_{number_field.id}'] == 120
-    assert response_json_row_1[f'field_{boolean_field.id}'] == True
+    assert response_json_row_1[f'field_{boolean_field.id}'] is True
 
     row_1.refresh_from_db()
     assert getattr(row_1, f'field_{text_field.id}') == 'Green'
     assert getattr(row_1, f'field_{number_field.id}') == 120
-    assert getattr(row_1, f'field_{boolean_field.id}') == True
+    assert getattr(row_1, f'field_{boolean_field.id}') is True
 
     response = api_client.patch(
         url,
@@ -636,7 +636,7 @@ def test_update_row(api_client, data_fixture):
     row_1.refresh_from_db()
     assert getattr(row_1, f'field_{text_field.id}') == 'Orange'
     assert getattr(row_1, f'field_{number_field.id}') == 120
-    assert getattr(row_1, f'field_{boolean_field.id}') == True
+    assert getattr(row_1, f'field_{boolean_field.id}') is True
 
     url = reverse('api:database:rows:item', kwargs={
         'table_id': table.id,
@@ -657,12 +657,12 @@ def test_update_row(api_client, data_fixture):
     assert response_json_row_2['id'] == row_2.id
     assert response_json_row_2[f'field_{text_field.id}'] == 'Blue'
     assert response_json_row_2[f'field_{number_field.id}'] == 50
-    assert response_json_row_2[f'field_{boolean_field.id}'] == False
+    assert response_json_row_2[f'field_{boolean_field.id}'] is False
 
     row_2.refresh_from_db()
     assert getattr(row_2, f'field_{text_field.id}') == 'Blue'
     assert getattr(row_2, f'field_{number_field.id}') == 50
-    assert getattr(row_2, f'field_{boolean_field.id}') == False
+    assert getattr(row_2, f'field_{boolean_field.id}') is False
 
     url = reverse('api:database:rows:item', kwargs={
         'table_id': table.id,
@@ -681,14 +681,14 @@ def test_update_row(api_client, data_fixture):
     response_json_row_2 = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json_row_2['id'] == row_2.id
-    assert response_json_row_2[f'field_{text_field.id}'] == None
-    assert response_json_row_2[f'field_{number_field.id}'] == None
-    assert response_json_row_2[f'field_{boolean_field.id}'] == False
+    assert response_json_row_2[f'field_{text_field.id}'] is None
+    assert response_json_row_2[f'field_{number_field.id}'] is None
+    assert response_json_row_2[f'field_{boolean_field.id}'] is False
 
     row_2.refresh_from_db()
-    assert getattr(row_2, f'field_{text_field.id}') == None
-    assert getattr(row_2, f'field_{number_field.id}') == None
-    assert getattr(row_2, f'field_{boolean_field.id}') == False
+    assert getattr(row_2, f'field_{text_field.id}') is None
+    assert getattr(row_2, f'field_{number_field.id}') is None
+    assert getattr(row_2, f'field_{boolean_field.id}') is False
 
     table_3 = data_fixture.create_database_table(user=user)
     decimal_field = data_fixture.create_number_field(

@@ -178,7 +178,7 @@ def test_long_text_field_type(data_fixture):
 def test_url_field_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    table_2 = data_fixture.create_database_table(user=user, database=table.database)
+    data_fixture.create_database_table(user=user, database=table.database)
     field = data_fixture.create_text_field(table=table, order=1, name='name')
 
     field_handler = FieldHandler()
@@ -207,32 +207,32 @@ def test_url_field_type(data_fixture):
             'url': 'httpss'
         }, model=model)
 
-    row_0 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'http://test.nl',
         'url': 'https://baserow.io',
         'number': 5
     }, model=model)
-    row_1 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'http;//',
         'url': 'http://localhost',
         'number': 10
     }, model=model)
-    row_2 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'bram@test.nl',
         'url': 'http://www.baserow.io'
     }, model=model)
-    row_3 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'NOT A URL',
         'url': 'http://www.baserow.io/blog/building-a-database'
     }, model=model)
-    row_4 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'ftps://www.complex.website.com?querystring=test&something=else',
         'url': ''
     }, model=model)
-    row_5 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'url': None,
     }, model=model)
-    row_6 = row_handler.create_row(user=user, table=table, values={}, model=model)
+    row_handler.create_row(user=user, table=table, values={}, model=model)
 
     # Convert to text field to a url field so we can check how the conversion of values
     # went.
@@ -289,7 +289,7 @@ def test_date_field_type_prepare_value(data_fixture):
     with pytest.raises(ValidationError):
         assert d.prepare_value_for_db(f, 'TEST')
 
-    assert d.prepare_value_for_db(f, None) == None
+    assert d.prepare_value_for_db(f, None) is None
 
     unprepared_datetime = make_aware(datetime(2020, 4, 10, 14, 30, 30), amsterdam)
     assert d.prepare_value_for_db(f, unprepared_datetime) == expected_datetime
@@ -339,15 +339,15 @@ def test_date_field_type(data_fixture):
     date_field_2 = field_handler.create_field(user=user, table=table, type_name='date',
                                               name='Datetime', date_include_time=True)
 
-    assert date_field_1.date_include_time == False
-    assert date_field_2.date_include_time == True
+    assert date_field_1.date_include_time is False
+    assert date_field_2.date_include_time is True
     assert len(DateField.objects.all()) == 2
 
     model = table.get_model(attribute_names=True)
 
     row = row_handler.create_row(user=user, table=table, values={}, model=model)
-    assert row.date == None
-    assert row.datetime == None
+    assert row.date is None
+    assert row.datetime is None
 
     row = row_handler.create_row(user=user, table=table, values={
         'date': '2020-4-1',
@@ -361,7 +361,7 @@ def test_date_field_type(data_fixture):
         'datetime': make_aware(datetime(2020, 4, 1, 12, 30, 30), amsterdam)
     }, model=model)
     row.refresh_from_db()
-    assert row.date == None
+    assert row.date is None
     assert row.datetime == datetime(2020, 4, 1, 10, 30, 30, tzinfo=timezone('UTC'))
 
     date_field_1 = field_handler.update_field(user=user, field=date_field_1,
@@ -369,17 +369,17 @@ def test_date_field_type(data_fixture):
     date_field_2 = field_handler.update_field(user=user, field=date_field_2,
                                               date_include_time=False)
 
-    assert date_field_1.date_include_time == True
-    assert date_field_2.date_include_time == False
+    assert date_field_1.date_include_time is True
+    assert date_field_2.date_include_time is False
 
     model = table.get_model(attribute_names=True)
     rows = model.objects.all()
 
-    assert rows[0].date == None
-    assert rows[0].datetime == None
+    assert rows[0].date is None
+    assert rows[0].datetime is None
     assert rows[1].date == datetime(2020, 4, 1, tzinfo=timezone('UTC'))
     assert rows[1].datetime == date(2020, 4, 1)
-    assert rows[2].date == None
+    assert rows[2].date is None
     assert rows[2].datetime == date(2020, 4, 1)
 
     field_handler.delete_field(user=user, field=date_field_1)
@@ -392,7 +392,7 @@ def test_date_field_type(data_fixture):
 def test_email_field_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    table_2 = data_fixture.create_database_table(user=user, database=table.database)
+    data_fixture.create_database_table(user=user, database=table.database)
     field = data_fixture.create_text_field(table=table, order=1, name='name')
 
     field_handler = FieldHandler()
@@ -416,32 +416,32 @@ def test_email_field_type(data_fixture):
             'email': 'invalid@email'
         }, model=model)
 
-    row_0 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'a.very.STRANGE@email.address.coM',
         'email': 'test@test.nl',
         'number': 5
     }, model=model)
-    row_1 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'someuser',
         'email': 'some@user.com',
         'number': 10
     }, model=model)
-    row_2 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'http://www.baserow.io',
         'email': 'bram@test.nl'
     }, model=model)
-    row_3 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'NOT AN EMAIL',
         'email': 'something@example.com'
     }, model=model)
-    row_4 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'name': 'testing@nowhere.org',
         'email': ''
     }, model=model)
-    row_5 = row_handler.create_row(user=user, table=table, values={
+    row_handler.create_row(user=user, table=table, values={
         'email': None,
     }, model=model)
-    row_6 = row_handler.create_row(user=user, table=table, values={}, model=model)
+    row_handler.create_row(user=user, table=table, values={}, model=model)
 
     # Convert the text field to a url field so we can check how the conversion of
     # values went.

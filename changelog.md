@@ -1,6 +1,7 @@
 # Changelog
 
 * Fixed API docs scrollbar size issue.
+* Also lint the backend tests.
 * Implemented a switch to disable all filters without deleting them.
 
 ## Released (2020-11-02)

@@ -33,5 +33,6 @@ def test_lenient_schema_editor():
         connection,
         "REGEXP_REPLACE(p_in, 'test', '', 'g')"
     ) as schema_editor:
-        assert schema_editor.alert_column_type_function == \
+        assert schema_editor.alert_column_type_function == (
                "REGEXP_REPLACE(p_in, 'test', '', 'g')"
+        )

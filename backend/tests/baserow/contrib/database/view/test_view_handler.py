@@ -166,24 +166,36 @@ def test_update_grid_view_field_options(data_fixture):
     field_3 = data_fixture.create_text_field()
 
     with pytest.raises(ValueError):
-        ViewHandler().update_grid_view_field_options(grid_view=grid_view, field_options={
-            'strange_format': {'height': 150},
-        })
+        ViewHandler().update_grid_view_field_options(
+            grid_view=grid_view,
+            field_options={
+                'strange_format': {'height': 150},
+            }
+        )
 
     with pytest.raises(UnrelatedFieldError):
-        ViewHandler().update_grid_view_field_options(grid_view=grid_view, field_options={
-            99999: {'width': 150},
-        })
+        ViewHandler().update_grid_view_field_options(
+            grid_view=grid_view,
+            field_options={
+                99999: {'width': 150},
+            }
+        )
 
     with pytest.raises(UnrelatedFieldError):
-        ViewHandler().update_grid_view_field_options(grid_view=grid_view, field_options={
-            field_3.id: {'width': 150},
-        })
+        ViewHandler().update_grid_view_field_options(
+            grid_view=grid_view,
+            field_options={
+                field_3.id: {'width': 150},
+            }
+        )
 
-    ViewHandler().update_grid_view_field_options(grid_view=grid_view, field_options={
-        str(field_1.id): {'width': 150},
-        field_2.id: {'width': 250}
-    })
+    ViewHandler().update_grid_view_field_options(
+        grid_view=grid_view,
+        field_options={
+            str(field_1.id): {'width': 150},
+            field_2.id: {'width': 250}
+        }
+    )
     options_4 = grid_view.get_field_options()
 
     assert len(options_4) == 2
@@ -214,9 +226,9 @@ def test_field_type_changed(data_fixture):
     table_2 = data_fixture.create_database_table(user=user, database=table.database)
     text_field = data_fixture.create_text_field(table=table)
     grid_view = data_fixture.create_grid_view(table=table)
-    contains_filter = data_fixture.create_view_filter(view=grid_view, field=text_field,
-                                                      type='contains', value='test')
-    sort = data_fixture.create_view_sort(view=grid_view, field=text_field, order='ASC')
+    data_fixture.create_view_filter(view=grid_view, field=text_field,
+                                    type='contains', value='test')
+    data_fixture.create_view_sort(view=grid_view, field=text_field, order='ASC')
 
     field_handler = FieldHandler()
     long_text_field = field_handler.update_field(user=user, field=text_field,
@@ -224,7 +236,8 @@ def test_field_type_changed(data_fixture):
     assert ViewFilter.objects.all().count() == 1
     assert ViewSort.objects.all().count() == 1
 
-    field_handler.update_field(user=user, field=long_text_field, new_type_name='number')
+    field_handler.update_field(user=user, field=long_text_field,
+                               new_type_name='number')
     assert ViewFilter.objects.all().count() == 0
     assert ViewSort.objects.all().count() == 1
 
@@ -449,7 +462,7 @@ def test_create_filter(data_fixture):
 
     tmp_field = Field.objects.get(pk=text_field.id)
     view_filter_2 = handler.create_filter(user=user, view=grid_view, field=tmp_field,
-                                        type_name='equal', value='test')
+                                          type_name='equal', value='test')
     assert view_filter_2.view_id == grid_view.id
     assert view_filter_2.field_id == text_field.id
     assert view_filter_2.type == 'equal'
@@ -757,7 +770,7 @@ def test_update_sort(data_fixture):
     assert updated_sort.field_id == text_field.id
     assert updated_sort.view_id == grid_view.id
 
-    view_sort_2 = data_fixture.create_view_sort(view=grid_view, field=long_text_field)
+    data_fixture.create_view_sort(view=grid_view, field=long_text_field)
 
     with pytest.raises(ViewSortFieldAlreadyExist):
         handler.update_sort(user=user, view_sort=view_sort, order='ASC',

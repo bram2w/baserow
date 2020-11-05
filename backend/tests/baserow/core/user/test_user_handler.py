@@ -15,6 +15,7 @@ from baserow.core.user.exceptions import (
 )
 from baserow.core.user.handler import UserHandler
 
+
 @pytest.mark.django_db
 def test_get_user(data_fixture):
     user_1 = data_fixture.create_user(email='user1@localhost')

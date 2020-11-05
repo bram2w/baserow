@@ -104,10 +104,10 @@ def test_long_text_field_type(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert response_json[f'field_{field_id}'] == None
+    assert response_json[f'field_{field_id}'] is None
 
     row = model.objects.all().last()
-    assert row.long_text_2 == None
+    assert row.long_text_2 is None
 
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),
@@ -117,10 +117,10 @@ def test_long_text_field_type(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert response_json[f'field_{field_id}'] == None
+    assert response_json[f'field_{field_id}'] is None
 
     row = model.objects.all().last()
-    assert row.long_text_2 == None
+    assert row.long_text_2 is None
 
     url = reverse('api:database:fields:item', kwargs={'field_id': field_id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f'JWT {token}')
@@ -262,8 +262,9 @@ def test_date_field_type(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
     assert response_json['detail'][f'field_{date_field_id}'][0]['code'] == 'invalid'
-    assert response_json['detail'][f'field_{date_time_field_id}'][0]['code'] == \
-           'invalid'
+    assert response_json['detail'][f'field_{date_time_field_id}'][0]['code'] == (
+        'invalid'
+    )
 
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),

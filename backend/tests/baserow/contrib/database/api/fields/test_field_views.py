@@ -275,9 +275,9 @@ def test_update_field(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['name'] == 'Test 2'
     assert response_json['type'] == 'boolean'
-    assert not 'number_type' in response_json
-    assert not 'number_decimal_places' in response_json
-    assert not 'number_negative' in response_json
+    assert 'number_type' not in response_json
+    assert 'number_decimal_places' not in response_json
+    assert 'number_negative' not in response_json
 
 
 @pytest.mark.django_db
