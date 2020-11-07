@@ -53,7 +53,7 @@ def map_exceptions(mapping):
             if len(value) > 1 and value[1] is not None:
                 status_code = value[1]
             if len(value) > 2 and value[2] is not None:
-                detail = value[2]
+                detail = value[2].format(e=e)
 
         exc = APIException({
             'error': error,

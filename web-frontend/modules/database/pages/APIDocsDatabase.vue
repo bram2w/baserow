@@ -275,22 +275,45 @@
                 :optional="true"
                 type="integer"
                 standard="1"
-                description="Defines which page of rows should be returned."
-              ></APIDocsParameter>
+              >
+                Defines which page of rows should be returned.
+              </APIDocsParameter>
               <APIDocsParameter
                 name="size"
                 :optional="true"
                 type="integer"
                 standard="100"
-                description="Defines how many rows should be returned per page."
-              ></APIDocsParameter>
+              >
+                Defines how many rows should be returned per page.
+              </APIDocsParameter>
               <APIDocsParameter
                 name="search"
                 :optional="true"
                 type="string"
                 standard="''"
-                description="If provided only rows with data that matches the search query are going to be returned."
-              ></APIDocsParameter>
+              >
+                If provided only rows with data that matches the search query
+                are going to be returned.
+              </APIDocsParameter>
+              <APIDocsParameter
+                name="order_by"
+                :optional="true"
+                type="string"
+                standard="'id'"
+              >
+                Optionally the rows can be ordered by provided field ids
+                separated by comma. By default a field is ordered in ascending
+                (A-Z) order, but by prepending the field with a '-' it can be
+                ordered descending (Z-A).
+                <br /><br />
+                For example if you provide the following GET parameter
+                <code class="api-docs__code">order_by=field_1,-field_2</code>
+                the rows will ordered by
+                <code class="api-docs__code">field_1</code>
+                in ascending order. If some fields have the same value, that
+                subset will be ordered by
+                <code class="api-docs__code">field_2</code> in descending order.
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
@@ -320,11 +343,9 @@
             </p>
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
-              <APIDocsParameter
-                name="row_id"
-                type="integer"
-                description="The unique identifier or the row that is requested."
-              ></APIDocsParameter>
+              <APIDocsParameter name="row_id" type="integer">
+                The unique identifier or the row that is requested.
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
@@ -353,8 +374,9 @@
                 :name="'field_' + field.id"
                 :optional="true"
                 :type="field._.type"
-                :description="field._.description"
-              ></APIDocsParameter>
+              >
+                {{ field._.description }}
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
@@ -380,11 +402,9 @@
             </p>
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
-              <APIDocsParameter
-                name="row_id"
-                type="integer"
-                description="The unique identifier or the row that needs to be updated."
-              ></APIDocsParameter>
+              <APIDocsParameter name="row_id" type="integer">
+                The unique identifier or the row that needs to be updated.
+              </APIDocsParameter>
             </ul>
             <h4 class="api-docs__heading-4">Request body schema</h4>
             <ul class="api-docs__parameters">
@@ -394,8 +414,9 @@
                 :name="'field_' + field.id"
                 :optional="true"
                 :type="field._.type"
-                :description="field._.description"
-              ></APIDocsParameter>
+              >
+                {{ field._.description }}
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
@@ -421,11 +442,9 @@
             </p>
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
-              <APIDocsParameter
-                name="row_id"
-                type="integer"
-                description="The unique identifier or the row that needs to be deleted."
-              ></APIDocsParameter>
+              <APIDocsParameter name="row_id" type="integer">
+                The unique identifier or the row that needs to be deleted.
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">

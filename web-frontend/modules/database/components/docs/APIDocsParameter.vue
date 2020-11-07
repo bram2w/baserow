@@ -10,7 +10,7 @@
         Default: {{ standard }}
       </div>
       <div class="api-docs__parameter-content">
-        {{ description }}
+        <slot></slot>
       </div>
     </div>
   </li>
@@ -34,11 +34,6 @@ export default {
       required: true,
     },
     standard: {
-      type: String,
-      required: false,
-      default: '',
-    },
-    description: {
       type: String,
       required: false,
       default: '',

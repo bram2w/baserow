@@ -8,6 +8,7 @@ from rest_framework.status import (
 
 from django.shortcuts import reverse
 
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.tokens.handler import TokenHandler
 
 
@@ -177,6 +178,52 @@ def test_list_rows(api_client, data_fixture):
     assert response_json['count'] == 1
     assert len(response_json['results']) == 1
     assert response_json['results'][0]['id'] == row_4.id
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?order_by=field_999999',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json['error'] == 'ERROR_ORDER_BY_FIELD_NOT_FOUND'
+    assert response_json['detail'] == (
+        'The field field_999999 was not found in the table.'
+    )
+
+    number_field_type = field_type_registry.get('number')
+    old_can_order_by = number_field_type.can_order_by
+    number_field_type.can_order_by = False
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?order_by=-field_{field_2.id}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json['error'] == 'ERROR_ORDER_BY_FIELD_NOT_POSSIBLE'
+    assert response_json['detail'] == (
+        f'It is not possible to order by field_{field_2.id} because the field type '
+        f'number does not support filtering.'
+    )
+    number_field_type.can_order_by = old_can_order_by
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?order_by=-field_{field_2.id}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 4
+    assert len(response_json['results']) == 4
+    assert response_json['results'][0]['id'] == row_4.id
+    assert response_json['results'][1]['id'] == row_3.id
+    assert response_json['results'][2]['id'] == row_2.id
+    assert response_json['results'][3]['id'] == row_1.id
 
 
 @pytest.mark.django_db

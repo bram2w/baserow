@@ -3,6 +3,7 @@
 * Fixed API docs scrollbar size issue.
 * Also lint the backend tests.
 * Implemented a switch to disable all filters without deleting them.
+* Made it possible to order by fields via the rows listing endpoint.
 
 ## Released (2020-11-02)
 
