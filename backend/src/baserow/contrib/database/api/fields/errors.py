@@ -19,3 +19,14 @@ ERROR_FIELD_NOT_IN_TABLE = (
     HTTP_400_BAD_REQUEST,
     'The provided field does not belong in the related table.'
 )
+ERROR_ORDER_BY_FIELD_NOT_FOUND = (
+    'ERROR_ORDER_BY_FIELD_NOT_FOUND',
+    HTTP_400_BAD_REQUEST,
+    'The field {e.field_name} was not found in the table.'
+)
+ERROR_ORDER_BY_FIELD_NOT_POSSIBLE = (
+    'ERROR_ORDER_BY_FIELD_NOT_POSSIBLE',
+    HTTP_400_BAD_REQUEST,
+    'It is not possible to order by {e.field_name} because the field type '
+    '{e.field_type} does not support filtering.'
+)

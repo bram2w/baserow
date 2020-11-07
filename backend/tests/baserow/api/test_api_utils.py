@@ -68,13 +68,15 @@ def test_map_exceptions():
             TemporaryException: (
                 'ERROR_TEMPORARY_2',
                 HTTP_404_NOT_FOUND,
-                'Another message'
+                'Another message {e.message}'
             )
         }):
-            raise TemporaryException
+            e = TemporaryException()
+            e.message = 'test'
+            raise e
 
     assert api_exception_2.value.detail['error'] == 'ERROR_TEMPORARY_2'
-    assert api_exception_2.value.detail['detail'] == 'Another message'
+    assert api_exception_2.value.detail['detail'] == 'Another message test'
     assert api_exception_2.value.status_code == status.HTTP_404_NOT_FOUND
 
     with pytest.raises(TemporaryException2):

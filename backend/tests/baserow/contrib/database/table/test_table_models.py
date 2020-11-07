@@ -5,6 +5,9 @@ from unittest.mock import MagicMock
 from django.db import models
 
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.fields.exceptions import (
+    OrderByFieldNotPossible, OrderByFieldNotFound
+)
 
 
 @pytest.mark.django_db
@@ -193,3 +196,90 @@ def test_search_all_fields_queryset(data_fixture):
 
     results = model.objects.all().search_all_fields('white car')
     assert len(results) == 0
+
+
+@pytest.mark.django_db
+def test_order_by_fields_string_queryset(data_fixture):
+    table = data_fixture.create_database_table(name='Cars')
+    table_2 = data_fixture.create_database_table(database=table.database)
+    name_field = data_fixture.create_text_field(table=table, order=0, name='Name')
+    color_field = data_fixture.create_text_field(table=table, order=1, name='Color')
+    price_field = data_fixture.create_number_field(table=table, order=2, name='Price')
+    description_field = data_fixture.create_long_text_field(
+        table=table, order=3, name='Description'
+    )
+    link_field = data_fixture.create_link_row_field(table=table,
+                                                    link_row_table=table_2)
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create(
+        name='BMW',
+        color='Blue',
+        price=10000,
+        description='Sports car.'
+    )
+    row_2 = model.objects.create(
+        name='Audi',
+        color='Orange',
+        price=20000,
+        description='This is the most expensive car we have.'
+    )
+    row_3 = model.objects.create(
+        name='Volkswagen',
+        color='White',
+        price=5000,
+        description='A very old car.'
+    )
+    row_4 = model.objects.create(
+        name='Volkswagen',
+        color='Green',
+        price=4000,
+        description='Strange color.'
+    )
+
+    with pytest.raises(ValueError):
+        model.objects.all().order_by_fields_string('xxxx')
+
+    with pytest.raises(ValueError):
+        model.objects.all().order_by_fields_string('')
+
+    with pytest.raises(ValueError):
+        model.objects.all().order_by_fields_string('id')
+
+    with pytest.raises(OrderByFieldNotFound):
+        model.objects.all().order_by_fields_string('field_99999')
+
+    with pytest.raises(OrderByFieldNotPossible):
+        model.objects.all().order_by_fields_string(f'field_{link_field.id}')
+
+    results = model.objects.all().order_by_fields_string(
+        f'-field_{price_field.id}'
+    )
+    assert results[0].id == row_2.id
+    assert results[1].id == row_1.id
+    assert results[2].id == row_3.id
+    assert results[3].id == row_4.id
+
+    results = model.objects.all().order_by_fields_string(
+        f'field_{name_field.id},-field_{price_field.id}'
+    )
+    assert results[0].id == row_2.id
+    assert results[1].id == row_1.id
+    assert results[2].id == row_3.id
+    assert results[3].id == row_4.id
+
+    results = model.objects.all().order_by_fields_string(
+        f'-field_{price_field.id}'
+    )
+    assert results[0].id == row_2.id
+    assert results[1].id == row_1.id
+    assert results[2].id == row_3.id
+    assert results[3].id == row_4.id
+
+    results = model.objects.all().order_by_fields_string(
+        f'{description_field.id},-field_{color_field.id}'
+    )
+    assert results[0].id == row_3.id
+    assert results[1].id == row_1.id
+    assert results[2].id == row_4.id
+    assert results[3].id == row_2.id
