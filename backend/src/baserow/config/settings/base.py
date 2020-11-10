@@ -173,7 +173,7 @@ DATABASE_ROUTERS = ('baserow.contrib.database.database_routers.TablesDatabaseRou
 
 MJML_BACKEND_MODE = 'tcpserver'
 MJML_TCPSERVERS = [
-    (os.getenv('MJML_SERVER_HOST', 'mjml'), os.getenv('MJML_SERVER_PORT', 28101)),
+    (os.getenv('MJML_SERVER_HOST', 'mjml'), int(os.getenv('MJML_SERVER_PORT', 28101))),
 ]
 
 PUBLIC_BACKEND_DOMAIN = os.getenv('PUBLIC_BACKEND_DOMAIN', 'localhost:8000')
