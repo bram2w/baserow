@@ -20,7 +20,7 @@ from baserow.api.errors import BAD_TOKEN_SIGNATURE, EXPIRED_TOKEN_SIGNATURE
 from baserow.api.schemas import get_error_schema
 from baserow.core.user.handler import UserHandler
 from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLDomainNotAllowed
+    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLHostnameNotAllowed
 )
 
 from .serializers import (
@@ -30,7 +30,7 @@ from .serializers import (
 )
 from .errors import (
     ERROR_ALREADY_EXISTS, ERROR_USER_NOT_FOUND, ERROR_INVALID_OLD_PASSWORD,
-    ERROR_DOMAIN_URL_IS_NOT_ALLOWED
+    ERROR_HOSTNAME_IS_NOT_ALLOWED
 )
 from .schemas import create_user_response_schema, authenticate_user_schema
 
@@ -171,7 +171,7 @@ class SendResetPasswordEmailView(APIView):
             204: None,
             400: get_error_schema([
                 'ERROR_REQUEST_BODY_VALIDATION',
-                'ERROR_DOMAIN_URL_IS_NOT_ALLOWED'
+                'ERROR_HOSTNAME_IS_NOT_ALLOWED'
             ])
         },
         auth=[None],
@@ -179,7 +179,7 @@ class SendResetPasswordEmailView(APIView):
     @transaction.atomic
     @validate_body(SendResetPasswordEmailBodyValidationSerializer)
     @map_exceptions({
-        BaseURLDomainNotAllowed: ERROR_DOMAIN_URL_IS_NOT_ALLOWED
+        BaseURLHostnameNotAllowed: ERROR_HOSTNAME_IS_NOT_ALLOWED
     })
     def post(self, request, data):
         """

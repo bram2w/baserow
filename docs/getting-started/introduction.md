@@ -93,9 +93,6 @@ are accepted.
 * `MJML_SERVER_HOST` (default `mjml`): The hostname of the MJML TCP server. In the 
   development environment we use the `liminspace/mjml-tcpserver:latest` image.
 * `MJML_SERVER_PORT` (default `28101`): The port of the MJML TCP server.
-* `PUBLIC_BACKEND_DOMAIN` (default `localhost:8000`): The publicly accessible domain 
-  name of the backend. For the development environment this is localhost:8000, but if 
-  you change the port to 9000, for example, it will be `localhost:9000`.
 * `PUBLIC_BACKEND_URL` (default `http://localhost:8000`): The publicly accessible URL 
   of the backend. For the development environment this is `http://localhost:8000`, but 
   if you change the port to 9000 it will be `http://localhost:9000`. 
@@ -107,9 +104,6 @@ are accepted.
   development environment the backend container be accessed via the `backend` hostname
   and because the server is also running on port 8000 inside the container, the private
   backend URL should be `http://backend:8000`.
-* `PUBLIC_WEB_FRONTEND_DOMAIN` (default `localhost:3000`): The publicly accessible
-  domain name of the web-frontend. For the development environment this is
-  localhost:3000, but if you change the port to 4000 it would be `localhost:4000`.
 * `PUBLIC_WEB_FRONTEND_URL` (default `http://localhost:3000`): The publicly accessible 
   URL of the web-frontend. For the development environment this is 
   `http://localhost:3000`, but again you can change the port to whatever you wish. This
