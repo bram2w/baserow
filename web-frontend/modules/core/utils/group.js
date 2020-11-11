@@ -2,7 +2,10 @@ const cookieGroupName = 'baserow_group_id'
 
 export const setGroupCookie = (groupId, cookie) => {
   if (process.SERVER_BUILD) return
-  cookie.set(cookieGroupName, groupId)
+  cookie.set(cookieGroupName, groupId, {
+    sameSite: 'strict',
+    secure: true,
+  })
 }
 
 export const unsetGroupCookie = (cookie) => {

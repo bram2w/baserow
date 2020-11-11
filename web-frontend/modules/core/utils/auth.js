@@ -5,6 +5,8 @@ export const setToken = (token, cookie) => {
   cookie.set(cookieTokenName, token, {
     path: '/',
     maxAge: 60 * 60 * 24 * 7,
+    sameSite: 'strict',
+    secure: true,
   })
 }
 
