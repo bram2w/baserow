@@ -106,7 +106,7 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_DOMAIN_URL_IS_NOT_ALLOWED'
+    assert response_json['error'] == 'ERROR_HOSTNAME_IS_NOT_ALLOWED'
     assert len(mailoutbox) == 0
 
     response = client.post(

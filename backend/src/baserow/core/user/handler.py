@@ -9,7 +9,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.registries import plugin_registry
 
 from .exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLDomainNotAllowed
+    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLHostnameNotAllowed
 )
 from .emails import ResetPasswordEmail
 from .utils import normalize_email_address
@@ -101,14 +101,15 @@ class UserHandler:
         :type user: User
         :param base_url: The base url of the frontend, where the user can reset his
             password. The reset token is appended to the URL (base_url + '/TOKEN').
-            Only the PUBLIC_WEB_FRONTEND_DOMAIN is allowed as domain name.
+            Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
         :type base_url: str
         """
 
         parsed_base_url = urlparse(base_url)
-        if parsed_base_url.netloc != settings.PUBLIC_WEB_FRONTEND_DOMAIN:
-            raise BaseURLDomainNotAllowed(f'The domain {parsed_base_url.netloc} is '
-                                          f'not allowed.')
+        if parsed_base_url.hostname != settings.PUBLIC_WEB_FRONTEND_HOSTNAME:
+            raise BaseURLHostnameNotAllowed(
+                f'The hostname {parsed_base_url.netloc} is not allowed.'
+            )
 
         signer = self.get_reset_password_signer()
         signed_user_id = signer.dumps(user.id)

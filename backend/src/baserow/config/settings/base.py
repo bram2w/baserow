@@ -1,5 +1,6 @@
 import os
 import datetime
+from urllib.parse import urlparse
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -10,7 +11,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'CHANGE_THIS_TO_SOMETHING_SECRET_IN_PRODUCT
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', 'backend', 'sandbox']
+ALLOWED_HOSTS = ['localhost']
 
 INSTALLED_APPS = [
     'django.contrib.auth',
@@ -176,13 +177,18 @@ MJML_TCPSERVERS = [
     (os.getenv('MJML_SERVER_HOST', 'mjml'), int(os.getenv('MJML_SERVER_PORT', 28101))),
 ]
 
-PUBLIC_BACKEND_DOMAIN = os.getenv('PUBLIC_BACKEND_DOMAIN', 'localhost:8000')
 PUBLIC_BACKEND_URL = os.getenv('PUBLIC_BACKEND_URL', 'http://localhost:8000')
-PUBLIC_WEB_FRONTEND_DOMAIN = os.getenv('PUBLIC_WEB_FRONTEND_DOMAIN', 'localhost:3000')
 PUBLIC_WEB_FRONTEND_URL = os.getenv('PUBLIC_WEB_FRONTEND_URL', 'http://localhost:3000')
+PRIVATE_BACKEND_URL = os.getenv('PRIVATE_BACKEND_URL', 'http://backend:8000')
+PUBLIC_BACKEND_HOSTNAME = urlparse(PUBLIC_BACKEND_URL).hostname
+PUBLIC_WEB_FRONTEND_HOSTNAME = urlparse(PUBLIC_WEB_FRONTEND_URL).hostname
+PRIVATE_BACKEND_HOSTNAME = urlparse(PRIVATE_BACKEND_URL).hostname
 
-if PUBLIC_BACKEND_DOMAIN:
-    ALLOWED_HOSTS.append(PUBLIC_BACKEND_DOMAIN)
+if PUBLIC_BACKEND_HOSTNAME:
+    ALLOWED_HOSTS.append(PUBLIC_BACKEND_HOSTNAME)
+
+if PRIVATE_BACKEND_HOSTNAME:
+    ALLOWED_HOSTS.append(PRIVATE_BACKEND_HOSTNAME)
 
 FROM_EMAIL = os.getenv('FROM_EMAIL', 'no-reply@localhost')
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
