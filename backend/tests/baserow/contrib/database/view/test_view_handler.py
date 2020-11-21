@@ -402,6 +402,13 @@ def test_get_filter(data_fixture):
     with pytest.raises(UserNotInGroupError):
         handler.get_filter(user=user_2, view_filter_id=equal_filter.id)
 
+    with pytest.raises(AttributeError):
+        handler.get_filter(
+            user=user,
+            view_filter_id=equal_filter.id,
+            base_queryset=ViewFilter.objects.prefetch_related('UNKNOWN')
+        )
+
     filter = handler.get_filter(user=user, view_filter_id=equal_filter.id)
 
     assert filter.id == equal_filter.id
@@ -670,6 +677,13 @@ def test_get_sort(data_fixture):
 
     with pytest.raises(UserNotInGroupError):
         handler.get_sort(user=user_2, view_sort_id=equal_sort.id)
+
+    with pytest.raises(AttributeError):
+        handler.get_sort(
+            user=user,
+            view_sort_id=equal_sort.id,
+            base_queryset=ViewSort.objects.prefetch_related('UNKNOWN')
+        )
 
     sort = handler.get_sort(user=user, view_sort_id=equal_sort.id)
 

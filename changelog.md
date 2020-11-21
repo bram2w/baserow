@@ -1,5 +1,6 @@
 # Changelog
 
+* Added select_for_update where it was still missing.
 * Fixed API docs scrollbar size issue.
 * Also lint the backend tests.
 * Implemented a switch to disable all filters without deleting them.

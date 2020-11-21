@@ -259,7 +259,7 @@ class ViewHandler:
 
         return queryset
 
-    def get_filter(self, user, view_filter_id):
+    def get_filter(self, user, view_filter_id, base_queryset=None):
         """
         Returns an existing view filter by the given id.
 
@@ -267,14 +267,20 @@ class ViewHandler:
         :type user: User
         :param view_filter_id: The id of the view filter.
         :type view_filter_id: int
+        :param base_queryset: The base queryset from where to select the view filter
+            object. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
         :raises ViewFilterDoesNotExist: The the requested view does not exists.
         :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The requested view filter instance.
         :type: ViewFilter
         """
 
+        if not base_queryset:
+            base_queryset = ViewFilter.objects
+
         try:
-            view_filter = ViewFilter.objects.select_related(
+            view_filter = base_queryset.select_related(
                 'view__table__database__group'
             ).get(
                 pk=view_filter_id
@@ -476,7 +482,7 @@ class ViewHandler:
 
         return queryset
 
-    def get_sort(self, user, view_sort_id):
+    def get_sort(self, user, view_sort_id, base_queryset=None):
         """
         Returns an existing view sort with the given id.
 
@@ -484,14 +490,20 @@ class ViewHandler:
         :type user: User
         :param view_sort_id: The id of the view sort.
         :type view_sort_id: int
+        :param base_queryset: The base queryset from where to select the view sort
+            object from. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
         :raises ViewSortDoesNotExist: The the requested view does not exists.
         :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The requested view sort instance.
         :type: ViewSort
         """
 
+        if not base_queryset:
+            base_queryset = ViewSort.objects
+
         try:
-            view_sort = ViewSort.objects.select_related(
+            view_sort = base_queryset.select_related(
                 'view__table__database__group'
             ).get(
                 pk=view_sort_id
