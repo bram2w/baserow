@@ -118,36 +118,31 @@
           <i class="fas fa-plus"></i>
           choose a field to sort by
         </a>
-        <Context ref="addContext">
-          <div class="dropdown dropdown--floating">
-            <div class="dropdown__items">
-              <ul ref="items" class="select__items">
-                <li v-show="isFieldAvailable(primary)" class="select__item">
-                  <a class="select__item-link" @click="addSort(primary)">
-                    <i
-                      class="select__item-icon fas fa-fw"
-                      :class="'fa-' + primary._.type.iconClass"
-                    ></i>
-                    {{ primary.name }}
-                  </a>
-                </li>
-                <li
-                  v-for="field in fields"
-                  v-show="isFieldAvailable(field)"
-                  :key="field.id"
-                  class="select__item"
-                >
-                  <a class="select__item-link" @click="addSort(field)">
-                    <i
-                      class="select__item-icon fas fa-fw"
-                      :class="'fa-' + field._.type.iconClass"
-                    ></i>
-                    {{ field.name }}
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
+        <Context ref="addContext" class="sortings__add-context">
+          <ul ref="items" class="context__menu">
+            <li v-show="isFieldAvailable(primary)">
+              <a @click="addSort(primary)">
+                <i
+                  class="context__menu-icon fas fa-fw"
+                  :class="'fa-' + primary._.type.iconClass"
+                ></i>
+                {{ primary.name }}
+              </a>
+            </li>
+            <li
+              v-for="field in fields"
+              v-show="isFieldAvailable(field)"
+              :key="field.id"
+            >
+              <a @click="addSort(field)">
+                <i
+                  class="context__menu-icon fas fa-fw"
+                  :class="'fa-' + field._.type.iconClass"
+                ></i>
+                {{ field.name }}
+              </a>
+            </li>
+          </ul>
         </Context>
       </template>
     </div>
