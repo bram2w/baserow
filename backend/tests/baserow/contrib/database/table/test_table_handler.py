@@ -28,6 +28,14 @@ def test_get_database_table(data_fixture):
     with pytest.raises(TableDoesNotExist):
         handler.get_table(user=user, table_id=99999)
 
+    # If the error is raised we know for sure that the base query has resolved.
+    with pytest.raises(AttributeError):
+        handler.get_table(
+            user=user,
+            table_id=table.id,
+            base_queryset=Table.objects.prefetch_related('UNKNOWN')
+        )
+
     table_copy = handler.get_table(user=user, table_id=table.id)
     assert table_copy.id == table.id
 

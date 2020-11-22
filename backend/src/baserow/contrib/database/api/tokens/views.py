@@ -154,7 +154,11 @@ class TokenView(APIView):
     def patch(self, request, data, token_id):
         """Updates the values of a token."""
 
-        token = TokenHandler().get_token(request.user, token_id)
+        token = TokenHandler().get_token(
+            request.user,
+            token_id,
+            base_queryset=Token.objects.select_for_update()
+        )
         permissions = data.pop('permissions', None)
         rotate_key = data.pop('rotate_key', False)
 
