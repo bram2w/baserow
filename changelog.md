@@ -8,6 +8,7 @@
 * Added community chat to the readme.
 * Made the cookies strict and secure.
 * Removed the redundant _DOMAIN variables.
+* Fixed bug where the sort choose field item didn't have a hover effect.
 
 ## Released (2020-11-02)
 
