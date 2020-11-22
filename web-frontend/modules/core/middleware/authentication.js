@@ -5,7 +5,7 @@ export default function ({ store, req, app }) {
   if (process.server && !req) return
 
   // Load the token
-  const token = getToken(app.$cookies)
+  const token = getToken(app)
 
   // If there already is a token we will refresh it to check if it is valid and
   // to get fresh user information. This will probably happen on the server
