@@ -164,7 +164,7 @@ export const actions = {
    */
   select({ commit, dispatch }, group) {
     commit('SET_SELECTED', group)
-    setGroupCookie(group.id, this.app.$cookies)
+    setGroupCookie(group.id, this.app)
   },
   /**
    * Select a group by a given group id.
@@ -181,7 +181,7 @@ export const actions = {
    */
   unselect({ commit, dispatch, getters }, group) {
     commit('UNSELECT', {})
-    unsetGroupCookie(this.app.$cookies)
+    unsetGroupCookie(this.app)
     return dispatch('application/clearAll', group, { root: true })
   },
 }

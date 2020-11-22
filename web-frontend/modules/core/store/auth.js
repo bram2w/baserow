@@ -32,7 +32,7 @@ export const actions = {
    */
   async login({ commit, dispatch }, { email, password }) {
     const { data } = await AuthService(this.$client).login(email, password)
-    setToken(data.token, this.app.$cookies)
+    setToken(data.token, this.app)
     commit('SET_USER_DATA', data)
     dispatch('startRefreshTimeout')
   },
@@ -47,7 +47,7 @@ export const actions = {
       password,
       true
     )
-    setToken(data.token, this.app.$cookies)
+    setToken(data.token, this.app)
     commit('SET_USER_DATA', data)
     dispatch('startRefreshTimeout')
   },
@@ -56,8 +56,8 @@ export const actions = {
    * data.
    */
   async logoff({ commit, dispatch }) {
-    unsetToken(this.app.$cookies)
-    unsetGroupCookie(this.app.$cookies)
+    unsetToken(this.app)
+    unsetGroupCookie(this.app)
     commit('CLEAR_USER_DATA')
     await dispatch('group/clearAll', {}, { root: true })
     await dispatch('group/unselect', {}, { root: true })
@@ -70,13 +70,13 @@ export const actions = {
   async refresh({ commit, state, dispatch }, token) {
     try {
       const { data } = await AuthService(this.$client).refresh(token)
-      setToken(data.token, this.app.$cookies)
+      setToken(data.token, this.app)
       commit('SET_USER_DATA', data)
       dispatch('startRefreshTimeout')
     } catch {
       // The token could not be refreshed, this means the token is no longer
       // valid and the user not logged in anymore.
-      unsetToken(this.app.$cookies)
+      unsetToken(this.app)
       commit('CLEAR_USER_DATA')
 
       // @TODO we might want to do something here, trigger some event, show
