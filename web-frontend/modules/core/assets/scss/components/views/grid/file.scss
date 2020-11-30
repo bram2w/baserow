@@ -1,0 +1,123 @@
+.grid-field-file__cell {
+  &.active {
+    bottom: auto;
+    right: auto;
+    height: auto;
+    min-width: calc(100% + 4px);
+  }
+}
+
+.grid-field-file__dragging {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: dashed 2px $color-primary-500;
+  background-color: $white;
+  text-align: center;
+  color: $color-neutral-500;
+  font-size: 12px;
+  z-index: 1;
+
+  @include absolute(0, 0, 0, 0);
+}
+
+.grid-field-file__list {
+  overflow: hidden;
+  display: flex;
+  flex-flow: row;
+  flex-wrap: nowrap;
+  list-style: none;
+  margin: 0;
+  padding: 0 5px;
+
+  .grid-field-file__cell.active & {
+    height: auto;
+    flex-wrap: wrap;
+  }
+}
+
+%grid-field-file__border {
+  border-radius: 3px;
+  border: solid 1px $color-neutral-300;
+
+  .grid-field-file__cell.active & {
+    border-color: $color-neutral-500;
+  }
+}
+
+.grid-field-file__item {
+  white-space: nowrap;
+  margin: 5px 3px;
+  display: flex;
+  height: 22px;
+}
+
+.grid-field-file__link {
+  cursor: initial;
+
+  // The link is not clickable when the cell is not active.
+  .grid-field-file__cell.active & {
+    cursor: pointer;
+  }
+}
+
+.grid-field-file__image {
+  @extend %grid-field-file__border;
+
+  display: block;
+  width: auto;
+  height: 22px;
+}
+
+.grid-field-file__icon {
+  @extend %grid-field-file__border;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-neutral-600;
+  width: 22px;
+  height: 22px;
+}
+
+.grid-field-file__loading {
+  @extend %grid-field-file__border;
+
+  position: relative;
+  width: 22px;
+  height: 22px;
+
+  &::before {
+    content: '';
+    margin: -6px 0 0 -6px;
+
+    @include loading(12px);
+    @include absolute(50%, auto, auto, 50%);
+  }
+}
+
+.grid-field-file__item-add {
+  border-radius: 3px;
+  color: $color-primary-900;
+  background-color: $color-primary-100;
+
+  @include center-text(22px, 11px);
+
+  &:hover {
+    background-color: $color-primary-200;
+  }
+}
+
+.grid-field-file__drop {
+  display: none;
+  line-height: 22px;
+  color: $color-neutral-500;
+  margin-left: 8px;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.grid-field-file__drop-icon {
+  margin-right: 4px;
+  font-size: 10px;
+}

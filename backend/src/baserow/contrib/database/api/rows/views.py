@@ -13,7 +13,9 @@ from baserow.api.decorators import map_exceptions
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
+from baserow.api.user_files.errors import ERROR_USER_FILE_DOES_NOT_EXIST
 from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
@@ -185,7 +187,8 @@ class RowsView(APIView):
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+        UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST
     })
     def post(self, request, table_id):
         """
@@ -316,7 +319,8 @@ class RowView(APIView):
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
-        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+        UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST
     })
     def patch(self, request, table_id, row_id):
         """

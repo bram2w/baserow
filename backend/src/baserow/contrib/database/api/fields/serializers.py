@@ -5,6 +5,8 @@ from drf_spectacular.types import OpenApiTypes
 
 from rest_framework import serializers
 
+from baserow.api.user_files.validators import user_file_name_validator
+from baserow.api.user_files.serializers import UserFileURLAndThumbnailsSerializerMixin
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.models import Field
 
@@ -71,3 +73,30 @@ class LinkRowValueSerializer(serializers.Serializer):
             source=value_field_name,
             required=False
         )
+
+
+class FileFieldRequestSerializer(serializers.Serializer):
+    visible_name = serializers.CharField(
+        required=False,
+        help_text='A visually editable name for the field.'
+    )
+    name = serializers.CharField(
+        required=True,
+        validators=[user_file_name_validator],
+        help_text='Accepts the name of the already uploaded user file.'
+    )
+
+
+class FileFieldResponseSerializer(UserFileURLAndThumbnailsSerializerMixin,
+                                  serializers.Serializer):
+    visible_name = serializers.CharField()
+    name = serializers.CharField()
+    size = serializers.IntegerField()
+    mime_type = serializers.CharField()
+    is_image = serializers.BooleanField()
+    image_width = serializers.IntegerField()
+    image_height = serializers.IntegerField()
+    uploaded_at = serializers.DateTimeField()
+
+    def get_instance_attr(self, instance, name):
+        return instance[name]

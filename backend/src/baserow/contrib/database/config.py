@@ -45,7 +45,8 @@ class DatabaseConfig(AppConfig):
 
         from .fields.field_types import (
             TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType,
-            BooleanFieldType, DateFieldType, LinkRowFieldType, EmailFieldType
+            BooleanFieldType, DateFieldType, LinkRowFieldType, EmailFieldType,
+            FileFieldType
         )
         field_type_registry.register(TextFieldType())
         field_type_registry.register(LongTextFieldType())
@@ -55,9 +56,11 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(BooleanFieldType())
         field_type_registry.register(DateFieldType())
         field_type_registry.register(LinkRowFieldType())
+        field_type_registry.register(FileFieldType())
 
-        from .fields.field_converters import LinkRowFieldConverter
+        from .fields.field_converters import LinkRowFieldConverter, FileFieldConverter
         field_converter_registry.register(LinkRowFieldConverter())
+        field_converter_registry.register(FileFieldConverter())
 
         from .views.view_types import GridViewType
         view_type_registry.register(GridViewType())

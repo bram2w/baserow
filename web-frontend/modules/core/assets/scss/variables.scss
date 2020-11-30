@@ -72,9 +72,13 @@ $z-index-layout-col-3-2: 4 !default;
 $z-index-modal: 7 !default;
 $z-index-context: 7 !default;
 
+// The tooltip is only visible on hover and because of that it can be over the modals
+// and contexts.
+$z-index-tooltip: 8 !default;
+
 // The notifications will be on top of anything else, because the message is temporary
 // and must always be visible.
-$z-index-notifications: 8 !default;
+$z-index-notifications: 9 !default;
 
 // normalize overrides
 $base-font-family: $text-font-stack !default;
@@ -82,10 +86,15 @@ $font-awesome-font-family: 'Font Awesome 5 Free', sans-serif !default;
 $font-awesome-font-weight: 900 !default;
 
 // API docs variables
-$api-docs-nav-width: 240px;
-$api-docs-header-height: 52px;
-$api-docs-header-z-index: 4;
-$api-docs-databases-z-index: 5;
-$api-docs-nav-z-index: 3;
-$api-docs-body-z-index: 2;
-$api-docs-background-z-index: 1;
+$api-docs-nav-width: 240px !default;
+$api-docs-header-height: 52px !default;
+$api-docs-header-z-index: 4 !default;
+$api-docs-databases-z-index: 5 !default;
+$api-docs-nav-z-index: 3 !default;
+$api-docs-body-z-index: 2 !default;
+$api-docs-background-z-index: 1 !default;
+
+// file field modal variables
+$file-field-modal-head-height: 62px !default;
+$file-field-modal-body-nav-width: 120px !default;
+$file-field-modal-foot-height: 108px !default;

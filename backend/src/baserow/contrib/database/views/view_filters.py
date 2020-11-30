@@ -7,10 +7,11 @@ from dateutil.parser import ParserError
 
 from django.db.models import Q, IntegerField, BooleanField
 from django.db.models.fields.related import ManyToManyField
+from django.contrib.postgres.fields import JSONField
 
 from baserow.contrib.database.fields.field_types import (
     TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType, DateFieldType,
-    LinkRowFieldType, BooleanFieldType, EmailFieldType
+    LinkRowFieldType, BooleanFieldType, EmailFieldType, FileFieldType
 )
 
 from .registries import ViewFilterType
@@ -251,7 +252,8 @@ class EmptyViewFilterType(ViewFilterType):
         BooleanFieldType.type,
         DateFieldType.type,
         LinkRowFieldType.type,
-        EmailFieldType.type
+        EmailFieldType.type,
+        FileFieldType.type
     ]
 
     def get_filter(self, field_name, value, model_field):
@@ -264,6 +266,10 @@ class EmptyViewFilterType(ViewFilterType):
 
         q = Q(**{f'{field_name}__isnull': True})
         q.add(Q(**{f'{field_name}': None}), Q.OR)
+
+        if isinstance(model_field, JSONField):
+            q.add(Q(**{f'{field_name}': []}), Q.OR)
+            q.add(Q(**{f'{field_name}': {}}), Q.OR)
 
         # If the model field accepts an empty string as value we are going to add
         # that to the or statement.

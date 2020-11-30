@@ -13,9 +13,11 @@ import Copied from '@baserow/modules/core/components/Copied'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
+import formatBytes from '@baserow/modules/core/filters/formatBytes'
 
 import scroll from '@baserow/modules/core/directives/scroll'
 import preventParentScroll from '@baserow/modules/core/directives/preventParentScroll'
+import tooltip from '@baserow/modules/core/directives/tooltip'
 
 Vue.component('Context', Context)
 Vue.component('Modal', Modal)
@@ -30,6 +32,8 @@ Vue.component('Copied', Copied)
 
 Vue.filter('lowercase', lowercase)
 Vue.filter('uppercase', uppercase)
+Vue.filter('formatBytes', formatBytes)
 
 Vue.directive('scroll', scroll)
 Vue.directive('preventParentScroll', preventParentScroll)
+Vue.directive('tooltip', tooltip)

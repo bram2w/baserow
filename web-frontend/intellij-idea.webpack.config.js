@@ -1,6 +1,9 @@
 /**
  * This file can be used in combination with intellij idea so the @baserow path
  * resolves.
+ *
+ * Intellij IDEA: Preferences -> Languages & Frameworks -> JavaScript -> Webpack ->
+ * webpack configuration file
  */
 
 const path = require('path')

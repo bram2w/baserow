@@ -345,6 +345,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'date',
       'boolean',
       'link_row',
+      'file',
     ]
   }
 
@@ -381,6 +382,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'date',
       'boolean',
       'link_row',
+      'file',
     ]
   }
 

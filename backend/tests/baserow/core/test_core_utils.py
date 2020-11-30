@@ -1,6 +1,9 @@
+from io import BytesIO
+
 from baserow.core.utils import (
     extract_allowed, set_allowed_attrs, to_pascal_case, to_snake_case,
-    remove_special_characters, dict_to_object, random_string
+    remove_special_characters, dict_to_object, random_string, sha256_hash,
+    stream_size
 )
 
 
@@ -61,3 +64,16 @@ def test_dict_to_object():
 def test_random_string():
     assert len(random_string(32)) == 32
     assert random_string(32) != random_string(32)
+
+
+def test_sha256_hash():
+    assert sha256_hash(BytesIO(b'test')) == (
+        '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08'
+    )
+    assert sha256_hash(BytesIO(b'Hello World')) == (
+        'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e'
+    )
+
+
+def test_stream_size():
+    assert stream_size(BytesIO(b'test')) == 4

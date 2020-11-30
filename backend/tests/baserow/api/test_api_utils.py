@@ -27,6 +27,12 @@ class TemporarySerializer(serializers.Serializer):
     field_2 = serializers.ChoiceField(choices=('choice_1', 'choice_2'))
 
 
+class TemporaryListSerializer(serializers.ListSerializer):
+    def __init__(self, *args, **kwargs):
+        kwargs['child'] = TemporarySerializer()
+        super().__init__(*args, **kwargs)
+
+
 class TemporarySerializerWithList(serializers.Serializer):
     field_3 = serializers.IntegerField()
     field_4 = serializers.ListField(child=serializers.IntegerField())
@@ -151,6 +157,18 @@ def test_validate_data():
     assert api_exception_1.value.detail['detail']['field_4'][1][0]['code'] == (
            'invalid'
     )
+
+    with pytest.raises(APIException) as api_exception_3:
+        validate_data(
+            TemporaryListSerializer,
+            [{'something': 'nothing'}]
+        )
+
+    assert api_exception_3.value.status_code == status.HTTP_400_BAD_REQUEST
+    assert api_exception_3.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert len(api_exception_3.value.detail['detail']) == 1
+    assert api_exception_3.value.detail['detail'][0]['field_1'][0]['code'] == 'required'
+    assert api_exception_3.value.detail['detail'][0]['field_2'][0]['code'] == 'required'
 
 
 def test_validate_data_custom_fields():

@@ -1,0 +1,63 @@
+from rest_framework import serializers
+
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
+
+from django.conf import settings
+from django.core.files.storage import default_storage
+
+from baserow.core.models import UserFile
+from baserow.core.user_files.handler import UserFileHandler
+
+
+class UserFileUploadViaURLRequestSerializer(serializers.Serializer):
+    url = serializers.URLField()
+
+
+class UserFileURLAndThumbnailsSerializerMixin(serializers.Serializer):
+    url = serializers.SerializerMethodField()
+    thumbnails = serializers.SerializerMethodField()
+
+    def get_instance_attr(self, instance, name):
+        return getattr(instance, name)
+
+    @extend_schema_field(OpenApiTypes.URI)
+    def get_url(self, instance):
+        name = self.get_instance_attr(instance, 'name')
+        path = UserFileHandler().user_file_path(name)
+        url = default_storage.url(path)
+        return url
+
+    def get_thumbnails(self, instance):
+        if not self.get_instance_attr(instance, 'is_image'):
+            return None
+
+        name = self.get_instance_attr(instance, 'name')
+
+        return {
+            thumbnail_name: {
+                'url': default_storage.url(
+                    UserFileHandler().user_file_thumbnail_path(
+                        name,
+                        thumbnail_name
+                    )
+                ),
+                'width': size[0],
+                'height': size[1]
+            }
+            for thumbnail_name, size in settings.USER_THUMBNAILS.items()
+        }
+
+
+class UserFileSerializer(UserFileURLAndThumbnailsSerializerMixin,
+                         serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserFile
+        fields = ('size', 'mime_type', 'is_image', 'image_width', 'image_height',
+                  'uploaded_at', 'url', 'thumbnails', 'name', 'original_name')
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_name(self, instance):
+        return instance.name

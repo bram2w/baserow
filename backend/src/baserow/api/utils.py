@@ -78,26 +78,26 @@ def validate_data(serializer_class, data):
     :rtype: dict
     """
 
-    def add(details, key, error_list):
-        if 'key' not in details:
-            details[key] = []
-        for error in error_list:
-            details[key].append({
+    def serialize_errors_recursive(error):
+        if isinstance(error, dict):
+            return {
+                key: serialize_errors_recursive(errors)
+                for key, errors in error.items()
+            }
+        elif isinstance(error, list):
+            return [
+                serialize_errors_recursive(errors)
+                for errors in error
+            ]
+        else:
+            return {
                 'error': force_text(error),
                 'code': error.code
-            })
+            }
 
     serializer = serializer_class(data=data)
     if not serializer.is_valid():
-        detail = {}
-        for key, errors in serializer.errors.items():
-            if isinstance(errors, dict):
-                detail[key] = {}
-                for group_key, group_errors in errors.items():
-                    add(detail[key], group_key, group_errors)
-            else:
-                add(detail, key, errors)
-
+        detail = serialize_errors_recursive(serializer.errors)
         raise RequestBodyValidationException(detail)
 
     return serializer.data

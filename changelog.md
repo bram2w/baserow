@@ -10,6 +10,7 @@
 * Removed the redundant _DOMAIN variables.
 * Set un-secure lax cookie when public web frontend url isn't over a secure connection.
 * Fixed bug where the sort choose field item didn't have a hover effect.
+* Implemented a file field and user files upload.
 
 ## Released (2020-11-02)
 
