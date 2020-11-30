@@ -1,0 +1,106 @@
+.field-file__list {
+  list-style: none;
+  margin: 0 0 20px 0;
+  padding: 0;
+}
+
+.field-file__item {
+  display: flex;
+
+  &:not(:last-child) {
+    margin-bottom: 10px;
+  }
+}
+
+.field-file__preview {
+  flex: 0 0 48px;
+  margin-right: 16px;
+}
+
+.field-file__icon {
+  display: block;
+  border: solid 1px $color-neutral-300;
+  border-radius: 3px;
+  color: $color-neutral-600;
+  overflow: hidden;
+
+  @include center-text(48px, 22px);
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+  }
+}
+
+.field-file__description {
+  min-width: 0;
+  width: 100%;
+  padding-top: 6px;
+}
+
+.field-file__name {
+  @extend %ellipsis;
+
+  position: relative;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.field-file__info {
+  @extend %ellipsis;
+
+  font-size: 12px;
+  color: $color-neutral-600;
+}
+
+.field-file__actions {
+  flex: 0 0;
+  display: flex;
+  margin-left: 16px;
+  text-align: right;
+  padding-top: 6px;
+  font-size: 13px;
+  color: $color-success-500;
+}
+
+.field-file__action {
+  position: relative;
+  color: $color-neutral-400;
+  border-radius: 3px;
+
+  @include center-text(24px, 13px);
+
+  &:not(:last-child) {
+    margin-right: 8px;
+  }
+
+  &:hover {
+    color: $color-primary-900;
+    background-color: $color-neutral-100;
+  }
+}
+
+.field-file__add {
+  display: inline-block;
+  padding: 0 5px;
+  background-color: $color-primary-100;
+  border-radius: 3px;
+  color: $color-primary-900;
+
+  @include fixed-height(22px, 13px);
+
+  &:hover {
+    background-color: $color-primary-200;
+    text-decoration: none;
+  }
+}
+
+.field-file__add-icon {
+  font-size: 12px;
+}

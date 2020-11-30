@@ -1,7 +1,7 @@
 FROM python:3.6
 
 ADD . /backend
-
+RUN mkdir -p /media
 WORKDIR /backend
 
 ENV PYTHONPATH $PYTHONPATH:/backend/src

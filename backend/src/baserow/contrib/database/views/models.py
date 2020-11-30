@@ -43,7 +43,7 @@ class View(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
     )
     filters_disabled = models.BooleanField(
         default=False,
-        help_text='Allows users to see results unfiltered while still keeping'
+        help_text='Allows users to see results unfiltered while still keeping '
                   'the filters saved for the view.'
     )
 

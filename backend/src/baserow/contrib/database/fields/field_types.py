@@ -6,13 +6,18 @@ from dateutil.parser import ParserError
 from datetime import datetime, date
 
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 from django.core.validators import URLValidator, EmailValidator
 from django.core.exceptions import ValidationError
 from django.utils.timezone import make_aware
 
 from rest_framework import serializers
 
-from baserow.contrib.database.api.fields.serializers import LinkRowValueSerializer
+from baserow.core.models import UserFile
+from baserow.core.user_files.exceptions import UserFileDoesNotExist
+from baserow.contrib.database.api.fields.serializers import (
+    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer
+)
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED
 )
@@ -21,7 +26,7 @@ from .handler import FieldHandler
 from .registries import FieldType
 from .models import (
     NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
-    NumberField, BooleanField, DateField, LinkRowField, EmailField
+    NumberField, BooleanField, DateField, LinkRowField, EmailField, FileField
 )
 from .exceptions import LinkRowTableNotInSameDatabase, LinkRowTableNotProvided
 
@@ -587,3 +592,101 @@ class EmailFieldType(FieldType):
             )"""
 
         return super().get_alter_column_type_function(connection, instance)
+
+
+class FileFieldType(FieldType):
+    type = 'file'
+    model_class = FileField
+
+    def prepare_value_for_db(self, instance, value):
+        if value is None:
+            return []
+
+        if not isinstance(value, list):
+            raise ValidationError('The provided value must be a list.')
+
+        if len(value) == 0:
+            return []
+
+        # Validates the provided object and extract the names from it. We need the name
+        # to validate if the file actually exists and to get the 'real' properties
+        # from it.
+        provided_files = []
+        for o in value:
+            if not isinstance(o, object) or not isinstance(o.get('name'), str):
+                raise ValidationError('Every provided value must at least contain '
+                                      'the file name as `name`.')
+
+            if 'visible_name' in o and not isinstance(o['visible_name'], str):
+                raise ValidationError('The provided `visible_name` must be a string.')
+
+            provided_files.append(o)
+
+        # Create a list of the serialized UserFiles in the originally provided order
+        # because that is also the order we need to store the serialized versions in.
+        user_files = []
+        queryset = UserFile.objects.all().name(*[f['name'] for f in provided_files])
+        for file in provided_files:
+            try:
+                user_file = next(
+                    user_file
+                    for user_file in queryset
+                    if user_file.name == file['name']
+                )
+                serialized = user_file.serialize()
+                serialized['visible_name'] = (
+                    file.get('visible_name') or user_file.original_name
+                )
+            except StopIteration:
+                raise UserFileDoesNotExist(
+                    file['name'],
+                    f"The provided file {file['name']} does not exist."
+                )
+
+            user_files.append(serialized)
+
+        return user_files
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.ListSerializer(
+            child=FileFieldRequestSerializer(),
+            required=False,
+            allow_null=True,
+            **kwargs
+        )
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        return FileFieldResponseSerializer(many=True, required=False, **kwargs)
+
+    def get_serializer_help_text(self, instance):
+        return 'This field accepts an `array` containing objects with the name of ' \
+               'the file. The response contains an `array` of more detailed objects ' \
+               'related to the files.'
+
+    def get_model_field(self, instance, **kwargs):
+        return JSONField(default=[], **kwargs)
+
+    def random_value(self, instance, fake, cache):
+        """
+        Selects between 0 and 3 random user files and returns those serialized in a
+        list.
+        """
+
+        count_name = f'field_{instance.id}_count'
+
+        if count_name not in cache:
+            cache[count_name] = UserFile.objects.all().count()
+
+        values = []
+        count = cache[count_name]
+
+        if count == 0:
+            return values
+
+        for i in range(0, randrange(0, 3)):
+            instance = UserFile.objects.all()[randint(0, count - 1)]
+            serialized = instance.serialize()
+            serialized['visible_name'] = serialized['name']
+            values.append(serialized)
+
+        return values

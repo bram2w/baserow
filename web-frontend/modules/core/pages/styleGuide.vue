@@ -450,6 +450,14 @@
           <a class="button button--large button--loading">Loading</a>
           <a class="button button--loading">Loading</a>
         </div>
+        <div class="margin-bottom-3">
+          <div class="tooltip margin-bottom-2">
+            <div class="tooltip__content">Example tooltip</div>
+          </div>
+          <div class="tooltip tooltip--top">
+            <div class="tooltip__content">Tooltip top</div>
+          </div>
+        </div>
         <div class="margin-bottom-3 style-guide__contexts">
           <div class="context">
             <div class="context__menu-title">Vehicles</div>
@@ -798,32 +806,32 @@
               <i class="fas fa-times"></i>
             </a>
             <div class="modal__box-sidebar">
-              <div class="settings__head">
-                <div class="settings__head-icon">B</div>
-                <div class="settings__head-name">Settings</div>
+              <div class="modal-sidebar__head">
+                <div class="modal-sidebar__head-icon">B</div>
+                <div class="modal-sidebar__head-name">Settings</div>
               </div>
-              <ul class="settings__nav">
+              <ul class="modal-sidebar__nav">
                 <li>
-                  <a href="#" class="settings__nav-link">
-                    <i class="fas fa-user-circle settings__nav-icon"></i>
+                  <a href="#" class="modal-sidebar__nav-link">
+                    <i class="fas fa-user-circle modal-sidebar__nav-icon"></i>
                     Profile
                   </a>
                 </li>
                 <li>
-                  <a href="#" class="settings__nav-link">
-                    <i class="fas fa-user settings__nav-icon"></i>
+                  <a href="#" class="modal-sidebar__nav-link">
+                    <i class="fas fa-user modal-sidebar__nav-icon"></i>
                     Account
                   </a>
                 </li>
                 <li>
-                  <a href="#" class="settings__nav-link active">
-                    <i class="fas fa-lock settings__nav-icon"></i>
+                  <a href="#" class="modal-sidebar__nav-link active">
+                    <i class="fas fa-lock modal-sidebar__nav-icon"></i>
                     Password
                   </a>
                 </li>
                 <li>
-                  <a href="#" class="settings__nav-link">
-                    <i class="fas fa-envelope settings__nav-icon"></i>
+                  <a href="#" class="modal-sidebar__nav-link">
+                    <i class="fas fa-envelope modal-sidebar__nav-icon"></i>
                     Email
                   </a>
                 </li>

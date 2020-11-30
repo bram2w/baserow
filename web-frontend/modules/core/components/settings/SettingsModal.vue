@@ -1,19 +1,19 @@
 <template>
   <Modal :sidebar="true">
     <template v-slot:sidebar>
-      <div class="settings__head">
-        <div class="settings__head-icon">{{ nameAbbreviation }}</div>
-        <div class="settings__head-name">Settings</div>
+      <div class="modal-sidebar__head">
+        <div class="modal-sidebar__head-icon">{{ nameAbbreviation }}</div>
+        <div class="modal-sidebar__head-name">Settings</div>
       </div>
-      <ul class="settings__nav">
+      <ul class="modal-sidebar__nav">
         <li v-for="setting in registeredSettings" :key="setting.type">
           <a
-            class="settings__nav-link"
+            class="modal-sidebar__nav-link"
             :class="{ active: page === setting.type }"
             @click="setPage(setting.type)"
           >
             <i
-              class="fas settings__nav-icon"
+              class="fas modal-sidebar__nav-icon"
               :class="'fa-' + setting.iconClass"
             ></i>
             {{ setting.name }}

@@ -35,6 +35,18 @@ class ErrorHandler {
         "The action couldn't be completed because the related row doesn't exist" +
           ' anymore.'
       ),
+      ERROR_FILE_SIZE_TOO_LARGE: new ResponseErrorMessage(
+        'File to large',
+        'The provided file is too large.'
+      ),
+      ERROR_INVALID_FILE: new ResponseErrorMessage(
+        'Invalid file',
+        'The provided file is not a valid file.'
+      ),
+      ERROR_FILE_URL_COULD_NOT_BE_REACHED: new ResponseErrorMessage(
+        'Invalid URL',
+        'The provided file URL could not be reached.'
+      ),
     }
 
     // A temporary notFoundMap containing the error messages for when the

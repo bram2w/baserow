@@ -239,3 +239,7 @@ class LinkRowField(Field):
 
 class EmailField(Field):
     pass
+
+
+class FileField(Field):
+    pass

@@ -38,13 +38,13 @@ export class SettingsType extends Registerable {
     this.name = this.getName()
 
     if (this.type === null) {
-      throw new Error('The type name of an application type must be set.')
+      throw new Error('The type name of a settings type must be set.')
     }
     if (this.iconClass === null) {
-      throw new Error('The icon class of an application type must be set.')
+      throw new Error('The icon class of a settings type must be set.')
     }
     if (this.name === null) {
-      throw new Error('The name of an application type must be set.')
+      throw new Error('The name of a settings type must be set.')
     }
   }
 

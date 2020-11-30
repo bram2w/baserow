@@ -1,5 +1,5 @@
 <template>
-  <div class="grid-view__column" @click="select($event)">
+  <div ref="wrapper" class="grid-view__column" @click="select($event)">
     <component
       :is="getFieldComponent(field.type)"
       ref="field"
@@ -8,6 +8,7 @@
       :selected="selected"
       @update="update"
       @edit="edit"
+      @select="$refs.wrapper.click()"
     />
   </div>
 </template>

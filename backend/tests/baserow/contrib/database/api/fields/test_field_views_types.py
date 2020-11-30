@@ -2,13 +2,14 @@ import pytest
 from faker import Faker
 from pytz import timezone
 from datetime import date, datetime
+from freezegun import freeze_time
 
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
 from django.shortcuts import reverse
 
 from baserow.contrib.database.fields.models import (
-    LongTextField, URLField, DateField, EmailField
+    LongTextField, URLField, DateField, EmailField, FileField
 )
 
 
@@ -382,3 +383,263 @@ def test_email_field_type(api_client, data_fixture):
     response = api_client.delete(email, HTTP_AUTHORIZATION=f'JWT {token}')
     assert response.status_code == HTTP_204_NO_CONTENT
     assert EmailField.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_file_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1'
+    )
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table)
+    with freeze_time('2020-01-01 12:00'):
+        user_file_1 = data_fixture.create_user_file(
+            original_name='test.txt',
+            original_extension='txt',
+            unique='sdafi6WtHfnDrU6S1lQKh9PdC7PeafCA',
+            size=10,
+            mime_type='text/plain',
+            is_image=True,
+            image_width=1920,
+            image_height=1080,
+            sha256_hash=(
+                'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e'
+            ),
+        )
+
+    user_file_2 = data_fixture.create_user_file()
+    user_file_3 = data_fixture.create_user_file()
+
+    response = api_client.post(
+        reverse('api:database:fields:list', kwargs={'table_id': table.id}),
+        {'name': 'File', 'type': 'file'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['type'] == 'file'
+    assert FileField.objects.all().count() == 1
+    field_id = response_json['id']
+
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': field_id}),
+        {'name': 'File2'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == []
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': []
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == []
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': [{'without_name': 'test'}]
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': [{'name': 'an__invalid__name.jpg'}]
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert (
+        response_json['detail'][f'field_{field_id}'][0]['name'][0]['code'] == 'invalid'
+    )
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': [{'name': 'not_existing.jpg'}]
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_USER_FILE_DOES_NOT_EXIST'
+    assert response_json['detail'] == 'The user file not_existing.jpg does not exist.'
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': [
+                {
+                    'name': user_file_1.name,
+                    'is_image': True
+                }
+            ]
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+
+    assert response.status_code == HTTP_200_OK
+    assert (
+        response_json[f'field_{field_id}'][0]['visible_name'] ==
+        user_file_1.original_name
+    )
+    assert response_json[f'field_{field_id}'][0]['name'] == (
+        'sdafi6WtHfnDrU6S1lQKh9PdC7PeafCA_'
+        'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e.txt'
+    )
+    assert response_json[f'field_{field_id}'][0]['size'] == 10
+    assert response_json[f'field_{field_id}'][0]['mime_type'] == 'text/plain'
+    assert response_json[f'field_{field_id}'][0]['is_image'] is True
+    assert response_json[f'field_{field_id}'][0]['image_width'] == 1920
+    assert response_json[f'field_{field_id}'][0]['image_height'] == 1080
+    assert response_json[f'field_{field_id}'][0]['uploaded_at'] == (
+        '2020-01-01T12:00:00+00:00'
+    )
+    assert 'localhost:8000' in response_json[f'field_{field_id}'][0]['url']
+    assert len(response_json[f'field_{field_id}'][0]['thumbnails']) == 1
+    assert (
+        'localhost:8000' in
+        response_json[f'field_{field_id}'][0]['thumbnails']['tiny']['url']
+    )
+    assert (
+        'sdafi6WtHfnDrU6S1lQKh9PdC7PeafCA_'
+        'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e.txt' in
+        response_json[f'field_{field_id}'][0]['thumbnails']['tiny']['url']
+    )
+    assert (
+        'tiny' in response_json[f'field_{field_id}'][0]['thumbnails']['tiny']['url']
+    )
+    assert response_json[f'field_{field_id}'][0]['thumbnails']['tiny']['width'] == 21
+    assert response_json[f'field_{field_id}'][0]['thumbnails']['tiny']['height'] == 21
+    assert 'original_name' not in response_json
+    assert 'original_extension' not in response_json
+    assert 'sha256_hash' not in response_json
+
+    response = api_client.patch(
+        reverse('api:database:rows:item', kwargs={
+            'table_id': table.id,
+            'row_id': response_json['id']
+        }),
+        {
+            f'field_{field_id}': [
+                {'name': user_file_3.name},
+                {'name': user_file_2.name, 'visible_name': 'new_name_1.txt'}
+            ]
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json[f'field_{field_id}'][0]['name'] == user_file_3.name
+    assert (
+        response_json[f'field_{field_id}'][0]['visible_name'] ==
+        user_file_3.original_name
+    )
+    assert 'localhost:8000' in response_json[f'field_{field_id}'][0]['url']
+    assert response_json[f'field_{field_id}'][0]['is_image'] is False
+    assert response_json[f'field_{field_id}'][0]['image_width'] is None
+    assert response_json[f'field_{field_id}'][0]['image_height'] is None
+    assert response_json[f'field_{field_id}'][0]['thumbnails'] is None
+    assert response_json[f'field_{field_id}'][1]['name'] == user_file_2.name
+    assert response_json[f'field_{field_id}'][1]['visible_name'] == 'new_name_1.txt'
+
+    response = api_client.patch(
+        reverse('api:database:rows:item', kwargs={
+            'table_id': table.id,
+            'row_id': response_json['id']
+        }),
+        {},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.get(
+        reverse('api:database:rows:item', kwargs={
+            'table_id': table.id,
+            'row_id': response_json['id']
+        }),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json[f'field_{field_id}'][0]['name'] == user_file_3.name
+    assert (
+        response_json[f'field_{field_id}'][0]['visible_name'] ==
+        user_file_3.original_name
+    )
+    assert 'localhost:8000' in response_json[f'field_{field_id}'][0]['url']
+    assert response_json[f'field_{field_id}'][1]['name'] == user_file_2.name
+    assert response_json[f'field_{field_id}'][1]['visible_name'] == 'new_name_1.txt'
+
+    response = api_client.get(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json['results']) == 3
+    assert response_json['results'][0][f'field_{field_id}'] == []
+    assert response_json['results'][1][f'field_{field_id}'] == []
+    assert (
+        response_json['results'][2][f'field_{field_id}'][0]['name'] == user_file_3.name
+    )
+    assert (
+        'localhost:8000' in response_json['results'][2][f'field_{field_id}'][0]['url']
+    )
+    assert (
+        response_json['results'][2][f'field_{field_id}'][1]['name'] == user_file_2.name
+    )
+
+    # We also need to check if the grid view returns the correct url because the
+    # request context must be provided there in order to work.
+    url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.get(
+        url,
+        **{'HTTP_AUTHORIZATION': f'JWT {token}'}
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json['results']) == 3
+    assert response_json['results'][0][f'field_{field_id}'] == []
+    assert response_json['results'][1][f'field_{field_id}'] == []
+    assert (
+        response_json['results'][2][f'field_{field_id}'][0]['name'] == user_file_3.name
+    )
+    assert (
+        'localhost:8000' in response_json['results'][2][f'field_{field_id}'][0]['url']
+    )
+    assert (
+        response_json['results'][2][f'field_{field_id}'][1]['name'] == user_file_2.name
+    )

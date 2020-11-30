@@ -29,7 +29,7 @@ setup(
     author='Bram Wiepjes (Baserow)',
     author_email='bram@baserow.io',
     license='MIT',
-    description='Baserow: open source online database web frontend.',
+    description='Baserow: open source online database backend.',
     long_description='',
     platforms=['linux'],
     package_dir={'': 'src'},

@@ -12,11 +12,13 @@
 @import 'context';
 @import 'select';
 @import 'dropdown';
+@import 'tooltip';
 @import 'fields/boolean';
 @import 'fields/number';
 @import 'fields/long_text';
 @import 'fields/date';
 @import 'fields/link_row';
+@import 'fields/file';
 @import 'views/grid';
 @import 'views/grid/text';
 @import 'views/grid/long_text';
@@ -24,6 +26,7 @@
 @import 'views/grid/number';
 @import 'views/grid/date';
 @import 'views/grid/link_row';
+@import 'views/grid/file';
 @import 'box_page';
 @import 'loading';
 @import 'notifications';
@@ -32,7 +35,7 @@
 @import 'style_guide';
 @import 'datepicker';
 @import 'time_select';
-@import 'settings';
+@import 'modal_sidebar';
 @import 'select_row_modal';
 @import 'filters';
 @import 'sortings';
@@ -45,3 +48,5 @@
 @import 'delete_section';
 @import 'copied';
 @import 'select_application';
+@import 'upload_files';
+@import 'file_field_modal';
