@@ -1,5 +1,7 @@
 # Changelog
 
+## Released (2020-12-01)
+
 * Added select_for_update where it was still missing.
 * Fixed API docs scrollbar size issue.
 * Also lint the backend tests.
