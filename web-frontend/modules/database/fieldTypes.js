@@ -96,6 +96,13 @@ export class FieldType extends Registerable {
     return true
   }
 
+  /**
+   * Indicates if is possible for the field type to be the primary field.
+   */
+  getCanBePrimaryField() {
+    return true
+  }
+
   constructor() {
     super()
     this.type = this.getType()
@@ -103,6 +110,7 @@ export class FieldType extends Registerable {
     this.name = this.getName()
     this.sortIndicator = this.getSortIndicator()
     this.canSortInView = this.getCanSortInView()
+    this.canBePrimaryField = this.getCanBePrimaryField()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -361,6 +369,10 @@ export class LinkRowFieldType extends FieldType {
   }
 
   getCanSortInView() {
+    return false
+  }
+
+  getCanBePrimaryField() {
     return false
   }
 

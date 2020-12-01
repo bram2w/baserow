@@ -29,6 +29,7 @@
             :icon="fieldType.iconClass"
             :name="fieldType.name"
             :value="fieldType.type"
+            :disabled="primary && !fieldType.canBePrimaryField"
           ></DropdownItem>
         </Dropdown>
         <div v-if="$v.values.type.$error" class="error">
@@ -61,6 +62,11 @@ export default {
     table: {
       type: Object,
       required: true,
+    },
+    primary: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {

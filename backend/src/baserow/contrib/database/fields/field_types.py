@@ -19,7 +19,8 @@ from baserow.contrib.database.api.fields.serializers import (
     LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer
 )
 from baserow.contrib.database.api.fields.errors import (
-    ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED
+    ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
+    ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE
 )
 
 from .handler import FieldHandler
@@ -28,7 +29,10 @@ from .models import (
     NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
     NumberField, BooleanField, DateField, LinkRowField, EmailField, FileField
 )
-from .exceptions import LinkRowTableNotInSameDatabase, LinkRowTableNotProvided
+from .exceptions import (
+    LinkRowTableNotInSameDatabase, LinkRowTableNotProvided,
+    IncompatiblePrimaryFieldTypeError
+)
 
 
 class TextFieldType(FieldType):
@@ -292,9 +296,11 @@ class LinkRowFieldType(FieldType):
     }
     api_exceptions_map = {
         LinkRowTableNotProvided: ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
-        LinkRowTableNotInSameDatabase: ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE
+        LinkRowTableNotInSameDatabase: ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
+        IncompatiblePrimaryFieldTypeError: ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE
     }
     can_order_by = False
+    can_be_primary_field = False
 
     def enhance_queryset(self, queryset, field, name):
         """

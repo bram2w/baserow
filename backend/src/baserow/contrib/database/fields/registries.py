@@ -39,6 +39,9 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
     can_order_by = True
     """Indicates whether it is possible to order by this field type."""
 
+    can_be_primary_field = True
+    """Some field types cannot be the primary field."""
+
     def prepare_value_for_db(self, instance, value):
         """
         When a row is created or updated all the values are going to be prepared for the

@@ -12,7 +12,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 
 from .exceptions import (
     PrimaryFieldAlreadyExists, CannotDeletePrimaryField, CannotChangeFieldType,
-    FieldDoesNotExist
+    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError
 )
 from .registries import field_type_registry, field_converter_registry
 from .models import Field
@@ -168,6 +168,10 @@ class FieldHandler:
         # to remove all view filters.
         if new_type_name and field_type.type != new_type_name:
             field_type = field_type_registry.get(new_type_name)
+
+            if field.primary and not field_type.can_be_primary_field:
+                raise IncompatiblePrimaryFieldTypeError(new_type_name)
+
             new_model_class = field_type.model_class
             field.change_polymorphic_type_to(new_model_class)
 
