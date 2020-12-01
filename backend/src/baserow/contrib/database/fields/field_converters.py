@@ -1,5 +1,5 @@
 from .registries import FieldConverter
-from .models import LinkRowField
+from .models import LinkRowField, FileField
 
 
 class RecreateFieldConverter(FieldConverter):
@@ -33,5 +33,20 @@ class LinkRowFieldConverter(RecreateFieldConverter):
                 isinstance(from_field, LinkRowField) and
                 isinstance(to_field, LinkRowField) and
                 from_field.link_row_table_id != to_field.link_row_table_id
+            )
+        )
+
+
+class FileFieldConverter(RecreateFieldConverter):
+    type = 'file'
+
+    def is_applicable(self, from_model, from_field, to_field):
+        return (
+            (
+                isinstance(from_field, FileField) and
+                not isinstance(to_field, FileField)
+            ) or (
+                not isinstance(from_field, FileField) and
+                isinstance(to_field, FileField)
             )
         )

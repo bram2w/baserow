@@ -9,7 +9,7 @@ export default async function GroupsAndApplications({ store, req, app }) {
   if (process.server && !req) return
 
   // Get the selected group id
-  const groupId = getGroupCookie(app.$cookies)
+  const groupId = getGroupCookie(app)
 
   // If the groups haven't already been selected we will
   if (store.getters['auth/isAuthenticated']) {

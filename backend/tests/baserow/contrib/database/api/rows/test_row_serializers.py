@@ -44,7 +44,7 @@ def test_get_table_serializer(data_fixture):
 
     serializer_instance = serializer_class(data={'color': None})
     assert serializer_instance.is_valid()
-    assert serializer_instance.data['color'] == None
+    assert serializer_instance.data['color'] is None
 
     # number field
     serializer_instance = serializer_class(data={'horsepower': 120})
@@ -53,7 +53,7 @@ def test_get_table_serializer(data_fixture):
 
     serializer_instance = serializer_class(data={'horsepower': None})
     assert serializer_instance.is_valid()
-    assert serializer_instance.data['horsepower'] == None
+    assert serializer_instance.data['horsepower'] is None
 
     serializer_instance = serializer_class(data={'horsepower': 'abc'})
     assert not serializer_instance.is_valid()
@@ -66,11 +66,11 @@ def test_get_table_serializer(data_fixture):
     # boolean field
     serializer_instance = serializer_class(data={'for_sale': True})
     assert serializer_instance.is_valid()
-    assert serializer_instance.data['for_sale'] == True
+    assert serializer_instance.data['for_sale'] is True
 
     serializer_instance = serializer_class(data={'for_sale': False})
     assert serializer_instance.is_valid()
-    assert serializer_instance.data['for_sale'] == False
+    assert serializer_instance.data['for_sale'] is False
 
     serializer_instance = serializer_class(data={'for_sale': None})
     assert not serializer_instance.is_valid()
@@ -95,7 +95,7 @@ def test_get_table_serializer(data_fixture):
 
     serializer_instance = serializer_class(data={'price': None})
     assert serializer_instance.is_valid()
-    assert serializer_instance.data['price'] == None
+    assert serializer_instance.data['price'] is None
 
     # not existing value
     serializer_instance = serializer_class(data={'NOT_EXISTING': True})
@@ -148,12 +148,15 @@ def test_get_example_row_serializer_class():
     request_serializer = get_example_row_serializer_class()
     response_serializer = get_example_row_serializer_class(add_id=True)
 
-    assert len(request_serializer._declared_fields) == \
-           len(field_type_registry.registry.values())
-    assert len(response_serializer._declared_fields) == \
-           len(request_serializer._declared_fields) + 1
-    assert len(response_serializer._declared_fields) == \
-           len(field_type_registry.registry.values()) + 1
+    assert len(request_serializer._declared_fields) == (
+        len(field_type_registry.registry.values())
+    )
+    assert len(response_serializer._declared_fields) == (
+        len(request_serializer._declared_fields) + 1
+    )
+    assert len(response_serializer._declared_fields) == (
+        len(field_type_registry.registry.values()) + 1
+    )
 
     assert isinstance(response_serializer._declared_fields['id'],
                       serializers.IntegerField)

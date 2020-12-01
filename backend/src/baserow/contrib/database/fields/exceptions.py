@@ -42,3 +42,28 @@ class LinkRowTableNotInSameDatabase(Exception):
     """
     Raised when the desired link row table is not in the same database as the table.
     """
+
+
+class OrderByFieldNotFound(Exception):
+    """Raised when the field was not found in the table."""
+
+    def __init__(self, field_name=None, *args, **kwargs):
+        self.field_name = field_name
+        super().__init__(*args, **kwargs)
+
+
+class OrderByFieldNotPossible(Exception):
+    """Raised when it is not possible to order by a field."""
+
+    def __init__(self, field_name=None, field_type=None, *args, **kwargs):
+        self.field_name = field_name
+        self.field_type = field_type
+        super().__init__(*args, **kwargs)
+
+
+class IncompatiblePrimaryFieldTypeError(Exception):
+    """Raised when the primary field is changed to an incompatible field type."""
+
+    def __init__(self, field_type=None, *args, **kwargs):
+        self.field_type = field_type
+        super().__init__(*args, **kwargs)

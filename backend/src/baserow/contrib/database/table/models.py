@@ -1,6 +1,11 @@
+import re
+
 from django.db import models
 
 from baserow.core.mixins import OrderableMixin
+from baserow.contrib.database.fields.exceptions import (
+    OrderByFieldNotFound, OrderByFieldNotPossible
+)
 from baserow.contrib.database.fields.registries import field_type_registry
 
 
@@ -59,6 +64,55 @@ class TableModelQuerySet(models.QuerySet):
 
         return self.filter(search_queries) if len(search_queries) > 0 else self
 
+    def order_by_fields_string(self, order_string):
+        """
+        Orders the query by the given field order string. This string is often directly
+        forwarded from a GET, POST or other user provided parameter. Multiple fields
+        can be provided by separating the values by a comma. The field id is extracted
+        from the string so it can either be provided as field_1, 1, id_1, etc.
+
+        :param order_string: The field ids to order the queryset by separated by a
+            comma. For example `field_1,2` which will order by field with id 1 first
+            and then by field with id 2 second.
+        :type order_string: str
+        :raises OrderByFieldNotFound: when the provided field id is not found in the
+            model.
+        :raises OrderByFieldNotPossible: when it is not possible to order by the
+            field's type.
+        :return: The queryset ordered by the provided order_string.
+        :rtype: QuerySet
+        """
+
+        order_by = order_string.split(',')
+
+        if len(order_by) == 0:
+            raise ValueError('At least one field must be provided.')
+
+        for index, order in enumerate(order_by):
+            field_id = int(re.sub("[^0-9]", "", str(order)))
+
+            if field_id not in self.model._field_objects:
+                raise OrderByFieldNotFound(order, f'Field {field_id} does not exist.')
+
+            field_object = self.model._field_objects[field_id]
+            field_type = field_object['type']
+            field_name = field_object['name']
+
+            if not field_object['type'].can_order_by:
+                raise OrderByFieldNotPossible(
+                    field_name,
+                    field_type.type,
+                    f'It is not possible to order by field type {field_type.type}.',
+                )
+
+            order_by[index] = '{}{}'.format(
+                '-' if order[:1] == '-' else '',
+                field_name
+            )
+
+        order_by.append('id')
+        return self.order_by(*order_by)
+
 
 class TableModelManager(models.Manager):
     def get_queryset(self):
@@ -113,7 +167,8 @@ class Table(OrderableMixin, models.Model):
         meta = type('Meta', (), {
             'managed': False,
             'db_table': f'database_table_{self.id}',
-            'app_label': app_label
+            'app_label': app_label,
+            'ordering': ['id']
         })
 
         attrs = {

@@ -62,7 +62,7 @@ export default {
       // While the field is selected we want to open the select row popup by pressing
       // the enter key.
       this.$el.keydownEvent = (event) => {
-        if (event.keyCode === 13) {
+        if (event.keyCode === 13 && !this.modalOpen) {
           this.showModal()
         }
       }
@@ -72,10 +72,10 @@ export default {
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     /**
-     * If the user clicks inside the select row modal we do not want to unselect the
-     * field. The modals lives in the root of the body element and not inside the cell,
-     * so the system naturally wants to unselect when the user clicks inside one of
-     * these contexts.
+     * If the user clicks inside the select row or file modal we do not want to
+     * unselect the field. The modals lives in the root of the body element and not
+     * inside the cell, so the system naturally wants to unselect when the user clicks
+     * inside one of these contexts.
      */
     canUnselectByClickingOutside(event) {
       return !isElement(this.$refs.selectModal.$el, event.target)
@@ -101,6 +101,15 @@ export default {
      * ignored.
      */
     canKeyDown(event) {
+      return !this.modalOpen
+    },
+    canPaste() {
+      return !this.modalOpen
+    },
+    canCopy() {
+      return !this.modalOpen
+    },
+    canEmpty() {
       return !this.modalOpen
     },
   },

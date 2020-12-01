@@ -16,7 +16,7 @@ def test_list_tables(api_client, data_fixture):
     database_2 = data_fixture.create_database_application()
     table_1 = data_fixture.create_database_table(database=database, order=2)
     table_2 = data_fixture.create_database_table(database=database, order=1)
-    table_3 = data_fixture.create_database_table(database=database_2)
+    data_fixture.create_database_table(database=database_2)
 
     url = reverse('api:database:tables:list', kwargs={'database_id': database.id})
     response = api_client.get(url, HTTP_AUTHORIZATION=f'JWT {token}')
@@ -384,7 +384,7 @@ def test_get_database_application_with_tables(api_client, data_fixture):
     database = data_fixture.create_database_application(user=user)
     table_1 = data_fixture.create_database_table(database=database, order=0)
     table_2 = data_fixture.create_database_table(database=database, order=1)
-    table_3 = data_fixture.create_database_table()
+    data_fixture.create_database_table()
 
     url = reverse('api:applications:item', kwargs={'application_id': database.id})
     response = api_client.get(

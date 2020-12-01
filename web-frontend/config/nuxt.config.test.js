@@ -10,5 +10,8 @@ export default _.assign({}, base(), {
   debug: false,
   env: {
     PRIVATE_BACKEND_URL: 'http://localhost',
+    PUBLIC_BACKEND_URL: 'http://localhost',
+    PUBLIC_WEB_FRONTEND_URL: 'http://localhost',
+    INITIAL_TABLE_DATA_LIMIT: null,
   },
 })

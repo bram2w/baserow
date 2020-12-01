@@ -84,7 +84,11 @@ class ViewHandler:
         # Figure out which model to use for the given view type.
         view_type = view_type_registry.get(type_name)
         model_class = view_type.model_class
-        allowed_fields = ['name', 'filter_type'] + view_type.allowed_fields
+        allowed_fields = [
+            'name',
+            'filter_type',
+            'filters_disabled'
+        ] + view_type.allowed_fields
         view_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
@@ -117,7 +121,11 @@ class ViewHandler:
             raise UserNotInGroupError(user, group)
 
         view_type = view_type_registry.get_by_model(view)
-        allowed_fields = ['name', 'filter_type'] + view_type.allowed_fields
+        allowed_fields = [
+            'name',
+            'filter_type',
+            'filters_disabled'
+        ] + view_type.allowed_fields
         view = set_allowed_attrs(kwargs, allowed_fields, view)
         view.save()
 
@@ -187,7 +195,7 @@ class ViewHandler:
 
         # If the new field type does not support sorting then all sortings will be
         # removed.
-        if not field_type.can_sort_in_view:
+        if not field_type.can_order_by:
             field.viewsort_set.all().delete()
 
         # Check which filters are not compatible anymore and remove those.
@@ -218,6 +226,10 @@ class ViewHandler:
         if not hasattr(model, '_field_objects'):
             raise ValueError('A queryset of the table model is required.')
 
+        # If the filter are disabled we don't have to do anything with the queryset.
+        if view.filters_disabled:
+            return queryset
+
         q_filters = Q()
 
         for view_filter in view.viewfilter_set.all():
@@ -247,7 +259,7 @@ class ViewHandler:
 
         return queryset
 
-    def get_filter(self, user, view_filter_id):
+    def get_filter(self, user, view_filter_id, base_queryset=None):
         """
         Returns an existing view filter by the given id.
 
@@ -255,14 +267,20 @@ class ViewHandler:
         :type user: User
         :param view_filter_id: The id of the view filter.
         :type view_filter_id: int
+        :param base_queryset: The base queryset from where to select the view filter
+            object. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
         :raises ViewFilterDoesNotExist: The the requested view does not exists.
         :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The requested view filter instance.
         :type: ViewFilter
         """
 
+        if not base_queryset:
+            base_queryset = ViewFilter.objects
+
         try:
-            view_filter = ViewFilter.objects.select_related(
+            view_filter = base_queryset.select_related(
                 'view__table__database__group'
             ).get(
                 pk=view_filter_id
@@ -464,7 +482,7 @@ class ViewHandler:
 
         return queryset
 
-    def get_sort(self, user, view_sort_id):
+    def get_sort(self, user, view_sort_id, base_queryset=None):
         """
         Returns an existing view sort with the given id.
 
@@ -472,14 +490,20 @@ class ViewHandler:
         :type user: User
         :param view_sort_id: The id of the view sort.
         :type view_sort_id: int
+        :param base_queryset: The base queryset from where to select the view sort
+            object from. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
         :raises ViewSortDoesNotExist: The the requested view does not exists.
         :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The requested view sort instance.
         :type: ViewSort
         """
 
+        if not base_queryset:
+            base_queryset = ViewSort.objects
+
         try:
-            view_sort = ViewSort.objects.select_related(
+            view_sort = base_queryset.select_related(
                 'view__table__database__group'
             ).get(
                 pk=view_sort_id
@@ -529,7 +553,7 @@ class ViewHandler:
 
         # Check if the field supports sorting.
         field_type = field_type_registry.get_by_model(field.specific_class)
-        if not field_type.can_sort_in_view:
+        if not field_type.can_order_by:
             raise ViewSortFieldNotSupported(f'The field {field.pk} does not support '
                                             f'sorting.')
 
@@ -586,7 +610,7 @@ class ViewHandler:
         field_type = field_type_registry.get_by_model(field.specific_class)
         if (
             field.id != view_sort.field_id and
-            not field_type.can_sort_in_view
+            not field_type.can_order_by
         ):
             raise ViewSortFieldNotSupported(f'The field {field.pk} does not support '
                                             f'sorting.')

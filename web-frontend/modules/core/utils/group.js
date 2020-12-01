@@ -1,16 +1,24 @@
+import { isSecureURL } from '@baserow/modules/core/utils/string'
+
 const cookieGroupName = 'baserow_group_id'
 
-export const setGroupCookie = (groupId, cookie) => {
+export const setGroupCookie = (groupId, { $cookies, $env }) => {
   if (process.SERVER_BUILD) return
-  cookie.set(cookieGroupName, groupId)
+  const secure = isSecureURL($env.PUBLIC_WEB_FRONTEND_URL)
+  $cookies.set(cookieGroupName, groupId, {
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+    sameSite: secure ? 'strict' : 'lax',
+    secure,
+  })
 }
 
-export const unsetGroupCookie = (cookie) => {
+export const unsetGroupCookie = ({ $cookies }) => {
   if (process.SERVER_BUILD) return
-  cookie.remove(cookieGroupName)
+  $cookies.remove(cookieGroupName)
 }
 
-export const getGroupCookie = (cookie) => {
+export const getGroupCookie = ({ $cookies }) => {
   if (process.SERVER_BUILD) return
-  return cookie.get(cookieGroupName)
+  return $cookies.get(cookieGroupName)
 }

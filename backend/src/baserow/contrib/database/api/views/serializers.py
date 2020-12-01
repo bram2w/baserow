@@ -92,7 +92,7 @@ class ViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = View
         fields = ('id', 'name', 'order', 'type', 'table', 'filter_type', 'filters',
-                  'sortings')
+                  'sortings', 'filters_disabled')
         extra_kwargs = {
             'id': {
                 'read_only': True
@@ -128,14 +128,15 @@ class CreateViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = View
-        fields = ('name', 'type', 'filter_type')
+        fields = ('name', 'type', 'filter_type', 'filters_disabled')
 
 
 class UpdateViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = View
-        fields = ('name', 'filter_type')
+        fields = ('name', 'filter_type', 'filters_disabled')
         extra_kwargs = {
             'name': {'required': False},
-            'filter_type': {'required': False}
+            'filter_type': {'required': False},
+            'filters_disabled': {'required': False},
         }

@@ -475,7 +475,11 @@ class ViewFilterView(APIView):
         """Updates the view filter if the user belongs to the group."""
 
         handler = ViewHandler()
-        view_filter = handler.get_filter(request.user, view_filter_id)
+        view_filter = handler.get_filter(
+            request.user,
+            view_filter_id,
+            base_queryset=ViewFilter.objects.select_for_update()
+        )
 
         if 'field' in data:
             # We can safely assume the field exists because the
@@ -695,7 +699,11 @@ class ViewSortView(APIView):
         """Updates the view sort if the user belongs to the group."""
 
         handler = ViewHandler()
-        view_sort = handler.get_sort(request.user, view_sort_id)
+        view_sort = handler.get_sort(
+            request.user,
+            view_sort_id,
+            base_queryset=ViewSort.objects.select_for_update()
+        )
 
         if 'field' in data:
             # We can safely assume the field exists because the

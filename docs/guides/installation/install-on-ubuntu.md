@@ -74,10 +74,15 @@ it for when you need it later.
 
 ## Install dependencies for & setup Baserow
 
-In order to use the Baserow application, we will need to create a virtual environment
-and install some more dependencies like: NodeJS, Yarn, Python 3.
+In order to use the Baserow application, we will need to create a media directory for
+the uploaded user files, a virtual environment and install some more dependencies
+like: NodeJS, Yarn, Python 3.
 
 ```bash
+# Create uploaded user files and media directory
+$ mkdir media
+$ chmod 0755 media
+
 # Install python3, pip & virtualenv
 $ apt install python3 python3-pip virtualenv libpq-dev libmysqlclient-dev -y
 
@@ -111,8 +116,8 @@ $ yarn install
 $ ./node_modules/nuxt/bin/nuxt.js build --config-file config/nuxt.config.demo.js
 ```
 
-
 ## Install NGINX
+
 Baserow uses NGINX as a reverse proxy for it's frontend and backend. Through that, you
 can easily add SSL Certificates and add more applications to your server if you want
 to. 
@@ -127,6 +132,7 @@ $ service nginx start
 ```
 
 ## Setup NGINX
+
 If you're unfamiliar with NGINX: NGINX uses so called "virtualhosts" to direct web
 traffic from outside of your network to the correct application on your server. These
 virtual hosts are defined in `.conf` files which are put into the
@@ -136,7 +142,8 @@ the `server_name` value in both of the files. The server name is the domain unde
 which you want Baserow to be reachable. 
 
 Make sure that in the following commands you replace `api.domain.com` with your own
-backend domain and that you replace `baserow.domain.com` with your frontend domain.
+backend domain, that you replace `baserow.domain.com` with your frontend domain and
+replace `media.baserow.com` with your domain to serve the user files.
 
 ```bash
 # Move virtualhost files to /etc/nginx/sites-enabled/
@@ -147,62 +154,14 @@ $ rm /etc/nginx/sites-enabled/default
 # Change the server_name values
 $ sed -i 's/\*YOUR_DOMAIN\*/api.domain.com/g' /etc/nginx/sites-enabled/baserow-backend.conf
 $ sed -i 's/\*YOUR_DOMAIN\*/baserow.domain.com/g' /etc/nginx/sites-enabled/baserow-frontend.conf
+$ sed -i 's/\*YOUR_DOMAIN\*/media.domain.com/g' /etc/nginx/sites-enabled/baserow-media.conf
 
 # Then restart nginx so that it processes the configuration files
 $ service nginx restart
 ```
 
-## Baserow Configuration
+## Import relations into database
 
-### Configuration
-
-Baserow needs a few environment variables to be set in order to work properly. Here is
-a list of the environment variables with explanations for them. This list is solely
-for reference, there is no need to set these variables because they will be set
-through `supervisor` later on. This list does not describe all environment variables
-that can be set. For a better understanding of the available environment variables,
-take a look at `/baserow/backend/src/config/settings/base.py`.
-
-We discourage changing the content of the `base.py` file since it might be overridden
-through a future update with `git pull`. It is only mentioned in this guide so that
-you're able to modify your Baserow instance as easily as possible with environment
-variables.
-
-```
-# Backend Domain & URL
-PUBLIC_BACKEND_DOMAIN="api.domain.com"
-PUBLIC_BACKEND_URL="https://api.domain.com"
-
-# Frontend Domain & URL
-PUBLIC_WEB_FRONTEND_DOMAIN="baserow.domain.com"
-PUBLIC_WEB_FRONTEND_URL="https://baserow.domain.com"
-
-# Private Backend URL & Database Password & Database Host
-PRIVATE_BACKEND_URL="http://localhost"
-DATABASE_PASSWORD="yourpassword"
-DATABASE_HOST="localhost" 
-
-# Django Settings Module & Python Path
-DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
-PYTHONPATH=/baserow:/baserow/plugins/saas/backend/src
-
-# Secret Key
-SECRET_KEY="Something_Secret"
-```
-
-Baserow uses the secret key to generate a variety of tokens (e.g. password reset
-token, ...). In order to generate a unique secret key, you can simply run the following
-command.
-
-```bash
-$ cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 80 | head -n 1
-```
-
-The output will be a alphanumeric string with 80 characters. You can shorten or
-lengthen the string by changing the number value in `fold -w 80` to a length you're
-satisfied with.
-
-### Import relations into database
 In the "*Install & Setup PostgreSQL*" Section, we created a database called `baserow`
 for the application. Since we didn't do anything with that database it is still empty,
 which will result in a non-working application since Baserow expects certain tables
@@ -214,7 +173,7 @@ commands:
 $ source backend/env/bin/activate
 $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD="yourpassword"
-$ export DATABASE_HOST="localhost" 
+$ export DATABASE_HOST="localhost"
 
 # Create database schema
 $ baserow migrate
@@ -223,6 +182,7 @@ $ deactivate
 ```
 
 ## Install & Configure Supervisor
+
 Supervisor is an application that starts and keeps track of processes and will restart
 them if the process finishes. For Baserow this is used to reduce downtime and in order
 to restart the application in the unlikely event of an unforseen termination. You can
@@ -239,23 +199,24 @@ $ mkdir /var/log/baserow/
 $ cd /baserow
 $ cp docs/guides/installation/configuration-files/supervisor/* /etc/supervisor/conf.d/
 ```
+
 You will need to edit the `baserow-frontend.conf` and `baserow-backend.conf` files
 (located now at `/etc/supervisor/conf.d/`) in order to set the necessary environment
 variables. You will need to change at least the following variables which can be found
-in the `environment=` section.
+in the `environment =` section.
 
-**Frontend**
+**Web frontend and backend**
 - `PUBLIC_WEB_FRONTEND_URL`: The URL under which your frontend can be reached from the
 internet (HTTP or HTTPS)
 - `PUBLIC_BACKEND_URL`: The URL under which your backend can be reached from the
   internet (HTTP or HTTPS)
-- `PUBLIC_WEB_FRONTEND_DOMAIN`: The domain under which you frontend can be reached from
-  the internet (same as URL but without `https://`)
-- `PUBLIC_BACKEND_DOMAIN`: The domain under which you backend can be reached from the
-  internet (same as URL but without `https://`)
 
 **Backend**
-- `SECRET_KEY`: The secret key that is used to generate tokens and other random strings
+- `SECRET_KEY`: The secret key that is used to generate tokens and other random
+  strings. You can generate one with the following commands:
+  ```bash
+  $ cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 80 | head -n 1
+  ```
 - `DATABASE_PASSWORD`: The password of the `baserow` database user
 - `DATABASE_HOST`: The host computer that runs the database (usually `localhost`)
 

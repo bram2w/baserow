@@ -1,6 +1,8 @@
+import os
 import re
 import random
 import string
+import hashlib
 
 from collections import namedtuple
 
@@ -175,3 +177,39 @@ def random_string(length):
             string.ascii_letters + string.digits
         ) for _ in range(length)
     )
+
+
+def sha256_hash(stream, block_size=65536):
+    """
+    Calculates a sha256 hash for the contents of the provided stream.
+
+    :param stream: The stream of the content where to calculate the hash for.
+    :type stream: IOStream
+    :param block_size: The amount of bytes that are read each time.
+    :type block_size: int
+    :return: The calculated hash.
+    :rtype: str
+    """
+
+    stream.seek(0)
+    hasher = hashlib.sha256()
+    for stream_chunk in iter(lambda: stream.read(block_size), b''):
+        hasher.update(stream_chunk)
+    stream.seek(0)
+    return hasher.hexdigest()
+
+
+def stream_size(stream):
+    """
+    Calculates the total amount of bytes of the stream's content.
+
+    :param stream: The stream of the content where to calculate the size for.
+    :type stream: IOStream
+    :return: The total size of the stream.
+    :rtype: int
+    """
+
+    stream.seek(0, os.SEEK_END)
+    size = stream.tell()
+    stream.seek(0)
+    return size

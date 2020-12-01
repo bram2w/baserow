@@ -1,5 +1,9 @@
 <template>
-  <Context ref="context" class="filters">
+  <Context
+    ref="context"
+    class="filters"
+    :class="{ 'context--loading-overlay': view._.loading }"
+  >
     <div v-show="view.filters.length === 0">
       <div class="filters__none">
         <div class="filters__none-title">You have not yet created a filter</div>
@@ -13,8 +17,7 @@
       :key="filter.id"
       class="filters__item"
       :class="{
-        'filters__item--loading':
-          filter._.loading || (index === 1 && view._.loading),
+        'filters__item--loading': filter._.loading,
       }"
     >
       <a class="filters__remove" @click.prevent="deleteFilter(filter)">
@@ -27,7 +30,7 @@
           :value="view.filter_type"
           :show-search="false"
           class="dropdown--floating"
-          @input="updateType(view, filter, $event)"
+          @input="updateView(view, { filter_type: $event })"
         >
           <DropdownItem name="And" value="AND"></DropdownItem>
           <DropdownItem name="Or" value="OR"></DropdownItem>
@@ -87,10 +90,19 @@
         />
       </div>
     </div>
-    <a class="filters__add" @click.prevent="addFilter()">
-      <i class="fas fa-plus"></i>
-      add filter
-    </a>
+    <div class="filters_footer">
+      <a class="filters__add" @click.prevent="addFilter()">
+        <i class="fas fa-plus"></i>
+        add filter
+      </a>
+      <div v-if="view.filters.length > 0">
+        <SwitchInput
+          :value="view.filters_disabled"
+          @input="updateView(view, { filters_disabled: $event })"
+          >all disabled</SwitchInput
+        >
+      </div>
+    </div>
   </Context>
 </template>
 
@@ -253,13 +265,13 @@ export default {
      * Updates the view filter type. It will mark the view as loading because that
      * will also trigger the loading state of the second filter.
      */
-    async updateType(view, filter, value) {
+    async updateView(view, values) {
       this.$store.dispatch('view/setItemLoading', { view, value: true })
 
       try {
         await this.$store.dispatch('view/update', {
           view,
-          values: { filter_type: value },
+          values,
         })
         this.$emit('changed')
       } catch (error) {

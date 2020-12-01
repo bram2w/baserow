@@ -2,8 +2,12 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
+from baserow.core.user_files.models import UserFile
+
 from .managers import GroupQuerySet
 from .mixins import OrderableMixin, PolymorphicContentTypeMixin
+
+__all__ = ['UserFile']
 
 
 User = get_user_model()

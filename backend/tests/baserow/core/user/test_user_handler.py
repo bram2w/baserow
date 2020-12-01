@@ -11,9 +11,10 @@ from baserow.contrib.database.models import (
 )
 from baserow.contrib.database.views.models import GridViewFieldOptions
 from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLDomainNotAllowed
+    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLHostnameNotAllowed
 )
 from baserow.core.user.handler import UserHandler
+
 
 @pytest.mark.django_db
 def test_get_user(data_fixture):
@@ -80,7 +81,7 @@ def test_send_reset_password_email(data_fixture, mailoutbox):
     user = data_fixture.create_user(email='test@localhost')
     handler = UserHandler()
 
-    with pytest.raises(BaseURLDomainNotAllowed):
+    with pytest.raises(BaseURLHostnameNotAllowed):
         handler.send_reset_password_email(user, 'http://test.nl/reset-password')
 
     signer = handler.get_reset_password_signer()

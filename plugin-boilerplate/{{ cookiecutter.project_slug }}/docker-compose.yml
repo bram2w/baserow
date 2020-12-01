@@ -31,9 +31,7 @@ services:
       - db
       - mjml
     environment:
-      - PUBLIC_BACKEND_DOMAIN=localhost:8001
       - PUBLIC_BACKEND_URL=http://localhost:8001
-      - PUBLIC_WEB_FRONTEND_DOMAIN=localhost:3001
       - PUBLIC_WEB_FRONTEND_URL=http://localhost:3001
 
   web-frontend:

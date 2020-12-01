@@ -8,7 +8,7 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.fields.exceptions import (
     FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
-    FieldDoesNotExist
+    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError
 )
 
 
@@ -165,6 +165,15 @@ def test_update_field(data_fixture):
     with pytest.raises(FieldTypeDoesNotExist):
         handler.update_field(user=user, field=field, new_type_name='NOT_EXISTING')
 
+    # The link row field is not compatible with a primary field so an exception
+    # is expected.
+    field.primary = True
+    field.save()
+    with pytest.raises(IncompatiblePrimaryFieldTypeError):
+        handler.update_field(user=user, field=field, new_type_name='link_row')
+    field.primary = False
+    field.save()
+
     # Change some values of the text field and test if they have been changed.
     field = handler.update_field(user=user, field=field, name='Text field',
                                  text_default='Default value')
@@ -186,12 +195,12 @@ def test_update_field(data_fixture):
 
     assert field.name == 'Number field'
     assert field.number_type == 'INTEGER'
-    assert field.number_negative == False
+    assert field.number_negative is False
     assert not hasattr(field, 'text_default')
 
     model = table.get_model()
     rows = model.objects.all()
-    assert getattr(rows[0], f'field_{field.id}') == None
+    assert getattr(rows[0], f'field_{field.id}') is None
     assert getattr(rows[1], f'field_{field.id}') == 100
     assert getattr(rows[2], f'field_{field.id}') == 10
 
@@ -203,11 +212,11 @@ def test_update_field(data_fixture):
     assert field.name == 'Price field'
     assert field.number_type == 'DECIMAL'
     assert field.number_decimal_places == 2
-    assert field.number_negative == True
+    assert field.number_negative is True
 
     model = table.get_model()
     rows = model.objects.all()
-    assert getattr(rows[0], f'field_{field.id}') == None
+    assert getattr(rows[0], f'field_{field.id}') is None
     assert getattr(rows[1], f'field_{field.id}') == Decimal('100.00')
     assert getattr(rows[2], f'field_{field.id}') == Decimal('10.00')
 
@@ -223,9 +232,9 @@ def test_update_field(data_fixture):
 
     model = table.get_model()
     rows = model.objects.all()
-    assert getattr(rows[0], f'field_{field.id}') == False
-    assert getattr(rows[1], f'field_{field.id}') == False
-    assert getattr(rows[2], f'field_{field.id}') == False
+    assert getattr(rows[0], f'field_{field.id}') is False
+    assert getattr(rows[1], f'field_{field.id}') is False
+    assert getattr(rows[2], f'field_{field.id}') is False
 
 
 @pytest.mark.django_db

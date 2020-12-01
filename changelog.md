@@ -1,5 +1,19 @@
 # Changelog
 
+* Added select_for_update where it was still missing.
+* Fixed API docs scrollbar size issue.
+* Also lint the backend tests.
+* Implemented a switch to disable all filters without deleting them.
+* Made it possible to order by fields via the rows listing endpoint.
+* Added community chat to the readme.
+* Made the cookies strict and secure.
+* Removed the redundant _DOMAIN variables.
+* Set un-secure lax cookie when public web frontend url isn't over a secure connection.
+* Fixed bug where the sort choose field item didn't have a hover effect.
+* Implemented a file field and user files upload.
+* Made it impossible for the `link_row` field to be a primary field because that can
+  cause the primary field to be deleted.
+
 ## Released (2020-11-02)
 
 * Highlight the row of a selected cell.
@@ -11,6 +25,7 @@
 * Added confirmation modals when the user wants to delete a group, application, table,
   view or field.
 * Fixed bug in the web-frontend URL validation where a '*' was invalidates.
+* Made it possible to publicly expose the table data via a REST API.
 
 ## Released (2020-10-06)
 

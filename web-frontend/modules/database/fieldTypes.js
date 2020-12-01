@@ -16,6 +16,7 @@ import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/GridViewFieldBoolean'
 import GridViewFieldDate from '@baserow/modules/database/components/view/grid/GridViewFieldDate'
+import GridViewFieldFile from '@baserow/modules/database/components/view/grid/GridViewFieldFile'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -25,6 +26,7 @@ import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEdi
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
+import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
 
@@ -94,6 +96,13 @@ export class FieldType extends Registerable {
     return true
   }
 
+  /**
+   * Indicates if is possible for the field type to be the primary field.
+   */
+  getCanBePrimaryField() {
+    return true
+  }
+
   constructor() {
     super()
     this.type = this.getType()
@@ -101,6 +110,7 @@ export class FieldType extends Registerable {
     this.name = this.getName()
     this.sortIndicator = this.getSortIndicator()
     this.canSortInView = this.getCanSortInView()
+    this.canBePrimaryField = this.getCanBePrimaryField()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -362,6 +372,10 @@ export class LinkRowFieldType extends FieldType {
     return false
   }
 
+  getCanBePrimaryField() {
+    return false
+  }
+
   prepareValueForCopy(field, value) {
     return JSON.stringify({
       tableId: field.link_row_table,
@@ -370,7 +384,14 @@ export class LinkRowFieldType extends FieldType {
   }
 
   prepareValueForPaste(field, clipboardData) {
-    const values = JSON.parse(clipboardData.getData('text'))
+    let values
+
+    try {
+      values = JSON.parse(clipboardData.getData('text'))
+    } catch (SyntaxError) {
+      return []
+    }
+
     if (field.link_row_table === values.tableId) {
       return values.value
     }
@@ -754,5 +775,108 @@ export class EmailFieldType extends FieldType {
 
   getDocsRequestExample(field) {
     return 'example@baserow.io'
+  }
+}
+
+export class FileFieldType extends FieldType {
+  static getType() {
+    return 'file'
+  }
+
+  getIconClass() {
+    return 'file'
+  }
+
+  getName() {
+    return 'File'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldFile
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldFile
+  }
+
+  prepareValueForCopy(field, value) {
+    return JSON.stringify(value)
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    let value
+
+    try {
+      value = JSON.parse(clipboardData.getData('text'))
+    } catch (SyntaxError) {
+      return []
+    }
+
+    if (!Array.isArray(value)) {
+      return []
+    }
+    // Each object should at least have the file name as property.
+    for (let i = 0; i < value.length; i++) {
+      if (!Object.prototype.hasOwnProperty.call(value[i], 'name')) {
+        return []
+      }
+    }
+    return value
+  }
+
+  getEmptyValue(field) {
+    return []
+  }
+
+  getCanSortInView() {
+    return false
+  }
+
+  getDocsDataType() {
+    return 'array'
+  }
+
+  getDocsDescription() {
+    return 'Accepts an array of objects containing at least the name of the user file.'
+  }
+
+  getDocsRequestExample() {
+    return [
+      {
+        name:
+          'VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+      },
+    ]
+  }
+
+  getDocsResponseExample() {
+    return [
+      {
+        url:
+          'https://files.baserow.io/user_files/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+        thumbnails: {
+          tiny: {
+            url:
+              'https://files.baserow.io/media/thumbnails/tiny/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+            width: 21,
+            height: 21,
+          },
+          small: {
+            url:
+              'https://files.baserow.io/media/thumbnails/small/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+            width: 48,
+            height: 48,
+          },
+        },
+        name:
+          'VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+        size: 229940,
+        mime_type: 'image/png',
+        is_image: true,
+        image_width: 1280,
+        image_height: 585,
+        uploaded_at: '2020-11-17T12:16:10.035234+00:00',
+      },
+    ]
   }
 }

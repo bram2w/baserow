@@ -24,7 +24,7 @@ class Token(models.Model):
         help_text='The unique token key that can be used to authorize for the table '
                   'row endpoints.'
     )
-    created = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

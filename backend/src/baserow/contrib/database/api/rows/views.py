@@ -13,7 +13,9 @@ from baserow.api.decorators import map_exceptions
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
+from baserow.api.user_files.errors import ERROR_USER_FILE_DOES_NOT_EXIST
 from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
@@ -21,6 +23,12 @@ from baserow.contrib.database.api.rows.serializers import (
     example_pagination_row_serializer_class
 )
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE, ERROR_ORDER_BY_FIELD_NOT_FOUND
+)
+from baserow.contrib.database.fields.exceptions import (
+    OrderByFieldNotFound, OrderByFieldNotPossible
+)
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.rows.handler import RowHandler
@@ -64,6 +72,15 @@ class RowsView(APIView):
                 type=OpenApiTypes.STR,
                 description='If provided only rows with data that matches the search '
                             'query are going to be returned.'
+            ),
+            OpenApiParameter(
+                name='order_by',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description='Optionally the rows can be ordered by provided field ids '
+                            'separated by comma. By default a field is ordered in '
+                            'ascending (A-Z) order, but by prepending the field with '
+                            'a \'-\' it can be ordered descending (Z-A). '
             )
         ],
         tags=['Database table rows'],
@@ -86,7 +103,9 @@ class RowsView(APIView):
                 'ERROR_USER_NOT_IN_GROUP',
                 'ERROR_REQUEST_BODY_VALIDATION',
                 'ERROR_PAGE_SIZE_LIMIT',
-                'ERROR_INVALID_PAGE'
+                'ERROR_INVALID_PAGE',
+                'ERROR_ORDER_BY_FIELD_NOT_FOUND',
+                'ERROR_ORDER_BY_FIELD_NOT_POSSIBLE'
             ]),
             401: get_error_schema(['ERROR_NO_PERMISSION_TO_TABLE']),
             404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
@@ -95,7 +114,9 @@ class RowsView(APIView):
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+        OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
+        OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE
     })
     def get(self, request, table_id):
         """
@@ -108,11 +129,15 @@ class RowsView(APIView):
 
         model = table.get_model()
         search = request.GET.get('search')
+        order_by = request.GET.get('order_by')
 
         queryset = model.objects.all().enhance_by_fields().order_by('id')
 
         if search:
             queryset = queryset.search_all_fields(search)
+
+        if order_by:
+            queryset = queryset.order_by_fields_string(order_by)
 
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)
@@ -162,7 +187,8 @@ class RowsView(APIView):
     @map_exceptions({
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+        UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST
     })
     def post(self, request, table_id):
         """
@@ -293,7 +319,8 @@ class RowView(APIView):
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
-        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
+        NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+        UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST
     })
     def patch(self, request, table_id, row_id):
         """

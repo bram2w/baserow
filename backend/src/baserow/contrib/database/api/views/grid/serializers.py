@@ -91,10 +91,11 @@ class GridViewFieldOptionsFieldFix(OpenApiSerializerFieldExtension):
 
 class GridViewSerializer(serializers.ModelSerializer):
     field_options = GridViewFieldOptionsField(required=False)
+    filters_disabled = serializers.BooleanField(required=False)
 
     class Meta:
         model = GridView
-        fields = ('field_options',)
+        fields = ('field_options', 'filters_disabled')
 
 
 class GridViewFieldOptionsSerializer(serializers.ModelSerializer):

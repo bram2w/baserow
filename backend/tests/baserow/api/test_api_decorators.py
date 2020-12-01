@@ -106,8 +106,9 @@ def test_validate_body():
         validate_body(TemporarySerializer)(func)(*[object, request])
 
     assert api_exception_1.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_1.value.detail['detail']['field_2'][0]['error'] == \
+    assert api_exception_1.value.detail['detail']['field_2'][0]['error'] == (
            'This field is required.'
+    )
     assert api_exception_1.value.detail['detail']['field_2'][0]['code'] == 'required'
     assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -122,10 +123,12 @@ def test_validate_body():
         validate_body(TemporarySerializer)(func)(*[object, request])
 
     assert api_exception_2.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_2.value.detail['detail']['field_2'][0]['error'] == \
+    assert api_exception_2.value.detail['detail']['field_2'][0]['error'] == (
         '"wrong" is not a valid choice.'
-    assert api_exception_2.value.detail['detail']['field_2'][0]['code'] == \
+    )
+    assert api_exception_2.value.detail['detail']['field_2'][0]['code'] == (
         'invalid_choice'
+    )
     assert api_exception_2.value.status_code == status.HTTP_400_BAD_REQUEST
 
     request = Request(factory.post(
@@ -156,8 +159,9 @@ def test_validate_body_custom_fields():
             registry, 'serializer_class')(func)(*[object, request])
 
     assert api_exception_1.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_1.value.detail['detail']['type'][0]['error'] == \
+    assert api_exception_1.value.detail['detail']['type'][0]['error'] == (
            'This field is required.'
+    )
     assert api_exception_1.value.detail['detail']['type'][0]['code'] == 'required'
     assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -172,8 +176,9 @@ def test_validate_body_custom_fields():
         validate_body_custom_fields(registry)(func)(*[object, request])
 
     assert api_exception_2.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_2.value.detail['detail']['type'][0]['error'] == \
+    assert api_exception_2.value.detail['detail']['type'][0]['error'] == (
            '"NOT_EXISTING" is not a valid choice.'
+    )
     assert api_exception_2.value.detail['detail']['type'][0]['code'] == 'invalid_choice'
     assert api_exception_2.value.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -188,8 +193,9 @@ def test_validate_body_custom_fields():
         validate_body_custom_fields(registry)(func)(*[object, request])
 
     assert api_exception_3.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_3.value.detail['detail']['name'][0]['error'] == \
+    assert api_exception_3.value.detail['detail']['name'][0]['error'] == (
            'This field is required.'
+    )
     assert api_exception_3.value.detail['detail']['name'][0]['code'] == 'required'
     assert api_exception_3.value.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -206,8 +212,9 @@ def test_validate_body_custom_fields():
         )(func)(*[object, request])
 
     assert api_exception_4.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_4.value.detail['detail']['name'][0]['error'] == \
+    assert api_exception_4.value.detail['detail']['name'][0]['error'] == (
            'This field is required.'
+    )
     assert api_exception_4.value.detail['detail']['name'][0]['code'] == 'required'
     assert api_exception_4.value.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -222,8 +229,9 @@ def test_validate_body_custom_fields():
         validate_body_custom_fields(registry)(func)(*[object, request])
 
     assert api_exception_5.value.detail['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert api_exception_5.value.detail['detail']['name'][0]['error'] == \
+    assert api_exception_5.value.detail['detail']['name'][0]['error'] == (
            'A valid integer is required.'
+    )
     assert api_exception_5.value.detail['detail']['name'][0]['code'] == 'invalid'
     assert api_exception_5.value.status_code == status.HTTP_400_BAD_REQUEST
 

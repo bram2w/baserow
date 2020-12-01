@@ -113,3 +113,5 @@ The official repository can be found at https://gitlab.com/bramw/baserow.
 The changelog can be found [here](./changelog.md).
 
 Become a GitHub Sponsor [here](https://github.com/sponsors/bram2w).
+
+Community chat via https://gitter.im/bramw-baserow/community.

@@ -6,7 +6,7 @@
       <p>
         Are you sure you want to delete the table
         <strong>{{ table.name }}</strong
-        >? All the the related views and data will be permanently deleted.
+        >? All the related views and data will be permanently deleted.
       </p>
       <div class="actions">
         <div class="align-right">

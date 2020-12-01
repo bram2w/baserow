@@ -36,8 +36,11 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         field_type_registry.register(ExampleFieldType())
     """
 
-    can_sort_in_view = True
-    """Indicates whether is is possible to sort on a field in a view."""
+    can_order_by = True
+    """Indicates whether it is possible to order by this field type."""
+
+    can_be_primary_field = True
+    """Some field types cannot be the primary field."""
 
     def prepare_value_for_db(self, instance, value):
         """

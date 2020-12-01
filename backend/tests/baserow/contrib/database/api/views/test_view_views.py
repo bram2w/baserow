@@ -18,7 +18,12 @@ def test_list_views(api_client, data_fixture):
     table_2 = data_fixture.create_database_table()
     view_1 = data_fixture.create_grid_view(table=table_1, order=1)
     view_2 = data_fixture.create_grid_view(table=table_1, order=3)
-    view_3 = data_fixture.create_grid_view(table=table_1, order=2, filter_type='OR')
+    view_3 = data_fixture.create_grid_view(
+        table=table_1,
+        order=2,
+        filter_type='OR',
+        filters_disabled=True
+    )
     data_fixture.create_grid_view(table=table_2, order=1)
 
     response = api_client.get(
@@ -34,14 +39,17 @@ def test_list_views(api_client, data_fixture):
     assert response_json[0]['id'] == view_1.id
     assert response_json[0]['type'] == 'grid'
     assert response_json[0]['filter_type'] == 'AND'
+    assert response_json[0]['filters_disabled'] is False
 
     assert response_json[1]['id'] == view_3.id
     assert response_json[1]['type'] == 'grid'
     assert response_json[1]['filter_type'] == 'OR'
+    assert response_json[1]['filters_disabled'] is True
 
     assert response_json[2]['id'] == view_2.id
     assert response_json[2]['type'] == 'grid'
     assert response_json[2]['filter_type'] == 'AND'
+    assert response_json[2]['filters_disabled'] is False
 
     response = api_client.get(
         reverse('api:database:views:list', kwargs={'table_id': table_2.id}), **{
@@ -74,7 +82,7 @@ def test_list_views_including_filters(api_client, data_fixture):
     filter_1 = data_fixture.create_view_filter(view=view_1, field=field_1)
     filter_2 = data_fixture.create_view_filter(view=view_1, field=field_2)
     filter_3 = data_fixture.create_view_filter(view=view_2, field=field_1)
-    filter_4 = data_fixture.create_view_filter(view=view_3, field=field_3)
+    data_fixture.create_view_filter(view=view_3, field=field_3)
 
     response = api_client.get(
         '{}'.format(reverse(
@@ -124,7 +132,7 @@ def test_list_views_including_sortings(api_client, data_fixture):
     sort_1 = data_fixture.create_view_sort(view=view_1, field=field_1)
     sort_2 = data_fixture.create_view_sort(view=view_1, field=field_2)
     sort_3 = data_fixture.create_view_sort(view=view_2, field=field_1)
-    sort_4 = data_fixture.create_view_sort(view=view_3, field=field_3)
+    data_fixture.create_view_sort(view=view_3, field=field_3)
 
     response = api_client.get(
         '{}'.format(reverse(
@@ -202,7 +210,8 @@ def test_create_view(api_client, data_fixture):
         {
             'name': 'Test 1',
             'type': 'grid',
-            'filter_type': 'OR'
+            'filter_type': 'OR',
+            'filters_disabled': True
         },
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
@@ -211,12 +220,14 @@ def test_create_view(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['type'] == 'grid'
     assert response_json['filter_type'] == 'OR'
+    assert response_json['filters_disabled'] is True
 
     grid = GridView.objects.filter()[0]
     assert response_json['id'] == grid.id
     assert response_json['name'] == grid.name
     assert response_json['order'] == grid.order
     assert response_json['filter_type'] == grid.filter_type
+    assert response_json['filters_disabled'] == grid.filters_disabled
     assert 'filters' not in response_json
     assert 'sortings' not in response_json
 
@@ -227,7 +238,8 @@ def test_create_view(api_client, data_fixture):
         {
             'name': 'Test 2',
             'type': 'grid',
-            'filter_type': 'AND'
+            'filter_type': 'AND',
+            'filters_disabled': False
         },
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
@@ -237,8 +249,27 @@ def test_create_view(api_client, data_fixture):
     assert response_json['name'] == 'Test 2'
     assert response_json['type'] == 'grid'
     assert response_json['filter_type'] == 'AND'
+    assert response_json['filters_disabled'] is False
     assert response_json['filters'] == []
     assert response_json['sortings'] == []
+
+    response = api_client.post(
+        '{}'.format(reverse('api:database:views:list', kwargs={'table_id': table.id})),
+        {
+            'name': 'Test 3',
+            'type': 'grid'
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['name'] == 'Test 3'
+    assert response_json['type'] == 'grid'
+    assert response_json['filter_type'] == 'AND'
+    assert response_json['filters_disabled'] is False
+    assert 'filters' not in response_json
+    assert 'sortings' not in response_json
 
 
 @pytest.mark.django_db
@@ -280,6 +311,7 @@ def test_get_view(api_client, data_fixture):
     assert response_json['type'] == 'grid'
     assert response_json['table']['id'] == table.id
     assert response_json['filter_type'] == 'AND'
+    assert not response_json['filters_disabled']
     assert 'filters' not in response_json
     assert 'sortings' not in response_json
 
@@ -352,15 +384,20 @@ def test_update_view(api_client, data_fixture):
     assert response_json['id'] == view.id
     assert response_json['name'] == 'Test 1'
     assert response_json['filter_type'] == 'AND'
+    assert not response_json['filters_disabled']
 
     view.refresh_from_db()
     assert view.name == 'Test 1'
     assert view.filter_type == 'AND'
+    assert not view.filters_disabled
 
     url = reverse('api:database:views:item', kwargs={'view_id': view.id})
     response = api_client.patch(
         url,
-        {'filter_type': 'OR'},
+        {
+            'filter_type': 'OR',
+            'filters_disabled': True,
+        },
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
@@ -368,11 +405,13 @@ def test_update_view(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['id'] == view.id
     assert response_json['filter_type'] == 'OR'
+    assert response_json['filters_disabled']
     assert 'filters' not in response_json
     assert 'sortings' not in response_json
 
     view.refresh_from_db()
     assert view.filter_type == 'OR'
+    assert view.filters_disabled
 
     filter_1 = data_fixture.create_view_filter(view=view)
     url = reverse('api:database:views:item', kwargs={'view_id': view.id})
@@ -386,6 +425,7 @@ def test_update_view(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['id'] == view.id
     assert response_json['filter_type'] == 'AND'
+    assert response_json['filters_disabled'] is True
     assert response_json['filters'][0]['id'] == filter_1.id
     assert response_json['sortings'] == []
 
@@ -430,8 +470,8 @@ def test_list_view_filters(api_client, data_fixture):
     view_3 = data_fixture.create_grid_view(table=table_2, order=1)
     filter_1 = data_fixture.create_view_filter(view=view_1, field=field_1)
     filter_2 = data_fixture.create_view_filter(view=view_1, field=field_2)
-    filter_3 = data_fixture.create_view_filter(view=view_2, field=field_1)
-    filter_4 = data_fixture.create_view_filter(view=view_3, field=field_3)
+    data_fixture.create_view_filter(view=view_2, field=field_1)
+    data_fixture.create_view_filter(view=view_3, field=field_3)
 
     response = api_client.get(
         reverse(
@@ -776,7 +816,7 @@ def test_update_view_filter(api_client, data_fixture):
             'api:database:views:filter_item',
             kwargs={'view_filter_id': filter_1.id}
         ),
-        {'type': 'equal',},
+        {'type': 'equal'},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
@@ -796,7 +836,7 @@ def test_update_view_filter(api_client, data_fixture):
             'api:database:views:filter_item',
             kwargs={'view_filter_id': filter_1.id}
         ),
-        {'value': 'test 3',},
+        {'value': 'test 3'},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
@@ -817,7 +857,7 @@ def test_update_view_filter(api_client, data_fixture):
             'api:database:views:filter_item',
             kwargs={'view_filter_id': filter_1.id}
         ),
-        {'value': '',},
+        {'value': ''},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
@@ -874,11 +914,11 @@ def test_list_view_sortings(api_client, data_fixture):
     field_2 = data_fixture.create_text_field(table=table_1)
     field_3 = data_fixture.create_text_field(table=table_2)
     view_1 = data_fixture.create_grid_view(table=table_1, order=1)
-    view_2 = data_fixture.create_grid_view(table=table_1, order=2)
+    data_fixture.create_grid_view(table=table_1, order=2)
     view_3 = data_fixture.create_grid_view(table=table_2, order=1)
     sort_1 = data_fixture.create_view_sort(view=view_1, field=field_1)
     sort_2 = data_fixture.create_view_sort(view=view_1, field=field_2)
-    sort_4 = data_fixture.create_view_sort(view=view_3, field=field_3)
+    data_fixture.create_view_sort(view=view_3, field=field_3)
 
     response = api_client.get(
         reverse(
@@ -1233,7 +1273,7 @@ def test_update_view_sort(api_client, data_fixture):
             'api:database:views:sort_item',
             kwargs={'view_sort_id': sort_1.id}
         ),
-        {'order': 'DESC',},
+        {'order': 'DESC'},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )

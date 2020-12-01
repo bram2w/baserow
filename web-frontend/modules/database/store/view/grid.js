@@ -555,7 +555,8 @@ export const actions = {
     Object.keys(overrides).forEach((key) => {
       values[key] = overrides[key]
     })
-    const matches = isValid(view.filters, values)
+    // The value is always valid if the filters are disabled.
+    const matches = view.filters_disabled ? true : isValid(view.filters, values)
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
   /**

@@ -265,7 +265,7 @@ def test_contains_filter_type(data_fixture):
         f'field_{text_field.id}': 'My name is John Doe.',
         f'field_{long_text_field.id}': 'Long text that is not empty.',
     })
-    row_2 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{text_field.id}': '',
         f'field_{long_text_field.id}': '',
     })
@@ -487,7 +487,7 @@ def test_higher_than_filter_type(data_fixture):
         f'field_{integer_field.id}': 10,
         f'field_{decimal_field.id}': 20.20,
     })
-    row_2 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{integer_field.id}': None,
         f'field_{decimal_field.id}': None,
     })
@@ -633,7 +633,7 @@ def test_lower_than_filter_type(data_fixture):
         f'field_{integer_field.id}': 10,
         f'field_{decimal_field.id}': 20.20,
     })
-    row_2 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{integer_field.id}': None,
         f'field_{decimal_field.id}': None,
     })
@@ -782,11 +782,11 @@ def test_date_equal_filter_type(data_fixture):
         f'field_{date_field.id}': date(2019, 1, 1),
         f'field_{date_time_field.id}': make_aware(datetime(2020, 6, 17, 1, 30, 5), utc)
     })
-    row_3 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{date_field.id}': None,
         f'field_{date_time_field.id}': None
     })
-    row_4 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{date_field.id}': date(2010, 1, 1),
         f'field_{date_time_field.id}': make_aware(datetime(2010, 2, 4, 2, 45, 45), utc)
     })
@@ -1016,6 +1016,7 @@ def test_empty_filter_type(data_fixture):
         date_include_time=True
     )
     boolean_field = data_fixture.create_boolean_field(table=table)
+    file_field = data_fixture.create_file_field(table=table)
 
     tmp_table = data_fixture.create_database_table(database=table.database)
     tmp_field = data_fixture.create_text_field(table=tmp_table, primary=True)
@@ -1038,6 +1039,7 @@ def test_empty_filter_type(data_fixture):
         f'field_{date_field.id}': None,
         f'field_{date_time_field.id}': None,
         f'field_{boolean_field.id}': False,
+        f'field_{file_field.id}': []
     })
     row_2 = model.objects.create(**{
         f'field_{text_field.id}': 'Value',
@@ -1047,6 +1049,7 @@ def test_empty_filter_type(data_fixture):
         f'field_{date_field.id}': date(2020, 6, 17),
         f'field_{date_time_field.id}': make_aware(datetime(2020, 6, 17, 1, 30, 0), utc),
         f'field_{boolean_field.id}': True,
+        f'field_{file_field.id}': [{'name': 'test_file.png'}]
     })
     getattr(row_2, f'field_{link_row_field.id}').add(tmp_row.id)
     row_3 = model.objects.create(**{
@@ -1057,6 +1060,9 @@ def test_empty_filter_type(data_fixture):
         f'field_{date_field.id}': date(1970, 1, 1),
         f'field_{date_time_field.id}': make_aware(datetime(1970, 1, 1, 0, 0, 0), utc),
         f'field_{boolean_field.id}': True,
+        f'field_{file_field.id}': [
+            {'name': 'test_file.png'}, {'name': 'another_file.jpg'}
+        ]
     })
     getattr(row_3, f'field_{link_row_field.id}').add(tmp_row.id)
 
@@ -1096,6 +1102,10 @@ def test_empty_filter_type(data_fixture):
     filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
+    filter.field = file_field
+    filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
+
 
 @pytest.mark.django_db
 def test_not_empty_filter_type(data_fixture):
@@ -1116,6 +1126,7 @@ def test_not_empty_filter_type(data_fixture):
         date_include_time=True
     )
     boolean_field = data_fixture.create_boolean_field(table=table)
+    file_field = data_fixture.create_file_field(table=table)
 
     tmp_table = data_fixture.create_database_table(database=table.database)
     tmp_field = data_fixture.create_text_field(table=tmp_table, primary=True)
@@ -1130,7 +1141,7 @@ def test_not_empty_filter_type(data_fixture):
     model = table.get_model()
     utc = timezone('UTC')
 
-    row = model.objects.create(**{
+    model.objects.create(**{
         f'field_{text_field.id}': '',
         f'field_{long_text_field.id}': '',
         f'field_{integer_field.id}': None,
@@ -1138,6 +1149,7 @@ def test_not_empty_filter_type(data_fixture):
         f'field_{date_field.id}': None,
         f'field_{date_time_field.id}': None,
         f'field_{boolean_field.id}': False,
+        f'field_{file_field.id}': []
     })
     row_2 = model.objects.create(**{
         f'field_{text_field.id}': 'Value',
@@ -1147,6 +1159,7 @@ def test_not_empty_filter_type(data_fixture):
         f'field_{date_field.id}': date(2020, 6, 17),
         f'field_{date_time_field.id}': make_aware(datetime(2020, 6, 17, 1, 30, 0), utc),
         f'field_{boolean_field.id}': True,
+        f'field_{file_field.id}': [{'name': 'test_file.png'}]
     })
     getattr(row_2, f'field_{link_row_field.id}').add(tmp_row.id)
 
@@ -1183,5 +1196,9 @@ def test_not_empty_filter_type(data_fixture):
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
 
     filter.field = boolean_field
+    filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
+
+    filter.field = file_field
     filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id

@@ -18,11 +18,11 @@ from baserow.contrib.database.tokens.exceptions import (
 @pytest.mark.django_db
 def test_get_by_key(data_fixture):
     user = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
+    data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user)
     group_2 = data_fixture.create_group()
     token = data_fixture.create_token(user=user, group=group_1)
-    token_2 = data_fixture.create_token(user=user, group=group_2)
+    data_fixture.create_token(user=user, group=group_2)
 
     handler = TokenHandler()
 
@@ -92,7 +92,7 @@ def test_generate_token(data_fixture):
 @pytest.mark.django_db
 def test_create_token(data_fixture):
     user = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
+    data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user)
     group_2 = data_fixture.create_group()
 
@@ -114,23 +114,23 @@ def test_create_token(data_fixture):
 
     assert permissions[0].token_id == token.id
     assert permissions[0].type == 'create'
-    assert permissions[0].database_id == None
-    assert permissions[0].table_id == None
+    assert permissions[0].database_id is None
+    assert permissions[0].table_id is None
 
     assert permissions[1].token_id == token.id
     assert permissions[1].type == 'read'
-    assert permissions[1].database_id == None
-    assert permissions[1].table_id == None
+    assert permissions[1].database_id is None
+    assert permissions[1].table_id is None
 
     assert permissions[2].token_id == token.id
     assert permissions[2].type == 'update'
-    assert permissions[2].database_id == None
-    assert permissions[2].table_id == None
+    assert permissions[2].database_id is None
+    assert permissions[2].table_id is None
 
     assert permissions[3].token_id == token.id
     assert permissions[3].type == 'delete'
-    assert permissions[3].database_id == None
-    assert permissions[3].table_id == None
+    assert permissions[3].database_id is None
+    assert permissions[3].table_id is None
 
 
 @pytest.mark.django_db
@@ -202,16 +202,16 @@ def test_update_token_permission(data_fixture):
     handler.update_token_permissions(user, token=token_1, create=True, read=True,
                                      update=True, delete=True)
     assert TokenPermission.objects.all().count() == 4
-    permission_1_1 = TokenPermission.objects.get(
+    TokenPermission.objects.get(
         token=token_1, type='create', database__isnull=True, table__isnull=True
     )
-    permission_1_2 = TokenPermission.objects.get(
+    TokenPermission.objects.get(
         token=token_1, type='read', database__isnull=True, table__isnull=True
     )
-    permission_1_3 = TokenPermission.objects.get(
+    TokenPermission.objects.get(
         token=token_1, type='update', database__isnull=True, table__isnull=True
     )
-    permission_1_4 = TokenPermission.objects.get(
+    TokenPermission.objects.get(
         token=token_1, type='delete', database__isnull=True, table__isnull=True
     )
 
@@ -230,13 +230,13 @@ def test_update_token_permission(data_fixture):
     permission_2_2 = TokenPermission.objects.get(
         token=token_1, type='read', database_id=database_2.id, table__isnull=True
     )
-    permission_2_3 = TokenPermission.objects.get(
+    TokenPermission.objects.get(
         token=token_1, type='read', database__isnull=True, table_id=table_2.id
     )
     permission_2_4 = TokenPermission.objects.get(
         token=token_1, type='update', database__isnull=True, table_id=table_1.id
     )
-    permission_2_5 = TokenPermission.objects.get(
+    TokenPermission.objects.get(
         token=token_1, type='delete', database__isnull=True, table__isnull=True
     )
 
@@ -252,7 +252,7 @@ def test_update_token_permission(data_fixture):
     permission_3_1 = TokenPermission.objects.get(
         token=token_1, type='create', database_id=database_1.id, table__isnull=True
     )
-    permission_3_2 = TokenPermission.objects.get(
+    TokenPermission.objects.get(
         token=token_1, type='create', database__isnull=True, table_id=table_2.id
     )
     permission_3_3 = TokenPermission.objects.get(

@@ -296,7 +296,7 @@ def test_list_filtered_rows(api_client, data_fixture):
         f'field_{number_field.id}': 100,
         f'field_{boolean_field.id}': True
     })
-    row_4 = model.objects.create(**{
+    model.objects.create(**{
         f'field_{text_field.id}': 'Purple',
         f'field_{number_field.id}': 1000,
         f'field_{boolean_field.id}': False
@@ -361,7 +361,7 @@ def test_patch_grid_view(api_client, data_fixture):
         email='test@test.nl', password='password', first_name='Test1')
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table)
-    unknown_field = data_fixture.create_text_field()
+    data_fixture.create_text_field()
     grid = data_fixture.create_grid_view(table=table)
     # The second field is deliberately created after the creation of the grid field
     # so that the GridViewFieldOptions entry is not created. This should

@@ -95,6 +95,13 @@
   line-height: 30px;
 }
 
+.filters_footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .filters__add {
   display: inline-block;
   margin: 12px 0 6px 4px;

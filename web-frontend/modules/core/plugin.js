@@ -3,6 +3,10 @@ import Vue from 'vue'
 import { Registry } from '@baserow/modules/core/registry'
 
 import { PasswordSettingsType } from '@baserow/modules/core/settingsTypes'
+import {
+  UploadFileUserFileUploadType,
+  UploadViaURLUserFileUploadType,
+} from '@baserow/modules/core/userFileUploadTypes'
 
 import applicationStore from '@baserow/modules/core/store/application'
 import authStore from '@baserow/modules/core/store/auth'
@@ -19,7 +23,10 @@ export default ({ store, app }, inject) => {
   registry.registerNamespace('view')
   registry.registerNamespace('field')
   registry.registerNamespace('settings')
+  registry.registerNamespace('userFileUpload')
   registry.register('settings', new PasswordSettingsType())
+  registry.register('userFileUpload', new UploadFileUserFileUploadType())
+  registry.register('userFileUpload', new UploadViaURLUserFileUploadType())
   inject('registry', registry)
 
   store.registerModule('application', applicationStore)

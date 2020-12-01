@@ -18,7 +18,7 @@ from .exceptions import (
 
 
 class TableHandler:
-    def get_table(self, user, table_id):
+    def get_table(self, user, table_id, base_queryset=None):
         """
         Selects a table with a given id from the database.
 
@@ -26,14 +26,20 @@ class TableHandler:
         :type user: User
         :param table_id: The identifier of the table that must be returned.
         :type table_id: int
+        :param base_queryset: The base queryset from where to select the table
+            object from. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
         :raises TableDoesNotExist: When the table with the provided id does not exist.
         :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The requested table of the provided id.
         :rtype: Table
         """
 
+        if not base_queryset:
+            base_queryset = Table.objects
+
         try:
-            table = Table.objects.select_related('database__group').get(id=table_id)
+            table = base_queryset.select_related('database__group').get(id=table_id)
         except Table.DoesNotExist:
             raise TableDoesNotExist(f'The table with id {table_id} doe not exist.')
 

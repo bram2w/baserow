@@ -1,9 +1,9 @@
 <template>
   <div class="api-docs">
-    <div class="api-docs__header">
-      <a class="api-docs__logo">
+    <div ref="header" class="api-docs__header">
+      <nuxt-link :to="{ name: 'index' }" class="api-docs__logo">
         <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
-      </a>
+      </nuxt-link>
       <a
         ref="databasesToggle"
         class="api-docs__switch"
@@ -150,7 +150,7 @@
         </li>
       </ul>
     </div>
-    <div ref="body" class="api-docs__body">
+    <div class="api-docs__body">
       <div class="api-docs__item">
         <div class="api-docs__left">
           <h2 id="section-introduction" class="api-docs__heading-2">
@@ -275,22 +275,45 @@
                 :optional="true"
                 type="integer"
                 standard="1"
-                description="Defines which page of rows should be returned."
-              ></APIDocsParameter>
+              >
+                Defines which page of rows should be returned.
+              </APIDocsParameter>
               <APIDocsParameter
                 name="size"
                 :optional="true"
                 type="integer"
                 standard="100"
-                description="Defines how many rows should be returned per page."
-              ></APIDocsParameter>
+              >
+                Defines how many rows should be returned per page.
+              </APIDocsParameter>
               <APIDocsParameter
                 name="search"
                 :optional="true"
                 type="string"
                 standard="''"
-                description="If provided only rows with data that matches the search query are going to be returned."
-              ></APIDocsParameter>
+              >
+                If provided only rows with data that matches the search query
+                are going to be returned.
+              </APIDocsParameter>
+              <APIDocsParameter
+                name="order_by"
+                :optional="true"
+                type="string"
+                standard="'id'"
+              >
+                Optionally the rows can be ordered by provided field ids
+                separated by comma. By default a field is ordered in ascending
+                (A-Z) order, but by prepending the field with a '-' it can be
+                ordered descending (Z-A).
+                <br /><br />
+                For example if you provide the following GET parameter
+                <code class="api-docs__code">order_by=field_1,-field_2</code>
+                the rows will ordered by
+                <code class="api-docs__code">field_1</code>
+                in ascending order. If some fields have the same value, that
+                subset will be ordered by
+                <code class="api-docs__code">field_2</code> in descending order.
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
@@ -320,11 +343,9 @@
             </p>
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
-              <APIDocsParameter
-                name="row_id"
-                type="integer"
-                description="The unique identifier or the row that is requested."
-              ></APIDocsParameter>
+              <APIDocsParameter name="row_id" type="integer">
+                The unique identifier or the row that is requested.
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
@@ -353,8 +374,9 @@
                 :name="'field_' + field.id"
                 :optional="true"
                 :type="field._.type"
-                :description="field._.description"
-              ></APIDocsParameter>
+              >
+                {{ field._.description }}
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
@@ -380,11 +402,9 @@
             </p>
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
-              <APIDocsParameter
-                name="row_id"
-                type="integer"
-                description="The unique identifier or the row that needs to be updated."
-              ></APIDocsParameter>
+              <APIDocsParameter name="row_id" type="integer">
+                The unique identifier or the row that needs to be updated.
+              </APIDocsParameter>
             </ul>
             <h4 class="api-docs__heading-4">Request body schema</h4>
             <ul class="api-docs__parameters">
@@ -394,8 +414,9 @@
                 :name="'field_' + field.id"
                 :optional="true"
                 :type="field._.type"
-                :description="field._.description"
-              ></APIDocsParameter>
+              >
+                {{ field._.description }}
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
@@ -421,11 +442,9 @@
             </p>
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
-              <APIDocsParameter
-                name="row_id"
-                type="integer"
-                description="The unique identifier or the row that needs to be deleted."
-              ></APIDocsParameter>
+              <APIDocsParameter name="row_id" type="integer">
+                The unique identifier or the row that needs to be deleted.
+              </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
@@ -595,13 +614,13 @@ export default {
     // navigation item must be updated.
     this.$el.scrollEvent = () => this.updateNav()
     this.$el.resizeEvent = () => this.updateNav()
-    this.$refs.body.addEventListener('scroll', this.$el.scrollEvent)
+    window.addEventListener('scroll', this.$el.scrollEvent)
     window.addEventListener('resize', this.$el.resizeEvent)
     this.updateNav()
   },
   beforeDestroy() {
     document.body.removeEventListener('click', this.$el.clickOutsideEvent)
-    this.$refs.body.removeEventListener('scroll', this.$el.scrollEvent)
+    window.removeEventListener('scroll', this.$el.scrollEvent)
     window.removeEventListener('resize', this.$el.resizeEvent)
   },
   methods: {
@@ -610,15 +629,14 @@ export default {
      * navigation item is active based on the scroll position of the available ids.
      */
     updateNav() {
-      const body = this.$refs.body
+      const body = document.documentElement
       const sections = body.querySelectorAll('[id]')
-      const margin = 40
       sections.forEach((section, index) => {
-        const top = section.offsetTop - margin
+        const top = section.offsetTop
         const nextIndex = (index + 1).toString()
         const next =
           nextIndex in sections
-            ? sections[nextIndex].offsetTop - margin
+            ? sections[nextIndex].offsetTop
             : body.scrollHeight
         if (top <= body.scrollTop && body.scrollTop < next) {
           this.navActive = section.id
@@ -626,8 +644,9 @@ export default {
       })
     },
     navigate(to) {
-      const section = this.$refs.body.querySelector(`[id='${to}']`)
-      this.$refs.body.scrollTop = section.offsetTop - 20
+      const section = document.querySelector(`[id='${to}']`)
+      document.documentElement.scrollTop =
+        section.offsetTop - 20 + this.$refs.header.clientHeight
     },
     /**
      * Generates an example request object based on the available fields of the table.
@@ -656,6 +675,11 @@ export default {
     getItemURL(table) {
       return this.getListURL(table) + '{row_id}/'
     },
+  },
+  head() {
+    return {
+      title: `API Documentation ${this.database.name}`,
+    }
   },
 }
 </script>

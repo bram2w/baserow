@@ -151,10 +151,8 @@ def test_get_token(api_client, data_fixture):
 
     database_1 = data_fixture.create_database_application(group=group_1)
     database_2 = data_fixture.create_database_application(group=group_1)
-    table_1 = data_fixture.create_database_table(database=database_1,
-                                                 create_table=False)
-    table_2 = data_fixture.create_database_table(database=database_1,
-                                                 create_table=False)
+    data_fixture.create_database_table(database=database_1, create_table=False)
+    data_fixture.create_database_table(database=database_1, create_table=False)
     table_3 = data_fixture.create_database_table(database=database_2,
                                                  create_table=False)
 
@@ -278,8 +276,7 @@ def test_update_token(api_client, data_fixture):
     database_3 = data_fixture.create_database_application()
     table_1 = data_fixture.create_database_table(database=database_1,
                                                  create_table=False)
-    table_2 = data_fixture.create_database_table(database=database_1,
-                                                 create_table=False)
+    data_fixture.create_database_table(database=database_1, create_table=False)
     table_3 = data_fixture.create_database_table(database=database_2,
                                                  create_table=False)
     table_4 = data_fixture.create_database_table(database=database_3,
@@ -610,4 +607,3 @@ def test_delete_token(api_client, data_fixture):
 
     assert Token.objects.all().count() == 2
     assert TokenPermission.objects.all().count() == 0
-

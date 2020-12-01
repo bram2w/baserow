@@ -36,6 +36,7 @@ def test_get_view(data_fixture):
     assert view.id == grid.id
     assert view.name == grid.name
     assert view.filter_type == 'AND'
+    assert not view.filters_disabled
     assert isinstance(view, View)
 
     view = handler.get_view(user=user, view_id=grid.id, view_model=GridView)
@@ -43,6 +44,7 @@ def test_get_view(data_fixture):
     assert view.id == grid.id
     assert view.name == grid.name
     assert view.filter_type == 'AND'
+    assert not view.filters_disabled
     assert isinstance(view, GridView)
 
     # If the error is raised we know for sure that the query has resolved.
@@ -58,6 +60,7 @@ def test_create_view(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(user=user)
 
     handler = ViewHandler()
     handler.create_view(user=user, table=table, type_name='grid', name='Test grid')
@@ -70,6 +73,32 @@ def test_create_view(data_fixture):
     assert grid.order == 1
     assert grid.table == table
     assert grid.filter_type == 'AND'
+    assert not grid.filters_disabled
+
+    handler.create_view(user=user, table=table, type_name='grid',
+                        name='Something else', filter_type='OR', filters_disabled=True)
+
+    assert View.objects.all().count() == 2
+    assert GridView.objects.all().count() == 2
+
+    grid = GridView.objects.all().last()
+    assert grid.name == 'Something else'
+    assert grid.order == 2
+    assert grid.table == table
+    assert grid.filter_type == 'OR'
+    assert grid.filters_disabled
+
+    grid = handler.create_view(user=user, table=table_2, type_name='grid', name='Name',
+                               filter_type='OR', filters_disabled=False)
+
+    assert View.objects.all().count() == 3
+    assert GridView.objects.all().count() == 3
+
+    assert grid.name == 'Name'
+    assert grid.order == 1
+    assert grid.table == table_2
+    assert grid.filter_type == 'OR'
+    assert not grid.filters_disabled
 
     with pytest.raises(UserNotInGroupError):
         handler.create_view(user=user_2, table=table, type_name='grid', name='')
@@ -97,11 +126,14 @@ def test_update_view(data_fixture):
 
     grid.refresh_from_db()
     assert grid.name == 'Test 1'
+    assert grid.filter_type == 'AND'
+    assert not grid.filters_disabled
 
-    handler.update_view(user=user, view=grid, filter_type='OR')
+    handler.update_view(user=user, view=grid, filter_type='OR', filters_disabled=True)
 
     grid.refresh_from_db()
     assert grid.filter_type == 'OR'
+    assert grid.filters_disabled
 
 
 @pytest.mark.django_db
@@ -134,24 +166,36 @@ def test_update_grid_view_field_options(data_fixture):
     field_3 = data_fixture.create_text_field()
 
     with pytest.raises(ValueError):
-        ViewHandler().update_grid_view_field_options(grid_view=grid_view, field_options={
-            'strange_format': {'height': 150},
-        })
+        ViewHandler().update_grid_view_field_options(
+            grid_view=grid_view,
+            field_options={
+                'strange_format': {'height': 150},
+            }
+        )
 
     with pytest.raises(UnrelatedFieldError):
-        ViewHandler().update_grid_view_field_options(grid_view=grid_view, field_options={
-            99999: {'width': 150},
-        })
+        ViewHandler().update_grid_view_field_options(
+            grid_view=grid_view,
+            field_options={
+                99999: {'width': 150},
+            }
+        )
 
     with pytest.raises(UnrelatedFieldError):
-        ViewHandler().update_grid_view_field_options(grid_view=grid_view, field_options={
-            field_3.id: {'width': 150},
-        })
+        ViewHandler().update_grid_view_field_options(
+            grid_view=grid_view,
+            field_options={
+                field_3.id: {'width': 150},
+            }
+        )
 
-    ViewHandler().update_grid_view_field_options(grid_view=grid_view, field_options={
-        str(field_1.id): {'width': 150},
-        field_2.id: {'width': 250}
-    })
+    ViewHandler().update_grid_view_field_options(
+        grid_view=grid_view,
+        field_options={
+            str(field_1.id): {'width': 150},
+            field_2.id: {'width': 250}
+        }
+    )
     options_4 = grid_view.get_field_options()
 
     assert len(options_4) == 2
@@ -182,9 +226,9 @@ def test_field_type_changed(data_fixture):
     table_2 = data_fixture.create_database_table(user=user, database=table.database)
     text_field = data_fixture.create_text_field(table=table)
     grid_view = data_fixture.create_grid_view(table=table)
-    contains_filter = data_fixture.create_view_filter(view=grid_view, field=text_field,
-                                                      type='contains', value='test')
-    sort = data_fixture.create_view_sort(view=grid_view, field=text_field, order='ASC')
+    data_fixture.create_view_filter(view=grid_view, field=text_field,
+                                    type='contains', value='test')
+    data_fixture.create_view_sort(view=grid_view, field=text_field, order='ASC')
 
     field_handler = FieldHandler()
     long_text_field = field_handler.update_field(user=user, field=text_field,
@@ -192,7 +236,8 @@ def test_field_type_changed(data_fixture):
     assert ViewFilter.objects.all().count() == 1
     assert ViewSort.objects.all().count() == 1
 
-    field_handler.update_field(user=user, field=long_text_field, new_type_name='number')
+    field_handler.update_field(user=user, field=long_text_field,
+                               new_type_name='number')
     assert ViewFilter.objects.all().count() == 0
     assert ViewSort.objects.all().count() == 1
 
@@ -334,6 +379,14 @@ def test_apply_filters(data_fixture):
     assert rows[0].id == row_2.id
     assert rows[1].id == row_4.id
 
+    grid_view.filters_disabled = True
+    grid_view.save()
+    rows = view_handler.apply_filters(grid_view, model.objects.all())
+    assert rows[0].id == row_1.id
+    assert rows[1].id == row_2.id
+    assert rows[2].id == row_3.id
+    assert rows[3].id == row_4.id
+
 
 @pytest.mark.django_db
 def test_get_filter(data_fixture):
@@ -348,6 +401,13 @@ def test_get_filter(data_fixture):
 
     with pytest.raises(UserNotInGroupError):
         handler.get_filter(user=user_2, view_filter_id=equal_filter.id)
+
+    with pytest.raises(AttributeError):
+        handler.get_filter(
+            user=user,
+            view_filter_id=equal_filter.id,
+            base_queryset=ViewFilter.objects.prefetch_related('UNKNOWN')
+        )
 
     filter = handler.get_filter(user=user, view_filter_id=equal_filter.id)
 
@@ -409,7 +469,7 @@ def test_create_filter(data_fixture):
 
     tmp_field = Field.objects.get(pk=text_field.id)
     view_filter_2 = handler.create_filter(user=user, view=grid_view, field=tmp_field,
-                                        type_name='equal', value='test')
+                                          type_name='equal', value='test')
     assert view_filter_2.view_id == grid_view.id
     assert view_filter_2.field_id == text_field.id
     assert view_filter_2.type == 'equal'
@@ -618,6 +678,13 @@ def test_get_sort(data_fixture):
     with pytest.raises(UserNotInGroupError):
         handler.get_sort(user=user_2, view_sort_id=equal_sort.id)
 
+    with pytest.raises(AttributeError):
+        handler.get_sort(
+            user=user,
+            view_sort_id=equal_sort.id,
+            base_queryset=ViewSort.objects.prefetch_related('UNKNOWN')
+        )
+
     sort = handler.get_sort(user=user, view_sort_id=equal_sort.id)
 
     assert sort.id == equal_sort.id
@@ -717,7 +784,7 @@ def test_update_sort(data_fixture):
     assert updated_sort.field_id == text_field.id
     assert updated_sort.view_id == grid_view.id
 
-    view_sort_2 = data_fixture.create_view_sort(view=grid_view, field=long_text_field)
+    data_fixture.create_view_sort(view=grid_view, field=long_text_field)
 
     with pytest.raises(ViewSortFieldAlreadyExist):
         handler.update_sort(user=user, view_sort=view_sort, order='ASC',

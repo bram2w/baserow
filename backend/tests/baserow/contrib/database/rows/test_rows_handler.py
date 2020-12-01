@@ -191,7 +191,7 @@ def test_delete_row(data_fixture):
     handler = RowHandler()
     model = table.get_model()
     row = handler.create_row(user=user, table=table)
-    row_2 = handler.create_row(user=user, table=table)
+    handler.create_row(user=user, table=table)
 
     with pytest.raises(UserNotInGroupError):
         handler.delete_row(user=user_2, table=table, row_id=row.id)
