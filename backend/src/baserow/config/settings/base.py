@@ -153,7 +153,7 @@ SPECTACULAR_SETTINGS = {
         'name': 'MIT',
         'url': 'https://gitlab.com/bramw/baserow/-/blob/master/LICENSE'
     },
-    'VERSION': '0.5.0',
+    'VERSION': '0.6.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'TAGS': [
         {'name': 'User'},
