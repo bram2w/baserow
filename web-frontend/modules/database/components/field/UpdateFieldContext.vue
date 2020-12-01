@@ -4,6 +4,7 @@
       ref="form"
       :table="table"
       :default-values="field"
+      :primary="field.primary"
       @submitted="submit"
     >
       <div class="context__form-actions">

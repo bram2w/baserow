@@ -59,3 +59,11 @@ class OrderByFieldNotPossible(Exception):
         self.field_name = field_name
         self.field_type = field_type
         super().__init__(*args, **kwargs)
+
+
+class IncompatiblePrimaryFieldTypeError(Exception):
+    """Raised when the primary field is changed to an incompatible field type."""
+
+    def __init__(self, field_type=None, *args, **kwargs):
+        self.field_type = field_type
+        super().__init__(*args, **kwargs)

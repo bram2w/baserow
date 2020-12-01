@@ -30,3 +30,8 @@ ERROR_ORDER_BY_FIELD_NOT_POSSIBLE = (
     'It is not possible to order by {e.field_name} because the field type '
     '{e.field_type} does not support filtering.'
 )
+ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE = (
+    'ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE',
+    HTTP_400_BAD_REQUEST,
+    'The field type {e.field_type} is not compatible with the primary field.'
+)

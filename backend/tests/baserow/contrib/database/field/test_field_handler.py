@@ -8,7 +8,7 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.fields.exceptions import (
     FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
-    FieldDoesNotExist
+    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError
 )
 
 
@@ -164,6 +164,15 @@ def test_update_field(data_fixture):
 
     with pytest.raises(FieldTypeDoesNotExist):
         handler.update_field(user=user, field=field, new_type_name='NOT_EXISTING')
+
+    # The link row field is not compatible with a primary field so an exception
+    # is expected.
+    field.primary = True
+    field.save()
+    with pytest.raises(IncompatiblePrimaryFieldTypeError):
+        handler.update_field(user=user, field=field, new_type_name='link_row')
+    field.primary = False
+    field.save()
 
     # Change some values of the text field and test if they have been changed.
     field = handler.update_field(user=user, field=field, name='Text field',
