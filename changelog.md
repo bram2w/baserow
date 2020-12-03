@@ -1,5 +1,7 @@
 # Changelog
 
+* Fixed bug where the page refreshes if you press enter in an input in the row modal.
+
 ## Released (2020-12-01)
 
 * Added select_for_update where it was still missing.
