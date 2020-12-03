@@ -186,6 +186,16 @@
               <div style="width: 200px;">
                 <Dropdown v-model="longDropdown">
                   <DropdownItem
+                    :key="'some-2'"
+                    :name="'Something'"
+                    :value="'some-2'"
+                  ></DropdownItem>
+                  <DropdownItem
+                    :key="'test-3'"
+                    :name="'Test 3'"
+                    :value="'test3'"
+                  ></DropdownItem>
+                  <DropdownItem
                     v-for="i in [
                       0,
                       1,
@@ -208,6 +218,16 @@
                     :name="'Choice ' + i"
                     :value="i"
                     :disabled="i === 7"
+                  ></DropdownItem>
+                  <DropdownItem
+                    :key="'test-1'"
+                    :name="'Test 1'"
+                    :value="'test1'"
+                  ></DropdownItem>
+                  <DropdownItem
+                    :key="'test-2'"
+                    :name="'Test 2'"
+                    :value="'test2'"
                   ></DropdownItem>
                 </Dropdown>
               </div>

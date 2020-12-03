@@ -218,42 +218,21 @@ export default {
      * the index of the current child, the next child enabled child is set as hover.
      */
     handleUpAndDownArrowPress(event) {
-      const hoverIndex = this.$children.findIndex(
-        (item) => item.value === this.hover
+      const children = this.$children.filter(
+        (child) => !child.disabled && child.isVisible(this.query)
       )
-      const nextItem = this.getNextChild(hoverIndex, event)
 
-      if (nextItem) {
-        this.hover = nextItem.value
-        this.$refs.items.scrollTop = this.getScrollTopAmountForNextChild(
-          nextItem
-        )
-      }
-    },
-    /**
-     * Recursively calculate the next enabled child index based on the arrow up or
-     * arrow down event.
-     */
-    getNextChild(currentIndex, event) {
-      // Derive our new index based off of the key pressed
-      if (event.code === 'ArrowUp') {
-        currentIndex--
-      }
-      if (event.code === 'ArrowDown') {
-        currentIndex++
+      let index = children.findIndex((item) => item.value === this.hover)
+      index = event.code === 'ArrowUp' ? index - 1 : index + 1
+
+      // Check if the new index is within the allowed range.
+      if (index < 0 || index > children.length - 1) {
+        return
       }
 
-      // Check if the new index is invalid
-      if (currentIndex < 0 || currentIndex > this.$children.length - 1) {
-        return null
-      }
-
-      const nextItem = this.$children[currentIndex]
-      if (nextItem.disabled) {
-        // If the expected nextItem is disabled, we want to skip over it
-        return this.getNextChild(currentIndex, event)
-      }
-      return nextItem
+      const next = children[index]
+      this.hover = next.value
+      this.$refs.items.scrollTop = this.getScrollTopAmountForNextChild(next)
     },
     /**
      * When scrolling up and down between options with the keyboard, this
