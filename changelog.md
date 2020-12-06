@@ -5,6 +5,7 @@
 * Fixed bug where the arrow navigation didn't work for the dropdown component in
   combination with a search query.
 * Fixed bug where the page refreshes if you press enter in an input in the row modal.
+* Fixed drifting context menu.
 
 ## Released (2020-12-01)
 
