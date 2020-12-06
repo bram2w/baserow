@@ -534,20 +534,35 @@ export const actions = {
    */
   updateMatchFilters({ commit }, { view, row, overrides = {} }) {
     const isValid = (filters, values) => {
+      // If there aren't any filters then it is not possible to check if the row
+      // matches any of the filters, so we can mark it as valid.
+      if (filters.length === 0) {
+        return true
+      }
+
       for (const i in filters) {
         const filterType = this.$registry.get('viewFilter', filters[i].type)
         const filterValue = filters[i].value
         const rowValue = values[`field_${filters[i].field}`]
         const matches = filterType.matches(rowValue, filterValue)
         if (view.filter_type === 'AND' && !matches) {
+          // With an `AND` filter type, the row must match all the filters, so if
+          // one of the filters doesn't match we can mark it as isvalid.
           return false
         } else if (view.filter_type === 'OR' && matches) {
+          // With an 'OR' filter type, the row only has to match one of the filters,
+          // that is the case here so we can mark it as valid.
           return true
         }
       }
+
       if (view.filter_type === 'AND') {
+        // When this point has been reached with an `AND` filter type it means that
+        // the row matches all the filters and therefore we can mark it as valid.
         return true
       } else if (view.filter_type === 'OR') {
+        // When this point has been reached with an `OR` filter type it means that
+        // the row matches none of the filters and therefore we can mark it as invalid.
         return false
       }
     }
