@@ -225,6 +225,92 @@ def test_list_rows(api_client, data_fixture):
     assert response_json['results'][2]['id'] == row_2.id
     assert response_json['results'][3]['id'] == row_1.id
 
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    get_params = [f'filter__field_9999999__contains=last']
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_FILTER_FIELD_NOT_FOUND'
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    get_params = [f'filter__field_{field_2.id}__contains=100']
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD'
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    get_params = [f'filter__field_{field_2.id}__INVALID=100']
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST'
+    assert response_json['detail'] == 'The view filter type INVALID doesn\'t exist.'
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    get_params = [
+        f'filter__field_{field_1.id}__contains=last',
+        f'filter__field_{field_2.id}__equal=200'
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 1
+    assert len(response_json['results']) == 1
+    assert response_json['results'][0]['id'] == row_4.id
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    get_params = [
+        f'filter__field_{field_1.id}__contains=last',
+        f'filter__field_{field_2.id}__higher_than=110',
+        'filter_type=or'
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 2
+    assert len(response_json['results']) == 2
+    assert response_json['results'][0]['id'] == row_3.id
+    assert response_json['results'][1]['id'] == row_4.id
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    get_params = [
+        f'filter__field_{field_1.id}__equal=Product 1',
+        f'filter__field_{field_1.id}__equal=Product 3',
+        'filter_type=or'
+    ]
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 2
+    assert len(response_json['results']) == 2
+    assert response_json['results'][0]['id'] == row_1.id
+    assert response_json['results'][1]['id'] == row_3.id
+
 
 @pytest.mark.django_db
 def test_create_row(api_client, data_fixture):

@@ -185,8 +185,9 @@ class Registry(object):
         """
 
         if type_name not in self.registry:
-            raise self.does_not_exist_exception_class(f'The {self.name} type '
-                                                      f'{type_name} does not exist.')
+            raise self.does_not_exist_exception_class(
+                type_name, f'The {self.name} type {type_name} does not exist.'
+            )
 
         return self.registry[type_name]
 

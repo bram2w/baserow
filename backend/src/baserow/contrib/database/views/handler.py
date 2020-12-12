@@ -340,8 +340,7 @@ class ViewHandler:
         # Check if the field is allowed for this filter type.
         if field_type.type not in view_filter_type.compatible_field_types:
             raise ViewFilterTypeNotAllowedForField(
-                f'The view filter type {type_name} is not supported for field type '
-                f'{field_type.type}.'
+                type_name, field_type.type
             )
 
         # Check if field belongs to the grid views table
@@ -389,8 +388,8 @@ class ViewHandler:
         # Check if the field is allowed for this filter type.
         if field_type.type not in view_filter_type.compatible_field_types:
             raise ViewFilterTypeNotAllowedForField(
-                f'The view filter type {type_name} is not supported for field type '
-                f'{field_type.type}.'
+                type_name,
+                field_type.type
             )
 
         # If the field has changed we need to check if the field belongs to the table.

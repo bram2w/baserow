@@ -143,7 +143,15 @@
         <li>
           <a
             class="api-docs__nav-link"
-            :class="{ active: navActive === '#section-errors' }"
+            :class="{ active: navActive === 'section-filters' }"
+            @click.prevent="navigate('section-filters')"
+            >Filters</a
+          >
+        </li>
+        <li>
+          <a
+            class="api-docs__nav-link"
+            :class="{ active: navActive === 'section-errors' }"
             @click.prevent="navigate('section-errors')"
             >Errors</a
           >
@@ -232,6 +240,7 @@
                   <th>Field name</th>
                   <th>Type</th>
                   <th>Description</th>
+                  <td>Compatible filters</td>
                 </tr>
               </thead>
               <tbody>
@@ -245,6 +254,15 @@
                     </code>
                     <br />
                     {{ field._.description }}
+                  </td>
+                  <td>
+                    <code
+                      v-for="filter in getCompatibleFilterTypes(field.type)"
+                      :key="filter.type"
+                      class="api-docs__code api-docs__code--clickable margin-bottom-1 margin-right-1"
+                      @click.prevent="navigate('section-filters')"
+                      >{{ filter.type }}</code
+                    >
                   </td>
                 </tr>
               </tbody>
@@ -313,6 +331,39 @@
                 in ascending order. If some fields have the same value, that
                 subset will be ordered by
                 <code class="api-docs__code">field_2</code> in descending order.
+              </APIDocsParameter>
+              <APIDocsParameter
+                name="filter__{field}__{filter}"
+                :optional="true"
+                type="string"
+              >
+                The rows can optionally be filtered by the same view filters
+                available for the views. Multiple filters can be provided if
+                they follow the same format. The
+                <code class="api-docs__code">field</code> and
+                <code class="api-docs__code">filter</code> variable indicate how
+                to filter and the value indicates where to filter on.
+                <br /><br />
+                For example if you provide the following GET parameter
+                <code class="api-docs__code">filter__field_1__equal=test</code>
+                then only rows where the value of field_1 is equal to test are
+                going to be returned.
+                <a @click.prevent="navigate('section-filters')">
+                  A list of all filters can be found here.</a
+                >
+              </APIDocsParameter>
+              <APIDocsParameter
+                name="filter_type"
+                :optional="true"
+                type="string"
+                standard="'AND'"
+              >
+                <code class="api-docs__code">AND</code>: Indicates that the rows
+                must match all the provided filters.
+                <br />
+                <code class="api-docs__code">OR</code>: Indicates that the rows
+                only have to match one of the filters. <br /><br />
+                This works only if at two or more filters are provided.
               </APIDocsParameter>
             </ul>
           </div>
@@ -458,6 +509,34 @@
       </div>
       <div class="api-docs__item">
         <div class="api-docs__left">
+          <h2 id="section-filters" class="api-docs__heading-2">
+            Filters
+          </h2>
+          <table class="api-docs__table">
+            <thead>
+              <tr>
+                <th>Filter</th>
+                <th>Example value</th>
+                <th>Full example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="filter in viewFilterTypes" :key="filter.type">
+                <td>{{ filter.type }}</td>
+                <td>{{ filter.example }}</td>
+                <td>
+                  field {{ filter.name }}
+                  <template v-if="filter.example !== ''"
+                    >'{{ filter.example }}'</template
+                  >
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="api-docs__item">
+        <div class="api-docs__left">
           <h2 id="section-errors" class="api-docs__heading-2">
             HTTP Errors
           </h2>
@@ -596,6 +675,11 @@ export default {
       databasesOpen: false,
     }
   },
+  computed: {
+    viewFilterTypes() {
+      return Object.values(this.$registry.getAll('viewFilter'))
+    },
+  },
   mounted() {
     // When the user clicks outside the databases sidebar and it is open then it must
     // be closed.
@@ -674,6 +758,11 @@ export default {
     },
     getItemURL(table) {
       return this.getListURL(table) + '{row_id}/'
+    },
+    getCompatibleFilterTypes(fieldType) {
+      return this.viewFilterTypes.filter((filter) =>
+        filter.compatibleFieldTypes.includes(fieldType)
+      )
     },
   },
   head() {

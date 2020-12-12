@@ -5,6 +5,7 @@
 * Fixed bug where the arrow navigation didn't work for the dropdown component in
   combination with a search query.
 * Fixed bug where the page refreshes if you press enter in an input in the row modal.
+* Added filtering by GET parameter to the rows listing endpoint.
 * Fixed drifting context menu.
 
 ## Released (2020-12-01)
