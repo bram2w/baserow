@@ -61,6 +61,14 @@ class OrderByFieldNotPossible(Exception):
         super().__init__(*args, **kwargs)
 
 
+class FilterFieldNotFound(Exception):
+    """Raised when the field was not found in the table."""
+
+    def __init__(self, field_name=None, *args, **kwargs):
+        self.field_name = field_name
+        super().__init__(*args, **kwargs)
+
+
 class IncompatiblePrimaryFieldTypeError(Exception):
     """Raised when the primary field is changed to an incompatible field type."""
 

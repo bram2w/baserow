@@ -1,12 +1,21 @@
 import re
 
 from django.db import models
+from django.db.models import Q
 
 from baserow.core.mixins import OrderableMixin
 from baserow.contrib.database.fields.exceptions import (
-    OrderByFieldNotFound, OrderByFieldNotPossible
+    OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
 )
+from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.views.models import FILTER_TYPE_AND, FILTER_TYPE_OR
+from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
+
+
+deconstruct_filter_key_regex = re.compile(
+    r'filter__field_([0-9]+)__([a-zA-Z0-9_]*)$'
+)
 
 
 class TableModelQuerySet(models.QuerySet):
@@ -112,6 +121,81 @@ class TableModelQuerySet(models.QuerySet):
 
         order_by.append('id')
         return self.order_by(*order_by)
+
+    def filter_by_fields_object(self, filter_object, filter_type=FILTER_TYPE_AND):
+        """
+        Filters the query by the provided filters in the filter_object. The following
+        format `filter__field_{id}__{view_filter_type}` is expected as key and multiple
+        values can be provided as a list containing strings. Only the view filter types
+        are allowed.
+
+        Example: {
+            'filter__field_{id}__{view_filter_type}': {value}.
+        }
+
+        :param filter_object: The object containing the field and filter type as key
+            and the filter value as value.
+        :type filter_object: object
+        :param filter_type: Indicates if the provided filters are in an AND or OR
+            statement.
+        :type filter_type: str
+        :raises ValueError: Raised when the provided filer_type isn't AND or OR.
+        :raises FilterFieldNotFound: Raised when the provided field isn't found in
+            the model.
+        :raises ViewFilterTypeDoesNotExist: when the view filter type doesn't exist.
+        :raises ViewFilterTypeNotAllowedForField: when the view filter type isn't
+            compatible with field type.
+        :return: The filtered queryset.
+        :rtype: QuerySet
+        """
+
+        if filter_type not in [FILTER_TYPE_AND, FILTER_TYPE_OR]:
+            raise ValueError(f'Unknown filter type {filter_type}.')
+
+        q_filters = Q()
+
+        for key, values in filter_object.items():
+            matches = deconstruct_filter_key_regex.match(key)
+
+            if not matches:
+                continue
+
+            field_id = int(matches[1])
+
+            if field_id not in self.model._field_objects:
+                raise FilterFieldNotFound(
+                    field_id, f'Field {field_id} does not exist.'
+                )
+
+            field_name = self.model._field_objects[field_id]['name']
+            field_type = self.model._field_objects[field_id]['type'].type
+            model_field = self.model._meta.get_field(field_name)
+            view_filter_type = view_filter_type_registry.get(matches[2])
+
+            if field_type not in view_filter_type.compatible_field_types:
+                raise ViewFilterTypeNotAllowedForField(
+                    matches[2],
+                    field_type,
+                )
+
+            if not isinstance(values, list):
+                values = [values]
+
+            for value in values:
+                q_filter = view_filter_type.get_filter(
+                    field_name,
+                    value,
+                    model_field
+                )
+
+                # Depending on filter type we are going to combine the Q either as
+                # AND or as OR.
+                if filter_type == FILTER_TYPE_AND:
+                    q_filters &= q_filter
+                elif filter_type == FILTER_TYPE_OR:
+                    q_filters |= q_filter
+
+        return self.filter(q_filters)
 
 
 class TableModelManager(models.Manager):

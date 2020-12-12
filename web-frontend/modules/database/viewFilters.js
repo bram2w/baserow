@@ -13,10 +13,15 @@ export class ViewFilterType extends Registerable {
     return null
   }
 
+  getExample() {
+    return 'string'
+  }
+
   constructor() {
     super()
     this.type = this.getType()
     this.name = this.getName()
+    this.example = this.getExample()
     this.compatibleFieldTypes = this.getCompatibleFieldTypes()
 
     if (this.type === null) {
@@ -191,6 +196,10 @@ export class DateEqualViewFilterType extends ViewFilterType {
     return 'is date'
   }
 
+  getExample() {
+    return '2020-01-01'
+  }
+
   getInputComponent() {
     return ViewFilterTypeDate
   }
@@ -218,6 +227,10 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
 
   getName() {
     return 'is not date'
+  }
+
+  getExample() {
+    return '2020-01-01'
   }
 
   getInputComponent() {
@@ -249,6 +262,10 @@ export class HigherThanViewFilterType extends ViewFilterType {
     return 'higher than'
   }
 
+  getExample() {
+    return '100'
+  }
+
   getInputComponent() {
     return ViewFilterTypeNumber
   }
@@ -275,6 +292,10 @@ export class LowerThanViewFilterType extends ViewFilterType {
 
   getName() {
     return 'lower than'
+  }
+
+  getExample() {
+    return '100'
   }
 
   getInputComponent() {
@@ -305,6 +326,10 @@ export class BooleanViewFilterType extends ViewFilterType {
     return 'equals'
   }
 
+  getExample() {
+    return 'true'
+  }
+
   getInputComponent() {
     return ViewFilterTypeBoolean
   }
@@ -329,6 +354,10 @@ export class EmptyViewFilterType extends ViewFilterType {
 
   getName() {
     return 'is empty'
+  }
+
+  getExample() {
+    return ''
   }
 
   prepareValue(value) {
@@ -366,6 +395,10 @@ export class NotEmptyViewFilterType extends ViewFilterType {
 
   getName() {
     return 'is not empty'
+  }
+
+  getExample() {
+    return ''
   }
 
   prepareValue(value) {
