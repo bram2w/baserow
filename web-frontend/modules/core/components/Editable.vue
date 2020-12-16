@@ -42,6 +42,7 @@ export default {
      */
     edit() {
       this.editing = true
+      this.$emit('editing', true)
       this.$nextTick(() => {
         focusEnd(this.$refs.editable)
       })
@@ -53,6 +54,7 @@ export default {
      */
     change() {
       this.editing = false
+      this.$emit('editing', false)
 
       if (this.oldValue === this.newValue) {
         return

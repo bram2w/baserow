@@ -9,6 +9,7 @@
 * Fixed drifting context menu.
 * Store updated and created timestamp for the groups, applications, tables, views,
   fields and rows.
+* Made the file name editable.
 
 ## Released (2020-12-01)
 
