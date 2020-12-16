@@ -3,7 +3,7 @@ import re
 from django.db import models
 from django.db.models import Q
 
-from baserow.core.mixins import OrderableMixin
+from baserow.core.mixins import OrderableMixin, CreatedAndUpdatedOnMixin
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
 )
@@ -203,7 +203,7 @@ class TableModelManager(models.Manager):
         return TableModelQuerySet(self.model, using=self._db)
 
 
-class Table(OrderableMixin, models.Model):
+class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
     database = models.ForeignKey('database.Database', on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
@@ -325,7 +325,7 @@ class Table(OrderableMixin, models.Model):
         # Create the model class.
         model = type(
             str(f'Table{self.pk}Model'),
-            (models.Model,),
+            (CreatedAndUpdatedOnMixin, models.Model,),
             attrs
         )
 

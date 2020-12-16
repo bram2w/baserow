@@ -39,7 +39,7 @@ def test_get_table_model(data_fixture):
     assert model.__name__ == f'Table{table.id}Model'
     assert model._generated_table_model
     assert model._meta.db_table == f'database_table_{table.id}'
-    assert len(model._meta.get_fields()) == 4
+    assert len(model._meta.get_fields()) == 4 + 2  # Two date fields
 
     color_field = model._meta.get_field('color')
     horsepower_field = model._meta.get_field('horsepower')
@@ -74,7 +74,7 @@ def test_get_table_model(data_fixture):
 
     model_2 = table.get_model(fields=[number_field], field_ids=[text_field.id],
                               attribute_names=True)
-    assert len(model_2._meta.get_fields()) == 3
+    assert len(model_2._meta.get_fields()) == 3 + 2  # Two date fields.
 
     color_field = model_2._meta.get_field('color')
     assert color_field
@@ -86,7 +86,7 @@ def test_get_table_model(data_fixture):
 
     model_3 = table.get_model()
     assert model_3._meta.db_table == f'database_table_{table.id}'
-    assert len(model_3._meta.get_fields()) == 4
+    assert len(model_3._meta.get_fields()) == 4 + 2  # Two date fields.
 
     field_1 = model_3._meta.get_field(f'field_{text_field.id}')
     assert isinstance(field_1, models.TextField)
@@ -104,7 +104,7 @@ def test_get_table_model(data_fixture):
                                                   text_default='orange')
     model = table.get_model(attribute_names=True)
     field_names = [f.name for f in model._meta.get_fields()]
-    assert len(field_names) == 5
+    assert len(field_names) == 5 + 2  # Two date fields.
     assert f'{text_field.model_attribute_name}_field_{text_field.id}' in field_names
     assert f'{text_field_2.model_attribute_name}_field_{text_field.id}' in field_names
 
