@@ -23,6 +23,12 @@
   @include fixed-height($file-field-modal-head-height, 14px);
 }
 
+.file-field-modal__rename {
+  font-size: 12px;
+  margin-left: 4px;
+  color: $white;
+}
+
 .file-field-modal__close {
   border-radius: 3px;
   color: $white;

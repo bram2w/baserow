@@ -27,6 +27,14 @@ export default {
       newValue.push(...files)
       this.$emit('update', newValue, value)
     },
+    /**
+     * Updates the visible name of the file with the given index.
+     */
+    renameFile(value, index, newName) {
+      const newValue = JSON.parse(JSON.stringify(value))
+      newValue[index].visible_name = newName
+      this.$emit('update', newValue, value)
+    },
     getIconClass(mimeType) {
       return mimetype2fa(mimeType)
     },
