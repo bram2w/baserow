@@ -7,6 +7,8 @@
 * Fixed bug where the page refreshes if you press enter in an input in the row modal.
 * Added filtering by GET parameter to the rows listing endpoint.
 * Fixed drifting context menu.
+* Store updated and created timestamp for the groups, applications, tables, views,
+  fields and rows.
 
 ## Released (2020-12-01)
 

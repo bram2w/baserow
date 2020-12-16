@@ -119,3 +119,16 @@ class PolymorphicContentTypeMixin:
         # properties so that they wont return the values of the old type.
         del self.specific
         del self.specific_class
+
+
+class CreatedAndUpdatedOnMixin(models.Model):
+    """
+    This mixin introduces two new fields that store the created on and updated on
+    timestamps.
+    """
+
+    created_on = models.DateTimeField(auto_now_add=True, blank=True, editable=False)
+    updated_on = models.DateTimeField(auto_now=True, blank=True, editable=False)
+
+    class Meta:
+        abstract = True

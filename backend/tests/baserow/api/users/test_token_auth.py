@@ -1,6 +1,8 @@
 import pytest
+from pytz import timezone
 from unittest.mock import patch
 from datetime import datetime
+from freezegun import freeze_time
 
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
@@ -19,8 +21,10 @@ User = get_user_model()
 
 @pytest.mark.django_db
 def test_token_auth(api_client, data_fixture):
-    data_fixture.create_user(email='test@test.nl', password='password',
-                             first_name='Test1')
+    user = data_fixture.create_user(email='test@test.nl', password='password',
+                                    first_name='Test1')
+
+    assert not user.last_login
 
     response = api_client.post(reverse('api:user:token_auth'), {
         'username': 'no_existing@test.nl',
@@ -38,27 +42,35 @@ def test_token_auth(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert len(json['non_field_errors']) > 0
 
-    response = api_client.post(reverse('api:user:token_auth'), {
-        'username': 'test@test.nl',
-        'password': 'password'
-    },  format='json')
-    json = response.json()
-    assert response.status_code == HTTP_200_OK
-    assert 'token' in json
-    assert 'user' in json
-    assert json['user']['username'] == 'test@test.nl'
-    assert json['user']['first_name'] == 'Test1'
+    with freeze_time('2020-01-01 12:00'):
+        response = api_client.post(reverse('api:user:token_auth'), {
+            'username': 'test@test.nl',
+            'password': 'password'
+        },  format='json')
+        json = response.json()
+        assert response.status_code == HTTP_200_OK
+        assert 'token' in json
+        assert 'user' in json
+        assert json['user']['username'] == 'test@test.nl'
+        assert json['user']['first_name'] == 'Test1'
 
-    response = api_client.post(reverse('api:user:token_auth'), {
-        'username': ' teSt@teSt.nL ',
-        'password': 'password'
-    },  format='json')
-    json = response.json()
-    assert response.status_code == HTTP_200_OK
-    assert 'token' in json
-    assert 'user' in json
-    assert json['user']['username'] == 'test@test.nl'
-    assert json['user']['first_name'] == 'Test1'
+    user.refresh_from_db()
+    assert user.last_login == datetime(2020, 1, 1, 12, 00, tzinfo=timezone('UTC'))
+
+    with freeze_time('2020-01-02 12:00'):
+        response = api_client.post(reverse('api:user:token_auth'), {
+            'username': ' teSt@teSt.nL ',
+            'password': 'password'
+        },  format='json')
+        json = response.json()
+        assert response.status_code == HTTP_200_OK
+        assert 'token' in json
+        assert 'user' in json
+        assert json['user']['username'] == 'test@test.nl'
+        assert json['user']['first_name'] == 'Test1'
+
+    user.refresh_from_db()
+    assert user.last_login == datetime(2020, 1, 2, 12, 00, tzinfo=timezone('UTC'))
 
 
 @pytest.mark.django_db

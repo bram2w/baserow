@@ -1,7 +1,9 @@
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 
-from baserow.core.mixins import OrderableMixin, PolymorphicContentTypeMixin
+from baserow.core.mixins import (
+    OrderableMixin, PolymorphicContentTypeMixin, CreatedAndUpdatedOnMixin
+)
 from baserow.contrib.database.fields.models import Field
 
 
@@ -24,7 +26,8 @@ def get_default_view_content_type():
     return ContentType.objects.get_for_model(View)
 
 
-class View(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
+class View(CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixin,
+           models.Model):
     table = models.ForeignKey('database.Table', on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
