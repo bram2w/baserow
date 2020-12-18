@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import axios from 'axios'
 import _ from 'lodash'
+import BigNumber from 'bignumber.js'
 
 import { uuid } from '@baserow/modules/core/utils/string'
 import GridService from '@baserow/modules/database/services/view/grid'
@@ -81,7 +82,7 @@ export const mutations = {
   /**
    * It will add and remove rows to the state based on the provided values. For example
    * if prependToRows is a positive number that amount of the provided rows will be
-   * added to the state. If that number is negative that amoun will be removed from
+   * added to the state. If that number is negative that amount will be removed from
    * the state. Same goes for the appendToRows, only then it will be appended.
    */
   ADD_ROWS(
@@ -108,6 +109,29 @@ export const mutations = {
         state.rows.length - Math.abs(appendToRows)
       )
     }
+  },
+  /**
+   * Inserts a new row at a specific index.
+   */
+  INSERT_ROW_AT(state, { row, index }) {
+    state.count++
+    state.bufferLimit++
+
+    const min = new BigNumber(row.order.split('.')[0])
+    const max = new BigNumber(row.order)
+
+    // Decrease all the orders that have already have been inserted before the same
+    // row.
+    state.rows.forEach((row) => {
+      const order = new BigNumber(row.order)
+      if (order.isGreaterThan(min) && order.isLessThanOrEqualTo(max)) {
+        row.order = order
+          .minus(new BigNumber('0.00000000000000000001'))
+          .toString()
+      }
+    })
+
+    state.rows.splice(index, 0, row)
   },
   SET_ROWS_INDEX(state, { startIndex, endIndex, top }) {
     state.rowsStartIndex = startIndex
@@ -137,9 +161,13 @@ export const mutations = {
       state.rows.splice(index, 1)
     }
   },
-  FINALIZE_ROW(state, { index, id }) {
-    state.rows[index].id = id
-    state.rows[index]._.loading = false
+  FINALIZE_ROW(state, { oldId, id, order }) {
+    const index = state.rows.findIndex((item) => item.id === oldId)
+    if (index !== -1) {
+      state.rows[index].id = id
+      state.rows[index].order = order
+      state.rows[index]._.loading = false
+    }
   },
   SET_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
@@ -155,7 +183,7 @@ export const mutations = {
   SORT_ROWS(state, sortFunction) {
     state.rows.sort(sortFunction)
 
-    // Because all the rows have been sorted again we can safely asume they are all in
+    // Because all the rows have been sorted again we can safely assume they are all in
     // the right order again.
     state.rows.forEach((row) => {
       if (!row._.matchSortings) {
@@ -581,7 +609,7 @@ export const actions = {
    */
   updateMatchSortings(
     { commit, getters, rootGetters },
-    { view, row, fields, primary, overrides = {} }
+    { view, row, fields, primary = null, overrides = {} }
   ) {
     const values = JSON.parse(JSON.stringify(row))
     Object.keys(overrides).forEach((key) => {
@@ -631,7 +659,7 @@ export const actions = {
    */
   async create(
     { commit, getters, rootGetters, dispatch },
-    { view, table, fields, values = {} }
+    { view, table, fields, values = {}, before = null }
   ) {
     // Fill the not provided values with the empty value of the field type so we can
     // immediately commit the created row to the state.
@@ -651,26 +679,44 @@ export const actions = {
     row.id = uuid()
     row._.loading = true
 
-    commit('ADD_ROWS', {
-      rows: [row],
-      prependToRows: 0,
-      appendToRows: 1,
-      count: getters.getCount + 1,
-      bufferStartIndex: getters.getBufferStartIndex,
-      bufferLimit: getters.getBufferLimit + 1,
-    })
+    if (before !== null) {
+      // If the row has been placed before another row we can specifically insert to
+      // the row at a calculated index.
+      const index = getters.getAllRows.findIndex((r) => r.id === before.id)
+      const change = new BigNumber('0.00000000000000000001')
+      row.order = new BigNumber(before.order).minus(change).toString()
+      commit('INSERT_ROW_AT', { row, index })
+    } else {
+      // By default the row is inserted at the end.
+      commit('ADD_ROWS', {
+        rows: [row],
+        prependToRows: 0,
+        appendToRows: 1,
+        count: getters.getCount + 1,
+        bufferStartIndex: getters.getBufferStartIndex,
+        bufferLimit: getters.getBufferLimit + 1,
+      })
+    }
+
+    // Recalculate all the values.
     dispatch('visibleByScrollTop', {
       scrollTop: null,
       windowHeight: null,
     })
-    const index = getters.getRowsLength - 1
 
     // Check if the newly created row matches the filters.
     dispatch('updateMatchFilters', { view, row })
 
+    // Check if the newly created row matches the sortings.
+    dispatch('updateMatchSortings', { view, fields, row })
+
     try {
-      const { data } = await RowService(this.$client).create(table.id, values)
-      commit('FINALIZE_ROW', { index, id: data.id })
+      const { data } = await RowService(this.$client).create(
+        table.id,
+        values,
+        before !== null ? before.id : null
+      )
+      commit('FINALIZE_ROW', { oldId: row.id, id: data.id, order: data.order })
     } catch (error) {
       commit('DELETE_ROW', row.id)
       throw error

@@ -152,10 +152,10 @@ def test_get_example_row_serializer_class():
         len(field_type_registry.registry.values())
     )
     assert len(response_serializer._declared_fields) == (
-        len(request_serializer._declared_fields) + 1
+        len(request_serializer._declared_fields) + 2  # fields + id + order
     )
     assert len(response_serializer._declared_fields) == (
-        len(field_type_registry.registry.values()) + 1
+        len(field_type_registry.registry.values()) + 2  # fields + id + order
     )
 
     assert isinstance(response_serializer._declared_fields['id'],

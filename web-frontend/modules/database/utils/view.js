@@ -1,14 +1,21 @@
 import { firstBy } from 'thenby'
+import BigNumber from 'bignumber.js'
 
 /**
  * Generates a sort function based on the provided sortings.
  */
-export function getRowSortFunction($registry, sortings, fields, primary) {
+export function getRowSortFunction(
+  $registry,
+  sortings,
+  fields,
+  primary = null
+) {
   let sortFunction = firstBy()
 
   sortings.forEach((sort) => {
+    // Find the field that is related to the sort.
     let field = fields.find((f) => f.id === sort.field)
-    if (field === undefined && primary.id === sort.field) {
+    if (field === undefined && primary !== null && primary.id === sort.field) {
       field = primary
     }
 
@@ -20,6 +27,9 @@ export function getRowSortFunction($registry, sortings, fields, primary) {
     }
   })
 
+  sortFunction = sortFunction.thenBy((a, b) =>
+    new BigNumber(a.order).minus(new BigNumber(b.order))
+  )
   sortFunction = sortFunction.thenBy((a, b) => a.id - b.id)
   return sortFunction
 }

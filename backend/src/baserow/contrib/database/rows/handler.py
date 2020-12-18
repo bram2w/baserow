@@ -1,6 +1,9 @@
 import re
+from math import floor, ceil
+from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Max, F
 from django.db.models.fields.related import ManyToManyField
 from django.conf import settings
 
@@ -114,7 +117,7 @@ class RowHandler:
 
         return row
 
-    def create_row(self, user, table, values=None, model=None):
+    def create_row(self, user, table, values=None, model=None, before=None):
         """
         Creates a new row for a given table with the provided values.
 
@@ -128,6 +131,9 @@ class RowHandler:
         :param model: If a model is already generated it can be provided here to avoid
             having to generate the model again.
         :type model: Model
+        :param before: If provided the new row will be placed right before that row
+            instance.
+        :type before: Table
         :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created row instance.
         :rtype: Model
@@ -145,6 +151,26 @@ class RowHandler:
 
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
+
+        if before:
+            # Here we calculate the order value, which indicates the position of the
+            # row, by subtracting a fraction of the row that it must be placed
+            # before. The same fraction is also going to be subtracted from the other
+            # rows that have been placed before. By using these fractions we don't
+            # have to re-order every row in the table.
+            change = Decimal('0.00000000000000000001')
+            values['order'] = before.order - change
+            model.objects.filter(
+                order__gt=floor(values['order']),
+                order__lte=values['order']
+            ).update(order=F('order') - change)
+        else:
+            # Because the row is by default added as last, we have to figure out what
+            # the highest order is and increase that by one. Because the order of new
+            # rows should always be a whole number we round it up.
+            values['order'] = ceil(
+                model.objects.aggregate(max=Max('order')).get('max') or Decimal('0')
+            ) + 1
 
         instance = model.objects.create(**values)
 

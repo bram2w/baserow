@@ -119,6 +119,7 @@ class TableModelQuerySet(models.QuerySet):
                 field_name
             )
 
+        order_by.append('order')
         order_by.append('id')
         return self.order_by(*order_by)
 
@@ -252,7 +253,7 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
             'managed': False,
             'db_table': f'database_table_{self.id}',
             'app_label': app_label,
-            'ordering': ['id']
+            'ordering': ['order', 'id']
         })
 
         attrs = {
@@ -266,7 +267,10 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
             '_field_objects': {},
             # We are using our own table model manager to implement some queryset
             # helpers.
-            'objects': TableModelManager()
+            'objects': TableModelManager(),
+            # Indicates which position the row has.
+            'order': models.DecimalField(max_digits=40, decimal_places=20,
+                                         editable=False, db_index=True, default=1)
         }
 
         # Construct a query to fetch all the fields of that table.

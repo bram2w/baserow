@@ -14,8 +14,14 @@ export default (client) => {
 
       return client.get(`/database/rows/table/${tableId}/`, config)
     },
-    create(tableId, values) {
-      return client.post(`/database/rows/table/${tableId}/`, values)
+    create(tableId, values, beforeId = null) {
+      const config = { params: {} }
+
+      if (beforeId !== null) {
+        config.params.before = beforeId
+      }
+
+      return client.post(`/database/rows/table/${tableId}/`, values, config)
     },
     update(tableId, rowId, values) {
       return client.patch(`/database/rows/table/${tableId}/${rowId}/`, values)

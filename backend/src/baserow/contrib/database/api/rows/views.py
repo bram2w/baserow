@@ -176,7 +176,7 @@ class RowsView(APIView):
         search = request.GET.get('search')
         order_by = request.GET.get('order_by')
 
-        queryset = model.objects.all().enhance_by_fields().order_by('id')
+        queryset = model.objects.all().enhance_by_fields()
 
         if search:
             queryset = queryset.search_all_fields(search)
@@ -206,6 +206,11 @@ class RowsView(APIView):
                 name='table_id', location=OpenApiParameter.PATH, type=OpenApiTypes.INT,
                 description='Creates a row in the table related to the provided '
                             'value.'
+            ),
+            OpenApiParameter(
+                name='before', location=OpenApiParameter.QUERY, type=OpenApiTypes.INT,
+                description='If provided then the newly created row will be '
+                            'positioned before the row with the provided id.'
             )
         ],
         tags=['Database table rows'],
@@ -232,7 +237,8 @@ class RowsView(APIView):
             ]),
             401: get_error_schema(['ERROR_NO_PERMISSION_TO_TABLE']),
             404: get_error_schema([
-                'ERROR_TABLE_DOES_NOT_EXIST'
+                'ERROR_TABLE_DOES_NOT_EXIST',
+                'ERROR_ROW_DOES_NOT_EXIST'
             ])
         }
     )
@@ -241,7 +247,8 @@ class RowsView(APIView):
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
-        UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST
+        UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
+        RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
     })
     def post(self, request, table_id):
         """
@@ -256,7 +263,14 @@ class RowsView(APIView):
         validation_serializer = get_row_serializer_class(model)
         data = validate_data(validation_serializer, request.data)
 
-        row = RowHandler().create_row(request.user, table, data, model)
+        before_id = request.GET.get('before')
+        before = (
+            RowHandler().get_row(request.user, table, before_id, model)
+            if before_id else
+            None
+        )
+
+        row = RowHandler().create_row(request.user, table, data, model, before=before)
         serializer_class = get_row_serializer_class(model, RowSerializer,
                                                     is_response=True)
         serializer = serializer_class(row)

@@ -1,4 +1,5 @@
 import pytest
+from decimal import Decimal
 
 from unittest.mock import MagicMock
 
@@ -27,6 +28,7 @@ def test_group_user_get_next_order(data_fixture):
 
 @pytest.mark.django_db
 def test_get_table_model(data_fixture):
+    default_model_fields_count = 3
     table = data_fixture.create_database_table(name='Cars')
     text_field = data_fixture.create_text_field(table=table, order=0, name='Color',
                                                 text_default='white')
@@ -39,7 +41,7 @@ def test_get_table_model(data_fixture):
     assert model.__name__ == f'Table{table.id}Model'
     assert model._generated_table_model
     assert model._meta.db_table == f'database_table_{table.id}'
-    assert len(model._meta.get_fields()) == 4 + 2  # Two date fields
+    assert len(model._meta.get_fields()) == 4 + default_model_fields_count
 
     color_field = model._meta.get_field('color')
     horsepower_field = model._meta.get_field('horsepower')
@@ -74,7 +76,7 @@ def test_get_table_model(data_fixture):
 
     model_2 = table.get_model(fields=[number_field], field_ids=[text_field.id],
                               attribute_names=True)
-    assert len(model_2._meta.get_fields()) == 3 + 2  # Two date fields.
+    assert len(model_2._meta.get_fields()) == 3 + default_model_fields_count
 
     color_field = model_2._meta.get_field('color')
     assert color_field
@@ -86,7 +88,7 @@ def test_get_table_model(data_fixture):
 
     model_3 = table.get_model()
     assert model_3._meta.db_table == f'database_table_{table.id}'
-    assert len(model_3._meta.get_fields()) == 4 + 2  # Two date fields.
+    assert len(model_3._meta.get_fields()) == 4 + default_model_fields_count
 
     field_1 = model_3._meta.get_field(f'field_{text_field.id}')
     assert isinstance(field_1, models.TextField)
@@ -104,7 +106,7 @@ def test_get_table_model(data_fixture):
                                                   text_default='orange')
     model = table.get_model(attribute_names=True)
     field_names = [f.name for f in model._meta.get_fields()]
-    assert len(field_names) == 5 + 2  # Two date fields.
+    assert len(field_names) == 5 + default_model_fields_count
     assert f'{text_field.model_attribute_name}_field_{text_field.id}' in field_names
     assert f'{text_field_2.model_attribute_name}_field_{text_field.id}' in field_names
 
@@ -286,6 +288,24 @@ def test_order_by_fields_string_queryset(data_fixture):
     assert results[1].id == row_1.id
     assert results[2].id == row_4.id
     assert results[3].id == row_2.id
+
+    row_5 = model.objects.create(
+        name='Audi',
+        color='Red',
+        price=2000,
+        description='Old times',
+        order=Decimal('0.1')
+    )
+
+    row_2.order = Decimal('0.1')
+    results = model.objects.all().order_by_fields_string(
+        f'{name_field.id}'
+    )
+    assert results[0].id == row_5.id
+    assert results[1].id == row_2.id
+    assert results[2].id == row_1.id
+    assert results[3].id == row_3.id
+    assert results[4].id == row_4.id
 
 
 @pytest.mark.django_db
