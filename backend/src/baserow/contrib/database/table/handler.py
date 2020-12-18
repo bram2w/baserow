@@ -179,11 +179,11 @@ class TableHandler:
         ViewHandler().create_view(user, table, GridViewType.type, name='Grid')
 
         bulk_data = [
-            model(**{
+            model(order=index + 1, **{
                 f'field_{fields[index].id}': str(value)
                 for index, value in enumerate(row)
             })
-            for row in data
+            for index, row in enumerate(data)
         ]
         model.objects.bulk_create(bulk_data)
 
@@ -215,8 +215,8 @@ class TableHandler:
         view_handler.update_grid_view_field_options(view, field_options, fields=fields)
 
         model = table.get_model(attribute_names=True)
-        model.objects.create(name='Tesla', active=True)
-        model.objects.create(name='Amazon', active=False)
+        model.objects.create(name='Tesla', active=True, order=1)
+        model.objects.create(name='Amazon', active=False, order=2)
 
     def update_table(self, user, table, **kwargs):
         """

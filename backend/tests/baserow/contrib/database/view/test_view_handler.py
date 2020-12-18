@@ -1,4 +1,5 @@
 import pytest
+from decimal import Decimal
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.views.handler import ViewHandler
@@ -662,6 +663,20 @@ def test_apply_sortings(data_fixture):
     rows = view_handler.apply_sorting(grid_view, model.objects.all())
     row_ids = [row.id for row in rows]
     assert row_ids == [row_4.id, row_5.id, row_6.id, row_1.id, row_2.id, row_3.id]
+
+    row_7 = model.objects.create(**{
+        f'field_{text_field.id}': 'Aaa',
+        f'field_{number_field.id}': 30,
+        f'field_{boolean_field.id}': True,
+        'order': Decimal('0.1')
+    })
+
+    sort.delete()
+    sort_2.delete()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_7.id, row_1.id, row_2.id, row_3.id, row_4.id, row_5.id,
+                       row_6.id]
 
 
 @pytest.mark.django_db

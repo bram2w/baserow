@@ -10,6 +10,7 @@
 * Store updated and created timestamp for the groups, applications, tables, views,
   fields and rows.
 * Made the file name editable.
+* Made the rows orderable and added the ability to insert a row at a given position.
 
 ## Released (2020-12-01)
 

@@ -27,10 +27,10 @@ def test_list_rows(api_client, data_fixture):
                                             True)
 
     model = table.get_model(attribute_names=True)
-    row_1 = model.objects.create(name='Product 1', price=50)
-    row_2 = model.objects.create(name='Product 2/3', price=100)
-    row_3 = model.objects.create(name='Product 3', price=150)
-    row_4 = model.objects.create(name='Last product', price=200)
+    row_1 = model.objects.create(name='Product 1', price=50, order=Decimal('1'))
+    row_2 = model.objects.create(name='Product 2/3', price=100, order=Decimal('2'))
+    row_3 = model.objects.create(name='Product 3', price=150, order=Decimal('3'))
+    row_4 = model.objects.create(name='Last product', price=200, order=Decimal('4'))
 
     response = api_client.get(
         reverse('api:database:rows:list', kwargs={'table_id': 999999}),
@@ -83,6 +83,7 @@ def test_list_rows(api_client, data_fixture):
     assert response_json['results'][0]['id'] == row_1.id
     assert response_json['results'][0][f'field_{field_1.id}'] == 'Product 1'
     assert response_json['results'][0][f'field_{field_2.id}'] == 50
+    assert response_json['results'][0]['order'] == '1.00000000000000000000'
 
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
     response = api_client.get(
@@ -311,6 +312,22 @@ def test_list_rows(api_client, data_fixture):
     assert response_json['results'][0]['id'] == row_1.id
     assert response_json['results'][1]['id'] == row_3.id
 
+    row_2.order = Decimal('999')
+    row_2.save()
+    response = api_client.get(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['count'] == 4
+    assert len(response_json['results']) == 4
+    assert response_json['results'][0]['id'] == row_1.id
+    assert response_json['results'][1]['id'] == row_3.id
+    assert response_json['results'][2]['id'] == row_4.id
+    assert response_json['results'][3]['id'] == row_2.id
+
 
 @pytest.mark.django_db
 def test_create_row(api_client, data_fixture):
@@ -367,6 +384,16 @@ def test_create_row(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
 
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.post(
+        f'{url}?before=99999',
+        {f'field_{text_field.id}': 'Green'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()['error'] == 'ERROR_ROW_DOES_NOT_EXIST'
+
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),
         {
@@ -397,6 +424,7 @@ def test_create_row(api_client, data_fixture):
     assert not response_json_row_1[f'field_{number_field.id}']
     assert response_json_row_1[f'field_{boolean_field.id}'] is False
     assert response_json_row_1[f'field_{text_field_2.id}'] is None
+    assert response_json_row_1['order'] == '1.00000000000000000000'
 
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),
@@ -414,6 +442,7 @@ def test_create_row(api_client, data_fixture):
     assert not response_json_row_2[f'field_{number_field.id}']
     assert response_json_row_2[f'field_{boolean_field.id}'] is False
     assert response_json_row_2[f'field_{text_field_2.id}'] == ''
+    assert response_json_row_2['order'] == '2.00000000000000000000'
 
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),
@@ -432,6 +461,7 @@ def test_create_row(api_client, data_fixture):
     assert response_json_row_3[f'field_{number_field.id}'] == 120
     assert response_json_row_3[f'field_{boolean_field.id}']
     assert response_json_row_3[f'field_{text_field_2.id}'] == 'Not important'
+    assert response_json_row_3['order'] == '3.00000000000000000000'
 
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),
@@ -450,10 +480,31 @@ def test_create_row(api_client, data_fixture):
     assert response_json_row_4[f'field_{number_field.id}'] == 240
     assert response_json_row_4[f'field_{boolean_field.id}']
     assert response_json_row_4[f'field_{text_field_2.id}'] == ''
+    assert response_json_row_4['order'] == '4.00000000000000000000'
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.post(
+        f"{url}?before={response_json_row_3['id']}",
+        {
+            f'field_{text_field.id}': 'Red',
+            f'field_{number_field.id}': 480,
+            f'field_{boolean_field.id}': False,
+            f'field_{text_field_2.id}': ''
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'Token {token.key}'
+    )
+    response_json_row_5 = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json_row_5[f'field_{text_field.id}'] == 'Red'
+    assert response_json_row_5[f'field_{number_field.id}'] == 480
+    assert not response_json_row_5[f'field_{boolean_field.id}']
+    assert response_json_row_5[f'field_{text_field_2.id}'] == ''
+    assert response_json_row_5['order'] == '2.99999999999999999999'
 
     model = table.get_model()
-    assert model.objects.all().count() == 4
-    rows = model.objects.all().order_by('id')
+    assert model.objects.all().count() == 5
+    rows = model.objects.all()
 
     row_1 = rows[0]
     assert row_1.id == response_json_row_1['id']
@@ -467,16 +518,23 @@ def test_create_row(api_client, data_fixture):
     assert getattr(row_2, f'field_{text_field.id}') == 'white'
     assert getattr(row_2, f'field_{number_field.id}') is None
     assert getattr(row_2, f'field_{boolean_field.id}') is False
-    assert getattr(row_1, f'field_{text_field_2.id}') is None
+    assert getattr(row_2, f'field_{text_field_2.id}') == ''
 
-    row_3 = rows[2]
+    row_5 = rows[2]
+    assert row_5.id == response_json_row_5['id']
+    assert getattr(row_5, f'field_{text_field.id}') == 'Red'
+    assert getattr(row_5, f'field_{number_field.id}') == 480
+    assert getattr(row_5, f'field_{boolean_field.id}') is False
+    assert getattr(row_5, f'field_{text_field_2.id}') == ''
+
+    row_3 = rows[3]
     assert row_3.id == response_json_row_3['id']
     assert getattr(row_3, f'field_{text_field.id}') == 'Green'
     assert getattr(row_3, f'field_{number_field.id}') == 120
     assert getattr(row_3, f'field_{boolean_field.id}') is True
     assert getattr(row_3, f'field_{text_field_2.id}') == 'Not important'
 
-    row_4 = rows[3]
+    row_4 = rows[4]
     assert row_4.id == response_json_row_4['id']
     assert getattr(row_4, f'field_{text_field.id}') == 'Purple'
     assert getattr(row_4, f'field_{number_field.id}') == 240

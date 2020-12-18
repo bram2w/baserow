@@ -476,6 +476,7 @@ class ViewHandler:
 
             order_by.append(order)
 
+        order_by.append('order')
         order_by.append('id')
         queryset = queryset.order_by(*order_by)
 

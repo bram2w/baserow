@@ -23,8 +23,8 @@
             ></Editable>
             <a
               v-show="!renaming"
-              @click="$refs.rename.edit()"
               class="file-field-modal__rename"
+              @click="$refs.rename.edit()"
             >
               <i class="fa fa-pen"></i>
             </a>
