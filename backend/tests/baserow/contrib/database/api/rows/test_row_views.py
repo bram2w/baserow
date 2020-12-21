@@ -20,6 +20,7 @@ def test_list_rows(api_client, data_fixture):
     table_2 = data_fixture.create_database_table()
     field_1 = data_fixture.create_text_field(name='Name', table=table, primary=True)
     field_2 = data_fixture.create_number_field(name='Price', table=table)
+    field_3 = data_fixture.create_text_field()
 
     token = TokenHandler().create_token(user, table.database.group, 'Good')
     wrong_token = TokenHandler().create_token(user, table.database.group, 'Wrong')
@@ -84,6 +85,29 @@ def test_list_rows(api_client, data_fixture):
     assert response_json['results'][0][f'field_{field_1.id}'] == 'Product 1'
     assert response_json['results'][0][f'field_{field_2.id}'] == 50
     assert response_json['results'][0]['order'] == '1.00000000000000000000'
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?include=field_{field_1.id},field_{field_3.id}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert f'field_{field_1.id}' in response_json['results'][0]
+    assert f'field_{field_2.id}' not in response_json['results'][0]
+    assert f'field_{field_3.id}' not in response_json['results'][0]
+
+    url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
+    response = api_client.get(
+        f'{url}?exclude=field_{field_1.id}',
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {jwt_token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert f'field_{field_1.id}' not in response_json['results'][0]
+    assert f'field_{field_2.id}' in response_json['results'][0]
 
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
     response = api_client.get(
