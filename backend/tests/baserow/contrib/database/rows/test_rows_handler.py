@@ -21,6 +21,82 @@ def test_get_field_ids_from_dict():
     }) == [1, 2, 3]
 
 
+def test_extract_field_ids_from_string():
+    handler = RowHandler()
+    assert handler.extract_field_ids_from_string(None) == []
+    assert handler.extract_field_ids_from_string('not,something') == []
+    assert handler.extract_field_ids_from_string('field_1,field_2') == [1, 2]
+    assert handler.extract_field_ids_from_string('field_22,test_8,999') == [22, 8, 999]
+    assert handler.extract_field_ids_from_string('is,1,one') == [1]
+
+
+@pytest.mark.django_db
+def test_get_include_exclude_fields(data_fixture):
+    table = data_fixture.create_database_table()
+    table_2 = data_fixture.create_database_table()
+    field_1 = data_fixture.create_text_field(table=table, order=1)
+    field_2 = data_fixture.create_text_field(table=table, order=2)
+    field_3 = data_fixture.create_text_field(table=table_2, order=3)
+
+    row_handler = RowHandler()
+
+    assert row_handler.get_include_exclude_fields(
+        table,
+        include=None,
+        exclude=None
+    ) is None
+
+    assert row_handler.get_include_exclude_fields(
+        table,
+        include='',
+        exclude=''
+    ) is None
+
+    fields = row_handler.get_include_exclude_fields(
+        table,
+        f'field_{field_1.id}'
+    )
+    assert len(fields) == 1
+    assert fields[0].id == field_1.id
+
+    fields = row_handler.get_include_exclude_fields(
+        table,
+        f'field_{field_1.id},field_9999,field_{field_2.id}'
+    )
+    assert len(fields) == 2
+    assert fields[0].id == field_1.id
+    assert fields[1].id == field_2.id
+
+    fields = row_handler.get_include_exclude_fields(
+        table,
+        None,
+        f'field_{field_1.id},field_9999'
+    )
+    assert len(fields) == 1
+    assert fields[0].id == field_2.id
+
+    fields = row_handler.get_include_exclude_fields(
+        table,
+        f'field_{field_1.id},field_{field_2}',
+        f'field_{field_1.id}'
+    )
+    assert len(fields) == 1
+    assert fields[0].id == field_2.id
+
+    fields = row_handler.get_include_exclude_fields(
+        table,
+        f'field_{field_3.id}'
+    )
+    assert len(fields) == 0
+
+    fields = row_handler.get_include_exclude_fields(
+        table,
+        None,
+        f'field_{field_3.id}'
+    )
+    assert len(fields) == 2
+
+
 @pytest.mark.django_db
 def test_extract_manytomany_values(data_fixture):
     row_handler = RowHandler()

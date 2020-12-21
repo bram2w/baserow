@@ -118,7 +118,33 @@ class RowsView(APIView):
                     'filters.\n'
                     '`OR`: Indicates that the rows only have to match one of the '
                     'filters.\n\n'
-                    'This works only if at two or more filters are provided.'
+                    'This works only if two or more filters are provided.'
+                )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'All the fields are included in the response by default. You can '
+                    'select a subset of fields by providing the include query '
+                    'parameter. If you for example provide the following GET '
+                    'parameter `include=field_1,field_2` then only the fields with'
+                    'id `1` and id `2` are going to be selected and included in the '
+                    'response. '
+                )
+            ),
+            OpenApiParameter(
+                name='exclude',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'All the fields are included in the response by default. You can '
+                    'select a subset of fields by providing the exclude query '
+                    'parameter. If you for example provide the following GET '
+                    'parameter `exclude=field_1,field_2` then the fields with id `1` '
+                    'and id `2` are going to be excluded from the selection and '
+                    'response.'
                 )
             ),
         ],
@@ -171,11 +197,16 @@ class RowsView(APIView):
 
         table = TableHandler().get_table(request.user, table_id)
         TokenHandler().check_table_permissions(request, 'read', table, False)
-
-        model = table.get_model()
         search = request.GET.get('search')
         order_by = request.GET.get('order_by')
+        include = request.GET.get('include')
+        exclude = request.GET.get('exclude')
+        fields = RowHandler().get_include_exclude_fields(table, include, exclude)
 
+        model = table.get_model(
+            fields=fields,
+            field_ids=[] if fields else None
+        )
         queryset = model.objects.all().enhance_by_fields()
 
         if search:

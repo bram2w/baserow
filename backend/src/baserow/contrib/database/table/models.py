@@ -286,7 +286,7 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
 
         # Create a combined list of fields that must be added and belong to the this
         # table.
-        fields = fields + [field for field in fields_query]
+        fields = list(fields) + [field for field in fields_query]
 
         # If there are duplicate field names we have to store them in a list so we know
         # later which ones are duplicate.

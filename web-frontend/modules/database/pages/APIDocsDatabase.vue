@@ -363,7 +363,29 @@
                 <br />
                 <code class="api-docs__code">OR</code>: Indicates that the rows
                 only have to match one of the filters. <br /><br />
-                This works only if at two or more filters are provided.
+                This works only if two or more filters are provided.
+              </APIDocsParameter>
+              <APIDocsParameter name="include" :optional="true" type="string">
+                All the fields are included in the response by default. You can
+                select a subset of fields by providing the include query
+                parameter. If you for example provide the following GET
+                parameter
+                <code class="api-docs__code">include=field_1,field_2</code>
+                then only the fields with id
+                <code class="api-docs__code">1</code> and id
+                <code class="api-docs__code">2</code> are going to be selected
+                and included in the response.
+              </APIDocsParameter>
+              <APIDocsParameter name="exclude" :optional="true" type="string">
+                All the fields are included in the response by default. You can
+                select a subset of fields by providing the exclude query
+                parameter. If you for example provide the following GET
+                parameter
+                <code class="api-docs__code">exclude=field_1,field_2</code>
+                then the fields with id
+                <code class="api-docs__code">1</code> and id
+                <code class="api-docs__code">2</code> are going to be excluded
+                from the selection and response.
               </APIDocsParameter>
             </ul>
           </div>
