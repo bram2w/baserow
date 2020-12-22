@@ -2,6 +2,9 @@
 
 Open source online database tool and Airtable alternative.
 
+**We're hiring** remote developers! More information at 
+https://baserow.io/jobs/experienced-full-stack-developer.
+
 ![Baserow screenshot](docs/assets/screenshot.png "Baserow screenshot")
 
 ## Introduction
