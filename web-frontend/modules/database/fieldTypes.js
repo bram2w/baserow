@@ -447,7 +447,9 @@ export class LinkRowFieldType extends FieldType {
 }
 
 export class NumberFieldType extends FieldType {
-  static maxNumberLength = 50
+  static getMaxNumberLength() {
+    return 50
+  }
 
   static getType() {
     return 'number'
@@ -500,7 +502,7 @@ export class NumberFieldType extends FieldType {
       isNaN(parseFloat(value)) ||
       !isFinite(value) ||
       value.split('.')[0].replace('-', '').length >
-        NumberFieldType.maxNumberLength
+        NumberFieldType.getMaxNumberLength()
     ) {
       return null
     }

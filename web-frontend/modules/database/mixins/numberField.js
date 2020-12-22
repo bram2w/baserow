@@ -19,9 +19,9 @@ export default {
       }
       if (
         this.copy.split('.')[0].replace('-', '').length >
-        NumberFieldType.maxNumberLength
+        NumberFieldType.getMaxNumberLength()
       ) {
-        return `Max ${NumberFieldType.maxNumberLength} digits allowed.`
+        return `Max ${NumberFieldType.getMaxNumberLength()} digits allowed.`
       }
       return null
     },
