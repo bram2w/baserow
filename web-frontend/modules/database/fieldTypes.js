@@ -1,4 +1,5 @@
 import moment from 'moment'
+import BigNumber from 'bignumber.js'
 
 import { isValidURL, isValidEmail } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
@@ -446,6 +447,8 @@ export class LinkRowFieldType extends FieldType {
 }
 
 export class NumberFieldType extends FieldType {
+  static maxNumberLength = 50
+
   static getType() {
     return 'number'
   }
@@ -493,7 +496,12 @@ export class NumberFieldType extends FieldType {
    */
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
-    if (isNaN(parseFloat(value)) || !isFinite(value)) {
+    if (
+      isNaN(parseFloat(value)) ||
+      !isFinite(value) ||
+      value.split('.')[0].replace('-', '').length >
+        NumberFieldType.maxNumberLength
+    ) {
       return null
     }
     return this.constructor.formatNumber(field, value)
@@ -510,15 +518,15 @@ export class NumberFieldType extends FieldType {
     }
     const decimalPlaces =
       field.number_type === 'DECIMAL' ? field.number_decimal_places : 0
-    let number = parseFloat(value)
-    if (!field.number_negative && number < 0) {
+    let number = new BigNumber(value)
+    if (!field.number_negative && number.isLessThan(0)) {
       number = 0
     }
     return number.toFixed(decimalPlaces)
   }
 
   getDocsDataType(field) {
-    return field.number_type === 'DECIMAL' ? 'decimal' : 'integer'
+    return field.number_type === 'DECIMAL' ? 'decimal' : 'number'
   }
 
   getDocsDescription(field) {

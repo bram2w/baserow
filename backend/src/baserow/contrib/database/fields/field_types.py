@@ -112,38 +112,44 @@ class NumberFieldType(FieldType):
     serializer_field_names = ['number_type', 'number_decimal_places', 'number_negative']
 
     def prepare_value_for_db(self, instance, value):
-        if value and instance.number_type == NUMBER_TYPE_DECIMAL:
+        if value is not None:
             value = Decimal(value)
-        if value and not instance.number_negative and value < 0:
+
+        if value is not None and not instance.number_negative and value < 0:
             raise ValidationError(f'The value for field {instance.id} cannot be '
                                   f'negative.')
         return value
 
     def get_serializer_field(self, instance, **kwargs):
-        kwargs['required'] = False
-        kwargs['allow_null'] = True
+        kwargs['decimal_places'] = (
+            0
+            if instance.number_type == NUMBER_TYPE_INTEGER else
+            instance.number_decimal_places
+        )
+
         if not instance.number_negative:
             kwargs['min_value'] = 0
-        if instance.number_type == NUMBER_TYPE_INTEGER:
-            return serializers.IntegerField(**kwargs)
-        elif instance.number_type == NUMBER_TYPE_DECIMAL:
-            return serializers.DecimalField(
-                decimal_places=instance.number_decimal_places,
-                max_digits=self.MAX_DIGITS + instance.number_decimal_places,
-                **kwargs
-            )
+
+        return serializers.DecimalField(
+            max_digits=self.MAX_DIGITS + kwargs['decimal_places'],
+            required=False,
+            allow_null=True,
+            **kwargs
+        )
 
     def get_model_field(self, instance, **kwargs):
-        kwargs['null'] = True
-        kwargs['blank'] = True
-        if instance.number_type == NUMBER_TYPE_INTEGER:
-            return models.IntegerField(**kwargs)
-        elif instance.number_type == NUMBER_TYPE_DECIMAL:
-            return models.DecimalField(
-                decimal_places=instance.number_decimal_places,
-                max_digits=self.MAX_DIGITS + instance.number_decimal_places,
-                **kwargs
-            )
+        kwargs['decimal_places'] = (
+            0
+            if instance.number_type == NUMBER_TYPE_INTEGER else
+            instance.number_decimal_places
+        )
+
+        return models.DecimalField(
+            max_digits=self.MAX_DIGITS + kwargs['decimal_places'],
+            null=True,
+            blank=True,
+            **kwargs
+        )
 
     def random_value(self, instance, fake, cache):
         if instance.number_type == NUMBER_TYPE_INTEGER:

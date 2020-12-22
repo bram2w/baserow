@@ -53,7 +53,7 @@ def test_get_table_model(data_fixture):
     assert color_field.default == 'white'
     assert color_field.null
 
-    assert isinstance(horsepower_field, models.IntegerField)
+    assert isinstance(horsepower_field, models.DecimalField)
     assert horsepower_field.verbose_name == 'Horsepower'
     assert horsepower_field.db_column == f'field_{number_field.id}'
     assert horsepower_field.null
@@ -95,7 +95,7 @@ def test_get_table_model(data_fixture):
     assert field_1.db_column == f'field_{text_field.id}'
 
     field_2 = model_3._meta.get_field(f'field_{number_field.id}')
-    assert isinstance(field_2, models.IntegerField)
+    assert isinstance(field_2, models.DecimalField)
     assert field_2.db_column == f'field_{number_field.id}'
 
     field_3 = model_3._meta.get_field(f'field_{boolean_field.id}')

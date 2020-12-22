@@ -83,7 +83,7 @@ def test_list_rows(api_client, data_fixture):
     assert len(response_json['results']) == 4
     assert response_json['results'][0]['id'] == row_1.id
     assert response_json['results'][0][f'field_{field_1.id}'] == 'Product 1'
-    assert response_json['results'][0][f'field_{field_2.id}'] == 50
+    assert response_json['results'][0][f'field_{field_2.id}'] == '50'
     assert response_json['results'][0]['order'] == '1.00000000000000000000'
 
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
@@ -482,7 +482,7 @@ def test_create_row(api_client, data_fixture):
     response_json_row_3 = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json_row_3[f'field_{text_field.id}'] == 'Green'
-    assert response_json_row_3[f'field_{number_field.id}'] == 120
+    assert response_json_row_3[f'field_{number_field.id}'] == '120'
     assert response_json_row_3[f'field_{boolean_field.id}']
     assert response_json_row_3[f'field_{text_field_2.id}'] == 'Not important'
     assert response_json_row_3['order'] == '3.00000000000000000000'
@@ -501,7 +501,7 @@ def test_create_row(api_client, data_fixture):
     response_json_row_4 = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json_row_4[f'field_{text_field.id}'] == 'Purple'
-    assert response_json_row_4[f'field_{number_field.id}'] == 240
+    assert response_json_row_4[f'field_{number_field.id}'] == '240'
     assert response_json_row_4[f'field_{boolean_field.id}']
     assert response_json_row_4[f'field_{text_field_2.id}'] == ''
     assert response_json_row_4['order'] == '4.00000000000000000000'
@@ -521,7 +521,7 @@ def test_create_row(api_client, data_fixture):
     response_json_row_5 = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json_row_5[f'field_{text_field.id}'] == 'Red'
-    assert response_json_row_5[f'field_{number_field.id}'] == 480
+    assert response_json_row_5[f'field_{number_field.id}'] == '480'
     assert not response_json_row_5[f'field_{boolean_field.id}']
     assert response_json_row_5[f'field_{text_field_2.id}'] == ''
     assert response_json_row_5['order'] == '2.99999999999999999999'
@@ -669,7 +669,7 @@ def test_get_row(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['id'] == row_1.id
     assert response_json[f'field_{text_field.id}'] == 'Green'
-    assert response_json[f'field_{number_field.id}'] == 120
+    assert response_json[f'field_{number_field.id}'] == '120'
     assert response_json[f'field_{boolean_field.id}'] is False
 
     url = reverse('api:database:rows:item', kwargs={
@@ -685,7 +685,7 @@ def test_get_row(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['id'] == row_2.id
     assert response_json[f'field_{text_field.id}'] == 'Purple'
-    assert response_json[f'field_{number_field.id}'] == 240
+    assert response_json[f'field_{number_field.id}'] == '240'
     assert response_json[f'field_{boolean_field.id}'] is True
 
 
@@ -814,12 +814,12 @@ def test_update_row(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json_row_1['id'] == row_1.id
     assert response_json_row_1[f'field_{text_field.id}'] == 'Green'
-    assert response_json_row_1[f'field_{number_field.id}'] == 120
+    assert response_json_row_1[f'field_{number_field.id}'] == '120'
     assert response_json_row_1[f'field_{boolean_field.id}'] is True
 
     row_1.refresh_from_db()
     assert getattr(row_1, f'field_{text_field.id}') == 'Green'
-    assert getattr(row_1, f'field_{number_field.id}') == 120
+    assert getattr(row_1, f'field_{number_field.id}') == Decimal('120')
     assert getattr(row_1, f'field_{boolean_field.id}') is True
 
     response = api_client.patch(
@@ -871,12 +871,12 @@ def test_update_row(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json_row_2['id'] == row_2.id
     assert response_json_row_2[f'field_{text_field.id}'] == 'Blue'
-    assert response_json_row_2[f'field_{number_field.id}'] == 50
+    assert response_json_row_2[f'field_{number_field.id}'] == '50'
     assert response_json_row_2[f'field_{boolean_field.id}'] is False
 
     row_2.refresh_from_db()
     assert getattr(row_2, f'field_{text_field.id}') == 'Blue'
-    assert getattr(row_2, f'field_{number_field.id}') == 50
+    assert getattr(row_2, f'field_{number_field.id}') == Decimal('50')
     assert getattr(row_2, f'field_{boolean_field.id}') is False
 
     url = reverse('api:database:rows:item', kwargs={

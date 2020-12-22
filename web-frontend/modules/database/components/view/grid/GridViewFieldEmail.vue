@@ -31,10 +31,10 @@
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
-import EmailField from '@baserow/modules/database/mixins/EmailField'
+import emailField from '@baserow/modules/database/mixins/emailField'
 
 export default {
-  mixins: [gridField, gridFieldInput, EmailField],
+  mixins: [gridField, gridFieldInput, emailField],
   methods: {
     afterEdit() {
       this.$nextTick(() => {

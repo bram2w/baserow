@@ -15,8 +15,8 @@ def test_get_table_serializer(data_fixture):
     data_fixture.create_text_field(table=table, order=0, name='Color',
                                    text_default='white')
     data_fixture.create_number_field(table=table, order=1, name='Horsepower')
-    data_fixture.create_boolean_field(table=table, order=2, name='For sale')
-    data_fixture.create_number_field(table=table, order=2, name='Price',
+    data_fixture.create_boolean_field(table=table, order=3, name='For sale')
+    data_fixture.create_number_field(table=table, order=4, name='Price',
                                      number_type='DECIMAL', number_negative=True,
                                      number_decimal_places=2)
 
@@ -49,7 +49,21 @@ def test_get_table_serializer(data_fixture):
     # number field
     serializer_instance = serializer_class(data={'horsepower': 120})
     assert serializer_instance.is_valid()
-    assert serializer_instance.data['horsepower'] == 120
+    assert serializer_instance.data['horsepower'] == '120'
+
+    serializer_instance = serializer_class(data={
+        'horsepower': 99999999999999999999999999999999999999999999999999
+    })
+    assert serializer_instance.is_valid()
+    assert (
+        serializer_instance.data['horsepower'] ==
+        '99999999999999999999999999999999999999999999999999'
+    )
+
+    serializer_instance = serializer_class(data={
+        'horsepower': 999999999999999999999999999999999999999999999999999
+    })
+    assert not serializer_instance.is_valid()
 
     serializer_instance = serializer_class(data={'horsepower': None})
     assert serializer_instance.is_valid()
@@ -117,7 +131,7 @@ def test_get_table_serializer(data_fixture):
     assert serializer_instance.is_valid()
     assert serializer_instance.data == {
         'color': 'green',
-        'horsepower': 120,
+        'horsepower': '120',
         'for_sale': True,
         'price': '120.22'
     }

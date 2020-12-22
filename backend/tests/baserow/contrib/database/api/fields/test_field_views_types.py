@@ -3,13 +3,14 @@ from faker import Faker
 from pytz import timezone
 from datetime import date, datetime
 from freezegun import freeze_time
+from decimal import Decimal
 
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
 from django.shortcuts import reverse
 
 from baserow.contrib.database.fields.models import (
-    LongTextField, URLField, DateField, EmailField, FileField
+    LongTextField, URLField, DateField, EmailField, FileField, NumberField
 )
 
 
@@ -642,4 +643,202 @@ def test_file_field_type(api_client, data_fixture):
     )
     assert (
         response_json['results'][2][f'field_{field_id}'][1]['name'] == user_file_2.name
+    )
+
+
+@pytest.mark.django_db
+def test_number_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    table = data_fixture.create_database_table(user=user)
+
+    # Create a positive integer field
+    response = api_client.post(
+        reverse('api:database:fields:list', kwargs={'table_id': table.id}),
+        {
+            'name': 'PositiveInt',
+            'type': 'number',
+            'number_type': 'INTEGER',
+            'number_negative': False,
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+
+    # Make sure the field was created properly
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['type'] == 'number'
+    assert NumberField.objects.all().count() == 1
+    positive_int_field_id = response_json['id']
+
+    # Create a negative integer field
+    response = api_client.post(
+        reverse('api:database:fields:list', kwargs={'table_id': table.id}),
+        {
+            'name': 'NegativeInt',
+            'type': 'number',
+            'number_type': 'INTEGER',
+            'number_negative': True,
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+
+    # Make sure the field was created properly
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['type'] == 'number'
+    assert NumberField.objects.all().count() == 2
+    negative_int_field_id = response_json['id']
+
+    # Create a positive decimal field
+    response = api_client.post(
+        reverse('api:database:fields:list', kwargs={'table_id': table.id}),
+        {
+            'name': 'PositiveDecimal',
+            'type': 'number',
+            'number_type': 'DECIMAL',
+            'number_negative': False,
+            'number_decimal_places': 2,
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+
+    # Make sure the field was created properly
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['type'] == 'number'
+    assert NumberField.objects.all().count() == 3
+    positive_decimal_field_id = response_json['id']
+
+    # Create a negative decimal field
+    response = api_client.post(
+        reverse('api:database:fields:list', kwargs={'table_id': table.id}),
+        {
+            'name': 'NegativeDecimal',
+            'type': 'number',
+            'number_type': 'DECIMAL',
+            'number_negative': True,
+            'number_decimal_places': 2,
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+
+    # Make sure the field was created properly
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['type'] == 'number'
+    assert NumberField.objects.all().count() == 4
+    negative_decimal_field_id = response_json['id']
+
+    # Test re-writing the name of a field. 'PositiveInt' is now called 'PositiveIntEdit'
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': positive_int_field_id}),
+        {'name': 'PositiveIntEdit'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # Add a row with correct values
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{positive_int_field_id}':
+                '99999999999999999999999999999999999999999999999999',
+            f'field_{negative_int_field_id}':
+                '-99999999999999999999999999999999999999999999999999',
+            f'field_{positive_decimal_field_id}': 1000.00,
+            f'field_{negative_decimal_field_id}': -1000.00,
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert (
+        response_json[f'field_{positive_int_field_id}'] ==
+        '99999999999999999999999999999999999999999999999999'
+    )
+    assert (
+        response_json[f'field_{negative_int_field_id}'] ==
+        '-99999999999999999999999999999999999999999999999999'
+    )
+    assert response_json[f'field_{positive_decimal_field_id}'] == '1000.00'
+    assert response_json[f'field_{negative_decimal_field_id}'] == '-1000.00'
+
+    model = table.get_model(attribute_names=True)
+    row = model.objects.all().last()
+    assert (
+        row.positiveintedit ==
+        Decimal('99999999999999999999999999999999999999999999999999')
+    )
+    assert (
+        row.negativeint ==
+        Decimal('-99999999999999999999999999999999999999999999999999')
+    )
+    assert row.positivedecimal == Decimal(1000.00)
+    assert row.negativedecimal == Decimal(-1000.00)
+
+    # Add a row with Nones'
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{positive_int_field_id}': None,
+            f'field_{negative_int_field_id}': None,
+            f'field_{positive_decimal_field_id}': None,
+            f'field_{negative_decimal_field_id}': None,
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{positive_int_field_id}'] is None
+    assert response_json[f'field_{negative_int_field_id}'] is None
+    assert response_json[f'field_{positive_decimal_field_id}'] is None
+    assert response_json[f'field_{negative_decimal_field_id}'] is None
+
+    row = model.objects.all().last()
+    assert row.positiveintedit is None
+    assert row.negativeint is None
+    assert row.positivedecimal is None
+    assert row.negativedecimal is None
+
+    # Add a row with an integer that's too big
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{positive_int_field_id}':
+                '999999999999999999999999999999999999999999999999999',
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert (
+        response_json['detail'][f'field_{positive_int_field_id}'][0]['code'] ==
+        'max_digits'
+    )
+
+    # Add a row with an integer that's too small
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{negative_int_field_id}':
+                '-9999999999999999999999999999999999999999999999999999',
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert (
+        response_json['detail'][f'field_{positive_int_field_id}'][0]['code'] ==
+        'max_digits'
     )
