@@ -19,9 +19,9 @@
 <script>
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
 import rowEditFieldInput from '@baserow/modules/database/mixins/rowEditFieldInput'
-import EmailField from '@baserow/modules/database/mixins/EmailField'
+import emailField from '@baserow/modules/database/mixins/emailField'
 
 export default {
-  mixins: [rowEditField, rowEditFieldInput, EmailField],
+  mixins: [rowEditField, rowEditFieldInput, emailField],
 }
 </script>

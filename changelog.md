@@ -1,5 +1,6 @@
 # Changelog
 
+* Allow larger values for the number field and improved the validation.
 * Fixed bug where if you have no filters, but the filter type is set to `OR` it always
   results in a not matching row state in the web-frontend.
 * Fixed bug where the arrow navigation didn't work for the dropdown component in

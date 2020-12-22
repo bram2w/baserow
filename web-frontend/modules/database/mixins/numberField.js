@@ -17,6 +17,12 @@ export default {
       if (isNaN(parseFloat(this.copy)) || !isFinite(this.copy)) {
         return 'Invalid number'
       }
+      if (
+        this.copy.split('.')[0].replace('-', '').length >
+        NumberFieldType.maxNumberLength
+      ) {
+        return `Max ${NumberFieldType.maxNumberLength} digits allowed.`
+      }
       return null
     },
     isValid() {

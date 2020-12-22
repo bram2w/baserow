@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal, DecimalException
 
 from django.db import models
 from django.db.models import Q
@@ -51,8 +52,12 @@ class TableModelQuerySet(models.QuerySet):
         """
 
         search_queries = models.Q()
+        excluded = ('order', 'created_on', 'updated_on')
 
         for field in self.model._meta.get_fields():
+            if field.name in excluded:
+                continue
+
             if (
                 isinstance(field, models.CharField) or
                 isinstance(field, models.TextField)
@@ -69,6 +74,13 @@ class TableModelQuerySet(models.QuerySet):
                         f'{field.name}': int(search)
                     })
                 except ValueError:
+                    pass
+            elif isinstance(field, models.DecimalField):
+                try:
+                    search_queries = search_queries | models.Q(**{
+                        f'{field.name}': Decimal(search)
+                    })
+                except (ValueError, DecimalException):
                     pass
 
         return self.filter(search_queries) if len(search_queries) > 0 else self

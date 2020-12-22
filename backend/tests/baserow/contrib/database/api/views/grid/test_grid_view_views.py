@@ -66,7 +66,7 @@ def test_list_rows(api_client, data_fixture):
     assert len(response_json['results']) == 4
     assert response_json['results'][0]['id'] == row_1.id
     assert response_json['results'][0][f'field_{text_field.id}'] == 'Green'
-    assert response_json['results'][0][f'field_{number_field.id}'] == 10
+    assert response_json['results'][0][f'field_{number_field.id}'] == '10'
     assert not response_json['results'][0][f'field_{boolean_field.id}']
     assert response_json['results'][1]['id'] == row_2.id
     assert response_json['results'][2]['id'] == row_3.id
