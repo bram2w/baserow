@@ -13,6 +13,7 @@
 * Made the file name editable.
 * Made the rows orderable and added the ability to insert a row at a given position.
 * Made it possible to include or exclude specific fields when listing rows via the API.
+* Implemented a single select field.
 
 ## Released (2020-12-01)
 

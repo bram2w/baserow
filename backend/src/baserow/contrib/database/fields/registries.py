@@ -42,6 +42,9 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
     can_be_primary_field = True
     """Some field types cannot be the primary field."""
 
+    can_have_select_options = False
+    """Indicates whether the field can have select options."""
+
     def prepare_value_for_db(self, instance, value):
         """
         When a row is created or updated all the values are going to be prepared for the
@@ -186,7 +189,28 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
 
         return None
 
-    def get_alter_column_type_function(self, connection, instance):
+    def get_alter_column_prepare_value(self, connection, from_field, to_field):
+        """
+        Can return a small SQL statement to convert the `p_in` variable to a readable
+        text format for the new field.
+
+        Example: return "p_in = lower(p_in);"
+
+        :param connection: The used connection. This can for example be used to check
+            the database engine type.
+        :type connection: DatabaseWrapper
+        :param from_field: The old field instance.
+        :type to_field: Field
+        :param to_field: The new field instance.
+        :type to_field: Field
+        :return: The SQL statement converting the value to text for the next field. The
+            can for example be used to convert a select option to plain text.
+        :rtype: None or str
+        """
+
+        return None
+
+    def get_alter_column_type_function(self, connection, from_field, to_field):
         """
         Can optionally return a SQL function as string to convert the old field's value
         when changing the field type. If None is returned no function will be
@@ -200,8 +224,10 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :param connection: The used connection. This can for example be used to check
             the database engine type.
         :type connection: DatabaseWrapper
-        :param instance: The new field instance.
-        :type instance: Field
+        :param from_field: The old field instance.
+        :type to_field: Field
+        :param to_field: The new field instance.
+        :type to_field: Field
         :return: The SQL function to convert the value.
         :rtype: None or str
         """
@@ -243,7 +269,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :type user: User
         """
 
-    def after_create(self, field, model, user, connection):
+    def after_create(self, field, model, user, connection, before):
         """
         This hook is called right after the has been created. The schema change has
         also been done so the provided model could optionally be used.
@@ -256,6 +282,8 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :type user: User
         :param connection: The connection used to make the database schema change.
         :type connection: DatabaseWrapper
+        :param before: The value returned by the before_created method.
+        :type before: any
         """
 
     def before_update(self, from_field, to_field_values, user):
@@ -298,7 +326,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
 
     def after_update(self, from_field, to_field, from_model, to_model, user, connection,
-                     altered_column):
+                     altered_column, before):
         """
         This hook is called right after a field has been updated. In some cases data
         mutation still has to be done in order to maintain data integrity. For example
@@ -322,6 +350,8 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :param altered_column: Indicates whether the column has been altered in the
             table. Sometimes data has to be updated if the column hasn't been altered.
         :type altered_column: bool
+        :param before: The value returned by the before_update method.
+        :type before: any
         """
 
     def after_delete(self, field, model, user, connection):
@@ -338,6 +368,26 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :param connection: The connection used to make the database schema change.
         :type connection: DatabaseWrapper
         """
+
+    def get_order(self, field, field_name, view_sort):
+        """
+        This hook can be called to generate a different order by expression. By default
+        None is returned which means the normal field sorting will be applied.
+        Optionally a different expression can be generated. This is for example used
+        by the single select field generates a mapping achieve the correct sorting
+        based on the select option value.
+
+        :param field: The related field object instance.
+        :type field: Field
+        :param field_name: The name of the field.
+        :type field_name: str
+        :param view_sort: The view sort that must be applied.
+        :type view_sort: ViewSort
+        :return: The expression that is added directly to the model.objects.order().
+        :rtype: Expression or None
+        """
+
+        return None
 
 
 class FieldTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,

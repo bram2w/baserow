@@ -23,6 +23,7 @@ class PostgresqlLenientDatabaseSchemaEditor:
         $$
         begin
             begin
+                %(alter_column_prepare_value)s
                 return %(alert_column_type_function)s::%(type)s;
             exception
                 when others then
@@ -33,25 +34,44 @@ class PostgresqlLenientDatabaseSchemaEditor:
         language plpgsql;
     """
 
-    def __init__(self, *args, alert_column_type_function='p_in'):
+    def __init__(self, *args, alter_column_prepare_value='',
+                 alert_column_type_function='p_in'):
+        self.alter_column_prepare_value = alter_column_prepare_value
         self.alert_column_type_function = alert_column_type_function
         super().__init__(*args)
 
     def _alter_field(self, model, old_field, new_field, old_type, new_type,
                      old_db_params, new_db_params, strict=False):
         if old_type != new_type:
+            variables = {}
+
+            if isinstance(self.alter_column_prepare_value, tuple):
+                alter_column_prepare_value, v = self.alter_column_prepare_value
+                variables = {**variables, **v}
+            else:
+                alter_column_prepare_value = self.alter_column_prepare_value
+
+            if isinstance(self.alert_column_type_function, tuple):
+                alert_column_type_function, v = self.alert_column_type_function
+                variables = {**variables, **v}
+            else:
+                alert_column_type_function = self.alert_column_type_function
+
             self.execute(self.sql_drop_try_cast)
             self.execute(self.sql_create_try_cast % {
                 "column": self.quote_name(new_field.column),
                 "type": new_type,
-                "alert_column_type_function": self.alert_column_type_function
-            })
+                "alter_column_prepare_value": alter_column_prepare_value,
+                "alert_column_type_function": alert_column_type_function
+            }, variables)
+
         return super()._alter_field(model, old_field, new_field, old_type, new_type,
                                     old_db_params, new_db_params, strict)
 
 
 @contextlib.contextmanager
-def lenient_schema_editor(connection, alert_column_type_function=None):
+def lenient_schema_editor(connection, alter_column_prepare_value=None,
+                          alert_column_type_function=None):
     """
     A contextual function that yields a modified version of the connection's schema
     editor. This temporary version is more lenient then the regular editor. Normally
@@ -63,6 +83,9 @@ def lenient_schema_editor(connection, alert_column_type_function=None):
     :param connection: The current connection for which to generate the schema editor
         for.
     :type connection: DatabaseWrapper
+    :param alter_column_prepare_value: Optionally a query statement converting the
+        `p_in` value to a string format.
+    :type alter_column_prepare_value: None or str
     :param alert_column_type_function: Optionally the string of a SQL function to
         convert the data value to the the new type. The function will have the variable
         `p_in` as old value.
@@ -88,6 +111,10 @@ def lenient_schema_editor(connection, alert_column_type_function=None):
     connection.SchemaEditorClass = schema_editor_class
 
     kwargs = {}
+
+    if alter_column_prepare_value:
+        kwargs['alter_column_prepare_value'] = alter_column_prepare_value
+
     if alert_column_type_function:
         kwargs['alert_column_type_function'] = alert_column_type_function
 

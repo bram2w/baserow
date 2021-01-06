@@ -237,34 +237,43 @@
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Field name</th>
+                  <th>Name</th>
                   <th>Type</th>
-                  <th>Description</th>
-                  <td>Compatible filters</td>
+                  <th>Compatible filters</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="field in fields[table.id]" :key="field.id">
-                  <td>field_{{ field.id }}</td>
-                  <td>{{ field.name }}</td>
-                  <td>{{ field.type }}</td>
-                  <td>
-                    <code class="api-docs__code margin-bottom-1">
-                      {{ field._.type }}
-                    </code>
-                    <br />
-                    {{ field._.description }}
-                  </td>
-                  <td>
-                    <code
-                      v-for="filter in getCompatibleFilterTypes(field.type)"
-                      :key="filter.type"
-                      class="api-docs__code api-docs__code--clickable margin-bottom-1 margin-right-1"
-                      @click.prevent="navigate('section-filters')"
-                      >{{ filter.type }}</code
-                    >
-                  </td>
-                </tr>
+                <template v-for="field in fields[table.id]">
+                  <tr
+                    :key="field.id + '-1'"
+                    class="api-docs__table-without-border"
+                  >
+                    <td>field_{{ field.id }}</td>
+                    <td>{{ field.name }}</td>
+                    <td>
+                      <code class="api-docs__code margin-bottom-1">
+                        {{ field._.type }}
+                      </code>
+                    </td>
+                    <td>
+                      <code
+                        v-for="filter in getCompatibleFilterTypes(field.type)"
+                        :key="filter.type"
+                        class="api-docs__code api-docs__code--small api-docs__code--clickable margin-bottom-1 margin-right-1"
+                        @click.prevent="navigate('section-filters')"
+                        >{{ filter.type }}</code
+                      >
+                    </td>
+                  </tr>
+                  <tr :key="field.id + '-2'">
+                    <td colspan="4">
+                      <div
+                        class="api-docs__table-content"
+                        v-html="field._.description"
+                      ></div>
+                    </td>
+                  </tr>
+                </template>
               </tbody>
             </table>
           </div>
@@ -448,7 +457,7 @@
                 :optional="true"
                 :type="field._.type"
               >
-                {{ field._.description }}
+                <div v-html="field._.description"></div>
               </APIDocsParameter>
             </ul>
           </div>
@@ -488,7 +497,7 @@
                 :optional="true"
                 :type="field._.type"
               >
-                {{ field._.description }}
+                <div v-html="field._.description"></div>
               </APIDocsParameter>
             </ul>
           </div>

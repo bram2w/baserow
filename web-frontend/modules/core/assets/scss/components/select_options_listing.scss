@@ -1,0 +1,23 @@
+.select-options-listing {
+  display: flex;
+  width: 100%;
+  margin: 4px 0;
+}
+
+.select-options-listing__id {
+  @include fixed-height(20px, 12px);
+
+  margin-right: 10px;
+}
+
+.select-options-listing__value {
+  @extend %ellipsis;
+
+  display: inline-block;
+  color: $color-primary-900;
+  border-radius: 20px;
+  padding: 0 10px;
+  max-width: 100%;
+
+  @include fixed-height(20px, 12px);
+}

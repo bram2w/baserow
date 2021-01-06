@@ -85,22 +85,3 @@
     background-color: $color-neutral-100;
   }
 }
-
-.field-file__add {
-  display: inline-block;
-  padding: 0 5px;
-  background-color: $color-primary-100;
-  border-radius: 3px;
-  color: $color-primary-900;
-
-  @include fixed-height(22px, 13px);
-
-  &:hover {
-    background-color: $color-primary-200;
-    text-decoration: none;
-  }
-}
-
-.field-file__add-icon {
-  font-size: 12px;
-}

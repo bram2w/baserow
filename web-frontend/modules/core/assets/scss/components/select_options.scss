@@ -1,0 +1,36 @@
+.select-options {
+  // Nothing
+}
+
+.select-options__item {
+  display: flex;
+  margin: 8px 0;
+}
+
+.select-options__color {
+  flex: 0 0 28px;
+  line-height: 28px;
+  text-align: center;
+  color: $color-primary-900;
+  border-radius: 3px;
+  font-size: 14px;
+  margin-right: 12px;
+}
+
+.select-options__value {
+  flex: 1 1 100%;
+  padding: 4px 8px;
+  min-width: 0;
+}
+
+.select-options__remove {
+  flex: 0 0 28px;
+  line-height: 28px;
+  margin-left: 4px;
+  text-align: center;
+  color: $color-neutral-600;
+
+  &:hover {
+    color: $color-neutral-400;
+  }
+}

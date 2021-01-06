@@ -6,6 +6,7 @@ from dateutil.parser import ParserError
 from datetime import datetime, date
 
 from django.db import models
+from django.db.models import Case, When
 from django.contrib.postgres.fields import JSONField
 from django.core.validators import URLValidator, EmailValidator
 from django.core.exceptions import ValidationError
@@ -16,7 +17,8 @@ from rest_framework import serializers
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.contrib.database.api.fields.serializers import (
-    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer
+    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
+    SelectOptionSerializer
 )
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
@@ -24,15 +26,17 @@ from baserow.contrib.database.api.fields.errors import (
 )
 
 from .handler import FieldHandler
-from .registries import FieldType
+from .registries import FieldType, field_type_registry
 from .models import (
     NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
-    NumberField, BooleanField, DateField, LinkRowField, EmailField, FileField
+    NumberField, BooleanField, DateField, LinkRowField, EmailField, FileField,
+    SingleSelectField, SelectOption
 )
 from .exceptions import (
     LinkRowTableNotInSameDatabase, LinkRowTableNotProvided,
     IncompatiblePrimaryFieldTypeError
 )
+from .fields import SingleSelectForeignKey
 
 
 class TextFieldType(FieldType):
@@ -90,7 +94,7 @@ class URLFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.url()
 
-    def get_alter_column_type_function(self, connection, instance):
+    def get_alter_column_type_function(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
             return r"""(
             case
@@ -100,7 +104,7 @@ class URLFieldType(FieldType):
                 end
             )"""
 
-        return super().get_alter_column_type_function(connection, instance)
+        return super().get_alter_column_type_function(connection, from_field, to_field)
 
 
 class NumberFieldType(FieldType):
@@ -165,23 +169,23 @@ class NumberFieldType(FieldType):
                 positive=not instance.number_negative
             )
 
-    def get_alter_column_type_function(self, connection, instance):
+    def get_alter_column_type_function(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
             decimal_places = 0
-            if instance.number_type == NUMBER_TYPE_DECIMAL:
-                decimal_places = instance.number_decimal_places
+            if to_field.number_type == NUMBER_TYPE_DECIMAL:
+                decimal_places = to_field.number_decimal_places
 
             function = f"round(p_in::numeric, {decimal_places})"
 
-            if not instance.number_negative:
+            if not to_field.number_negative:
                 function = f"greatest({function}, 0)"
 
             return function
 
-        return super().get_alter_column_type_function(connection, instance)
+        return super().get_alter_column_type_function(connection, from_field, to_field)
 
     def after_update(self, from_field, to_field, from_model, to_model, user, connection,
-                     altered_column):
+                     altered_column, before):
         """
         The allowing of negative values isn't stored in the database field type. If
         the type hasn't changed, but the allowing of negative values has it means that
@@ -468,7 +472,7 @@ class LinkRowFieldType(FieldType):
                 f'as the table {table.id}.'
             )
 
-    def after_create(self, field, model, user, connection):
+    def after_create(self, field, model, user, connection, before):
         """
         When the field is created we have to add the related field to the related
         table so a reversed lookup can be done by the user.
@@ -511,7 +515,7 @@ class LinkRowFieldType(FieldType):
             from_field.link_row_related_field.save()
 
     def after_update(self, from_field, to_field, from_model, to_model, user, connection,
-                     altered_column):
+                     altered_column, before):
         """
         If the old field is not already a link row field we have to create the related
         field into the related table.
@@ -593,7 +597,7 @@ class EmailFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.email()
 
-    def get_alter_column_type_function(self, connection, instance):
+    def get_alter_column_type_function(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
             return r"""(
             case
@@ -603,7 +607,7 @@ class EmailFieldType(FieldType):
                 end
             )"""
 
-        return super().get_alter_column_type_function(connection, instance)
+        return super().get_alter_column_type_function(connection, from_field, to_field)
 
 
 class FileFieldType(FieldType):
@@ -702,3 +706,155 @@ class FileFieldType(FieldType):
             values.append(serialized)
 
         return values
+
+
+class SingleSelectFieldType(FieldType):
+    type = 'single_select'
+    model_class = SingleSelectField
+    can_have_select_options = True
+    allowed_fields = ['select_options']
+    serializer_field_names = ['select_options']
+    serializer_field_overrides = {
+        'select_options': SelectOptionSerializer(many=True, required=False)
+    }
+
+    def enhance_queryset(self, queryset, field, name):
+        return queryset.prefetch_related(
+            models.Prefetch(name, queryset=SelectOption.objects.using('default').all())
+        )
+
+    def prepare_value_for_db(self, instance, value):
+        if value is None:
+            return value
+
+        if isinstance(value, int):
+            try:
+                return SelectOption.objects.get(field=instance, id=value)
+            except SelectOption.DoesNotExist:
+                pass
+
+        if isinstance(value, SelectOption) and value.field_id == instance.id:
+            return value
+
+        # If the select option is not found or if it does not belong to the right field
+        # then the provided value is invalid and a validation error can be raised.
+        raise ValidationError(f'The provided value is not a valid option.')
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.PrimaryKeyRelatedField(
+            queryset=SelectOption.objects.filter(field=instance), required=False,
+            allow_null=True, **kwargs
+        )
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        return SelectOptionSerializer(required=False, allow_null=True, **kwargs)
+
+    def get_serializer_help_text(self, instance):
+        return (
+            'This field accepts an `integer` representing the chosen select option id '
+            'related to the field. Available ids can be found when getting or listing '
+            'the field. The response represents chosen field, but also the value and '
+            'color is exposed.'
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return SingleSelectForeignKey(
+            to=SelectOption,
+            on_delete=models.SET_NULL,
+            related_name='+',
+            related_query_name='+',
+            db_constraint=False,
+            null=True,
+            blank=True,
+            **kwargs
+        )
+
+    def before_create(self, table, primary, values, order, user):
+        if 'select_options' in values:
+            return values.pop('select_options')
+
+    def after_create(self, field, model, user, connection, before):
+        if before and len(before) > 0:
+            FieldHandler().update_field_select_options(user, field, before)
+
+    def before_update(self, from_field, to_field_values, user):
+        if 'select_options' in to_field_values:
+            FieldHandler().update_field_select_options(
+                user,
+                from_field,
+                to_field_values['select_options']
+            )
+            to_field_values.pop('select_options')
+
+    def get_alter_column_prepare_value(self, connection, from_field, to_field):
+        """
+        If the new field type isn't a single select field we can convert the plain
+        text value of the option and maybe that can be used by the new field.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type and connection.vendor == 'postgresql':
+            variables = {}
+            values_mapping = []
+            for option in from_field.select_options.all():
+                variable_name = f'option_{option.id}_value'
+                variables[variable_name] = option.value
+                values_mapping.append(f"('{int(option.id)}', %({variable_name})s)")
+
+            sql = f"""
+                p_in = (SELECT value FROM (
+                    VALUES {','.join(values_mapping)}
+                ) AS values (key, value)
+                WHERE key = p_in);
+            """
+            return sql, variables
+
+        return super().get_alter_column_prepare_value(connection, from_field, to_field)
+
+    def get_alter_column_type_function(self, connection, from_field, to_field):
+        """
+        If the old field wasn't a single select field we can try to match the old text
+        values to the new options.
+        """
+
+        from_field_type = field_type_registry.get_by_model(from_field)
+        if from_field_type.type != self.type and connection.vendor == 'postgresql':
+            variables = {}
+            values_mapping = []
+            for option in to_field.select_options.all():
+                variable_name = f'option_{option.id}_value'
+                variables[variable_name] = option.value
+                values_mapping.append(
+                    f"(lower(%({variable_name})s), '{int(option.id)}')"
+                )
+
+            return f"""(
+                SELECT value FROM (
+                    VALUES {','.join(values_mapping)}
+                ) AS values (key, value)
+                WHERE key = lower(p_in)
+            )
+            """, variables
+
+        return super().get_alter_column_prepare_value(connection, from_field, to_field)
+
+    def get_order(self, field, field_name, view_sort):
+        """
+        If the user wants to sort the results he expects them to be ordered
+        alphabetically based on the select option value and not in the id which is
+        stored in the table. This method generates a Case expression which maps the id
+        to the correct position.
+        """
+
+        select_options = field.select_options.all().order_by('value')
+        options = [select_option.pk for select_option in select_options]
+        options.insert(0, None)
+
+        if view_sort.order == 'DESC':
+            options.reverse()
+
+        order = Case(*[
+            When(**{field_name: option, 'then': index})
+            for index, option in enumerate(options)
+        ])
+        return order
