@@ -31,4 +31,24 @@
       padding-right: 20px;
     }
   }
+
+  .api-docs__table-without-border {
+    th,
+    td {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    & + tr {
+      th,
+      td {
+        padding-top: 10px;
+      }
+    }
+  }
+}
+
+.api-docs__table-content {
+  font-size: 14px;
+  line-height: 170%;
 }

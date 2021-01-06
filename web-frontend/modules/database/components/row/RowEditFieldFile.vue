@@ -18,13 +18,24 @@
         </div>
         <div class="field-file__description">
           <div class="field-file__name">
-            {{ file.visible_name }}
+            <Editable
+              :ref="'rename-' + index"
+              :value="file.visible_name"
+              @change="renameFile(value, index, $event.value)"
+            ></Editable>
           </div>
           <div class="field-file__info">
             {{ getDate(file.uploaded_at) }} - {{ file.size | formatBytes }}
           </div>
         </div>
         <div class="field-file__actions">
+          <a
+            v-tooltip="'rename'"
+            class="field-file__action"
+            @click="$refs['rename-' + index][0].edit()"
+          >
+            <i class="fas fa-pen"></i>
+          </a>
           <a
             v-tooltip="'download'"
             target="_blank"
@@ -43,8 +54,8 @@
         </div>
       </li>
     </ul>
-    <a class="field-file__add" @click.prevent="showModal()">
-      <i class="fas fa-plus field-file__add-icon"></i>
+    <a class="add" @click.prevent="showModal()">
+      <i class="fas fa-plus add__icon"></i>
       Add a file
     </a>
     <UserFilesModal
@@ -55,6 +66,7 @@
       ref="fileModal"
       :files="value"
       @removed="removeFile(value, $event)"
+      @renamed="renameFile(value, $event.index, $event.value)"
     ></FileFieldModal>
   </div>
 </template>

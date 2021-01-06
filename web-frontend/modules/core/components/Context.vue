@@ -63,16 +63,19 @@ export default {
      */
     show(target, vertical, horizontal, offset) {
       const isElementOrigin = isDomElement(target)
+      const updatePosition = () => {
+        const css = isElementOrigin
+          ? this.calculatePositionElement(target, vertical, horizontal, offset)
+          : this.calculatePositionFixed(target, vertical, horizontal, offset)
 
-      const css = isElementOrigin
-        ? this.calculatePositionElement(target, vertical, horizontal, offset)
-        : this.calculatePositionFixed(target, vertical, horizontal, offset)
-
-      // Set the calculated positions of the context.
-      for (const key in css) {
-        const value = css[key] !== null ? Math.ceil(css[key]) + 'px' : 'auto'
-        this.$el.style[key] = value
+        // Set the calculated positions of the context.
+        for (const key in css) {
+          const value = css[key] !== null ? Math.ceil(css[key]) + 'px' : 'auto'
+          this.$el.style[key] = value
+        }
       }
+
+      updatePosition()
 
       // If we store the element who opened the context menu we can exclude the element
       // when clicked outside of this element.
@@ -101,6 +104,12 @@ export default {
         }
       }
       document.body.addEventListener('click', this.$el.clickOutsideEvent)
+
+      this.$el.updatePositionEvent = (event) => {
+        updatePosition()
+      }
+      window.addEventListener('scroll', this.$el.updatePositionEvent, true)
+      window.addEventListener('resize', this.$el.updatePositionEvent)
     },
     /**
      * Hide the context menu and make sure the body event is removed.
@@ -114,15 +123,32 @@ export default {
       }
 
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
+      window.removeEventListener('scroll', this.$el.updatePositionEvent, true)
+      window.removeEventListener('resize', this.$el.updatePositionEvent)
     },
     /**
      * Calculates the absolute position of the context based on the original clicked
-     * element.
+     * element. If the target element is not visible, it might mean that we can't
+     * figure out the correct position, so in that case we force the element to be
+     * visible.
      */
     calculatePositionElement(target, vertical, horizontal, offset) {
+      const visible =
+        window.getComputedStyle(target).getPropertyValue('display') !== 'none'
+
+      // If the target is not visible then we can't calculate the position, so we
+      // temporarily need to show the element forcefully.
+      if (!visible) {
+        target.classList.add('forced-block')
+      }
+
       const targetRect = target.getBoundingClientRect()
       const contextRect = this.$el.getBoundingClientRect()
       const positions = { top: null, right: null, bottom: null, left: null }
+
+      if (!visible) {
+        target.classList.remove('forced-block')
+      }
 
       // Calculate if top, bottom, left and right positions are possible.
       const canTop = targetRect.top - contextRect.height - offset > 0

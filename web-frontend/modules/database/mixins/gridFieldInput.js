@@ -74,8 +74,10 @@ export default {
      * need it. We will also save the changes if the user was editing.
      */
     beforeUnSelect() {
-      if (this.editing) {
+      if (this.editing && this.isValid()) {
         this.save()
+      } else {
+        this.editing = false
       }
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },

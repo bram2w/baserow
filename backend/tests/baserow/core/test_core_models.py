@@ -1,7 +1,26 @@
 import pytest
+from pytz import timezone
+from freezegun import freeze_time
+from datetime import datetime
 
-from baserow.core.models import GroupUser
+from baserow.core.models import GroupUser, Group
 from baserow.contrib.database.models import Database
+
+
+@pytest.mark.django_db
+def test_created_and_updated_on_mixin():
+    with freeze_time('2020-01-01 12:00'):
+        group = Group.objects.create(name='Group')
+
+    assert group.created_on == datetime(2020, 1, 1, 12, 00, tzinfo=timezone('UTC'))
+    assert group.updated_on == datetime(2020, 1, 1, 12, 00, tzinfo=timezone('UTC'))
+
+    with freeze_time('2020-01-02 12:00'):
+        group.name = 'Group2'
+        group.save()
+
+    assert group.created_on == datetime(2020, 1, 1, 12, 00, tzinfo=timezone('UTC'))
+    assert group.updated_on == datetime(2020, 1, 2, 12, 00, tzinfo=timezone('UTC'))
 
 
 @pytest.mark.django_db

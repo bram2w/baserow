@@ -3,32 +3,30 @@
     <h2 v-if="primary !== undefined" class="box__title">
       {{ getHeading(primary, row) }}
     </h2>
-    <form>
-      <RowEditModalField
-        v-for="field in getFields(fields, primary)"
-        :ref="'field-' + field.id"
-        :key="'row-edit-field-' + field.id"
+    <RowEditModalField
+      v-for="field in getFields(fields, primary)"
+      :ref="'field-' + field.id"
+      :key="'row-edit-field-' + field.id"
+      :table="table"
+      :field="field"
+      :row="row"
+      @update="update"
+      @field-updated="$emit('field-updated')"
+      @field-deleted="$emit('field-deleted')"
+    ></RowEditModalField>
+    <div class="actions">
+      <a
+        ref="createFieldContextLink"
+        @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
+      >
+        <i class="fas fa-plus"></i>
+        add field
+      </a>
+      <CreateFieldContext
+        ref="createFieldContext"
         :table="table"
-        :field="field"
-        :row="row"
-        @update="update"
-        @field-updated="$emit('field-updated')"
-        @field-deleted="$emit('field-deleted')"
-      ></RowEditModalField>
-      <div class="actions">
-        <a
-          ref="createFieldContextLink"
-          @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
-        >
-          <i class="fas fa-plus"></i>
-          add field
-        </a>
-        <CreateFieldContext
-          ref="createFieldContext"
-          :table="table"
-        ></CreateFieldContext>
-      </div>
-    </form>
+      ></CreateFieldContext>
+    </div>
   </Modal>
 </template>
 

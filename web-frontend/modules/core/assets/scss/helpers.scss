@@ -53,8 +53,18 @@
   margin-bottom: 40px !important;
 }
 
+.margin-right-1 {
+  margin-right: 8px;
+}
+
 .resizing-horizontal {
   cursor: col-resize;
+}
+
+// This selector can only be used to temporarily show an element for calculating
+// positions.
+.forced-block {
+  display: block !important;
 }
 
 @keyframes spin {

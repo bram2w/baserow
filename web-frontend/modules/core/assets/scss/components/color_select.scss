@@ -1,0 +1,38 @@
+.color-select-context {
+  width: 212px;
+}
+
+.color-select-context__colors {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 6px;
+}
+
+.color-select-context__color {
+  position: relative;
+  flex: 0 0 28px;
+  height: 28px;
+  margin: 6px;
+  border-radius: 3px;
+
+  &:nth-child(5n+5) {
+    margin-right: 0;
+  }
+
+  &:not(.active):hover {
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.08);
+  }
+
+  &.active::before {
+    font-family: $font-awesome-font-family;
+    font-weight: $font-awesome-font-weight;
+    content: fa-content($fa-var-check);
+    color: $color-primary-900;
+    text-align: center;
+    font-size: 13px;
+    transform: translateX(-50%) translateY(-50%);
+
+    @include fa-icon;
+    @include absolute(50%, auto, auto, 50%);
+  }
+}

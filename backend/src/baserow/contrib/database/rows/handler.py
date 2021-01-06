@@ -1,10 +1,14 @@
 import re
+from math import floor, ceil
+from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Max, F, Q
 from django.db.models.fields.related import ManyToManyField
 from django.conf import settings
 
 from baserow.core.exceptions import UserNotInGroupError
+from baserow.contrib.database.fields.models import Field
 
 from .exceptions import RowDoesNotExist
 
@@ -52,6 +56,62 @@ class RowHandler:
             for key in values.keys()
             if str(key).isnumeric() or field_pattern.match(str(key))
         ]
+
+    def extract_field_ids_from_string(self, value):
+        """
+        Extracts the field ids from a string. Multiple ids can be separated by a comma.
+        For example if you provide 'field_1,field_2' then [1, 2] is returned.
+
+        :param value: A string containing multiple ids separated by comma.
+        :type value: str
+        :return: A list containing the field ids as integers.
+        :rtype: list
+        """
+
+        if not value:
+            return []
+
+        return [
+            int(re.sub("[^0-9]", "", str(v)))
+            for v in value.split(',')
+            if any(c.isdigit() for c in v)
+        ]
+
+    def get_include_exclude_fields(self, table, include=None, exclude=None):
+        """
+        Returns a field queryset containing the requested fields based on the include
+        and exclude parameter.
+
+        :param table: The table where to select the fields from. Field id's that are
+            not in the table won't be included.
+        :type table: Table
+        :param include: The field ids that must be included. Only the provided ones
+            are going to be in the returned queryset. Multiple can be provided
+            separated by comma
+        :type include: str
+        :param exclude: The field ids that must be excluded. Only the ones that are not
+            provided are going to be in the returned queryset. Multiple can be provided
+            separated by comma.
+        :type exclude: str
+        :return: A Field's QuerySet containing the allowed fields based on the provided
+            input.
+        :rtype: QuerySet
+        """
+
+        queryset = Field.objects.filter(table=table)
+        include_ids = self.extract_field_ids_from_string(include)
+        exclude_ids = self.extract_field_ids_from_string(exclude)
+
+        if len(include_ids) == 0 and len(exclude_ids) == 0:
+            return None
+
+        if len(include_ids) > 0:
+            queryset = queryset.filter(id__in=include_ids)
+
+        if len(exclude_ids) > 0:
+            queryset = queryset.filter(~Q(id__in=exclude_ids))
+
+        return queryset
 
     def extract_manytomany_values(self, values, model):
         """
@@ -114,7 +174,7 @@ class RowHandler:
 
         return row
 
-    def create_row(self, user, table, values=None, model=None):
+    def create_row(self, user, table, values=None, model=None, before=None):
         """
         Creates a new row for a given table with the provided values.
 
@@ -128,6 +188,9 @@ class RowHandler:
         :param model: If a model is already generated it can be provided here to avoid
             having to generate the model again.
         :type model: Model
+        :param before: If provided the new row will be placed right before that row
+            instance.
+        :type before: Table
         :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created row instance.
         :rtype: Model
@@ -145,6 +208,26 @@ class RowHandler:
 
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
+
+        if before:
+            # Here we calculate the order value, which indicates the position of the
+            # row, by subtracting a fraction of the row that it must be placed
+            # before. The same fraction is also going to be subtracted from the other
+            # rows that have been placed before. By using these fractions we don't
+            # have to re-order every row in the table.
+            change = Decimal('0.00000000000000000001')
+            values['order'] = before.order - change
+            model.objects.filter(
+                order__gt=floor(values['order']),
+                order__lte=values['order']
+            ).update(order=F('order') - change)
+        else:
+            # Because the row is by default added as last, we have to figure out what
+            # the highest order is and increase that by one. Because the order of new
+            # rows should always be a whole number we round it up.
+            values['order'] = ceil(
+                model.objects.aggregate(max=Max('order')).get('max') or Decimal('0')
+            ) + 1
 
         instance = model.objects.create(**values)
 

@@ -1,6 +1,7 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
+import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeSelectOptions'
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
 import { trueString } from '@baserow/modules/database/utils/constants'
@@ -13,10 +14,15 @@ export class ViewFilterType extends Registerable {
     return null
   }
 
+  getExample() {
+    return 'string'
+  }
+
   constructor() {
     super()
     this.type = this.getType()
     this.name = this.getName()
+    this.example = this.getExample()
     this.compatibleFieldTypes = this.getCompatibleFieldTypes()
 
     if (this.type === null) {
@@ -191,6 +197,10 @@ export class DateEqualViewFilterType extends ViewFilterType {
     return 'is date'
   }
 
+  getExample() {
+    return '2020-01-01'
+  }
+
   getInputComponent() {
     return ViewFilterTypeDate
   }
@@ -218,6 +228,10 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
 
   getName() {
     return 'is not date'
+  }
+
+  getExample() {
+    return '2020-01-01'
   }
 
   getInputComponent() {
@@ -249,6 +263,10 @@ export class HigherThanViewFilterType extends ViewFilterType {
     return 'higher than'
   }
 
+  getExample() {
+    return '100'
+  }
+
   getInputComponent() {
     return ViewFilterTypeNumber
   }
@@ -277,6 +295,10 @@ export class LowerThanViewFilterType extends ViewFilterType {
     return 'lower than'
   }
 
+  getExample() {
+    return '100'
+  }
+
   getInputComponent() {
     return ViewFilterTypeNumber
   }
@@ -296,13 +318,76 @@ export class LowerThanViewFilterType extends ViewFilterType {
   }
 }
 
+export class SingleSelectEqualViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'single_select_equal'
+  }
+
+  getName() {
+    return 'is'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['single_select']
+  }
+
+  matches(rowValue, filterValue) {
+    return (
+      filterValue === '' ||
+      (rowValue !== null && rowValue.id === parseInt(filterValue))
+    )
+  }
+}
+
+export class SingleSelectNotEqualViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'single_select_not_equal'
+  }
+
+  getName() {
+    return 'is not'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['single_select']
+  }
+
+  matches(rowValue, filterValue) {
+    return (
+      filterValue === '' ||
+      rowValue === null ||
+      (rowValue !== null && rowValue.id !== parseInt(filterValue))
+    )
+  }
+}
+
 export class BooleanViewFilterType extends ViewFilterType {
   static getType() {
     return 'boolean'
   }
 
   getName() {
-    return 'equals'
+    return 'is'
+  }
+
+  getExample() {
+    return 'true'
   }
 
   getInputComponent() {
@@ -331,6 +416,10 @@ export class EmptyViewFilterType extends ViewFilterType {
     return 'is empty'
   }
 
+  getExample() {
+    return ''
+  }
+
   prepareValue(value) {
     return ''
   }
@@ -346,6 +435,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'boolean',
       'link_row',
       'file',
+      'single_select',
     ]
   }
 
@@ -368,6 +458,10 @@ export class NotEmptyViewFilterType extends ViewFilterType {
     return 'is not empty'
   }
 
+  getExample() {
+    return ''
+  }
+
   prepareValue(value) {
     return ''
   }
@@ -383,6 +477,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'boolean',
       'link_row',
       'file',
+      'single_select',
     ]
   }
 

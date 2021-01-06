@@ -13,11 +13,10 @@ logger = logging.getLogger(__name__)
 
 class RowSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ('id',)
+        fields = ('id', 'order',)
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            }
+            'id': {'read_only': True},
+            'order': {'read_only': True}
         }
 
 
@@ -83,6 +82,11 @@ def get_example_row_serializer_class(add_id=False):
         fields['id'] = serializers.IntegerField(
             read_only=True,
             help_text='The unique identifier of the row in the table.'
+        )
+        fields['order'] = serializers.DecimalField(
+            max_digits=40, decimal_places=20, required=False,
+            help_text='Indicates the position of the row, lowest first and highest '
+                      'last.'
         )
 
     field_types = field_type_registry.registry.values()

@@ -66,6 +66,7 @@
       :files="value"
       @hidden="hideModal"
       @removed="removeFile(value, $event)"
+      @renamed="renameFile(value, $event.index, $event.value)"
     ></FileFieldModal>
   </div>
 </template>

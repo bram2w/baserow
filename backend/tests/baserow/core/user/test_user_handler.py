@@ -1,4 +1,5 @@
 import pytest
+from decimal import Decimal
 from unittest.mock import MagicMock
 from freezegun import freeze_time
 
@@ -65,10 +66,19 @@ def test_create_user():
     tables = Table.objects.all().order_by('id')
 
     model_1 = tables[0].get_model()
-    assert model_1.objects.all().count() == 4
+    model_1_results = model_1.objects.all()
+    assert len(model_1_results) == 4
+    assert model_1_results[0].order == Decimal('1.00000000000000000000')
+    assert model_1_results[1].order == Decimal('2.00000000000000000000')
+    assert model_1_results[2].order == Decimal('3.00000000000000000000')
+    assert model_1_results[3].order == Decimal('4.00000000000000000000')
 
     model_2 = tables[1].get_model()
-    assert model_2.objects.all().count() == 3
+    model_2_results = model_2.objects.all()
+    assert len(model_2_results) == 3
+    assert model_2_results[0].order == Decimal('1.00000000000000000000')
+    assert model_2_results[1].order == Decimal('2.00000000000000000000')
+    assert model_2_results[2].order == Decimal('3.00000000000000000000')
 
     plugin_mock.user_created.assert_called_with(user, group)
 

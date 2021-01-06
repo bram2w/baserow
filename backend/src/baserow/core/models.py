@@ -5,7 +5,9 @@ from django.contrib.contenttypes.models import ContentType
 from baserow.core.user_files.models import UserFile
 
 from .managers import GroupQuerySet
-from .mixins import OrderableMixin, PolymorphicContentTypeMixin
+from .mixins import (
+    OrderableMixin, PolymorphicContentTypeMixin, CreatedAndUpdatedOnMixin
+)
 
 __all__ = ['UserFile']
 
@@ -17,7 +19,7 @@ def get_default_application_content_type():
     return ContentType.objects.get_for_model(Application)
 
 
-class Group(models.Model):
+class Group(CreatedAndUpdatedOnMixin, models.Model):
     name = models.CharField(max_length=100)
     users = models.ManyToManyField(User, through='GroupUser')
 
@@ -32,7 +34,7 @@ class Group(models.Model):
         return f'<Group id={self.id}, name={self.name}>'
 
 
-class GroupUser(OrderableMixin, models.Model):
+class GroupUser(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
@@ -46,7 +48,8 @@ class GroupUser(OrderableMixin, models.Model):
         return cls.get_highest_order_of_queryset(queryset) + 1
 
 
-class Application(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
+class Application(CreatedAndUpdatedOnMixin, OrderableMixin,
+                  PolymorphicContentTypeMixin, models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     order = models.PositiveIntegerField()

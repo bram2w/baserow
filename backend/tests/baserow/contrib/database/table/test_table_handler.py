@@ -2,6 +2,7 @@ import pytest
 
 from django.db import connection
 from django.conf import settings
+from decimal import Decimal
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.table.models import Table
@@ -85,7 +86,8 @@ def test_fill_example_table_data(data_fixture):
     database = data_fixture.create_database_application(user=user)
 
     table_handler = TableHandler()
-    table_handler.create_table(user, database, fill_example=True, name='Table 1')
+    table = table_handler.create_table(user, database, fill_example=True,
+                                       name='Table 1')
 
     assert Table.objects.all().count() == 1
     assert GridView.objects.all().count() == 1
@@ -93,6 +95,13 @@ def test_fill_example_table_data(data_fixture):
     assert LongTextField.objects.all().count() == 1
     assert BooleanField.objects.all().count() == 1
     assert GridViewFieldOptions.objects.all().count() == 2
+
+    model = table.get_model()
+    results = model.objects.all()
+
+    assert len(results) == 2
+    assert results[0].order == Decimal('1.00000000000000000000')
+    assert results[1].order == Decimal('2.00000000000000000000')
 
 
 @pytest.mark.django_db
@@ -136,6 +145,10 @@ def test_fill_table_with_initial_data(data_fixture):
 
     model = table.get_model()
     results = model.objects.all()
+
+    assert results[0].order == Decimal('1.00000000000000000000')
+    assert results[1].order == Decimal('2.00000000000000000000')
+    assert results[2].order == Decimal('3.00000000000000000000')
 
     assert getattr(results[0], f'field_{text_fields[0].id}') == '1-1'
     assert getattr(results[0], f'field_{text_fields[1].id}') == '1-2'

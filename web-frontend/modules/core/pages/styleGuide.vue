@@ -186,6 +186,16 @@
               <div style="width: 200px;">
                 <Dropdown v-model="longDropdown">
                   <DropdownItem
+                    :key="'some-2'"
+                    :name="'Something'"
+                    :value="'some-2'"
+                  ></DropdownItem>
+                  <DropdownItem
+                    :key="'test-3'"
+                    :name="'Test 3'"
+                    :value="'test3'"
+                  ></DropdownItem>
+                  <DropdownItem
                     v-for="i in [
                       0,
                       1,
@@ -208,6 +218,53 @@
                     :name="'Choice ' + i"
                     :value="i"
                     :disabled="i === 7"
+                  ></DropdownItem>
+                  <DropdownItem
+                    :key="'test-1'"
+                    :name="'Test 1'"
+                    :value="'test1'"
+                  ></DropdownItem>
+                  <DropdownItem
+                    :key="'test-2'"
+                    :name="'Test 2'"
+                    :value="'test2'"
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">
+              Dropdown by link {{ dropdown }}
+            </label>
+            <div class="control__elements">
+              <div style="width: 200px;">
+                <a
+                  ref="dropdownLink"
+                  @click="$refs.dropdown1.toggle($refs.dropdownLink)"
+                  >Open dropdown</a
+                >
+                <Dropdown
+                  ref="dropdown1"
+                  v-model="dropdown"
+                  :show-input="false"
+                >
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="pencil"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="database"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="times"
+                    :disabled="true"
                   ></DropdownItem>
                 </Dropdown>
               </div>

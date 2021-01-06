@@ -8,7 +8,27 @@
     <div class="file-field-modal">
       <div class="file-field-modal__head">
         <div class="file-field-modal__name">
-          <template v-if="preview">{{ preview.visible_name }}</template>
+          <template v-if="preview">
+            <Editable
+              ref="rename"
+              :value="preview.visible_name"
+              @change="
+                $emit('renamed', {
+                  value: files,
+                  index: selected,
+                  value: $event.value,
+                })
+              "
+              @editing="renaming = $event"
+            ></Editable>
+            <a
+              v-show="!renaming"
+              class="file-field-modal__rename"
+              @click="$refs.rename.edit()"
+            >
+              <i class="fa fa-pen"></i>
+            </a>
+          </template>
         </div>
         <a class="file-field-modal__close" @click="hide()">
           <i class="fas fa-times"></i>
@@ -97,6 +117,7 @@ export default {
   },
   data() {
     return {
+      renaming: false,
       selected: 0,
     }
   },
@@ -137,6 +158,12 @@ export default {
       }
     },
     keyup(event) {
+      // When we are renaming we want the arrow keys to be available to move the
+      // cursor.
+      if (this.renaming) {
+        return
+      }
+
       // If left arrow
       if (event.keyCode === 37) {
         this.previous()

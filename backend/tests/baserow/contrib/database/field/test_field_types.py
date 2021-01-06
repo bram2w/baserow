@@ -24,17 +24,22 @@ from baserow.contrib.database.rows.handler import RowHandler
     "expected,field_kwargs",
     [
         (
-            [100, 100, 101, 0, 0, 0, None, None, None, None, None],
+            [
+                9223372036854775807, 100, 100, 101, 0, 0, 0, 0, None, None, None, None,
+                None
+            ],
             {'number_type': 'INTEGER', 'number_negative': False}
         ),
         (
-            [100, 100, 101, -100, -100, -101, None, None, None, None, None],
+            [9223372036854775807, 100, 100, 101, -9223372036854775808, -100, -100, -101,
+             None, None, None, None, None],
             {'number_type': 'INTEGER', 'number_negative': True}
         ),
         (
             [
-                Decimal('100.0'), Decimal('100.2'), Decimal('100.6'), Decimal('0.0'),
-                Decimal('0.0'), Decimal('0.0'), None, None, None, None, None
+                Decimal('9223372036854775807.0'), Decimal('100.0'), Decimal('100.2'),
+                Decimal('100.6'), Decimal('0.0'), Decimal('0.0'), Decimal('0.0'),
+                Decimal('0.0'), None, None, None, None, None
             ],
             {
                 'number_type': 'DECIMAL', 'number_negative': False,
@@ -43,9 +48,10 @@ from baserow.contrib.database.rows.handler import RowHandler
         ),
         (
             [
-                Decimal('100.000'), Decimal('100.220'), Decimal('100.600'),
-                Decimal('-100.0'), Decimal('-100.220'), Decimal('-100.600'), None, None,
-                None, None, None
+                Decimal('9223372036854775807.000'), Decimal('100.000'),
+                Decimal('100.220'), Decimal('100.600'),
+                Decimal('-9223372036854775808.0'), Decimal('-100.0'),
+                Decimal('-100.220'), Decimal('-100.600'), None, None, None, None, None
             ],
             {
                 'number_type': 'DECIMAL', 'number_negative': True,
@@ -63,9 +69,11 @@ def test_alter_number_field_column_type(expected, field_kwargs, data_fixture):
     field = handler.update_field(user=user, field=field, name='Text field')
 
     model = table.get_model()
+    model.objects.create(**{f'field_{field.id}': '9223372036854775807'})
     model.objects.create(**{f'field_{field.id}': '100'})
     model.objects.create(**{f'field_{field.id}': '100.22'})
     model.objects.create(**{f'field_{field.id}': '100.59999'})
+    model.objects.create(**{f'field_{field.id}': '-9223372036854775808'})
     model.objects.create(**{f'field_{field.id}': '-100'})
     model.objects.create(**{f'field_{field.id}': '-100.22'})
     model.objects.create(**{f'field_{field.id}': '-100.5999'})

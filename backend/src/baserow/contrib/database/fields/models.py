@@ -2,7 +2,9 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 
 from baserow.core.utils import to_snake_case, remove_special_characters
-from baserow.core.mixins import OrderableMixin, PolymorphicContentTypeMixin
+from baserow.core.mixins import (
+    OrderableMixin, PolymorphicContentTypeMixin, CreatedAndUpdatedOnMixin
+)
 
 
 NUMBER_TYPE_INTEGER = 'INTEGER'
@@ -53,7 +55,8 @@ def get_default_field_content_type():
     return ContentType.objects.get_for_model(Field)
 
 
-class Field(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
+class Field(CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixin,
+            models.Model):
     """
     Because each field type can have custom settings, for example precision for a number
     field, values for an option field or checkbox style for a boolean field we need a
@@ -103,6 +106,17 @@ class Field(OrderableMixin, PolymorphicContentTypeMixin, models.Model):
             name = f'field_{name}'
 
         return name
+
+
+class SelectOption(models.Model):
+    value = models.CharField(max_length=255, blank=True)
+    color = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField()
+    field = models.ForeignKey(Field, on_delete=models.CASCADE,
+                              related_name='select_options')
+
+    class Meta:
+        ordering = ('order', 'id',)
 
 
 class TextField(Field):
@@ -242,4 +256,8 @@ class EmailField(Field):
 
 
 class FileField(Field):
+    pass
+
+
+class SingleSelectField(Field):
     pass

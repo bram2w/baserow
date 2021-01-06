@@ -288,6 +288,18 @@
     <Context ref="rowContext">
       <ul class="context__menu">
         <li>
+          <a @click=";[addRow(selectedRow), $refs.rowContext.hide()]">
+            <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
+            Insert row above
+          </a>
+        </li>
+        <li>
+          <a @click=";[addRowAfter(selectedRow), $refs.rowContext.hide()]">
+            <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
+            Insert row below
+          </a>
+        </li>
+        <li>
           <a
             @click="
               ;[$refs.rowEditModal.show(selectedRow), $refs.rowContext.hide()]
@@ -571,7 +583,7 @@ export default {
         this.$refs.scrollbars.update()
       }
     },
-    async addRow() {
+    async addRow(before = null) {
       try {
         await this.$store.dispatch('view/grid/create', {
           view: this.view,
@@ -579,10 +591,27 @@ export default {
           // We need a list of all fields including the primary one here.
           fields: [this.primary].concat(...this.fields),
           values: {},
+          before,
         })
       } catch (error) {
         notifyIf(error, 'row')
       }
+    },
+    /**
+     * Because it is only possible to add a new row before another row, we have to
+     * figure out which row is below the given row and insert before that one. If the
+     * next row is not found, we can safely assume it is the last row and add it last.
+     */
+    addRowAfter(row) {
+      const rows = this.$store.getters['view/grid/getAllRows']
+      const index = rows.findIndex((r) => r.id === row.id)
+      let nextRow = null
+
+      if (index !== -1 && rows.length > index + 1) {
+        nextRow = rows[index + 1]
+      }
+
+      this.addRow(nextRow)
     },
     showRowContext(event, row) {
       this.selectedRow = row

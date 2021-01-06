@@ -56,3 +56,7 @@ export const isValidEmail = (str) => {
 export const isSecureURL = (str) => {
   return str.toLowerCase().substr(0, 5) === 'https'
 }
+
+export const escapeRegExp = (string) => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}

@@ -340,8 +340,7 @@ class ViewHandler:
         # Check if the field is allowed for this filter type.
         if field_type.type not in view_filter_type.compatible_field_types:
             raise ViewFilterTypeNotAllowedForField(
-                f'The view filter type {type_name} is not supported for field type '
-                f'{field_type.type}.'
+                type_name, field_type.type
             )
 
         # Check if field belongs to the grid views table
@@ -389,8 +388,8 @@ class ViewHandler:
         # Check if the field is allowed for this filter type.
         if field_type.type not in view_filter_type.compatible_field_types:
             raise ViewFilterTypeNotAllowedForField(
-                f'The view filter type {type_name} is not supported for field type '
-                f'{field_type.type}.'
+                type_name,
+                field_type.type
             )
 
         # If the field has changed we need to check if the field belongs to the table.
@@ -460,23 +459,32 @@ class ViewHandler:
 
         order_by = []
 
-        for view_filter in view.viewsort_set.all():
+        for view_sort in view.viewsort_set.all():
             # If the to be sort field is not present in the `_field_objects` we
             # cannot filter so we raise a ValueError.
-            if view_filter.field_id not in model._field_objects:
+            if view_sort.field_id not in model._field_objects:
                 raise ValueError(f'The table model does not contain field '
-                                 f'{view_filter.field_id}.')
+                                 f'{view_sort.field_id}.')
 
-            field_name = model._field_objects[view_filter.field_id]['name']
-            order = F(field_name)
+            field = model._field_objects[view_sort.field_id]['field']
+            field_name = model._field_objects[view_sort.field_id]['name']
+            field_type = model._field_objects[view_sort.field_id]['type']
 
-            if view_filter.order == 'ASC':
-                order = order.asc(nulls_first=True)
-            else:
-                order = order.desc(nulls_last=True)
+            order = field_type.get_order(field, field_name, view_sort)
+
+            # If the field type does not have a specific ordering expression we can
+            # order the default way.
+            if not order:
+                order = F(field_name)
+
+                if view_sort.order == 'ASC':
+                    order = order.asc(nulls_first=True)
+                else:
+                    order = order.desc(nulls_last=True)
 
             order_by.append(order)
 
+        order_by.append('order')
         order_by.append('id')
         queryset = queryset.order_by(*order_by)
 

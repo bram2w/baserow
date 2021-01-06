@@ -15,7 +15,7 @@ from .exceptions import (
     FieldDoesNotExist, IncompatiblePrimaryFieldTypeError
 )
 from .registries import field_type_registry, field_converter_registry
-from .models import Field
+from .models import Field, SelectOption
 
 
 logger = logging.getLogger(__name__)
@@ -109,7 +109,8 @@ class FieldHandler:
         last_order = model_class.get_last_order(table)
 
         field_values = field_type.prepare_values(field_values, user)
-        field_type.before_create(table, primary, field_values, last_order, user)
+        before = field_type.before_create(table, primary, field_values, last_order,
+                                          user)
 
         instance = model_class.objects.create(table=table, order=last_order,
                                               primary=primary, **field_values)
@@ -123,7 +124,7 @@ class FieldHandler:
             if do_schema_change:
                 schema_editor.add_field(to_model, model_field)
 
-        field_type.after_create(instance, to_model, user, connection)
+        field_type.after_create(instance, to_model, user, connection, before)
 
         return instance
 
@@ -183,7 +184,7 @@ class FieldHandler:
         field_values = extract_allowed(kwargs, allowed_fields)
 
         field_values = field_type.prepare_values(field_values, user)
-        field_type.before_update(old_field, field_values, user)
+        before = field_type.before_update(old_field, field_values, user)
 
         field = set_allowed_attrs(field_values, allowed_fields, field)
         field.save()
@@ -228,7 +229,9 @@ class FieldHandler:
             # the lenient schema editor.
             with lenient_schema_editor(
                 connection,
-                field_type.get_alter_column_type_function(connection, field)
+                old_field_type.get_alter_column_prepare_value(
+                    connection, old_field, field),
+                field_type.get_alter_column_type_function(connection, old_field, field)
             ) as schema_editor:
                 try:
                     schema_editor.alter_field(from_model, from_model_field,
@@ -247,8 +250,16 @@ class FieldHandler:
         to_model_field_type = to_model_field.db_parameters(connection)['type']
         altered_column = from_model_field_type != to_model_field_type
 
+        # If the new field doesn't support select options we can delete those
+        # relations.
+        if (
+            old_field_type.can_have_select_options and
+            not field_type.can_have_select_options
+        ):
+            old_field.select_options.all().delete()
+
         field_type.after_update(old_field, field, from_model, to_model, user,
-                                connection, altered_column)
+                                connection, altered_column, before)
 
         return field
 
@@ -292,3 +303,74 @@ class FieldHandler:
         # After the field is deleted we are going to to call the after_delete method of
         # the field type because some instance cleanup might need to happen.
         field_type.after_delete(field, from_model, user, connection)
+
+    def update_field_select_options(self, user, field, select_options):
+        """
+        Brings the select options in the desired provided state in a query efficient
+        manner.
+
+        Example: select_options = [
+            {'id': 1, 'value': 'Option 1', 'color': 'blue'},
+            {'value': 'Option 2', 'color': 'red'}
+        ]
+
+        :param user: The user on whose behalf the change is made.
+        :type user: User
+        :param field: The field of which the select options must be updated.
+        :type field: Field
+        :param select_options: A list containing dicts with the desired select options.
+        :type select_options: list
+        :raises UserNotInGroupError: When the user does not belong to the related group.
+        """
+
+        group = field.table.database.group
+        if not group.has_user(user):
+            raise UserNotInGroupError(user, group)
+
+        existing_select_options = field.select_options.all()
+
+        # Checks which option ids must be selected by comparing the existing ids with
+        # the provided ids.
+        to_delete = [
+            existing.id
+            for existing in existing_select_options
+            if existing.id not in [
+                desired['id']
+                for desired in select_options
+                if 'id' in desired
+            ]
+        ]
+
+        if len(to_delete) > 0:
+            SelectOption.objects.filter(field=field, id__in=to_delete).delete()
+
+        # Checks which existing instances must be fetched using a single query.
+        to_select = [
+            select_option['id']
+            for select_option in select_options
+            if 'id' in select_option
+        ]
+
+        if len(to_select) > 0:
+            for existing in field.select_options.filter(id__in=to_select):
+                for select_option in select_options:
+                    if select_option.get('id') == existing.id:
+                        select_option['instance'] = existing
+
+        to_create = []
+
+        for order, select_option in enumerate(select_options):
+            if 'instance' in select_option:
+                instance = select_option['instance']
+                instance.order = order
+                instance.value = select_option['value']
+                instance.color = select_option['color']
+                instance.save()
+            else:
+                to_create.append(SelectOption(
+                    field=field, order=order, value=select_option['value'],
+                    color=select_option['color'])
+                )
+
+        if len(to_create) > 0:
+            SelectOption.objects.bulk_create(to_create)

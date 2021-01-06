@@ -24,10 +24,15 @@ from baserow.contrib.database.api.rows.serializers import (
 )
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
 from baserow.contrib.database.api.fields.errors import (
-    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE, ERROR_ORDER_BY_FIELD_NOT_FOUND
+    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE, ERROR_ORDER_BY_FIELD_NOT_FOUND,
+    ERROR_FILTER_FIELD_NOT_FOUND
+)
+from baserow.contrib.database.api.views.errors import (
+    ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+    ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD
 )
 from baserow.contrib.database.fields.exceptions import (
-    OrderByFieldNotFound, OrderByFieldNotPossible
+    OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
 )
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
@@ -35,6 +40,11 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
+from baserow.contrib.database.views.models import FILTER_TYPE_AND, FILTER_TYPE_OR
+from baserow.contrib.database.views.exceptions import (
+    ViewFilterTypeNotAllowedForField, ViewFilterTypeDoesNotExist
+)
+from baserow.contrib.database.views.registries import view_filter_type_registry
 
 from .serializers import (
     RowSerializer, get_example_row_serializer_class, get_row_serializer_class
@@ -81,7 +91,62 @@ class RowsView(APIView):
                             'separated by comma. By default a field is ordered in '
                             'ascending (A-Z) order, but by prepending the field with '
                             'a \'-\' it can be ordered descending (Z-A). '
-            )
+            ),
+            OpenApiParameter(
+                name='filter__{field}__{filter}',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    f'The rows can optionally be filtered by the same view filters '
+                    f'available for the views. Multiple filters can be provided if '
+                    f'they follow the same format. The field and filter variable '
+                    f'indicate how to filter and the value indicates where to filter '
+                    f'on.\n\n'
+                    f'For example if you provide the following GET parameter '
+                    f'`filter__field_1__equal=test` then only rows where the value of '
+                    f'field_1 is equal to test are going to be returned.\n\n'
+                    f'The following filters are available: '
+                    f'{", ".join(view_filter_type_registry.get_types())}.'
+                )
+            ),
+            OpenApiParameter(
+                name='filter_type',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    '`AND`: Indicates that the rows must match all the provided '
+                    'filters.\n'
+                    '`OR`: Indicates that the rows only have to match one of the '
+                    'filters.\n\n'
+                    'This works only if two or more filters are provided.'
+                )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'All the fields are included in the response by default. You can '
+                    'select a subset of fields by providing the include query '
+                    'parameter. If you for example provide the following GET '
+                    'parameter `include=field_1,field_2` then only the fields with'
+                    'id `1` and id `2` are going to be selected and included in the '
+                    'response. '
+                )
+            ),
+            OpenApiParameter(
+                name='exclude',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'All the fields are included in the response by default. You can '
+                    'select a subset of fields by providing the exclude query '
+                    'parameter. If you for example provide the following GET '
+                    'parameter `exclude=field_1,field_2` then the fields with id `1` '
+                    'and id `2` are going to be excluded from the selection and '
+                    'response.'
+                )
+            ),
         ],
         tags=['Database table rows'],
         operation_id='list_database_table_rows',
@@ -105,7 +170,10 @@ class RowsView(APIView):
                 'ERROR_PAGE_SIZE_LIMIT',
                 'ERROR_INVALID_PAGE',
                 'ERROR_ORDER_BY_FIELD_NOT_FOUND',
-                'ERROR_ORDER_BY_FIELD_NOT_POSSIBLE'
+                'ERROR_ORDER_BY_FIELD_NOT_POSSIBLE',
+                'ERROR_FILTER_FIELD_NOT_FOUND',
+                'ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST',
+                'ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD'
             ]),
             401: get_error_schema(['ERROR_NO_PERMISSION_TO_TABLE']),
             404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
@@ -116,7 +184,10 @@ class RowsView(APIView):
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
         OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
-        OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE
+        OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
+        FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
+        ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+        ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD
     })
     def get(self, request, table_id):
         """
@@ -126,18 +197,31 @@ class RowsView(APIView):
 
         table = TableHandler().get_table(request.user, table_id)
         TokenHandler().check_table_permissions(request, 'read', table, False)
-
-        model = table.get_model()
         search = request.GET.get('search')
         order_by = request.GET.get('order_by')
+        include = request.GET.get('include')
+        exclude = request.GET.get('exclude')
+        fields = RowHandler().get_include_exclude_fields(table, include, exclude)
 
-        queryset = model.objects.all().enhance_by_fields().order_by('id')
+        model = table.get_model(
+            fields=fields,
+            field_ids=[] if fields else None
+        )
+        queryset = model.objects.all().enhance_by_fields()
 
         if search:
             queryset = queryset.search_all_fields(search)
 
         if order_by:
             queryset = queryset.order_by_fields_string(order_by)
+
+        filter_type = (
+            FILTER_TYPE_OR
+            if str(request.GET.get('filter_type')).upper() == 'OR' else
+            FILTER_TYPE_AND
+        )
+        filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}
+        queryset = queryset.filter_by_fields_object(filter_object, filter_type)
 
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)
@@ -153,6 +237,11 @@ class RowsView(APIView):
                 name='table_id', location=OpenApiParameter.PATH, type=OpenApiTypes.INT,
                 description='Creates a row in the table related to the provided '
                             'value.'
+            ),
+            OpenApiParameter(
+                name='before', location=OpenApiParameter.QUERY, type=OpenApiTypes.INT,
+                description='If provided then the newly created row will be '
+                            'positioned before the row with the provided id.'
             )
         ],
         tags=['Database table rows'],
@@ -179,7 +268,8 @@ class RowsView(APIView):
             ]),
             401: get_error_schema(['ERROR_NO_PERMISSION_TO_TABLE']),
             404: get_error_schema([
-                'ERROR_TABLE_DOES_NOT_EXIST'
+                'ERROR_TABLE_DOES_NOT_EXIST',
+                'ERROR_ROW_DOES_NOT_EXIST'
             ])
         }
     )
@@ -188,7 +278,8 @@ class RowsView(APIView):
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
-        UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST
+        UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
+        RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
     })
     def post(self, request, table_id):
         """
@@ -203,7 +294,14 @@ class RowsView(APIView):
         validation_serializer = get_row_serializer_class(model)
         data = validate_data(validation_serializer, request.data)
 
-        row = RowHandler().create_row(request.user, table, data, model)
+        before_id = request.GET.get('before')
+        before = (
+            RowHandler().get_row(request.user, table, before_id, model)
+            if before_id else
+            None
+        )
+
+        row = RowHandler().create_row(request.user, table, data, model, before=before)
         serializer_class = get_row_serializer_class(model, RowSerializer,
                                                     is_response=True)
         serializer = serializer_class(row)

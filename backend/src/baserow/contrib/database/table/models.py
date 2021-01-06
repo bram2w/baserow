@@ -1,12 +1,22 @@
 import re
+from decimal import Decimal, DecimalException
 
 from django.db import models
+from django.db.models import Q
 
-from baserow.core.mixins import OrderableMixin
+from baserow.core.mixins import OrderableMixin, CreatedAndUpdatedOnMixin
 from baserow.contrib.database.fields.exceptions import (
-    OrderByFieldNotFound, OrderByFieldNotPossible
+    OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
 )
+from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.views.models import FILTER_TYPE_AND, FILTER_TYPE_OR
+from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
+
+
+deconstruct_filter_key_regex = re.compile(
+    r'filter__field_([0-9]+)__([a-zA-Z0-9_]*)$'
+)
 
 
 class TableModelQuerySet(models.QuerySet):
@@ -42,8 +52,12 @@ class TableModelQuerySet(models.QuerySet):
         """
 
         search_queries = models.Q()
+        excluded = ('order', 'created_on', 'updated_on')
 
         for field in self.model._meta.get_fields():
+            if field.name in excluded:
+                continue
+
             if (
                 isinstance(field, models.CharField) or
                 isinstance(field, models.TextField)
@@ -60,6 +74,13 @@ class TableModelQuerySet(models.QuerySet):
                         f'{field.name}': int(search)
                     })
                 except ValueError:
+                    pass
+            elif isinstance(field, models.DecimalField):
+                try:
+                    search_queries = search_queries | models.Q(**{
+                        f'{field.name}': Decimal(search)
+                    })
+                except (ValueError, DecimalException):
                     pass
 
         return self.filter(search_queries) if len(search_queries) > 0 else self
@@ -110,8 +131,84 @@ class TableModelQuerySet(models.QuerySet):
                 field_name
             )
 
+        order_by.append('order')
         order_by.append('id')
         return self.order_by(*order_by)
+
+    def filter_by_fields_object(self, filter_object, filter_type=FILTER_TYPE_AND):
+        """
+        Filters the query by the provided filters in the filter_object. The following
+        format `filter__field_{id}__{view_filter_type}` is expected as key and multiple
+        values can be provided as a list containing strings. Only the view filter types
+        are allowed.
+
+        Example: {
+            'filter__field_{id}__{view_filter_type}': {value}.
+        }
+
+        :param filter_object: The object containing the field and filter type as key
+            and the filter value as value.
+        :type filter_object: object
+        :param filter_type: Indicates if the provided filters are in an AND or OR
+            statement.
+        :type filter_type: str
+        :raises ValueError: Raised when the provided filer_type isn't AND or OR.
+        :raises FilterFieldNotFound: Raised when the provided field isn't found in
+            the model.
+        :raises ViewFilterTypeDoesNotExist: when the view filter type doesn't exist.
+        :raises ViewFilterTypeNotAllowedForField: when the view filter type isn't
+            compatible with field type.
+        :return: The filtered queryset.
+        :rtype: QuerySet
+        """
+
+        if filter_type not in [FILTER_TYPE_AND, FILTER_TYPE_OR]:
+            raise ValueError(f'Unknown filter type {filter_type}.')
+
+        q_filters = Q()
+
+        for key, values in filter_object.items():
+            matches = deconstruct_filter_key_regex.match(key)
+
+            if not matches:
+                continue
+
+            field_id = int(matches[1])
+
+            if field_id not in self.model._field_objects:
+                raise FilterFieldNotFound(
+                    field_id, f'Field {field_id} does not exist.'
+                )
+
+            field_name = self.model._field_objects[field_id]['name']
+            field_type = self.model._field_objects[field_id]['type'].type
+            model_field = self.model._meta.get_field(field_name)
+            view_filter_type = view_filter_type_registry.get(matches[2])
+
+            if field_type not in view_filter_type.compatible_field_types:
+                raise ViewFilterTypeNotAllowedForField(
+                    matches[2],
+                    field_type,
+                )
+
+            if not isinstance(values, list):
+                values = [values]
+
+            for value in values:
+                q_filter = view_filter_type.get_filter(
+                    field_name,
+                    value,
+                    model_field
+                )
+
+                # Depending on filter type we are going to combine the Q either as
+                # AND or as OR.
+                if filter_type == FILTER_TYPE_AND:
+                    q_filters &= q_filter
+                elif filter_type == FILTER_TYPE_OR:
+                    q_filters |= q_filter
+
+        return self.filter(q_filters)
 
 
 class TableModelManager(models.Manager):
@@ -119,7 +216,7 @@ class TableModelManager(models.Manager):
         return TableModelQuerySet(self.model, using=self._db)
 
 
-class Table(OrderableMixin, models.Model):
+class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
     database = models.ForeignKey('database.Database', on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
@@ -168,7 +265,7 @@ class Table(OrderableMixin, models.Model):
             'managed': False,
             'db_table': f'database_table_{self.id}',
             'app_label': app_label,
-            'ordering': ['id']
+            'ordering': ['order', 'id']
         })
 
         attrs = {
@@ -182,7 +279,10 @@ class Table(OrderableMixin, models.Model):
             '_field_objects': {},
             # We are using our own table model manager to implement some queryset
             # helpers.
-            'objects': TableModelManager()
+            'objects': TableModelManager(),
+            # Indicates which position the row has.
+            'order': models.DecimalField(max_digits=40, decimal_places=20,
+                                         editable=False, db_index=True, default=1)
         }
 
         # Construct a query to fetch all the fields of that table.
@@ -198,7 +298,7 @@ class Table(OrderableMixin, models.Model):
 
         # Create a combined list of fields that must be added and belong to the this
         # table.
-        fields = fields + [field for field in fields_query]
+        fields = list(fields) + [field for field in fields_query]
 
         # If there are duplicate field names we have to store them in a list so we know
         # later which ones are duplicate.
@@ -241,7 +341,7 @@ class Table(OrderableMixin, models.Model):
         # Create the model class.
         model = type(
             str(f'Table{self.pk}Model'),
-            (models.Model,),
+            (CreatedAndUpdatedOnMixin, models.Model,),
             attrs
         )
 

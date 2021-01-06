@@ -1,5 +1,24 @@
 # Changelog
 
+## Released (2021-01-06)
+
+* Allow larger values for the number field and improved the validation.
+* Fixed bug where if you have no filters, but the filter type is set to `OR` it always
+  results in a not matching row state in the web-frontend.
+* Fixed bug where the arrow navigation didn't work for the dropdown component in
+  combination with a search query.
+* Fixed bug where the page refreshes if you press enter in an input in the row modal.
+* Added filtering by GET parameter to the rows listing endpoint.
+* Fixed drifting context menu.
+* Store updated and created timestamp for the groups, applications, tables, views,
+  fields and rows.
+* Made the file name editable.
+* Made the rows orderable and added the ability to insert a row at a given position.
+* Made it possible to include or exclude specific fields when listing rows via the API.
+* Implemented a single select field.
+* Fixed bug where inserting above or below a row created upon signup doesn't work
+  correctly.
+
 ## Released (2020-12-01)
 
 * Added select_for_update where it was still missing.

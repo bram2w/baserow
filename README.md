@@ -2,6 +2,9 @@
 
 Open source online database tool and Airtable alternative.
 
+**We're hiring** remote developers! More information at 
+https://baserow.io/jobs/experienced-full-stack-developer.
+
 ![Baserow screenshot](docs/assets/screenshot.png "Baserow screenshot")
 
 ## Introduction
@@ -106,7 +109,7 @@ Created by Bram Wiepjes (Baserow) - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 0.6.0
+Version: 0.7.0
 
 The official repository can be found at https://gitlab.com/bramw/baserow.
 

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework_jwt.serializers import JSONWebTokenSerializer
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import update_last_login
 
 from baserow.core.user.utils import normalize_email_address
 
@@ -64,3 +65,14 @@ class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields[self.username_field] = NormalizedEmailField()
+
+    def validate(self, attrs):
+        """
+        This serializer is only used by the ObtainJSONWebToken view which is only used
+        to generate a new token. When that happens we want to update the user's last
+        login timestamp.
+        """
+
+        validated_data = super().validate(attrs)
+        update_last_login(None, validated_data['user'])
+        return validated_data

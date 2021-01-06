@@ -4,7 +4,7 @@ from decimal import Decimal
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    Field, TextField, NumberField, BooleanField
+    Field, TextField, NumberField, BooleanField, SelectOption
 )
 from baserow.contrib.database.fields.exceptions import (
     FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
@@ -265,3 +265,97 @@ def test_delete_field(data_fixture):
     primary = data_fixture.create_text_field(table=table, primary=True)
     with pytest.raises(CannotDeletePrimaryField):
         handler.delete_field(user=user, field=primary)
+
+
+@pytest.mark.django_db
+def test_update_select_options(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_single_select_field(table=table)
+    field_2 = data_fixture.create_single_select_field(table=table)
+    data_fixture.create_text_field(table=table)
+
+    handler = FieldHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.update_field_select_options(field=field, user=user_2, select_options=[])
+
+    handler.update_field_select_options(field=field, user=user, select_options=[
+        {'value': 'Option 1', 'color': 'blue'},
+        {'value': 'Option 2', 'color': 'red'}
+    ])
+
+    assert SelectOption.objects.all().count() == 2
+    select_options = field.select_options.all()
+    assert len(select_options) == 2
+
+    assert select_options[0].order == 0
+    assert select_options[0].value == 'Option 1'
+    assert select_options[0].color == 'blue'
+    assert select_options[0].field_id == field.id
+
+    assert select_options[1].order == 1
+    assert select_options[1].value == 'Option 2'
+    assert select_options[1].color == 'red'
+    assert select_options[1].field_id == field.id
+
+    handler.update_field_select_options(field=field, user=user, select_options=[
+        {'id': select_options[0].id, 'value': 'Option 1 A', 'color': 'blue 2'},
+        {'id': select_options[1].id, 'value': 'Option 2 A', 'color': 'red 2'}
+    ])
+
+    assert SelectOption.objects.all().count() == 2
+    select_options_2 = field.select_options.all()
+    assert len(select_options_2) == 2
+
+    assert select_options_2[0].id == select_options[0].id
+    assert select_options_2[0].order == 0
+    assert select_options_2[0].value == 'Option 1 A'
+    assert select_options_2[0].color == 'blue 2'
+    assert select_options_2[0].field_id == field.id
+
+    assert select_options_2[1].id == select_options[1].id
+    assert select_options_2[1].order == 1
+    assert select_options_2[1].value == 'Option 2 A'
+    assert select_options_2[1].color == 'red 2'
+    assert select_options_2[1].field_id == field.id
+
+    handler.update_field_select_options(field=field, user=user, select_options=[
+        {'id': select_options[1].id, 'value': 'Option 1 B', 'color': 'red'},
+        {'value': 'Option 2 B', 'color': 'green'},
+    ])
+
+    assert SelectOption.objects.all().count() == 2
+    select_options_3 = field.select_options.all()
+    assert len(select_options_3) == 2
+
+    assert select_options_3[0].id == select_options[1].id
+    assert select_options_3[0].order == 0
+    assert select_options_3[0].value == 'Option 1 B'
+    assert select_options_3[0].color == 'red'
+    assert select_options_3[0].field_id == field.id
+
+    assert select_options_3[1].order == 1
+    assert select_options_3[1].value == 'Option 2 B'
+    assert select_options_3[1].color == 'green'
+    assert select_options_3[1].field_id == field.id
+
+    handler.update_field_select_options(field=field_2, user=user, select_options=[
+        {'id': select_options[1].id, 'value': 'Option 1 B', 'color': 'red'},
+    ])
+
+    assert SelectOption.objects.all().count() == 3
+    select_options_4 = field_2.select_options.all()
+    assert len(select_options_4) == 1
+
+    assert select_options_4[0].id != select_options[1].id
+    assert select_options_4[0].order == 0
+    assert select_options_4[0].value == 'Option 1 B'
+    assert select_options_4[0].color == 'red'
+    assert select_options_4[0].field_id == field_2.id
+
+    handler.update_field_select_options(field=field_2, user=user, select_options=[])
+
+    assert SelectOption.objects.all().count() == 2
+    assert field_2.select_options.all().count() == 0
