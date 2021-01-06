@@ -1,5 +1,7 @@
 # Changelog
 
+## Released (2021-01-06)
+
 * Allow larger values for the number field and improved the validation.
 * Fixed bug where if you have no filters, but the filter type is set to `OR` it always
   results in a not matching row state in the web-frontend.
@@ -14,6 +16,8 @@
 * Made the rows orderable and added the ability to insert a row at a given position.
 * Made it possible to include or exclude specific fields when listing rows via the API.
 * Implemented a single select field.
+* Fixed bug where inserting above or below a row created upon signup doesn't work
+  correctly.
 
 ## Released (2020-12-01)
 
@@ -30,8 +34,6 @@
 * Implemented a file field and user files upload.
 * Made it impossible for the `link_row` field to be a primary field because that can
   cause the primary field to be deleted.
-* Fixed bug where inserting above or below a row created upon signup doesn't work
-  correctly.
 
 ## Released (2020-11-02)
 
