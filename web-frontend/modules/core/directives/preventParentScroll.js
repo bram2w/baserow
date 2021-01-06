@@ -10,8 +10,14 @@ export default {
       event.stopPropagation()
     }
     el.addEventListener('wheel', el.preventParentScrollDirectiveEvent)
+    el.addEventListener('touchstart', el.preventParentScrollDirectiveEvent)
+    el.addEventListener('touchend', el.preventParentScrollDirectiveEvent)
+    el.addEventListener('touchmove', el.preventParentScrollDirectiveEvent)
   },
   unbind(el) {
     el.removeEventListener('wheel', el.preventParentScrollDirectiveEvent)
+    el.removeEventListener('touchstart', el.preventParentScrollDirectiveEvent)
+    el.removeEventListener('touchend', el.preventParentScrollDirectiveEvent)
+    el.removeEventListener('touchmove', el.preventParentScrollDirectiveEvent)
   },
 }

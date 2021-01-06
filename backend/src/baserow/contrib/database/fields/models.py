@@ -108,6 +108,17 @@ class Field(CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixi
         return name
 
 
+class SelectOption(models.Model):
+    value = models.CharField(max_length=255, blank=True)
+    color = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField()
+    field = models.ForeignKey(Field, on_delete=models.CASCADE,
+                              related_name='select_options')
+
+    class Meta:
+        ordering = ('order', 'id',)
+
+
 class TextField(Field):
     text_default = models.CharField(
         max_length=255,
@@ -245,4 +256,8 @@ class EmailField(Field):
 
 
 class FileField(Field):
+    pass
+
+
+class SingleSelectField(Field):
     pass

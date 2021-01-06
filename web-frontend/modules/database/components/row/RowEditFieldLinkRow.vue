@@ -19,8 +19,8 @@
         </a>
       </li>
     </ul>
-    <a class="field-link-row__add" @click.prevent="$refs.selectModal.show()">
-      <i class="fas fa-plus field-link-row__add-icon"></i>
+    <a class="add" @click.prevent="$refs.selectModal.show()">
+      <i class="fas fa-plus add__icon"></i>
       Add another link
     </a>
     <SelectRowModal

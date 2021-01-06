@@ -35,6 +35,12 @@ class FieldSerializer(serializers.ModelSerializer):
         return field.type
 
 
+class SelectOptionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    value = serializers.CharField(max_length=255, required=True)
+    color = serializers.CharField(max_length=255, required=True)
+
+
 class CreateFieldSerializer(serializers.ModelSerializer):
     type = serializers.ChoiceField(
         choices=lazy(field_type_registry.get_types, list)(),

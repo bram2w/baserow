@@ -1,6 +1,7 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
+import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeSelectOptions'
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
 import { trueString } from '@baserow/modules/database/utils/constants'
@@ -317,13 +318,72 @@ export class LowerThanViewFilterType extends ViewFilterType {
   }
 }
 
+export class SingleSelectEqualViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'single_select_equal'
+  }
+
+  getName() {
+    return 'is'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['single_select']
+  }
+
+  matches(rowValue, filterValue) {
+    return (
+      filterValue === '' ||
+      (rowValue !== null && rowValue.id === parseInt(filterValue))
+    )
+  }
+}
+
+export class SingleSelectNotEqualViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'single_select_not_equal'
+  }
+
+  getName() {
+    return 'is not'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['single_select']
+  }
+
+  matches(rowValue, filterValue) {
+    return (
+      filterValue === '' ||
+      rowValue === null ||
+      (rowValue !== null && rowValue.id !== parseInt(filterValue))
+    )
+  }
+}
+
 export class BooleanViewFilterType extends ViewFilterType {
   static getType() {
     return 'boolean'
   }
 
   getName() {
-    return 'equals'
+    return 'is'
   }
 
   getExample() {
@@ -375,6 +435,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'boolean',
       'link_row',
       'file',
+      'single_select',
     ]
   }
 
@@ -416,6 +477,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'boolean',
       'link_row',
       'file',
+      'single_select',
     ]
   }
 

@@ -139,15 +139,23 @@
   }
 }
 
+.select__description {
+  padding-bottom: 14px;
+  text-align: center;
+}
+
 .select__footer {
   border-top: 1px solid $color-neutral-200;
 }
 
 .select__footer-button {
+  position: relative;
   display: block;
   padding: 0 12px;
   color: $color-neutral-600;
   user-select: none;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
 
   @include fixed-height(36px, 14px);
 
@@ -158,6 +166,10 @@
   &:hover {
     background-color: $color-neutral-100;
     text-decoration: none;
+  }
+
+  &.button--loading {
+    background-color: $color-neutral-200;
   }
 }
 

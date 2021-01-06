@@ -1,0 +1,37 @@
+.grid-field-single-select {
+  position: relative;
+  display: block;
+  height: 32px;
+  padding: 0 10px;
+  width: 100%;
+  user-select: none;
+
+  .grid-view__cell.active &:hover {
+    cursor: pointer;
+  }
+
+  &.grid-field-single-select--selected {
+    padding-right: 32px;
+  }
+}
+
+.grid-field-single-select__option {
+  @extend %ellipsis;
+
+  display: inline-block;
+  color: $color-primary-900;
+  border-radius: 20px;
+  padding: 0 10px;
+  max-width: 100%;
+  margin-top: 6px;
+
+  @include fixed-height(20px, 12px);
+}
+
+.grid-field-single-select__icon {
+  font-size: 11px;
+  color: $color-primary-900;
+  transform: translateY(-50%);
+
+  @include absolute(50%, 10px, auto, auto);
+}

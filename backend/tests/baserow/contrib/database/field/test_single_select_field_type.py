@@ -1,0 +1,475 @@
+import pytest
+
+from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
+
+from django.shortcuts import reverse
+from django.core.exceptions import ValidationError
+
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import SelectOption, SingleSelectField
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.handler import ViewHandler
+
+
+@pytest.mark.django_db
+def test_single_select_field_type(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    table = data_fixture.create_database_table(name='Example', database=database)
+
+    field_handler = FieldHandler()
+
+    field = field_handler.create_field(
+        user=user, table=table, type_name='single_select', name='Single select',
+        select_options=[{'value': 'Option 1', 'color': 'blue'}]
+    )
+
+    assert SingleSelectField.objects.all().first().id == field.id
+    assert SelectOption.objects.all().count() == 1
+
+    select_options = field.select_options.all()
+    assert len(select_options) == 1
+    assert select_options[0].order == 0
+    assert select_options[0].field_id == field.id
+    assert select_options[0].value == 'Option 1'
+    assert select_options[0].color == 'blue'
+
+    field = field_handler.update_field(
+        user=user, table=table, field=field,
+        select_options=[
+            {'value': 'Option 2 B', 'color': 'red 2'},
+            {'id': select_options[0].id, 'value': 'Option 1 B', 'color': 'blue 2'},
+        ]
+    )
+
+    assert SelectOption.objects.all().count() == 2
+    select_options_2 = field.select_options.all()
+    assert len(select_options_2) == 2
+    assert select_options_2[0].order == 0
+    assert select_options_2[0].field_id == field.id
+    assert select_options_2[0].value == 'Option 2 B'
+    assert select_options_2[0].color == 'red 2'
+    assert select_options_2[1].id == select_options[0].id
+    assert select_options_2[1].order == 1
+    assert select_options_2[1].field_id == field.id
+    assert select_options_2[1].value == 'Option 1 B'
+    assert select_options_2[1].color == 'blue 2'
+
+    field_handler.delete_field(user=user, field=field)
+    assert SelectOption.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    table = data_fixture.create_database_table(name='Example', database=database)
+    other_select_option = data_fixture.create_select_option()
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name='single_select',
+        select_options=[
+            {'value': 'Option 1', 'color': 'red'},
+            {'value': 'Option 2', 'color': 'blue'}
+        ]
+    )
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            f'field_{field.id}': 999999
+        })
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            f'field_{field.id}': other_select_option.id
+        })
+
+    select_options = field.select_options.all()
+    row = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': select_options[0].id
+    })
+
+    assert getattr(row, f'field_{field.id}').id == select_options[0].id
+    assert getattr(row, f'field_{field.id}').value == select_options[0].value
+    assert getattr(row, f'field_{field.id}').color == select_options[0].color
+    assert getattr(row, f'field_{field.id}_id') == select_options[0].id
+
+    field = field_handler.update_field(
+        user=user,
+        field=field,
+        select_options=[
+            {'value': 'Option 3', 'color': 'orange'},
+            {'value': 'Option 4', 'color': 'purple'},
+        ]
+    )
+
+    select_options = field.select_options.all()
+    row_2 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': select_options[0].id
+    })
+    assert getattr(row_2, f'field_{field.id}').id == select_options[0].id
+    assert getattr(row_2, f'field_{field.id}').value == select_options[0].value
+    assert getattr(row_2, f'field_{field.id}').color == select_options[0].color
+    assert getattr(row_2, f'field_{field.id}_id') == select_options[0].id
+
+    row_3 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': select_options[1].id
+    })
+    assert getattr(row_3, f'field_{field.id}').id == select_options[1].id
+    assert getattr(row_3, f'field_{field.id}_id') == select_options[1].id
+
+    row_4 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': select_options[0].id
+    })
+    assert getattr(row_4, f'field_{field.id}').id == select_options[0].id
+    assert getattr(row_4, f'field_{field.id}_id') == select_options[0].id
+
+    model = table.get_model()
+
+    with django_assert_num_queries(2):
+        rows = list(model.objects.all().enhance_by_fields())
+
+    assert getattr(rows[0], f'field_{field.id}') is None
+    assert getattr(rows[1], f'field_{field.id}').id == select_options[0].id
+    assert getattr(rows[2], f'field_{field.id}').id == select_options[1].id
+    assert getattr(rows[3], f'field_{field.id}').id == select_options[0].id
+
+    row.refresh_from_db()
+    assert getattr(row, f'field_{field.id}') is None
+    assert getattr(row, f'field_{field.id}_id') is None
+
+    field = field_handler.update_field(user=user, field=field, new_type_name='text')
+    assert field.select_options.all().count() == 0
+    model = table.get_model()
+    rows = model.objects.all().enhance_by_fields()
+    assert getattr(rows[0], f'field_{field.id}') is None
+    assert getattr(rows[1], f'field_{field.id}') == 'Option 3'
+    assert getattr(rows[2], f'field_{field.id}') == 'Option 4'
+    assert getattr(rows[3], f'field_{field.id}') == 'Option 3'
+
+    field = field_handler.update_field(
+        user=user, field=field, new_type_name='single_select',
+        select_options=[
+            {'value': 'Option 2', 'color': 'blue'},
+            {'value': 'option 3', 'color': 'purple'},
+        ]
+    )
+    assert field.select_options.all().count() == 2
+    model = table.get_model()
+    rows = model.objects.all().enhance_by_fields()
+    select_options = field.select_options.all()
+    assert getattr(rows[0], f'field_{field.id}') is None
+    assert getattr(rows[1], f'field_{field.id}').id == select_options[1].id
+    assert getattr(rows[2], f'field_{field.id}') is None
+    assert getattr(rows[3], f'field_{field.id}').id == select_options[1].id
+
+    row_4 = row_handler.update_row(user=user, table=table, row_id=row_4.id, values={
+        f'field_{field.id}': None
+    })
+    assert getattr(row_4, f'field_{field.id}') is None
+    assert getattr(row_4, f'field_{field.id}_id') is None
+
+
+@pytest.mark.django_db
+def test_single_select_field_type_api_views(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    table = data_fixture.create_database_table(name='Example', database=database)
+
+    response = api_client.post(
+        reverse('api:database:fields:list', kwargs={'table_id': table.id}),
+        {
+            'name': 'Select 1',
+            'type': 'single_select',
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['name'] == 'Select 1'
+    assert response_json['type'] == 'single_select'
+    assert response_json['select_options'] == []
+    assert SingleSelectField.objects.all().count() == 1
+    assert SelectOption.objects.all().count() == 0
+
+    response = api_client.post(
+        reverse('api:database:fields:list', kwargs={'table_id': table.id}),
+        {
+            'name': 'Select 1',
+            'type': 'single_select',
+            'select_options': [
+                {'value': 'Option 1', 'color': 'red'}
+            ]
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    field_id = response_json['id']
+    select_options = SelectOption.objects.all()
+    assert len(select_options) == 1
+    assert select_options[0].field_id == field_id
+    assert select_options[0].value == 'Option 1'
+    assert select_options[0].color == 'red'
+    assert select_options[0].order == 0
+    assert response_json['name'] == 'Select 1'
+    assert response_json['type'] == 'single_select'
+    assert response_json['select_options'] == [
+        {'id': select_options[0].id, 'value': 'Option 1', 'color': 'red'}
+    ]
+    assert SingleSelectField.objects.all().count() == 2
+
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': field_id}),
+        {'name': 'New select 1'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['name'] == 'New select 1'
+    assert response_json['type'] == 'single_select'
+    assert response_json['select_options'] == [
+        {'id': select_options[0].id, 'value': 'Option 1', 'color': 'red'}
+    ]
+
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': field_id}),
+        {
+            'name': 'New select 1',
+            'select_options': [
+                {'id': select_options[0].id, 'value': 'Option 1 B', 'color': 'red 2'},
+                {'value': 'Option 2 B', 'color': 'blue 2'}
+            ]
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    select_options = SelectOption.objects.all()
+    assert len(select_options) == 2
+    assert response_json['select_options'] == [
+        {'id': select_options[0].id, 'value': 'Option 1 B', 'color': 'red 2'},
+        {'id': select_options[1].id, 'value': 'Option 2 B', 'color': 'blue 2'}
+    ]
+
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': field_id}),
+        {
+            'name': 'New select 1',
+            'select_options': []
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert SelectOption.objects.all().count() == 0
+    assert response_json['select_options'] == []
+
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': field_id}),
+        {
+            'name': 'New select 1',
+            'select_options': [
+                {'value': 'Option 1 B', 'color': 'red 2'},
+                {'value': 'Option 2 B', 'color': 'blue 2'}
+            ]
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+    select_options = SelectOption.objects.all()
+    assert len(select_options) == 2
+
+    response = api_client.delete(
+        reverse('api:database:fields:item', kwargs={'field_id': field_id}),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert SingleSelectField.objects.all().count() == 1
+    assert SelectOption.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_single_select_field_type_api_row_views(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    table = data_fixture.create_database_table(name='Example', database=database)
+    other_select_option = data_fixture.create_select_option()
+
+    field_handler = FieldHandler()
+
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name='single_select',
+        select_options=[
+            {'value': 'Option 1', 'color': 'red'},
+            {'value': 'Option 2', 'color': 'blue'}
+        ]
+    )
+
+    select_options = field.select_options.all()
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {f'field_{field.id}': 'Nothing'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json['detail'][f'field_{field.id}'][0]['code'] == 'incorrect_type'
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {f'field_{field.id}': 999999},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json['detail'][f'field_{field.id}'][0]['code'] == 'does_not_exist'
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {f'field_{field.id}': other_select_option.id},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json['detail'][f'field_{field.id}'][0]['code'] == 'does_not_exist'
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {f'field_{field.id}': select_options[0].id},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field.id}']['id'] == select_options[0].id
+    assert response_json[f'field_{field.id}']['value'] == 'Option 1'
+    assert response_json[f'field_{field.id}']['color'] == 'red'
+
+    url = reverse('api:database:rows:item', kwargs={
+        'table_id': table.id,
+        'row_id': response_json['id']
+    })
+    response = api_client.patch(
+        url,
+        {},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+
+    url = reverse('api:database:rows:item', kwargs={
+        'table_id': table.id,
+        'row_id': response_json['id']
+    })
+    response = api_client.patch(
+        url,
+        {f'field_{field.id}': select_options[1].id},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field.id}']['id'] == select_options[1].id
+    assert response_json[f'field_{field.id}']['value'] == 'Option 2'
+    assert response_json[f'field_{field.id}']['color'] == 'blue'
+
+    url = reverse('api:database:rows:item', kwargs={
+        'table_id': table.id,
+        'row_id': response_json['id']
+    })
+    response = api_client.patch(
+        url,
+        {f'field_{field.id}': None},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field.id}'] is None
+
+    url = reverse('api:database:rows:item', kwargs={
+        'table_id': table.id,
+        'row_id': response_json['id']
+    })
+    response = api_client.delete(
+        url,
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert SelectOption.objects.all().count() == 3
+
+
+@pytest.mark.django_db
+def test_single_select_field_type_get_order(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    table = data_fixture.create_database_table(name='Example', database=database)
+    field = data_fixture.create_single_select_field(table=table)
+    option_c = data_fixture.create_select_option(field=field, value='C', color='blue')
+    option_a = data_fixture.create_select_option(field=field, value='A', color='blue')
+    option_b = data_fixture.create_select_option(field=field, value='B', color='blue')
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    view_handler = ViewHandler()
+    row_handler = RowHandler()
+
+    row_1 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': option_b.id
+    })
+    row_2 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': option_a.id
+    })
+    row_3 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': option_c.id
+    })
+    row_4 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': option_b.id
+    })
+    row_5 = row_handler.create_row(user=user, table=table, values={
+        f'field_{field.id}': None
+    })
+
+    sort = data_fixture.create_view_sort(view=grid_view, field=field, order='ASC')
+    model = table.get_model()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_5.id, row_2.id, row_1.id, row_4.id, row_3.id]
+
+    sort.order = 'DESC'
+    sort.save()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_3.id, row_1.id, row_4.id, row_2.id, row_5.id]
+
+    option_a.value = 'Z'
+    option_a.save()
+    sort.order = 'ASC'
+    sort.save()
+    model = table.get_model()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_5.id, row_1.id, row_4.id, row_3.id, row_2.id]

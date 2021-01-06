@@ -1,3 +1,5 @@
+import { clone } from '@baserow/modules/core/utils/object'
+
 /**
  * This mixin introduces some helper functions for form components where the
  * whole component existence is based on being a form.
@@ -34,7 +36,19 @@ export default {
       }
       return Object.keys(this.defaultValues).reduce((result, key) => {
         if (this.allowedValues.includes(key)) {
-          result[key] = this.defaultValues[key]
+          let value = this.defaultValues[key]
+
+          // If the value is an array or object, it could be that it contains
+          // references and we actually need a copy of the value here so that we don't
+          // directly change existing variables when editing form values.
+          if (
+            Array.isArray(value) ||
+            (typeof value === 'object' && value !== null)
+          ) {
+            value = clone(value)
+          }
+
+          result[key] = value
         }
         return result
       }, {})

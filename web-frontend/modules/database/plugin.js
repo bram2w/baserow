@@ -10,6 +10,7 @@ import {
   BooleanFieldType,
   DateFieldType,
   FileFieldType,
+  SingleSelectFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -20,6 +21,8 @@ import {
   ContainsNotViewFilterType,
   HigherThanViewFilterType,
   LowerThanViewFilterType,
+  SingleSelectEqualViewFilterType,
+  SingleSelectNotEqualViewFilterType,
   BooleanViewFilterType,
   EmptyViewFilterType,
   NotEmptyViewFilterType,
@@ -51,6 +54,8 @@ export default ({ store, app }) => {
   app.$registry.register('viewFilter', new ContainsNotViewFilterType())
   app.$registry.register('viewFilter', new HigherThanViewFilterType())
   app.$registry.register('viewFilter', new LowerThanViewFilterType())
+  app.$registry.register('viewFilter', new SingleSelectEqualViewFilterType())
+  app.$registry.register('viewFilter', new SingleSelectNotEqualViewFilterType())
   app.$registry.register('viewFilter', new BooleanViewFilterType())
   app.$registry.register('viewFilter', new EmptyViewFilterType())
   app.$registry.register('viewFilter', new NotEmptyViewFilterType())
@@ -63,6 +68,7 @@ export default ({ store, app }) => {
   app.$registry.register('field', new URLFieldType())
   app.$registry.register('field', new EmailFieldType())
   app.$registry.register('field', new FileFieldType())
+  app.$registry.register('field', new SingleSelectFieldType())
   app.$registry.register('importer', new CSVImporterType())
   app.$registry.register('importer', new PasteImporterType())
   app.$registry.register('settings', new APITokenSettingsType())

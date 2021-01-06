@@ -54,8 +54,8 @@
         </div>
       </li>
     </ul>
-    <a class="field-file__add" @click.prevent="showModal()">
-      <i class="fas fa-plus field-file__add-icon"></i>
+    <a class="add" @click.prevent="showModal()">
+      <i class="fas fa-plus add__icon"></i>
       Add a file
     </a>
     <UserFilesModal
