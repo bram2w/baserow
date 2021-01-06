@@ -30,6 +30,8 @@
 * Implemented a file field and user files upload.
 * Made it impossible for the `link_row` field to be a primary field because that can
   cause the primary field to be deleted.
+* Fixed bug where inserting above or below a row created upon signup doesn't work
+  correctly.
 
 ## Released (2020-11-02)
 
