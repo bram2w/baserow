@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+* Fixed bug where you could not convert an existing field to a single select field
+  without select options.
+
 ## Released (2021-01-06)
 
 * Allow larger values for the number field and improved the validation.

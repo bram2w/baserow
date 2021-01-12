@@ -174,6 +174,25 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
     assert getattr(row_4, f'field_{field.id}') is None
     assert getattr(row_4, f'field_{field.id}_id') is None
 
+    field = field_handler.update_field(user=user, field=field, new_type_name='text')
+    assert field.select_options.all().count() == 0
+    model = table.get_model()
+    rows = model.objects.all().enhance_by_fields()
+    assert getattr(rows[0], f'field_{field.id}') is None
+    assert getattr(rows[1], f'field_{field.id}') == 'option 3'
+    assert getattr(rows[2], f'field_{field.id}') is None
+    assert getattr(rows[3], f'field_{field.id}') is None
+
+    field = field_handler.update_field(user=user, field=field,
+                                       new_type_name='single_select')
+    assert field.select_options.all().count() == 0
+    model = table.get_model()
+    rows = model.objects.all().enhance_by_fields()
+    assert getattr(rows[0], f'field_{field.id}') is None
+    assert getattr(rows[1], f'field_{field.id}') is None
+    assert getattr(rows[2], f'field_{field.id}') is None
+    assert getattr(rows[3], f'field_{field.id}') is None
+
 
 @pytest.mark.django_db
 def test_single_select_field_type_api_views(api_client, data_fixture):

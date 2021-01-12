@@ -236,14 +236,14 @@ class FieldHandler:
                 try:
                     schema_editor.alter_field(from_model, from_model_field,
                                               to_model_field)
-                except (ProgrammingError, DataError):
+                except (ProgrammingError, DataError) as e:
                     # If something is going wrong while changing the schema we will
                     # just raise a specific exception. In the future we want to have
                     # some sort of converter abstraction where the values of certain
                     # types can be converted to another value.
+                    logger.error(str(e))
                     message = f'Could not alter field when changing field type ' \
                               f'{from_field_type} to {new_type_name}.'
-                    logger.error(message)
                     raise CannotChangeFieldType(message)
 
         from_model_field_type = from_model_field.db_parameters(connection)['type']
