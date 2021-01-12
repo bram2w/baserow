@@ -828,6 +828,11 @@ class SingleSelectFieldType(FieldType):
                     f"(lower(%({variable_name})s), '{int(option.id)}')"
                 )
 
+            # If there is no values we don't need to convert the value since all
+            # values should be converted to null.
+            if len(values_mapping) == 0:
+                return None
+
             return f"""(
                 SELECT value FROM (
                     VALUES {','.join(values_mapping)}
