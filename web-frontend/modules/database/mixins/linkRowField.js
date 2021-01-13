@@ -27,9 +27,12 @@ export default {
       // Prepare the new value with all the relations and emit that value to the
       // parent.
       const newValue = JSON.parse(JSON.stringify(value))
+      const rowValue = this.$registry
+        .get('field', primary.type)
+        .toHumanReadableString(primary, row[`field_${primary.id}`])
       newValue.push({
         id: row.id,
-        value: row[`field_${primary.id}`].toString(),
+        value: rowValue.toString(),
       })
       this.$emit('update', newValue, value)
     },

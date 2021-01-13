@@ -1,14 +1,17 @@
 import pytest
 from decimal import Decimal
+from unittest.mock import patch
 
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     Field, TextField, NumberField, BooleanField, SelectOption
 )
+from baserow.contrib.database.fields.field_types import TextFieldType
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.exceptions import (
     FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
-    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError
+    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError, CannotChangeFieldType
 )
 
 
@@ -144,10 +147,6 @@ def test_create_primary_field(data_fixture):
 
 @pytest.mark.django_db
 def test_update_field(data_fixture):
-    """
-    @TODO somehow trigger the CannotChangeFieldType and test if it is raised.
-    """
-
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -235,6 +234,32 @@ def test_update_field(data_fixture):
     assert getattr(rows[0], f'field_{field.id}') is False
     assert getattr(rows[1], f'field_{field.id}') is False
     assert getattr(rows[2], f'field_{field.id}') is False
+
+
+@pytest.mark.django_db
+def test_update_field_failing(data_fixture):
+    # This failing field type triggers the CannotChangeFieldType error if a field is
+    # changed into this type.
+    class FailingFieldType(TextFieldType):
+        def get_alter_column_type_function(self, connection, from_field, to_field):
+            return 'p_in::NOT_VALID_SQL_SO_IT_WILL_FAIL('
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_number_field(table=table, order=1)
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'text': FailingFieldType()}
+    ):
+        with pytest.raises(CannotChangeFieldType):
+            handler.update_field(user=user, field=field, new_type_name='text')
+
+    handler.update_field(user, field=field, new_type_name='text')
+    assert Field.objects.all().count() == 1
+    assert TextField.objects.all().count() == 1
 
 
 @pytest.mark.django_db
