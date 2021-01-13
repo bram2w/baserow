@@ -492,3 +492,80 @@ def test_single_select_field_type_get_order(data_fixture):
     rows = view_handler.apply_sorting(grid_view, model.objects.all())
     row_ids = [row.id for row in rows]
     assert row_ids == [row_5.id, row_1.id, row_4.id, row_3.id, row_2.id]
+
+
+@pytest.mark.django_db
+def test_primary_single_select_field_with_link_row_field(api_client, data_fixture):
+    """
+    We expect the relation to a table that has a single select field to work.
+    """
+
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    example_table = data_fixture.create_database_table(name='Example',
+                                                       database=database)
+    customers_table = data_fixture.create_database_table(name='Customers',
+                                                         database=database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    data_fixture.create_text_field(
+        name='Name',
+        table=example_table,
+        primary=True
+    )
+    customers_primary = field_handler.create_field(
+        user=user,
+        table=customers_table,
+        type_name='single_select',
+        select_options=[
+            {'value': 'Option 1', 'color': 'red'},
+            {'value': 'Option 2', 'color': 'blue'}
+        ],
+        primary=True
+    )
+    link_row_field = field_handler.create_field(
+        user=user,
+        table=example_table,
+        type_name='link_row',
+        link_row_table=customers_table
+    )
+    select_options = customers_primary.select_options.all()
+
+    customers_row_1 = row_handler.create_row(
+        user=user, table=customers_table,
+        values={f'field_{customers_primary.id}': select_options[0].id}
+    )
+    customers_row_2 = row_handler.create_row(
+        user=user, table=customers_table,
+        values={f'field_{customers_primary.id}': select_options[1].id}
+    )
+    row_handler.create_row(
+        user, table=example_table,
+        values={f'field_{link_row_field.id}': [customers_row_1.id, customers_row_2.id]}
+    )
+    row_handler.create_row(
+        user, table=example_table,
+        values={f'field_{link_row_field.id}': [customers_row_1.id]}
+    )
+
+    response = api_client.get(
+        reverse('api:database:rows:list', kwargs={'table_id': example_table.id}),
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+
+    assert (
+        response_json['results'][0][f'field_{link_row_field.id}'][0]['value'] ==
+        'Option 1'
+    )
+    assert (
+        response_json['results'][0][f'field_{link_row_field.id}'][1]['value'] ==
+        'Option 2'
+    )
+    assert (
+        response_json['results'][1][f'field_{link_row_field.id}'][0]['value'] ==
+        'Option 1'
+    )
