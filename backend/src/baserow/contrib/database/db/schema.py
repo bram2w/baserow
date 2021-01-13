@@ -118,7 +118,10 @@ def lenient_schema_editor(connection, alter_column_prepare_value=None,
     if alert_column_type_function:
         kwargs['alert_column_type_function'] = alert_column_type_function
 
-    with connection.schema_editor(**kwargs) as schema_editor:
-        yield schema_editor
-
-    connection.SchemaEditorClass = regular_schema_editor
+    try:
+        with connection.schema_editor(**kwargs) as schema_editor:
+            yield schema_editor
+    except Exception as e:
+        raise e
+    finally:
+        connection.SchemaEditorClass = regular_schema_editor

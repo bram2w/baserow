@@ -33,6 +33,10 @@ import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFi
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
+import {
+  getDateMomentFormat,
+  getTimeMomentFormat,
+} from '@baserow/modules/database/utils/date'
 
 export class FieldType extends Registerable {
   /**
@@ -151,7 +155,11 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * Should return a for humans readable representation of the value.
+   * Should return a for humans readable representation of the value. This is for
+   * example used by the link row field and row modal. This is not a problem with most
+   * fields like text or number, but some store a more complex object object like
+   * the single select or file field. In this case, the object might needs to be
+   * converted to string.
    */
   toHumanReadableString(field, value) {
     return value
@@ -661,6 +669,24 @@ export class DateFieldType extends FieldType {
     }
   }
 
+  toHumanReadableString(field, value) {
+    const date = moment.utc(value)
+
+    if (date.isValid()) {
+      const dateFormat = getDateMomentFormat(field.date_format)
+      let dateString = date.format(dateFormat)
+
+      if (field.date_include_time) {
+        const timeFormat = getTimeMomentFormat(field.date_time_format)
+        dateString = `${dateString} ${date.format(timeFormat)}`
+      }
+
+      return dateString
+    } else {
+      return ''
+    }
+  }
+
   /**
    * Tries to parse the clipboard text value with moment and returns the date in the
    * correct format for the field. If it can't be parsed null is returned.
@@ -812,6 +838,10 @@ export class FileFieldType extends FieldType {
     return RowEditFieldFile
   }
 
+  toHumanReadableString(field, value) {
+    return value.map((file) => file.visible_name).join(', ')
+  }
+
   prepareValueForCopy(field, value) {
     return JSON.stringify(value)
   }
@@ -953,6 +983,13 @@ export class SingleSelectFieldType extends FieldType {
         return option
       }
     }
+  }
+
+  toHumanReadableString(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+    return value.value
   }
 
   getDocsDataType() {

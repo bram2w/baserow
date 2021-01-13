@@ -4,6 +4,8 @@
 
 * Fixed bug where you could not convert an existing field to a single select field
   without select options.
+* Fixed bug where is was not possible to create a relation to a table that has a single
+  select as primary field.
 
 ## Released (2021-01-06)
 

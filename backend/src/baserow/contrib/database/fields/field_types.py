@@ -17,8 +17,8 @@ from rest_framework import serializers
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.contrib.database.api.fields.serializers import (
-    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
-    SelectOptionSerializer
+    LinkRowListSerializer, LinkRowValueSerializer, FileFieldRequestSerializer,
+    FileFieldResponseSerializer, SelectOptionSerializer
 )
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
@@ -348,8 +348,9 @@ class LinkRowFieldType(FieldType):
             if primary_field:
                 primary_field_name = primary_field['name']
 
-        return LinkRowValueSerializer(many=True, value_field_name=primary_field_name,
-                                      required=False, **kwargs)
+        return LinkRowListSerializer(child=LinkRowValueSerializer(
+            value_field_name=primary_field_name, required=False, **kwargs
+        ))
 
     def get_serializer_help_text(self, instance):
         return 'This field accepts an `array` containing the ids of the related rows.' \
