@@ -11,6 +11,12 @@ services:
     ports:
       - 5432:5432
 
+  redis:
+    container_name: redis
+    image: redis:6.0
+    ports:
+      - 6379:6379
+
   mjml:
     container_name: mjml
     image: liminspace/mjml-tcpserver:latest

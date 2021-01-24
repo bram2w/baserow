@@ -76,6 +76,11 @@ export default {
         : this.fields.find((f) => f.id === this.fieldId)
     },
   },
+  watch: {
+    value(value) {
+      this.setCopy(value)
+    },
+  },
   created() {
     this.setCopy(this.value)
   },

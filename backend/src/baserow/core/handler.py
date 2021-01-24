@@ -3,6 +3,10 @@ from .exceptions import UserNotInGroupError
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
 from .exceptions import GroupDoesNotExist, ApplicationDoesNotExist
+from .signals import (
+    application_created, application_updated, application_deleted, group_created,
+    group_updated, group_deleted
+)
 
 
 class CoreHandler:
@@ -83,6 +87,8 @@ class CoreHandler:
         last_order = GroupUser.get_last_order(user)
         group_user = GroupUser.objects.create(group=group, user=user, order=last_order)
 
+        group_created.send(self, group=group, user=user)
+
         return group_user
 
     def update_group(self, user, group, **kwargs):
@@ -108,6 +114,8 @@ class CoreHandler:
         group = set_allowed_attrs(kwargs, ['name'], group)
         group.save()
 
+        group_updated.send(self, group=group, user=user)
+
         return group
 
     def delete_group(self, user, group):
@@ -128,6 +136,11 @@ class CoreHandler:
         if not group.has_user(user):
             raise UserNotInGroupError(user, group)
 
+        # Load the group users before the group is deleted so that we can pass those
+        # along with the signal.
+        group_id = group.id
+        group_users = list(group.users.all())
+
         # Select all the applications so we can delete them via the handler which is
         # needed in order to call the pre_delete method for each application.
         applications = group.application_set.all().select_related('group')
@@ -135,6 +148,9 @@ class CoreHandler:
             self.delete_application(user, application)
 
         group.delete()
+
+        group_deleted.send(self, group_id=group_id, group=group,
+                           group_users=group_users, user=user)
 
     def order_groups(self, user, group_ids):
         """
@@ -217,6 +233,9 @@ class CoreHandler:
         instance = model.objects.create(group=group, order=last_order,
                                         **application_values)
 
+        application_created.send(self, application=instance, user=user,
+                                 type_name=type_name)
+
         return instance
 
     def update_application(self, user, application, **kwargs):
@@ -244,6 +263,8 @@ class CoreHandler:
         application = set_allowed_attrs(kwargs, ['name'], application)
         application.save()
 
+        application_updated.send(self, application=application, user=user)
+
         return application
 
     def delete_application(self, user, application):
@@ -264,8 +285,12 @@ class CoreHandler:
         if not application.group.has_user(user):
             raise UserNotInGroupError(user, application.group)
 
+        application_id = application.id
         application = application.specific
         application_type = application_type_registry.get_by_model(application)
         application_type.pre_delete(user, application)
 
         application.delete()
+
+        application_deleted.send(self, application_id=application_id,
+                                 application=application, user=user)

@@ -2,6 +2,8 @@ import os
 import datetime
 from urllib.parse import urlparse, urljoin
 
+from corsheaders.defaults import default_headers
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -22,11 +24,13 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'corsheaders',
+    'channels',
     'mjml',
     'drf_spectacular',
 
     'baserow.core',
     'baserow.api',
+    'baserow.ws',
     'baserow.contrib.database'
 ]
 
@@ -60,6 +64,27 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'baserow.config.wsgi.application'
+ASGI_APPLICATION = 'baserow.config.asgi.application'
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
+REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+REDIS_USERNAME = os.getenv('REDIS_USER', '')
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
+REDIS_PROTOCOL = os.getenv('REDIS_PROTOCOL', 'redis')
+REDIS_URL = (
+    f'{REDIS_PROTOCOL}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0'
+)
+
+CELERY_BROKER_URL = REDIS_URL
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [REDIS_URL],
+        },
+    },
+}
 
 
 # Database
@@ -134,6 +159,10 @@ REST_FRAMEWORK = {
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'WebSocketId',
+]
+
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=60 * 60),

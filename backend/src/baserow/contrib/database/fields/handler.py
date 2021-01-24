@@ -16,6 +16,7 @@ from .exceptions import (
 )
 from .registries import field_type_registry, field_converter_registry
 from .models import Field, SelectOption
+from .signals import field_created, field_updated, field_deleted
 
 
 logger = logging.getLogger(__name__)
@@ -125,6 +126,9 @@ class FieldHandler:
                 schema_editor.add_field(to_model, model_field)
 
         field_type.after_create(instance, to_model, user, connection, before)
+
+        field_created.send(self, field=instance, user=user,
+                           type_name=type_name)
 
         return instance
 
@@ -261,6 +265,8 @@ class FieldHandler:
         field_type.after_update(old_field, field, from_model, to_model, user,
                                 connection, altered_column, before)
 
+        field_updated.send(self, field=field, user=user)
+
         return field
 
     def delete_field(self, user, field):
@@ -298,11 +304,14 @@ class FieldHandler:
             model_field = from_model._meta.get_field(field.db_column)
             schema_editor.remove_field(from_model, model_field)
 
+        field_id = field.id
         field.delete()
 
         # After the field is deleted we are going to to call the after_delete method of
         # the field type because some instance cleanup might need to happen.
         field_type.after_delete(field, from_model, user, connection)
+
+        field_deleted.send(self, field_id=field_id, field=field, user=user)
 
     def update_field_select_options(self, user, field, select_options):
         """

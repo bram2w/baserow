@@ -7,8 +7,12 @@ mysqlclient==1.4.6
 ipython==7.13.0
 Faker==4.0.2
 gunicorn==20.0.4
+uvicorn[standard]==0.13.3
 django-mjml==0.9.0
 requests==2.25.0
 itsdangerous==1.1.0
 drf-spectacular==0.9.12
 Pillow==8.0.1
+channels==3.0.3
+channels-redis==3.2.0
+celery[redis]==5.0.5

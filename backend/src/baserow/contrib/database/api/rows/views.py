@@ -429,14 +429,9 @@ class RowView(APIView):
         table = TableHandler().get_table(request.user, table_id)
         TokenHandler().check_table_permissions(request, 'update', table, False)
 
-        # Small side effect of generating the model for only the fields that need to
-        # change is that the response it not going to contain the other fields. It is
-        # however much faster because it doesn't need to get the specific version of
-        # all the field objects.
         field_ids = RowHandler().extract_field_ids_from_dict(request.data)
-        model = table.get_model(field_ids=field_ids)
-
-        validation_serializer = get_row_serializer_class(model)
+        model = table.get_model()
+        validation_serializer = get_row_serializer_class(model, field_ids=field_ids)
         data = validate_data(validation_serializer, request.data)
 
         row = RowHandler().update_row(request.user, table, row_id, data, model)

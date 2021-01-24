@@ -20,7 +20,8 @@ class RowSerializer(serializers.ModelSerializer):
         }
 
 
-def get_row_serializer_class(model, base_class=None, is_response=False):
+def get_row_serializer_class(model, base_class=None, is_response=False,
+                             field_ids=None):
     """
     Generates a Django rest framework model serializer based on the available fields
     that belong to this model. For each table field, used to generate this serializer,
@@ -36,18 +37,27 @@ def get_row_serializer_class(model, base_class=None, is_response=False):
         instead of handling input data. If that is the case other serializer fields
         might be used depending on the field type.
     :type is_response: bool
+    :param field_ids: If provided only the field ids in the list will be included in
+        the serializer. By default all the fields of the model are going to be
+        included. Note that the field id must exist in the model in order to work.
+    :type field_ids: list or None
     :return: The generated serializer.
     :rtype: ModelSerializer
     """
 
     field_objects = model._field_objects
-    field_names = [field['name'] for field in field_objects.values()]
+    field_names = [
+        field['name']
+        for field in field_objects.values()
+        if field_ids is None or field['field'].id in field_ids
+    ]
     field_overrides = {
         field['name']:
             field['type'].get_response_serializer_field(field['field'])
             if is_response else
             field['type'].get_serializer_field(field['field'])
         for field in field_objects.values()
+        if field_ids is None or field['field'].id in field_ids
     }
     return get_serializer_class(model, field_names, field_overrides, base_class)
 

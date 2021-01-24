@@ -16,6 +16,8 @@ New to Baserow? This is the place to start.
   concepts before using Baserow.
 * [API](./getting-started/api.md): An introduction to the REST API and information 
   about API resources.
+* [WebSocket API](./getting-started/web-socket-api.md): An introduction to the
+  WebSockets API which is used to broad cast real time updates.
 * [Database plugin](./getting-started/database-plugin.md) An introduction to the
   database plugin which is installed by default.
 

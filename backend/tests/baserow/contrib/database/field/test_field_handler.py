@@ -50,14 +50,19 @@ def test_get_field(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_field(data_fixture):
+@patch('baserow.contrib.database.fields.signals.field_created.send')
+def test_create_field(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
 
     handler = FieldHandler()
-    handler.create_field(user=user, table=table, type_name='text',
-                         name='Test text field', text_default='Some default')
+    field = handler.create_field(user=user, table=table, type_name='text',
+                                 name='Test text field', text_default='Some default')
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['field'].id == field.id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     assert Field.objects.all().count() == 1
     assert TextField.objects.all().count() == 1
@@ -146,7 +151,8 @@ def test_create_primary_field(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_field(data_fixture):
+@patch('baserow.contrib.database.fields.signals.field_updated.send')
+def test_update_field(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -180,6 +186,10 @@ def test_update_field(data_fixture):
     assert field.name == 'Text field'
     assert field.text_default == 'Default value'
     assert isinstance(field, TextField)
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['field'].id == field.id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     # Insert some rows to the table which should be converted later.
     model = table.get_model()
@@ -263,7 +273,8 @@ def test_update_field_failing(data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_field(data_fixture):
+@patch('baserow.contrib.database.fields.signals.field_deleted.send')
+def test_delete_field(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -279,9 +290,15 @@ def test_delete_field(data_fixture):
 
     assert Field.objects.all().count() == 1
     assert TextField.objects.all().count() == 1
+    field_id = text_field.id
     handler.delete_field(user=user, field=text_field)
     assert Field.objects.all().count() == 0
     assert TextField.objects.all().count() == 0
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['field_id'] == field_id
+    assert send_mock.call_args[1]['field'].id == field_id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     table_model = table.get_model()
     field_name = f'field_{text_field.id}'

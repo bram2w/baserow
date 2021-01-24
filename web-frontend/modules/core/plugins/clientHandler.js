@@ -209,6 +209,10 @@ export default function ({ store, app }, inject) {
       const token = store.getters['auth/token']
       config.headers.Authorization = `JWT ${token}`
     }
+    if (store.getters['auth/webSocketId'] !== null) {
+      const webSocketId = store.getters['auth/webSocketId']
+      config.headers.WebSocketId = webSocketId
+    }
     return config
   })
 

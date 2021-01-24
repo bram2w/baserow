@@ -11,6 +11,12 @@ services:
     ports:
       - 5432:5432
 
+  redis:
+    container_name: redis
+    image: redis:6.0
+    ports:
+      - 6379:6379
+
   mjml:
     container_name: baserow-demo-mjml
     image: liminspace/mjml-tcpserver:latest
@@ -26,6 +32,7 @@ services:
       - 8000:8000
     depends_on:
       - db
+      - redis
       - mjml
 
   web-frontend:

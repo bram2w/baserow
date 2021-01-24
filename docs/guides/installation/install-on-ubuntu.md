@@ -47,6 +47,22 @@ Make sure that you use a secure password instead of `yourpassword`! Also take ca
 you use the password you've chosen in any upcoming commands that need the PostgreSQL
 baserow user password.
 
+## Install & Setup Redis
+
+Baserow uses Redis for asynchronous tasks and the real time collaboration. You can
+install Redis with the following commands.
+
+```
+$ sudo add-apt-repository ppa:chris-lea/redis-server
+$ sudo apt update
+$ sudo apt install redis-server -y
+$ sed -i 's/supervised no/supervised systemd/g' /etc/redis/redis.conf
+$ sudo systemctl enable --now redis-server
+$ sudo systemctl restart redis.service
+```
+
+By default Redis is not publicly accessible, so there is no need to setup a password.
+
 ## Install Baserow
 
 In this section, we will install Baserow itself. We will need a new user called
@@ -172,7 +188,7 @@ commands:
 # Prepare for creating the database schema
 $ source backend/env/bin/activate
 $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
-$ export DATABASE_PASSWORD="yourpassword"
+$ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST="localhost"
 
 # Create database schema
@@ -205,13 +221,14 @@ You will need to edit the `baserow-frontend.conf` and `baserow-backend.conf` fil
 variables. You will need to change at least the following variables which can be found
 in the `environment =` section.
 
-**Web frontend and backend**
 - `PUBLIC_WEB_FRONTEND_URL`: The URL under which your frontend can be reached from the
-internet (HTTP or HTTPS)
+  internet.
 - `PUBLIC_BACKEND_URL`: The URL under which your backend can be reached from the
-  internet (HTTP or HTTPS)
+  internet.
+- `MEDIA_URL`: The URL under which your media files can be reached from the internet.
 
 **Backend**
+
 - `SECRET_KEY`: The secret key that is used to generate tokens and other random
   strings. You can generate one with the following commands:
   ```bash
@@ -219,6 +236,7 @@ internet (HTTP or HTTPS)
   ```
 - `DATABASE_PASSWORD`: The password of the `baserow` database user
 - `DATABASE_HOST`: The host computer that runs the database (usually `localhost`)
+- `REDIS_HOST`: The host computer that runs the caching server (usually `localhost`)
 
 After modifying these files you need to make supervisor reread the files and apply the
 changes.
@@ -272,3 +290,28 @@ $ supervisorctl restart nginx
 
 You now have a full installation of Baserow, which will keep the Front- & Backend
 running even if there is an unforeseen termination of them. 
+
+## Updating existing installation to the latest version
+
+If you already have Baserow installed on your server and you want to update to the
+latest version then you can execute the following commands. This only works if there
+aren't any additional instructions in the previous release blog posts.
+
+```
+$ cd /baserow
+$ git pull
+$ source backend/env/bin/activate
+$ pip3 install -e ./backend
+$ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
+$ export DATABASE_PASSWORD='yourpassword'
+$ export DATABASE_HOST='localhost'
+$ baserow migrate
+$ deactivate
+$ cd web-frontend
+$ yarn install
+$ ./node_modules/nuxt/bin/nuxt.js build --config-file config/nuxt.config.demo.js
+$ supervisorctl reread
+$ supervisorctl update
+$ supervisorctl restart all
+```
+

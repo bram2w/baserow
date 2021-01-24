@@ -18,6 +18,12 @@ export default {
       copy: null,
     }
   },
+  watch: {
+    value(value) {
+      this.copy = value
+      clearTimeout(delayTimeout)
+    },
+  },
   created() {
     this.copy = this.value
   },

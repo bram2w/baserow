@@ -15,6 +15,7 @@ from .models import Table
 from .exceptions import (
     TableDoesNotExist, InvalidInitialTableData, InitialTableDataLimitExceeded
 )
+from .signals import table_created, table_updated, table_deleted
 
 
 class TableHandler:
@@ -114,6 +115,8 @@ class TableHandler:
         elif fill_example:
             self.fill_example_table_data(user, table)
 
+        table_created.send(self, table=table, user=user)
+
         return table
 
     def normalize_initial_table_data(self, data, first_row_header):
@@ -212,7 +215,8 @@ class TableHandler:
             active.id: {'width': 100}
         }
         fields = [notes, active]
-        view_handler.update_grid_view_field_options(view, field_options, fields=fields)
+        view_handler.update_grid_view_field_options(user, view, field_options,
+                                                    fields=fields)
 
         model = table.get_model(attribute_names=True)
         model.objects.create(name='Tesla', active=True, order=1)
@@ -243,6 +247,8 @@ class TableHandler:
         table = set_allowed_attrs(kwargs, ['name'], table)
         table.save()
 
+        table_updated.send(self, table=table, user=user)
+
         return table
 
     def delete_table(self, user, table):
@@ -263,6 +269,8 @@ class TableHandler:
         if not table.database.group.has_user(user):
             raise UserNotInGroupError(user, table.database.group)
 
+        table_id = table.id
+
         # Delete the table schema from the database.
         connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
@@ -270,3 +278,5 @@ class TableHandler:
             schema_editor.delete_model(model)
 
         table.delete()
+
+        table_deleted.send(self, table_id=table_id, table=table, user=user)

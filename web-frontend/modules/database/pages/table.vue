@@ -211,6 +211,16 @@ export default {
     this.$store.dispatch('table/unselect')
     next()
   },
+  beforeMount() {
+    this.$bus.$on('table-refresh', this.refresh)
+  },
+  mounted() {
+    this.$realtime.subscribe('table', { table_id: this.table.id })
+  },
+  beforeDestroy() {
+    this.$bus.$off('table-refresh', this.refresh)
+    this.$realtime.subscribe(null)
+  },
   methods: {
     getViewComponent(view) {
       const type = this.$registry.get('view', view.type)

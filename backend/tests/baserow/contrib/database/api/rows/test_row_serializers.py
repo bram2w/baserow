@@ -12,8 +12,8 @@ from baserow.contrib.database.api.rows.serializers import (
 def test_get_table_serializer(data_fixture):
     table = data_fixture.create_database_table(name='Cars')
     table_2 = data_fixture.create_database_table()
-    data_fixture.create_text_field(table=table, order=0, name='Color',
-                                   text_default='white')
+    text_field = data_fixture.create_text_field(table=table, order=0, name='Color',
+                                                text_default='white')
     data_fixture.create_number_field(table=table, order=1, name='Horsepower')
     data_fixture.create_boolean_field(table=table, order=3, name='For sale')
     data_fixture.create_number_field(table=table, order=4, name='Price',
@@ -155,6 +155,12 @@ def test_get_table_serializer(data_fixture):
     serializer_instance = serializer_class(data={f'field_{price_field.id}': 'abc'})
     assert not serializer_instance.is_valid()
     assert len(serializer_instance.errors[f'field_{price_field.id}']) == 1
+
+    model = table.get_model(attribute_names=True)
+    serializer_class = get_row_serializer_class(model=model, field_ids=[text_field.id])
+    serializer_instance = serializer_class(data={})
+    assert serializer_instance.is_valid()
+    assert serializer_instance.data == {'color': 'white'}
 
 
 @pytest.mark.django_db
