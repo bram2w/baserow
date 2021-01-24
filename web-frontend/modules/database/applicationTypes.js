@@ -85,4 +85,16 @@ export class DatabaseApplicationType extends ApplicationType {
       }
     })
   }
+
+  /**
+   * It is not possible to update the tables by updating the application. In fact,
+   * providing the tables as value could break the current table state. That is why
+   * we remove it here.
+   */
+  prepareForStoreUpdate(application, data) {
+    if (Object.prototype.hasOwnProperty.call(data, 'tables')) {
+      delete data.tables
+    }
+    return data
+  }
 }

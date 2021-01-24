@@ -831,8 +831,12 @@ def test_update_row(api_client, data_fixture):
     response_json_row_1 = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json_row_1[f'field_{text_field.id}'] == 'Purple'
+    assert response_json_row_1[f'field_{number_field.id}'] == '120'
+    assert response_json_row_1[f'field_{boolean_field.id}'] is True
     row_1.refresh_from_db()
     assert getattr(row_1, f'field_{text_field.id}') == 'Purple'
+    assert getattr(row_1, f'field_{number_field.id}') == Decimal('120')
+    assert getattr(row_1, f'field_{boolean_field.id}') is True
 
     response = api_client.patch(
         url,
@@ -843,11 +847,8 @@ def test_update_row(api_client, data_fixture):
     response_json_row_1 = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json_row_1[f'field_{text_field.id}'] == 'Orange'
-    # Because the model is generated only for the field we want to change the other
-    # fields are not included in the serializer.
-    assert f'field_{number_field.id}' not in response_json_row_1
-    assert f'field_{boolean_field.id}' not in response_json_row_1
-
+    assert response_json_row_1[f'field_{number_field.id}'] == '120'
+    assert response_json_row_1[f'field_{boolean_field.id}'] is True
     row_1.refresh_from_db()
     assert getattr(row_1, f'field_{text_field.id}') == 'Orange'
     assert getattr(row_1, f'field_{number_field.id}') == 120
@@ -926,9 +927,13 @@ def test_update_row(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json[f'field_{decimal_field.id}'] == '10.22'
+    assert response_json_row_2[f'field_{number_field.id}'] is None
+    assert response_json_row_2[f'field_{boolean_field.id}'] is False
 
     row_3.refresh_from_db()
     assert getattr(row_3, f'field_{decimal_field.id}') == Decimal('10.22')
+    assert getattr(row_2, f'field_{number_field.id}') is None
+    assert getattr(row_2, f'field_{boolean_field.id}') is False
 
 
 @pytest.mark.django_db

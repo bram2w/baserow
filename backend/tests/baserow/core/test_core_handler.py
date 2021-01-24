@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 
 from django.db import connection
 
@@ -62,11 +63,16 @@ def test_get_group_user(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_group(data_fixture):
+@patch('baserow.core.signals.group_created.send')
+def test_create_group(send_mock, data_fixture):
     user = data_fixture.create_user()
 
     handler = CoreHandler()
-    handler.create_group(user=user, name='Test group')
+    group_user = handler.create_group(user=user, name='Test group')
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['group'].id == group_user.group.id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     group = Group.objects.all().first()
     user_group = GroupUser.objects.all().first()
@@ -83,13 +89,18 @@ def test_create_group(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_group(data_fixture):
+@patch('baserow.core.signals.group_updated.send')
+def test_update_group(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     group = data_fixture.create_group(user=user_1)
 
     handler = CoreHandler()
     handler.update_group(user=user_1, group=group, name='New name')
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['group'].id == group.id
+    assert send_mock.call_args[1]['user'].id == user_1.id
 
     group.refresh_from_db()
 
@@ -103,7 +114,8 @@ def test_update_group(data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_group(data_fixture):
+@patch('baserow.core.signals.group_deleted.send')
+def test_delete_group(send_mock, data_fixture):
     user = data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(group=group_1)
@@ -114,6 +126,12 @@ def test_delete_group(data_fixture):
 
     handler = CoreHandler()
     handler.delete_group(user, group_1)
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['group'].id == group_1.id
+    assert send_mock.call_args[1]['user'].id == user.id
+    assert len(send_mock.call_args[1]['group_users']) == 1
+    assert send_mock.call_args[1]['group_users'][0].id == user.id
 
     assert Database.objects.all().count() == 0
     assert Table.objects.all().count() == 0
@@ -188,7 +206,8 @@ def test_get_application(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_database_application(data_fixture):
+@patch('baserow.core.signals.application_created.send')
+def test_create_database_application(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
@@ -205,6 +224,11 @@ def test_create_database_application(data_fixture):
     assert database.order == 1
     assert database.group == group
 
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['application'].id == database.id
+    assert send_mock.call_args[1]['user'].id == user.id
+    assert send_mock.call_args[1]['type_name'] == 'database'
+
     with pytest.raises(UserNotInGroupError):
         handler.create_application(user=user_2, group=group, type_name='database',
                                    name='')
@@ -215,7 +239,8 @@ def test_create_database_application(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_database_application(data_fixture):
+@patch('baserow.core.signals.application_updated.send')
+def test_update_database_application(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
@@ -231,13 +256,18 @@ def test_update_database_application(data_fixture):
 
     handler.update_application(user=user, application=database, name='Test 1')
 
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['application'].id == database.id
+    assert send_mock.call_args[1]['user'].id == user.id
+
     database.refresh_from_db()
 
     assert database.name == 'Test 1'
 
 
 @pytest.mark.django_db
-def test_delete_database_application(data_fixture):
+@patch('baserow.core.signals.application_deleted.send')
+def test_delete_database_application(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
@@ -257,3 +287,8 @@ def test_delete_database_application(data_fixture):
     assert Database.objects.all().count() == 0
     assert Table.objects.all().count() == 0
     assert f'database_table_{table.id}' not in connection.introspection.table_names()
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['application_id'] == database.id
+    assert send_mock.call_args[1]['application'].id == database.id
+    assert send_mock.call_args[1]['user'].id == user.id

@@ -46,6 +46,7 @@ class DatabasePlugin(Plugin):
             user, table, BooleanFieldType.type, name='Active'
         )
         view_handler.update_grid_view_field_options(
+            user,
             customers_view,
             {
                 notes_field.id: {'width': 400},
@@ -87,6 +88,7 @@ class DatabasePlugin(Plugin):
         model.objects.create(name='Amazon', active=False, started=date(2018, 1, 1),
                              order=3)
         view_handler.update_grid_view_field_options(
+            user,
             projects_view,
             {active_field.id: {'width': 100}},
             fields=[active_field]

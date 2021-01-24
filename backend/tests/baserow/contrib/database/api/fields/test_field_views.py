@@ -154,6 +154,7 @@ def test_get_field(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['id'] == text.id
     assert response_json['name'] == text.name
+    assert response_json['table_id'] == text.table_id
     assert not response_json['text_default']
 
 

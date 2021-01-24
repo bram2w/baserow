@@ -107,7 +107,7 @@ export const actions = {
    * Creates a new field with the provided type for the given table.
    */
   async create(context, { type, table, values }) {
-    const { commit } = context
+    const { dispatch } = context
 
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
@@ -120,13 +120,19 @@ export const actions = {
       throw new Error(`A field with type "${type}" doesn't exist.`)
     }
 
-    const fieldType = this.$registry.get('field', type)
-
     const postData = clone(values)
     postData.type = type
 
-    let { data } = await FieldService(this.$client).create(table.id, postData)
-    data = populateField(data, this.$registry)
+    const { data } = await FieldService(this.$client).create(table.id, postData)
+    dispatch('forceCreate', { table, values: data })
+  },
+  /**
+   * Forcefully create a new field without making a call to the backend.
+   */
+  async forceCreate(context, { table, values }) {
+    const { commit } = context
+    const fieldType = this.$registry.get('field', values.type)
+    const data = populateField(values, this.$registry)
     commit('ADD_ITEM', data)
 
     // Call the field created event on all the registered views because they might
@@ -140,7 +146,7 @@ export const actions = {
    * Updates the values of the provided field.
    */
   async update(context, { field, type, values }) {
-    const { dispatch, commit } = context
+    const { dispatch } = context
 
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
@@ -153,13 +159,19 @@ export const actions = {
       throw new Error(`A field with type "${type}" doesn't exist.`)
     }
 
-    const fieldType = this.$registry.get('field', type)
-
     const oldField = clone(field)
     const postData = clone(values)
     postData.type = type
 
-    let { data } = await FieldService(this.$client).update(field.id, postData)
+    const { data } = await FieldService(this.$client).update(field.id, postData)
+    await dispatch('forceUpdate', { field, oldField, data })
+  },
+  /**
+   * Forcefully update an existing field without making a request to the backend.
+   */
+  async forceUpdate(context, { field, oldField, data }) {
+    const { commit, dispatch } = context
+    const fieldType = this.$registry.get('field', data.type)
     data = populateField(data, this.$registry)
 
     if (field.primary) {

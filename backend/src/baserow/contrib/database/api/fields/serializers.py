@@ -17,11 +17,10 @@ class FieldSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Field
-        fields = ('id', 'name', 'order', 'type', 'primary')
+        fields = ('id', 'table_id', 'name', 'order', 'type', 'primary')
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            }
+            'id': {'read_only': True},
+            'table_id': {'read_only': True},
         }
 
     @extend_schema_field(OpenApiTypes.STR)

@@ -38,6 +38,8 @@ import viewStore from '@baserow/modules/database/store/view'
 import fieldStore from '@baserow/modules/database/store/field'
 import gridStore from '@baserow/modules/database/store/view/grid'
 
+import { registerRealtimeEvents } from '@baserow/modules/database/realtime'
+
 export default ({ store, app }) => {
   store.registerModule('table', tableStore)
   store.registerModule('view', viewStore)
@@ -72,4 +74,6 @@ export default ({ store, app }) => {
   app.$registry.register('importer', new CSVImporterType())
   app.$registry.register('importer', new PasteImporterType())
   app.$registry.register('settings', new APITokenSettingsType())
+
+  registerRealtimeEvents(app.$realtime)
 }

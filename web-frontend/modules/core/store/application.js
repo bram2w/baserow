@@ -134,6 +134,12 @@ export const actions = {
       group.id,
       postData
     )
+    dispatch('forceCreate', { data })
+  },
+  /**
+   * Forcefully create an item in the store without making a call to the server.
+   */
+  forceCreate({ commit }, { data }) {
     populateApplication(data, this.$registry)
     commit('ADD_ITEM', data)
   },
@@ -145,12 +151,22 @@ export const actions = {
       application.id,
       values
     )
+
     // Create a dict with only the values we want to update.
     const update = Object.keys(values).reduce((result, key) => {
       result[key] = data[key]
       return result
     }, {})
-    commit('UPDATE_ITEM', { id: application.id, values: update })
+
+    dispatch('forceUpdate', { application, data: update })
+  },
+  /**
+   * Forcefully update an item in the store without making a call to the server.
+   */
+  forceUpdate({ commit }, { application, data }) {
+    const type = this.$registry.get('application', application.type)
+    data = type.prepareForStoreUpdate(application, data)
+    commit('UPDATE_ITEM', { id: application.id, values: data })
   },
   /**
    * Deletes an existing application.
@@ -158,16 +174,22 @@ export const actions = {
   async delete({ commit, dispatch, getters }, application) {
     try {
       await ApplicationService(this.$client).delete(application.id)
-      const type = this.$registry.get('application', application.type)
-      type.delete(application, this)
-      commit('DELETE_ITEM', application.id)
+      dispatch('forceDelete', application)
     } catch (error) {
       if (error.response && error.response.status === 404) {
-        commit('DELETE_ITEM', application.id)
+        dispatch('forceDelete', application)
       } else {
         throw error
       }
     }
+  },
+  /**
+   * Forcefully delete an item in the store without making a call to the server.
+   */
+  forceDelete({ commit }, application) {
+    const type = this.$registry.get('application', application.type)
+    type.delete(application, this)
+    commit('DELETE_ITEM', application.id)
   },
   /**
    * Select an application.

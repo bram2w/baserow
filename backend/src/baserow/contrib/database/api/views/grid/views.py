@@ -252,5 +252,9 @@ class GridViewView(APIView):
 
         handler = ViewHandler()
         view = handler.get_view(request.user, view_id, GridView)
-        handler.update_grid_view_field_options(view, data['field_options'])
+        handler.update_grid_view_field_options(
+            request.user,
+            view,
+            data['field_options']
+        )
         return Response(GridViewSerializer(view).data)

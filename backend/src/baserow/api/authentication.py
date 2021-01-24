@@ -42,6 +42,9 @@ class JSONWebTokenAuthentication(JWTJSONWebTokenAuthentication):
 
         user = self.authenticate_credentials(payload)
 
+        # @TODO this should actually somehow be moved to the ws app.
+        user.web_socket_id = request.headers.get('WebSocketId')
+
         return user, jwt_value
 
 

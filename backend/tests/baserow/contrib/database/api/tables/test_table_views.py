@@ -287,6 +287,7 @@ def test_get_table(api_client, data_fixture):
     assert json_response['id'] == table_1.id
     assert json_response['name'] == table_1.name
     assert json_response['order'] == table_1.order
+    assert json_response['database_id'] == table_1.database_id
 
     url = reverse('api:database:tables:item', kwargs={'table_id': table_2.id})
     response = api_client.get(url, HTTP_AUTHORIZATION=f'JWT {token}')
