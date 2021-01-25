@@ -8,6 +8,7 @@
   select as primary field.
 * Implemented real time collaboration.
 * Added option to hide fields in a grid view.
+* Keep token usage details.
 
 ## Released (2021-01-06)
 

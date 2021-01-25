@@ -506,6 +506,9 @@ def test_create_row(api_client, data_fixture):
     assert response_json_row_4[f'field_{text_field_2.id}'] == ''
     assert response_json_row_4['order'] == '4.00000000000000000000'
 
+    token.refresh_from_db()
+    assert token.handled_calls == 1
+
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
     response = api_client.post(
         f"{url}?before={response_json_row_3['id']}",
@@ -525,6 +528,9 @@ def test_create_row(api_client, data_fixture):
     assert not response_json_row_5[f'field_{boolean_field.id}']
     assert response_json_row_5[f'field_{text_field_2.id}'] == ''
     assert response_json_row_5['order'] == '2.99999999999999999999'
+
+    token.refresh_from_db()
+    assert token.handled_calls == 2
 
     model = table.get_model()
     assert model.objects.all().count() == 5
