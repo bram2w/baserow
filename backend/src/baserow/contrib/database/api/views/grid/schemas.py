@@ -11,6 +11,12 @@ grid_view_field_options_schema = {
                     'type': 'integer',
                     'example': 200,
                     'description': 'The width of the table field in the related view.'
+                },
+                'hidden': {
+                    'type': 'boolean',
+                    'example': True,
+                    'description': 'Whether or not the field should be hidden in the '
+                                   'current view.'
                 }
             }
         },

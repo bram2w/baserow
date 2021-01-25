@@ -155,7 +155,7 @@
       >
         <div class="grid-view__head">
           <GridViewFieldType
-            v-for="field in fields"
+            v-for="field in visibleFields"
             :key="'right-head-field-' + view.id + '-' + field.id"
             :table="table"
             :view="view"
@@ -227,7 +227,7 @@
                 @contextmenu.prevent="showRowContext($event, row)"
               >
                 <GridViewField
-                  v-for="field in fields"
+                  v-for="field in visibleFields"
                   :ref="'row-' + row.id + '-field-' + field.id"
                   :key="
                     'right-row-field-' + view.id + '-' + row.id + '-' + field.id
@@ -383,6 +383,15 @@ export default {
     }
   },
   computed: {
+    visibleFields() {
+      return this.fields.filter((field) => {
+        const exists = Object.prototype.hasOwnProperty.call(
+          this.fieldOptions,
+          field.id
+        )
+        return !exists || (exists && !this.fieldOptions[field.id].hidden)
+      })
+    },
     ...mapGetters({
       rows: 'view/grid/getRows',
       count: 'view/grid/getCount',
@@ -519,9 +528,16 @@ export default {
      */
     getCalculatedWidths(primary, fields, fieldOptions) {
       const getFieldWidth = (fieldId) => {
-        return Object.prototype.hasOwnProperty.call(fieldOptions, fieldId)
-          ? fieldOptions[fieldId].width
-          : 200
+        const hasFieldOptions = Object.prototype.hasOwnProperty.call(
+          fieldOptions,
+          fieldId
+        )
+
+        if (hasFieldOptions && fieldOptions[fieldId].hidden) {
+          return 0
+        }
+
+        return hasFieldOptions ? fieldOptions[fieldId].width : 200
       }
 
       // Calculate the widths left side of the grid view. This is the sticky side that

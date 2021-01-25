@@ -158,6 +158,7 @@ class GridViewFieldOptions(models.Model):
     # The defaults should be the same as in the `fieldCreated` of the `GridViewType`
     # abstraction in the web-frontend.
     width = models.PositiveIntegerField(default=200)
+    hidden = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('field_id',)

@@ -101,7 +101,7 @@ class GridViewSerializer(serializers.ModelSerializer):
 class GridViewFieldOptionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = GridViewFieldOptions
-        fields = ('width',)
+        fields = ('width', 'hidden')
 
 
 class GridViewFilterSerializer(serializers.Serializer):

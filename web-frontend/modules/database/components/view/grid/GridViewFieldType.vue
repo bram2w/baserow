@@ -83,6 +83,12 @@
             ></i>
           </a>
         </li>
+        <li v-if="canFilter">
+          <a @click="hide($event, view, field)">
+            <i class="context__menu-icon fas fa-fw fa-eye-slash"></i>
+            Hide field
+          </a>
+        </li>
       </FieldContext>
       <slot></slot>
     </div>
@@ -166,6 +172,18 @@ export default {
         }
 
         this.$emit('refresh')
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+    },
+    async hide(event, view, field) {
+      try {
+        await this.$store.dispatch('view/grid/updateFieldOptionsOfField', {
+          gridId: view.id,
+          field,
+          values: { hidden: true },
+          oldValues: { hidden: false },
+        })
       } catch (error) {
         notifyIf(error, 'view')
       }
