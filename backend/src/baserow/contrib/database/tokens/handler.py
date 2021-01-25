@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils import timezone
 
 from rest_framework.request import Request
 
@@ -422,3 +423,20 @@ class TokenHandler:
                                            'token.')
 
         token.delete()
+
+    def update_token_usage(self, token):
+        """
+        Increases the amount of handled calls and updates the last call timestamp of
+        the token.
+
+        :param token: The token instance that needs to be updated.
+        :param token: Token
+        :return: The updated token instance.
+        :rtype: Token
+        """
+
+        token.handled_calls += 1
+        token.last_call = timezone.now()
+        token.save()
+
+        return token
