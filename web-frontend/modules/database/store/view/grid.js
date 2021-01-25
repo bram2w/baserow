@@ -212,7 +212,10 @@ export const mutations = {
   REPLACE_ALL_FIELD_OPTIONS(state, fieldOptions) {
     state.fieldOptions = fieldOptions
   },
-  SET_FIELD_OPTIONS_OF_FIELD(state, { fieldId, values }) {
+  UPDATE_ALL_FIELD_OPTIONS(state, fieldOptions) {
+    state.fieldOptions = _.merge({}, state.fieldOptions, fieldOptions)
+  },
+  UPDATE_FIELD_OPTIONS_OF_FIELD(state, { fieldId, values }) {
     if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
       _.assign(state.fieldOptions[fieldId], values)
     } else {
@@ -819,7 +822,7 @@ export const actions = {
     { commit },
     { gridId, field, values, oldValues }
   ) {
-    commit('SET_FIELD_OPTIONS_OF_FIELD', {
+    commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
     })
@@ -829,7 +832,7 @@ export const actions = {
     try {
       await GridService(this.$client).update({ gridId, values: updateValues })
     } catch (error) {
-      commit('SET_FIELD_OPTIONS_OF_FIELD', {
+      commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
         fieldId: field.id,
         values: oldValues,
       })
@@ -841,16 +844,34 @@ export const actions = {
    * the backend is made.
    */
   setFieldOptionsOfField({ commit }, { field, values }) {
-    commit('SET_FIELD_OPTIONS_OF_FIELD', {
+    commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
     })
   },
   /**
+   * Replaces all field options with new values and also makes an API request to the
+   * backend with the changed values. If the request fails the action is reverted.
+   */
+  async updateAllFieldOptions(
+    { dispatch },
+    { gridId, newFieldOptions, oldFieldOptions }
+  ) {
+    dispatch('forceUpdateAllFieldOptions', newFieldOptions)
+    const updateValues = { field_options: newFieldOptions }
+
+    try {
+      await GridService(this.$client).update({ gridId, values: updateValues })
+    } catch (error) {
+      dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
+      throw error
+    }
+  },
+  /**
    * Forcefully updates all field options without making a call to the backend.
    */
   forceUpdateAllFieldOptions({ commit }, fieldOptions) {
-    commit('REPLACE_ALL_FIELD_OPTIONS', fieldOptions)
+    commit('UPDATE_ALL_FIELD_OPTIONS', fieldOptions)
   },
   setRowHover({ commit }, { row, value }) {
     commit('SET_ROW_HOVER', { row, value })

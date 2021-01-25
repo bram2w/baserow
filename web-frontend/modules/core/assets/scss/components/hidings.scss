@@ -1,0 +1,23 @@
+.hidings {
+  padding: 0 16px 16px 16px;
+}
+
+.hidings__item {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 6px;
+  padding: 0;
+}
+
+.hidings__footer {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  margin-top: 16px;
+}
+
+.hidings__footer-button:not(:last-child) {
+  margin-right: 10px;
+}

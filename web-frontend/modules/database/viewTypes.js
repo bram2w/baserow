@@ -1,6 +1,7 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewForm from '@baserow/modules/database/components/view/ViewForm'
 import GridView from '@baserow/modules/database/components/view/grid/GridView'
+import GridViewHeader from '@baserow/modules/database/components/view/grid/GridViewHeader'
 
 export class ViewType extends Registerable {
   /**
@@ -165,6 +166,10 @@ export class GridViewType extends ViewType {
     return 'Grid'
   }
 
+  getHeaderComponent() {
+    return GridViewHeader
+  }
+
   getComponent() {
     return GridView
   }
@@ -186,7 +191,10 @@ export class GridViewType extends ViewType {
         field,
         // The default values should be the same as in the `GridViewFieldOptions`
         // model in the backend to stay consistent.
-        values: { width: 200 },
+        values: {
+          width: 200,
+          hidden: false,
+        },
       },
       { root: true }
     )
