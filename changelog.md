@@ -9,6 +9,10 @@
 * Implemented real time collaboration.
 * Added option to hide fields in a grid view.
 * Keep token usage details.
+* Fixed bug where an incompatible row value was visible and used while changing the
+  field type.
+* Fixed bug where the row in the RowEditModel was not entirely reactive and wouldn't be
+  updated when the grid view was refreshed.
 
 ## Released (2021-01-06)
 

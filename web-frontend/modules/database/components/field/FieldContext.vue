@@ -21,7 +21,8 @@
           ref="updateFieldContext"
           :table="table"
           :field="field"
-          @update=";[$emit('update'), $refs.context.hide()]"
+          @update="$emit('update', $event)"
+          @updated="$refs.context.hide()"
         ></UpdateFieldContext>
       </li>
       <slot></slot>
