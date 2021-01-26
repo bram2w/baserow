@@ -1,5 +1,5 @@
 <template>
-  <Modal @hidden="$emit('hidden', { row })">
+  <Modal ref="modal" @hidden="$emit('hidden', { row })">
     <h2 v-if="primary !== undefined" class="box__title">
       {{ getHeading(primary, row) }}
     </h2>
@@ -11,7 +11,7 @@
       :field="field"
       :row="row"
       @update="update"
-      @field-updated="$emit('field-updated')"
+      @field-updated="$emit('field-updated', $event)"
       @field-deleted="$emit('field-deleted')"
     ></RowEditModalField>
     <div class="actions">
@@ -56,16 +56,57 @@ export default {
       type: Array,
       required: true,
     },
+    rows: {
+      type: Array,
+      required: true,
+    },
   },
   data() {
     return {
-      row: {},
+      rowId: -1,
     }
   },
+  computed: {
+    /**
+     * We need an array containing all available rows because then we can always find
+     * the most up to the date row based on the provided id. We need to do it this way
+     * because it is possible that the rows are refreshed after for example a field
+     * update and we always need the most up to date row. This way eventually prevents
+     * incompatible row values.
+     *
+     * Small side effect is that if the user is editing a row via the modal and another
+     * user changes the filters of the same view, then the rows are refreshed for both
+     * users. If the current row is then not in the buffer anymore then the modal does
+     * not have a data source anymore and is forced to close. This is, in my opinion,
+     * less bad compared to old/incompatible data after the user changes the field
+     * type.
+     */
+    row() {
+      const row = this.rows.find((row) => row.id === this.rowId)
+      if (row === undefined) {
+        // If the row is not found in the provided rows then we don't have a row data
+        // source anymore which means we can close the modal.
+        if (
+          this.$refs &&
+          Object.prototype.hasOwnProperty.call(this.$refs, 'modal') &&
+          this.$refs.modal.open
+        ) {
+          this.$nextTick(() => {
+            this.hide()
+          })
+        }
+        return {}
+      }
+      return row
+    },
+  },
   methods: {
-    show(row, ...args) {
-      this.row = row
+    show(rowId, ...args) {
+      this.rowId = rowId
       this.getRootModal().show(...args)
+    },
+    hide(...args) {
+      this.getRootModal().hide(...args)
     },
     /**
      * Because the modal can't update values by himself, an event will be called to

@@ -22,7 +22,7 @@
             :field="primary"
             :filters="view.filters"
             :style="{ width: widths.fields[primary.id] + 'px' }"
-            @refresh="$emit('refresh')"
+            @refresh="$emit('refresh', $event)"
           ></GridViewFieldType>
         </div>
         <div ref="leftBody" class="grid-view__body">
@@ -81,7 +81,7 @@
                     </div>
                     <a
                       class="grid-view__row-more"
-                      @click="$refs.rowEditModal.show(row)"
+                      @click="$refs.rowEditModal.show(row.id)"
                     >
                       <i class="fas fa-expand"></i>
                     </a>
@@ -162,7 +162,7 @@
             :field="field"
             :filters="view.filters"
             :style="{ width: widths.fields[field.id] + 'px' }"
-            @refresh="$emit('refresh')"
+            @refresh="$emit('refresh', $event)"
           >
             <GridViewFieldWidthHandle
               class="grid-view__description-width"
@@ -302,7 +302,10 @@
         <li>
           <a
             @click="
-              ;[$refs.rowEditModal.show(selectedRow), $refs.rowContext.hide()]
+              ;[
+                $refs.rowEditModal.show(selectedRow.id),
+                $refs.rowContext.hide(),
+              ]
             "
           >
             <i class="context__menu-icon fas fa-fw fa-expand"></i>
@@ -322,9 +325,10 @@
       :table="table"
       :primary="primary"
       :fields="fields"
+      :rows="allRows"
       @update="updateValue"
       @hidden="rowEditModalHidden"
-      @field-updated="$emit('refresh')"
+      @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
     ></RowEditModal>
   </div>
@@ -393,6 +397,7 @@ export default {
       })
     },
     ...mapGetters({
+      allRows: 'view/grid/getAllRows',
       rows: 'view/grid/getRows',
       count: 'view/grid/getCount',
       rowHeight: 'view/grid/getRowHeight',
@@ -809,6 +814,15 @@ export default {
      * must be deleted.
      */
     rowEditModalHidden({ row }) {
+      // It could be that the row is not in the buffer anymore and in that case we also
+      // don't need to refresh the row.
+      if (
+        row === undefined ||
+        !Object.prototype.hasOwnProperty.call(row, 'id')
+      ) {
+        return
+      }
+
       this.$store.dispatch('view/grid/refreshRow', {
         grid: this.view,
         fields: this.fields,

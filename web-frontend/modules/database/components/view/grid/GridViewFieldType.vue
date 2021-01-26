@@ -28,7 +28,7 @@
         ref="context"
         :table="table"
         :field="field"
-        @update="$emit('refresh')"
+        @update="$emit('refresh', $event)"
         @delete="$emit('refresh')"
       >
         <li v-if="canFilter">
