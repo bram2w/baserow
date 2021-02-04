@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Released (2021-02-04)
 
 * Upgraded web-frontend dependencies.
 * Fixed bug where you could not convert an existing field to a single select field
