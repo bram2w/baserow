@@ -98,12 +98,20 @@ import ViewSort from '@baserow/modules/database/components/view/ViewSort'
  * will load the correct components into the header and body.
  */
 export default {
-  layout: 'app',
   components: {
     ViewsContext,
     ViewFilter,
     ViewSort,
   },
+  /**
+   * When the user leaves to another page we want to unselect the selected table. This
+   * way it will not be highlighted the left sidebar.
+   */
+  beforeRouteLeave(to, from, next) {
+    this.$store.dispatch('table/unselect')
+    next()
+  },
+  layout: 'app',
   /**
    * Because there is no hook that is called before the route changes, we need the
    * tableLoading middleware to change the table loading state. This change will get
@@ -174,6 +182,11 @@ export default {
       viewLoading: false,
     }
   },
+  head() {
+    return {
+      title: (this.view ? this.view.name + ' - ' : '') + this.table.name,
+    }
+  },
   computed: {
     /**
      * Indicates if there is a selected view by checking if the view object has been
@@ -202,14 +215,6 @@ export default {
    */
   beforeCreate() {
     this.$store.dispatch('table/setLoading', false)
-  },
-  /**
-   * When the user leaves to another page we want to unselect the selected table. This
-   * way it will not be highlighted the left sidebar.
-   */
-  beforeRouteLeave(to, from, next) {
-    this.$store.dispatch('table/unselect')
-    next()
   },
   beforeMount() {
     this.$bus.$on('table-refresh', this.refresh)
@@ -255,11 +260,6 @@ export default {
         this.viewLoading = false
       })
     },
-  },
-  head() {
-    return {
-      title: (this.view ? this.view.name + ' - ' : '') + this.table.name,
-    }
   },
 }
 </script>

@@ -20,12 +20,8 @@
       <div class="upload-files__dropzone-content">
         <i class="upload-files__dropzone-icon fas fa-cloud-upload-alt"></i>
         <div class="upload-files__dropzone-text">
-          <template v-if="dragging">
-            Drop here
-          </template>
-          <template v-else>
-            Click or drop your files here
-          </template>
+          <template v-if="dragging"> Drop here </template>
+          <template v-else> Click or drop your files here </template>
         </div>
       </div>
     </div>

@@ -540,9 +540,7 @@
       </div>
       <div class="api-docs__item">
         <div class="api-docs__left">
-          <h2 id="section-filters" class="api-docs__heading-2">
-            Filters
-          </h2>
+          <h2 id="section-filters" class="api-docs__heading-2">Filters</h2>
           <table class="api-docs__table">
             <thead>
               <tr>
@@ -568,9 +566,7 @@
       </div>
       <div class="api-docs__item">
         <div class="api-docs__left">
-          <h2 id="section-errors" class="api-docs__heading-2">
-            HTTP Errors
-          </h2>
+          <h2 id="section-errors" class="api-docs__heading-2">HTTP Errors</h2>
           <table class="api-docs__table">
             <thead>
               <tr>
@@ -596,9 +592,7 @@
               <tr>
                 <td>401</td>
                 <td>Unauthorized</td>
-                <td>
-                  When you try to access an endpoint without valid token.
-                </td>
+                <td>When you try to access an endpoint without valid token.</td>
               </tr>
               <tr>
                 <td>404</td>
@@ -608,9 +602,7 @@
               <tr>
                 <td>413</td>
                 <td>Request Entity Too Large</td>
-                <td>
-                  The request exceeded the maximum allowed payload size.
-                </td>
+                <td>The request exceeded the maximum allowed payload size.</td>
               </tr>
               <tr>
                 <td>500</td>
@@ -706,6 +698,11 @@ export default {
       databasesOpen: false,
     }
   },
+  head() {
+    return {
+      title: `API Documentation ${this.database.name}`,
+    }
+  },
   computed: {
     viewFilterTypes() {
       return Object.values(this.$registry.getAll('viewFilter'))
@@ -795,11 +792,6 @@ export default {
         filter.compatibleFieldTypes.includes(fieldType)
       )
     },
-  },
-  head() {
-    return {
-      title: `API Documentation ${this.database.name}`,
-    }
   },
 }
 </script>

@@ -41,9 +41,7 @@
         ></FieldSingleSelectDropdownItem>
       </ul>
       <template v-if="canCreateOption">
-        <div class="select__description">
-          Option not found
-        </div>
+        <div class="select__description">Option not found</div>
         <div class="select__footer">
           <a
             class="select__footer-button"

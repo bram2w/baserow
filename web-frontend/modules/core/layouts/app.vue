@@ -97,17 +97,17 @@ import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
 import Sidebar from '@baserow/modules/core/components/sidebar/Sidebar'
 
 export default {
-  // Application pages are pages that have the edit sidebar on the left side which
-  // contains the groups and applications. In order to be able to fetch them the user
-  // must be authenticated. And in order to show them we must fetch all the groups and
-  // applications.
-  middleware: ['authenticated', 'groupsAndApplications'],
   components: {
     SettingsModal,
     GroupsContext,
     Notifications,
     Sidebar,
   },
+  // Application pages are pages that have the edit sidebar on the left side which
+  // contains the groups and applications. In order to be able to fetch them the user
+  // must be authenticated. And in order to show them we must fetch all the groups and
+  // applications.
+  middleware: ['authenticated', 'groupsAndApplications'],
   computed: {
     ...mapGetters({
       isCollapsed: 'sidebar/isCollapsed',

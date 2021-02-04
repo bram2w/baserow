@@ -44,12 +44,13 @@ the created directory and start your development environment.
 > plugin directory.
 
 ```
-$ cd my-plugin-boilerplate
+$ cd my-baserow-plugin
 $ docker network create baserow_plugin_default
 $ docker-compose up -d
 ...
 Starting my-baserow-plugin-mjml ... done
 Starting my-baserow-plugin-db   ... done
+Starting my-baserow-plugin-redis   ... done
 Starting my-baserow-plugin-backend ... done
 Starting my-baserow-plugin-web-frontend ... done
 ```
@@ -70,11 +71,25 @@ containing "Authentication credentials were not provided.". This means that ever
 is working! Second we can install the node dependencies and start the Nuxt development
 server. Open a new tab/window of your terminal and execute the following commands.
 
+> You might need to restart the Celery worker when you have made changes.
+
+Celery is used to broadcast real time changes asynchronous to other users. If you want
+to use real time collaboration you also need to start the Celery worker. Open a new tab
+or window in your terminal and execute the following commands.
+
+```
+$ docker exec -it my-baserow-plugin-backend bash
+$ celery -A baserow worker -l INFO
+```
+
 > It could happen that you get a module not found error when are trying to start the
 > Nuxt development server. This will most likely be because Baserow has been installed
 > as a link dependency and this means that Baserow needs its own node_modules in order 
 > to work. Execute the following command inside the web-frontend container to resolve
 > the issue: `(cd /baserow/web-frontend && yarn install)`.
+
+Finally you need to start the web-frontend server. Open a new tab or window in your
+terminal and execute to following commands.
 
 ```
 $ docker exec -it my-baserow-plugin-web-frontend bash
