@@ -7,15 +7,17 @@
     }"
   >
     <a class="select__item-link" @click="selectView(view)">
-      <i
-        class="select__item-icon fas fa-fw color-primary"
-        :class="'fa-' + view._.type.iconClass"
-      ></i>
-      <Editable
-        ref="rename"
-        :value="view.name"
-        @change="renameView(view, $event)"
-      ></Editable>
+      <div class="select__item-name">
+        <i
+          class="select__item-icon fas fa-fw color-primary"
+          :class="'fa-' + view._.type.iconClass"
+        ></i>
+        <Editable
+          ref="rename"
+          :value="view.name"
+          @change="renameView(view, $event)"
+        ></Editable>
+      </div>
     </a>
     <a
       ref="contextLink"

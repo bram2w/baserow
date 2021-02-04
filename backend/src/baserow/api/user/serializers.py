@@ -4,6 +4,7 @@ from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
 
+from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.core.user.utils import normalize_email_address
 
 User = get_user_model()
@@ -31,6 +32,11 @@ class RegisterSerializer(serializers.Serializer):
         default=False,
         help_text='Indicates whether an authentication token should be generated and '
                   'be included in the response.'
+    )
+    group_invitation_token = serializers.CharField(
+        required=False,
+        help_text='If provided and valid, the user accepts the group invitation and '
+                  'will have access to the group after signing up.'
     )
 
 
@@ -76,3 +82,7 @@ class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
         validated_data = super().validate(attrs)
         update_last_login(None, validated_data['user'])
         return validated_data
+
+
+class DashboardSerializer(serializers.Serializer):
+    group_invitations = UserGroupInvitationSerializer(many=True)

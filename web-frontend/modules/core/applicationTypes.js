@@ -141,4 +141,10 @@ export class ApplicationType extends Registerable {
    *
    */
   clearChildrenSelected(application) {}
+
+  /**
+   * Before the application values are updated, they can be modified here. This
+   * might be needed because providing certain values could break the update.
+   */
+  prepareForStoreUpdate(application, data) {}
 }

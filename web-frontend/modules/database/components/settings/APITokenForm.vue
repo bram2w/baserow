@@ -1,9 +1,7 @@
 <template>
   <form @submit.prevent="submit">
     <div class="control">
-      <label class="control__label">
-        Name
-      </label>
+      <label class="control__label"> Name </label>
       <div class="control__elements">
         <input
           ref="name"
@@ -19,9 +17,7 @@
       </div>
     </div>
     <div class="control">
-      <label class="control__label">
-        Group
-      </label>
+      <label class="control__label"> Group </label>
       <Dropdown
         v-model="values.group"
         class="col-4"

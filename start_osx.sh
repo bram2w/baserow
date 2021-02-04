@@ -23,6 +23,10 @@ new_tab "Backend" \
         "docker exec -it backend bash" \
         "python src/baserow/manage.py runserver 0.0.0.0:8000"
 
+new_tab "Backend" \
+        "docker exec -it backend bash" \
+        "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A baserow worker -l INFO"
+
 new_tab "Web frontend" \
         "docker exec -it web-frontend bash" \
         "yarn run dev"

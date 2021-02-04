@@ -9,13 +9,19 @@ from drf_spectacular.plumbing import build_array_type
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 
 from baserow.api.decorators import validate_body, map_exceptions
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
+from baserow.api.errors import (
+    ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST,
+    ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
+)
 from baserow.api.schemas import get_error_schema
-from baserow.core.models import GroupUser
+from baserow.api.groups.users.serializers import GroupUserGroupSerializer
+from baserow.core.models import GroupUser, Group
 from baserow.core.handler import CoreHandler
-from baserow.core.exceptions import UserNotInGroupError, GroupDoesNotExist
+from baserow.core.exceptions import (
+    UserNotInGroupError, GroupDoesNotExist, UserInvalidGroupPermissionsError
+)
 
-from .serializers import GroupSerializer, GroupUserSerializer, OrderGroupsSerializer
+from .serializers import GroupSerializer, OrderGroupsSerializer
 from .schemas import group_user_schema
 
 
@@ -41,7 +47,7 @@ class GroupsView(APIView):
         """Responds with a list of serialized groups where the user is part of."""
 
         groups = GroupUser.objects.filter(user=request.user).select_related('group')
-        serializer = GroupUserSerializer(groups, many=True)
+        serializer = GroupUserGroupSerializer(groups, many=True)
         return Response(serializer.data)
 
     @extend_schema(
@@ -63,7 +69,7 @@ class GroupsView(APIView):
         """Creates a new group for a user."""
 
         group_user = CoreHandler().create_group(request.user, name=data['name'])
-        return Response(GroupUserSerializer(group_user).data)
+        return Response(GroupUserGroupSerializer(group_user).data)
 
 
 class GroupView(APIView):
@@ -87,9 +93,10 @@ class GroupView(APIView):
         ),
         request=GroupSerializer,
         responses={
-            200: group_user_schema,
+            200: GroupSerializer,
             400: get_error_schema([
-                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',
+                'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
             ]),
             404: get_error_schema(['ERROR_GROUP_DOES_NOT_EXIST'])
         }
@@ -98,18 +105,22 @@ class GroupView(APIView):
     @validate_body(GroupSerializer)
     @map_exceptions({
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
     })
     def patch(self, request, data, group_id):
         """Updates the group if it belongs to a user."""
 
-        group_user = CoreHandler().get_group_user(
-            request.user, group_id, base_queryset=GroupUser.objects.select_for_update()
+        group = CoreHandler().get_group(
+            group_id,
+            base_queryset=Group.objects.select_for_update()
         )
-        group_user.group = CoreHandler().update_group(
-            request.user,  group_user.group, name=data['name'])
-
-        return Response(GroupUserSerializer(group_user).data)
+        group = CoreHandler().update_group(
+            request.user,
+            group,
+            name=data['name']
+        )
+        return Response(GroupSerializer(group).data)
 
     @extend_schema(
         parameters=[
@@ -131,7 +142,8 @@ class GroupView(APIView):
         responses={
             200: group_user_schema,
             400: get_error_schema([
-                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION'
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',
+                'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
             ]),
             404: get_error_schema(['ERROR_GROUP_DOES_NOT_EXIST'])
         }
@@ -139,15 +151,17 @@ class GroupView(APIView):
     @transaction.atomic
     @map_exceptions({
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
     })
     def delete(self, request, group_id):
         """Deletes an existing group if it belongs to a user."""
 
-        group_user = CoreHandler().get_group_user(
-            request.user, group_id, base_queryset=GroupUser.objects.select_for_update()
+        group = CoreHandler().get_group(
+            group_id,
+            base_queryset=Group.objects.select_for_update()
         )
-        CoreHandler().delete_group(request.user,  group_user.group)
+        CoreHandler().delete_group(request.user,  group)
         return Response(status=204)
 
 

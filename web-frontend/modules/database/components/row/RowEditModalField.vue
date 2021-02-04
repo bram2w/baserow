@@ -18,7 +18,7 @@
       ref="context"
       :table="table"
       :field="field"
-      @update="$emit('field-updated')"
+      @update="$emit('field-updated', $event)"
       @delete="$emit('field-deleted')"
     ></FieldContext>
     <component

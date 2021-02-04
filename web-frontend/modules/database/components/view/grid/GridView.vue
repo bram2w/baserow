@@ -22,7 +22,7 @@
             :field="primary"
             :filters="view.filters"
             :style="{ width: widths.fields[primary.id] + 'px' }"
-            @refresh="$emit('refresh')"
+            @refresh="$emit('refresh', $event)"
           ></GridViewFieldType>
         </div>
         <div ref="leftBody" class="grid-view__body">
@@ -81,7 +81,7 @@
                     </div>
                     <a
                       class="grid-view__row-more"
-                      @click="$refs.rowEditModal.show(row)"
+                      @click="$refs.rowEditModal.show(row.id)"
                     >
                       <i class="fas fa-expand"></i>
                     </a>
@@ -155,14 +155,14 @@
       >
         <div class="grid-view__head">
           <GridViewFieldType
-            v-for="field in fields"
+            v-for="field in visibleFields"
             :key="'right-head-field-' + view.id + '-' + field.id"
             :table="table"
             :view="view"
             :field="field"
             :filters="view.filters"
             :style="{ width: widths.fields[field.id] + 'px' }"
-            @refresh="$emit('refresh')"
+            @refresh="$emit('refresh', $event)"
           >
             <GridViewFieldWidthHandle
               class="grid-view__description-width"
@@ -227,7 +227,7 @@
                 @contextmenu.prevent="showRowContext($event, row)"
               >
                 <GridViewField
-                  v-for="field in fields"
+                  v-for="field in visibleFields"
                   :ref="'row-' + row.id + '-field-' + field.id"
                   :key="
                     'right-row-field-' + view.id + '-' + row.id + '-' + field.id
@@ -302,7 +302,10 @@
         <li>
           <a
             @click="
-              ;[$refs.rowEditModal.show(selectedRow), $refs.rowContext.hide()]
+              ;[
+                $refs.rowEditModal.show(selectedRow.id),
+                $refs.rowContext.hide(),
+              ]
             "
           >
             <i class="context__menu-icon fas fa-fw fa-expand"></i>
@@ -322,9 +325,10 @@
       :table="table"
       :primary="primary"
       :fields="fields"
+      :rows="allRows"
       @update="updateValue"
       @hidden="rowEditModalHidden"
-      @field-updated="$emit('refresh')"
+      @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
     ></RowEditModal>
   </div>
@@ -383,7 +387,17 @@ export default {
     }
   },
   computed: {
+    visibleFields() {
+      return this.fields.filter((field) => {
+        const exists = Object.prototype.hasOwnProperty.call(
+          this.fieldOptions,
+          field.id
+        )
+        return !exists || (exists && !this.fieldOptions[field.id].hidden)
+      })
+    },
     ...mapGetters({
+      allRows: 'view/grid/getAllRows',
       rows: 'view/grid/getRows',
       count: 'view/grid/getCount',
       rowHeight: 'view/grid/getRowHeight',
@@ -519,9 +533,16 @@ export default {
      */
     getCalculatedWidths(primary, fields, fieldOptions) {
       const getFieldWidth = (fieldId) => {
-        return Object.prototype.hasOwnProperty.call(fieldOptions, fieldId)
-          ? fieldOptions[fieldId].width
-          : 200
+        const hasFieldOptions = Object.prototype.hasOwnProperty.call(
+          fieldOptions,
+          fieldId
+        )
+
+        if (hasFieldOptions && fieldOptions[fieldId].hidden) {
+          return 0
+        }
+
+        return hasFieldOptions ? fieldOptions[fieldId].width : 200
       }
 
       // Calculate the widths left side of the grid view. This is the sticky side that
@@ -793,6 +814,15 @@ export default {
      * must be deleted.
      */
     rowEditModalHidden({ row }) {
+      // It could be that the row is not in the buffer anymore and in that case we also
+      // don't need to refresh the row.
+      if (
+        row === undefined ||
+        !Object.prototype.hasOwnProperty.call(row, 'id')
+      ) {
+        return
+      }
+
       this.$store.dispatch('view/grid/refreshRow', {
         grid: this.view,
         fields: this.fields,

@@ -14,7 +14,7 @@
   padding: 0 32px 0 12px;
   color: $color-primary-900;
 
-  @include fixed-height(32px, 13px);
+  @include fixed-height(36px, 13px);
 
   &:hover {
     text-decoration: none;
@@ -23,6 +23,11 @@
 
   .dropdown--error & {
     border-color: $color-error-500;
+  }
+
+  .dropdown--tiny & {
+    height: 32px;
+    line-height: 32px;
   }
 }
 

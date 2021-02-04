@@ -9,9 +9,7 @@
         ></i>
         {{ selectedName }}
       </template>
-      <template v-if="!hasValue()">
-        Make a choice
-      </template>
+      <template v-if="!hasValue()"> Make a choice </template>
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <div class="dropdown__items" :class="{ hidden: !open }">

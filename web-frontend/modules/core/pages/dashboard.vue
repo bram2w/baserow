@@ -22,6 +22,12 @@
         <i class="fa fa-heart"></i>
       </a>
     </div>
+    <GroupInvitation
+      v-for="invitation in groupInvitations"
+      :key="'invitation-' + invitation.id"
+      :invitation="invitation"
+      @remove="removeInvitation($event)"
+    ></GroupInvitation>
     <div v-if="groups.length === 0" class="placeholder">
       <div class="placeholder__icon">
         <i class="fas fa-layer-group"></i>
@@ -60,10 +66,29 @@ import { mapState } from 'vuex'
 
 import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
 import DashboardGroup from '@baserow/modules/core/components/group/DashboardGroup'
+import GroupInvitation from '@baserow/modules/core/components/group/GroupInvitation'
+import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
+  components: { CreateGroupModal, DashboardGroup, GroupInvitation },
   layout: 'app',
-  components: { CreateGroupModal, DashboardGroup },
+  /**
+   * Fetches the data that must be shown on the dashboard, this could for example be
+   * pending group invitations.
+   */
+  async asyncData({ error, app }) {
+    try {
+      const { data } = await AuthService(app.$client).dashboard()
+      return { groupInvitations: data.group_invitations }
+    } catch (e) {
+      return error({ statusCode: 400, message: 'Error loading dashboard.' })
+    }
+  },
+  head() {
+    return {
+      title: 'Dashboard',
+    }
+  },
   computed: {
     ...mapState({
       user: (state) => state.auth.user,
@@ -71,10 +96,17 @@ export default {
       applications: (state) => state.application.items,
     }),
   },
-  head() {
-    return {
-      title: 'Dashboard',
-    }
+  methods: {
+    /**
+     * When a group invation has been rejected or accepted, it can be removed from the
+     * list because in both situations the invitation itself is deleted.
+     */
+    removeInvitation(invitation) {
+      const index = this.groupInvitations.findIndex(
+        (i) => i.id === invitation.id
+      )
+      this.groupInvitations.splice(index, 1)
+    },
   },
 }
 </script>

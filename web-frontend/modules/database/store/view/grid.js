@@ -6,7 +6,10 @@ import BigNumber from 'bignumber.js'
 import { uuid } from '@baserow/modules/core/utils/string'
 import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
-import { getRowSortFunction } from '@baserow/modules/database/utils/view'
+import {
+  getRowSortFunction,
+  rowMatchesFilters,
+} from '@baserow/modules/database/utils/view'
 
 export function populateRow(row) {
   row._ = {
@@ -140,8 +143,13 @@ export const mutations = {
   },
   DELETE_ROW(state, id) {
     const index = state.rows.findIndex((item) => item.id === id)
-    state.count--
     if (index !== -1) {
+      // A small side effect of the buffered loading is that we don't know for sure if
+      // the row exists within the view. So the count might need to be decreased
+      // even though the row is not found. Because we don't want to make another call
+      // to the backend we only decrease the count if the row is found in the buffer.
+      // The count is eventually refreshed when the user scrolls within the view.
+      state.count--
       state.bufferLimit--
       state.rows.splice(index, 1)
     }
@@ -171,6 +179,9 @@ export const mutations = {
   },
   SET_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
+  },
+  UPDATE_ROW(state, { row, values }) {
+    _.assign(row, values)
   },
   UPDATE_ROWS(state, { rows }) {
     rows.forEach((newRow) => {
@@ -206,7 +217,10 @@ export const mutations = {
   REPLACE_ALL_FIELD_OPTIONS(state, fieldOptions) {
     state.fieldOptions = fieldOptions
   },
-  SET_FIELD_OPTIONS_OF_FIELD(state, { fieldId, values }) {
+  UPDATE_ALL_FIELD_OPTIONS(state, fieldOptions) {
+    state.fieldOptions = _.merge({}, state.fieldOptions, fieldOptions)
+  },
+  UPDATE_FIELD_OPTIONS_OF_FIELD(state, { fieldId, values }) {
     if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
       _.assign(state.fieldOptions[fieldId], values)
     } else {
@@ -561,45 +575,19 @@ export const actions = {
    * override values that not actually belong to the row to do some preliminary checks.
    */
   updateMatchFilters({ commit }, { view, row, overrides = {} }) {
-    const isValid = (filters, values) => {
-      // If there aren't any filters then it is not possible to check if the row
-      // matches any of the filters, so we can mark it as valid.
-      if (filters.length === 0) {
-        return true
-      }
-
-      for (const i in filters) {
-        const filterType = this.$registry.get('viewFilter', filters[i].type)
-        const filterValue = filters[i].value
-        const rowValue = values[`field_${filters[i].field}`]
-        const matches = filterType.matches(rowValue, filterValue)
-        if (view.filter_type === 'AND' && !matches) {
-          // With an `AND` filter type, the row must match all the filters, so if
-          // one of the filters doesn't match we can mark it as isvalid.
-          return false
-        } else if (view.filter_type === 'OR' && matches) {
-          // With an 'OR' filter type, the row only has to match one of the filters,
-          // that is the case here so we can mark it as valid.
-          return true
-        }
-      }
-
-      if (view.filter_type === 'AND') {
-        // When this point has been reached with an `AND` filter type it means that
-        // the row matches all the filters and therefore we can mark it as valid.
-        return true
-      } else if (view.filter_type === 'OR') {
-        // When this point has been reached with an `OR` filter type it means that
-        // the row matches none of the filters and therefore we can mark it as invalid.
-        return false
-      }
-    }
     const values = JSON.parse(JSON.stringify(row))
     Object.keys(overrides).forEach((key) => {
       values[key] = overrides[key]
     })
     // The value is always valid if the filters are disabled.
-    const matches = view.filters_disabled ? true : isValid(view.filters, values)
+    const matches = view.filters_disabled
+      ? true
+      : rowMatchesFilters(
+          this.$registry,
+          view.filter_type,
+          view.filters,
+          values
+        )
     commit('SET_ROW_MATCH_FILTERS', { row, value: matches })
   },
   /**
@@ -723,6 +711,60 @@ export const actions = {
     }
   },
   /**
+   * Forcefully create a new row without making a call to the backend. It also
+   * checks if the row matches the filters and sortings and if not it will be
+   * removed from the buffer.
+   */
+  forceCreate(
+    { commit, dispatch, getters },
+    { view, fields, primary, values, getScrollTop }
+  ) {
+    const row = _.assign({}, values)
+    populateRow(row)
+    commit('ADD_ROWS', {
+      rows: [row],
+      prependToRows: 0,
+      appendToRows: 1,
+      count: getters.getCount + 1,
+      bufferStartIndex: getters.getBufferStartIndex,
+      bufferLimit: getters.getBufferLimit + 1,
+    })
+    dispatch('visibleByScrollTop', {
+      scrollTop: null,
+      windowHeight: null,
+    })
+    dispatch('updateMatchFilters', { view, row })
+    dispatch('updateMatchSortings', { view, fields, primary, row })
+    dispatch('refreshRow', { grid: view, row, fields, primary, getScrollTop })
+  },
+  /**
+   * Forcefully update an existing row without making a call to the backend. It
+   * could be that the row does not exist in the buffer, but actually belongs in
+   * there. So after creating or updating the row we can check if it belongs
+   * there and if not it will be deleted.
+   */
+  forceUpdate(
+    { dispatch, commit, getters },
+    { view, fields, primary, values, getScrollTop }
+  ) {
+    const row = getters.getRow(values.id)
+    if (row === undefined) {
+      return dispatch('forceCreate', {
+        view,
+        fields,
+        primary,
+        values,
+        getScrollTop,
+      })
+    } else {
+      commit('UPDATE_ROW', { row, values })
+    }
+
+    dispatch('updateMatchFilters', { view, row })
+    dispatch('updateMatchSortings', { view, fields, primary, row })
+    dispatch('refreshRow', { grid: view, row, fields, primary, getScrollTop })
+  },
+  /**
    * Deletes an existing row of the provided table. After deleting, the visible rows
    * range and the buffer are recalculated because we might need to show different
    * rows or add some rows to the buffer.
@@ -785,7 +827,7 @@ export const actions = {
     { commit },
     { gridId, field, values, oldValues }
   ) {
-    commit('SET_FIELD_OPTIONS_OF_FIELD', {
+    commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
     })
@@ -795,7 +837,7 @@ export const actions = {
     try {
       await GridService(this.$client).update({ gridId, values: updateValues })
     } catch (error) {
-      commit('SET_FIELD_OPTIONS_OF_FIELD', {
+      commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
         fieldId: field.id,
         values: oldValues,
       })
@@ -807,10 +849,34 @@ export const actions = {
    * the backend is made.
    */
   setFieldOptionsOfField({ commit }, { field, values }) {
-    commit('SET_FIELD_OPTIONS_OF_FIELD', {
+    commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
     })
+  },
+  /**
+   * Replaces all field options with new values and also makes an API request to the
+   * backend with the changed values. If the request fails the action is reverted.
+   */
+  async updateAllFieldOptions(
+    { dispatch },
+    { gridId, newFieldOptions, oldFieldOptions }
+  ) {
+    dispatch('forceUpdateAllFieldOptions', newFieldOptions)
+    const updateValues = { field_options: newFieldOptions }
+
+    try {
+      await GridService(this.$client).update({ gridId, values: updateValues })
+    } catch (error) {
+      dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
+      throw error
+    }
+  },
+  /**
+   * Forcefully updates all field options without making a call to the backend.
+   */
+  forceUpdateAllFieldOptions({ commit }, fieldOptions) {
+    commit('UPDATE_ALL_FIELD_OPTIONS', fieldOptions)
   },
   setRowHover({ commit }, { row, value }) {
     commit('SET_ROW_HOVER', { row, value })
@@ -902,6 +968,9 @@ export const getters = {
   },
   getAllRows(state) {
     return state.rows
+  },
+  getRow: (state) => (id) => {
+    return state.rows.find((row) => row.id === id)
   },
   getRows(state) {
     return state.rows.slice(state.rowsStartIndex, state.rowsEndIndex)

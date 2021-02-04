@@ -35,6 +35,15 @@ class Token(models.Model):
         on_delete=models.CASCADE,
         help_text='Only the tables of the group can be accessed.'
     )
+    handled_calls = models.PositiveIntegerField(
+        default=0,
+        help_text='Indicates the total amount of calls were handled using this token.'
+    )
+    last_call = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text='Timestamp when the last call was handled using this token.'
+    )
 
     class Meta:
         ordering = ('id',)

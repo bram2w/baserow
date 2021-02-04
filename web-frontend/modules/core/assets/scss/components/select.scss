@@ -48,8 +48,6 @@
 }
 
 .select__item {
-  @extend %select__item-size;
-
   position: relative;
   margin: 0 8px 4px 8px;
   padding: 0 32px 0 10px;
@@ -86,7 +84,7 @@
       @include absolute(0, 0, auto, auto);
     }
 
-    &:hover::after {
+    &:not(.select__item--no-options):hover::after {
       display: none;
     }
   }
@@ -97,9 +95,6 @@
 }
 
 .select__item-link {
-  @extend %ellipsis;
-  @extend %select__item-size;
-
   display: block;
   color: $color-primary-900;
 
@@ -116,8 +111,21 @@
   }
 }
 
+.select__item-name {
+  @extend %ellipsis;
+  @extend %select__item-size;
+}
+
 .select__item-icon {
   margin-right: 6px;
+}
+
+.select__item-description {
+  font-size: 11px;
+  margin-right: -32px;
+  line-height: 140%;
+  color: $color-neutral-600;
+  padding-bottom: 6px;
 }
 
 .select__item-options {

@@ -35,7 +35,7 @@
               class="menu__link menu__user-item"
               @click="$refs.userContext.toggle($event.target)"
             >
-              {{ nameAbbreviation }}
+              {{ name | nameAbbreviation }}
               <span class="menu__link-text">{{ name }}</span>
             </a>
             <Context ref="userContext">
@@ -97,23 +97,29 @@ import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
 import Sidebar from '@baserow/modules/core/components/sidebar/Sidebar'
 
 export default {
-  // Application pages are pages that have the edit sidebar on the left side which
-  // contains the groups and applications. In order to be able to fetch them the user
-  // must be authenticated. And in order to show them we must fetch all the groups and
-  // applications.
-  middleware: ['authenticated', 'groupsAndApplications'],
   components: {
     SettingsModal,
     GroupsContext,
     Notifications,
     Sidebar,
   },
+  // Application pages are pages that have the edit sidebar on the left side which
+  // contains the groups and applications. In order to be able to fetch them the user
+  // must be authenticated. And in order to show them we must fetch all the groups and
+  // applications.
+  middleware: ['authenticated', 'groupsAndApplications'],
   computed: {
     ...mapGetters({
       isCollapsed: 'sidebar/isCollapsed',
       name: 'auth/getName',
-      nameAbbreviation: 'auth/getNameAbbreviation',
     }),
+  },
+  mounted() {
+    // Connect to the web socket so we can start receiving real time updates.
+    this.$realtime.connect()
+  },
+  beforeDestroy() {
+    this.$realtime.disconnect()
   },
   methods: {
     logoff() {

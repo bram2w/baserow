@@ -107,9 +107,15 @@ export const actions = {
   /**
    * Creates a new group with the given values.
    */
-  async create({ commit }, values) {
+  async create({ commit, dispatch }, values) {
     const { data } = await GroupService(this.$client).create(values)
-    commit('ADD_ITEM', data)
+    dispatch('forceCreate', data)
+  },
+  /**
+   * Forcefully create an item in the store without making a call to the server.
+   */
+  forceCreate({ commit }, values) {
+    commit('ADD_ITEM', values)
   },
   /**
    * Updates the values of the group with the provided id.
@@ -121,7 +127,13 @@ export const actions = {
       result[key] = data[key]
       return result
     }, {})
-    commit('UPDATE_ITEM', { id: group.id, values: update })
+    dispatch('forceUpdate', { group, values: update })
+  },
+  /**
+   * Forcefully update the item in the store without making a call to the server.
+   */
+  forceUpdate({ commit }, { group, values }) {
+    commit('UPDATE_ITEM', { id: group.id, values })
   },
   /**
    * Deletes an existing group with the provided id.
@@ -141,7 +153,7 @@ export const actions = {
     }
   },
   /**
-   * Forcibly remove the group from the items  without calling the server. The
+   * Forcefully remove the group from the items  without calling the server. The
    * delete event is also called for all the applications that are in the
    * group. This is needed so that we can redirect the user to another page if for
    * example a Table is open that has been deleted because the group has been deleted.

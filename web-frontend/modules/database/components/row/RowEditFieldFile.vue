@@ -63,6 +63,7 @@
       @uploaded="addFiles(value, $event)"
     ></UserFilesModal>
     <FileFieldModal
+      v-if="Boolean(value)"
       ref="fileModal"
       :files="value"
       @removed="removeFile(value, $event)"

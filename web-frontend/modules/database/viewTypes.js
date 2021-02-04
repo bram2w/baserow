@@ -1,6 +1,7 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewForm from '@baserow/modules/database/components/view/ViewForm'
 import GridView from '@baserow/modules/database/components/view/grid/GridView'
+import GridViewHeader from '@baserow/modules/database/components/view/grid/GridViewHeader'
 
 export class ViewType extends Registerable {
   /**
@@ -118,6 +119,27 @@ export class ViewType extends Registerable {
   fieldUpdated(context, field, oldField, fieldType) {}
 
   /**
+   * Event that is called when a row is created from an outside source, so for example
+   * via a real time event by another user. It can be used to check if data in an store
+   * needs to be updated.
+   */
+  rowCreated(context, tableId, rowValues) {}
+
+  /**
+   * Event that is called when a row is updated from an outside source, so for example
+   * via a real time event by another user. It can be used to check if data in an store
+   * needs to be updated.
+   */
+  rowUpdated(context, tableId, rowValues) {}
+
+  /**
+   * Event that is called when a row is deleted from an outside source, so for example
+   * via a real time event by another user. It can be used to check if data in an store
+   * needs to be updated.
+   */
+  rowDeleted(context, tableId, rowId) {}
+
+  /**
    * @return object
    */
   serialize() {
@@ -144,6 +166,10 @@ export class GridViewType extends ViewType {
     return 'Grid'
   }
 
+  getHeaderComponent() {
+    return GridViewHeader
+  }
+
   getComponent() {
     return GridView
   }
@@ -165,9 +191,57 @@ export class GridViewType extends ViewType {
         field,
         // The default values should be the same as in the `GridViewFieldOptions`
         // model in the backend to stay consistent.
-        values: { width: 200 },
+        values: {
+          width: 200,
+          hidden: false,
+        },
       },
       { root: true }
     )
+  }
+
+  isCurrentView(store, tableId) {
+    const table = store.getters['table/getSelected']
+    const grid = store.getters['view/getSelected']
+    return (
+      table.id === tableId &&
+      Object.prototype.hasOwnProperty.call(grid, 'type') &&
+      grid.type === GridViewType.getType()
+    )
+  }
+
+  rowCreated({ store }, tableId, rowValues) {
+    if (this.isCurrentView(store, tableId)) {
+      store.dispatch('view/grid/forceCreate', {
+        view: store.getters['view/getSelected'],
+        fields: store.getters['field/getAll'],
+        primary: store.getters['field/getPrimary'],
+        values: rowValues,
+        getScrollTop: () => store.getters['view/grid/getScrollTop'],
+      })
+    }
+  }
+
+  rowUpdated({ store }, tableId, rowValues) {
+    if (this.isCurrentView(store, tableId)) {
+      store.dispatch('view/grid/forceUpdate', {
+        view: store.getters['view/getSelected'],
+        fields: store.getters['field/getAll'],
+        primary: store.getters['field/getPrimary'],
+        values: rowValues,
+        getScrollTop: () => store.getters['view/grid/getScrollTop'],
+      })
+    }
+  }
+
+  rowDeleted({ store }, tableId, rowId) {
+    if (this.isCurrentView(store, tableId)) {
+      const row = { id: rowId }
+      store.dispatch('view/grid/forceDelete', {
+        grid: store.getters['view/getSelected'],
+        row,
+        getScrollTop: () => store.getters['view/grid/getScrollTop'],
+      })
+    }
   }
 }

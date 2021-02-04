@@ -79,7 +79,7 @@
         :view="view"
         :fields="fields"
         :primary="primary"
-        @refresh="refresh()"
+        @refresh="refresh"
       />
       <div v-if="viewLoading" class="loading-overlay"></div>
     </div>
@@ -98,12 +98,20 @@ import ViewSort from '@baserow/modules/database/components/view/ViewSort'
  * will load the correct components into the header and body.
  */
 export default {
-  layout: 'app',
   components: {
     ViewsContext,
     ViewFilter,
     ViewSort,
   },
+  /**
+   * When the user leaves to another page we want to unselect the selected table. This
+   * way it will not be highlighted the left sidebar.
+   */
+  beforeRouteLeave(to, from, next) {
+    this.$store.dispatch('table/unselect')
+    next()
+  },
+  layout: 'app',
   /**
    * Because there is no hook that is called before the route changes, we need the
    * tableLoading middleware to change the table loading state. This change will get
@@ -174,6 +182,11 @@ export default {
       viewLoading: false,
     }
   },
+  head() {
+    return {
+      title: (this.view ? this.view.name + ' - ' : '') + this.table.name,
+    }
+  },
   computed: {
     /**
      * Indicates if there is a selected view by checking if the view object has been
@@ -203,13 +216,15 @@ export default {
   beforeCreate() {
     this.$store.dispatch('table/setLoading', false)
   },
-  /**
-   * When the user leaves to another page we want to unselect the selected table. This
-   * way it will not be highlighted the left sidebar.
-   */
-  beforeRouteLeave(to, from, next) {
-    this.$store.dispatch('table/unselect')
-    next()
+  beforeMount() {
+    this.$bus.$on('table-refresh', this.refresh)
+  },
+  mounted() {
+    this.$realtime.subscribe('table', { table_id: this.table.id })
+  },
+  beforeDestroy() {
+    this.$bus.$off('table-refresh', this.refresh)
+    this.$realtime.subscribe(null)
   },
   methods: {
     getViewComponent(view) {
@@ -224,7 +239,7 @@ export default {
      * Refreshes the whole view. All data will be reloaded and it will visually look
      * the same as seeing the view for the first time.
      */
-    async refresh() {
+    async refresh(event) {
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
       await type.refresh({ store: this.$store }, this.view)
@@ -234,15 +249,17 @@ export default {
       ) {
         await this.$refs.view.refresh()
       }
+      // It might be possible that the event has a callback that needs to be called
+      // after the rows are refreshed. This is for example the case when a field has
+      // changed. In that case we want to update the field in the store after the rows
+      // have been refreshed to prevent incompatible values in field types.
+      if (event && Object.prototype.hasOwnProperty.call(event, 'callback')) {
+        await event.callback()
+      }
       this.$nextTick(() => {
         this.viewLoading = false
       })
     },
-  },
-  head() {
-    return {
-      title: (this.view ? this.view.name + ' - ' : '') + this.table.name,
-    }
   },
 }
 </script>

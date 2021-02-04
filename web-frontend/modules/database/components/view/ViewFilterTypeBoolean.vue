@@ -1,7 +1,5 @@
 <template>
-  <Checkbox :value="copy" @input="input($event)">
-    Selected
-  </Checkbox>
+  <Checkbox :value="copy" @input="input($event)"> Selected </Checkbox>
 </template>
 
 <script>

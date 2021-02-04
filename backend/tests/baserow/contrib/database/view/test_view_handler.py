@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 from decimal import Decimal
 
 from baserow.core.exceptions import UserNotInGroupError
@@ -57,14 +58,20 @@ def test_get_view(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_view(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_created.send')
+def test_create_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table(user=user)
 
     handler = ViewHandler()
-    handler.create_view(user=user, table=table, type_name='grid', name='Test grid')
+    view = handler.create_view(user=user, table=table, type_name='grid',
+                               name='Test grid')
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view'].id == view.id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     assert View.objects.all().count() == 1
     assert GridView.objects.all().count() == 1
@@ -109,7 +116,8 @@ def test_create_view(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_view(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_updated.send')
+def test_update_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -123,7 +131,11 @@ def test_update_view(data_fixture):
     with pytest.raises(ValueError):
         handler.update_view(user=user, view=object(), name='Test 1')
 
-    handler.update_view(user=user, view=grid, name='Test 1')
+    view = handler.update_view(user=user, view=grid, name='Test 1')
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view'].id == view.id
+    assert send_mock.call_args[1]['user'].id == user.id
 
     grid.refresh_from_db()
     assert grid.name == 'Test 1'
@@ -138,7 +150,8 @@ def test_update_view(data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_view(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_deleted.send')
+def test_delete_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -152,13 +165,21 @@ def test_delete_view(data_fixture):
     with pytest.raises(ValueError):
         handler.delete_view(user=user_2, view=object())
 
+    view_id = grid.id
+
     assert View.objects.all().count() == 1
     handler.delete_view(user=user, view=grid)
     assert View.objects.all().count() == 0
 
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view_id'] == view_id
+    assert send_mock.call_args[1]['view'].id == view_id
+    assert send_mock.call_args[1]['user'].id == user.id
+
 
 @pytest.mark.django_db
-def test_update_grid_view_field_options(data_fixture):
+@patch('baserow.contrib.database.views.signals.grid_view_field_options_updated.send')
+def test_update_grid_view_field_options(send_mock, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
@@ -168,6 +189,7 @@ def test_update_grid_view_field_options(data_fixture):
 
     with pytest.raises(ValueError):
         ViewHandler().update_grid_view_field_options(
+            user=user,
             grid_view=grid_view,
             field_options={
                 'strange_format': {'height': 150},
@@ -176,6 +198,7 @@ def test_update_grid_view_field_options(data_fixture):
 
     with pytest.raises(UnrelatedFieldError):
         ViewHandler().update_grid_view_field_options(
+            user=user,
             grid_view=grid_view,
             field_options={
                 99999: {'width': 150},
@@ -184,6 +207,7 @@ def test_update_grid_view_field_options(data_fixture):
 
     with pytest.raises(UnrelatedFieldError):
         ViewHandler().update_grid_view_field_options(
+            user=user,
             grid_view=grid_view,
             field_options={
                 field_3.id: {'width': 150},
@@ -191,6 +215,7 @@ def test_update_grid_view_field_options(data_fixture):
         )
 
     ViewHandler().update_grid_view_field_options(
+        user=user,
         grid_view=grid_view,
         field_options={
             str(field_1.id): {'width': 150},
@@ -199,6 +224,9 @@ def test_update_grid_view_field_options(data_fixture):
     )
     options_4 = grid_view.get_field_options()
 
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['grid_view'].id == grid_view.id
+    assert send_mock.call_args[1]['user'].id == user.id
     assert len(options_4) == 2
     assert options_4[0].width == 150
     assert options_4[0].field_id == field_1.id
@@ -206,10 +234,14 @@ def test_update_grid_view_field_options(data_fixture):
     assert options_4[1].field_id == field_2.id
 
     field_4 = data_fixture.create_text_field(table=table)
-    ViewHandler().update_grid_view_field_options(grid_view=grid_view, field_options={
-        field_2.id: {'width': 300},
-        field_4.id: {'width': 50}
-    })
+    ViewHandler().update_grid_view_field_options(
+        user=user,
+        grid_view=grid_view,
+        field_options={
+            field_2.id: {'width': 300},
+            field_4.id: {'width': 50}
+        }
+    )
     options_4 = grid_view.get_field_options()
     assert len(options_4) == 3
     assert options_4[0].width == 150
@@ -420,7 +452,8 @@ def test_get_filter(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_filter(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_filter_created.send')
+def test_create_filter(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     grid_view = data_fixture.create_grid_view(user=user)
@@ -459,6 +492,10 @@ def test_create_filter(data_fixture):
     view_filter = handler.create_filter(user=user, view=grid_view, field=text_field,
                                         type_name='equal', value='test')
 
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view_filter'].id == view_filter.id
+    assert send_mock.call_args[1]['user'].id == user.id
+
     assert ViewFilter.objects.all().count() == 1
     first = ViewFilter.objects.all().first()
 
@@ -478,7 +515,8 @@ def test_create_filter(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_filter(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_filter_updated.send')
+def test_update_filter(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     grid_view = data_fixture.create_grid_view(user=user)
@@ -513,6 +551,9 @@ def test_update_filter(data_fixture):
 
     updated_filter = handler.update_filter(user=user, view_filter=equal_filter,
                                            value='test2')
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view_filter'].id == updated_filter.id
+    assert send_mock.call_args[1]['user'].id == user.id
     assert updated_filter.value == 'test2'
     assert updated_filter.field_id == long_text_field.id
     assert updated_filter.type == 'equal'
@@ -528,7 +569,8 @@ def test_update_filter(data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_filter(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_filter_deleted.send')
+def test_delete_filter(send_mock, data_fixture):
     user = data_fixture.create_user()
     filter_1 = data_fixture.create_view_filter(user=user)
     filter_2 = data_fixture.create_view_filter()
@@ -540,8 +582,13 @@ def test_delete_filter(data_fixture):
     with pytest.raises(UserNotInGroupError):
         handler.delete_filter(user=user, view_filter=filter_2)
 
+    filter_1_id = filter_1.id
     handler.delete_filter(user=user, view_filter=filter_1)
 
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view_filter_id'] == filter_1_id
+    assert send_mock.call_args[1]['view_filter']
+    assert send_mock.call_args[1]['user'].id == user.id
     assert ViewFilter.objects.all().count() == 1
     assert ViewFilter.objects.filter(pk=filter_1.pk).count() == 0
 
@@ -709,7 +756,8 @@ def test_get_sort(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_sort(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_sort_created.send')
+def test_create_sort(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     grid_view = data_fixture.create_grid_view(user=user)
@@ -742,6 +790,10 @@ def test_create_sort(data_fixture):
     view_sort = handler.create_sort(user=user, view=grid_view, field=text_field,
                                     order='ASC')
 
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view_sort'].id == view_sort.id
+    assert send_mock.call_args[1]['user'].id == user.id
+
     assert ViewSort.objects.all().count() == 1
     first = ViewSort.objects.all().first()
 
@@ -762,7 +814,8 @@ def test_create_sort(data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_sort(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_sort_updated.send')
+def test_update_sort(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     grid_view = data_fixture.create_grid_view(user=user)
@@ -789,6 +842,9 @@ def test_update_sort(data_fixture):
 
     updated_sort = handler.update_sort(user=user, view_sort=view_sort,
                                        order='DESC')
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view_sort'].id == updated_sort.id
+    assert send_mock.call_args[1]['user'].id == user.id
     assert updated_sort.order == 'DESC'
     assert updated_sort.field_id == long_text_field.id
     assert updated_sort.view_id == grid_view.id
@@ -807,7 +863,8 @@ def test_update_sort(data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_sort(data_fixture):
+@patch('baserow.contrib.database.views.signals.view_sort_deleted.send')
+def test_delete_sort(send_mock, data_fixture):
     user = data_fixture.create_user()
     sort_1 = data_fixture.create_view_sort(user=user)
     sort_2 = data_fixture.create_view_sort()
@@ -819,7 +876,13 @@ def test_delete_sort(data_fixture):
     with pytest.raises(UserNotInGroupError):
         handler.delete_sort(user=user, view_sort=sort_2)
 
+    sort_1_id = sort_1.id
     handler.delete_sort(user=user, view_sort=sort_1)
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['view_sort_id'] == sort_1_id
+    assert send_mock.call_args[1]['view_sort']
+    assert send_mock.call_args[1]['user'].id == user.id
 
     assert ViewSort.objects.all().count() == 1
     assert ViewSort.objects.filter(pk=sort_1.pk).count() == 0

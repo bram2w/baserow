@@ -216,6 +216,12 @@ export const actions = {
     postData.type = type
 
     const { data } = await ViewService(this.$client).create(table.id, postData)
+    dispatch('forceCreate', { data })
+  },
+  /**
+   * Forcefully create a new view without making a request to the server.
+   */
+  forceCreate({ commit }, { data }) {
     populateView(data, this.$registry)
     commit('ADD_ITEM', data)
   },
@@ -232,15 +238,21 @@ export const actions = {
       }
     })
 
-    commit('UPDATE_ITEM', { id: view.id, values: newValues })
+    dispatch('forceUpdate', { view, values: newValues })
 
     try {
       await ViewService(this.$client).update(view.id, values)
       commit('SET_ITEM_LOADING', { view, value: false })
     } catch (error) {
-      commit('UPDATE_ITEM', { id: view.id, values: oldValues })
+      dispatch('forceUpdate', { view, values: oldValues })
       throw error
     }
+  },
+  /**
+   * Forcefully update an existing view without making a request to the backend.
+   */
+  forceUpdate({ commit }, { view, values }) {
+    commit('UPDATE_ITEM', { id: view.id, values })
   },
   /**
    * Deletes an existing view with the provided id. A request to the server is first
@@ -362,10 +374,18 @@ export const actions = {
     return { filter }
   },
   /**
+   * Forcefully create a new view filterwithout making a request to the backend.
+   */
+  forceCreateFilter({ commit }, { view, values }) {
+    const filter = _.assign({}, values)
+    populateFilter(filter)
+    commit('ADD_FILTER', { view, filter })
+  },
+  /**
    * Updates the filter values in the store right away. If the API call fails the
    * changes will be undone.
    */
-  async updateFilter({ commit }, { filter, values }) {
+  async updateFilter({ dispatch, commit }, { filter, values }) {
     commit('SET_FILTER_LOADING', { filter, value: true })
 
     const oldValues = {}
@@ -377,31 +397,43 @@ export const actions = {
       }
     })
 
-    commit('UPDATE_FILTER', { filter, values: newValues })
+    dispatch('forceUpdateFilter', { filter, values: newValues })
 
     try {
       await FilterService(this.$client).update(filter.id, values)
       commit('SET_FILTER_LOADING', { filter, value: false })
     } catch (error) {
-      commit('UPDATE_FILTER', { filter, values: oldValues })
+      dispatch('forceUpdateFilter', { filter, values: oldValues })
       commit('SET_FILTER_LOADING', { filter, value: false })
       throw error
     }
   },
   /**
+   * Forcefully update an existing view filter without making a request to the backend.
+   */
+  forceUpdateFilter({ commit }, { filter, values }) {
+    commit('UPDATE_FILTER', { filter, values })
+  },
+  /**
    * Deletes an existing filter. A request to the server will be made first and
    * after that it will be deleted.
    */
-  async deleteFilter({ commit }, { view, filter }) {
+  async deleteFilter({ dispatch, commit }, { view, filter }) {
     commit('SET_FILTER_LOADING', { filter, value: true })
 
     try {
       await FilterService(this.$client).delete(filter.id)
-      commit('DELETE_FILTER', { view, id: filter.id })
+      dispatch('forceDeleteFilter', { view, filter })
     } catch (error) {
       commit('SET_FILTER_LOADING', { filter, value: false })
       throw error
     }
+  },
+  /**
+   * Forcefully delete an existing field without making a request to the backend.
+   */
+  forceDeleteFilter({ commit }, { view, filter }) {
+    commit('DELETE_FILTER', { view, id: filter.id })
   },
   /**
    * When a field is deleted the related filters are also automatically deleted in the
@@ -446,10 +478,18 @@ export const actions = {
     return { sort }
   },
   /**
+   * Forcefully create a new  view sorting without making a request to the backend.
+   */
+  forceCreateSort({ commit }, { view, values }) {
+    const sort = _.assign({}, values)
+    populateSort(sort)
+    commit('ADD_SORT', { view, sort })
+  },
+  /**
    * Updates the sort values in the store right away. If the API call fails the
    * changes will be undone.
    */
-  async updateSort({ commit }, { sort, values }) {
+  async updateSort({ dispatch, commit }, { sort, values }) {
     commit('SET_SORT_LOADING', { sort, value: true })
 
     const oldValues = {}
@@ -461,31 +501,43 @@ export const actions = {
       }
     })
 
-    commit('UPDATE_SORT', { sort, values: newValues })
+    dispatch('forceUpdateSort', { sort, values: newValues })
 
     try {
       await SortService(this.$client).update(sort.id, values)
       commit('SET_SORT_LOADING', { sort, value: false })
     } catch (error) {
-      commit('UPDATE_SORT', { sort, values: oldValues })
+      dispatch('forceUpdateSort', { sort, values: oldValues })
       commit('SET_SORT_LOADING', { sort, value: false })
       throw error
     }
   },
   /**
+   * Forcefully update an existing view sort without making a request to the backend.
+   */
+  forceUpdateSort({ commit }, { sort, values }) {
+    commit('UPDATE_SORT', { sort, values })
+  },
+  /**
    * Deletes an existing sort. A request to the server will be made first and
    * after that it will be deleted.
    */
-  async deleteSort({ commit }, { view, sort }) {
+  async deleteSort({ dispatch, commit }, { view, sort }) {
     commit('SET_SORT_LOADING', { sort, value: true })
 
     try {
       await SortService(this.$client).delete(sort.id)
-      commit('DELETE_SORT', { view, id: sort.id })
+      dispatch('forceDeleteSort', { view, sort })
     } catch (error) {
       commit('SET_SORT_LOADING', { sort, value: false })
       throw error
     }
+  },
+  /**
+   * Forcefully delete an existing view sort without making a request to the backend.
+   */
+  forceDeleteSort({ commit }, { view, sort }) {
+    commit('DELETE_SORT', { view, id: sort.id })
   },
   /**
    * When a field is deleted the related sortings are also automatically deleted in the
@@ -535,6 +587,12 @@ export const actions = {
 export const getters = {
   hasSelected(state) {
     return Object.prototype.hasOwnProperty.call(state.selected, '_')
+  },
+  getSelected(state) {
+    return state.selected
+  },
+  getSelectedId(state) {
+    return state.selected.id || 0
   },
   isLoaded(state) {
     return state.loaded

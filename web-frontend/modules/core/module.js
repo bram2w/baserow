@@ -84,6 +84,9 @@ export default function DatabaseModule(options) {
   this.appendPlugin({
     src: path.resolve(__dirname, 'plugins/clientHandler.js'),
   })
+  this.appendPlugin({
+    src: path.resolve(__dirname, 'plugins/realTimeHandler.js'),
+  })
 
   this.extendRoutes((configRoutes) => {
     // Remove all the routes created by nuxt.

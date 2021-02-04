@@ -13,12 +13,14 @@ def test_list_groups(api_client, data_fixture):
         email='test@test.nl', password='password', first_name='Test1')
     user_group_2 = data_fixture.create_user_group(user=user, order=2)
     user_group_1 = data_fixture.create_user_group(user=user, order=1)
+    data_fixture.create_group()
 
     response = api_client.get(reverse('api:groups:list'), **{
         'HTTP_AUTHORIZATION': f'JWT {token}'
     })
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
+    assert len(response_json) == 2
     assert response_json[0]['id'] == user_group_1.group.id
     assert response_json[0]['order'] == 1
     assert response_json[1]['id'] == user_group_2.group.id
@@ -50,7 +52,9 @@ def test_create_group(api_client, data_fixture):
 @pytest.mark.django_db
 def test_update_group(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
     group = data_fixture.create_group(user=user, name='Old name')
+    data_fixture.create_user_group(user=user_2, group=group, permissions='MEMBER')
     group_2 = data_fixture.create_group()
 
     url = reverse('api:groups:item', kwargs={'group_id': 99999})
@@ -78,6 +82,16 @@ def test_update_group(api_client, data_fixture):
         url,
         {'name': 'New name'},
         format='json',
+        HTTP_AUTHORIZATION=f'JWT {token_2}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+
+    url = reverse('api:groups:item', kwargs={'group_id': group.id})
+    response = api_client.patch(
+        url,
+        {'name': 'New name'},
+        format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_200_OK
@@ -93,7 +107,9 @@ def test_update_group(api_client, data_fixture):
 @pytest.mark.django_db
 def test_delete_group(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
     group = data_fixture.create_group(user=user, name='Old name')
+    data_fixture.create_user_group(user=user_2, group=group, permissions='MEMBER')
     group_2 = data_fixture.create_group()
 
     url = reverse('api:groups:item', kwargs={'group_id': 99999})
@@ -111,6 +127,14 @@ def test_delete_group(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+    url = reverse('api:groups:item', kwargs={'group_id': group.id})
+    response = api_client.delete(
+        url,
+        HTTP_AUTHORIZATION=f'JWT {token_2}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
 
     url = reverse('api:groups:item', kwargs={'group_id': group.id})
     response = api_client.delete(

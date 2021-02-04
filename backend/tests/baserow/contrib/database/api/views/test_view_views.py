@@ -308,6 +308,7 @@ def test_get_view(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json['id'] == view.id
+    assert response_json['table_id'] == view.table_id
     assert response_json['type'] == 'grid'
     assert response_json['table']['id'] == table.id
     assert response_json['filter_type'] == 'AND'

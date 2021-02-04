@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
 from baserow.core.registries import plugin_registry, application_type_registry
+from baserow.ws.registries import page_registry
 
 from .views.registries import view_type_registry, view_filter_type_registry
 from .fields.registries import field_type_registry, field_converter_registry
@@ -89,3 +90,10 @@ class DatabaseConfig(AppConfig):
 
         from .application_types import DatabaseApplicationType
         application_type_registry.register(DatabaseApplicationType())
+
+        from .ws.pages import TablePageType
+        page_registry.register(TablePageType())
+
+        # The signals must always be imported last because they use the registries
+        # which need to be filled first.
+        import baserow.contrib.database.ws.signals  # noqa: F403, F401

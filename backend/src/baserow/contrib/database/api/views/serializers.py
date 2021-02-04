@@ -17,9 +17,7 @@ class ViewFilterSerializer(serializers.ModelSerializer):
         model = ViewFilter
         fields = ('id', 'view', 'field', 'type', 'value')
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            }
+            'id': {'read_only': True}
         }
 
 
@@ -58,9 +56,7 @@ class ViewSortSerializer(serializers.ModelSerializer):
         model = ViewSort
         fields = ('id', 'view', 'field', 'order')
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            }
+            'id': {'read_only': True}
         }
 
 
@@ -91,12 +87,11 @@ class ViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = View
-        fields = ('id', 'name', 'order', 'type', 'table', 'filter_type', 'filters',
-                  'sortings', 'filters_disabled')
+        fields = ('id', 'table_id', 'name', 'order', 'type', 'table', 'filter_type',
+                  'filters', 'sortings', 'filters_disabled')
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            }
+            'id': {'read_only': True},
+            'table_id': {'read_only': True}
         }
 
     def __init__(self, *args, **kwargs):

@@ -1,6 +1,7 @@
 import { uuid } from '@baserow/modules/core/utils/string'
 
 export const state = () => ({
+  connecting: false,
   items: [],
 })
 
@@ -11,6 +12,9 @@ export const mutations = {
   REMOVE(state, notification) {
     const index = state.items.indexOf(notification)
     state.items.splice(index, 1)
+  },
+  SET_CONNECTING(state, value) {
+    state.connecting = value
   },
 }
 
@@ -40,6 +44,9 @@ export const actions = {
   },
   remove({ commit }, notification) {
     commit('REMOVE', notification)
+  },
+  setConnecting({ commit }, value) {
+    commit('SET_CONNECTING', value)
   },
 }
 

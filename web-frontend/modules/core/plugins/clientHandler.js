@@ -24,6 +24,11 @@ class ErrorHandler {
         "The action couldn't be completed because you aren't a " +
           'member of the related group.'
       ),
+      ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR: new ResponseErrorMessage(
+        'Action not allowed.',
+        "The action couldn't be completed because you don't have the right " +
+          'permissions to the related group.'
+      ),
       // @TODO move these errors to the module.
       ERROR_TABLE_DOES_NOT_EXIST: new ResponseErrorMessage(
         "Table doesn't exist.",
@@ -208,6 +213,10 @@ export default function ({ store, app }, inject) {
     if (store.getters['auth/isAuthenticated']) {
       const token = store.getters['auth/token']
       config.headers.Authorization = `JWT ${token}`
+    }
+    if (store.getters['auth/webSocketId'] !== null) {
+      const webSocketId = store.getters['auth/webSocketId']
+      config.headers.WebSocketId = webSocketId
     }
     return config
   })

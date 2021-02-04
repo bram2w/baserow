@@ -1,11 +1,20 @@
 # Changelog
 
-## Unreleased
+## Released (2021-02-04)
 
+* Upgraded web-frontend dependencies.
 * Fixed bug where you could not convert an existing field to a single select field
   without select options.
 * Fixed bug where is was not possible to create a relation to a table that has a single
   select as primary field.
+* Implemented real time collaboration.
+* Added option to hide fields in a grid view.
+* Keep token usage details.
+* Fixed bug where an incompatible row value was visible and used while changing the
+  field type.
+* Fixed bug where the row in the RowEditModel was not entirely reactive and wouldn't be
+  updated when the grid view was refreshed.
+* Made it possible to invite other users to a group.
 
 ## Released (2021-01-06)
 

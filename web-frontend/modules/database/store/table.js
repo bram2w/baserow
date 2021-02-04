@@ -77,9 +77,15 @@ export const actions = {
       initialData,
       firstRowHeader
     )
-    commit('ADD_ITEM', { database, table: data })
+    dispatch('forceCreate', { database, data })
 
     return data
+  },
+  /**
+   * Forcefully create an item in the store without making a call to the server.
+   */
+  forceCreate({ commit }, { database, data }) {
+    commit('ADD_ITEM', { database, table: data })
   },
   /**
    * Update an existing table of the provided database with the provided tables.
@@ -91,7 +97,14 @@ export const actions = {
       result[key] = data[key]
       return result
     }, {})
-    commit('UPDATE_ITEM', { database, table, values: update })
+
+    dispatch('forceUpdate', { database, table, values: update })
+  },
+  /**
+   * Forcefully update an item in the store without making a call to the server.
+   */
+  forceUpdate({ commit }, { database, table, values }) {
+    commit('UPDATE_ITEM', { database, table, values })
   },
   /**
    * Deletes an existing application.

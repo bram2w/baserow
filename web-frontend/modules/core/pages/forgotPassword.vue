@@ -68,8 +68,8 @@ import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
-  layout: 'login',
   mixins: [error],
+  layout: 'login',
   data() {
     return {
       loading: false,
@@ -77,6 +77,11 @@ export default {
       account: {
         email: '',
       },
+    }
+  },
+  head() {
+    return {
+      title: 'Forgot password',
     }
   },
   methods: {
@@ -102,11 +107,6 @@ export default {
         this.handleError(error, 'passwordReset')
       }
     },
-  },
-  head() {
-    return {
-      title: 'Forgot password',
-    }
   },
   validations: {
     account: {
