@@ -62,19 +62,19 @@ import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroup
 import DashboardGroup from '@baserow/modules/core/components/group/DashboardGroup'
 
 export default {
-  layout: 'app',
   components: { CreateGroupModal, DashboardGroup },
+  layout: 'app',
+  head() {
+    return {
+      title: 'Dashboard',
+    }
+  },
   computed: {
     ...mapState({
       user: (state) => state.auth.user,
       groups: (state) => state.group.items,
       applications: (state) => state.application.items,
     }),
-  },
-  head() {
-    return {
-      title: 'Dashboard',
-    }
   },
 }
 </script>

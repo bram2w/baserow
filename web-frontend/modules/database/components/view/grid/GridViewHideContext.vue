@@ -37,7 +37,7 @@
 import { mapGetters } from 'vuex'
 
 import context from '@baserow/modules/core/mixins/context'
-import { notifyIf } from '@/modules/core/utils/error'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 import { clone } from '@baserow/modules/core/utils/object'
 
 export default {

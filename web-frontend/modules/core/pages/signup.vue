@@ -110,8 +110,8 @@ import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandle
 import error from '@baserow/modules/core/mixins/error'
 
 export default {
-  layout: 'login',
   mixins: [error],
+  layout: 'login',
   data() {
     return {
       loading: false,
@@ -121,6 +121,11 @@ export default {
         password: '',
         passwordConfirm: '',
       },
+    }
+  },
+  head() {
+    return {
+      title: 'Create new account',
     }
   },
   methods: {
@@ -153,11 +158,6 @@ export default {
         })
       }
     },
-  },
-  head() {
-    return {
-      title: 'Create new account',
-    }
   },
   validations: {
     account: {

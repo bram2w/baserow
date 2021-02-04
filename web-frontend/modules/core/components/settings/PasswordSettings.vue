@@ -80,8 +80,8 @@ import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
-  layout: 'login',
   mixins: [error],
+  layout: 'login',
   data() {
     return {
       loading: false,

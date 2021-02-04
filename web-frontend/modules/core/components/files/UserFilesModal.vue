@@ -1,6 +1,6 @@
 <template>
   <Modal :sidebar="true" @hidden="$emit('hidden')">
-    <template v-slot:sidebar>
+    <template #sidebar>
       <div class="modal-sidebar__head">
         <div class="modal-sidebar__head-name">Upload from</div>
       </div>
@@ -20,7 +20,7 @@
         </li>
       </ul>
     </template>
-    <template v-slot:content>
+    <template #content>
       <component
         :is="userFileUploadComponent"
         @uploaded="$emit('uploaded', $event)"

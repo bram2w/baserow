@@ -45,6 +45,11 @@ export default {
       required: true,
     },
   },
+  head() {
+    return {
+      title: this.message,
+    }
+  },
   computed: {
     statusCode() {
       return (this.error && this.error.statusCode) || 500
@@ -55,11 +60,6 @@ export default {
     ...mapGetters({
       isAuthenticated: 'auth/isAuthenticated',
     }),
-  },
-  head() {
-    return {
-      title: this.message,
-    }
   },
 }
 </script>

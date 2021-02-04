@@ -11,6 +11,12 @@ services:
     ports:
       - 5432:5432
 
+  redis:
+    container_name: {{ cookiecutter.project_slug }}-redis
+    image: redis:6.0
+    ports:
+      - 6379:6379
+
   mjml:
     container_name: {{ cookiecutter.project_slug }}-mjml
     image: liminspace/mjml-tcpserver:latest
@@ -29,6 +35,7 @@ services:
       - 8001:8000
     depends_on:
       - db
+      - redis
       - mjml
     environment:
       - PUBLIC_BACKEND_URL=http://localhost:8001

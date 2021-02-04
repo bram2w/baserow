@@ -128,7 +128,7 @@
               value: {{ dropdown }}
               <br />
               <br />
-              <div style="width: 200px;">
+              <div style="width: 200px">
                 <Dropdown v-model="dropdown">
                   <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
                   <DropdownItem
@@ -157,7 +157,7 @@
               value: {{ dropdown }}
               <br />
               <br />
-              <div style="width: 200px;">
+              <div style="width: 200px">
                 <Dropdown v-model="dropdown" :show-search="false">
                   <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
                   <DropdownItem
@@ -183,7 +183,7 @@
           <div class="control">
             <label class="control__label">Very long dropdown</label>
             <div class="control__elements">
-              <div style="width: 200px;">
+              <div style="width: 200px">
                 <Dropdown v-model="longDropdown">
                   <DropdownItem
                     :key="'some-2'"
@@ -238,7 +238,7 @@
               Dropdown by link {{ dropdown }}
             </label>
             <div class="control__elements">
-              <div style="width: 200px;">
+              <div style="width: 200px">
                 <a
                   ref="dropdownLink"
                   @click="$refs.dropdown1.toggle($refs.dropdownLink)"

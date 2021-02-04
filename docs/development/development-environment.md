@@ -65,9 +65,10 @@ $ docker network create baserow_default
 $ docker-compose up -d
 Building backend
 ...
-Starting baserow_db_1   ... done
-Starting baserow_mjml_1 ... done
-Starting backend        ... done
+Starting db    ... done
+Starting mjml    ... done
+Starting redis    ... done
+Starting backend    ... done
 Starting web-frontend   ... done
 ```
 
@@ -90,6 +91,18 @@ After executing these commands, the server is running. If you visit
 http://localhost:8000/api/groups/ in your browser you should see the response 
 "Authentication credentials were not provided." If you want to see the API spec, 
 you can visit http://localhost:8000/api/redoc/.
+
+## Starting the worker
+
+In order to process asynchronous tasks you also need to start a Celery worker this is
+mainly used for the real time collaboration. Open a new tab or window and execute the
+following commands. The `watchmedo` command makes sure the worker is restarted whenever
+you make a change.
+
+```
+$ docker exec -it backend bash
+$ watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A baserow worker -l INFO
+```
 
 ## Starting web frontend development server
 

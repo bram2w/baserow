@@ -42,18 +42,18 @@ import APIDocsSelectDatabase from '@baserow/modules/database/components/docs/API
 
 export default {
   name: 'APIDocs',
-  layout: 'login',
   components: { SettingsModal, APIDocsSelectDatabase },
+  layout: 'login',
   middleware: ['groupsAndApplications'],
-  computed: {
-    ...mapGetters({
-      isAuthenticated: 'auth/isAuthenticated',
-    }),
-  },
   head() {
     return {
       title: 'REST API documentation',
     }
+  },
+  computed: {
+    ...mapGetters({
+      isAuthenticated: 'auth/isAuthenticated',
+    }),
   },
 }
 </script>

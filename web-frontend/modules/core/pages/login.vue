@@ -42,9 +42,7 @@
       <div class="actions">
         <ul class="action__links">
           <li>
-            <nuxt-link :to="{ name: 'signup' }">
-              Sign up
-            </nuxt-link>
+            <nuxt-link :to="{ name: 'signup' }"> Sign up </nuxt-link>
           </li>
           <li>
             <nuxt-link :to="{ name: 'forgot-password' }">
@@ -70,8 +68,8 @@ import { required, email } from 'vuelidate/lib/validators'
 import error from '@baserow/modules/core/mixins/error'
 
 export default {
-  layout: 'login',
   mixins: [error],
+  layout: 'login',
   data() {
     return {
       loading: false,
@@ -79,6 +77,17 @@ export default {
         email: '',
         password: '',
       },
+    }
+  },
+  head() {
+    return {
+      title: 'Login',
+      link: [
+        {
+          rel: 'canonical',
+          href: this.$env.PUBLIC_WEB_FRONTEND_URL + this.$route.path,
+        },
+      ],
     }
   },
   methods: {
@@ -127,17 +136,6 @@ export default {
         }
       }
     },
-  },
-  head() {
-    return {
-      title: 'Login',
-      link: [
-        {
-          rel: 'canonical',
-          href: this.$env.PUBLIC_WEB_FRONTEND_URL + this.$route.path,
-        },
-      ],
-    }
   },
   validations: {
     credentials: {
