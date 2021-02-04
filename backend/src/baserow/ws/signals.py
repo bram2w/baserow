@@ -1,7 +1,7 @@
 from django.dispatch import receiver
 from django.db import transaction
 
-from baserow.api.groups.serializers import GroupSerializer
+from baserow.api.groups.serializers import GroupSerializer, GroupUserGroupSerializer
 from baserow.api.applications.serializers import get_application_serializer
 from baserow.core import signals
 
@@ -40,6 +40,31 @@ def group_deleted(sender, group_id, group, group_users, user, **kwargs):
         {
             'type': 'group_deleted',
             'group_id': group_id
+        },
+        getattr(user, 'web_socket_id', None)
+    ))
+
+
+@receiver(signals.group_user_updated)
+def group_user_updated(sender, group_user, user, **kwargs):
+    transaction.on_commit(lambda: broadcast_to_users.delay(
+        [group_user.user_id],
+        {
+            'type': 'group_updated',
+            'group_id': group_user.group_id,
+            'group': GroupUserGroupSerializer(group_user).data
+        },
+        getattr(user, 'web_socket_id', None)
+    ))
+
+
+@receiver(signals.group_user_deleted)
+def group_user_deleted(sender, group_user, user, **kwargs):
+    transaction.on_commit(lambda: broadcast_to_users.delay(
+        [group_user.user_id],
+        {
+            'type': 'group_deleted',
+            'group_id': group_user.group_id
         },
         getattr(user, 'web_socket_id', None)
     ))

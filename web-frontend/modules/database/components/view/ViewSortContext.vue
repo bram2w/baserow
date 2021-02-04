@@ -26,7 +26,7 @@
         <div class="sortings__field">
           <Dropdown
             :value="sort.field"
-            class="dropdown--floating"
+            class="dropdown--floating dropdown--tiny"
             @input="updateSort(sort, { field: $event })"
           >
             <DropdownItem

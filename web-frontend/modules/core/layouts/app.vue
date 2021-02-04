@@ -35,7 +35,7 @@
               class="menu__link menu__user-item"
               @click="$refs.userContext.toggle($event.target)"
             >
-              {{ nameAbbreviation }}
+              {{ name | nameAbbreviation }}
               <span class="menu__link-text">{{ name }}</span>
             </a>
             <Context ref="userContext">
@@ -112,7 +112,6 @@ export default {
     ...mapGetters({
       isCollapsed: 'sidebar/isCollapsed',
       name: 'auth/getName',
-      nameAbbreviation: 'auth/getNameAbbreviation',
     }),
   },
   mounted() {

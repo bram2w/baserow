@@ -13,12 +13,17 @@
       @click="select(value, disabled)"
       @mousemove="hover(value, disabled)"
     >
-      <i
-        v-if="icon"
-        class="select__item-icon fas fa-fw"
-        :class="'fa-' + icon"
-      ></i>
-      {{ name }}
+      <div class="select__item-name">
+        <i
+          v-if="icon"
+          class="select__item-icon fas fa-fw"
+          :class="'fa-' + icon"
+        ></i>
+        {{ name }}
+      </div>
+      <div v-if="description !== null" class="select__item-description">
+        {{ description }}
+      </div>
     </a>
   </li>
 </template>

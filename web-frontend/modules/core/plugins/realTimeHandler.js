@@ -177,7 +177,7 @@ export class RealTimeHandler {
     })
 
     this.registerEvent('application_created', ({ store }, data) => {
-      store.dispatch('application/forceCreate', { data: data.application })
+      store.dispatch('application/forceCreate', data.application)
     })
 
     this.registerEvent('application_updated', ({ store }, data) => {

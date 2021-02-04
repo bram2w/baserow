@@ -11,13 +11,25 @@ export default (client) => {
         token,
       })
     },
-    register(email, name, password, authenticate = true) {
-      return client.post('/user/', {
+    register(
+      email,
+      name,
+      password,
+      authenticate = true,
+      groupInvitationToken = null
+    ) {
+      const values = {
         name,
         email,
         password,
         authenticate,
-      })
+      }
+
+      if (groupInvitationToken !== null) {
+        values.group_invitation_token = groupInvitationToken
+      }
+
+      return client.post('/user/', values)
     },
     sendResetPasswordEmail(email, baseUrl) {
       return client.post('/user/send-reset-password-email/', {
@@ -36,6 +48,9 @@ export default (client) => {
         old_password: oldPassword,
         new_password: newPassword,
       })
+    },
+    dashboard() {
+      return client.get('/user/dashboard/')
     },
   }
 }

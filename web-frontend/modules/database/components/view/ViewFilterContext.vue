@@ -41,7 +41,7 @@
       <div class="filters__field">
         <Dropdown
           :value="filter.field"
-          class="dropdown--floating"
+          class="dropdown--floating dropdown--tiny"
           @input="updateFilter(filter, { field: $event })"
         >
           <DropdownItem
@@ -62,7 +62,7 @@
       <div class="filters__type">
         <Dropdown
           :value="filter.type"
-          class="dropdown--floating"
+          class="dropdown--floating dropdown--tiny"
           @input="updateFilter(filter, { type: $event })"
         >
           <DropdownItem

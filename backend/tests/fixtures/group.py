@@ -1,4 +1,4 @@
-from baserow.core.models import Group, GroupUser
+from baserow.core.models import Group, GroupUser, GroupInvitation
 
 
 class GroupFixtures:
@@ -29,4 +29,25 @@ class GroupFixtures:
         if 'order' not in kwargs:
             kwargs['order'] = 0
 
+        if 'permissions' not in kwargs:
+            kwargs['permissions'] = 'ADMIN'
+
         return GroupUser.objects.create(**kwargs)
+
+    def create_group_invitation(self, **kwargs):
+        if 'invited_by' not in kwargs:
+            kwargs['invited_by'] = self.create_user()
+
+        if 'group' not in kwargs:
+            kwargs['group'] = self.create_group(user=kwargs['invited_by'])
+
+        if 'email' not in kwargs:
+            kwargs['email'] = self.fake.email()
+
+        if 'permissions' not in kwargs:
+            kwargs['permissions'] = 'ADMIN'
+
+        if 'message' not in kwargs:
+            kwargs['message'] = self.fake.name()
+
+        return GroupInvitation.objects.create(**kwargs)

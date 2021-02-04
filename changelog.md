@@ -14,6 +14,7 @@
   field type.
 * Fixed bug where the row in the RowEditModel was not entirely reactive and wouldn't be
   updated when the grid view was refreshed.
+* Made it possible to invite other users to a group.
 
 ## Released (2021-01-06)
 

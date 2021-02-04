@@ -15,14 +15,17 @@ from .fields.field_types import (
 class DatabasePlugin(Plugin):
     type = 'database'
 
-    def user_created(self, user, group):
+    def user_created(self, user, group, group_invitation):
         """
         This method is called when a new user is created. We are going to create a
         database, table, view, fields and some rows here as an example for the user.
-
-        :param user: The newly created user.
-        :param group: The newly created group for the user.
         """
+
+        # If the user created an account in combination with a group invitation we
+        # don't want to create the initial data in the group because data should
+        # already exist.
+        if group_invitation:
+            return
 
         core_handler = CoreHandler()
         table_handler = TableHandler()

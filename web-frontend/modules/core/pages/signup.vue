@@ -1,12 +1,35 @@
 <template>
   <div>
     <h1 class="box__title">Sign up</h1>
+    <div
+      v-if="invitation !== null"
+      class="alert alert--simple alert-primary alert--has-icon"
+    >
+      <div class="alert__icon">
+        <i class="fas fa-exclamation"></i>
+      </div>
+      <div class="alert__title">Invitation</div>
+      <p class="alert__content">
+        <strong>{{ invitation.invited_by }}</strong> has invited you to join
+        <strong>{{ invitation.group }}</strong
+        >.
+      </p>
+    </div>
     <Error :error="error"></Error>
     <form @submit.prevent="register">
       <div class="control">
         <label class="control__label">E-mail address</label>
         <div class="control__elements">
           <input
+            v-if="invitation !== null"
+            ref="email"
+            type="email"
+            class="input input--large"
+            disabled
+            :value="account.email"
+          />
+          <input
+            v-else
             ref="email"
             v-model="account.email"
             :class="{ 'input--error': $v.account.email.$error }"
@@ -107,10 +130,11 @@ import {
 } from 'vuelidate/lib/validators'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
+import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
 import error from '@baserow/modules/core/mixins/error'
 
 export default {
-  mixins: [error],
+  mixins: [error, groupInvitationToken],
   layout: 'login',
   data() {
     return {
@@ -128,6 +152,11 @@ export default {
       title: 'Create new account',
     }
   },
+  beforeMount() {
+    if (this.invitation !== null) {
+      this.account.email = this.invitation.email
+    }
+  },
   methods: {
     async register() {
       this.$v.$touch()
@@ -139,11 +168,21 @@ export default {
       this.hideError()
 
       try {
-        await this.$store.dispatch('auth/register', {
+        const values = {
           name: this.account.name,
           email: this.account.email,
           password: this.account.password,
-        })
+        }
+
+        // If there is a valid invitation we can add the group invitation token to the
+        // action parameters so that is can be passed along when signing up. That makes
+        // the user accept the group invitation without creating a new group for the
+        // user.
+        if (this.invitation !== null) {
+          values.groupInvitationToken = this.$route.query.groupInvitationToken
+        }
+
+        await this.$store.dispatch('auth/register', values)
         Object.values(this.$registry.getAll('plugin')).forEach((plugin) => {
           plugin.userCreated(this.account, this)
         })

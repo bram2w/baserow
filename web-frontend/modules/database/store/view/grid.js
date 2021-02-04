@@ -143,8 +143,13 @@ export const mutations = {
   },
   DELETE_ROW(state, id) {
     const index = state.rows.findIndex((item) => item.id === id)
-    state.count--
     if (index !== -1) {
+      // A small side effect of the buffered loading is that we don't know for sure if
+      // the row exists within the view. So the count might need to be decreased
+      // even though the row is not found. Because we don't want to make another call
+      // to the backend we only decrease the count if the row is found in the buffer.
+      // The count is eventually refreshed when the user scrolls within the view.
+      state.count--
       state.bufferLimit--
       state.rows.splice(index, 1)
     }

@@ -4,49 +4,41 @@
     :class="{
       active: group._.selected,
       'select__item--loading': group._.loading,
+      'select__item--no-options': group.permissions !== 'ADMIN',
     }"
   >
     <a class="select__item-link" @click="selectGroup(group)">
-      <Editable
-        ref="rename"
-        :value="group.name"
-        @change="renameGroup(group, $event)"
-      ></Editable>
+      <div class="select__item-name">
+        <Editable
+          ref="rename"
+          :value="group.name"
+          @change="renameGroup(group, $event)"
+        ></Editable>
+      </div>
     </a>
     <a
+      v-if="group.permissions === 'ADMIN'"
       ref="contextLink"
       class="select__item-options"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
     >
       <i class="fas fa-ellipsis-v"></i>
     </a>
-    <Context ref="context">
-      <ul class="context__menu">
-        <li>
-          <a @click="enableRename()">
-            <i class="context__menu-icon fas fa-fw fa-pen"></i>
-            Rename group
-          </a>
-        </li>
-        <li>
-          <a @click="deleteGroup(group)">
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
-            Delete group
-          </a>
-        </li>
-      </ul>
-      <DeleteGroupModal ref="deleteGroupModal" :group="group" />
-    </Context>
+    <GroupContext
+      ref="context"
+      :group="group"
+      @rename="enableRename()"
+    ></GroupContext>
   </li>
 </template>
 
 <script>
-import DeleteGroupModal from '@baserow/modules/core/components/group/DeleteGroupModal'
+import GroupContext from '@baserow/modules/core/components/group/GroupContext'
 import editGroup from '@baserow/modules/core/mixins/editGroup'
 
 export default {
   name: 'GroupsContextItem',
-  components: { DeleteGroupModal },
+  components: { GroupContext },
   mixins: [editGroup],
   props: {
     group: {

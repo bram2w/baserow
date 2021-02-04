@@ -18,21 +18,23 @@
   padding: 20px 30px 0 30px;
 }
 
-.dashboard__group-title {
-  font-size: 18px;
+.dashboard__group-head {
+  display: flex;
+  justify-content: space-between;
   border-bottom: 1px solid $color-neutral-200;
-  font-weight: 700;
   padding-bottom: 16px;
   margin-bottom: 20px;
 }
 
-.dashboard__group-title-link {
+.dashboard__group-title {
   @extend %ellipsis;
 
-  display: block;
-  width: 100%;
+  font-size: 18px;
+  font-weight: 700;
+  max-width: 100%;
   position: relative;
   color: $color-primary-900;
+  min-width: 0;
 
   &:hover {
     text-decoration: none;
@@ -48,6 +50,15 @@
       @include absolute(6px, 0, auto, auto);
     }
   }
+}
+
+.dashboard__group-title-options {
+  color: $color-primary-900;
+}
+
+.dashboard__group-link {
+  flex: 0 0;
+  margin-left: 16px;
 }
 
 .dashboard__group-title-icon {

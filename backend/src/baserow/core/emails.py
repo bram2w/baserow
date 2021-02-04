@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.utils.translation import gettext as _
 
 
 class BaseEmailMessage(EmailMultiAlternatives):
@@ -70,3 +71,25 @@ class BaseEmailMessage(EmailMultiAlternatives):
         if not self.template_name:
             raise NotImplementedError('The template_name must be implement.')
         return self.template_name
+
+
+class GroupInvitationEmail(BaseEmailMessage):
+    subject = _('Group invitation')
+    template_name = 'baserow/core/group_invitation.html'
+
+    def __init__(self, invitation, public_accept_url, *args, **kwargs):
+        self.public_accept_url = public_accept_url
+        self.invitation = invitation
+        super().__init__(*args, **kwargs)
+
+    def get_subject(self):
+        return f'{self.invitation.invited_by.first_name} invited you to ' \
+               f'{self.invitation.group.name} - Baserow'
+
+    def get_context(self):
+        context = super().get_context()
+        context.update(
+            invitation=self.invitation,
+            public_accept_url=self.public_accept_url
+        )
+        return context

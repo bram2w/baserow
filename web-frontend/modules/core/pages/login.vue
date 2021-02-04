@@ -5,12 +5,35 @@
         <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
       </nuxt-link>
     </h1>
+    <div
+      v-if="invitation !== null"
+      class="alert alert--simple alert-primary alert--has-icon"
+    >
+      <div class="alert__icon">
+        <i class="fas fa-exclamation"></i>
+      </div>
+      <div class="alert__title">Invitation</div>
+      <p class="alert__content">
+        <strong>{{ invitation.invited_by }}</strong> has invited you to join
+        <strong>{{ invitation.group }}</strong
+        >.
+      </p>
+    </div>
     <Error :error="error"></Error>
     <form @submit.prevent="login">
       <div class="control">
         <label class="control__label">E-mail address</label>
         <div class="control__elements">
           <input
+            v-if="invitation !== null"
+            ref="email"
+            type="email"
+            class="input input--large"
+            disabled
+            :value="credentials.email"
+          />
+          <input
+            v-else
             ref="email"
             v-model="credentials.email"
             :class="{ 'input--error': $v.credentials.email.$error }"
@@ -66,9 +89,11 @@
 <script>
 import { required, email } from 'vuelidate/lib/validators'
 import error from '@baserow/modules/core/mixins/error'
+import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
+import GroupService from '@baserow/modules/core/services/group'
 
 export default {
-  mixins: [error],
+  mixins: [error, groupInvitationToken],
   layout: 'login',
   data() {
     return {
@@ -90,6 +115,11 @@ export default {
       ],
     }
   },
+  beforeMount() {
+    if (this.invitation !== null) {
+      this.credentials.email = this.invitation.email
+    }
+  },
   methods: {
     async login() {
       this.$v.$touch()
@@ -105,6 +135,16 @@ export default {
           email: this.credentials.email,
           password: this.credentials.password,
         })
+
+        // If there is an invitation we can immediately accept that one after the user
+        // successfully signs in.
+        if (
+          this.invitation !== null &&
+          this.invitation.email === this.credentials.email
+        ) {
+          await GroupService(this.$client).acceptInvitation(this.invitation.id)
+        }
+
         const { original } = this.$route.query
         if (original) {
           this.$nuxt.$router.push(original)

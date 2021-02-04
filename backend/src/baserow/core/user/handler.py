@@ -3,14 +3,16 @@ from itsdangerous import URLSafeTimedSerializer
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError
+from django.db.models import Q
 
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import plugin_registry
-
-from .exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLHostnameNotAllowed
+from baserow.core.exceptions import (
+    BaseURLHostnameNotAllowed
 )
+from baserow.core.exceptions import GroupInvitationEmailMismatch
+
+from .exceptions import UserAlreadyExist, UserNotFound, InvalidPassword
 from .emails import ResetPasswordEmail
 from .utils import normalize_email_address
 
@@ -51,35 +53,62 @@ class UserHandler:
         except User.DoesNotExist:
             raise UserNotFound('The user with the provided parameters is not found.')
 
-    def create_user(self, name, email, password):
+    def create_user(self, name, email, password, group_invitation_token=None):
         """
         Creates a new user with the provided information and creates a new group and
-        application for him.
+        application for him. If the optional group invitation is provided then the user
+        joins that group without creating a new one.
 
         :param name: The name of the new user.
+        :type name: str
         :param email: The e-mail address of the user, this is also the username.
+        :type email: str
         :param password: The password of the user.
+        :type password: str
+        :param group_invitation_token: If provided and valid, the invitation will be
+            accepted and and initial group will not be created.
+        :type group_invitation_token: str
         :raises: UserAlreadyExist: When a user with the provided username (email)
             already exists.
+        :raises GroupInvitationEmailMismatch: If the group invitation email does not
+            match the one of the user.
         :return: The user object.
         :rtype: User
         """
 
-        try:
-            email = normalize_email_address(email)
-            user = User(first_name=name, email=email, username=email)
-            user.set_password(password)
-            user.save()
-        except IntegrityError:
+        email = normalize_email_address(email)
+
+        if User.objects.filter(Q(email=email) | Q(username=email)).exists():
             raise UserAlreadyExist(f'A user with username {email} already exists.')
 
-        # Insert some initial data for the newly created user.
         core_handler = CoreHandler()
-        group_user = core_handler.create_group(user=user, name=f"{name}'s group")
+        group_invitation = None
+        group_user = None
+
+        if group_invitation_token:
+            group_invitation = core_handler.get_group_invitation_by_token(
+                group_invitation_token
+            )
+
+            if email != group_invitation.email:
+                raise GroupInvitationEmailMismatch(
+                    'The email address of the invitation does not match the one of the '
+                    'user.'
+                )
+
+        user = User(first_name=name, email=email, username=email)
+        user.set_password(password)
+        user.save()
+
+        if group_invitation_token:
+            group_user = core_handler.accept_group_invitation(user, group_invitation)
+
+        if not group_user:
+            group_user = core_handler.create_group(user=user, name=f"{name}'s group")
 
         # Call the user_created method for each plugin that is un the registry.
         for plugin in plugin_registry.registry.values():
-            plugin.user_created(user, group_user.group)
+            plugin.user_created(user, group_user.group, group_invitation)
 
         return user
 

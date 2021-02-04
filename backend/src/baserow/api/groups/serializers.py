@@ -1,6 +1,11 @@
 from rest_framework import serializers
 
-from baserow.core.models import Group, GroupUser
+from baserow.core.models import Group
+
+from .users.serializers import GroupUserGroupSerializer
+
+
+__all__ = ['GroupUserGroupSerializer']
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -12,17 +17,6 @@ class GroupSerializer(serializers.ModelSerializer):
                 'read_only': True
             }
         }
-
-
-class GroupUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = GroupUser
-        fields = ('order',)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data.update(GroupSerializer(instance.group).data)
-        return data
 
 
 class OrderGroupsSerializer(serializers.Serializer):

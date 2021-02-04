@@ -5,14 +5,19 @@ from freezegun import freeze_time
 
 from itsdangerous.exc import SignatureExpired, BadSignature
 
-from baserow.core.models import Group
+from baserow.core.models import Group, GroupUser
 from baserow.core.registries import plugin_registry
 from baserow.contrib.database.models import (
     Database, Table, GridView, TextField, LongTextField, BooleanField, DateField
 )
 from baserow.contrib.database.views.models import GridViewFieldOptions
+from baserow.core.exceptions import (
+    BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
+    GroupInvitationDoesNotExist
+)
+from baserow.core.handler import CoreHandler
 from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLHostnameNotAllowed
+    UserAlreadyExist, UserNotFound, InvalidPassword
 )
 from baserow.core.user.handler import UserHandler
 
@@ -80,10 +85,51 @@ def test_create_user():
     assert model_2_results[1].order == Decimal('2.00000000000000000000')
     assert model_2_results[2].order == Decimal('3.00000000000000000000')
 
-    plugin_mock.user_created.assert_called_with(user, group)
+    plugin_mock.user_created.assert_called_with(user, group, None)
 
     with pytest.raises(UserAlreadyExist):
         user_handler.create_user('Test1', 'test@test.nl', 'password')
+
+
+@pytest.mark.django_db
+def test_create_user_with_invitation(data_fixture):
+    plugin_mock = MagicMock()
+    plugin_registry.registry['mock'] = plugin_mock
+
+    user_handler = UserHandler()
+    core_handler = CoreHandler()
+
+    invitation = data_fixture.create_group_invitation(email='test0@test.nl')
+    signer = core_handler.get_group_invitation_signer()
+
+    with pytest.raises(BadSignature):
+        user_handler.create_user('Test1', 'test0@test.nl', 'password', 'INVALID')
+
+    with pytest.raises(GroupInvitationDoesNotExist):
+        user_handler.create_user('Test1', 'test0@test.nl', 'password',
+                                 signer.dumps(99999))
+
+    with pytest.raises(GroupInvitationEmailMismatch):
+        user_handler.create_user('Test1', 'test1@test.nl', 'password',
+                                 signer.dumps(invitation.id))
+
+    user = user_handler.create_user('Test1', 'test0@test.nl', 'password',
+                                    signer.dumps(invitation.id))
+
+    assert Group.objects.all().count() == 1
+    assert Group.objects.all().first().id == invitation.group_id
+    assert GroupUser.objects.all().count() == 2
+
+    plugin_mock.user_created.assert_called_once()
+    args = plugin_mock.user_created.call_args
+    assert args[0][0] == user
+    assert args[0][1].id == invitation.group_id
+    assert args[0][2].email == invitation.email
+    assert args[0][2].group_id == invitation.group_id
+
+    # We do not expect any initial data to have been created.
+    assert Database.objects.all().count() == 0
+    assert Table.objects.all().count() == 0
 
 
 @pytest.mark.django_db
@@ -100,7 +146,7 @@ def test_send_reset_password_email(data_fixture, mailoutbox):
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
 
-    assert email.subject == 'Reset password'
+    assert email.subject == 'Reset password - Baserow'
     assert email.from_email == 'no-reply@localhost'
     assert 'test@localhost' in email.to
 

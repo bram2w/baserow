@@ -41,9 +41,5 @@ export default {
 
       this.setLoading(group, false)
     },
-    deleteGroup(group) {
-      this.$refs.context.hide()
-      this.$refs.deleteGroupModal.show()
-    },
   },
 }

@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from .views import (
     UserView, SendResetPasswordEmailView, ResetPasswordView, ChangePasswordView,
-    ObtainJSONWebToken, RefreshJSONWebToken, VerifyJSONWebToken
+    DashboardView, ObtainJSONWebToken, RefreshJSONWebToken, VerifyJSONWebToken
 )
 
 
@@ -26,6 +26,11 @@ urlpatterns = [
         r'^change-password/$',
         ChangePasswordView.as_view(),
         name='change_password'
+    ),
+    url(
+        r'^dashboard/$',
+        DashboardView.as_view(),
+        name='dashboard'
     ),
     url(r'^$', UserView.as_view(), name='index')
 ]
