@@ -71,7 +71,7 @@ export const actions = {
   /**
    * Fetches all the application of the authenticated user.
    */
-  async fetchAll({ commit, getters }) {
+  async fetchAll({ commit }) {
     commit('SET_LOADING', true)
 
     try {
@@ -134,12 +134,12 @@ export const actions = {
       group.id,
       postData
     )
-    dispatch('forceCreate', { data })
+    dispatch('forceCreate', data)
   },
   /**
    * Forcefully create an item in the store without making a call to the server.
    */
-  forceCreate({ commit }, { data }) {
+  forceCreate({ commit }, data) {
     populateApplication(data, this.$registry)
     commit('ADD_ITEM', data)
   },

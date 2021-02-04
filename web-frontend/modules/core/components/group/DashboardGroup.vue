@@ -1,37 +1,36 @@
 <template>
   <div class="dashboard__group">
-    <h2 class="dashboard__group-title">
-      <a
+    <div class="dashboard__group-head">
+      <div
         ref="contextLink"
-        class="dashboard__group-title-link"
+        class="dashboard__group-title"
         :class="{ 'dashboard__group-title-link--loading': group._.loading }"
-        @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 0)"
       >
         <Editable
           ref="rename"
           :value="group.name"
           @change="renameGroup(group, $event)"
         ></Editable>
-        <i class="dashboard__group-title-icon fas fa-caret-down"></i>
-      </a>
-      <Context ref="context">
-        <ul class="context__menu">
-          <li>
-            <a @click="enableRename()">
-              <i class="context__menu-icon fas fa-fw fa-pen"></i>
-              Rename group
-            </a>
-          </li>
-          <li>
-            <a @click="deleteGroup(group)">
-              <i class="context__menu-icon fas fa-fw fa-trash"></i>
-              Delete group
-            </a>
-          </li>
-        </ul>
-        <DeleteGroupModal ref="deleteGroupModal" :group="group" />
-      </Context>
-    </h2>
+        <a
+          v-if="group.permissions === 'ADMIN'"
+          class="dashboard__group-title-options"
+          @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 0)"
+        >
+          <i class="dashboard__group-title-icon fas fa-caret-down"></i>
+        </a>
+      </div>
+      <GroupContext
+        ref="context"
+        :group="group"
+        @rename="enableRename()"
+      ></GroupContext>
+      <a
+        v-if="group.permissions === 'ADMIN'"
+        class="dashboard__group-link"
+        @click="$refs.context.showGroupMembersModal()"
+        >Members</a
+      >
+    </div>
     <ul class="dashboard__group-items">
       <li
         v-for="application in getAllOfGroup(group)"
@@ -80,13 +79,13 @@
 import { mapGetters } from 'vuex'
 
 import CreateApplicationContext from '@baserow/modules/core/components/application/CreateApplicationContext'
-import DeleteGroupModal from '@baserow/modules/core/components/group/DeleteGroupModal'
+import GroupContext from '@baserow/modules/core/components/group/GroupContext'
 import editGroup from '@baserow/modules/core/mixins/editGroup'
 
 export default {
   components: {
     CreateApplicationContext,
-    DeleteGroupModal,
+    GroupContext,
   },
   mixins: [editGroup],
   props: {

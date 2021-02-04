@@ -30,6 +30,7 @@ export default {
      */
     show() {
       this.open = true
+      this.$emit('show')
       window.addEventListener('keyup', this.keyup)
     },
     /**

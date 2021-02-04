@@ -2,7 +2,9 @@
   <Modal :sidebar="true">
     <template #sidebar>
       <div class="modal-sidebar__head">
-        <div class="modal-sidebar__head-icon">{{ nameAbbreviation }}</div>
+        <div class="modal-sidebar__head-icon">
+          {{ name | nameAbbreviation }}
+        </div>
         <div class="modal-sidebar__head-name">Settings</div>
       </div>
       <ul class="modal-sidebar__nav">
@@ -54,7 +56,7 @@ export default {
       return active ? active.getComponent() : null
     },
     ...mapGetters({
-      nameAbbreviation: 'auth/getNameAbbreviation',
+      name: 'auth/getName',
     }),
   },
   methods: {

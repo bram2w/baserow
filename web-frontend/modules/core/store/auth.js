@@ -44,12 +44,16 @@ export const actions = {
    * Register a new user and immediately authenticate. If successful commit the
    * token to the state and start the refresh timeout to stay authenticated.
    */
-  async register({ commit, dispatch }, { email, name, password }) {
+  async register(
+    { commit, dispatch },
+    { email, name, password, groupInvitationToken = null }
+  ) {
     const { data } = await AuthService(this.$client).register(
       email,
       name,
       password,
-      true
+      true,
+      groupInvitationToken
     )
     setToken(data.token, this.app)
     commit('SET_USER_DATA', data)
@@ -132,11 +136,8 @@ export const getters = {
   getName(state) {
     return state.user ? state.user.first_name : ''
   },
-  getNameAbbreviation(state) {
-    return state.user ? state.user.first_name.split('')[0] : ''
-  },
-  getEmail(state) {
-    return state.user ? state.user.email : ''
+  getUsername(state) {
+    return state.user ? state.user.username : ''
   },
   /**
    * Returns the amount of seconds it will take before the tokes expires.

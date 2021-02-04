@@ -492,14 +492,34 @@ export class NumberFieldType extends FieldType {
 
   getSort(name, order) {
     return (a, b) => {
-      const numberA = parseFloat(a[name])
-      const numberB = parseFloat(b[name])
+      if (a[name] === b[name]) {
+        return 0
+      }
 
-      if (isNaN(numberA) || isNaN(numberB)) {
+      if (
+        (a[name] === null && order === 'ASC') ||
+        (b[name] === null && order === 'DESC')
+      ) {
         return -1
       }
 
-      return order === 'ASC' ? numberA - numberB : numberB - numberA
+      if (
+        (b[name] === null && order === 'ASC') ||
+        (a[name] === null && order === 'DESC')
+      ) {
+        return 1
+      }
+
+      const numberA = new BigNumber(a[name])
+      const numberB = new BigNumber(b[name])
+
+      return order === 'ASC'
+        ? numberA.isLessThan(numberB)
+          ? -1
+          : 1
+        : numberB.isLessThan(numberA)
+        ? -1
+        : 1
     }
   }
 
@@ -659,13 +679,28 @@ export class DateFieldType extends FieldType {
 
   getSort(name, order) {
     return (a, b) => {
-      if (a[name] === null || b[name] === null) {
+      if (a[name] === b[name]) {
+        return 0
+      }
+
+      if (
+        (a[name] === null && order === 'ASC') ||
+        (b[name] === null && order === 'DESC')
+      ) {
         return -1
+      }
+
+      if (
+        (b[name] === null && order === 'ASC') ||
+        (a[name] === null && order === 'DESC')
+      ) {
+        return 1
       }
 
       const timeA = new Date(a[name]).getTime()
       const timeB = new Date(b[name]).getTime()
-      return order === 'ASC' ? timeA - timeB : timeB - timeA
+
+      return order === 'ASC' ? (timeA < timeB ? -1 : 1) : timeB < timeA ? -1 : 1
     }
   }
 

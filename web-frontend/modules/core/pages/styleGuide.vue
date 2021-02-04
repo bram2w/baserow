@@ -134,7 +134,8 @@
                   <DropdownItem
                     name="Choice 2"
                     value="choice-2"
-                    icon="pencil"
+                    icon="edit"
+                    description="Lorem ipsum dolor sit amet, consectetur."
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 3"
@@ -163,7 +164,7 @@
                   <DropdownItem
                     name="Choice 2"
                     value="choice-2"
-                    icon="pencil"
+                    icon="edit"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 3"
@@ -544,25 +545,33 @@
             </div>
             <ul class="select__items">
               <li class="select__item active">
-                <a href="#" class="select__item-link">Group name 1</a>
+                <a href="#" class="select__item-link">
+                  <div class="select__item-name">Group name 1</div>
+                </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>
                 </a>
               </li>
               <li class="select__item">
-                <a href="#" class="select__item-link">Group name 2</a>
+                <a href="#" class="select__item-link">
+                  <div class="select__item-name">Group name 2</div>
+                </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>
                 </a>
               </li>
               <li class="select__item select__item--loading">
-                <a href="#" class="select__item-link">Group name 3</a>
+                <a href="#" class="select__item-link">
+                  <div class="select__item-name">Group name 3</div>
+                </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>
                 </a>
               </li>
               <li class="select__item">
-                <a href="#" class="select__item-link">Group name 4</a>
+                <a href="#" class="select__item-link">
+                  <div class="select__item-name">roup name 4</div>
+                </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>
                 </a>
@@ -587,10 +596,12 @@
             <ul class="select__items">
               <li class="select__item">
                 <a href="#" class="select__item-link">
-                  <i
-                    class="select__item-icon fas fa-th fa-fw color-primary"
-                  ></i>
-                  Grid view name
+                  <div class="select__item-name">
+                    <i
+                      class="select__item-icon fas fa-th fa-fw color-primary"
+                    ></i>
+                    Grid view name
+                  </div>
                 </a>
                 <a
                   href="#"
@@ -602,10 +613,12 @@
               </li>
               <li class="select__item">
                 <a href="#" class="select__item-link">
-                  <i
-                    class="select__item-icon fas fa-th fa-fw color-primary"
-                  ></i>
-                  Grid view option 2.
+                  <div class="select__item-name">
+                    <i
+                      class="select__item-icon fas fa-th fa-fw color-primary"
+                    ></i>
+                    Grid view option 2.
+                  </div>
                 </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>
@@ -613,10 +626,12 @@
               </li>
               <li class="select__item">
                 <a href="#" class="select__item-link">
-                  <i
-                    class="select__item-icon fas fa-th fa-fw color-primary"
-                  ></i>
-                  Grid view 2
+                  <div class="select__item-name">
+                    <i
+                      class="select__item-icon fas fa-th fa-fw color-primary"
+                    ></i>
+                    Grid view 2
+                  </div>
                 </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>
@@ -624,10 +639,12 @@
               </li>
               <li class="select__item">
                 <a href="#" class="select__item-link">
-                  <i
-                    class="select__item-icon fas fa-th fa-fw color-primary"
-                  ></i>
-                  Grid view 3
+                  <div class="select__item-name">
+                    <i
+                      class="select__item-icon fas fa-th fa-fw color-primary"
+                    ></i>
+                    Grid view 3
+                  </div>
                 </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>

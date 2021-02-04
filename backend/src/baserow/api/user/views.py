@@ -16,21 +16,30 @@ from rest_framework_jwt.views import (
 )
 
 from baserow.api.decorators import map_exceptions, validate_body
-from baserow.api.errors import BAD_TOKEN_SIGNATURE, EXPIRED_TOKEN_SIGNATURE
+from baserow.api.errors import (
+    BAD_TOKEN_SIGNATURE, EXPIRED_TOKEN_SIGNATURE, ERROR_HOSTNAME_IS_NOT_ALLOWED
+)
+from baserow.api.groups.invitations.errors import (
+    ERROR_GROUP_INVITATION_DOES_NOT_EXIST, ERROR_GROUP_INVITATION_EMAIL_MISMATCH
+)
 from baserow.api.schemas import get_error_schema
+from baserow.core.exceptions import (
+    BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
+    GroupInvitationDoesNotExist
+)
+from baserow.core.models import GroupInvitation
 from baserow.core.user.handler import UserHandler
 from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, BaseURLHostnameNotAllowed
+    UserAlreadyExist, UserNotFound, InvalidPassword
 )
 
 from .serializers import (
     RegisterSerializer, UserSerializer, SendResetPasswordEmailBodyValidationSerializer,
     ResetPasswordBodyValidationSerializer, ChangePasswordBodyValidationSerializer,
-    NormalizedEmailWebTokenSerializer,
+    NormalizedEmailWebTokenSerializer, DashboardSerializer
 )
 from .errors import (
-    ERROR_ALREADY_EXISTS, ERROR_USER_NOT_FOUND, ERROR_INVALID_OLD_PASSWORD,
-    ERROR_HOSTNAME_IS_NOT_ALLOWED
+    ERROR_ALREADY_EXISTS, ERROR_USER_NOT_FOUND, ERROR_INVALID_OLD_PASSWORD
 )
 from .schemas import create_user_response_schema, authenticate_user_schema
 
@@ -125,22 +134,30 @@ class UserView(APIView):
         responses={
             200: create_user_response_schema,
             400: get_error_schema([
-                'ERROR_ALREADY_EXISTS',
-                'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+                'ERROR_ALREADY_EXISTS', 'ERROR_GROUP_INVITATION_DOES_NOT_EXIST'
+                'ERROR_REQUEST_BODY_VALIDATION', 'BAD_TOKEN_SIGNATURE'
+            ]),
+            404: get_error_schema(['ERROR_GROUP_INVITATION_DOES_NOT_EXIST'])
         },
         auth=[None]
     )
     @transaction.atomic
     @map_exceptions({
-        UserAlreadyExist: ERROR_ALREADY_EXISTS
+        UserAlreadyExist: ERROR_ALREADY_EXISTS,
+        BadSignature: BAD_TOKEN_SIGNATURE,
+        GroupInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
+        GroupInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH
     })
     @validate_body(RegisterSerializer)
     def post(self, request, data):
         """Registers a new user."""
 
-        user = UserHandler().create_user(name=data['name'], email=data['email'],
-                                         password=data['password'])
+        user = UserHandler().create_user(
+            name=data['name'],
+            email=data['email'],
+            password=data['password'],
+            group_invitation_token=data.get('group_invitation_token')
+        )
 
         response = {'user': UserSerializer(user).data}
 
@@ -268,3 +285,34 @@ class ChangePasswordView(APIView):
                                 data['new_password'])
 
         return Response('', status=204)
+
+
+class DashboardView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=['User'],
+        operation_id='dashboard',
+        description=(
+            'Lists all the relevant user information that for example could be shown '
+            'on a dashboard. It will contain all the pending group invitations for '
+            'that user.'
+        ),
+        responses={
+            200: DashboardSerializer
+        }
+    )
+    @transaction.atomic
+    def get(self, request):
+        """Lists all the data related to the user dashboard page."""
+
+        group_invitations = GroupInvitation.objects.select_related(
+            'group',
+            'invited_by'
+        ).filter(
+            email=request.user.username
+        )
+        dashboard_serializer = DashboardSerializer({
+            'group_invitations': group_invitations
+        })
+        return Response(dashboard_serializer.data)

@@ -51,6 +51,44 @@ def test_group_deleted(mock_broadcast_to_users, data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
+@patch('baserow.ws.signals.broadcast_to_users')
+def test_group_user_updated(mock_broadcast_to_users, data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    group = data_fixture.create_group()
+    group_user_1 = data_fixture.create_user_group(user=user_1, group=group)
+    data_fixture.create_user_group(user=user_2, group=group)
+    CoreHandler().update_group_user(user=user_2, group_user=group_user_1,
+                                    permissions='MEMBER')
+
+    mock_broadcast_to_users.delay.assert_called_once()
+    args = mock_broadcast_to_users.delay.call_args
+    assert args[0][0] == [user_1.id]
+    assert args[0][1]['type'] == 'group_updated'
+    assert args[0][1]['group']['id'] == group.id
+    assert args[0][1]['group']['name'] == group.name
+    assert args[0][1]['group']['permissions'] == 'MEMBER'
+    assert args[0][1]['group_id'] == group.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch('baserow.ws.signals.broadcast_to_users')
+def test_group_user_deleted(mock_broadcast_to_users, data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    group = data_fixture.create_group()
+    group_user_1 = data_fixture.create_user_group(user=user_1, group=group)
+    data_fixture.create_user_group(user=user_2, group=group)
+    CoreHandler().delete_group_user(user=user_2, group_user=group_user_1)
+
+    mock_broadcast_to_users.delay.assert_called_once()
+    args = mock_broadcast_to_users.delay.call_args
+    assert args[0][0] == [user_1.id]
+    assert args[0][1]['type'] == 'group_deleted'
+    assert args[0][1]['group_id'] == group.id
+
+
+@pytest.mark.django_db(transaction=True)
 @patch('baserow.ws.signals.broadcast_to_group')
 def test_application_created(mock_broadcast_to_group, data_fixture):
     user = data_fixture.create_user()

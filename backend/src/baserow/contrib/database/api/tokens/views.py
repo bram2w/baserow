@@ -76,7 +76,7 @@ class TokensView(APIView):
     def post(self, request, data):
         """Creates a new token for the authorized user."""
 
-        data['group'] = CoreHandler().get_group(request.user, data.pop('group'))
+        data['group'] = CoreHandler().get_group(data.pop('group'))
         token = TokenHandler().create_token(request.user, **data)
         serializer = TokenSerializer(token)
         return Response(serializer.data)

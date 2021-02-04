@@ -119,7 +119,9 @@ class ApplicationsView(APIView):
         returned.
         """
 
-        group = CoreHandler().get_group(request.user, group_id)
+        group = CoreHandler().get_group(group_id)
+        group.has_user(request.user, raise_error=True)
+
         applications = Application.objects.select_related(
             'content_type', 'group'
         ).filter(group=group)
@@ -171,9 +173,10 @@ class ApplicationsView(APIView):
     def post(self, request, data, group_id):
         """Creates a new application for a user."""
 
-        group = CoreHandler().get_group(request.user, group_id)
+        group = CoreHandler().get_group(group_id)
         application = CoreHandler().create_application(
-            request.user, group, data['type'], name=data['name'])
+            request.user, group, data['type'], name=data['name']
+        )
 
         return Response(get_application_serializer(application).data)
 

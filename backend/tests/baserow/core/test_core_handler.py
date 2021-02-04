@@ -1,13 +1,19 @@
 import pytest
 from unittest.mock import patch
 
+from itsdangerous.exc import BadSignature
+
 from django.db import connection
 
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Group, GroupUser, Application
+from baserow.core.models import (
+    Group, GroupUser, GroupInvitation, Application, GROUP_USER_PERMISSION_ADMIN
+)
 from baserow.core.exceptions import (
     UserNotInGroupError, ApplicationTypeDoesNotExist, GroupDoesNotExist,
-    ApplicationDoesNotExist
+    GroupUserDoesNotExist, ApplicationDoesNotExist, UserInvalidGroupPermissionsError,
+    BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
+    GroupInvitationDoesNotExist, GroupUserAlreadyExists
 )
 from baserow.contrib.database.models import Database, Table
 
@@ -15,24 +21,21 @@ from baserow.contrib.database.models import Database, Table
 @pytest.mark.django_db
 def test_get_group(data_fixture):
     user_1 = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
+    data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user_1)
 
     handler = CoreHandler()
 
     with pytest.raises(GroupDoesNotExist):
-        handler.get_group(user=user_1, group_id=0)
+        handler.get_group(group_id=0)
 
-    with pytest.raises(UserNotInGroupError):
-        handler.get_group(user=user_2, group_id=group_1.id)
-
-    group_1_copy = handler.get_group(user=user_1, group_id=group_1.id)
+    group_1_copy = handler.get_group(group_id=group_1.id)
     assert group_1_copy.id == group_1.id
 
     # If the error is raised we know for sure that the query has resolved.
     with pytest.raises(AttributeError):
         handler.get_group(
-            user=user_1, group_id=group_1.id,
+            group_id=group_1.id,
             base_queryset=Group.objects.prefetch_related('UNKNOWN')
         )
 
@@ -40,26 +43,86 @@ def test_get_group(data_fixture):
 @pytest.mark.django_db
 def test_get_group_user(data_fixture):
     user_1 = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
-    group_1 = data_fixture.create_group(user=user_1)
+    data_fixture.create_user()
+    group_1 = data_fixture.create_group()
+    group_user_1 = data_fixture.create_user_group(user=user_1, group=group_1)
 
     handler = CoreHandler()
 
-    with pytest.raises(GroupDoesNotExist):
-        handler.get_group_user(user=user_1, group_id=0)
+    with pytest.raises(GroupUserDoesNotExist):
+        handler.get_group_user(group_user_id=0)
 
-    with pytest.raises(UserNotInGroupError):
-        handler.get_group_user(user=user_2, group_id=group_1.id)
-
-    group_user_1_copy = handler.get_group_user(user=user_1, group_id=group_1.id)
-    assert group_user_1_copy.group_id == group_1.id
+    group_user = handler.get_group_user(group_user_id=group_user_1.id)
+    assert group_user.id == group_user_1.id
+    assert group_user_1.group_id == group_1.id
 
     # If the error is raised we know for sure that the query has resolved.
     with pytest.raises(AttributeError):
         handler.get_group_user(
-            user=user_1, group_id=group_1.id,
+            group_user_id=group_user_1.id,
             base_queryset=GroupUser.objects.prefetch_related('UNKNOWN')
         )
+
+
+@pytest.mark.django_db
+@patch('baserow.core.signals.group_user_updated.send')
+def test_update_group_user(send_mock, data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    group_1 = data_fixture.create_group()
+    data_fixture.create_user_group(user=user_1, group=group_1, permissions='ADMIN')
+    group_user_2 = data_fixture.create_user_group(user=user_2, group=group_1,
+                                                  permissions='MEMBER')
+
+    handler = CoreHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.update_group_user(user=user_3, group_user=group_user_2)
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        handler.update_group_user(user=user_2, group_user=group_user_2)
+
+    tmp = handler.update_group_user(user=user_1, group_user=group_user_2,
+                                    permissions='ADMIN')
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['group_user'].id == group_user_2.id
+    assert send_mock.call_args[1]['user'].id == user_1.id
+
+    group_user_2.refresh_from_db()
+    assert tmp.id == group_user_2.id
+    assert tmp.permissions == 'ADMIN'
+    assert group_user_2.permissions == 'ADMIN'
+
+
+@pytest.mark.django_db
+@patch('baserow.core.signals.group_user_deleted.send')
+def test_delete_group_user(send_mock, data_fixture):
+    user_1 = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    group_1 = data_fixture.create_group()
+    data_fixture.create_user_group(user=user_1, group=group_1, permissions='ADMIN')
+    group_user_2 = data_fixture.create_user_group(user=user_2, group=group_1,
+                                                  permissions='MEMBER')
+
+    handler = CoreHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.delete_group_user(user=user_3, group_user=group_user_2)
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        handler.delete_group_user(user=user_2, group_user=group_user_2)
+
+    group_user_id = group_user_2.id
+    handler.delete_group_user(user=user_1, group_user=group_user_2)
+    assert GroupUser.objects.all().count() == 1
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]['group_user_id'] == group_user_id
+    assert send_mock.call_args[1]['group_user'].group_id == group_user_2.group_id
+    assert send_mock.call_args[1]['user'].id == user_1.id
 
 
 @pytest.mark.django_db
@@ -81,6 +144,7 @@ def test_create_group(send_mock, data_fixture):
     assert user_group.user == user
     assert user_group.group == group
     assert user_group.order == 1
+    assert user_group.permissions == GROUP_USER_PERMISSION_ADMIN
 
     handler.create_group(user=user, name='Test group 2')
 
@@ -176,6 +240,357 @@ def test_order_groups(data_fixture):
     ug_3.refresh_from_db()
 
     assert [1, 2, 3] == [ug_2.order, ug_1.order, ug_3.order]
+
+
+@pytest.mark.django_db
+def test_get_group_invitation_by_token(data_fixture):
+    user = data_fixture.create_user()
+    group_user = data_fixture.create_user_group(user=user)
+    invitation = data_fixture.create_group_invitation(
+        group=group_user.group,
+        email=user.email
+    )
+
+    handler = CoreHandler()
+    signer = handler.get_group_invitation_signer()
+
+    with pytest.raises(BadSignature):
+        handler.get_group_invitation_by_token(token='INVALID')
+
+    with pytest.raises(GroupInvitationDoesNotExist):
+        handler.get_group_invitation_by_token(token=signer.dumps(999999))
+
+    invitation2 = handler.get_group_invitation_by_token(
+        token=signer.dumps(invitation.id)
+    )
+
+    assert invitation.id == invitation2.id
+    assert invitation.invited_by_id == invitation2.invited_by_id
+    assert invitation.group_id == invitation2.group_id
+    assert invitation.email == invitation2.email
+    assert invitation.permissions == invitation2.permissions
+    assert isinstance(invitation2, GroupInvitation)
+
+    with pytest.raises(AttributeError):
+        handler.get_group_invitation_by_token(
+            token=signer.dumps(invitation.id),
+            base_queryset=GroupInvitation.objects.prefetch_related('UNKNOWN')
+        )
+
+
+@pytest.mark.django_db
+def test_get_group_invitation(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    user_3 = data_fixture.create_user()
+    group_user = data_fixture.create_user_group(user=user)
+    data_fixture.create_user_group(
+        user=user_2,
+        group=group_user.group,
+        permissions='MEMBER'
+    )
+    invitation = data_fixture.create_group_invitation(
+        group=group_user.group,
+        email=user.email
+    )
+
+    handler = CoreHandler()
+
+    with pytest.raises(GroupInvitationDoesNotExist):
+        handler.get_group_invitation(user=user, group_invitation_id=999999)
+
+    with pytest.raises(UserNotInGroupError):
+        handler.get_group_invitation(user=user_3, group_invitation_id=invitation.id)
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        handler.get_group_invitation(user=user_2, group_invitation_id=invitation.id)
+
+    invitation2 = handler.get_group_invitation(
+        user=user,
+        group_invitation_id=invitation.id
+    )
+
+    assert invitation.id == invitation2.id
+    assert invitation.invited_by_id == invitation2.invited_by_id
+    assert invitation.group_id == invitation2.group_id
+    assert invitation.email == invitation2.email
+    assert invitation.permissions == invitation2.permissions
+    assert isinstance(invitation2, GroupInvitation)
+
+    with pytest.raises(AttributeError):
+        handler.get_field(
+            invitation_id=invitation.id,
+            base_queryset=GroupInvitation.objects.prefetch_related('UNKNOWN')
+        )
+
+
+@pytest.mark.django_db
+def test_send_group_invitation_email(data_fixture, mailoutbox):
+    group_invitation = data_fixture.create_group_invitation()
+    handler = CoreHandler()
+
+    with pytest.raises(BaseURLHostnameNotAllowed):
+        handler.send_group_invitation_email(
+            invitation=group_invitation,
+            base_url='http://test.nl/group-invite'
+        )
+
+    signer = handler.get_group_invitation_signer()
+    handler.send_group_invitation_email(
+        invitation=group_invitation,
+        base_url='http://localhost:3000/group-invite'
+    )
+
+    assert len(mailoutbox) == 1
+    email = mailoutbox[0]
+
+    assert email.subject == f'{group_invitation.invited_by.first_name} invited you ' \
+                            f'to {group_invitation.group.name} - Baserow'
+    assert email.from_email == 'no-reply@localhost'
+    assert group_invitation.email in email.to
+
+    html_body = email.alternatives[0][0]
+    search_url = 'http://localhost:3000/group-invite/'
+    start_url_index = html_body.index(search_url)
+
+    assert start_url_index != -1
+
+    end_url_index = html_body.index('"', start_url_index)
+    token = html_body[start_url_index + len(search_url):end_url_index]
+
+    invitation_id = signer.loads(token)
+    assert invitation_id == group_invitation.id
+
+
+@pytest.mark.django_db
+@patch('baserow.core.handler.CoreHandler.send_group_invitation_email')
+def test_create_group_invitation(mock_send_email, data_fixture):
+    user_group = data_fixture.create_user_group()
+    user = user_group.user
+    group = user_group.group
+    user_2 = data_fixture.create_user()
+    user_group_3 = data_fixture.create_user_group(group=group, permissions='MEMBER')
+    user_3 = user_group_3.user
+
+    handler = CoreHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.create_group_invitation(
+            user=user_2,
+            group=group,
+            email='test@test.nl',
+            permissions='ADMIN',
+            message='Test',
+            base_url='http://localhost:3000/invite'
+        )
+
+    with pytest.raises(UserInvalidGroupPermissionsError):
+        handler.create_group_invitation(
+            user=user_3,
+            group=group,
+            email='test@test.nl',
+            permissions='ADMIN',
+            message='Test',
+            base_url='http://localhost:3000/invite'
+        )
+
+    with pytest.raises(GroupUserAlreadyExists):
+        handler.create_group_invitation(
+            user=user,
+            group=group,
+            email=user_3.email,
+            permissions='ADMIN',
+            message='Test',
+            base_url='http://localhost:3000/invite'
+        )
+
+    with pytest.raises(ValueError):
+        handler.create_group_invitation(
+            user=user,
+            group=group,
+            email='test@test.nl',
+            permissions='NOT_EXISTING',
+            message='Test',
+            base_url='http://localhost:3000/invite'
+        )
+
+    invitation = handler.create_group_invitation(
+        user=user,
+        group=group,
+        email='test@test.nl',
+        permissions='ADMIN',
+        message='Test',
+        base_url='http://localhost:3000/invite'
+    )
+    assert invitation.invited_by_id == user.id
+    assert invitation.group_id == group.id
+    assert invitation.email == 'test@test.nl'
+    assert invitation.permissions == 'ADMIN'
+    assert invitation.message == 'Test'
+    assert GroupInvitation.objects.all().count() == 1
+
+    mock_send_email.assert_called_once()
+    assert mock_send_email.call_args[0][0].id == invitation.id
+    assert mock_send_email.call_args[0][1] == 'http://localhost:3000/invite'
+
+    # Because there already is an invitation for this email and group, it must be
+    # updated instead of having duplicates.
+    invitation = handler.create_group_invitation(
+        user=user,
+        group=group,
+        email='test@test.nl',
+        permissions='MEMBER',
+        message='New message',
+        base_url='http://localhost:3000/invite'
+    )
+    assert invitation.invited_by_id == user.id
+    assert invitation.group_id == group.id
+    assert invitation.email == 'test@test.nl'
+    assert invitation.permissions == 'MEMBER'
+    assert invitation.message == 'New message'
+    assert GroupInvitation.objects.all().count() == 1
+
+    invitation = handler.create_group_invitation(
+        user=user,
+        group=group,
+        email='test2@test.nl',
+        permissions='ADMIN',
+        message='',
+        base_url='http://localhost:3000/invite'
+    )
+    assert invitation.invited_by_id == user.id
+    assert invitation.group_id == group.id
+    assert invitation.email == 'test2@test.nl'
+    assert invitation.permissions == 'ADMIN'
+    assert invitation.message == ''
+    assert GroupInvitation.objects.all().count() == 2
+
+
+@pytest.mark.django_db
+def test_update_group_invitation(data_fixture):
+    group_invitation = data_fixture.create_group_invitation()
+    user = group_invitation.invited_by
+    user_2 = data_fixture.create_user()
+    handler = CoreHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.update_group_invitation(
+            user=user_2,
+            invitation=group_invitation,
+            permissions='ADMIN'
+        )
+
+    with pytest.raises(ValueError):
+        handler.update_group_invitation(
+            user=user,
+            invitation=group_invitation,
+            permissions='NOT_EXISTING'
+        )
+
+    invitation = handler.update_group_invitation(
+        user=user,
+        invitation=group_invitation,
+        permissions='MEMBER'
+    )
+
+    assert invitation.permissions == 'MEMBER'
+    invitation = GroupInvitation.objects.all().first()
+    assert invitation.permissions == 'MEMBER'
+
+
+@pytest.mark.django_db
+def test_delete_group_invitation(data_fixture):
+    group_invitation = data_fixture.create_group_invitation()
+    user = group_invitation.invited_by
+    user_2 = data_fixture.create_user()
+    handler = CoreHandler()
+
+    with pytest.raises(UserNotInGroupError):
+        handler.delete_group_invitation(
+            user=user_2,
+            invitation=group_invitation,
+        )
+
+    handler.delete_group_invitation(
+        user=user,
+        invitation=group_invitation,
+    )
+    assert GroupInvitation.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_reject_group_invitation(data_fixture):
+    group_invitation = data_fixture.create_group_invitation(email='test@test.nl')
+    user_1 = data_fixture.create_user(email='test@test.nl')
+    user_2 = data_fixture.create_user(email='test2@test.nl')
+
+    handler = CoreHandler()
+
+    with pytest.raises(GroupInvitationEmailMismatch):
+        handler.reject_group_invitation(user=user_2, invitation=group_invitation)
+
+    assert GroupInvitation.objects.all().count() == 1
+
+    handler.reject_group_invitation(user=user_1, invitation=group_invitation)
+    assert GroupInvitation.objects.all().count() == 0
+    assert GroupUser.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_accept_group_invitation(data_fixture):
+    group = data_fixture.create_group()
+    group_2 = data_fixture.create_group()
+    group_invitation = data_fixture.create_group_invitation(
+        email='test@test.nl',
+        permissions='MEMBER',
+        group=group
+    )
+    user_1 = data_fixture.create_user(email='test@test.nl')
+    user_2 = data_fixture.create_user(email='test2@test.nl')
+
+    handler = CoreHandler()
+
+    with pytest.raises(GroupInvitationEmailMismatch):
+        handler.accept_group_invitation(user=user_2, invitation=group_invitation)
+
+    assert GroupInvitation.objects.all().count() == 1
+
+    group_user = handler.accept_group_invitation(
+        user=user_1,
+        invitation=group_invitation
+    )
+    assert group_user.group_id == group.id
+    assert group_user.permissions == 'MEMBER'
+    assert GroupInvitation.objects.all().count() == 0
+    assert GroupUser.objects.all().count() == 1
+
+    group_invitation = data_fixture.create_group_invitation(
+        email='test@test.nl',
+        permissions='ADMIN',
+        group=group
+    )
+    group_user = handler.accept_group_invitation(
+        user=user_1,
+        invitation=group_invitation
+    )
+    assert group_user.group_id == group.id
+    assert group_user.permissions == 'ADMIN'
+    assert GroupInvitation.objects.all().count() == 0
+    assert GroupUser.objects.all().count() == 1
+
+    group_invitation = data_fixture.create_group_invitation(
+        email='test@test.nl',
+        permissions='MEMBER',
+        group=group_2
+    )
+    group_user = handler.accept_group_invitation(
+        user=user_1,
+        invitation=group_invitation
+    )
+    assert group_user.group_id == group_2.id
+    assert group_user.permissions == 'MEMBER'
+    assert GroupInvitation.objects.all().count() == 0
+    assert GroupUser.objects.all().count() == 2
 
 
 @pytest.mark.django_db
