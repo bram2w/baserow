@@ -8,7 +8,7 @@ export const setGroupCookie = (groupId, { $cookies, $env }) => {
   $cookies.set(cookieGroupName, groupId, {
     path: '/',
     maxAge: 60 * 60 * 24 * 7,
-    sameSite: secure ? 'strict' : 'lax',
+    sameSite: 'lax',
     secure,
   })
 }
