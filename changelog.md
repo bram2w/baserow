@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Changed all cookies to SameSite=lax.
+
 ## Released (2021-02-04)
 
 * Upgraded web-frontend dependencies.
