@@ -1,5 +1,8 @@
 from django.contrib.auth import get_user_model
 
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
+
 from rest_framework import serializers
 
 from baserow.core.models import GroupUser
@@ -16,9 +19,11 @@ class GroupUserSerializer(serializers.ModelSerializer):
         model = GroupUser
         fields = ('id', 'name', 'email', 'group', 'permissions', 'created_on')
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_name(self, object):
         return object.user.first_name
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_email(self, object):
         return object.user.email
 

@@ -28,6 +28,7 @@ class UserFileURLAndThumbnailsSerializerMixin(serializers.Serializer):
         url = default_storage.url(path)
         return url
 
+    @extend_schema_field(OpenApiTypes.OBJECT)
     def get_thumbnails(self, instance):
         if not self.get_instance_attr(instance, 'is_image'):
             return None
