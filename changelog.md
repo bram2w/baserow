@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Upgraded DRF Spectacular dependency to the latest version.
 * Added single select field form option validation.
 * Changed all cookies to SameSite=lax.
 * Fixed the "Ignored attempt to cancel a touchmove" error.

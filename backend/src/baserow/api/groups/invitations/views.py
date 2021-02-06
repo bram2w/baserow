@@ -286,6 +286,7 @@ class AcceptGroupInvitationView(APIView):
             'Accepts a group invitation with the given id if the email address of the '
             'user matches that of the invitation.'
         ),
+        request=None,
         responses={
             200: GroupUserGroupSerializer,
             400: get_error_schema(['ERROR_GROUP_INVITATION_EMAIL_MISMATCH']),
@@ -335,6 +336,7 @@ class RejectGroupInvitationView(APIView):
             'Rejects a group invitation with the given id if the email address of the '
             'user matches that of the invitation.'
         ),
+        request=None,
         responses={
             204: None,
             400: get_error_schema(['ERROR_GROUP_INVITATION_EMAIL_MISMATCH']),
