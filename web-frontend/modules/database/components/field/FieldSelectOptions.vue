@@ -15,7 +15,9 @@
       <input
         v-model="item.value"
         class="input select-options__value"
+        :class="{ 'input--error': $v.value.$each[index].value.$error }"
         @input="$emit('input', value)"
+        @blur="$v.value.$each[index].value.$touch()"
       />
       <a class="select-options__remove" @click.stop.prevent="remove(index)">
         <i class="fas fa-times"></i>
@@ -33,6 +35,8 @@
 </template>
 
 <script>
+import { required } from 'vuelidate/lib/validators'
+
 import ColorSelectContext from '@baserow/modules/core/components/ColorSelectContext'
 import { colors } from '@baserow/modules/core/utils/colors'
 
@@ -76,6 +80,13 @@ export default {
     updateColor(index, color) {
       this.value[index].color = color
       this.$emit('input', this.value)
+    },
+  },
+  validations: {
+    value: {
+      $each: {
+        value: { required },
+      },
     },
   },
 }

@@ -4,6 +4,7 @@
       <label class="control__label control__label--small">Options</label>
       <div class="control__elements">
         <FieldSelectOptions
+          ref="selectOptions"
           v-model="values.select_options"
         ></FieldSelectOptions>
       </div>
@@ -30,7 +31,8 @@ export default {
   },
   methods: {
     isFormValid() {
-      return true
+      this.$refs.selectOptions.$v.$touch()
+      return !this.$refs.selectOptions.$v.$invalid
     },
   },
 }
