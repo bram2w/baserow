@@ -5,6 +5,8 @@
 * Added single select field form option validation.
 * Changed all cookies to SameSite=lax.
 * Fixed the "Ignored attempt to cancel a touchmove" error.
+* Refactored the has_user everywhere such that the raise_error argument is used when
+  possible.
 
 ## Released (2021-02-04)
 

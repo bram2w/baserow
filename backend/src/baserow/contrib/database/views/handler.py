@@ -1,6 +1,5 @@
 from django.db.models import Q, F
 
-from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.models import Field
@@ -41,7 +40,6 @@ class ViewHandler:
             if this is used the `view_model` parameter doesn't work anymore.
         :type base_queryset: Queryset
         :raises ViewDoesNotExist: When the view with the provided id does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :type view_model: View
         :return:
         """
@@ -60,8 +58,7 @@ class ViewHandler:
             raise ViewDoesNotExist(f'The view with id {view_id} does not exist.')
 
         group = view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         return view
 
@@ -77,14 +74,12 @@ class ViewHandler:
         :type type_name: str
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created view instance.
         :rtype: View
         """
 
         group = table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         # Figure out which model to use for the given view type.
         view_type = view_type_registry.get(type_name)
@@ -116,7 +111,6 @@ class ViewHandler:
         :param kwargs: The fields that need to be updated.
         :type kwargs: object
         :raises ValueError: When the provided view not an instance of View.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated view instance.
         :rtype: View
         """
@@ -125,8 +119,7 @@ class ViewHandler:
             raise ValueError('The view is not an instance of View.')
 
         group = view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         view_type = view_type_registry.get_by_model(view)
         allowed_fields = [
@@ -150,15 +143,13 @@ class ViewHandler:
         :param view: The view instance that needs to be deleted.
         :type view: View
         :raises ViewDoesNotExist: When the view with the provided id does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(view, View):
             raise ValueError('The view is not an instance of View')
 
         group = view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         view_id = view.id
         view.delete()
@@ -289,7 +280,6 @@ class ViewHandler:
             object. This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
         :raises ViewFilterDoesNotExist: The the requested view does not exists.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The requested view filter instance.
         :type: ViewFilter
         """
@@ -309,8 +299,7 @@ class ViewHandler:
             )
 
         group = view_filter.view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         return view_filter
 
@@ -330,7 +319,6 @@ class ViewHandler:
         :type type_name: str
         :param value: The value that the filter must apply to.
         :type value: str
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises ViewFilterNotSupported: When the provided view does not support
             filtering.
         :raises ViewFilterTypeNotAllowedForField: When the field does not support the
@@ -342,8 +330,7 @@ class ViewHandler:
         """
 
         group = view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         # Check if view supports filtering
         view_type = view_type_registry.get_by_model(view.specific_class)
@@ -388,7 +375,6 @@ class ViewHandler:
         :param kwargs: The values that need to be updated, allowed values are
             `field`, `value` and `type_name`.
         :type kwargs: dict
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises ViewFilterTypeNotAllowedForField: When the field does not supports the
             filter type.
         :raises FieldNotInTable: When the provided field does not belong to the
@@ -398,8 +384,7 @@ class ViewHandler:
         """
 
         group = view_filter.view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         type_name = kwargs.get('type_name', view_filter.type)
         field = kwargs.get('field', view_filter.field)
@@ -439,12 +424,10 @@ class ViewHandler:
         :type user: User
         :param view_filter: The view filter instance that needs to be deleted.
         :type view_filter: ViewFilter
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         group = view_filter.view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         view_filter_id = view_filter.id
         view_filter.delete()
@@ -530,7 +513,6 @@ class ViewHandler:
             object from. This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
         :raises ViewSortDoesNotExist: The the requested view does not exists.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The requested view sort instance.
         :type: ViewSort
         """
@@ -550,8 +532,7 @@ class ViewHandler:
             )
 
         group = view_sort.view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         return view_sort
 
@@ -568,7 +549,6 @@ class ViewHandler:
         :param order: The desired order, can either be ascending (A to Z) or
             descending (Z to A).
         :type order: str
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises ViewSortNotSupported: When the provided view does not support sorting.
         :raises FieldNotInTable:  When the provided field does not belong to the
             provided view's table.
@@ -577,8 +557,7 @@ class ViewHandler:
         """
 
         group = view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         # Check if view supports sorting.
         view_type = view_type_registry.get_by_model(view.specific_class)
@@ -624,15 +603,13 @@ class ViewHandler:
         :param kwargs: The values that need to be updated, allowed values are
             `field` and `order`.
         :type kwargs: dict
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises FieldNotInTable: When the field does not support sorting.
         :return: The updated view sort instance.
         :rtype: ViewSort
         """
 
         group = view_sort.view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         field = kwargs.get('field', view_sort.field)
         order = kwargs.get('order', view_sort.order)
@@ -680,12 +657,10 @@ class ViewHandler:
         :type user: User
         :param view_sort: The view sort instance that needs to be deleted.
         :type view_sort: ViewSort
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         group = view_sort.view.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         view_sort_id = view_sort.id
         view_sort.delete()

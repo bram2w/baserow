@@ -7,7 +7,6 @@ from django.db.models import Max, F, Q
 from django.db.models.fields.related import ManyToManyField
 from django.conf import settings
 
-from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.fields.models import Field
 
 from .exceptions import RowDoesNotExist
@@ -155,7 +154,6 @@ class RowHandler:
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
         :type model: Model
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The requested row instance.
         :rtype: Model
@@ -165,8 +163,7 @@ class RowHandler:
             model = table.get_model()
 
         group = table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         try:
             row = model.objects.get(id=row_id)
@@ -192,7 +189,6 @@ class RowHandler:
         :param before: If provided the new row will be placed right before that row
             instance.
         :type before: Table
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created row instance.
         :rtype: Model
         """
@@ -201,8 +197,7 @@ class RowHandler:
             values = {}
 
         group = table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         if not model:
             model = table.get_model()
@@ -255,15 +250,13 @@ class RowHandler:
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
         :type model: Model
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The updated row instance.
         :rtype: Model
         """
 
         group = table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         if not model:
             model = table.get_model()
@@ -302,13 +295,11 @@ class RowHandler:
         :type table: Table
         :param row_id: The id of the row that must be deleted.
         :type row_id: int
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
         group = table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         model = table.get_model(field_ids=[])
 
