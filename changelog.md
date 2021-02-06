@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added single select field form option validation.
 * Changed all cookies to SameSite=lax.
 
 ## Released (2021-02-04)
