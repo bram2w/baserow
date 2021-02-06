@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Changed all cookies to SameSite=lax.
+* Fixed the "Ignored attempt to cancel a touchmove" error.
 
 ## Released (2021-02-04)
 

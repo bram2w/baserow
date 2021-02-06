@@ -63,7 +63,9 @@ export default {
     }
     el.scrollTouchMoveEvent = (event) => {
       if (touching) {
-        event.preventDefault()
+        if (event.cancelable) {
+          event.preventDefault()
+        }
 
         const touches = event.targetTouches
         const eventY = Math.round(touches[0].pageY)
