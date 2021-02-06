@@ -5,7 +5,6 @@ from django.db import connections
 from django.db.utils import ProgrammingError, DataError
 from django.conf import settings
 
-from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.db.schema import lenient_schema_editor
 from baserow.contrib.database.views.handler import ViewHandler
@@ -40,7 +39,6 @@ class FieldHandler:
             if this is used the `field_model` parameter doesn't work anymore.
         :type base_queryset: Queryset
         :raises FieldDoesNotExist: When the field with the provided id does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the field.
         :return: The requested field instance of the provided id.
         :rtype: Field
         """
@@ -59,8 +57,7 @@ class FieldHandler:
             raise FieldDoesNotExist(f'The field with id {field_id} does not exist.')
 
         group = field.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         return field
 
@@ -84,7 +81,6 @@ class FieldHandler:
         :type do_schema_change: bool
         :param kwargs: The field values that need to be set upon creation.
         :type kwargs: object
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises PrimaryFieldAlreadyExists: When we try to create a primary field,
             but one already exists.
         :return: The created field instance.
@@ -92,8 +88,7 @@ class FieldHandler:
         """
 
         group = table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         # Because only one primary field per table can exist and we have to check if one
         # already exists. If so the field cannot be created and an exception is raised.
@@ -146,7 +141,6 @@ class FieldHandler:
         :param kwargs: The field values that need to be updated
         :type kwargs: object
         :raises ValueError: When the provided field is not an instance of Field.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises CannotChangeFieldType: When the database server responds with an
             error while trying to change the field type. This should rarely happen
             because of the lenient schema editor, which replaces the value with null
@@ -159,8 +153,7 @@ class FieldHandler:
             raise ValueError('The field is not an instance of Field.')
 
         group = field.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         old_field = deepcopy(field)
         field_type = field_type_registry.get_by_model(field)
@@ -278,7 +271,6 @@ class FieldHandler:
         :param field: The field instance that needs to be deleted.
         :type field: Field
         :raises ValueError: When the provided field is not an instance of Field.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :raises CannotDeletePrimaryField: When we try to delete the primary field
             which cannot be deleted.
         """
@@ -287,8 +279,7 @@ class FieldHandler:
             raise ValueError('The field is not an instance of Field')
 
         group = field.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         if field.primary:
             raise CannotDeletePrimaryField('Cannot delete the primary field of a '
@@ -329,12 +320,10 @@ class FieldHandler:
         :type field: Field
         :param select_options: A list containing dicts with the desired select options.
         :type select_options: list
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         group = field.table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         existing_select_options = field.select_options.all()
 

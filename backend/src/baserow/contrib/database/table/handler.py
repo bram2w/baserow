@@ -1,7 +1,6 @@
 from django.db import connections
 from django.conf import settings
 
-from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.views.handler import ViewHandler
@@ -31,7 +30,6 @@ class TableHandler:
             object from. This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
         :raises TableDoesNotExist: When the table with the provided id does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The requested table of the provided id.
         :rtype: Table
         """
@@ -45,8 +43,7 @@ class TableHandler:
             raise TableDoesNotExist(f'The table with id {table_id} doe not exist.')
 
         group = table.database.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         return table
 
@@ -71,13 +68,11 @@ class TableHandler:
         :type first_row_header: bool
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created table instance.
         :rtype: Table
         """
 
-        if not database.group.has_user(user):
-            raise UserNotInGroupError(user, database.group)
+        database.group.has_user(user, raise_error=True)
 
         if data is not None:
             fields, data = self.normalize_initial_table_data(data, first_row_header)
@@ -233,7 +228,6 @@ class TableHandler:
         :param kwargs: The fields that need to be updated.
         :type kwargs: object
         :raises ValueError: When the provided table is not an instance of Table.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated table instance.
         :rtype: Table
         """
@@ -241,8 +235,7 @@ class TableHandler:
         if not isinstance(table, Table):
             raise ValueError('The table is not an instance of Table')
 
-        if not table.database.group.has_user(user):
-            raise UserNotInGroupError(user, table.database.group)
+        table.database.group.has_user(user, raise_error=True)
 
         table = set_allowed_attrs(kwargs, ['name'], table)
         table.save()
@@ -260,15 +253,12 @@ class TableHandler:
         :param table: The table instance that needs to be deleted.
         :type table: Table
         :raises ValueError: When the provided table is not an instance of Table.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(table, Table):
             raise ValueError('The table is not an instance of Table')
 
-        if not table.database.group.has_user(user):
-            raise UserNotInGroupError(user, table.database.group)
-
+        table.database.group.has_user(user, raise_error=True)
         table_id = table.id
 
         # Delete the table schema from the database.

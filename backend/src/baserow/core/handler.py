@@ -11,8 +11,8 @@ from .models import (
 )
 from .exceptions import (
     GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
-    UserNotInGroupError, GroupInvitationEmailMismatch, GroupInvitationDoesNotExist,
-    GroupUserDoesNotExist, GroupUserAlreadyExists
+    GroupInvitationEmailMismatch, GroupInvitationDoesNotExist, GroupUserDoesNotExist,
+    GroupUserAlreadyExists
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
@@ -34,7 +34,6 @@ class CoreHandler:
             object. This can for example be used to do a `prefetch_related`.
         :type base_queryset: Queryset
         :raises GroupDoesNotExist: When the group with the provided id does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the group.
         :return: The requested group instance of the provided id.
         :rtype: Group
         """
@@ -500,7 +499,6 @@ class CoreHandler:
         :type base_queryset: Queryset
         :raises ApplicationDoesNotExist: When the application with the provided id
             does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the group.
         :return: The requested application instance of the provided id.
         :rtype: Application
         """
@@ -517,8 +515,7 @@ class CoreHandler:
                 f'The application with id {application_id} does not exist.'
             )
 
-        if not application.group.has_user(user):
-            raise UserNotInGroupError(user, application.group)
+        application.group.has_user(user, raise_error=True)
 
         return application
 
@@ -535,13 +532,11 @@ class CoreHandler:
         :type type_name: str
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created application instance.
         :rtype: Application
         """
 
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user,  raise_error=True)
 
         # Figure out which model is used for the given application type.
         application_type = application_type_registry.get(type_name)
@@ -568,7 +563,6 @@ class CoreHandler:
         :param kwargs: The fields that need to be updated.
         :type kwargs: object
         :raises ValueError: If one of the provided parameters is invalid.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated application instance.
         :rtype: Application
         """
@@ -576,8 +570,7 @@ class CoreHandler:
         if not isinstance(application, Application):
             raise ValueError('The application is not an instance of Application.')
 
-        if not application.group.has_user(user):
-            raise UserNotInGroupError(user, application.group)
+        application.group.has_user(user, raise_error=True)
 
         application = set_allowed_attrs(kwargs, ['name'], application)
         application.save()
@@ -595,14 +588,12 @@ class CoreHandler:
         :param application: The application instance that needs to be deleted.
         :type application: Application
         :raises ValueError: If one of the provided parameters is invalid.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(application, Application):
             raise ValueError('The application is not an instance of Application')
 
-        if not application.group.has_user(user):
-            raise UserNotInGroupError(user, application.group)
+        application.group.has_user(user, raise_error=True)
 
         application_id = application.id
         application = application.specific
