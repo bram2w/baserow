@@ -3,6 +3,7 @@ import re
 import random
 import string
 import hashlib
+import math
 
 from collections import namedtuple
 
@@ -213,3 +214,38 @@ def stream_size(stream):
     size = stream.tell()
     stream.seek(0)
     return size
+
+
+def truncate_middle(content, max_length, middle='...'):
+    """
+    Truncates the middle part of the string if the total length if too long.
+
+    For example:
+    truncate_middle('testabcdecho', 8) == 'tes...ho'
+
+    :param content: The string that must be truncated.
+    :type: str
+    :param max_length: The maximum amount of characters the string can have.
+    :type max_length: int
+    :param middle: The part that must be added in the middle if the provided
+        content is too long.
+    :type middle str
+    :return: The truncated string.
+    :rtype: str
+    """
+
+    if len(content) <= max_length:
+        return content
+
+    if max_length <= len(middle):
+        raise ValueError('The max_length cannot be lower than the length if the '
+                         'middle string.')
+
+    total = max_length - len(middle)
+    start = math.ceil(total / 2)
+    end = math.floor(total / 2)
+
+    left = content[:start]
+    right = content[-end:] if end else ''
+
+    return f'{left}{middle}{right}'
