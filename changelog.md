@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Fixed error when a very long user file name is provided when uploading.
 * Upgraded DRF Spectacular dependency to the latest version.
 * Added single select field form option validation.
 * Changed all cookies to SameSite=lax.

@@ -1,9 +1,10 @@
 from io import BytesIO
+import pytest
 
 from baserow.core.utils import (
     extract_allowed, set_allowed_attrs, to_pascal_case, to_snake_case,
     remove_special_characters, dict_to_object, random_string, sha256_hash,
-    stream_size
+    stream_size, truncate_middle
 )
 
 
@@ -77,3 +78,19 @@ def test_sha256_hash():
 
 def test_stream_size():
     assert stream_size(BytesIO(b'test')) == 4
+
+
+def test_truncate_middle():
+    assert truncate_middle('testtesttest', 13) == 'testtesttest'
+    assert truncate_middle('testtesttest', 12) == 'testtesttest'
+    assert truncate_middle('testabcdecho', 11) == 'test...echo'
+    assert truncate_middle('testabcdecho', 10) == 'test...cho'
+    assert truncate_middle('testabcdecho', 9) == 'tes...cho'
+    assert truncate_middle('testabcdecho', 8) == 'tes...ho'
+    assert truncate_middle('testabcdecho', 7) == 'te...ho'
+    assert truncate_middle('testabcdecho', 6) == 'te...o'
+    assert truncate_middle('testabcdecho', 5) == 't...o'
+    assert truncate_middle('testabcdecho', 4) == 't...'
+
+    with pytest.raises(ValueError):
+        truncate_middle('testtesttest', 3) == '...'
