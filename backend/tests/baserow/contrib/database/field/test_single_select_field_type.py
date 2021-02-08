@@ -58,6 +58,10 @@ def test_single_select_field_type(data_fixture):
     field_handler.delete_field(user=user, field=field)
     assert SelectOption.objects.all().count() == 0
 
+    field = field_handler.create_field(user=user, table=table,
+                                       type_name='single_select', select_options=[])
+    field_handler.update_field(user=user, field=field, new_type_name='text')
+
 
 @pytest.mark.django_db
 def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
