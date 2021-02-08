@@ -802,6 +802,11 @@ class SingleSelectFieldType(FieldType):
                 variables[variable_name] = option.value
                 values_mapping.append(f"('{int(option.id)}', %({variable_name})s)")
 
+            # If there are no values we don't need to convert the value to a string
+            # since all values will be converted to null.
+            if len(values_mapping) == 0:
+                return None
+
             sql = f"""
                 p_in = (SELECT value FROM (
                     VALUES {','.join(values_mapping)}
@@ -829,7 +834,7 @@ class SingleSelectFieldType(FieldType):
                     f"(lower(%({variable_name})s), '{int(option.id)}')"
                 )
 
-            # If there is no values we don't need to convert the value since all
+            # If there are no values we don't need to convert the value since all
             # values should be converted to null.
             if len(values_mapping) == 0:
                 return None

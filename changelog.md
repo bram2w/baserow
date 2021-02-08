@@ -8,6 +8,8 @@
 * Fixed the "Ignored attempt to cancel a touchmove" error.
 * Refactored the has_user everywhere such that the raise_error argument is used when
   possible.
+* Fixed bug where a single select field without options could not be converted to a
+  another field.
 
 ## Released (2021-02-04)
 
