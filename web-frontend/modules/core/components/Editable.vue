@@ -2,6 +2,7 @@
   <span
     ref="editable"
     :contenteditable="editing"
+    :class="{ 'forced-user-select-initial': editing }"
     @input="update"
     @keydown="keydown"
     @focusout="change"

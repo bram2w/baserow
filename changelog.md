@@ -11,6 +11,8 @@
   possible.
 * Fixed bug where a single select field without options could not be converted to a
   another field.
+* Fixed bug where the Editable component was not working if a prent a user-select:
+  none; property.
 
 ## Released (2021-02-04)
 
