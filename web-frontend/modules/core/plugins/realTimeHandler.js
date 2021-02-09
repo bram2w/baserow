@@ -127,8 +127,8 @@ export class RealTimeHandler {
    * navigating to another page that doesn't require updates.
    */
   disconnect() {
-    if (!this.connected) {
-      return
+    if (this.connected) {
+      this.socket.close()
     }
 
     this.context.store.dispatch('notification/setConnecting', false)
@@ -136,7 +136,6 @@ export class RealTimeHandler {
     this.reconnect = false
     this.attempts = 0
     this.connected = false
-    this.socket.close()
   }
 
   /**

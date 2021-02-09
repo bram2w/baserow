@@ -13,6 +13,6 @@ export default function ({ req, store, redirect }) {
       query.original = encodeURI(req.originalUrl)
     }
 
-    redirect({ name: 'login', query })
+    return redirect({ name: 'login', query })
   }
 }

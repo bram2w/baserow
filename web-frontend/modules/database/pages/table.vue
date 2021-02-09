@@ -142,6 +142,11 @@ export default {
       data.database = database
       data.table = table
     } catch (e) {
+      // In case of a network error we want to fail hard.
+      if (!e.status) {
+        throw e
+      }
+
       return error({ statusCode: 404, message: 'Table not found.' })
     }
 
@@ -169,7 +174,12 @@ export default {
         // filled with initial data so we're going to call the fetch function here.
         const type = app.$registry.get('view', view.type)
         await type.fetch({ store }, view)
-      } catch {
+      } catch (e) {
+        // In case of a network error we want to fail hard.
+        if (!e.status) {
+          throw e
+        }
+
         return error({ statusCode: 404, message: 'View not found.' })
       }
     }
