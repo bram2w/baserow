@@ -143,7 +143,7 @@ export default {
       data.table = table
     } catch (e) {
       // In case of a network error we want to fail hard.
-      if (!e.status) {
+      if (e.response === undefined) {
         throw e
       }
 
@@ -176,7 +176,7 @@ export default {
         await type.fetch({ store }, view)
       } catch (e) {
         // In case of a network error we want to fail hard.
-        if (!e.status) {
+        if (e.response === undefined) {
           throw e
         }
 

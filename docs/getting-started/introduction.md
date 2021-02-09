@@ -113,3 +113,17 @@ are accepted.
 * `INITIAL_TABLE_DATA_LIMIT` (default `null`): Indicates the initial table data limit.
   If for example 100 is provided then it will not be possible to import a CSV file with
   more than 100 rows.
+* `REDIS_HOST` (default `redis`): The hostname of the Redis server.
+* `REDIS_PORT` (default `6379`): The port of the Redis server.
+* `REDIS_USER` (default ``): The username of the Redis server.
+* `REDIS_PASSWORD` (default ``):  The password of the Redis server.
+* `REDIS_PROTOCOL` (default `redis`): The redis protocol. Can either be `redis` or
+  `rediss`.
+* `EMAIL_SMTP` (default ``): Providing anything other than an empty string will enable
+  SMTP email.
+* `EMAIL_SMTP_HOST` (default `localhost`): The hostname of the SMTP server.
+* `EMAIL_SMPT_USE_TLS` (default ``): Providing anything other than an empty string will
+  enable connecting to the SMTP server via TLS.
+* `EMAIL_SMTP_PORT` (default `25`): The port of the SMTP server.
+* `EMAIL_SMTP_USER` (default ``): The username for the SMTP server.
+* `EMAIL_SMTP_PASSWORD` (default ``): The password of the SMTP server.

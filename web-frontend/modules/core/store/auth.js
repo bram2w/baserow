@@ -84,7 +84,7 @@ export const actions = {
     } catch (error) {
       // If the server can't be reached because of a network error we want to
       // fail hard so that the correct error message is shown.
-      if (!error.status) {
+      if (error.response === undefined) {
         throw error
       }
 
