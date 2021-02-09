@@ -23,6 +23,7 @@
         <date-picker
           :inline="true"
           :monday-first="true"
+          :use-utc="true"
           :value="dateObject"
           class="datepicker"
           @input=";[setCopy($event, 'dateObject'), delayedUpdate(copy, true)]"
