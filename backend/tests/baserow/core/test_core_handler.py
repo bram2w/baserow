@@ -282,7 +282,7 @@ def test_get_group_invitation_by_token(data_fixture):
 def test_get_group_invitation(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    user_3 = data_fixture.create_user()
+    data_fixture.create_user()
     group_user = data_fixture.create_user_group(user=user)
     data_fixture.create_user_group(
         user=user_2,
@@ -297,18 +297,9 @@ def test_get_group_invitation(data_fixture):
     handler = CoreHandler()
 
     with pytest.raises(GroupInvitationDoesNotExist):
-        handler.get_group_invitation(user=user, group_invitation_id=999999)
+        handler.get_group_invitation(group_invitation_id=999999)
 
-    with pytest.raises(UserNotInGroupError):
-        handler.get_group_invitation(user=user_3, group_invitation_id=invitation.id)
-
-    with pytest.raises(UserInvalidGroupPermissionsError):
-        handler.get_group_invitation(user=user_2, group_invitation_id=invitation.id)
-
-    invitation2 = handler.get_group_invitation(
-        user=user,
-        group_invitation_id=invitation.id
-    )
+    invitation2 = handler.get_group_invitation(group_invitation_id=invitation.id)
 
     assert invitation.id == invitation2.id
     assert invitation.invited_by_id == invitation2.invited_by_id
@@ -596,25 +587,20 @@ def test_accept_group_invitation(data_fixture):
 @pytest.mark.django_db
 def test_get_application(data_fixture):
     user_1 = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
+    data_fixture.create_user()
     application_1 = data_fixture.create_database_application(user=user_1)
 
     handler = CoreHandler()
 
     with pytest.raises(ApplicationDoesNotExist):
-        handler.get_application(user=user_1, application_id=0)
+        handler.get_application(application_id=0)
 
-    with pytest.raises(UserNotInGroupError):
-        handler.get_application(user=user_2, application_id=application_1.id)
-
-    application_1_copy = handler.get_application(
-        user=user_1, application_id=application_1.id
-    )
+    application_1_copy = handler.get_application(application_id=application_1.id)
     assert application_1_copy.id == application_1.id
     assert isinstance(application_1_copy, Application)
 
     database_1_copy = handler.get_application(
-        user=user_1, application_id=application_1.id, base_queryset=Database.objects
+        application_id=application_1.id, base_queryset=Database.objects
     )
     assert database_1_copy.id == application_1.id
     assert isinstance(database_1_copy, Database)

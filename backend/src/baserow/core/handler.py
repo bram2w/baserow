@@ -298,7 +298,7 @@ class CoreHandler:
 
         return group_invitation
 
-    def get_group_invitation(self, user, group_invitation_id, base_queryset=None):
+    def get_group_invitation(self, group_invitation_id, base_queryset=None):
         """
         Selects a group invitation with a given id from the database.
 
@@ -324,8 +324,6 @@ class CoreHandler:
             raise GroupInvitationDoesNotExist(
                 f'The group invitation with id {group_invitation_id} does not exist.'
             )
-
-        group_invitation.group.has_user(user, 'ADMIN', raise_error=True)
 
         return group_invitation
 
@@ -486,7 +484,7 @@ class CoreHandler:
 
         return group_user
 
-    def get_application(self, user, application_id, base_queryset=None):
+    def get_application(self, application_id, base_queryset=None):
         """
         Selects an application with a given id from the database.
 
@@ -514,8 +512,6 @@ class CoreHandler:
             raise ApplicationDoesNotExist(
                 f'The application with id {application_id} does not exist.'
             )
-
-        application.group.has_user(user, raise_error=True)
 
         return application
 

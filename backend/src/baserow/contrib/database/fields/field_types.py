@@ -424,10 +424,9 @@ class LinkRowFieldType(FieldType):
         if 'link_row_table' in values and isinstance(values['link_row_table'], int):
             from baserow.contrib.database.table.handler import TableHandler
 
-            values['link_row_table'] = TableHandler().get_table(
-                user,
-                values['link_row_table']
-            )
+            table = TableHandler().get_table(values['link_row_table'])
+            table.database.group.has_user(user, raise_error=True)
+            values['link_row_table'] = table
 
         return values
 

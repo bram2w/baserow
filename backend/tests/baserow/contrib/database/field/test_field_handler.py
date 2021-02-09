@@ -18,24 +18,21 @@ from baserow.contrib.database.fields.exceptions import (
 @pytest.mark.django_db
 def test_get_field(data_fixture):
     user = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
+    data_fixture.create_user()
     text = data_fixture.create_text_field(user=user)
 
     handler = FieldHandler()
 
     with pytest.raises(FieldDoesNotExist):
-        handler.get_field(user=user, field_id=99999)
+        handler.get_field(field_id=99999)
 
-    with pytest.raises(UserNotInGroupError):
-        handler.get_field(user=user_2, field_id=text.id)
-
-    field = handler.get_field(user=user, field_id=text.id)
+    field = handler.get_field(field_id=text.id)
 
     assert text.id == field.id
     assert text.name == field.name
     assert isinstance(field, Field)
 
-    field = handler.get_field(user=user, field_id=text.id, field_model=TextField)
+    field = handler.get_field(field_id=text.id, field_model=TextField)
 
     assert text.id == field.id
     assert text.name == field.name
@@ -44,7 +41,7 @@ def test_get_field(data_fixture):
     # If the error is raised we know for sure that the query has resolved.
     with pytest.raises(AttributeError):
         handler.get_field(
-            user=user, field_id=text.id,
+            field_id=text.id,
             base_queryset=Field.objects.prefetch_related('UNKNOWN')
         )
 

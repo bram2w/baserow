@@ -113,7 +113,8 @@ class GridViewView(APIView):
         """
 
         view_handler = ViewHandler()
-        view = view_handler.get_view(request.user, view_id, GridView)
+        view = view_handler.get_view(view_id, GridView)
+        view.table.database.group.has_user(request.user, raise_error=True)
 
         model = view.table.get_model()
         queryset = model.objects.all().enhance_by_fields()
@@ -192,7 +193,8 @@ class GridViewView(APIView):
         requested fields.
         """
 
-        view = ViewHandler().get_view(request.user, view_id, GridView)
+        view = ViewHandler().get_view(view_id, GridView)
+        view.table.database.group.has_user(request.user, raise_error=True)
 
         model = view.table.get_model(field_ids=data['field_ids'])
         results = model.objects.filter(pk__in=data['row_ids'])
@@ -251,7 +253,7 @@ class GridViewView(APIView):
         """
 
         handler = ViewHandler()
-        view = handler.get_view(request.user, view_id, GridView)
+        view = handler.get_view(view_id, GridView)
         handler.update_grid_view_field_options(
             request.user,
             view,
