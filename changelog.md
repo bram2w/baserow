@@ -16,6 +16,7 @@
 * Fail hard when the web-frontend can't reach the backend because of a network error.
 * Use UTC time in the date picker.
 * Refactored handler get_* methods so that they never check for permissions.
+* Made it possible to configure SMTP settings via environment variables.
 
 ## Released (2021-02-04)
 

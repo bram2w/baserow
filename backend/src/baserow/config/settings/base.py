@@ -242,6 +242,15 @@ USER_FILES_DIRECTORY = 'user_files'
 USER_THUMBNAILS_DIRECTORY = 'thumbnails'
 USER_FILE_SIZE_LIMIT = 1024 * 1024 * 20  # 20MB
 
+if os.getenv('EMAIL_SMTP', ''):
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_USE_TLS = bool(os.getenv('EMAIL_SMPT_USE_TLS', ''))
+    EMAIL_HOST = os.getenv('EMAIL_SMTP_HOST', 'localhost')
+    EMAIL_PORT = os.getenv('EMAIL_SMTP_PORT', '25')
+    EMAIL_HOST_USER = os.getenv('EMAIL_SMTP_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_SMTP_PASSWORD', '')
+
+
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
 USER_THUMBNAILS = {
