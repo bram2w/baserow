@@ -64,9 +64,10 @@ class TablesView(APIView):
         """Lists all the tables of a database."""
 
         database = CoreHandler().get_application(
-            request.user, database_id,
+            database_id,
             base_queryset=Database.objects
         )
+        database.group.has_user(request.user, raise_error=True)
         tables = Table.objects.filter(database=database)
         serializer = TableSerializer(tables, many=True)
         return Response(serializer.data)
@@ -111,7 +112,7 @@ class TablesView(APIView):
         """Creates a new table in a database."""
 
         database = CoreHandler().get_application(
-            request.user, database_id,
+            database_id,
             base_queryset=Database.objects
         )
         table = TableHandler().create_table(
@@ -155,7 +156,8 @@ class TableView(APIView):
     def get(self, request, table_id):
         """Responds with a serialized table instance."""
 
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
+        table.database.group.has_user(request.user, raise_error=True)
         serializer = TableSerializer(table)
         return Response(serializer.data)
 
@@ -194,7 +196,7 @@ class TableView(APIView):
 
         table = TableHandler().update_table(
             request.user,
-            TableHandler().get_table(request.user, table_id),
+            TableHandler().get_table(table_id),
             base_queryset=Table.objects.select_for_update(),
             name=data['name']
         )
@@ -232,6 +234,6 @@ class TableView(APIView):
 
         TableHandler().delete_table(
             request.user,
-            TableHandler().get_table(request.user, table_id)
+            TableHandler().get_table(table_id)
         )
         return Response(status=204)

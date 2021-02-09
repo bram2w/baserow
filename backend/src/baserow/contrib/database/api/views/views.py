@@ -88,7 +88,8 @@ class ViewsView(APIView):
         has access to that group.
         """
 
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
+        table.database.group.has_user(request.user, raise_error=True)
         views = View.objects.filter(table=table).select_related('content_type')
 
         if filters:
@@ -152,7 +153,7 @@ class ViewsView(APIView):
     def post(self, request, data, table_id, filters, sortings):
         """Creates a new view for a user."""
 
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
         view = ViewHandler().create_view(
             request.user, table, data.pop('type'), **data)
 
@@ -201,7 +202,8 @@ class ViewView(APIView):
     def get(self, request, view_id, filters, sortings):
         """Selects a single view and responds with a serialized version."""
 
-        view = ViewHandler().get_view(request.user, view_id)
+        view = ViewHandler().get_view(view_id)
+        view.table.database.group.has_user(request.user, raise_error=True)
         serializer = view_type_registry.get_serializer(
             view,
             ViewSerializer,
@@ -250,7 +252,7 @@ class ViewView(APIView):
     def patch(self, request, view_id, filters, sortings):
         """Updates the view if the user belongs to the group."""
 
-        view = ViewHandler().get_view(request.user, view_id).specific
+        view = ViewHandler().get_view(view_id).specific
         view_type = view_type_registry.get_by_model(view)
         data = validate_data_custom_fields(
             view_type.type, view_type_registry, request.data,
@@ -298,7 +300,7 @@ class ViewView(APIView):
     def delete(self, request, view_id):
         """Deletes an existing view if the user belongs to the group."""
 
-        view = ViewHandler().get_view(request.user, view_id)
+        view = ViewHandler().get_view(view_id)
         ViewHandler().delete_view(request.user, view)
 
         return Response(status=204)
@@ -341,7 +343,8 @@ class ViewFiltersView(APIView):
         has access to that group.
         """
 
-        view = ViewHandler().get_view(request.user, view_id)
+        view = ViewHandler().get_view(view_id)
+        view.table.database.group.has_user(request.user, raise_error=True)
         filters = ViewFilter.objects.filter(view=view)
         serializer = ViewFilterSerializer(filters, many=True)
         return Response(serializer.data)
@@ -391,7 +394,7 @@ class ViewFiltersView(APIView):
         """Creates a new filter for the provided view."""
 
         view_handler = ViewHandler()
-        view = view_handler.get_view(request.user, view_id)
+        view = view_handler.get_view(view_id)
         # We can safely assume the field exists because the CreateViewFilterSerializer
         # has already checked that.
         field = Field.objects.get(pk=data['field'])
@@ -566,7 +569,8 @@ class ViewSortingsView(APIView):
         has access to that group.
         """
 
-        view = ViewHandler().get_view(request.user, view_id)
+        view = ViewHandler().get_view(view_id)
+        view.table.database.group.has_user(request.user, raise_error=True)
         sortings = ViewSort.objects.filter(view=view)
         serializer = ViewSortSerializer(sortings, many=True)
         return Response(serializer.data)
@@ -616,7 +620,7 @@ class ViewSortingsView(APIView):
         """Creates a new sort for the provided view."""
 
         view_handler = ViewHandler()
-        view = view_handler.get_view(request.user, view_id)
+        view = view_handler.get_view(view_id)
         # We can safely assume the field exists because the CreateViewSortSerializer
         # has already checked that.
         field = Field.objects.get(pk=data['field'])

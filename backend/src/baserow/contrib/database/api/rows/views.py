@@ -195,7 +195,9 @@ class RowsView(APIView):
         provide a search query.
         """
 
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
+        table.database.group.has_user(request.user, raise_error=True)
+
         TokenHandler().check_table_permissions(request, 'read', table, False)
         search = request.GET.get('search')
         order_by = request.GET.get('order_by')
@@ -287,7 +289,7 @@ class RowsView(APIView):
         according to the tables field types.
         """
 
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, 'create', table, False)
         model = table.get_model()
 
@@ -361,7 +363,7 @@ class RowView(APIView):
         and table_id.
         """
 
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, 'read', table, False)
 
         model = table.get_model()
@@ -426,7 +428,7 @@ class RowView(APIView):
         table_id. Also the post data is validated according to the tables field types.
         """
 
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, 'update', table, False)
 
         field_ids = RowHandler().extract_field_ids_from_dict(request.data)
@@ -481,7 +483,7 @@ class RowView(APIView):
         table_id.
         """
 
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, 'delete', table, False)
         RowHandler().delete_row(request.user, table, row_id)
 

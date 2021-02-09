@@ -18,12 +18,10 @@ from .signals import table_created, table_updated, table_deleted
 
 
 class TableHandler:
-    def get_table(self, user, table_id, base_queryset=None):
+    def get_table(self, table_id, base_queryset=None):
         """
         Selects a table with a given id from the database.
 
-        :param user: The user on whose behalf the table is requested.
-        :type user: User
         :param table_id: The identifier of the table that must be returned.
         :type table_id: int
         :param base_queryset: The base queryset from where to select the table
@@ -41,9 +39,6 @@ class TableHandler:
             table = base_queryset.select_related('database__group').get(id=table_id)
         except Table.DoesNotExist:
             raise TableDoesNotExist(f'The table with id {table_id} doe not exist.')
-
-        group = table.database.group
-        group.has_user(user, raise_error=True)
 
         return table
 

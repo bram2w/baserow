@@ -20,7 +20,8 @@ class TablePageType(PageType):
 
         try:
             handler = TableHandler()
-            handler.get_table(user, table_id)
+            table = handler.get_table(table_id)
+            table.database.group.has_user(user, raise_error=True)
         except (UserNotInGroupError, TableDoesNotExist):
             return False
 

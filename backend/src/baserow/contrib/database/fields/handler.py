@@ -22,12 +22,10 @@ logger = logging.getLogger(__name__)
 
 
 class FieldHandler:
-    def get_field(self, user, field_id, field_model=None, base_queryset=None):
+    def get_field(self, field_id, field_model=None, base_queryset=None):
         """
         Selects a field with a given id from the database.
 
-        :param user: The user on whose behalf the field is requested.
-        :type user: User
         :param field_id: The identifier of the field that must be returned.
         :type field_id: int
         :param field_model: If provided that model's objects are used to select the
@@ -55,9 +53,6 @@ class FieldHandler:
             )
         except Field.DoesNotExist:
             raise FieldDoesNotExist(f'The field with id {field_id} does not exist.')
-
-        group = field.table.database.group
-        group.has_user(user, raise_error=True)
 
         return field
 

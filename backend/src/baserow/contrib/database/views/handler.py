@@ -22,13 +22,11 @@ from .signals import (
 
 
 class ViewHandler:
-    def get_view(self, user, view_id, view_model=None, base_queryset=None):
+    def get_view(self, view_id, view_model=None, base_queryset=None):
         """
         Selects a view and checks if the user has access to that view. If everything
         is fine the view is returned.
 
-        :param user: The user on whose behalf the view is requested.
-        :type user: User
         :param view_id: The identifier of the view that must be returned.
         :type view_id: int
         :param view_model: If provided that models objects are used to select the
@@ -56,9 +54,6 @@ class ViewHandler:
             )
         except View.DoesNotExist:
             raise ViewDoesNotExist(f'The view with id {view_id} does not exist.')
-
-        group = view.table.database.group
-        group.has_user(user, raise_error=True)
 
         return view
 
@@ -175,6 +170,8 @@ class ViewHandler:
         :raises UnrelatedFieldError: When the provided field id is not related to the
             provided view.
         """
+
+        grid_view.table.database.group.has_user(user, raise_error=True)
 
         if not fields:
             fields = Field.objects.filter(table=grid_view.table)

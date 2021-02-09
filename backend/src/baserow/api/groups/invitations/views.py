@@ -168,10 +168,8 @@ class GroupInvitationView(APIView):
     def get(self, request, group_invitation_id):
         """Selects a single group invitation and responds with a serialized version."""
 
-        group_invitation = CoreHandler().get_group_invitation(
-            request.user,
-            group_invitation_id
-        )
+        group_invitation = CoreHandler().get_group_invitation(group_invitation_id)
+        group_invitation.group.has_user(request.user, 'ADMIN', raise_error=True)
         return Response(GroupInvitationSerializer(group_invitation).data)
 
     @extend_schema(
@@ -213,7 +211,6 @@ class GroupInvitationView(APIView):
         """Updates the group invitation if the user belongs to the group."""
 
         group_invitation = CoreHandler().get_group_invitation(
-            request.user,
             group_invitation_id,
             base_queryset=GroupInvitation.objects.select_for_update()
         )
@@ -259,7 +256,6 @@ class GroupInvitationView(APIView):
         """Deletes an existing group_invitation if the user belongs to the group."""
 
         group_invitation = CoreHandler().get_group_invitation(
-            request.user,
             group_invitation_id,
             base_queryset=GroupInvitation.objects.select_for_update()
         )
