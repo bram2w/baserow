@@ -6,10 +6,10 @@
       'tree__item--loading': application._.loading,
     }"
   >
-    <div class="tree__action">
+    <div class="tree__action tree__action--has-options">
       <a class="tree__link" @click="selectApplication(application)">
         <i
-          class="tree__type fas"
+          class="tree__icon tree__icon--type fas"
           :class="'fa-' + application._.type.iconClass"
         ></i>
         <Editable
