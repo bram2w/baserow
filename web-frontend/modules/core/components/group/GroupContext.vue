@@ -8,7 +8,7 @@
         </a>
       </li>
       <li>
-        <a @click="$refs.groupMembersModal.show()">
+        <a @click=";[$refs.groupMembersModal.show(), hide()]">
           <i class="context__menu-icon fas fa-fw fa-users"></i>
           Members
         </a>

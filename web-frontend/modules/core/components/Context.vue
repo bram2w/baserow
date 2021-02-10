@@ -33,10 +33,15 @@ export default {
      * @param vertical    Bottom positions the context under the target.
      *                    Top positions the context above the target.
      *                    Over-bottom positions the context over and under the target.
-     *                    Over-top positions the context over and above the target
-     * @param horizontal  Left aligns the context with the left side of the target.
-     *                    Right aligns the context with the right side of the target.
-     * @param offset      The distance between the target element and the context.
+     *                    Over-top positions the context over and above the target.
+     * @param horizontal  `left` aligns the context with the left side of the target.
+     *                    `right` aligns the context with the right side of the target.
+     * @param verticalOffset
+     *                    The offset indicates how many pixels the context is moved
+     *                    top from the original calculated position.
+     * @param horizontalOffset
+     *                    The offset indicates how many pixels the context is moved
+     *                    left from the original calculated position.
      * @param value       True if context must be shown, false if not and undefine
      *                    will invert the current state.
      */
@@ -44,7 +49,8 @@ export default {
       target,
       vertical = 'bottom',
       horizontal = 'left',
-      offset = 10,
+      verticalOffset = 10,
+      horizontalOffset = 0,
       value
     ) {
       if (value === undefined) {
@@ -52,7 +58,13 @@ export default {
       }
 
       if (value) {
-        this.show(target, vertical, horizontal, offset)
+        this.show(
+          target,
+          vertical,
+          horizontal,
+          verticalOffset,
+          horizontalOffset
+        )
       } else {
         this.hide()
       }
@@ -61,12 +73,24 @@ export default {
      * Calculate the position, show the context menu and register a click event on the
      * body to check if the user has clicked outside the context.
      */
-    show(target, vertical, horizontal, offset) {
+    show(target, vertical, horizontal, verticalOffset, horizontalOffset) {
       const isElementOrigin = isDomElement(target)
       const updatePosition = () => {
         const css = isElementOrigin
-          ? this.calculatePositionElement(target, vertical, horizontal, offset)
-          : this.calculatePositionFixed(target, vertical, horizontal, offset)
+          ? this.calculatePositionElement(
+              target,
+              vertical,
+              horizontal,
+              verticalOffset,
+              horizontalOffset
+            )
+          : this.calculatePositionFixed(
+              target,
+              vertical,
+              horizontal,
+              verticalOffset,
+              horizontalOffset
+            )
 
         // Set the calculated positions of the context.
         for (const key in css) {
@@ -132,7 +156,13 @@ export default {
      * figure out the correct position, so in that case we force the element to be
      * visible.
      */
-    calculatePositionElement(target, vertical, horizontal, offset) {
+    calculatePositionElement(
+      target,
+      vertical,
+      horizontal,
+      verticalOffset,
+      horizontalOffset
+    ) {
       const visible =
         window.getComputedStyle(target).getPropertyValue('display') !== 'none'
 
@@ -151,15 +181,29 @@ export default {
       }
 
       // Calculate if top, bottom, left and right positions are possible.
-      const canTop = targetRect.top - contextRect.height - offset > 0
+      const canTop = targetRect.top - contextRect.height - verticalOffset > 0
       const canBottom =
-        window.innerHeight - targetRect.bottom - contextRect.height - offset > 0
-      const canOverTop = targetRect.bottom - contextRect.height - offset > 0
+        window.innerHeight -
+          targetRect.bottom -
+          contextRect.height -
+          verticalOffset >
+        0
+      const canOverTop =
+        targetRect.bottom - contextRect.height - verticalOffset > 0
       const canOverBottom =
-        window.innerHeight - targetRect.bottom - contextRect.height - offset > 0
-      const canRight = targetRect.right - contextRect.width > 0
+        window.innerHeight -
+          targetRect.bottom -
+          contextRect.height -
+          verticalOffset >
+        0
+      const canRight =
+        targetRect.right - contextRect.width - horizontalOffset > 0
       const canLeft =
-        window.innerWidth - targetRect.left - contextRect.width > 0
+        window.innerWidth -
+          targetRect.left -
+          contextRect.width -
+          horizontalOffset >
+        0
 
       // If bottom, top, left or right doesn't fit, but their opposite does we switch to
       // that.
@@ -189,27 +233,29 @@ export default {
 
       // Calculate the correct positions for horizontal and vertical values.
       if (horizontal === 'left') {
-        positions.left = targetRect.left
+        positions.left = targetRect.left + horizontalOffset
       }
 
       if (horizontal === 'right') {
-        positions.right = window.innerWidth - targetRect.right
+        positions.right =
+          window.innerWidth - targetRect.right - horizontalOffset
       }
 
       if (vertical === 'bottom') {
-        positions.top = targetRect.bottom + offset
+        positions.top = targetRect.bottom + verticalOffset
       }
 
       if (vertical === 'top') {
-        positions.bottom = window.innerHeight - targetRect.top + offset
+        positions.bottom = window.innerHeight - targetRect.top + verticalOffset
       }
 
       if (vertical === 'over-bottom') {
-        positions.top = targetRect.top + offset
+        positions.top = targetRect.top + verticalOffset
       }
 
       if (vertical === 'over-top') {
-        positions.bottom = window.innerHeight - targetRect.bottom + offset
+        positions.bottom =
+          window.innerHeight - targetRect.bottom + verticalOffset
       }
 
       return positions

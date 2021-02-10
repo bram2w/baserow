@@ -1,6 +1,6 @@
 <template>
   <div>
-    <header class="layout__col-3-1 header">
+    <header class="layout__col-2-1 header">
       <div v-show="tableLoading" class="header__loading"></div>
       <ul v-if="!tableLoading" class="header__filter">
         <li class="header__filter-item header__filter-item--grids">
@@ -69,7 +69,7 @@
         <li>{{ table.name }}</li>
       </ul>
     </header>
-    <div class="layout__col-3-2 content">
+    <div class="layout__col-2-2 content">
       <component
         :is="getViewComponent(view)"
         v-if="hasSelectedView && !tableLoading"

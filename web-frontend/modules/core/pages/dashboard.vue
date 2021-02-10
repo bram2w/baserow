@@ -1,5 +1,5 @@
 <template>
-  <div class="layout__col-3-scroll">
+  <div class="layout__col-2-scroll">
     <div
       class="alert alert--simple alert--warning alert--has-icon dashboard__alert"
     >

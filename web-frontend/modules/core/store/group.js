@@ -208,6 +208,9 @@ export const getters = {
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
   },
+  getAll(state) {
+    return state.items
+  },
   hasSelected(state) {
     return Object.prototype.hasOwnProperty.call(state.selected, 'id')
   },
