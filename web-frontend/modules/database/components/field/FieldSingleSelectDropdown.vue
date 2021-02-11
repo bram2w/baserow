@@ -4,10 +4,14 @@
     :class="{ 'dropdown--floating': !showInput }"
     @contextmenu.stop
   >
-    <a v-if="showInput" class="dropdown__selected" @click="show()">
+    <a
+      v-if="showInput"
+      class="field-single-select__dropdown-selected dropdown__selected"
+      @click="show()"
+    >
       <div
         v-if="hasValue()"
-        class="field-single-select__dropdown-option field-single-select__dropdown-option--align-32"
+        class="field-single-select__dropdown-option"
         :class="'background-color--' + selectedColor"
       >
         {{ selectedName }}
