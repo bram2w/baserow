@@ -10,6 +10,7 @@
 * Fixed the "Ignored attempt to cancel a touchmove" error.
 * Refactored the has_user everywhere such that the raise_error argument is used when
   possible.
+* Added Baserow Cloudron app.
 * Fixed bug where a single select field without options could not be converted to a
   another field.
 * Fixed bug where the Editable component was not working if a prent a user-select:

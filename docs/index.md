@@ -29,6 +29,8 @@ Need some help with setting things up?
   `docker-compose`.
 * [Install on Ubuntu](./guides/installation/install-on-ubuntu.md): A step by step guide
   on how to install Baserow on an Ubuntu server.
+* [Install on Cloudron](./guides/cloudron.md): Instructions on how to manually install
+  Baserow on Cloudron.
 
 ## Development
 
