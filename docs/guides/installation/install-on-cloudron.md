@@ -1,4 +1,4 @@
-# Cloudron
+# Installation on Cloudron
 
 Cloudron is a complete solution for running apps on your server and keeping them
 up-to-date and secure. If you don't have Cloudron installed on a server you can follow
