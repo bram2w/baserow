@@ -10,6 +10,6 @@ stylelint:
 lint: eslint stylelint
 
 jest:
-	yarn run jest || exit;
+	yarn run jest-all || exit;
 
 test: jest

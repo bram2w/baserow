@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div v-if="type !== '' && url !== ''" class="api-docs__example">
+    <div
+      v-if="type !== '' && url !== ''"
+      class="api-docs__example api-docs__example--with-padding"
+    >
       <a
         class="api-docs__copy"
         @click.prevent=";[copyToClipboard(url), $refs.urlCopied.show()]"
@@ -34,7 +37,10 @@
       <a
         class="api-docs__copy"
         @click.prevent="
-          ;[copyToClipboard(getFormattedRequest()), $refs.requestCopied.show()]
+          ;[
+            copyToClipboard(getFormattedRequest().example),
+            $refs.requestCopied.show(),
+          ]
         "
       >
         Copy
@@ -51,9 +57,29 @@
           <DropdownItem value="python" name="Python (requests)"></DropdownItem>
         </Dropdown>
       </div>
-      <pre
-        class="api-docs__example-content"
-      ><code>{{ formattedRequest }}</code></pre>
+      <div class="api-docs__example-content-container">
+        <div
+          v-if="Object.keys(mapping).length > 0"
+          class="api-docs__example-content-side"
+        >
+          <div
+            v-for="(lineValue, line) in formattedRequest.lines"
+            :key="'response-info-line-' + line"
+            class="api-docs__example-content-line"
+            :style="'top:' + (line - 1) * 21 + 'px;'"
+            :title="lineValue"
+          >
+            {{ lineValue }}
+          </div>
+        </div>
+        <div class="api-docs__example-content-wrapper">
+          <div class="api-docs__example-content">
+            <pre
+              class="api-docs__example-content"
+            ><code>{{ formattedRequest.example }}</code></pre>
+          </div>
+        </div>
+      </div>
     </div>
     <template v-if="response !== false">
       <div class="api-docs__example-title">Response sample</div>
@@ -62,7 +88,7 @@
           class="api-docs__copy"
           @click.prevent="
             ;[
-              copyToClipboard(getFormattedResponse()),
+              copyToClipboard(getFormattedResponse().example),
               $refs.responseCopied.show(),
             ]
           "
@@ -70,9 +96,29 @@
           Copy
           <Copied ref="responseCopied"></Copied>
         </a>
-        <pre
-          class="api-docs__example-content"
-        ><code>{{ formattedResponse }}</code></pre>
+        <div class="api-docs__example-content-container">
+          <div
+            v-if="Object.keys(mapping).length > 0"
+            class="api-docs__example-content-side"
+          >
+            <div
+              v-for="(lineValue, line) in formattedResponse.lines"
+              :key="'response-info-line-' + line"
+              class="api-docs__example-content-line"
+              :style="'top:' + (line - 1) * 21 + 'px;'"
+              :title="lineValue"
+            >
+              {{ lineValue }}
+            </div>
+          </div>
+          <div class="api-docs__example-content-wrapper">
+            <div class="api-docs__example-content">
+              <pre
+                class="api-docs__example-content"
+              ><code>{{ formattedResponse.example }}</code></pre>
+            </div>
+          </div>
+        </div>
       </div>
     </template>
   </div>
@@ -80,6 +126,7 @@
 
 <script>
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
+import { mappingToStringifiedJSONLines } from '@baserow/modules/core/utils/object'
 
 export default {
   name: 'APIDocsExample',
@@ -108,6 +155,11 @@ export default {
       required: false,
       default: false,
     },
+    mapping: {
+      type: Object,
+      required: false,
+      default: () => ({}),
+    },
   },
   computed: {
     formattedResponse() {
@@ -134,30 +186,39 @@ export default {
       return ''
     },
     getCURLRequestExample() {
+      let index = 3
       let example = 'curl \\'
 
       if (this.type !== '') {
+        index++
         example += `\n-X ${this.type} \\`
       }
 
       example += '\n-H "Authorization: Token YOUR_API_KEY" \\'
 
       if (this.request !== false) {
+        index++
         example += '\n-H "Content-Type: application/json" \\'
       }
 
       example += `\n${this.url}`
 
       if (this.request !== false) {
+        index++
         example += ` \\\n--data '${this.format(this.request)}'`
       }
 
-      return example
+      return {
+        example,
+        lines: mappingToStringifiedJSONLines(this.mapping, this.request, index),
+      }
     },
     getHTTPRequestExample() {
+      let index = 2
       let example = ''
 
       if (this.type !== '') {
+        index++
         example += `${this.type.toUpperCase()} `
       }
 
@@ -165,16 +226,22 @@ export default {
       example += '\nAuthorization: Token YOUR_API_KEY'
 
       if (this.request !== false) {
+        index += 2
         example += '\nContent-Type: application/json'
         example += `\n\n${this.format(this.request)}`
       }
 
-      return example
+      return {
+        example,
+        lines: mappingToStringifiedJSONLines(this.mapping, this.request, index),
+      }
     },
     getJavaScriptExample() {
+      let index = 5
       let example = 'axios({'
 
       if (this.type !== '') {
+        index++
         example += `\n  method: "${this.type.toUpperCase()}",`
       }
 
@@ -183,20 +250,26 @@ export default {
       example += '\n    Authorization: "Token YOUR_API_KEY"'
 
       if (this.request !== false) {
+        index++
         example += ',\n    "Content-Type": "application/json"'
       }
 
       example += '\n  }'
 
       if (this.request !== false) {
+        index++
         const data = this.format(this.request).slice(0, -1) + '  }'
         example += `,\n  data: ${data}`
       }
 
       example += '\n})'
-      return example
+      return {
+        example,
+        lines: mappingToStringifiedJSONLines(this.mapping, this.request, index),
+      }
     },
     getPythonExample() {
+      let index = 5
       const type = (this.type || 'get').toLowerCase()
       let example = `requests.${type}(`
       example += `\n    "${this.url}",`
@@ -205,21 +278,29 @@ export default {
       example += `\n        "Authorization": "Token YOUR_API_KEY"`
 
       if (this.request !== false) {
+        index++
         example += `,\n        "Content-Type": "application/json"`
       }
 
       example += '\n    }'
 
       if (this.request !== false) {
+        index++
         const data = this.format(this.request).split('\n').join('\n    ')
         example += `,\n    json=${data}`
       }
 
       example += '\n)'
-      return example
+      return {
+        example,
+        lines: mappingToStringifiedJSONLines(this.mapping, this.request, index),
+      }
     },
     getFormattedResponse() {
-      return this.format(this.response)
+      return {
+        example: this.format(this.response),
+        lines: mappingToStringifiedJSONLines(this.mapping, this.response),
+      }
     },
     copyToClipboard(value) {
       copyToClipboard(value)
