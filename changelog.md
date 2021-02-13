@@ -19,6 +19,7 @@
 * Use UTC time in the date picker.
 * Refactored handler get_* methods so that they never check for permissions.
 * Made it possible to configure SMTP settings via environment variables.
+* Added field name to the public REST API docs.
 
 ## Released (2021-02-04)
 

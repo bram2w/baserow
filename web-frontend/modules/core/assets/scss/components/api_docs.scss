@@ -7,7 +7,7 @@
 
   &::after {
     content: '';
-    width: calc(45% - #{$api-docs-nav-width * 0.45});
+    width: calc(50% - #{$api-docs-nav-width * 0.5});
     background-color: $color-neutral-600;
     z-index: $api-docs-background-z-index;
 
@@ -101,12 +101,12 @@
 }
 
 .api-docs__left {
-  width: 55%;
+  width: 50%;
   padding: 0 34px;
 }
 
 .api-docs__right {
-  width: 45%;
+  width: 50%;
   padding: 0 20px;
 }
 

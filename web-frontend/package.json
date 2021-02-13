@@ -12,7 +12,8 @@
     "demo": "nuxt start --hostname 0.0.0.0 --config-file config/nuxt.config.demo.js",
     "eslint": "eslint --ext .js,.vue .",
     "stylelint": "stylelint **/*.scss --syntax scss",
-    "jest": "jest -i --verbose false test/"
+    "jest": "jest -i --verbose false",
+    "jest-all": "jest -i --verbose false test/"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.0",
