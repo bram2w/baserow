@@ -5,8 +5,11 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD
 from django.shortcuts import reverse
 from django.core.exceptions import ValidationError
 
+from faker import Faker
+
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption, SingleSelectField
+from baserow.contrib.database.fields.field_types import SingleSelectFieldType
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 
@@ -573,3 +576,46 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
         response_json['results'][1][f'field_{link_row_field.id}'][0]['value'] ==
         'Option 1'
     )
+
+
+@pytest.mark.django_db
+def test_single_select_field_type_random_value(data_fixture):
+    """
+    Verify that the random_value function of the single select field type correctly
+    returns one option of a given select_options list. If the select_options list is
+    empty or the passed field type is not of single select field type by any chance
+    it should return None.
+    """
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    table = data_fixture.create_database_table(name='Example', database=database)
+    field_handler = FieldHandler()
+    cache = {}
+    fake = Faker()
+
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name='single_select',
+        name='Single select',
+        select_options=[
+            {'value': 'Option 1', 'color': 'blue'},
+            {'value': 'Option 2', 'color': 'red'}
+        ],
+    )
+
+    select_options = field.select_options.all()
+    random_choice = SingleSelectFieldType().random_value(field, fake, cache)
+    assert random_choice in select_options
+    random_choice = SingleSelectFieldType().random_value(field, fake, cache)
+    assert random_choice in select_options
+
+    email_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name='email',
+        name='E-Mail',
+    )
+    random_choice_2 = SingleSelectFieldType().random_value(email_field, fake, cache)
+    assert random_choice_2 is None
