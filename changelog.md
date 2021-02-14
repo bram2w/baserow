@@ -20,6 +20,7 @@
 * Refactored handler get_* methods so that they never check for permissions.
 * Made it possible to configure SMTP settings via environment variables.
 * Added field name to the public REST API docs.
+* Made the public REST API docs compatible with smaller screens.
 
 ## Released (2021-02-04)
 

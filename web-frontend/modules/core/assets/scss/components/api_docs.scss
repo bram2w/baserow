@@ -12,6 +12,10 @@
     z-index: $api-docs-background-z-index;
 
     @include absolute(0, 0, 0, auto);
+
+    @media screen and (max-width: $api-docs-breakpoint) {
+      display: none;
+    }
   }
 }
 
@@ -98,16 +102,30 @@
 .api-docs__item {
   display: flex;
   margin: 40px 0;
+
+  @media screen and (max-width: $api-docs-breakpoint) {
+    display: block;
+  }
 }
 
 .api-docs__left {
   width: 50%;
   padding: 0 34px;
+
+  @media screen and (max-width: $api-docs-breakpoint) {
+    width: 100%;
+  }
 }
 
 .api-docs__right {
   width: 50%;
   padding: 0 20px;
+
+  @media screen and (max-width: $api-docs-breakpoint) {
+    width: 100%;
+    padding: 0 34px;
+    margin: 20px 0;
+  }
 }
 
 .api-docs__content {
