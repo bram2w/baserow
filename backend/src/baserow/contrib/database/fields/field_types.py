@@ -868,3 +868,23 @@ class SingleSelectFieldType(FieldType):
             for index, option in enumerate(options)
         ])
         return order
+
+    def random_value(self, instance, fake, cache):
+        """
+        Selects a random choice out of the possible options.
+        """
+
+        cache_entry_name = f'field_{instance.id}_options'
+
+        if cache_entry_name not in cache:
+            cache[cache_entry_name] = instance.select_options.all()
+
+        select_options = cache[cache_entry_name]
+
+        # if the select_options are empty return None
+        if not select_options:
+            return None
+
+        random_choice = randint(0, len(select_options) - 1)
+
+        return select_options[random_choice]
