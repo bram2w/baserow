@@ -1,3 +1,4 @@
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import GroupService from '@baserow/modules/core/services/group'
 import {
   setGroupCookie,
@@ -184,7 +185,7 @@ export const actions = {
   selectById({ dispatch, getters }, id) {
     const group = getters.get(id)
     if (group === undefined) {
-      throw new Error(`Group with id ${id} is not found.`)
+      throw new StoreItemLookupError(`Group with id ${id} is not found.`)
     }
     return dispatch('select', group)
   },
