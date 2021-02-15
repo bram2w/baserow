@@ -1,5 +1,6 @@
 import _ from 'lodash'
 
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import { uuid } from '@baserow/modules/core/utils/string'
 import ViewService from '@baserow/modules/database/services/view'
 import FilterService from '@baserow/modules/database/services/filter'
@@ -321,7 +322,7 @@ export const actions = {
   selectById({ dispatch, getters }, id) {
     const view = getters.get(id)
     if (view === undefined) {
-      return new Error(`View with id ${id} is not found.`)
+      throw new StoreItemLookupError(`View with id ${id} is not found.`)
     }
     return dispatch('select', view)
   },

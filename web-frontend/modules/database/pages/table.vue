@@ -89,6 +89,7 @@
 <script>
 import { mapState } from 'vuex'
 
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
@@ -143,7 +144,7 @@ export default {
       data.table = table
     } catch (e) {
       // In case of a network error we want to fail hard.
-      if (e.response === undefined) {
+      if (e.response === undefined && !(e instanceof StoreItemLookupError)) {
         throw e
       }
 
@@ -176,7 +177,7 @@ export default {
         await type.fetch({ store }, view)
       } catch (e) {
         // In case of a network error we want to fail hard.
-        if (e.response === undefined) {
+        if (e.response === undefined && !(e instanceof StoreItemLookupError)) {
           throw e
         }
 

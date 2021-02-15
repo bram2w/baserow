@@ -1,3 +1,4 @@
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import ApplicationService from '@baserow/modules/core/services/application'
 import { clone } from '@baserow/modules/core/utils/object'
 
@@ -124,7 +125,9 @@ export const actions = {
     }
 
     if (!this.$registry.exists('application', type)) {
-      throw new Error(`An application type with type "${type}" doesn't exist.`)
+      throw new StoreItemLookupError(
+        `An application type with type "${type}" doesn't exist.`
+      )
     }
 
     const postData = clone(values)
@@ -204,7 +207,7 @@ export const actions = {
   selectById({ dispatch, getters }, id) {
     const application = getters.get(id)
     if (application === undefined) {
-      throw new Error(`Application with id ${id} is not found.`)
+      throw new StoreItemLookupError(`Application with id ${id} is not found.`)
     }
     return dispatch('select', application)
   },
