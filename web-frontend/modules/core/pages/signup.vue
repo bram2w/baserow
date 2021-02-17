@@ -1,122 +1,144 @@
 <template>
   <div>
     <h1 class="box__title">Sign up</h1>
-    <div
-      v-if="invitation !== null"
-      class="alert alert--simple alert-primary alert--has-icon"
-    >
-      <div class="alert__icon">
-        <i class="fas fa-exclamation"></i>
+    <template v-if="!settings.allow_new_signups">
+      <div class="alert alert--simple alert--error alert--has-icon">
+        <div class="alert__icon">
+          <i class="fas fa-exclamation"></i>
+        </div>
+        <div class="alert__title">Sign up is disabled</div>
+        <p class="alert__content">
+          It's not possible to create an account because it has been disabled.
+        </p>
       </div>
-      <div class="alert__title">Invitation</div>
-      <p class="alert__content">
-        <strong>{{ invitation.invited_by }}</strong> has invited you to join
-        <strong>{{ invitation.group }}</strong
-        >.
-      </p>
-    </div>
-    <Error :error="error"></Error>
-    <form @submit.prevent="register">
-      <div class="control">
-        <label class="control__label">E-mail address</label>
-        <div class="control__elements">
-          <input
-            v-if="invitation !== null"
-            ref="email"
-            type="email"
-            class="input input--large"
-            disabled
-            :value="account.email"
-          />
-          <input
-            v-else
-            ref="email"
-            v-model="account.email"
-            :class="{ 'input--error': $v.account.email.$error }"
-            type="text"
-            class="input input--large"
-            @blur="$v.account.email.$touch()"
-          />
-          <div v-if="$v.account.email.$error" class="error">
-            Please enter a valid e-mail address.
+      <nuxt-link
+        :to="{ name: 'login' }"
+        class="button button--large button--primary"
+      >
+        <i class="fas fa-arrow-left"></i>
+        Back to login
+      </nuxt-link>
+    </template>
+    <template v-else>
+      <div
+        v-if="invitation !== null"
+        class="alert alert--simple alert--primary alert--has-icon"
+      >
+        <div class="alert__icon">
+          <i class="fas fa-exclamation"></i>
+        </div>
+        <div class="alert__title">Invitation</div>
+        <p class="alert__content">
+          <strong>{{ invitation.invited_by }}</strong> has invited you to join
+          <strong>{{ invitation.group }}</strong
+          >.
+        </p>
+      </div>
+      <Error :error="error"></Error>
+      <form @submit.prevent="register">
+        <div class="control">
+          <label class="control__label">E-mail address</label>
+          <div class="control__elements">
+            <input
+              v-if="invitation !== null"
+              ref="email"
+              type="email"
+              class="input input--large"
+              disabled
+              :value="account.email"
+            />
+            <input
+              v-else
+              ref="email"
+              v-model="account.email"
+              :class="{ 'input--error': $v.account.email.$error }"
+              type="text"
+              class="input input--large"
+              @blur="$v.account.email.$touch()"
+            />
+            <div v-if="$v.account.email.$error" class="error">
+              Please enter a valid e-mail address.
+            </div>
           </div>
         </div>
-      </div>
-      <div class="control">
-        <label class="control__label">Your name</label>
-        <div class="control__elements">
-          <input
-            v-model="account.name"
-            :class="{ 'input--error': $v.account.name.$error }"
-            type="text"
-            class="input input--large"
-            @blur="$v.account.name.$touch()"
-          />
-          <div v-if="$v.account.name.$error" class="error">
-            A minimum of two characters is required here.
+        <div class="control">
+          <label class="control__label">Your name</label>
+          <div class="control__elements">
+            <input
+              v-model="account.name"
+              :class="{ 'input--error': $v.account.name.$error }"
+              type="text"
+              class="input input--large"
+              @blur="$v.account.name.$touch()"
+            />
+            <div v-if="$v.account.name.$error" class="error">
+              A minimum of two characters is required here.
+            </div>
           </div>
         </div>
-      </div>
-      <div class="control">
-        <label class="control__label">Password</label>
-        <div class="control__elements">
-          <input
-            v-model="account.password"
-            :class="{ 'input--error': $v.account.password.$error }"
-            type="password"
-            class="input input--large"
-            @blur="$v.account.password.$touch()"
-          />
-          <div
-            v-if="$v.account.password.$error && !$v.account.password.required"
-            class="error"
+        <div class="control">
+          <label class="control__label">Password</label>
+          <div class="control__elements">
+            <input
+              v-model="account.password"
+              :class="{ 'input--error': $v.account.password.$error }"
+              type="password"
+              class="input input--large"
+              @blur="$v.account.password.$touch()"
+            />
+            <div
+              v-if="$v.account.password.$error && !$v.account.password.required"
+              class="error"
+            >
+              A password is required.
+            </div>
+            <div
+              v-if="
+                $v.account.password.$error && !$v.account.password.maxLength
+              "
+              class="error"
+            >
+              A maximum of
+              {{ $v.account.password.$params.maxLength.max }} characters is
+              allowed here.
+            </div>
+          </div>
+        </div>
+        <div class="control">
+          <label class="control__label">Repeat password</label>
+          <div class="control__elements">
+            <input
+              v-model="account.passwordConfirm"
+              :class="{ 'input--error': $v.account.passwordConfirm.$error }"
+              type="password"
+              class="input input--large"
+              @blur="$v.account.passwordConfirm.$touch()"
+            />
+            <div v-if="$v.account.passwordConfirm.$error" class="error">
+              This field must match your password field.
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <ul class="action__links">
+            <li>
+              <nuxt-link :to="{ name: 'login' }">
+                <i class="fas fa-arrow-left"></i>
+                Back
+              </nuxt-link>
+            </li>
+          </ul>
+          <button
+            :class="{ 'button--loading': loading }"
+            class="button button--large"
+            :disabled="loading"
           >
-            A password is required.
-          </div>
-          <div
-            v-if="$v.account.password.$error && !$v.account.password.maxLength"
-            class="error"
-          >
-            A maximum of
-            {{ $v.account.password.$params.maxLength.max }} characters is
-            allowed here.
-          </div>
+            Sign up
+            <i class="fas fa-user-plus"></i>
+          </button>
         </div>
-      </div>
-      <div class="control">
-        <label class="control__label">Repeat password</label>
-        <div class="control__elements">
-          <input
-            v-model="account.passwordConfirm"
-            :class="{ 'input--error': $v.account.passwordConfirm.$error }"
-            type="password"
-            class="input input--large"
-            @blur="$v.account.passwordConfirm.$touch()"
-          />
-          <div v-if="$v.account.passwordConfirm.$error" class="error">
-            This field must match your password field.
-          </div>
-        </div>
-      </div>
-      <div class="actions">
-        <ul class="action__links">
-          <li>
-            <nuxt-link :to="{ name: 'login' }">
-              <i class="fas fa-arrow-left"></i>
-              Back
-            </nuxt-link>
-          </li>
-        </ul>
-        <button
-          :class="{ 'button--loading': loading }"
-          class="button button--large"
-          :disabled="loading"
-        >
-          Sign up
-          <i class="fas fa-user-plus"></i>
-        </button>
-      </div>
-    </form>
+      </form>
+    </template>
   </div>
 </template>
 
@@ -132,6 +154,7 @@ import {
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
 import error from '@baserow/modules/core/mixins/error'
+import { mapGetters } from 'vuex'
 
 export default {
   mixins: [error, groupInvitationToken],
@@ -151,6 +174,11 @@ export default {
     return {
       title: 'Create new account',
     }
+  },
+  computed: {
+    ...mapGetters({
+      settings: 'settings/get',
+    }),
   },
   beforeMount() {
     if (this.invitation !== null) {

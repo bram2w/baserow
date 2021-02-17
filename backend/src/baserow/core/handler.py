@@ -6,13 +6,13 @@ from django.conf import settings
 from baserow.core.user.utils import normalize_email_address
 
 from .models import (
-    Group, GroupUser, GroupInvitation, Application, GROUP_USER_PERMISSION_CHOICES,
-    GROUP_USER_PERMISSION_ADMIN
+    Settings, Group, GroupUser, GroupInvitation, Application,
+    GROUP_USER_PERMISSION_CHOICES, GROUP_USER_PERMISSION_ADMIN
 )
 from .exceptions import (
     GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch, GroupInvitationDoesNotExist, GroupUserDoesNotExist,
-    GroupUserAlreadyExists
+    GroupUserAlreadyExists, IsNotAdminError
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
@@ -24,6 +24,46 @@ from .emails import GroupInvitationEmail
 
 
 class CoreHandler:
+    def get_settings(self):
+        """
+        Returns a settings model instance containing all the admin configured settings.
+
+        :return: The settings instance.
+        :rtype: Settings
+        """
+
+        try:
+            return Settings.objects.all()[:1].get()
+        except Settings.DoesNotExist:
+            return Settings.objects.create()
+
+    def update_settings(self, user, settings_instance=None, **kwargs):
+        """
+        Updates one or more setting values if the user has staff permissions.
+
+        :param user: The user on whose behalf the settings are updated.
+        :type user: User
+        :param settings_instance: If already fetched, the settings instance can be
+            provided to avoid fetching the values for a second time.
+        :type settings_instance: Settings
+        :param kwargs: An dict containing the settings that need to be updated.
+        :type kwargs: dict
+        :return: The update settings instance.
+        :rtype: Settings
+        """
+
+        if not user.is_staff:
+            raise IsNotAdminError(user)
+
+        if not settings_instance:
+            settings_instance = self.get_settings()
+
+        for name, value in kwargs.items():
+            setattr(settings_instance, name, value)
+
+        settings_instance.save()
+        return settings_instance
+
     def get_group(self, group_id, base_queryset=None):
         """
         Selects a group with a given id from the database.

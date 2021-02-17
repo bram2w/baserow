@@ -64,7 +64,7 @@
       </div>
       <div class="actions">
         <ul class="action__links">
-          <li>
+          <li v-if="settings.allow_new_signups">
             <nuxt-link :to="{ name: 'signup' }"> Sign up </nuxt-link>
           </li>
           <li>
@@ -87,6 +87,8 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 import { required, email } from 'vuelidate/lib/validators'
 import error from '@baserow/modules/core/mixins/error'
 import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
@@ -114,6 +116,11 @@ export default {
         },
       ],
     }
+  },
+  computed: {
+    ...mapGetters({
+      settings: 'settings/get',
+    }),
   },
   beforeMount() {
     if (this.invitation !== null) {

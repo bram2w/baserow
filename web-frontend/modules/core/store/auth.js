@@ -145,6 +145,9 @@ export const getters = {
   getUsername(state) {
     return state.user ? state.user.username : ''
   },
+  isStaff(state) {
+    return state.user ? state.user.is_staff : false
+  },
   /**
    * Returns the amount of seconds it will take before the tokes expires.
    * @TODO figure out what happens if the browser and server time are not in

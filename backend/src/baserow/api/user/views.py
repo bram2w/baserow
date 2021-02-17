@@ -30,7 +30,7 @@ from baserow.core.exceptions import (
 from baserow.core.models import GroupInvitation
 from baserow.core.user.handler import UserHandler
 from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword
+    UserAlreadyExist, UserNotFound, InvalidPassword, DisabledSignupError
 )
 
 from .serializers import (
@@ -39,7 +39,8 @@ from .serializers import (
     NormalizedEmailWebTokenSerializer, DashboardSerializer
 )
 from .errors import (
-    ERROR_ALREADY_EXISTS, ERROR_USER_NOT_FOUND, ERROR_INVALID_OLD_PASSWORD
+    ERROR_ALREADY_EXISTS, ERROR_USER_NOT_FOUND, ERROR_INVALID_OLD_PASSWORD,
+    ERROR_DISABLED_SIGNUP
 )
 from .schemas import create_user_response_schema, authenticate_user_schema
 
@@ -146,7 +147,8 @@ class UserView(APIView):
         UserAlreadyExist: ERROR_ALREADY_EXISTS,
         BadSignature: BAD_TOKEN_SIGNATURE,
         GroupInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
-        GroupInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH
+        GroupInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
+        DisabledSignupError: ERROR_DISABLED_SIGNUP
     })
     @validate_body(RegisterSerializer)
     def post(self, request, data):

@@ -1,3 +1,10 @@
+class IsNotAdminError(Exception):
+    """
+    Raised when the user tries to perform an action that is not allowed because he
+    does not have admin permissions.
+    """
+
+
 class UserNotInGroupError(Exception):
     """Raised when the user doesn't have access to the related group."""
 

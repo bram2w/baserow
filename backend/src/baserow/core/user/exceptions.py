@@ -8,3 +8,9 @@ class UserAlreadyExist(Exception):
 
 class InvalidPassword(Exception):
     """Raised when the provided password is incorrect."""
+
+
+class DisabledSignupError(Exception):
+    """
+    Raised when a user account is created when the new signup setting is disabled.
+    """

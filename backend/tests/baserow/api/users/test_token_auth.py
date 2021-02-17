@@ -53,6 +53,7 @@ def test_token_auth(api_client, data_fixture):
         assert 'user' in json
         assert json['user']['username'] == 'test@test.nl'
         assert json['user']['first_name'] == 'Test1'
+        assert json['user']['is_staff'] is False
 
     user.refresh_from_db()
     assert user.last_login == datetime(2020, 1, 1, 12, 00, tzinfo=timezone('UTC'))
@@ -68,6 +69,7 @@ def test_token_auth(api_client, data_fixture):
         assert 'user' in json
         assert json['user']['username'] == 'test@test.nl'
         assert json['user']['first_name'] == 'Test1'
+        assert json['user']['is_staff'] is False
 
     user.refresh_from_db()
     assert user.last_login == datetime(2020, 1, 2, 12, 00, tzinfo=timezone('UTC'))
@@ -85,7 +87,12 @@ def test_token_refresh(api_client, data_fixture):
     response = api_client.post(reverse('api:user:token_refresh'),
                                {'token': token}, format='json')
     assert response.status_code == HTTP_200_OK
-    assert 'token' in response.json()
+    json = response.json()
+    assert 'token' in json
+    assert 'user' in json
+    assert json['user']['username'] == 'test@test.nl'
+    assert json['user']['first_name'] == 'Test1'
+    assert json['user']['is_staff'] is False
 
     with patch('rest_framework_jwt.utils.datetime') as mock_datetime:
         mock_datetime.utcnow.return_value = datetime(2019, 1, 1, 1, 1, 1, 0)

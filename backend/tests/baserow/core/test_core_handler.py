@@ -7,15 +7,38 @@ from django.db import connection
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
-    Group, GroupUser, GroupInvitation, Application, GROUP_USER_PERMISSION_ADMIN
+    Settings, Group, GroupUser, GroupInvitation, Application,
+    GROUP_USER_PERMISSION_ADMIN
 )
 from baserow.core.exceptions import (
     UserNotInGroupError, ApplicationTypeDoesNotExist, GroupDoesNotExist,
     GroupUserDoesNotExist, ApplicationDoesNotExist, UserInvalidGroupPermissionsError,
     BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
-    GroupInvitationDoesNotExist, GroupUserAlreadyExists
+    GroupInvitationDoesNotExist, GroupUserAlreadyExists, IsNotAdminError
 )
 from baserow.contrib.database.models import Database, Table
+
+
+@pytest.mark.django_db
+def test_get_settings():
+    settings = CoreHandler().get_settings()
+    assert isinstance(settings, Settings)
+    assert settings.allow_new_signups is True
+
+
+@pytest.mark.django_db
+def test_update_settings(data_fixture):
+    user_1 = data_fixture.create_user(is_staff=True)
+    user_2 = data_fixture.create_user()
+
+    with pytest.raises(IsNotAdminError):
+        CoreHandler().update_settings(user_2, allow_new_signups=False)
+
+    settings = CoreHandler().update_settings(user_1, allow_new_signups=False)
+    assert settings.allow_new_signups is False
+
+    settings = Settings.objects.all().first()
+    assert settings.allow_new_signups is False
 
 
 @pytest.mark.django_db

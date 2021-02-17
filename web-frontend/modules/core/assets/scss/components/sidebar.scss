@@ -147,6 +147,10 @@
 
 .layout--collapsed {
   // Some minor changes regarding the tree items within the collapsed sidebar.
+  .tree .sidebar__tree {
+    padding-left: 0;
+  }
+
   .sidebar__action {
     .tree__link {
       text-align: center;
@@ -157,7 +161,6 @@
     }
 
     .sidebar__item-name {
-      margin-top: -10.5px;
       background-color: $color-neutral-900;
       color: $white;
       border-radius: 3px;
@@ -166,7 +169,7 @@
       font-weight: 400;
       display: none;
 
-      @include absolute(50%, auto, auto, 36px);
+      @include absolute(6px, auto, auto, 36px);
       @include center-text(auto, 11px, 21px);
     }
 

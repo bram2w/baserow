@@ -67,6 +67,42 @@
               </nuxt-link>
             </div>
           </li>
+          <li v-if="isStaff" class="tree__item">
+            <div
+              class="tree__action sidebar__action"
+              :class="{ 'tree__action--disabled': isAdminPage }"
+            >
+              <a class="tree__link" @click.prevent="admin()">
+                <i class="tree__icon fas fa-users-cog"></i>
+                <span class="sidebar__item-name">Admin</span>
+              </a>
+            </div>
+            <ul v-show="isAdminPage" class="tree sidebar__tree">
+              <li
+                v-for="adminType in adminTypes"
+                :key="adminType.type"
+                class="tree__item"
+                :class="{
+                  active: $route.matched.some(
+                    ({ name }) => name === adminType.routeName
+                  ),
+                }"
+              >
+                <div class="tree__action sidebar__action">
+                  <nuxt-link
+                    :to="{ name: adminType.routeName }"
+                    class="tree__link"
+                  >
+                    <i
+                      class="tree__icon fas"
+                      :class="'fa-' + adminType.iconClass"
+                    ></i>
+                    <span class="sidebar__item-name">{{ adminType.name }}</span>
+                  </nuxt-link>
+                </div>
+              </li>
+            </ul>
+          </li>
           <template v-if="hasSelectedGroup && !isCollapsed">
             <li class="tree__item margin-top-2">
               <div class="tree__action">
@@ -208,12 +244,26 @@ export default {
         this.selectedGroup
       )
     },
+    adminTypes() {
+      return this.$registry.getAll('admin')
+    },
+    /**
+     * Indicates whether the current user is visiting an admin page.
+     */
+    isAdminPage() {
+      return Object.values(this.adminTypes).some((adminType) => {
+        return this.$route.matched.some(
+          ({ name }) => name === adminType.routeName
+        )
+      })
+    },
     ...mapState({
       allApplications: (state) => state.application.items,
       groups: (state) => state.group.items,
       selectedGroup: (state) => state.group.selected,
     }),
     ...mapGetters({
+      isStaff: 'auth/isStaff',
       name: 'auth/getName',
       email: 'auth/getUsername',
       hasSelectedGroup: 'group/hasSelected',
@@ -224,6 +274,24 @@ export default {
     logoff() {
       this.$store.dispatch('auth/logoff')
       this.$nuxt.$router.push({ name: 'login' })
+    },
+    /**
+     * Called when the user clicks on the admin menu. Because there isn't an
+     * admin page it will navigate to the route of the first registered admin
+     * type.
+     */
+    admin() {
+      // If the user is already on an admin page we don't have to do anything because
+      // the link is disabled.
+      if (this.isAdminPage) {
+        return
+      }
+
+      const types = Object.values(this.adminTypes)
+
+      if (types.length > 0) {
+        this.$nuxt.$router.push({ name: types[0].routeName })
+      }
     },
   },
 }
