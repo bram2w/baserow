@@ -32,7 +32,7 @@ export default {
         .toHumanReadableString(primary, row[`field_${primary.id}`])
       newValue.push({
         id: row.id,
-        value: rowValue.toString(),
+        value: rowValue,
       })
       this.$emit('update', newValue, value)
     },
