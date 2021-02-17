@@ -5,6 +5,8 @@ from freezegun import freeze_time
 
 from itsdangerous.exc import SignatureExpired, BadSignature
 
+from django.contrib.auth import get_user_model
+
 from baserow.core.models import Group, GroupUser
 from baserow.core.registries import plugin_registry
 from baserow.contrib.database.models import (
@@ -17,9 +19,12 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword
+    UserAlreadyExist, UserNotFound, InvalidPassword, DisabledSignupError
 )
 from baserow.core.user.handler import UserHandler
+
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -42,11 +47,17 @@ def test_get_user(data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_user():
+def test_create_user(data_fixture):
     plugin_mock = MagicMock()
     plugin_registry.registry['mock'] = plugin_mock
 
     user_handler = UserHandler()
+
+    data_fixture.update_settings(allow_new_signups=False)
+    with pytest.raises(DisabledSignupError):
+        user_handler.create_user('Test1', 'test@test.nl', 'password')
+    assert User.objects.all().count() == 0
+    data_fixture.update_settings(allow_new_signups=True)
 
     user = user_handler.create_user('Test1', 'test@test.nl', 'password')
     assert user.pk

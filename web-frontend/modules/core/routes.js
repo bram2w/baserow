@@ -37,6 +37,11 @@ export const routes = [
     component: path.resolve(__dirname, 'pages/groupInvitation.vue'),
   },
   {
+    name: 'admin-settings',
+    path: '/admin/settings',
+    component: path.resolve(__dirname, 'pages/admin/settings.vue'),
+  },
+  {
     name: 'style-guide',
     path: '/style-guide',
     component: path.resolve(__dirname, 'pages/styleGuide.vue'),

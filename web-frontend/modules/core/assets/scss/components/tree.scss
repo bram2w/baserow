@@ -5,6 +5,7 @@
 
   .tree__item & {
     padding-left: 8px;
+    margin-top: 6px;
   }
 }
 
@@ -38,7 +39,7 @@
   padding: 0 6px;
   border-radius: 3px;
 
-  &:hover {
+  &:not(.tree__action--disabled):hover {
     background-color: $color-neutral-100;
   }
 
@@ -66,6 +67,10 @@
 
   &.tree__link--group {
     font-weight: 600;
+  }
+
+  .tree__action--disabled &:hover {
+    cursor: inherit;
   }
 }
 

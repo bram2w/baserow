@@ -185,6 +185,7 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '0.8.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'TAGS': [
+        {'name': 'Settings'},
         {'name': 'User'},
         {'name': 'User files'},
         {'name': 'Groups'},

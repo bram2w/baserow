@@ -12,7 +12,9 @@ from baserow.core.exceptions import (
 )
 from baserow.core.exceptions import GroupInvitationEmailMismatch
 
-from .exceptions import UserAlreadyExist, UserNotFound, InvalidPassword
+from .exceptions import (
+    UserAlreadyExist, UserNotFound, InvalidPassword, DisabledSignupError
+)
 from .emails import ResetPasswordEmail
 from .utils import normalize_email_address
 
@@ -72,9 +74,13 @@ class UserHandler:
             already exists.
         :raises GroupInvitationEmailMismatch: If the group invitation email does not
             match the one of the user.
+        :raises SignupDisabledError: If signing up is disabled.
         :return: The user object.
         :rtype: User
         """
+
+        if not CoreHandler().get_settings().allow_new_signups:
+            raise DisabledSignupError('Sign up is disabled.')
 
         email = normalize_email_address(email)
 

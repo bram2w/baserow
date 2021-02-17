@@ -1,0 +1,48 @@
+.admin-settings {
+  padding: 30px;
+}
+
+.admin-settings__group {
+  &:not(:last-child) {
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+    border-bottom: solid 1px $color-neutral-200;
+  }
+}
+
+.admin-settings__group-title {
+  font-size: 20px;
+  margin-bottom: 30px;
+}
+
+.admin-settings__item {
+  display: flex;
+
+  &:not(:last-child) {
+    margin-bottom: 30px;
+  }
+}
+
+.admin-settings__label {
+  flex: 0 0 25%;
+  max-width: 340px;
+  min-width: 200px;
+  margin-right: 40px;
+}
+
+.admin-settings__name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.admin-settings__description {
+  font-size: 13px;
+  color: $color-neutral-600;
+  line-height: 160%;
+}
+
+.admin-settings__control {
+  min-width: 0;
+  width: 100%;
+}

@@ -7,7 +7,9 @@ import {
   UploadFileUserFileUploadType,
   UploadViaURLUserFileUploadType,
 } from '@baserow/modules/core/userFileUploadTypes'
+import { SettingsAdminType } from '@baserow/modules/core/adminTypes'
 
+import settingsStore from '@baserow/modules/core/store/settings'
 import applicationStore from '@baserow/modules/core/store/application'
 import authStore from '@baserow/modules/core/store/auth'
 import groupStore from '@baserow/modules/core/store/group'
@@ -27,8 +29,10 @@ export default ({ store, app }, inject) => {
   registry.register('settings', new PasswordSettingsType())
   registry.register('userFileUpload', new UploadFileUserFileUploadType())
   registry.register('userFileUpload', new UploadViaURLUserFileUploadType())
+  registry.register('admin', new SettingsAdminType())
   inject('registry', registry)
 
+  store.registerModule('settings', settingsStore)
   store.registerModule('application', applicationStore)
   store.registerModule('auth', authStore)
   store.registerModule('group', groupStore)
