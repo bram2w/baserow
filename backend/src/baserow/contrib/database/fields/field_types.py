@@ -17,8 +17,8 @@ from rest_framework import serializers
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.contrib.database.api.fields.serializers import (
-    LinkRowListSerializer, LinkRowValueSerializer, FileFieldRequestSerializer,
-    FileFieldResponseSerializer, SelectOptionSerializer
+    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
+    SelectOptionSerializer
 )
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
@@ -314,10 +314,35 @@ class LinkRowFieldType(FieldType):
 
     def enhance_queryset(self, queryset, field, name):
         """
-        Makes sure that the related rows are prefetched by Django.
+        Makes sure that the related rows are prefetched by Django. We also want to
+        enhance the primary field of the related queryset. If for example the primary
+        field is a single select field then the dropdown options need to be
+        prefetched in order to prevent many queries.
         """
 
-        return queryset.prefetch_related(name)
+        remote_model = queryset.model._meta.get_field(name).remote_field.model
+        related_queryset = remote_model.objects.all()
+
+        try:
+            primary_field_object = next(
+                object
+                for object in remote_model._field_objects.values()
+                if object['field'].primary
+            )
+            related_queryset = primary_field_object['type'].enhance_queryset(
+                related_queryset,
+                primary_field_object['field'],
+                primary_field_object['name']
+            )
+        except StopIteration:
+            # If the related model does not have a primary field then we also don't
+            # need to enhance the queryset.
+            pass
+
+        return queryset.prefetch_related(models.Prefetch(
+            name,
+            queryset=related_queryset
+        ))
 
     def get_serializer_field(self, instance, **kwargs):
         """
@@ -331,9 +356,9 @@ class LinkRowFieldType(FieldType):
     def get_response_serializer_field(self, instance, **kwargs):
         """
         If a model has already been generated it will be added as a property to the
-        instance. If that case then we can extract the primary field from the model and
-        we can pass the name along to the LinkRowValueSerializer. It will be used to
-        include the primary field's value in the response as a string.
+        instance. If that is the case then we can extract the primary field from the
+        model and we can pass the name along to the LinkRowValueSerializer. It will
+        be used to include the primary field's value in the response as a string.
         """
 
         primary_field_name = None
@@ -348,7 +373,7 @@ class LinkRowFieldType(FieldType):
             if primary_field:
                 primary_field_name = primary_field['name']
 
-        return LinkRowListSerializer(child=LinkRowValueSerializer(
+        return serializers.ListSerializer(child=LinkRowValueSerializer(
             value_field_name=primary_field_name, required=False, **kwargs
         ))
 

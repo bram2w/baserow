@@ -12,6 +12,9 @@ from baserow.contrib.database.fields.models import SelectOption, SingleSelectFie
 from baserow.contrib.database.fields.field_types import SingleSelectFieldType
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.api.rows.serializers import (
+    get_row_serializer_class, RowSerializer
+)
 
 
 @pytest.mark.django_db
@@ -502,7 +505,11 @@ def test_single_select_field_type_get_order(data_fixture):
 
 
 @pytest.mark.django_db
-def test_primary_single_select_field_with_link_row_field(api_client, data_fixture):
+def test_primary_single_select_field_with_link_row_field(
+    api_client,
+    data_fixture,
+    django_assert_num_queries
+):
     """
     We expect the relation to a table that has a single select field to work.
     """
@@ -528,7 +535,8 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
         type_name='single_select',
         select_options=[
             {'value': 'Option 1', 'color': 'red'},
-            {'value': 'Option 2', 'color': 'blue'}
+            {'value': 'Option 2', 'color': 'blue'},
+            {'value': 'Option 3', 'color': 'orange'}
         ],
         primary=True
     )
@@ -548,6 +556,10 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
         user=user, table=customers_table,
         values={f'field_{customers_primary.id}': select_options[1].id}
     )
+    customers_row_3 = row_handler.create_row(
+        user=user, table=customers_table,
+        values={f'field_{customers_primary.id}': select_options[2].id}
+    )
     row_handler.create_row(
         user, table=example_table,
         values={f'field_{link_row_field.id}': [customers_row_1.id, customers_row_2.id]}
@@ -556,6 +568,18 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
         user, table=example_table,
         values={f'field_{link_row_field.id}': [customers_row_1.id]}
     )
+    row_handler.create_row(
+        user, table=example_table,
+        values={f'field_{link_row_field.id}': [customers_row_3.id]}
+    )
+
+    model = example_table.get_model()
+    queryset = model.objects.all().enhance_by_fields()
+    serializer_class = get_row_serializer_class(model, RowSerializer, is_response=True)
+
+    with django_assert_num_queries(3):
+        serializer = serializer_class(queryset, many=True)
+        serializer.data
 
     response = api_client.get(
         reverse('api:database:rows:list', kwargs={'table_id': example_table.id}),
@@ -575,6 +599,10 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
     assert (
         response_json['results'][1][f'field_{link_row_field.id}'][0]['value'] ==
         'Option 1'
+    )
+    assert (
+        response_json['results'][2][f'field_{link_row_field.id}'][0]['value'] ==
+        'Option 3'
     )
 
 

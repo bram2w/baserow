@@ -162,7 +162,7 @@ export class FieldType extends Registerable {
    * converted to string.
    */
   toHumanReadableString(field, value) {
-    return value
+    return value || ''
   }
 
   /**
