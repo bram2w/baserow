@@ -40,6 +40,7 @@ USER root
 RUN chown -R cloudron:cloudron /app/code
 
 RUN sed -i 's/daemonize no/daemonize yes\nbind 127.0.0.1/g' /etc/redis/redis.conf
+RUN sed -i 's/dir \/var\/lib\/redis/dir \/app\/data\/redis/g' /etc/redis/redis.conf
 RUN ln -sf /dev/stdout /var/log/redis/redis-server.log
 
 ADD supervisor.conf /etc/supervisor/conf.d/supervisor.conf

@@ -7,6 +7,8 @@ if [[ ! -f /app/data/.secret ]]; then
 fi
 source /app/data/.secret
 
+mkdir -p /app/data/redis
+
 echo "==> Executing database migrations"
 /app/code/env/bin/python /app/code/baserow/backend/src/baserow/manage.py migrate --settings=cloudron.settings
 
