@@ -248,7 +248,7 @@ def test_update_field_failing(data_fixture):
     # This failing field type triggers the CannotChangeFieldType error if a field is
     # changed into this type.
     class FailingFieldType(TextFieldType):
-        def get_alter_column_type_function(self, connection, from_field, to_field):
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
             return 'p_in::NOT_VALID_SQL_SO_IT_WILL_FAIL('
 
     user = data_fixture.create_user()

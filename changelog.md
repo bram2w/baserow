@@ -23,6 +23,7 @@
 * Made the public REST API docs compatible with smaller screens.
 * Made it possible for the admin to disable new signups.
 * Reduced the amount of queries when using the link row field.
+* Respect the date format when converting to a date field.
 
 ## Released (2021-02-04)
 

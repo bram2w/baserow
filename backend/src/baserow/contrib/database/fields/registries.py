@@ -189,10 +189,10 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
 
         return None
 
-    def get_alter_column_prepare_value(self, connection, from_field, to_field):
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         """
-        Can return a small SQL statement to convert the `p_in` variable to a readable
-        text format for the new field.
+        Can return an SQL statement to convert the `p_in` variable to a readable text
+        format for the new field.
 
         Example: return "p_in = lower(p_in);"
 
@@ -210,15 +210,13 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
 
         return None
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
-        Can optionally return a SQL function as string to convert the old field's value
-        when changing the field type. If None is returned no function will be
-        applied. The connection can be used to see which engine is used, postgresql,
-        mysql or sqlite.
+        Can return a SQL statement to convert the `p_in` variable from text to a
+        desired format for the new field.
 
-        Example when a string is converted to a number, the function could be:
-        REGEXP_REPLACE(p_in, '[^0-9]', '', 'g') which would remove all non numeric
+        Example when a string is converted to a number, to statement could be:
+        `REGEXP_REPLACE(p_in, '[^0-9]', '', 'g')` which would remove all non numeric
         characters. The p_in variable is the old value as a string.
 
         :param connection: The used connection. This can for example be used to check
@@ -228,7 +226,8 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :type to_field: Field
         :param to_field: The new field instance.
         :type to_field: Field
-        :return: The SQL function to convert the value.
+        :return: The SQL statement converting the old text value into the correct
+            format.
         :rtype: None or str
         """
 
