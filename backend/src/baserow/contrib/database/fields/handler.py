@@ -221,9 +221,11 @@ class FieldHandler:
             # the lenient schema editor.
             with lenient_schema_editor(
                 connection,
-                old_field_type.get_alter_column_prepare_value(
+                old_field_type.get_alter_column_prepare_old_value(
                     connection, old_field, field),
-                field_type.get_alter_column_type_function(connection, old_field, field)
+                field_type.get_alter_column_prepare_new_value(
+                    connection, old_field, field
+                )
             ) as schema_editor:
                 try:
                     schema_editor.alter_field(from_model, from_model_field,
