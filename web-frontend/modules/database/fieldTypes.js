@@ -327,6 +327,10 @@ export class LongTextFieldType extends FieldType {
     return RowEditFieldLongText
   }
 
+  getEmptyValue(field) {
+    return ''
+  }
+
   getSort(name, order) {
     return (a, b) => {
       const stringA = a[name] === null ? '' : '' + a[name]

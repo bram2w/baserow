@@ -254,6 +254,13 @@ class ViewHandler:
                 model_field
             )
 
+            view_filter_annotation = view_filter_type.get_annotation(
+                field_name,
+                view_filter.value
+            )
+            if view_filter_annotation:
+                queryset = queryset.annotate(**view_filter_annotation)
+
             # Depending on filter type we are going to combine the Q either as AND or
             # as OR.
             if view.filter_type == FILTER_TYPE_AND:
