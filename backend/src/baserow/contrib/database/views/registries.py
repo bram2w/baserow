@@ -120,6 +120,25 @@ class ViewFilterType(Instance):
 
         raise NotImplementedError('Each must have his own get_filter method.')
 
+    def get_annotation(self, field_name, value):
+        """
+        Optional method allowing this ViewFilterType to annotate the queryset prior to
+        the application of any Q filters returned by ViewFilterType.get_filter.
+
+        Should return a dictionary which can be unpacked into an annotate call or None
+        if you do not wish any annotation to be applied by your filter.
+
+        :param field_name: The name of the field that needs to be filtered.
+        :type field_name: str
+        :param value: The value that the field must be compared to.
+        :type value: str
+        :return: The dict object that will be unpacked into an annotate call or None if
+            no annotation needs to be done.
+        :rtype: None or dict
+        """
+
+        return None
+
 
 class ViewFilterTypeRegistry(Registry):
     """

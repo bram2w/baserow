@@ -140,6 +140,45 @@ export class NotEqualViewFilterType extends ViewFilterType {
   }
 }
 
+export class FilenameContainsViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'filename_contains'
+  }
+
+  getName() {
+    return 'filename contains'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeText
+  }
+
+  getCompatibleFieldTypes() {
+    return ['file']
+  }
+
+  matches(rowValue, filterValue) {
+    filterValue = filterValue.toString().toLowerCase().trim()
+
+    if (filterValue === '') {
+      return true
+    }
+
+    for (let i = 0; i < rowValue.length; i++) {
+      const visibleName = rowValue[i].visible_name
+        .toString()
+        .toLowerCase()
+        .trim()
+
+      if (visibleName.includes(filterValue)) {
+        return true
+      }
+    }
+
+    return false
+  }
+}
+
 export class ContainsViewFilterType extends ViewFilterType {
   static getType() {
     return 'contains'
