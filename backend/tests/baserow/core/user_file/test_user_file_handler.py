@@ -238,6 +238,20 @@ def test_upload_user_file(data_fixture, tmpdir):
 
     assert UserFile.objects.all().count() == 7
 
+    image = Image.new('RGB', (1, 1), color='red')
+    image_bytes = BytesIO()
+    image.save(image_bytes, format='PNG')
+    user_file = handler.upload_user_file(
+        user,
+        'this_file_has_an_extreme_long_file_name_that_should_not_make_the_system_'
+        'fail_hard_when_trying_to_upload.png',
+        image_bytes,
+        storage=storage
+    )
+
+    assert user_file.original_name == 'this_file_has_an_extreme_long_f...hard_when_' \
+                                      'trying_to_upload.png'
+
 
 @pytest.mark.django_db
 @responses.activate

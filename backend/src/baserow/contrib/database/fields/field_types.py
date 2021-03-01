@@ -17,8 +17,8 @@ from rest_framework import serializers
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.contrib.database.api.fields.serializers import (
-    LinkRowListSerializer, LinkRowValueSerializer, FileFieldRequestSerializer,
-    FileFieldResponseSerializer, SelectOptionSerializer
+    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
+    SelectOptionSerializer
 )
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
@@ -28,8 +28,9 @@ from baserow.contrib.database.api.fields.errors import (
 from .handler import FieldHandler
 from .registries import FieldType, field_type_registry
 from .models import (
-    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
-    NumberField, BooleanField, DateField, LinkRowField, EmailField, FileField,
+    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, DATE_FORMAT, DATE_TIME_FORMAT,
+    TextField, LongTextField, URLField, NumberField, BooleanField, DateField,
+    LinkRowField, EmailField, FileField,
     SingleSelectField, SelectOption
 )
 from .exceptions import (
@@ -94,17 +95,18 @@ class URLFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.url()
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
-            return r"""(
+            return r"""p_in = (
             case
                 when p_in::text ~* '(https?|ftps?)://(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)?'
                 then p_in::text
                 else ''
                 end
-            )"""
+            );"""
 
-        return super().get_alter_column_type_function(connection, from_field, to_field)
+        return super().get_alter_column_prepare_new_value(connection, from_field,
+                                                          to_field)
 
 
 class NumberFieldType(FieldType):
@@ -169,7 +171,7 @@ class NumberFieldType(FieldType):
                 positive=not instance.number_negative
             )
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
             decimal_places = 0
             if to_field.number_type == NUMBER_TYPE_DECIMAL:
@@ -180,9 +182,10 @@ class NumberFieldType(FieldType):
             if not to_field.number_negative:
                 function = f"greatest({function}, 0)"
 
-            return function
+            return f'p_in = {function};'
 
-        return super().get_alter_column_type_function(connection, from_field, to_field)
+        return super().get_alter_column_prepare_new_value(connection, from_field,
+                                                          to_field)
 
     def after_update(self, from_field, to_field, from_model, to_model, user, connection,
                      altered_column, before):
@@ -288,6 +291,52 @@ class DateFieldType(FieldType):
         else:
             return fake.date_object()
 
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        If the field type has changed then we want to convert the date or timestamp to
+        a human readable text following the old date format.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type and connection.vendor == 'postgresql':
+            sql_type = 'date'
+            sql_format = DATE_FORMAT[from_field.date_format]['sql']
+
+            if from_field.date_include_time:
+                sql_type = 'timestamp'
+                sql_format += ' ' + DATE_TIME_FORMAT[from_field.date_time_format]['sql']
+
+            return f"""p_in = TO_CHAR(p_in::{sql_type}, '{sql_format}');"""
+
+        return super().get_alter_column_prepare_old_value(connection, from_field,
+                                                          to_field)
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        """
+        If the field type has changed into a date field then we want to parse the old
+        text value following the format of the new field and convert it to a date or
+        timestamp. If that fails we want to fallback on the default ::date or
+        ::timestamp conversion that has already been added.
+        """
+
+        from_field_type = field_type_registry.get_by_model(from_field)
+        if from_field_type.type != self.type and connection.vendor == 'postgresql':
+            sql_function = 'TO_DATE'
+            sql_format = DATE_FORMAT[to_field.date_format]['sql']
+
+            if to_field.date_include_time:
+                sql_function = 'TO_TIMESTAMP'
+                sql_format += ' ' + DATE_TIME_FORMAT[to_field.date_time_format]['sql']
+
+            return f"""
+                begin
+                    p_in = {sql_function}(p_in::text, 'FM{sql_format}');
+                exception when others then end;
+            """
+
+        return super().get_alter_column_prepare_old_value(connection, from_field,
+                                                          to_field)
+
 
 class LinkRowFieldType(FieldType):
     """
@@ -314,10 +363,35 @@ class LinkRowFieldType(FieldType):
 
     def enhance_queryset(self, queryset, field, name):
         """
-        Makes sure that the related rows are prefetched by Django.
+        Makes sure that the related rows are prefetched by Django. We also want to
+        enhance the primary field of the related queryset. If for example the primary
+        field is a single select field then the dropdown options need to be
+        prefetched in order to prevent many queries.
         """
 
-        return queryset.prefetch_related(name)
+        remote_model = queryset.model._meta.get_field(name).remote_field.model
+        related_queryset = remote_model.objects.all()
+
+        try:
+            primary_field_object = next(
+                object
+                for object in remote_model._field_objects.values()
+                if object['field'].primary
+            )
+            related_queryset = primary_field_object['type'].enhance_queryset(
+                related_queryset,
+                primary_field_object['field'],
+                primary_field_object['name']
+            )
+        except StopIteration:
+            # If the related model does not have a primary field then we also don't
+            # need to enhance the queryset.
+            pass
+
+        return queryset.prefetch_related(models.Prefetch(
+            name,
+            queryset=related_queryset
+        ))
 
     def get_serializer_field(self, instance, **kwargs):
         """
@@ -331,9 +405,9 @@ class LinkRowFieldType(FieldType):
     def get_response_serializer_field(self, instance, **kwargs):
         """
         If a model has already been generated it will be added as a property to the
-        instance. If that case then we can extract the primary field from the model and
-        we can pass the name along to the LinkRowValueSerializer. It will be used to
-        include the primary field's value in the response as a string.
+        instance. If that is the case then we can extract the primary field from the
+        model and we can pass the name along to the LinkRowValueSerializer. It will
+        be used to include the primary field's value in the response as a string.
         """
 
         primary_field_name = None
@@ -348,7 +422,7 @@ class LinkRowFieldType(FieldType):
             if primary_field:
                 primary_field_name = primary_field['name']
 
-        return LinkRowListSerializer(child=LinkRowValueSerializer(
+        return serializers.ListSerializer(child=LinkRowValueSerializer(
             value_field_name=primary_field_name, required=False, **kwargs
         ))
 
@@ -424,10 +498,9 @@ class LinkRowFieldType(FieldType):
         if 'link_row_table' in values and isinstance(values['link_row_table'], int):
             from baserow.contrib.database.table.handler import TableHandler
 
-            values['link_row_table'] = TableHandler().get_table(
-                user,
-                values['link_row_table']
-            )
+            table = TableHandler().get_table(values['link_row_table'])
+            table.database.group.has_user(user, raise_error=True)
+            values['link_row_table'] = table
 
         return values
 
@@ -598,17 +671,18 @@ class EmailFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.email()
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == 'postgresql':
-            return r"""(
+            return r"""p_in = (
             case
                 when p_in::text ~* '[A-Z0-9._+-]+@[A-Z0-9.-]+\.[A-Z]{2,}'
                 then p_in::text
                 else ''
                 end
-            )"""
+            );"""
 
-        return super().get_alter_column_type_function(connection, from_field, to_field)
+        return super().get_alter_column_prepare_new_value(connection, from_field,
+                                                          to_field)
 
 
 class FileFieldType(FieldType):
@@ -787,7 +861,7 @@ class SingleSelectFieldType(FieldType):
             )
             to_field_values.pop('select_options')
 
-    def get_alter_column_prepare_value(self, connection, from_field, to_field):
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         """
         If the new field type isn't a single select field we can convert the plain
         text value of the option and maybe that can be used by the new field.
@@ -802,6 +876,11 @@ class SingleSelectFieldType(FieldType):
                 variables[variable_name] = option.value
                 values_mapping.append(f"('{int(option.id)}', %({variable_name})s)")
 
+            # If there are no values we don't need to convert the value to a string
+            # since all values will be converted to null.
+            if len(values_mapping) == 0:
+                return None
+
             sql = f"""
                 p_in = (SELECT value FROM (
                     VALUES {','.join(values_mapping)}
@@ -810,9 +889,10 @@ class SingleSelectFieldType(FieldType):
             """
             return sql, variables
 
-        return super().get_alter_column_prepare_value(connection, from_field, to_field)
+        return super().get_alter_column_prepare_old_value(connection, from_field,
+                                                          to_field)
 
-    def get_alter_column_type_function(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
         If the old field wasn't a single select field we can try to match the old text
         values to the new options.
@@ -829,20 +909,21 @@ class SingleSelectFieldType(FieldType):
                     f"(lower(%({variable_name})s), '{int(option.id)}')"
                 )
 
-            # If there is no values we don't need to convert the value since all
+            # If there are no values we don't need to convert the value since all
             # values should be converted to null.
             if len(values_mapping) == 0:
                 return None
 
-            return f"""(
+            return f"""p_in = (
                 SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = lower(p_in)
-            )
+            );
             """, variables
 
-        return super().get_alter_column_prepare_value(connection, from_field, to_field)
+        return super().get_alter_column_prepare_old_value(connection, from_field,
+                                                          to_field)
 
     def get_order(self, field, field_name, view_sort):
         """
@@ -864,3 +945,23 @@ class SingleSelectFieldType(FieldType):
             for index, option in enumerate(options)
         ])
         return order
+
+    def random_value(self, instance, fake, cache):
+        """
+        Selects a random choice out of the possible options.
+        """
+
+        cache_entry_name = f'field_{instance.id}_options'
+
+        if cache_entry_name not in cache:
+            cache[cache_entry_name] = instance.select_options.all()
+
+        select_options = cache[cache_entry_name]
+
+        # if the select_options are empty return None
+        if not select_options:
+            return None
+
+        random_choice = randint(0, len(select_options) - 1)
+
+        return select_options[random_choice]

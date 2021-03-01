@@ -3,12 +3,21 @@
   font-size: 18px;
   font-weight: 700;
   margin: 20px 0;
+
+  @media screen and (max-width: $api-docs-breakpoint) {
+    color: $color-primary-900;
+  }
 }
 
 .api-docs__example {
+  width: 100%;
+  min-width: 0;
   position: relative;
-  padding: 16px;
   background-color: $color-neutral-100;
+
+  &.api-docs__example--with-padding {
+    padding: 16px;
+  }
 }
 
 .api-docs__copy {
@@ -65,11 +74,41 @@
 .api-docs__example-type {
   width: 200px;
   margin-bottom: 20px;
+  padding: 16px 16px 0 16px;
+}
+
+.api-docs__example-content-container {
+  display: flex;
+}
+
+.api-docs__example-content-side {
+  position: relative;
+  flex: 0 0 120px;
+  padding: 16px 0;
+  background-color: $color-neutral-200;
+}
+
+.api-docs__example-content-line {
+  @extend %ellipsis;
+
+  margin-top: 16px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-family: monospace;
+  color: $color-neutral-700;
+
+  @include absolute(auto, 0, auto, 0);
+}
+
+.api-docs__example-content-wrapper {
+  padding: 16px;
+  width: 100%;
+  min-width: 0;
 }
 
 .api-docs__example-content {
   margin: 0;
-  line-height: 160%;
+  line-height: 21px;
   color: $color-neutral-700;
   overflow-x: auto;
 }

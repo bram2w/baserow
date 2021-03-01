@@ -3,12 +3,19 @@
 }
 
 .field-single-select__dropdown-link {
-  display: block;
-  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  height: 32px;
 
   &:hover {
     text-decoration: none;
   }
+}
+
+.field-single-select__dropdown-selected {
+  display: flex;
+  align-items: center;
 }
 
 .field-single-select__dropdown-option {
@@ -21,8 +28,4 @@
   max-width: 100%;
 
   @include fixed-height(20px, 12px);
-
-  &.field-single-select__dropdown-option--align-32 {
-    margin-top: 5px;
-  }
 }

@@ -5,10 +5,16 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD
 from django.shortcuts import reverse
 from django.core.exceptions import ValidationError
 
+from faker import Faker
+
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption, SingleSelectField
+from baserow.contrib.database.fields.field_types import SingleSelectFieldType
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.api.rows.serializers import (
+    get_row_serializer_class, RowSerializer
+)
 
 
 @pytest.mark.django_db
@@ -57,6 +63,10 @@ def test_single_select_field_type(data_fixture):
 
     field_handler.delete_field(user=user, field=field)
     assert SelectOption.objects.all().count() == 0
+
+    field = field_handler.create_field(user=user, table=table,
+                                       type_name='single_select', select_options=[])
+    field_handler.update_field(user=user, field=field, new_type_name='text')
 
 
 @pytest.mark.django_db
@@ -495,7 +505,11 @@ def test_single_select_field_type_get_order(data_fixture):
 
 
 @pytest.mark.django_db
-def test_primary_single_select_field_with_link_row_field(api_client, data_fixture):
+def test_primary_single_select_field_with_link_row_field(
+    api_client,
+    data_fixture,
+    django_assert_num_queries
+):
     """
     We expect the relation to a table that has a single select field to work.
     """
@@ -521,7 +535,8 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
         type_name='single_select',
         select_options=[
             {'value': 'Option 1', 'color': 'red'},
-            {'value': 'Option 2', 'color': 'blue'}
+            {'value': 'Option 2', 'color': 'blue'},
+            {'value': 'Option 3', 'color': 'orange'}
         ],
         primary=True
     )
@@ -541,6 +556,10 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
         user=user, table=customers_table,
         values={f'field_{customers_primary.id}': select_options[1].id}
     )
+    customers_row_3 = row_handler.create_row(
+        user=user, table=customers_table,
+        values={f'field_{customers_primary.id}': select_options[2].id}
+    )
     row_handler.create_row(
         user, table=example_table,
         values={f'field_{link_row_field.id}': [customers_row_1.id, customers_row_2.id]}
@@ -549,6 +568,18 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
         user, table=example_table,
         values={f'field_{link_row_field.id}': [customers_row_1.id]}
     )
+    row_handler.create_row(
+        user, table=example_table,
+        values={f'field_{link_row_field.id}': [customers_row_3.id]}
+    )
+
+    model = example_table.get_model()
+    queryset = model.objects.all().enhance_by_fields()
+    serializer_class = get_row_serializer_class(model, RowSerializer, is_response=True)
+
+    with django_assert_num_queries(3):
+        serializer = serializer_class(queryset, many=True)
+        serializer.data
 
     response = api_client.get(
         reverse('api:database:rows:list', kwargs={'table_id': example_table.id}),
@@ -569,3 +600,50 @@ def test_primary_single_select_field_with_link_row_field(api_client, data_fixtur
         response_json['results'][1][f'field_{link_row_field.id}'][0]['value'] ==
         'Option 1'
     )
+    assert (
+        response_json['results'][2][f'field_{link_row_field.id}'][0]['value'] ==
+        'Option 3'
+    )
+
+
+@pytest.mark.django_db
+def test_single_select_field_type_random_value(data_fixture):
+    """
+    Verify that the random_value function of the single select field type correctly
+    returns one option of a given select_options list. If the select_options list is
+    empty or the passed field type is not of single select field type by any chance
+    it should return None.
+    """
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    table = data_fixture.create_database_table(name='Example', database=database)
+    field_handler = FieldHandler()
+    cache = {}
+    fake = Faker()
+
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name='single_select',
+        name='Single select',
+        select_options=[
+            {'value': 'Option 1', 'color': 'blue'},
+            {'value': 'Option 2', 'color': 'red'}
+        ],
+    )
+
+    select_options = field.select_options.all()
+    random_choice = SingleSelectFieldType().random_value(field, fake, cache)
+    assert random_choice in select_options
+    random_choice = SingleSelectFieldType().random_value(field, fake, cache)
+    assert random_choice in select_options
+
+    email_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name='email',
+        name='E-Mail',
+    )
+    random_choice_2 = SingleSelectFieldType().random_value(email_field, fake, cache)
+    assert random_choice_2 is None

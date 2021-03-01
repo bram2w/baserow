@@ -201,6 +201,13 @@ class TableModelQuerySet(models.QuerySet):
                     model_field
                 )
 
+                view_filter_annotation = view_filter_type.get_annotation(
+                    field_name,
+                    value
+                )
+                if view_filter_annotation:
+                    self = self.annotate(**view_filter_annotation)
+
                 # Depending on filter type we are going to combine the Q either as
                 # AND or as OR.
                 if filter_type == FILTER_TYPE_AND:

@@ -24,18 +24,20 @@ def test_lenient_schema_editor():
     with lenient_schema_editor(connection) as schema_editor:
         assert isinstance(schema_editor, PostgresqlLenientDatabaseSchemaEditor)
         assert isinstance(schema_editor, BaseDatabaseSchemaEditor)
-        assert schema_editor.alter_column_prepare_value == ''
-        assert schema_editor.alert_column_type_function == 'p_in'
+        assert schema_editor.alter_column_prepare_old_value == ''
+        assert schema_editor.alter_column_prepare_new_value == ''
         assert connection.SchemaEditorClass != PostgresqlDatabaseSchemaEditor
 
     assert connection.SchemaEditorClass == PostgresqlDatabaseSchemaEditor
 
     with lenient_schema_editor(
         connection,
-        'p_in = p_in;',
-        "REGEXP_REPLACE(p_in, 'test', '', 'g')"
+        "p_in = REGEXP_REPLACE(p_in, '', 'test', 'g');",
+        "p_in = REGEXP_REPLACE(p_in, 'test', '', 'g');"
     ) as schema_editor:
-        assert schema_editor.alter_column_prepare_value == "p_in = p_in;"
-        assert schema_editor.alert_column_type_function == (
-               "REGEXP_REPLACE(p_in, 'test', '', 'g')"
+        assert schema_editor.alter_column_prepare_old_value == (
+            "p_in = REGEXP_REPLACE(p_in, '', 'test', 'g');"
+        )
+        assert schema_editor.alter_column_prepare_new_value == (
+            "p_in = REGEXP_REPLACE(p_in, 'test', '', 'g');"
         )

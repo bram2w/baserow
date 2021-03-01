@@ -22,18 +22,15 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 @pytest.mark.django_db
 def test_get_view(data_fixture):
     user = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
+    data_fixture.create_user()
     grid = data_fixture.create_grid_view(user=user)
 
     handler = ViewHandler()
 
     with pytest.raises(ViewDoesNotExist):
-        handler.get_view(user=user, view_id=99999)
+        handler.get_view(view_id=99999)
 
-    with pytest.raises(UserNotInGroupError):
-        handler.get_view(user=user_2, view_id=grid.id)
-
-    view = handler.get_view(user=user, view_id=grid.id)
+    view = handler.get_view(view_id=grid.id)
 
     assert view.id == grid.id
     assert view.name == grid.name
@@ -41,7 +38,7 @@ def test_get_view(data_fixture):
     assert not view.filters_disabled
     assert isinstance(view, View)
 
-    view = handler.get_view(user=user, view_id=grid.id, view_model=GridView)
+    view = handler.get_view(view_id=grid.id, view_model=GridView)
 
     assert view.id == grid.id
     assert view.name == grid.name
@@ -52,7 +49,7 @@ def test_get_view(data_fixture):
     # If the error is raised we know for sure that the query has resolved.
     with pytest.raises(AttributeError):
         handler.get_view(
-            user=user, view_id=grid.id,
+            view_id=grid.id,
             base_queryset=View.objects.prefetch_related('UNKNOWN')
         )
 
@@ -190,6 +187,15 @@ def test_update_grid_view_field_options(send_mock, data_fixture):
     with pytest.raises(ValueError):
         ViewHandler().update_grid_view_field_options(
             user=user,
+            grid_view=grid_view,
+            field_options={
+                'strange_format': {'height': 150},
+            }
+        )
+
+    with pytest.raises(UserNotInGroupError):
+        ViewHandler().update_grid_view_field_options(
+            user=data_fixture.create_user(),
             grid_view=grid_view,
             field_options={
                 'strange_format': {'height': 150},

@@ -21,24 +21,20 @@ from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
 def test_get_database_table(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    table_2 = data_fixture.create_database_table()
+    data_fixture.create_database_table()
     handler = TableHandler()
 
-    with pytest.raises(UserNotInGroupError):
-        handler.get_table(user=user, table_id=table_2.id)
-
     with pytest.raises(TableDoesNotExist):
-        handler.get_table(user=user, table_id=99999)
+        handler.get_table(table_id=99999)
 
     # If the error is raised we know for sure that the base query has resolved.
     with pytest.raises(AttributeError):
         handler.get_table(
-            user=user,
             table_id=table.id,
             base_queryset=Table.objects.prefetch_related('UNKNOWN')
         )
 
-    table_copy = handler.get_table(user=user, table_id=table.id)
+    table_copy = handler.get_table(table_id=table.id)
     assert table_copy.id == table.id
 
 

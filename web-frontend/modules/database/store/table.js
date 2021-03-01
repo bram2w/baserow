@@ -1,5 +1,6 @@
 import axios from 'axios'
 
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import TableService from '@baserow/modules/database/services/table'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 
@@ -177,13 +178,17 @@ export const actions = {
 
     // Check if the just selected application is a database
     if (database.type !== type) {
-      throw new Error(`The application doesn't have the required ${type} type.`)
+      throw new StoreItemLookupError(
+        `The application doesn't have the required ${type} type.`
+      )
     }
 
     // Check if the provided table id is found in the just selected database.
     const index = database.tables.findIndex((item) => item.id === tableId)
     if (index === -1) {
-      throw new Error('The table is not found in the selected application.')
+      throw new StoreItemLookupError(
+        'The table is not found in the selected application.'
+      )
     }
     const table = database.tables[index]
 

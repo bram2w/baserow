@@ -3,7 +3,6 @@ from django.utils import timezone
 
 from rest_framework.request import Request
 
-from baserow.core.exceptions import UserNotInGroupError
 from baserow.core.utils import random_string
 from baserow.contrib.database.models import Database, Table
 from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
@@ -49,8 +48,6 @@ class TokenHandler:
         :type base_queryset: Queryset
         :raises TokenDoesNotExist: Raised when the requested token was not found or
             if it does not belong to the user.
-        :raises UserNotInGroupError: When the user does not belong to the group
-            anymore.
         :return: The fetched token.
         :rtype: Token
         """
@@ -67,8 +64,7 @@ class TokenHandler:
             raise TokenDoesNotExist(f'The token with id {token_id} does not exist.')
 
         group = token.group
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         return token
 
@@ -112,13 +108,11 @@ class TokenHandler:
         :type group: Group
         :param name: The name of the token.
         :type name: str
-        :raises UserNotInGroupError: If the user does not belong to the group.
         :return: The created token instance.
         :rtype: Token
         """
 
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user, raise_error=True)
 
         token = Token.objects.create(
             name=name,

@@ -1,7 +1,14 @@
 <template>
   <li class="api-docs__parameter">
     <div class="api-docs__parameter-name">
-      <div>{{ name }}</div>
+      <div>
+        {{ name }}
+        <span
+          v-if="visibleName !== null"
+          class="api-docs__parameter-visible-name"
+          >{{ visibleName }}</span
+        >
+      </div>
       <div v-if="optional" class="api-docs__parameter-optional">optional</div>
     </div>
     <div class="api-docs__parameter-description">
@@ -23,6 +30,11 @@ export default {
     name: {
       type: String,
       required: true,
+    },
+    visibleName: {
+      type: String,
+      required: false,
+      default: null,
     },
     optional: {
       type: Boolean,

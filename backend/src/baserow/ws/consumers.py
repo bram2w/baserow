@@ -139,5 +139,5 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json(payload)
 
     async def disconnect(self, message):
-        self.discard_current_page()
+        await self.discard_current_page()
         await self.channel_layer.group_discard('users', self.channel_name)

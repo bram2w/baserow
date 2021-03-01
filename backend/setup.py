@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 
 PROJECT_DIR = os.path.dirname(__file__)
 REQUIREMENTS_DIR = os.path.join(PROJECT_DIR, 'requirements')
-VERSION = '0.8.0'
+VERSION = '1.0.0'
 
 
 def get_requirements(env):
@@ -29,8 +29,11 @@ setup(
     author='Bram Wiepjes (Baserow)',
     author_email='bram@baserow.io',
     license='MIT',
-    description='Baserow: open source online database backend.',
-    long_description='',
+    description='Baserow: open source no-code database backend.',
+    long_description='Baserow is an open source no-code database tool and Airtable '
+                     'alternative. Easily create a relational database without any '
+                     'technical expertise. Build a table and define custom fields '
+                     'like text, number, file and many more.',
     platforms=['linux'],
     package_dir={'': 'src'},
     packages=find_packages('src'),

@@ -1,5 +1,31 @@
 # Changelog
 
+## Released (2021-03-01)
+
+* Redesigned the left sidebar.
+* Fixed error when a very long user file name is provided when uploading.
+* Upgraded DRF Spectacular dependency to the latest version.
+* Added single select field form option validation.
+* Changed all cookies to SameSite=lax.
+* Fixed the "Ignored attempt to cancel a touchmove" error.
+* Refactored the has_user everywhere such that the raise_error argument is used when
+  possible.
+* Added Baserow Cloudron app.
+* Fixed bug where a single select field without options could not be converted to a
+  another field.
+* Fixed bug where the Editable component was not working if a prent a user-select:
+  none; property.
+* Fail hard when the web-frontend can't reach the backend because of a network error.
+* Use UTC time in the date picker.
+* Refactored handler get_* methods so that they never check for permissions.
+* Made it possible to configure SMTP settings via environment variables.
+* Added field name to the public REST API docs.
+* Made the public REST API docs compatible with smaller screens.
+* Made it possible for the admin to disable new signups.
+* Reduced the amount of queries when using the link row field.
+* Respect the date format when converting to a date field.
+* Added a field type filename contains filter.
+
 ## Released (2021-02-04)
 
 * Upgraded web-frontend dependencies.

@@ -1329,3 +1329,67 @@ def test_not_empty_filter_type(data_fixture):
     filter.field = single_select_field
     filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
+
+
+@pytest.mark.django_db
+def test_filename_contains_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    file_field = data_fixture.create_file_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(**{
+        f'field_{file_field.id}': [{'visible_name': 'test_file.png'}],
+    })
+    row_with_multiple_files = model.objects.create(**{
+        f'field_{file_field.id}': [
+            {'visible_name': 'test.doc'},
+            {'visible_name': 'test.txt'}
+        ],
+    })
+    row_with_no_files = model.objects.create(**{
+        f'field_{file_field.id}': [],
+    })
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=file_field,
+        type='filename_contains',
+        value='test_file.png'
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    filter.value = '.jpg'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    filter.value = '.png'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    filter.value = 'test.'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_with_multiple_files.id in ids
+
+    filter.value = ''
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row.id in ids
+    assert row_with_multiple_files.id in ids
+    assert row_with_no_files.id in ids
+
+    results = model.objects.all().filter_by_fields_object(filter_object={
+        f'filter__field_{file_field.id}__filename_contains': ['.png'],
+    }, filter_type='AND')
+    assert len(results) == 1

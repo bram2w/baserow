@@ -23,6 +23,7 @@
             <date-picker
               :inline="true"
               :monday-first="true"
+              :use-utc="true"
               :value="copy"
               class="datepicker"
               @input="chooseDate(field, $event)"

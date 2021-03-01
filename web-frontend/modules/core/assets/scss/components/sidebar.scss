@@ -1,63 +1,187 @@
 .sidebar {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background-color: $white;
-  border-right: 1px solid $color-neutral-200;
-}
+  @include absolute(0);
 
-.sidebar__content-wrapper {
   overflow-y: auto;
+  background-color: $color-neutral-10;
+  border-right: solid 1px $color-neutral-200;
+  height: 100%;
+
+  .layout--collapsed & {
+    overflow: visible;
+  }
 }
 
-.sidebar__content {
-  padding: 12px;
+.sidebar__inner {
+  position: relative;
+  min-height: 100%;
+  padding-bottom: 46px;
+
+  .layout--collapsed & {
+    padding-bottom: 56px;
+  }
 }
 
-.sidebar__footer {
-  flex-grow: 0;
-  flex-shrink: 0;
-  border-top: 1px solid $color-neutral-200;
-}
-
-.sidebar__collapse {
-  display: block;
-  padding: 0 16px;
-  color: $color-primary-900;
-  font-weight: bold;
-
-  @include fixed-height(47px, 14px);
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 16px;
+  margin-bottom: 4px;
 
   &:hover {
-    text-decoration: none;
     background-color: $color-neutral-100;
+    text-decoration: none;
+  }
+
+  .layout--collapsed & {
+    padding: 8px;
   }
 }
 
-.sidebar__title {
-  font-family: $logo-font-stack;
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 16px;
+.sidebar__user-initials {
+  flex: 0 0 36px;
+  font-weight: bold;
+  color: $white;
+  background-color: $color-primary-500;
+  border-radius: 100%;
+  margin-right: 12px;
 
-  img {
-    max-width: 104px;
+  @include center-text(36px, 15px);
+
+  .layout--collapsed & {
+    flex-basis: 32px;
+    margin-right: 0;
+
+    @include center-text(32px, 12px);
   }
 }
 
-.sidebar__group-title {
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 10px;
+.sidebar__user-info {
+  width: 100%;
+  min-width: 0;
+
+  .layout--collapsed & {
+    display: none;
+  }
+}
+
+.sidebar__user-info-top {
+  display: flex;
+  width: 100%;
+  justify-items: center;
+  margin-bottom: 4px;
+}
+
+.sidebar__user-name {
+  @extend %ellipsis;
+
+  min-width: 0;
+  color: $color-primary-900;
+}
+
+.sidebar__user-icon {
+  flex: 0 0 20px;
+  text-align: center;
+  font-size: 12px;
+  color: $color-primary-900;
+}
+
+.sidebar__user-email {
+  @extend %ellipsis;
+
+  font-size: 12px;
+  color: $color-neutral-600;
+}
+
+.sidebar__nav {
+  padding: 0 10px;
+
+  .layout--collapsed & {
+    padding: 0 8px;
+  }
+}
+
+.sidebar__new-wrapper {
+  margin-top: 12px;
 }
 
 .sidebar__new {
   font-size: 13px;
   color: $color-neutral-300;
-  margin-left: 7px;
+  margin-left: 6px;
 
   &:hover {
     color: $color-neutral-500;
     text-decoration: none;
+  }
+}
+
+.sidebar__foot {
+  @include absolute(auto, 0, 0, 0);
+
+  display: flex;
+  width: 100%;
+  padding: 0 16px 16px 16px;
+  align-items: center;
+  justify-content: space-between;
+
+  .layout--collapsed & {
+    flex-direction: column;
+    height: 56px;
+    padding: 0 8px 8px 8px;
+  }
+}
+
+.sidebar__collapse-link {
+  color: $color-neutral-700;
+  border-radius: 3px;
+
+  @include center-text(20px, 12px);
+
+  &:hover {
+    display: inline-block;
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+}
+
+.layout--collapsed {
+  // Some minor changes regarding the tree items within the collapsed sidebar.
+  .tree .sidebar__tree {
+    padding-left: 0;
+  }
+
+  .sidebar__action {
+    .tree__link {
+      text-align: center;
+    }
+
+    .tree__icon {
+      margin-right: 0;
+    }
+
+    .sidebar__item-name {
+      background-color: $color-neutral-900;
+      color: $white;
+      border-radius: 3px;
+      padding: 0 4px;
+      white-space: nowrap;
+      font-weight: 400;
+      display: none;
+
+      @include absolute(6px, auto, auto, 36px);
+      @include center-text(auto, 11px, 21px);
+    }
+
+    &:hover .sidebar__item-name {
+      display: block;
+    }
+  }
+
+  .sidebar__logo {
+    display: inline-block;
+    order: 2;
+    width: 18px;
+    overflow: hidden;
   }
 }

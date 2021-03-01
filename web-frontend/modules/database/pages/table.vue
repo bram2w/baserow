@@ -1,6 +1,6 @@
 <template>
   <div>
-    <header class="layout__col-3-1 header">
+    <header class="layout__col-2-1 header">
       <div v-show="tableLoading" class="header__loading"></div>
       <ul v-if="!tableLoading" class="header__filter">
         <li class="header__filter-item header__filter-item--grids">
@@ -69,7 +69,7 @@
         <li>{{ table.name }}</li>
       </ul>
     </header>
-    <div class="layout__col-3-2 content">
+    <div class="layout__col-2-2 content">
       <component
         :is="getViewComponent(view)"
         v-if="hasSelectedView && !tableLoading"
@@ -89,6 +89,7 @@
 <script>
 import { mapState } from 'vuex'
 
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
@@ -142,6 +143,11 @@ export default {
       data.database = database
       data.table = table
     } catch (e) {
+      // In case of a network error we want to fail hard.
+      if (e.response === undefined && !(e instanceof StoreItemLookupError)) {
+        throw e
+      }
+
       return error({ statusCode: 404, message: 'Table not found.' })
     }
 
@@ -169,7 +175,12 @@ export default {
         // filled with initial data so we're going to call the fetch function here.
         const type = app.$registry.get('view', view.type)
         await type.fetch({ store }, view)
-      } catch {
+      } catch (e) {
+        // In case of a network error we want to fail hard.
+        if (e.response === undefined && !(e instanceof StoreItemLookupError)) {
+          throw e
+        }
+
         return error({ statusCode: 404, message: 'View not found.' })
       }
     }

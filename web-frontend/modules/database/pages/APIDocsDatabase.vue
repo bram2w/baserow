@@ -409,6 +409,7 @@
                 previous: null,
                 results: [getResponseItem(table)],
               }"
+              :mapping="getFieldMapping(table)"
             ></APIDocsExample>
           </div>
         </div>
@@ -436,6 +437,7 @@
               type="GET"
               :url="getItemURL(table)"
               :response="getResponseItem(table)"
+              :mapping="getFieldMapping(table)"
             ></APIDocsExample>
           </div>
         </div>
@@ -454,6 +456,7 @@
                 v-for="field in fields[table.id]"
                 :key="field.id"
                 :name="'field_' + field.id"
+                :visible-name="field.name"
                 :optional="true"
                 :type="field._.type"
               >
@@ -466,8 +469,9 @@
               v-model="exampleType"
               type="POST"
               :url="getListURL(table)"
-              :request="getRequestItem(table)"
+              :request="getRequestExample(table)"
               :response="getResponseItem(table)"
+              :mapping="getFieldMapping(table)"
             ></APIDocsExample>
           </div>
         </div>
@@ -494,6 +498,7 @@
                 v-for="field in fields[table.id]"
                 :key="field.id"
                 :name="'field_' + field.id"
+                :visible-name="field.name"
                 :optional="true"
                 :type="field._.type"
               >
@@ -506,8 +511,9 @@
               v-model="exampleType"
               type="PATCH"
               :url="getItemURL(table)"
-              :request="getRequestItem(table)"
+              :request="getRequestExample(table)"
               :response="getResponseItem(table)"
+              :mapping="getFieldMapping(table)"
             ></APIDocsExample>
           </div>
         </div>
@@ -763,7 +769,7 @@ export default {
     /**
      * Generates an example request object based on the available fields of the table.
      */
-    getRequestItem(table, response = false) {
+    getRequestExample(table, response = false) {
       const item = {}
       this.fields[table.id].forEach((field) => {
         const example = response
@@ -778,8 +784,18 @@ export default {
      */
     getResponseItem(table) {
       const item = { id: 0 }
-      Object.assign(item, this.getRequestItem(table, true))
+      Object.assign(item, this.getRequestExample(table, true))
       return item
+    },
+    /**
+     * Returns the mapping of the field id as key and the field name as value.
+     */
+    getFieldMapping(table) {
+      const mapping = {}
+      this.fields[table.id].forEach((field) => {
+        mapping[`field_${field.id}`] = field.name
+      })
+      return mapping
     },
     getListURL(table) {
       return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${table.id}/`

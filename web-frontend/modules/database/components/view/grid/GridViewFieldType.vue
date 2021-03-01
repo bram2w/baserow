@@ -83,7 +83,7 @@
             ></i>
           </a>
         </li>
-        <li v-if="canFilter">
+        <li v-if="!field.primary && canFilter">
           <a @click="hide($event, view, field)">
             <i class="context__menu-icon fas fa-fw fa-eye-slash"></i>
             Hide field

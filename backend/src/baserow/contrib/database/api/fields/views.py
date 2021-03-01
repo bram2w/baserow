@@ -74,7 +74,8 @@ class FieldsView(APIView):
         has access to that group.
         """
 
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
+        table.database.group.has_user(request.user, raise_error=True)
         fields = Field.objects.filter(table=table).select_related('content_type')
 
         data = [
@@ -128,7 +129,8 @@ class FieldsView(APIView):
 
         type_name = data.pop('type')
         field_type = field_type_registry.get(type_name)
-        table = TableHandler().get_table(request.user, table_id)
+        table = TableHandler().get_table(table_id)
+        table.database.group.has_user(request.user, raise_error=True)
 
         # Because each field type can raise custom exceptions while creating the
         # field we need to be able to map those to the correct API exceptions which are
@@ -175,7 +177,8 @@ class FieldView(APIView):
     def get(self, request, field_id):
         """Selects a single field and responds with a serialized version."""
 
-        field = FieldHandler().get_field(request.user, field_id)
+        field = FieldHandler().get_field(field_id)
+        field.table.database.group.has_user(request.user, raise_error=True)
         serializer = field_type_registry.get_serializer(field, FieldSerializer)
         return Response(serializer.data)
 
@@ -226,7 +229,8 @@ class FieldView(APIView):
         """Updates the field if the user belongs to the group."""
 
         field = FieldHandler().get_field(
-            request.user, field_id, base_queryset=Field.objects.select_for_update()
+            field_id,
+            base_queryset=Field.objects.select_for_update()
         ).specific
         type_name = type_from_data_or_registry(request.data, field_type_registry, field)
         field_type = field_type_registry.get(type_name)
@@ -276,7 +280,7 @@ class FieldView(APIView):
     def delete(self, request, field_id):
         """Deletes an existing field if the user belongs to the group."""
 
-        field = FieldHandler().get_field(request.user, field_id)
+        field = FieldHandler().get_field(field_id)
         FieldHandler().delete_field(request.user, field)
 
         return Response(status=204)

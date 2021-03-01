@@ -219,7 +219,8 @@ class ApplicationView(APIView):
     def get(self, request, application_id):
         """Selects a single application and responds with a serialized version."""
 
-        application = CoreHandler().get_application(request.user, application_id)
+        application = CoreHandler().get_application(application_id)
+        application.group.has_user(request.user, raise_error=True)
         return Response(get_application_serializer(application).data)
 
     @extend_schema(
@@ -261,12 +262,12 @@ class ApplicationView(APIView):
         """Updates the application if the user belongs to the group."""
 
         application = CoreHandler().get_application(
-            request.user, application_id,
+            application_id,
             base_queryset=Application.objects.select_for_update()
         )
         application = CoreHandler().update_application(
-            request.user, application, name=data['name'])
-
+            request.user, application, name=data['name']
+        )
         return Response(get_application_serializer(application).data)
 
     @extend_schema(
@@ -301,7 +302,7 @@ class ApplicationView(APIView):
         """Deletes an existing application if the user belongs to the group."""
 
         application = CoreHandler().get_application(
-            request.user, application_id,
+            application_id,
             base_queryset=Application.objects.select_for_update()
         )
         CoreHandler().delete_application(request.user, application)

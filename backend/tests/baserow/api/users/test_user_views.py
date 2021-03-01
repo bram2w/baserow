@@ -16,7 +16,7 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
-def test_create_user(client):
+def test_create_user(client, data_fixture):
     response = client.post(reverse('api:user:index'), {
         'name': 'Test1',
         'email': 'test@test.nl',
@@ -31,6 +31,7 @@ def test_create_user(client):
     assert 'password' not in response_json['user']
     assert response_json['user']['username'] == 'test@test.nl'
     assert response_json['user']['first_name'] == 'Test1'
+    assert response_json['user']['is_staff'] is False
 
     response_failed = client.post(reverse('api:user:index'), {
         'name': 'Test1',
@@ -47,6 +48,16 @@ def test_create_user(client):
     }, format='json')
     assert response_failed.status_code == 400
     assert response_failed.json()['error'] == 'ERROR_EMAIL_ALREADY_EXISTS'
+
+    data_fixture.update_settings(allow_new_signups=False)
+    response_failed = client.post(reverse('api:user:index'), {
+        'name': 'Test1',
+        'email': 'test10@test.nl',
+        'password': 'test12'
+    }, format='json')
+    assert response_failed.status_code == 400
+    assert response_failed.json()['error'] == 'ERROR_DISABLED_SIGNUP'
+    data_fixture.update_settings(allow_new_signups=True)
 
     response_failed_2 = client.post(reverse('api:user:index'), {
         'email': 'test'

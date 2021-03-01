@@ -6,13 +6,13 @@ from django.conf import settings
 from baserow.core.user.utils import normalize_email_address
 
 from .models import (
-    Group, GroupUser, GroupInvitation, Application, GROUP_USER_PERMISSION_CHOICES,
-    GROUP_USER_PERMISSION_ADMIN
+    Settings, Group, GroupUser, GroupInvitation, Application,
+    GROUP_USER_PERMISSION_CHOICES, GROUP_USER_PERMISSION_ADMIN
 )
 from .exceptions import (
     GroupDoesNotExist, ApplicationDoesNotExist, BaseURLHostnameNotAllowed,
-    UserNotInGroupError, GroupInvitationEmailMismatch, GroupInvitationDoesNotExist,
-    GroupUserDoesNotExist, GroupUserAlreadyExists
+    GroupInvitationEmailMismatch, GroupInvitationDoesNotExist, GroupUserDoesNotExist,
+    GroupUserAlreadyExists, IsNotAdminError
 )
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
@@ -24,6 +24,46 @@ from .emails import GroupInvitationEmail
 
 
 class CoreHandler:
+    def get_settings(self):
+        """
+        Returns a settings model instance containing all the admin configured settings.
+
+        :return: The settings instance.
+        :rtype: Settings
+        """
+
+        try:
+            return Settings.objects.all()[:1].get()
+        except Settings.DoesNotExist:
+            return Settings.objects.create()
+
+    def update_settings(self, user, settings_instance=None, **kwargs):
+        """
+        Updates one or more setting values if the user has staff permissions.
+
+        :param user: The user on whose behalf the settings are updated.
+        :type user: User
+        :param settings_instance: If already fetched, the settings instance can be
+            provided to avoid fetching the values for a second time.
+        :type settings_instance: Settings
+        :param kwargs: An dict containing the settings that need to be updated.
+        :type kwargs: dict
+        :return: The update settings instance.
+        :rtype: Settings
+        """
+
+        if not user.is_staff:
+            raise IsNotAdminError(user)
+
+        if not settings_instance:
+            settings_instance = self.get_settings()
+
+        for name, value in kwargs.items():
+            setattr(settings_instance, name, value)
+
+        settings_instance.save()
+        return settings_instance
+
     def get_group(self, group_id, base_queryset=None):
         """
         Selects a group with a given id from the database.
@@ -34,7 +74,6 @@ class CoreHandler:
             object. This can for example be used to do a `prefetch_related`.
         :type base_queryset: Queryset
         :raises GroupDoesNotExist: When the group with the provided id does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the group.
         :return: The requested group instance of the provided id.
         :rtype: Group
         """
@@ -299,7 +338,7 @@ class CoreHandler:
 
         return group_invitation
 
-    def get_group_invitation(self, user, group_invitation_id, base_queryset=None):
+    def get_group_invitation(self, group_invitation_id, base_queryset=None):
         """
         Selects a group invitation with a given id from the database.
 
@@ -325,8 +364,6 @@ class CoreHandler:
             raise GroupInvitationDoesNotExist(
                 f'The group invitation with id {group_invitation_id} does not exist.'
             )
-
-        group_invitation.group.has_user(user, 'ADMIN', raise_error=True)
 
         return group_invitation
 
@@ -487,7 +524,7 @@ class CoreHandler:
 
         return group_user
 
-    def get_application(self, user, application_id, base_queryset=None):
+    def get_application(self, application_id, base_queryset=None):
         """
         Selects an application with a given id from the database.
 
@@ -500,7 +537,6 @@ class CoreHandler:
         :type base_queryset: Queryset
         :raises ApplicationDoesNotExist: When the application with the provided id
             does not exist.
-        :raises UserNotInGroupError: When the user does not belong to the group.
         :return: The requested application instance of the provided id.
         :rtype: Application
         """
@@ -517,9 +553,6 @@ class CoreHandler:
                 f'The application with id {application_id} does not exist.'
             )
 
-        if not application.group.has_user(user):
-            raise UserNotInGroupError(user, application.group)
-
         return application
 
     def create_application(self, user, group, type_name, **kwargs):
@@ -535,13 +568,11 @@ class CoreHandler:
         :type type_name: str
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The created application instance.
         :rtype: Application
         """
 
-        if not group.has_user(user):
-            raise UserNotInGroupError(user, group)
+        group.has_user(user,  raise_error=True)
 
         # Figure out which model is used for the given application type.
         application_type = application_type_registry.get(type_name)
@@ -568,7 +599,6 @@ class CoreHandler:
         :param kwargs: The fields that need to be updated.
         :type kwargs: object
         :raises ValueError: If one of the provided parameters is invalid.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         :return: The updated application instance.
         :rtype: Application
         """
@@ -576,8 +606,7 @@ class CoreHandler:
         if not isinstance(application, Application):
             raise ValueError('The application is not an instance of Application.')
 
-        if not application.group.has_user(user):
-            raise UserNotInGroupError(user, application.group)
+        application.group.has_user(user, raise_error=True)
 
         application = set_allowed_attrs(kwargs, ['name'], application)
         application.save()
@@ -595,14 +624,12 @@ class CoreHandler:
         :param application: The application instance that needs to be deleted.
         :type application: Application
         :raises ValueError: If one of the provided parameters is invalid.
-        :raises UserNotInGroupError: When the user does not belong to the related group.
         """
 
         if not isinstance(application, Application):
             raise ValueError('The application is not an instance of Application')
 
-        if not application.group.has_user(user):
-            raise UserNotInGroupError(user, application.group)
+        application.group.has_user(user, raise_error=True)
 
         application_id = application.id
         application = application.specific

@@ -81,7 +81,13 @@ export const actions = {
       setToken(data.token, this.app)
       commit('SET_USER_DATA', data)
       dispatch('startRefreshTimeout')
-    } catch {
+    } catch (error) {
+      // If the server can't be reached because of a network error we want to
+      // fail hard so that the correct error message is shown.
+      if (error.response === undefined) {
+        throw error
+      }
+
       // The token could not be refreshed, this means the token is no longer
       // valid and the user not logged in anymore.
       unsetToken(this.app)
@@ -138,6 +144,9 @@ export const getters = {
   },
   getUsername(state) {
     return state.user ? state.user.username : ''
+  },
+  isStaff(state) {
+    return state.user ? state.user.is_staff : false
   },
   /**
    * Returns the amount of seconds it will take before the tokes expires.

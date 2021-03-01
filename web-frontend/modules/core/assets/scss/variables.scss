@@ -19,6 +19,7 @@ $color-primary-700: #0f6499 !default;
 $color-primary-800: #0a4970 !default;
 $color-primary-900: #062e47 !default;
 
+$color-neutral-10: #fcfcfc !default;
 $color-neutral-50: #fafafa !default;
 $color-neutral-100: #f5f5f5 !default;
 $color-neutral-200: #d9dbde !default;
@@ -86,13 +87,14 @@ $font-awesome-font-family: 'Font Awesome 5 Free', sans-serif !default;
 $font-awesome-font-weight: 900 !default;
 
 // API docs variables
-$api-docs-nav-width: 240px !default;
+$api-docs-nav-width: 220px !default;
 $api-docs-header-height: 52px !default;
 $api-docs-header-z-index: 4 !default;
 $api-docs-databases-z-index: 5 !default;
 $api-docs-nav-z-index: 3 !default;
 $api-docs-body-z-index: 2 !default;
 $api-docs-background-z-index: 1 !default;
+$api-docs-breakpoint: 1100px !default;
 
 // file field modal variables
 $file-field-modal-head-height: 62px !default;

@@ -31,6 +31,19 @@ def get_default_application_content_type():
     return ContentType.objects.get_for_model(Application)
 
 
+class Settings(models.Model):
+    """
+    The settings model represents the application wide settings that only admins can
+    change. This table can only contain a single row.
+    """
+
+    allow_new_signups = models.BooleanField(
+        default=True,
+        help_text='Indicates whether new users can create a new account when signing '
+                  'up.'
+    )
+
+
 class Group(CreatedAndUpdatedOnMixin, models.Model):
     name = models.CharField(max_length=100)
     users = models.ManyToManyField(User, through='GroupUser')

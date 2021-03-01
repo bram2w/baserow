@@ -5,7 +5,12 @@ Baserow is divided into two components, the **backend** and the
 contains some documentation about those endpoints and how to use them. These endpoints
 should never be used to show data on your own website because that would mean you have
 to expose your credentials or JWT token. They should only be used the make changes in
-in your data. In the future there are going to be features that enable you to expose 
+in your data. You can publicly expose your data in a safe way by creating a
+[database token](https://api.baserow.io/api/redoc/#operation/create_database_token)
+token, set the permissions and follow the automatically generated api docs at
+https://baserow.io/api/docs.
+
+In the future there are going to be features that enable you to expose 
 your data publicly in a safe way.
 
 ## OpenAPI spec

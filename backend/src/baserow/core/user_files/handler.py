@@ -12,7 +12,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from baserow.core.utils import sha256_hash, stream_size, random_string
+from baserow.core.utils import sha256_hash, stream_size, random_string, truncate_middle
 
 from .exceptions import (
     InvalidFileStreamError, FileSizeTooLargeError, FileURLCouldNotBeReached,
@@ -171,6 +171,7 @@ class UserFileHandler:
 
         storage = storage or default_storage
         hash = sha256_hash(stream)
+        file_name = truncate_middle(file_name, 64)
 
         try:
             return UserFile.objects.get(original_name=file_name, sha256_hash=hash)
