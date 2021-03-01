@@ -109,7 +109,7 @@ Created by Bram Wiepjes (Baserow) - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 1.0.0
+Version: 1.0.1
 
 The official repository can be found at https://gitlab.com/bramw/baserow.
 

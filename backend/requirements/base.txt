@@ -6,6 +6,7 @@ psycopg2==2.8.4
 mysqlclient==1.4.6
 ipython==7.13.0
 Faker==4.0.2
+Twisted==20.3.0
 gunicorn==20.0.4
 uvicorn[standard]==0.13.3
 django-mjml==0.9.0
