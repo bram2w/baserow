@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Released (2021-03-01)
 
 * Redesigned the left sidebar.
 * Fixed error when a very long user file name is provided when uploading.
