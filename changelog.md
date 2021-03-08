@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Prevent websocket reconnect loop when the authentication fails.
+
 ## Released (2021-03-01)
 
 * Redesigned the left sidebar.

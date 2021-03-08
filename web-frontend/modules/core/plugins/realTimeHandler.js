@@ -12,6 +12,8 @@ export class RealTimeHandler {
     this.page = null
     this.pageParameters = {}
     this.subscribedToPage = true
+    this.lastToken = null
+    this.authenticationSuccess = true
     this.registerCoreEvents()
   }
 
@@ -23,6 +25,16 @@ export class RealTimeHandler {
     this.reconnect = reconnect
 
     const token = this.context.store.getters['auth/token']
+
+    // Check if we already had a failed authentication response from the server before.
+    // If so, and if the authentication token has not changed, we don't need to connect
+    // because we already know it will fail.
+    if (!this.authenticationSuccess && token === this.lastToken) {
+      this.delayedReconnect()
+      return
+    }
+
+    this.lastToken = token
 
     // The web socket url is the same as the PUBLIC_BACKEND_URL apart from the
     // protocol.
@@ -76,20 +88,30 @@ export class RealTimeHandler {
       // page is already null we can mark it as subscribed.
       this.subscribedToPage = this.page === null
 
-      // Automatically reconnect if the socket closes.
-      if (this.reconnect) {
-        this.attempts++
-        this.context.store.dispatch('notification/setConnecting', true)
-
-        this.reconnectTimeout = setTimeout(
-          () => {
-            this.connect(true)
-          },
-          // After the first try, we want to try again every 5 seconds.
-          this.attempts > 0 ? 5000 : 0
-        )
-      }
+      // Automatically reconnect after the given timeout.
+      this.delayedReconnect()
     }
+  }
+
+  /**
+   * If reconnecting is enabled then a timeout is created that will try to connect
+   * to the backend one more time.
+   */
+  delayedReconnect() {
+    if (!this.reconnect) {
+      return
+    }
+
+    this.attempts++
+    this.context.store.dispatch('notification/setConnecting', true)
+
+    this.reconnectTimeout = setTimeout(
+      () => {
+        this.connect(true)
+      },
+      // After the first try, we want to try again every 5 seconds.
+      this.attempts > 1 ? 5000 : 0
+    )
   }
 
   /**
@@ -155,6 +177,10 @@ export class RealTimeHandler {
     // because we already know about the change.
     this.registerEvent('authentication', ({ store }, data) => {
       store.dispatch('auth/setWebSocketId', data.web_socket_id)
+
+      // Store if the authentication was successful in order to prevent retries that
+      // will fail.
+      this.authenticationSuccess = data.success
     })
 
     this.registerEvent('group_created', ({ store }, data) => {

@@ -42,6 +42,9 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         user = self.scope['user']
         web_socket_id = self.scope['web_socket_id']
 
+        if not user:
+            return
+
         # If the user has already joined another page we need to discard that
         # page first before we can join a new one.
         await self.discard_current_page()
