@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Prevent websocket reconnect loop when the authentication fails.
+* Added gunicorn worker test to the CI pipeline.
 
 ## Released (2021-03-01)
 

@@ -64,3 +64,5 @@ backend-setup:
   script:
     - pip install -e ./backend
     - python -c 'import baserow'
+    - export DJANGO_SETTINGS_MODULE='baserow.config.settings.demo'
+    - timeout --preserve-status 10s gunicorn --workers=1 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker baserow.config.asgi:application
