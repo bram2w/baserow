@@ -1,16 +1,14 @@
 <template>
   <div
-    class="grid-view__cell"
+    class="grid-view__cell active"
     :class="{
-      active: selected,
       editing: editing,
       invalid: editing && !isValid(),
     }"
     @contextmenu="stopContextIfEditing($event)"
   >
     <div v-show="!editing" class="grid-field-text">
-      <template v-if="!selected">{{ value }}</template>
-      <a v-if="selected" :href="value" target="_blank">{{ value }}</a>
+      <a :href="'mailto:' + value" target="_blank">{{ value }}</a>
     </div>
     <template v-if="editing">
       <input
@@ -29,10 +27,10 @@
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
-import URLField from '@baserow/modules/database/mixins/URLField'
+import emailField from '@baserow/modules/database/mixins/emailField'
 
 export default {
-  mixins: [gridField, gridFieldInput, URLField],
+  mixins: [gridField, gridFieldInput, emailField],
   methods: {
     afterEdit() {
       this.$nextTick(() => {

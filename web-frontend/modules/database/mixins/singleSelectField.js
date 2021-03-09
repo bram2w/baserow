@@ -7,7 +7,7 @@ export default {
   components: { FieldSingleSelectDropdown },
   computed: {
     valueId() {
-      return this.value !== null ? this.value.id : null
+      return this.value && this.value !== null ? this.value.id : null
     },
   },
   methods: {

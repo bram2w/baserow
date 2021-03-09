@@ -4,7 +4,7 @@
     <div v-if="loaded" :class="{ 'select-row-modal__loading': loading }">
       <Scrollbars
         ref="scrollbars"
-        horizontal="right"
+        horizontal="getHorizontalScrollbarElement"
         :style="{ left: '240px' }"
         @horizontal="horizontalScroll"
       ></Scrollbars>
@@ -189,6 +189,12 @@ export default {
     this.loaded = true
   },
   methods: {
+    /**
+     * Returns the scrollable element for the scrollbar.
+     */
+    getHorizontalScrollbarElement() {
+      return this.$refs.right
+    },
     /**
      * Event that is called when the users does any form of scrolling on the whole grid
      * surface.

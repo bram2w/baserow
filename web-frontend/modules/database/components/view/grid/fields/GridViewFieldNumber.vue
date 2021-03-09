@@ -1,8 +1,7 @@
 <template>
   <div
-    class="grid-view__cell"
+    class="grid-view__cell active"
     :class="{
-      active: selected,
       editing: editing,
       invalid: editing && !isValid(),
     }"

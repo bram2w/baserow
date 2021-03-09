@@ -1,10 +1,11 @@
 <template>
   <component
     :is="getFieldComponent(field.type)"
-    ref="field"
     :field="field"
     :value="row['field_' + field.id]"
     :selected="false"
+    :state="{}"
+    :read-only="true"
   />
 </template>
 
@@ -23,7 +24,9 @@ export default {
   },
   methods: {
     getFieldComponent(type) {
-      return this.$registry.get('field', type).getGridViewFieldComponent()
+      return this.$registry
+        .get('field', type)
+        .getFunctionalGridViewFieldComponent()
     },
   },
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="grid-view__cell" :class="{ active: selected }">
+  <div class="grid-view__cell active">
     <div class="grid-field-boolean">
       <div
         class="grid-field-boolean__checkbox"
@@ -32,9 +32,6 @@ export default {
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     toggle(value) {
-      if (!this.selected) {
-        return
-      }
       const oldValue = !!value
       const newValue = !value
       this.$emit('update', newValue, oldValue)

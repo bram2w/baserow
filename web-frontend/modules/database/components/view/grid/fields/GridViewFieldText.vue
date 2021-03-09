@@ -1,13 +1,13 @@
 <template>
   <div
     ref="cell"
-    class="grid-view__cell"
-    :class="{ active: selected, editing: editing }"
+    class="grid-view__cell active"
+    :class="{ editing: editing }"
     @contextmenu="stopContextIfEditing($event)"
   >
-    <div v-show="!editing" class="grid-field-text">{{ value }}</div>
+    <div v-if="!editing" class="grid-field-text">{{ value }}</div>
     <input
-      v-if="editing"
+      v-else
       ref="input"
       v-model="copy"
       type="text"
