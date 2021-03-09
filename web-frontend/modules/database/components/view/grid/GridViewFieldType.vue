@@ -8,6 +8,7 @@
       'grid-view__column--sorted':
         view.sortings.findIndex((sort) => sort.field === field.id) !== -1,
     }"
+    :style="{ width: width + 'px' }"
   >
     <div
       class="grid-view__description"
@@ -90,18 +91,29 @@
           </a>
         </li>
       </FieldContext>
-      <slot></slot>
+      <GridViewFieldWidthHandle
+        v-if="includeFieldWidthHandles"
+        class="grid-view__description-width"
+        :grid="view"
+        :field="field"
+        :width="width"
+      ></GridViewFieldWidthHandle>
     </div>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
+import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewFieldType',
-  components: { FieldContext },
+  components: { FieldContext, GridViewFieldWidthHandle },
+  mixins: [gridViewHelpers],
   props: {
     table: {
       type: Object,
@@ -115,8 +127,15 @@ export default {
       type: Object,
       required: true,
     },
+    includeFieldWidthHandles: {
+      type: Boolean,
+      required: false,
+    },
   },
   computed: {
+    width() {
+      return this.getFieldWidth(this.field.id)
+    },
     canFilter() {
       const filters = Object.values(this.$registry.getAll('viewFilter'))
       for (const type in filters) {
@@ -126,6 +145,9 @@ export default {
       }
       return false
     },
+    ...mapGetters({
+      fieldOptions: 'view/grid/getAllFieldOptions',
+    }),
   },
   methods: {
     async createFilter(event, view, field) {

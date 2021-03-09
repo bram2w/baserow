@@ -18,6 +18,10 @@ export function populateRow(row) {
     selectedBy: [],
     matchFilters: true,
     matchSortings: true,
+    // Keeping the selected state with the row has the best performance when navigating
+    // between cells.
+    selected: false,
+    selectedFieldId: -1,
   }
   return row
 }
@@ -56,6 +60,8 @@ export const state = () => ({
   scrollTop: 0,
   // The last windowHeight when the visibleByScrollTop was called.
   windowHeight: 0,
+  // Indicates if the user is hovering over the add row button.
+  addRowHover: false,
 })
 
 export const mutations = {
@@ -248,6 +254,21 @@ export const mutations = {
     if (index > -1) {
       row._.selectedBy.splice(index, 1)
     }
+  },
+  SET_ADD_ROW_HOVER(state, value) {
+    state.addRowHover = value
+  },
+  SET_SELECTED_CELL(state, { rowId, fieldId }) {
+    state.rows.forEach((row) => {
+      if (row._.selected) {
+        row._.selected = false
+        row._.selectedFieldId = -1
+      }
+      if (row.id === rowId) {
+        row._.selected = true
+        row._.selectedFieldId = fieldId
+      }
+    })
   },
 }
 
@@ -936,6 +957,12 @@ export const actions = {
       }
     }
   },
+  setAddRowHover({ commit }, value) {
+    commit('SET_ADD_ROW_HOVER', value)
+  },
+  setSelectedCell({ commit }, { rowId, fieldId }) {
+    commit('SET_SELECTED_CELL', { rowId, fieldId })
+  },
 }
 
 export const getters = {
@@ -1009,6 +1036,9 @@ export const getters = {
   isLast: (state) => (id) => {
     const index = state.rows.findIndex((row) => row.id === id)
     return index === state.rows.length - 1
+  },
+  getAddRowHover(state) {
+    return state.addRowHover
   },
 }
 

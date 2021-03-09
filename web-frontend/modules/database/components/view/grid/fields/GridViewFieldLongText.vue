@@ -1,8 +1,8 @@
 <template>
   <div
     ref="cell"
-    class="grid-view__cell grid-field-long-text__cell"
-    :class="{ active: selected, editing: editing }"
+    class="grid-view__cell grid-field-long-text__cell active"
+    :class="{ editing: editing }"
     @contextmenu="stopContextIfEditing($event)"
   >
     <div v-show="!editing" class="grid-field-long-text">{{ value }}</div>

@@ -91,6 +91,7 @@
 .grid-view__head {
   @include absolute(0, 0, auto, 0);
 
+  display: flex;
   height: 33px;
   background-color: $color-neutral-50;
   border-bottom: 1px solid $color-neutral-200;
@@ -177,6 +178,7 @@
   @extend .clearfix;
 
   position: relative;
+  display: flex;
   height: 32px + 1px;
 
   &.grid-view__row--warning::before {
@@ -202,7 +204,6 @@
 // Because the width of a column can be adjusted it is specified in the html file.
 .grid-view__column {
   position: relative;
-  float: left;
   height: 32px + 1px;
   border-right: 1px solid $color-neutral-200;
   border-bottom: 1px solid $color-neutral-200;
@@ -453,7 +454,10 @@
   color: $color-neutral-900;
   background-color: $white;
 
-  &:hover,
+  &:hover {
+    text-decoration: none;
+  }
+
   &.hover {
     background-color: $color-primary-100;
   }

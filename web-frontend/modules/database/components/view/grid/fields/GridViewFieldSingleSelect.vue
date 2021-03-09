@@ -1,9 +1,8 @@
 <template>
-  <div ref="cell" class="grid-view__cell" :class="{ active: selected }">
+  <div ref="cell" class="grid-view__cell active">
     <div
       ref="dropdownLink"
-      class="grid-field-single-select"
-      :class="{ 'grid-field-single-select--selected': selected }"
+      class="grid-field-single-select grid-field-single-select--selected"
       @click="toggleDropdown()"
     >
       <div
@@ -13,13 +12,9 @@
       >
         {{ value.value }}
       </div>
-      <i
-        v-if="selected"
-        class="fa fa-caret-down grid-field-single-select__icon"
-      ></i>
+      <i class="fa fa-caret-down grid-field-single-select__icon"></i>
     </div>
     <FieldSingleSelectDropdown
-      v-if="selected"
       ref="dropdown"
       :value="valueId"
       :options="field.select_options"
@@ -48,10 +43,6 @@ export default {
   },
   methods: {
     toggleDropdown(value, query) {
-      if (!this.selected) {
-        return
-      }
-
       this.$refs.dropdown.toggle(this.$refs.dropdownLink, value, query)
     },
     hideDropdown() {
@@ -85,7 +76,6 @@ export default {
       document.body.addEventListener('keydown', this.$el.keydownEvent)
     },
     beforeUnSelect() {
-      this.hideDropdown()
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     canSelectNext() {

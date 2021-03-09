@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="grid-view__cell grid-field-link-row__cell"
-    :class="{ active: selected }"
-  >
+  <div class="grid-view__cell grid-field-link-row__cell active">
     <div class="grid-field-link-row__list">
       <div
         v-for="item in value"
