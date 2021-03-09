@@ -26,6 +26,12 @@ export class RealTimeHandler {
 
     const token = this.context.store.getters['auth/token']
 
+    // If the user is already connected to the web socket, we don't have to do
+    // anything.
+    if (this.connected) {
+      return
+    }
+
     // Check if we already had a failed authentication response from the server before.
     // If so, and if the authentication token has not changed, we don't need to connect
     // because we already know it will fail.
@@ -82,14 +88,20 @@ export class RealTimeHandler {
      * want to miss any important real time updates. After the first attempt we want to
      * delay retry with 5 seconds.
      */
-    this.socket.onclose = () => {
+    this.socket.onclose = (event) => {
       this.connected = false
       // By default the user not subscribed to a page a.k.a `null`, so if the current
       // page is already null we can mark it as subscribed.
       this.subscribedToPage = this.page === null
 
-      // Automatically reconnect after the given timeout.
-      this.delayedReconnect()
+      // Automatically reconnect after the given timeout if the socket closes not
+      // normally.
+      // 1000=CLOSE_NORMAL
+      // 1001=CLOSE_GOING_AWAY
+      // 1002+=an error.
+      if (event.code > 1001) {
+        this.delayedReconnect()
+      }
     }
   }
 
