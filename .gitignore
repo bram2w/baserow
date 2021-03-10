@@ -91,3 +91,9 @@ __pycache__
 *.egg-info
 
 docker-compose.override.yml
+
+# python virtual envs
+venv/
+
+# intellij config files
+*.iml
