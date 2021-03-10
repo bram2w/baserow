@@ -9,13 +9,7 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-eye-slash"></i>
-      <span v-if="hiddenFields.length === 1"
-        >{{ hiddenFields.length }} hidden field</span
-      >
-      <span v-else-if="hiddenFields.length > 1"
-        >{{ hiddenFields.length }} hidden fields</span
-      >
-      <span v-else>Hide fields</span>
+      {{ hiddenFieldsTitle }}
     </a>
     <GridViewHideContext
       ref="context"
@@ -51,6 +45,16 @@ export default {
         )
         return !exists || (exists && this.fieldOptions[field.id].hidden)
       })
+    },
+    hiddenFieldsTitle() {
+      const numberOfHiddenFields = this.hiddenFields.length
+      if (numberOfHiddenFields === 0) {
+        return 'Hide Fields'
+      } else if (numberOfHiddenFields === 1) {
+        return `${numberOfHiddenFields} hidden field`
+      } else {
+        return `${numberOfHiddenFields} hidden fields`
+      }
     },
     ...mapGetters({
       fieldOptions: 'view/grid/getAllFieldOptions',
