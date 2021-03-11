@@ -1,19 +1,19 @@
 # Field type
 
-A field is an abstraction that defines how table data is stored per column. More 
-information can be found on found on the 
+A field is an abstraction that defines how table data is stored per column. More
+information can be found on the
 [database plugin page](../getting-started/database-plugin.md). This is a tutorial about
-how to create your own custom table field type for Baserow via a plugin. We are going
-to create a not working hello world integer field. Of course a number field with the
-more features already exists, this is just for example purposes. In the end the user 
-can create an integer field that only shows a hello world message. We expect that you 
+how to create your own custom table field type for Baserow via a plugin. We are going to
+create a integer field which displays as "hello world". Of course a number field with
+the more features already exists, this is just for example purposes. In the end the user
+can create an integer field that only shows a hello world message. We expect that you
 are using the [plugin boilerplate](./boilerplate.md).
 
 ## Backend
 
-We are going to start by creating an `IntegerField` model that extends the `Field` 
-model. It will have a property to indicate if a negative number is allowed which can
-be set for each field that is created. Add/modify the following files.
+We are going to start by creating an `IntegerField` model that extends the `Field`
+model. It will have a property to indicate if a negative number is allowed which can be
+set for each field that is created. Add/modify the following files.
 
 plugins/my_baserow_plugin/backend/src/my_baserow_plugin/models.py
 ```python
@@ -27,12 +27,12 @@ class IntegerField(Field):
 
 ```
 
-Depending on the field model instance a model and serializer field must be returned.
-The model field is used when generating the table's model that is used to select and 
-update the data. The serializer field is used when exposing the data via the REST API
-to the web-frontend. For more information about the properties and methods related to 
-the field type you can check the
-`backend/src/baserow/contrib/database/fields/registries.py::FieldType` class in the 
+Depending on the field model instance a model and serializer field must be returned. The
+model field is used when generating the table's model that is used to select and update
+the data. The serializer field is used when exposing the data via the REST API to the
+web-frontend. For more information about the properties and methods related to the field
+type you can check the
+`backend/src/baserow/contrib/database/fields/registries.py::FieldType` class in the
 Baserow repository.
 
 plugins/my_baserow_plugin/backend/src/my_baserow_plugin/field_types.py
@@ -89,15 +89,15 @@ Don't forget to create and apply the migrations because we have created a new mo
 
 ```
 $ baserow makemigrations my_baserow_plugin
-$ baserow migrate 
+$ baserow migrate
 ```
 
 ## Web frontend
 
-Because the backend and web-frontend are two separate applications that only 
-communicate via a REST API with each other, the web-frontend does not yet know about 
-the existence of the `integer` field type. We can add this in a similar way. Add/modify
-the following files in the web-frontend part of the plugin.
+Because the backend and web-frontend are two separate applications that only communicate
+via a REST API with each other, the web-frontend does not yet know about the existence
+of the `integer` field type. We can add this in a similar way. Add/modify the following
+files in the web-frontend part of the plugin.
 
 plugins/my_baserow_plugin/web-frontend/fieldTypes.js
 ```javascript
@@ -145,11 +145,11 @@ export default ({ store, app }) => {
 }
 ```
 
-The GridViewIntegerField component is returned by the `getGridViewFieldComponent` 
-method of the `IntegerFieldType` class which means that this component is added for 
-each data row field that has the `integer` type. For now we only add "Hello World" for 
-example purposes so it doesn't actually work, but there are plenty of examples in the
-Baserow repository in the directory 
+The GridViewIntegerField component is returned by the `getGridViewFieldComponent`
+method of the `IntegerFieldType` class which means that this component is added for each
+data row field that has the `integer` type. For now we only add "Hello World" for
+example purposes so it doesn't actually display the number, but there are plenty of
+examples in the Baserow repository in the directory
 `web-frontend/modules/database/components/view/grid`.
 
 plugins/my_baserow_plugin/web-frontend/components/GridViewIntegerField.vue
@@ -171,10 +171,10 @@ export default {
 
 The `RowEditIntegerField` component is returned by the `getRowEditFieldComponent`
 method of the `IntegerFieldType` class which means that this component is added in the
-popup row form. This form is shown when the expand icon at the left side of row has
-been clicked by the user. For now we only add "Hello World" for example purposes so it 
-doesn't actually work, but there are plenty of examples in the Baserow repository in 
-the directory `web-frontend/modules/database/components/row`.
+popup row form. This form is shown when the expand icon at the left side of row has been
+clicked by the user. For now we only add "Hello World" for example purposes, but there
+are plenty of examples in the Baserow repository in the
+directory `web-frontend/modules/database/components/row`.
 
 plugins/my_baserow_plugin/web-frontend/components/RowEditIntegerField.vue
 ```vue
@@ -193,9 +193,9 @@ export default {
 </script>
 ```
 
-The `SubFormIntegerField` component will be added to the context menu form when 
-creating or editing a field. If there are extra properties defined in the related model
-in the backend then they can be added to the form using this component.
+The `SubFormIntegerField` component will be added to the context menu form when creating
+or editing a field. If there are extra properties defined in the related model in the
+backend then they can be added to the form using this component.
 
 plugins/my_baserow_plugin/web-frontend/components/SubFormIntegerField.vue
 ```vue

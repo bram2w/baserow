@@ -13,7 +13,7 @@ We are going to start by creating a new application type instance for our text f
 add it to the application type registry. By doing this the Baserow backend knows we 
 have an additional application type names `text_file`. Creating the following python 
 classes and modify the plugins config. Every time a user creates a new text file 
-application a TextFile model instance is automatically created. It also possible to 
+application a TextFile model instance is automatically created. It is also possible to 
 save unique attributes for each created text file by adding the properties to the 
 model, but we do not need that in this case.
 
