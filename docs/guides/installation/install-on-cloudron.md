@@ -19,7 +19,7 @@ $ sudo npm install -g cloudron
 
 ## Installing Baserow
 
-If you have not already been logged into your Cloudron platfrom you can do so by
+If you have not already been logged into your Cloudron platform you can do so by
 executing the following command.
 
 ```

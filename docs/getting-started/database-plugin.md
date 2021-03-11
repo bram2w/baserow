@@ -13,7 +13,7 @@ Every table has its own schema representation in the PostgreSQL database.
 
 There is a `baserow.contrib.database.table.handler.TableHandler` handler class that has
 all kinds of methods related to creating, modifying, and deleting tables. Another nice
-thing is that a Django model of the table can easily be generated. Lets say you have 
+thing is that a Django model of the table can easily be generated. Let's say you have 
 the following table with id `id` and you want select all the data.
 
 | Model name | Brand | Price |
