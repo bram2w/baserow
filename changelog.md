@@ -6,6 +6,7 @@
 * Refactored the GridView component and improved interface speed.
 * Prevent websocket reconnect when the connection closes without error.
 * Added gunicorn worker test to the CI pipeline.
+* Made it possible to re-order fields in a grid view.
 * Show the number of filters and sorts active in the header of a grid view.
 * The first user to sign-up after installation now gets given staff status.
 

@@ -9,6 +9,7 @@
         view.sortings.findIndex((sort) => sort.field === field.id) !== -1,
     }"
     :style="{ width: width + 'px' }"
+    @mousedown="startDragging($event, field)"
   >
     <div
       class="grid-view__description"
@@ -22,6 +23,7 @@
         ref="contextLink"
         class="grid-view__description-options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
+        @mousedown.stop
       >
         <i class="fas fa-caret-down"></i>
       </a>
@@ -132,6 +134,11 @@ export default {
       required: false,
     },
   },
+  data() {
+    return {
+      dragging: false,
+    }
+  },
   computed: {
     width() {
       return this.getFieldWidth(this.field.id)
@@ -209,6 +216,10 @@ export default {
       } catch (error) {
         notifyIf(error, 'view')
       }
+    },
+    startDragging(event, field) {
+      event.preventDefault()
+      this.$emit('dragging', { field, event })
     },
   },
 }

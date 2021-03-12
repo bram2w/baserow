@@ -113,6 +113,12 @@ export class ViewType extends Registerable {
   fieldCreated(context, table, field, fieldType) {}
 
   /**
+   * Method that is called when a field has been deleted. This can be useful to
+   * maintain data integrity.
+   */
+  fieldDeleted(context, field, fieldType) {}
+
+  /**
    * Method that is called when a field has been changed. This can be useful to
    * maintain data integrity by updating the values.
    */
@@ -154,6 +160,10 @@ export class ViewType extends Registerable {
 }
 
 export class GridViewType extends ViewType {
+  static getMaxPossibleOrderValue() {
+    return 32767
+  }
+
   static getType() {
     return 'grid'
   }
@@ -194,10 +204,17 @@ export class GridViewType extends ViewType {
         values: {
           width: 200,
           hidden: false,
+          order: GridViewType.getMaxPossibleOrderValue(),
         },
       },
       { root: true }
     )
+  }
+
+  async fieldDeleted({ dispatch }, field, fieldType) {
+    await dispatch('view/grid/forceDeleteFieldOptions', field.id, {
+      root: true,
+    })
   }
 
   isCurrentView(store, tableId) {

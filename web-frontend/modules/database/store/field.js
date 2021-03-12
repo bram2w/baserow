@@ -224,10 +224,20 @@ export const actions = {
   /**
    * Remove the field from the items without calling the server.
    */
-  forceDelete({ commit, dispatch }, field) {
+  async forceDelete(context, field) {
+    const { commit, dispatch } = context
+
     // Also delete the related filters if there are any.
     dispatch('view/fieldDeleted', { field }, { root: true })
     commit('DELETE_ITEM', field.id)
+
+    // Call the field delete event on all the registered views because they might
+    // need to change things in loaded data. For example the grid field will remove the
+    // field options of that field.
+    const fieldType = this.$registry.get('field', field.type)
+    for (const viewType of Object.values(this.$registry.getAll('view'))) {
+      await viewType.fieldDeleted(context, field, fieldType)
+    }
   },
 }
 
