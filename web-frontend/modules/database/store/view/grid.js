@@ -4,6 +4,7 @@ import _ from 'lodash'
 import BigNumber from 'bignumber.js'
 
 import { uuid } from '@baserow/modules/core/utils/string'
+import { clone } from '@baserow/modules/core/utils/object'
 import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 import {
@@ -233,6 +234,11 @@ export const mutations = {
       state.fieldOptions = _.assign({}, state.fieldOptions, {
         [fieldId]: values,
       })
+    }
+  },
+  DELETE_FIELD_OPTIONS(state, fieldId) {
+    if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
+      delete state.fieldOptions[fieldId]
     }
   },
   SET_ROW_HOVER(state, { row, value }) {
@@ -898,6 +904,47 @@ export const actions = {
    */
   forceUpdateAllFieldOptions({ commit }, fieldOptions) {
     commit('UPDATE_ALL_FIELD_OPTIONS', fieldOptions)
+  },
+  /**
+   * Updates the order of all the available field options. The provided order parameter
+   * should be an array containing the field ids in the correct order.
+   */
+  async updateFieldOptionsOrder(
+    { commit, getters, dispatch },
+    { gridId, order }
+  ) {
+    const oldFieldOptions = clone(getters.getAllFieldOptions)
+    const newFieldOptions = clone(getters.getAllFieldOptions)
+
+    // Update the order of the field options that have not been provided in the order.
+    // They will get a position that places them after the provided field ids.
+    let i = 0
+    Object.keys(newFieldOptions).forEach((fieldId) => {
+      if (!order.includes(parseInt(fieldId))) {
+        newFieldOptions[fieldId].order = order.length + i
+        i++
+      }
+    })
+
+    // Update create the field options and set the correct order value.
+    order.forEach((fieldId, index) => {
+      const id = fieldId.toString()
+      if (Object.prototype.hasOwnProperty.call(newFieldOptions, id)) {
+        newFieldOptions[fieldId.toString()].order = index
+      }
+    })
+
+    return await dispatch('updateAllFieldOptions', {
+      gridId,
+      oldFieldOptions,
+      newFieldOptions,
+    })
+  },
+  /**
+   * Deletes the field options of the provided field id if they exist.
+   */
+  forceDeleteFieldOptions({ commit }, fieldId) {
+    commit('DELETE_FIELD_OPTIONS', fieldId)
   },
   setRowHover({ commit }, { row, value }) {
     commit('SET_ROW_HOVER', { row, value })

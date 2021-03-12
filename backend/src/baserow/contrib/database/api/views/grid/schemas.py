@@ -17,6 +17,14 @@ grid_view_field_options_schema = {
                     'example': True,
                     'description': 'Whether or not the field should be hidden in the '
                                    'current view.'
+                },
+                'order': {
+                    'type': 'integer',
+                    'example': 0,
+                    'description': 'The position that the field has within the view, '
+                                   'lowest first. If there is another field with the '
+                                   'same order value then the field with the lowest '
+                                   'id must be shown first.'
                 }
             }
         },

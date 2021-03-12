@@ -159,6 +159,9 @@ class GridViewFieldOptions(models.Model):
     # abstraction in the web-frontend.
     width = models.PositiveIntegerField(default=200)
     hidden = models.BooleanField(default=False)
+    # The default value is the maximum value of the small integer field because a newly
+    # created field must always be last.
+    order = models.SmallIntegerField(default=32767)
 
     class Meta:
         ordering = ('field_id',)

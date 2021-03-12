@@ -14,8 +14,10 @@ def test_grid_view_get_field_options(data_fixture):
     assert len(field_options) == 2
     assert field_options[0].field_id == field_1.id
     assert field_options[0].width == 200
+    assert field_options[0].order == 32767
     assert field_options[1].field_id == field_2.id
     assert field_options[1].width == 200
+    assert field_options[1].order == 32767
 
     field_3 = data_fixture.create_text_field(table=table)
 

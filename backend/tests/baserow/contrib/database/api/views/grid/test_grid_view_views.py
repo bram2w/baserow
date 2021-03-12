@@ -226,8 +226,10 @@ def test_list_rows_include_field_options(api_client, data_fixture):
     assert len(response_json['field_options']) == 2
     assert response_json['field_options'][str(text_field.id)]['width'] == 200
     assert response_json['field_options'][str(text_field.id)]['hidden'] is False
+    assert response_json['field_options'][str(text_field.id)]['order'] == 32767
     assert response_json['field_options'][str(number_field.id)]['width'] == 200
     assert response_json['field_options'][str(number_field.id)]['hidden'] is False
+    assert response_json['field_options'][str(number_field.id)]['order'] == 32767
 
 
 @pytest.mark.django_db
@@ -385,16 +387,20 @@ def test_patch_grid_view(api_client, data_fixture):
     assert len(response_json['field_options']) == 2
     assert response_json['field_options'][str(text_field.id)]['width'] == 300
     assert response_json['field_options'][str(text_field.id)]['hidden'] is True
+    assert response_json['field_options'][str(text_field.id)]['order'] == 32767
     assert response_json['field_options'][str(number_field.id)]['width'] == 200
     assert response_json['field_options'][str(number_field.id)]['hidden'] is False
+    assert response_json['field_options'][str(number_field.id)]['order'] == 32767
     options = grid.get_field_options()
     assert len(options) == 2
     assert options[0].field_id == text_field.id
     assert options[0].width == 300
     assert options[0].hidden is True
+    assert options[0].order == 32767
     assert options[1].field_id == number_field.id
     assert options[1].width == 200
     assert options[1].hidden is False
+    assert options[1].order == 32767
 
     url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
     response = api_client.patch(

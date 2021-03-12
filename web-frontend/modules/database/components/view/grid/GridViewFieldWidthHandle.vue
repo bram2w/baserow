@@ -1,5 +1,5 @@
 <template>
-  <div :class="{ dragging: dragging }" @mousedown="start($event)"></div>
+  <div :class="{ dragging: dragging }" @mousedown.stop="start($event)"></div>
 </template>
 
 <script>

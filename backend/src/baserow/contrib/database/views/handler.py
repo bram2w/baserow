@@ -160,7 +160,7 @@ class ViewHandler:
         :param user: The user on whose behalf the request is made.
         :type user: User
         :param grid_view: The grid view for which the field options need to be updated.
-        :type grid_view: Model
+        :type grid_view: GridView
         :param field_options: A dict with the field ids as the key and a dict
             containing the values that need to be updated as value.
         :type field_options: dict

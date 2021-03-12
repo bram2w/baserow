@@ -53,6 +53,7 @@
       :table="table"
       :view="view"
       :include-add-field="true"
+      :can-order-fields="true"
       :style="{ left: leftWidth + 'px' }"
       @refresh="$emit('refresh', $event)"
       @row-hover="setRowHover($event.row, $event.value)"
@@ -64,6 +65,7 @@
       @unselected="unselectedCell($event)"
       @select-next="selectNextCell($event)"
       @edit-modal="$refs.rowEditModal.show($event.id)"
+      @scroll="scroll($event.pixelY, $event.pixelX)"
     ></GridViewSection>
     <Context ref="rowContext">
       <ul class="context__menu">

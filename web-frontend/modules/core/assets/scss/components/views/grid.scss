@@ -466,3 +466,17 @@
     padding-left: 10px;
   }
 }
+
+.grid-view__field-dragging {
+  @include absolute(0, auto);
+
+  z-index: 4;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.grid-view__field-target {
+  @include absolute(0, auto, 48px, auto);
+
+  z-index: 5;
+  border-left: solid 1px $color-primary-900;
+}

@@ -14,6 +14,7 @@
       :filters="view.filters"
       :include-field-width-handles="includeFieldWidthHandles"
       @refresh="$emit('refresh', $event)"
+      @dragging="$emit('dragging', $event)"
     ></GridViewFieldType>
     <div
       v-if="includeAddField"
