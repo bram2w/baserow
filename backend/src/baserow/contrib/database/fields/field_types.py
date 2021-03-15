@@ -330,7 +330,10 @@ class DateFieldType(FieldType):
 
             return f"""
                 begin
-                    p_in = {sql_function}(p_in::text, 'FM{sql_format}');
+                    p_in = GREATEST(
+                        {sql_function}(p_in::text, 'FM{sql_format}'),
+                        '0001-01-01'::date
+                    );
                 exception when others then end;
             """
 
