@@ -79,7 +79,7 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
             'parameters': parameters
         })
 
-    async def discard_current_page(self):
+    async def discard_current_page(self, send_confirmation=True):
         """
         If the user has subscribed to another page then he will be unsubscribed from
         the last page.
@@ -97,11 +97,12 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         del self.scope['page']
         del self.scope['page_parameters']
 
-        await self.send_json({
-            'type': 'page_discard',
-            'page': page_type,
-            'parameters': page_parameters
-        })
+        if send_confirmation:
+            await self.send_json({
+                'type': 'page_discard',
+                'page': page_type,
+                'parameters': page_parameters
+            })
 
     async def broadcast_to_users(self, event):
         """
@@ -142,5 +143,5 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json(payload)
 
     async def disconnect(self, message):
-        await self.discard_current_page()
+        await self.discard_current_page(send_confirmation=False)
         await self.channel_layer.group_discard('users', self.channel_name)
