@@ -323,18 +323,32 @@ class DateFieldType(FieldType):
         if from_field_type.type != self.type and connection.vendor == 'postgresql':
             sql_function = 'TO_DATE'
             sql_format = DATE_FORMAT[to_field.date_format]['sql']
+            sql_type = 'date'
 
             if to_field.date_include_time:
                 sql_function = 'TO_TIMESTAMP'
                 sql_format += ' ' + DATE_TIME_FORMAT[to_field.date_time_format]['sql']
+                sql_type = 'timestamp'
 
             return f"""
                 begin
-                    p_in = GREATEST(
-                        {sql_function}(p_in::text, 'FM{sql_format}'),
-                        '0001-01-01'::date
-                    );
-                exception when others then end;
+                    IF char_length(p_in::text) < 5 THEN
+                        p_in = null;
+                    ELSEIF p_in IS NULL THEN
+                        p_in = null;
+                    ELSE
+                        p_in = GREATEST(
+                            {sql_function}(p_in::text, 'FM{sql_format}'),
+                            '0001-01-01'::{sql_type}
+                        );
+                    END IF;
+                exception when others then
+                    begin
+                        p_in = GREATEST(p_in::{sql_type}, '0001-01-01'::{sql_type});
+                    exception when others then
+                        p_in = p_default;
+                    end;
+                end;
             """
 
         return super().get_alter_column_prepare_old_value(connection, from_field,
