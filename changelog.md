@@ -18,6 +18,7 @@
   reconnect loop stops.
 * Fixed 100X backend web socket errors when refreshing the page.
 * Fixed SSRF bug in the file upload by URL by blocking urls to the private network.
+* Fixed bug where an invalid date could be converted to 0001-01-01.
 
 ## Released (2021-03-01)
 
