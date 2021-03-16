@@ -2,6 +2,7 @@ import { uuid } from '@baserow/modules/core/utils/string'
 
 export const state = () => ({
   connecting: false,
+  failedConnecting: false,
   items: [],
 })
 
@@ -15,6 +16,9 @@ export const mutations = {
   },
   SET_CONNECTING(state, value) {
     state.connecting = value
+  },
+  SET_FAILED_CONNECTING(state, value) {
+    state.failedConnecting = value
   },
 }
 
@@ -46,7 +50,16 @@ export const actions = {
     commit('REMOVE', notification)
   },
   setConnecting({ commit }, value) {
+    if (value) {
+      commit('SET_FAILED_CONNECTING', false)
+    }
     commit('SET_CONNECTING', value)
+  },
+  setFailedConnecting({ commit }, value) {
+    if (value) {
+      commit('SET_CONNECTING', false)
+    }
+    commit('SET_FAILED_CONNECTING', value)
   },
 }
 

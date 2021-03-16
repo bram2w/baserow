@@ -7,8 +7,8 @@ export class RealTimeHandler {
     this.connected = false
     this.reconnect = false
     this.reconnectTimeout = null
-    this.events = {}
     this.attempts = 0
+    this.events = {}
     this.page = null
     this.pageParameters = {}
     this.subscribedToPage = true
@@ -32,11 +32,15 @@ export class RealTimeHandler {
       return
     }
 
-    // Check if we already had a failed authentication response from the server before.
-    // If so, and if the authentication token has not changed, we don't need to connect
-    // because we already know it will fail.
-    if (!this.authenticationSuccess && token === this.lastToken) {
-      this.delayedReconnect()
+    // Stop connecting if we have already tried more than 10 times, if we do not have
+    // an authentication token or if the server has already responded with a failed
+    // authentication error and the token has not changed.
+    if (
+      this.attempts > 10 ||
+      token === null ||
+      (!this.authenticationSuccess && token === this.lastToken)
+    ) {
+      this.context.store.dispatch('notification/setFailedConnecting', true)
       return
     }
 
@@ -88,20 +92,12 @@ export class RealTimeHandler {
      * want to miss any important real time updates. After the first attempt we want to
      * delay retry with 5 seconds.
      */
-    this.socket.onclose = (event) => {
+    this.socket.onclose = () => {
       this.connected = false
       // By default the user not subscribed to a page a.k.a `null`, so if the current
       // page is already null we can mark it as subscribed.
       this.subscribedToPage = this.page === null
-
-      // Automatically reconnect after the given timeout if the socket closes not
-      // normally.
-      // 1000=CLOSE_NORMAL
-      // 1001=CLOSE_GOING_AWAY
-      // 1002+=an error.
-      if (event.code > 1001) {
-        this.delayedReconnect()
-      }
+      this.delayedReconnect()
     }
   }
 
@@ -166,6 +162,7 @@ export class RealTimeHandler {
     }
 
     this.context.store.dispatch('notification/setConnecting', false)
+    this.context.store.dispatch('notification/setFailedConnecting', false)
     clearTimeout(this.reconnectTimeout)
     this.reconnect = false
     this.attempts = 0
