@@ -4,18 +4,18 @@ export default (client) => {
       const config = {
         params: {},
       }
-      const includes = []
+      const include = []
 
       if (includeFilters) {
-        includes.push('filters')
+        include.push('filters')
       }
 
       if (includeSortings) {
-        includes.push('sortings')
+        include.push('sortings')
       }
 
-      if (includes.length > 0) {
-        config.params.includes = includes.join(',')
+      if (include.length > 0) {
+        config.params.include = include.join(',')
       }
 
       return client.get(`/database/views/table/${tableId}/`, config)

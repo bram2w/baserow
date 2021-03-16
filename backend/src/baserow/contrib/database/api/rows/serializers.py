@@ -7,7 +7,6 @@ from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.core.utils import model_default_values, dict_to_object
 from baserow.contrib.database.fields.registries import field_type_registry
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -133,3 +132,6 @@ def get_example_row_serializer_class(add_id=False):
 example_pagination_row_serializer_class = get_example_pagination_serializer_class(
     get_example_row_serializer_class(True)
 )
+example_pagination_row_serializer_class_with_field_options = \
+    get_example_pagination_serializer_class(
+        get_example_row_serializer_class(True), add_field_options=True)

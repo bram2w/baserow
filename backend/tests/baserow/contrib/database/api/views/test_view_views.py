@@ -98,7 +98,7 @@ def test_list_views_including_filters(api_client, data_fixture):
     assert 'filters' not in response_json[1]
 
     response = api_client.get(
-        '{}?includes=filters'.format(reverse(
+        '{}?include=filters'.format(reverse(
             'api:database:views:list',
             kwargs={'table_id': table_1.id}
         )),
@@ -148,7 +148,7 @@ def test_list_views_including_sortings(api_client, data_fixture):
     assert 'sortings' not in response_json[1]
 
     response = api_client.get(
-        '{}?includes=sortings'.format(reverse(
+        '{}?include=sortings'.format(reverse(
             'api:database:views:list',
             kwargs={'table_id': table_1.id}
         )),
@@ -232,7 +232,7 @@ def test_create_view(api_client, data_fixture):
     assert 'sortings' not in response_json
 
     response = api_client.post(
-        '{}?includes=filters,sortings'.format(
+        '{}?include=filters,sortings'.format(
             reverse('api:database:views:list', kwargs={'table_id': table.id})
         ),
         {
@@ -318,7 +318,7 @@ def test_get_view(api_client, data_fixture):
 
     url = reverse('api:database:views:item', kwargs={'view_id': view.id})
     response = api_client.get(
-        '{}?includes=filters,sortings'.format(url),
+        '{}?include=filters,sortings'.format(url),
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
@@ -417,7 +417,7 @@ def test_update_view(api_client, data_fixture):
     filter_1 = data_fixture.create_view_filter(view=view)
     url = reverse('api:database:views:item', kwargs={'view_id': view.id})
     response = api_client.patch(
-        '{}?includes=filters,sortings'.format(url),
+        '{}?include=filters,sortings'.format(url),
         {'filter_type': 'AND'},
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'

@@ -148,7 +148,7 @@ def allowed_includes(*allowed):
     """
     A view method decorator that checks which allowed includes are in the GET
     parameters of the request. The allowed arguments are going to be added to the
-    view method kwargs and if they are in the includes GET parameter the value will
+    view method kwargs and if they are in the `include` GET parameter the value will
     be True.
 
     Imagine this request:
@@ -174,7 +174,7 @@ def allowed_includes(*allowed):
     def validate_decorator(func):
         def func_wrapper(*args, **kwargs):
             request = get_request(args)
-            raw_include = request.GET.get('includes', None)
+            raw_include = request.GET.get('include', None)
             includes = raw_include.split(',') if raw_include else []
 
             for include in allowed:
