@@ -52,6 +52,10 @@ class ErrorHandler {
         'Invalid URL',
         'The provided file URL could not be reached.'
       ),
+      ERROR_INVALID_FILE_URL: new ResponseErrorMessage(
+        'Invalid URL',
+        'The provided file URL is invalid or not allowed.'
+      ),
     }
 
     // A temporary notFoundMap containing the error messages for when the

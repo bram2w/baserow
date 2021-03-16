@@ -11,13 +11,15 @@ from rest_framework.permissions import IsAuthenticated
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.schemas import get_error_schema
 from baserow.core.user_files.exceptions import (
-    InvalidFileStreamError, FileSizeTooLargeError, FileURLCouldNotBeReached
+    InvalidFileStreamError, FileSizeTooLargeError, FileURLCouldNotBeReached,
+    InvalidFileURLError
 )
 from baserow.core.user_files.handler import UserFileHandler
 
 from .serializers import UserFileSerializer, UserFileUploadViaURLRequestSerializer
 from .errors import (
-    ERROR_INVALID_FILE, ERROR_FILE_SIZE_TOO_LARGE, ERROR_FILE_URL_COULD_NOT_BE_REACHED
+    ERROR_INVALID_FILE, ERROR_FILE_SIZE_TOO_LARGE, ERROR_FILE_URL_COULD_NOT_BE_REACHED,
+    ERROR_INVALID_FILE_URL
 )
 
 
@@ -70,7 +72,8 @@ class UploadViaURLView(APIView):
             400: get_error_schema([
                 'ERROR_INVALID_FILE',
                 'ERROR_FILE_SIZE_TOO_LARGE',
-                'ERROR_FILE_URL_COULD_NOT_BE_REACHED'
+                'ERROR_FILE_URL_COULD_NOT_BE_REACHED',
+                'ERROR_INVALID_FILE_URL'
             ])
         }
     )
@@ -78,7 +81,8 @@ class UploadViaURLView(APIView):
     @map_exceptions({
         InvalidFileStreamError: ERROR_INVALID_FILE,
         FileSizeTooLargeError: ERROR_FILE_SIZE_TOO_LARGE,
-        FileURLCouldNotBeReached: ERROR_FILE_URL_COULD_NOT_BE_REACHED
+        FileURLCouldNotBeReached: ERROR_FILE_URL_COULD_NOT_BE_REACHED,
+        InvalidFileURLError: ERROR_INVALID_FILE_URL
     })
     @validate_body(UserFileUploadViaURLRequestSerializer)
     def post(self, request, data):

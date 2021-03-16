@@ -17,7 +17,7 @@
 * Show an error to the user when the web socket connection could not be made and the
   reconnect loop stops.
 * Fixed 100X backend web socket errors when refreshing the page.
-* Prevented the date field value being negative.
+* Fixed SSRF bug in the file upload by URL by blocking urls to the private network.
 
 ## Released (2021-03-01)
 

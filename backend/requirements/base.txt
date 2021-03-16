@@ -17,3 +17,4 @@ Pillow==8.0.1
 channels==3.0.3
 channels-redis==3.2.0
 celery[redis]==5.0.5
+advocate==1.0.0
