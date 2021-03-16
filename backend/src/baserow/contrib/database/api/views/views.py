@@ -54,7 +54,20 @@ class ViewsView(APIView):
                 type=OpenApiTypes.INT,
                 description='Returns only views of the table related to the provided '
                             'value.'
-            )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'A comma separated list of extra attributes to include on each '
+                    'view in the response. The supported attributes are `filters` and '
+                    '`sortings`. '
+                    'For example `include=filters,sortings` will add the attributes '
+                    '`filters` and `sortings` to every returned view, containing '
+                    'a list of the views filters and sortings respectively.'
+                )
+            ),
         ],
         tags=['Database table views'],
         operation_id='list_database_table_views',
@@ -117,7 +130,20 @@ class ViewsView(APIView):
                 type=OpenApiTypes.INT,
                 description='Creates a view for the table related to the provided '
                             'value.'
-            )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'A comma separated list of extra attributes to include on each '
+                    'view in the response. The supported attributes are `filters` and '
+                    '`sortings`. '
+                    'For example `include=filters,sortings` will add the attributes '
+                    '`filters` and `sortings` to every returned view, containing '
+                    'a list of the views filters and sortings respectively.'
+                )
+            ),
         ],
         tags=['Database table views'],
         operation_id='create_database_table_view',
@@ -176,7 +202,20 @@ class ViewView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description='Returns the view related to the provided value.'
-            )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'A comma separated list of extra attributes to include on the '
+                    'returned view. The supported attributes are are `filters` and '
+                    '`sortings`. '
+                    'For example `include=filters,sortings` will add the attributes '
+                    '`filters` and `sortings` to every returned view, containing '
+                    'a list of the views filters and sortings respectively.'
+                )
+            ),
         ],
         tags=['Database table views'],
         operation_id='get_database_table_view',
@@ -219,7 +258,20 @@ class ViewView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description='Updates the view related to the provided value.'
-            )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'A comma separated list of extra attributes to include on the '
+                    'returned view. The supported attributes are are `filters` and '
+                    '`sortings`. '
+                    'For example `include=filters,sortings` will add the attributes '
+                    '`filters` and `sortings` to every returned view, containing '
+                    'a list of the views filters and sortings respectively.'
+                )
+            ),
         ],
         tags=['Database table views'],
         operation_id='update_database_table_view',

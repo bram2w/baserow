@@ -12,10 +12,11 @@ from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroupError
 from baserow.contrib.database.api.rows.serializers import (
-    get_row_serializer_class, RowSerializer
+    get_row_serializer_class, RowSerializer,
+    example_pagination_row_serializer_class_with_field_options
 )
 from baserow.contrib.database.api.rows.serializers import (
-    get_example_row_serializer_class, example_pagination_row_serializer_class
+    get_example_row_serializer_class
 )
 from baserow.contrib.database.api.views.grid.serializers import GridViewSerializer
 from baserow.contrib.database.views.exceptions import (
@@ -92,7 +93,7 @@ class GridViewView(APIView):
             '`list_database_table_view_sortings` endpoints.'
         ),
         responses={
-            200: example_pagination_row_serializer_class,
+            200: example_pagination_row_serializer_class_with_field_options,
             400: get_error_schema(['ERROR_USER_NOT_IN_GROUP']),
             404: get_error_schema(['ERROR_GRID_DOES_NOT_EXIST'])
         }
@@ -109,7 +110,7 @@ class GridViewView(APIView):
         else the page number pagination.
 
         Optionally the field options can also be included in the response if the the
-        `field_options` are provided in the includes GET parameter.
+        `field_options` are provided in the include GET parameter.
         """
 
         view_handler = ViewHandler()
@@ -144,7 +145,8 @@ class GridViewView(APIView):
             # but when added to the context the fields don't have to be fetched from
             # the database again when checking if they exist.
             context = {'fields': [o['field'] for o in model._field_objects.values()]}
-            response.data.update(**GridViewSerializer(view, context=context).data)
+            serialized_view = GridViewSerializer(view, context=context).data
+            response.data['field_options'] = serialized_view['field_options']
 
         return response
 

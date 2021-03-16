@@ -12,7 +12,7 @@ export default (client) => {
           limit,
         },
       }
-      const includes = []
+      const include = []
 
       if (offset !== null) {
         config.params.offset = offset
@@ -23,11 +23,11 @@ export default (client) => {
       }
 
       if (includeFieldOptions) {
-        includes.push('field_options')
+        include.push('field_options')
       }
 
-      if (includes.length > 0) {
-        config.params.includes = includes.join(',')
+      if (include.length > 0) {
+        config.params.include = include.join(',')
       }
 
       return client.get(`/database/views/grid/${gridId}/`, config)
