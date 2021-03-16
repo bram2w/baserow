@@ -9,6 +9,10 @@ def forward(apps, schema_editor):
 
     connection = connections[settings.USER_TABLE_DATABASE]
     with connection.schema_editor() as tables_schema_editor:
+        # We need to stop the transaction because we might need to lock a lot of tables
+        # which could result in an out of memory exception.
+        tables_schema_editor.atomic.__exit__(None, None, None)
+
         for field in DateField.objects.all():
             table_name = f'database_table_{field.table.id}'
             field_name = f'field_{field.id}'
@@ -18,6 +22,7 @@ def forward(apps, schema_editor):
                     WHERE {field_name} < '0001-01-01'::date
                 """
             )
+
 
 
 class Migration(migrations.Migration):
