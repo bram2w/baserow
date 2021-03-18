@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label"> Paste the table data </label>
+      <label class="control__label">Paste the table data</label>
       <div class="control__description">
         You can copy the cells from a spreadsheet and paste them below.
       </div>
@@ -17,7 +17,7 @@
       </div>
     </div>
     <div class="control">
-      <label class="control__label"> First row is header </label>
+      <label class="control__label">First row is header</label>
       <div class="control__elements">
         <Checkbox v-model="values.firstRowHeader" @input="reload()"
           >yes</Checkbox

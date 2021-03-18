@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added support for different character encodings when importing CSV files.
 * Prevent websocket reconnect loop when the authentication fails.
 * Refactored the GridView component and improved interface speed.
 * Prevent websocket reconnect when the connection closes without error.
