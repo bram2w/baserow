@@ -11,6 +11,8 @@ Baserow consists of two main components:
 1. The **web frontend** is an application that serves as a user interface for the
    backend and is made in [NuxtJS](https://nuxtjs.org/) and
    [Vue.js](https://vuejs.org/). It communicates to the backend via the REST API.
+   
+![server_diagram](../assets/diagrams/server-architecture.png "Server Architecture")
 
 ## Backend
 
