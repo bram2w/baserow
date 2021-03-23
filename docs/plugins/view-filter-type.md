@@ -26,7 +26,7 @@ class EqualToViewFilterType(ViewFilterType):
     type = 'equal_to'
     compatible_field_types = ['text']
 
-    def get_filter(self, field_name, value, model_field):
+    def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
 
         # If an empty value has been provided we do not want to filter at all.
