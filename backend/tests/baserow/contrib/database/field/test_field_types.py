@@ -1,15 +1,18 @@
 import pytest
 import json
+
+from django.test.utils import override_settings
 from faker import Faker
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
 from baserow.core.user_files.exceptions import (
     InvalidUserFileNameError, UserFileDoesNotExist
 )
 from baserow.contrib.database.fields.models import (
-    LongTextField, URLField, EmailField, FileField
+    LongTextField, URLField, EmailField, FileField, PhoneNumberField
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
@@ -511,3 +514,102 @@ def test_file_field_type(data_fixture):
     assert results[0].text is None
     assert results[1].text is None
     assert results[2].text is None
+
+
+@pytest.mark.django_db
+@override_settings(debug=True)
+def test_phone_number_field_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_database_table(user=user, database=table.database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    text_field = field_handler.create_field(user=user, table=table,
+                                            order=1,
+                                            type_name='text',
+                                            name='name')
+    phone_number_field = field_handler.create_field(user=user, table=table,
+                                                    type_name='phone_number',
+                                                    name='phonenumber')
+    email_field = field_handler.create_field(user=user, table=table,
+                                             type_name='email',
+                                             name='email')
+    number_field = data_fixture.create_number_field(table=table, order=1,
+                                                    number_negative=True, name="number")
+
+    assert len(PhoneNumberField.objects.all()) == 1
+    model = table.get_model(attribute_names=True)
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            'phonenumber': 'invalid phone number'
+        }, model=model)
+
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            'phonenumber': 'Phone: 2312321 2349432 '
+        }, model=model)
+    with pytest.raises(ValidationError):
+        row_handler.create_row(user=user, table=table, values={
+            'phonenumber': '1' * (PhoneNumberFieldType.MAX_PHONE_NUMBER_LENGTH+1)
+        }, model=model)
+
+    max_length_phone_number = '1' * PhoneNumberFieldType.MAX_PHONE_NUMBER_LENGTH
+    row_handler.create_row(user=user, table=table, values={
+        'name': '+45(1424) 322314 324234',
+        'phonenumber': max_length_phone_number,
+        'number': 1234534532,
+        'email': 'a_valid_email_to_be_blanked_after_conversion@email.com'
+    }, model=model)
+    row_handler.create_row(user=user, table=table, values={
+        'name': 'some text which should be blanked out after conversion',
+        'phonenumber': '1234567890 NnXx,+._*()#=;/ -',
+        'number': 0
+    }, model=model)
+    row_handler.create_row(user=user, table=table, values={
+        'name': max_length_phone_number,
+        'phonenumber': '',
+        'number': -10230450,
+    }, model=model)
+    row_handler.create_row(user=user, table=table, values={
+        'phonenumber': None,
+        'name': '1' * (PhoneNumberFieldType.MAX_PHONE_NUMBER_LENGTH+1)
+
+    }, model=model)
+    row_handler.create_row(user=user, table=table, values={}, model=model)
+
+    # No actual database type change occurs here as a phone number field is also a text
+    # field. Instead the after_update hook is being used to clear out invalid
+    # phone numbers.
+    field_handler.update_field(user=user, field=text_field,
+                               new_type_name='phone_number')
+
+    field_handler.update_field(user=user, field=number_field,
+                               new_type_name='phone_number')
+    field_handler.update_field(user=user, field=email_field,
+                               new_type_name='phone_number')
+
+    model = table.get_model(attribute_names=True)
+    rows = model.objects.all()
+
+    assert rows[0].name == '+45(1424) 322314 324234'
+    assert rows[0].phonenumber == max_length_phone_number
+    assert rows[0].number == '1234534532'
+    assert rows[0].email == ''
+
+    assert rows[1].name == ''
+    assert rows[1].phonenumber == '1234567890 NnXx,+._*()#=;/ -'
+    assert rows[1].number == '0'
+
+    assert rows[2].name == max_length_phone_number
+    assert rows[2].phonenumber == ''
+    assert rows[2].number == '-10230450'
+
+    assert rows[3].name == ''
+    assert rows[3].phonenumber == ''
+    assert rows[3].number == ''
+
+    field_handler.delete_field(user=user, field=phone_number_field)
+    assert len(PhoneNumberField.objects.all()) == 3

@@ -98,7 +98,7 @@ export class EqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'number']
+    return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
   }
 
   matches(rowValue, filterValue) {
@@ -126,7 +126,7 @@ export class NotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'number']
+    return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
   }
 
   matches(rowValue, filterValue) {
@@ -193,7 +193,7 @@ export class ContainsViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email']
+    return ['text', 'long_text', 'url', 'email', 'phone_number']
   }
 
   matches(rowValue, filterValue) {
@@ -217,7 +217,7 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email']
+    return ['text', 'long_text', 'url', 'email', 'phone_number']
   }
 
   matches(rowValue, filterValue) {
@@ -475,6 +475,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'link_row',
       'file',
       'single_select',
+      'phone_number',
     ]
   }
 
@@ -517,6 +518,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'link_row',
       'file',
       'single_select',
+      'phone_number',
     ]
   }
 

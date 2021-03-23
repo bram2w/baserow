@@ -10,7 +10,8 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD
 from django.shortcuts import reverse
 
 from baserow.contrib.database.fields.models import (
-    LongTextField, URLField, DateField, EmailField, FileField, NumberField
+    LongTextField, URLField, DateField, EmailField, FileField, NumberField,
+    PhoneNumberField
 )
 
 
@@ -842,3 +843,96 @@ def test_number_field_type(api_client, data_fixture):
         response_json['detail'][f'field_{positive_int_field_id}'][0]['code'] ==
         'max_digits'
     )
+
+
+@pytest.mark.django_db
+def test_phone_number_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1')
+    table = data_fixture.create_database_table(user=user)
+
+    response = api_client.post(
+        reverse('api:database:fields:list', kwargs={'table_id': table.id}),
+        {'name': 'phone', 'type': 'phone_number'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json['type'] == 'phone_number'
+    assert PhoneNumberField.objects.all().count() == 1
+    field_id = response_json['id']
+
+    response = api_client.patch(
+        reverse('api:database:fields:item', kwargs={'field_id': field_id}),
+        {'name': 'Phone'},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_200_OK
+
+    expected_phone_number = '+44761198672'
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': expected_phone_number
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == expected_phone_number
+
+    model = table.get_model(attribute_names=True)
+    row = model.objects.all().last()
+    assert row.phone == expected_phone_number
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': ''
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == ''
+
+    row = model.objects.all().last()
+    assert row.phone == ''
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {
+            f'field_{field_id}': None
+        },
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == ''
+
+    row = model.objects.all().last()
+    assert row.phone == ''
+
+    response = api_client.post(
+        reverse('api:database:rows:list', kwargs={'table_id': table.id}),
+        {},
+        format='json',
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f'field_{field_id}'] == ''
+
+    row = model.objects.all().last()
+    assert row.phone == ''
+
+    email = reverse('api:database:fields:item', kwargs={'field_id': field_id})
+    response = api_client.delete(email, HTTP_AUTHORIZATION=f'JWT {token}')
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert PhoneNumberField.objects.all().count() == 0
