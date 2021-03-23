@@ -1,43 +1,43 @@
+from datetime import datetime, date
 from decimal import Decimal
-from pytz import timezone
 from random import randrange, randint
+
 from dateutil import parser
 from dateutil.parser import ParserError
-from datetime import datetime, date
-
-from django.db import models
-from django.db.models import Case, When
 from django.contrib.postgres.fields import JSONField
-from django.core.validators import URLValidator, EmailValidator
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator, EmailValidator
+from django.db import models
+from django.db.models import Case, When, Q, F, Func, Value, CharField
+from django.db.models.expressions import RawSQL
 from django.utils.timezone import make_aware
-
+from pytz import timezone
 from rest_framework import serializers
 
-from baserow.core.models import UserFile
-from baserow.core.user_files.exceptions import UserFileDoesNotExist
-from baserow.contrib.database.api.fields.serializers import (
-    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
-    SelectOptionSerializer
-)
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE, ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE
 )
-
-from .handler import FieldHandler
-from .registries import FieldType, field_type_registry
-from .models import (
-    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, DATE_FORMAT, DATE_TIME_FORMAT,
-    TextField, LongTextField, URLField, NumberField, BooleanField, DateField,
-    LinkRowField, EmailField, FileField,
-    SingleSelectField, SelectOption
+from baserow.contrib.database.api.fields.serializers import (
+    LinkRowValueSerializer, FileFieldRequestSerializer, FileFieldResponseSerializer,
+    SelectOptionSerializer
 )
+from baserow.core.models import UserFile
+from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .exceptions import (
     LinkRowTableNotInSameDatabase, LinkRowTableNotProvided,
     IncompatiblePrimaryFieldTypeError
 )
+from .field_filters import contains_filter, AnnotatedQ, filename_contains_filter
 from .fields import SingleSelectForeignKey
+from .handler import FieldHandler
+from .models import (
+    NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
+    NumberField, BooleanField, DateField,
+    LinkRowField, EmailField, FileField,
+    SingleSelectField, SelectOption
+)
+from .registries import FieldType, field_type_registry
 
 
 class TextFieldType(FieldType):
@@ -57,6 +57,9 @@ class TextFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.name()
 
+    def contains_query(self, *args):
+        return contains_filter(*args)
+
 
 class LongTextFieldType(FieldType):
     type = 'long_text'
@@ -71,6 +74,9 @@ class LongTextFieldType(FieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.text()
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
 
 
 class URLFieldType(FieldType):
@@ -107,6 +113,9 @@ class URLFieldType(FieldType):
 
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
 
 
 class NumberFieldType(FieldType):
@@ -207,6 +216,9 @@ class NumberFieldType(FieldType):
                 f'field_{to_field.id}': 0
             })
 
+    def contains_query(self, *args):
+        return contains_filter(*args)
+
 
 class BooleanFieldType(FieldType):
     type = 'boolean'
@@ -299,17 +311,23 @@ class DateFieldType(FieldType):
 
         to_field_type = field_type_registry.get_by_model(to_field)
         if to_field_type.type != self.type and connection.vendor == 'postgresql':
-            sql_type = 'date'
-            sql_format = DATE_FORMAT[from_field.date_format]['sql']
-
-            if from_field.date_include_time:
-                sql_type = 'timestamp'
-                sql_format += ' ' + DATE_TIME_FORMAT[from_field.date_time_format]['sql']
-
+            sql_format = from_field.get_psql_format()
+            sql_type = from_field.get_psql_type()
             return f"""p_in = TO_CHAR(p_in::{sql_type}, '{sql_format}');"""
 
         return super().get_alter_column_prepare_old_value(connection, from_field,
                                                           to_field)
+
+    def contains_query(self, field_name, value, model_field, field):
+        return AnnotatedQ(
+            annotation={f"formatted_date_{field_name}": Func(
+                F(field_name),
+                Value(field.get_psql_format()),
+                function='to_char',
+                output_field=CharField()
+            )},
+            q={f'formatted_date_{field_name}__icontains': value}
+        )
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
@@ -321,14 +339,9 @@ class DateFieldType(FieldType):
 
         from_field_type = field_type_registry.get_by_model(from_field)
         if from_field_type.type != self.type and connection.vendor == 'postgresql':
-            sql_function = 'TO_DATE'
-            sql_format = DATE_FORMAT[to_field.date_format]['sql']
-            sql_type = 'date'
-
-            if to_field.date_include_time:
-                sql_function = 'TO_TIMESTAMP'
-                sql_format += ' ' + DATE_TIME_FORMAT[to_field.date_time_format]['sql']
-                sql_type = 'timestamp'
+            sql_function = to_field.get_psql_type_convert_function()
+            sql_format = to_field.get_psql_format()
+            sql_type = to_field.get_psql_type()
 
             return f"""
                 begin
@@ -701,6 +714,9 @@ class EmailFieldType(FieldType):
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
 
+    def contains_query(self, *args):
+        return contains_filter(*args)
+
 
 class FileFieldType(FieldType):
     type = 'file'
@@ -798,6 +814,9 @@ class FileFieldType(FieldType):
             values.append(serialized)
 
         return values
+
+    def contains_query(self, *args):
+        return filename_contains_filter(*args)
 
 
 class SingleSelectFieldType(FieldType):
@@ -982,3 +1001,37 @@ class SingleSelectFieldType(FieldType):
         random_choice = randint(0, len(select_options) - 1)
 
         return select_options[random_choice]
+
+    def contains_query(self, field_name, value, model_field, field):
+        option_value_mappings = []
+        option_values = []
+        # We have to query for all option values here as the user table we are
+        # constructing a search query for could be in a different database from the
+        # SingleOption. In such a situation if we just tried to do a cross database
+        # join django would crash, so we must look up the values in a separate query.
+
+        for option in field.select_options.all():
+            option_values.append(option.value)
+            option_value_mappings.append(
+                f"(lower(%s), {int(option.id)})"
+            )
+
+        # If there are no values then there is no way this search could match this
+        # field.
+        if len(option_value_mappings) == 0:
+            return Q()
+
+        convert_rows_select_id_to_value_sql = f"""(
+                SELECT key FROM (
+                    VALUES {','.join(option_value_mappings)}
+                ) AS values (key, value)
+                WHERE value = "field_{field.id}"
+            )
+        """
+
+        query = RawSQL(convert_rows_select_id_to_value_sql, params=option_values,
+                       output_field=models.CharField())
+        return AnnotatedQ(
+            annotation={f"select_option_value_{field_name}": query},
+            q={f'select_option_value_{field_name}__icontains': value}
+        )

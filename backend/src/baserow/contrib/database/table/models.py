@@ -1,18 +1,16 @@
 import re
-from decimal import Decimal, DecimalException
 
 from django.db import models
-from django.db.models import Q
 
-from baserow.core.mixins import OrderableMixin, CreatedAndUpdatedOnMixin
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
 )
-from baserow.contrib.database.views.registries import view_filter_type_registry
+from baserow.contrib.database.fields.field_filters import FilterBuilder, \
+    FILTER_TYPE_AND, FILTER_TYPE_OR
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.views.models import FILTER_TYPE_AND, FILTER_TYPE_OR
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
-
+from baserow.contrib.database.views.registries import view_filter_type_registry
+from baserow.core.mixins import OrderableMixin, CreatedAndUpdatedOnMixin
 
 deconstruct_filter_key_regex = re.compile(
     r'filter__field_([0-9]+)__([a-zA-Z0-9_]*)$'
@@ -51,39 +49,29 @@ class TableModelQuerySet(models.QuerySet):
         :rtype: QuerySet
         """
 
-        search_queries = models.Q()
-        excluded = ('order', 'created_on', 'updated_on')
+        try:
+            id_field_filter = models.Q(**{
+                f'id__contains': int(search)
+            })
+        except ValueError:
+            id_field_filter = models.Q()
 
-        for field in self.model._meta.get_fields():
-            if field.name in excluded:
-                continue
+        filter_builder = FilterBuilder(filter_type=FILTER_TYPE_OR).filter(
+            id_field_filter
+        )
+        for field_object in self.model._field_objects.values():
+            field_name = field_object['name']
+            model_field = self.model._meta.get_field(field_name)
 
-            if (
-                isinstance(field, models.CharField) or
-                isinstance(field, models.TextField)
-            ):
-                search_queries = search_queries | models.Q(**{
-                    f'{field.name}__icontains': search
-                })
-            elif (
-                isinstance(field, models.AutoField) or
-                isinstance(field, models.IntegerField)
-            ):
-                try:
-                    search_queries = search_queries | models.Q(**{
-                        f'{field.name}': int(search)
-                    })
-                except ValueError:
-                    pass
-            elif isinstance(field, models.DecimalField):
-                try:
-                    search_queries = search_queries | models.Q(**{
-                        f'{field.name}': Decimal(search)
-                    })
-                except (ValueError, DecimalException):
-                    pass
+            sub_filter = field_object['type'].contains_query(
+                field_name,
+                search,
+                model_field,
+                field_object['field']
+            )
+            filter_builder.filter(sub_filter)
 
-        return self.filter(search_queries) if len(search_queries) > 0 else self
+        return filter_builder.apply_to_queryset(self)
 
     def order_by_fields_string(self, order_string):
         """
@@ -165,7 +153,7 @@ class TableModelQuerySet(models.QuerySet):
         if filter_type not in [FILTER_TYPE_AND, FILTER_TYPE_OR]:
             raise ValueError(f'Unknown filter type {filter_type}.')
 
-        q_filters = Q()
+        filter_builder = FilterBuilder(filter_type=filter_type)
 
         for key, values in filter_object.items():
             matches = deconstruct_filter_key_regex.match(key)
@@ -180,8 +168,9 @@ class TableModelQuerySet(models.QuerySet):
                     field_id, f'Field {field_id} does not exist.'
                 )
 
-            field_name = self.model._field_objects[field_id]['name']
-            field_type = self.model._field_objects[field_id]['type'].type
+            field_object = self.model._field_objects[field_id]
+            field_name = field_object['name']
+            field_type = field_object['type'].type
             model_field = self.model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(matches[2])
 
@@ -195,27 +184,16 @@ class TableModelQuerySet(models.QuerySet):
                 values = [values]
 
             for value in values:
-                q_filter = view_filter_type.get_filter(
-                    field_name,
-                    value,
-                    model_field
+                filter_builder.filter(
+                    view_filter_type.get_filter(
+                        field_name,
+                        value,
+                        model_field,
+                        field_object['field']
+                    )
                 )
 
-                view_filter_annotation = view_filter_type.get_annotation(
-                    field_name,
-                    value
-                )
-                if view_filter_annotation:
-                    self = self.annotate(**view_filter_annotation)
-
-                # Depending on filter type we are going to combine the Q either as
-                # AND or as OR.
-                if filter_type == FILTER_TYPE_AND:
-                    q_filters &= q_filter
-                elif filter_type == FILTER_TYPE_OR:
-                    q_filters |= q_filter
-
-        return self.filter(q_filters)
+        return filter_builder.apply_to_queryset(self)
 
 
 class TableModelManager(models.Manager):

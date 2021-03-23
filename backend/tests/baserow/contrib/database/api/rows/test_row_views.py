@@ -169,7 +169,7 @@ def test_list_rows(api_client, data_fixture):
 
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
     response = api_client.get(
-        f'{url}?search=1',
+        f'{url}?search=4',
         format='json',
         HTTP_AUTHORIZATION=f'JWT {jwt_token}'
     )
@@ -177,7 +177,7 @@ def test_list_rows(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['count'] == 1
     assert len(response_json['results']) == 1
-    assert response_json['results'][0]['id'] == row_1.id
+    assert response_json['results'][0]['id'] == row_4.id
 
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
     response = api_client.get(

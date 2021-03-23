@@ -6,7 +6,6 @@ from baserow.core.mixins import (
     OrderableMixin, PolymorphicContentTypeMixin, CreatedAndUpdatedOnMixin
 )
 
-
 NUMBER_TYPE_INTEGER = 'INTEGER'
 NUMBER_TYPE_DECIMAL = 'DECIMAL'
 NUMBER_TYPE_CHOICES = (
@@ -205,9 +204,45 @@ class DateField(Field):
         :rtype: str
         """
 
-        date_format = DATE_FORMAT[self.date_format]['format']
-        time_format = DATE_TIME_FORMAT[self.date_time_format]['format']
+        return self._get_format('format')
 
+    def get_psql_format(self):
+        """
+        Returns the sql datetime format as a string based on the field's properties.
+        This could for example be 'YYYY-MM-DD HH12:MIAM'.
+
+        :return: The sql datetime format based on the field's properties.
+        :rtype: str
+        """
+
+        return self._get_format('sql')
+
+    def get_psql_type(self):
+        """
+        Returns the postgresql column type used by this field depending on if it is a
+        date or datetime.
+
+        :return: The postgresql column type either 'timestamp' or 'date'
+        :rtype: str
+        """
+
+        return 'timestamp' if self.date_include_time else 'date'
+
+    def get_psql_type_convert_function(self):
+        """
+        Returns the postgresql function that can be used to coerce another postgresql
+        type to the correct type used by this field.
+
+        :return: The postgresql type conversion function, either 'TO_TIMESTAMP' or
+        'TO_DATE'
+        :rtype: str
+        """
+
+        return 'TO_TIMESTAMP' if self.date_include_time else 'TO_DATE'
+
+    def _get_format(self, format_type):
+        date_format = DATE_FORMAT[self.date_format][format_type]
+        time_format = DATE_TIME_FORMAT[self.date_time_format][format_type]
         if self.date_include_time:
             return f'{date_format} {time_format}'
         else:
