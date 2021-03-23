@@ -6,7 +6,7 @@ from dateutil import parser
 from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.core.validators import URLValidator, EmailValidator
+from django.core.validators import URLValidator, EmailValidator, RegexValidator
 from django.db import models
 from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
@@ -35,7 +35,7 @@ from .models import (
     NUMBER_TYPE_INTEGER, NUMBER_TYPE_DECIMAL, TextField, LongTextField, URLField,
     NumberField, BooleanField, DateField,
     LinkRowField, EmailField, FileField,
-    SingleSelectField, SelectOption
+    SingleSelectField, SelectOption, PhoneNumberField
 )
 from .registries import FieldType, field_type_registry
 
@@ -196,25 +196,8 @@ class NumberFieldType(FieldType):
         return super().get_alter_column_prepare_new_value(connection, from_field,
                                                           to_field)
 
-    def after_update(self, from_field, to_field, from_model, to_model, user, connection,
-                     altered_column, before):
-        """
-        The allowing of negative values isn't stored in the database field type. If
-        the type hasn't changed, but the allowing of negative values has it means that
-        the column data hasn't been converted to positive values yet. We need to do
-        this here. All the negatives values are set to 0.
-        """
-
-        if (
-            not altered_column
-            and not to_field.number_negative
-            and from_field.number_negative
-        ):
-            to_model.objects.filter(**{
-                f'field_{to_field.id}__lt': 0
-            }).update(**{
-                f'field_{to_field.id}': 0
-            })
+    def force_same_type_alter_column(self, from_field, to_field):
+        return not to_field.number_negative and from_field.number_negative
 
     def contains_query(self, *args):
         return contains_filter(*args)
@@ -1035,3 +1018,85 @@ class SingleSelectFieldType(FieldType):
             annotation={f"select_option_value_{field_name}": query},
             q={f'select_option_value_{field_name}__icontains': value}
         )
+
+
+class PhoneNumberFieldType(FieldType):
+    """
+    A simple wrapper around a TextField which ensures any entered data is a
+    simple phone number.
+
+    See `docs/decisions/001-phone-number-field-validation.md` for context
+    as to why the phone number validation was implemented using a simple regex.
+    """
+
+    type = 'phone_number'
+    model_class = PhoneNumberField
+
+    MAX_PHONE_NUMBER_LENGTH = 100
+    """
+    According to the E.164 (https://en.wikipedia.org/wiki/E.164) standard for
+    international numbers the max length of an E.164 number without formatting is 15
+    characters. However we allow users to store formatting characters, spaces and
+    expect them to be entering numbers not in the E.164 standard but instead a
+    wide range of local standards which might support longer numbers.
+    This is why we have picked a very generous 100 character length to support heavily
+    formatted local numbers.
+    """
+
+    PHONE_NUMBER_REGEX = rf'^[0-9NnXx,+._*()#=;/ -]{{1,{MAX_PHONE_NUMBER_LENGTH}}}$'
+    """
+    Allow common punctuation used in phone numbers and spaces to allow formatting,
+    but otherwise don't allow text as the phone number should work as a link on mobile
+    devices.
+    Duplicated in the frontend code at, please keep in sync:
+    web-frontend/modules/core/utils/string.js#isSimplePhoneNumber
+    """
+
+    simple_phone_number_validator = RegexValidator(
+        regex=PHONE_NUMBER_REGEX)
+
+    def prepare_value_for_db(self, instance, value):
+        if value == '' or value is None:
+            return ''
+        self.simple_phone_number_validator(value)
+
+        return value
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.CharField(
+            required=False,
+            allow_null=True,
+            allow_blank=True,
+            validators=[self.simple_phone_number_validator],
+            max_length=self.MAX_PHONE_NUMBER_LENGTH,
+            **kwargs
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return models.CharField(
+            default='',
+            blank=True,
+            null=True,
+            max_length=self.MAX_PHONE_NUMBER_LENGTH,
+            validators=[
+                self.simple_phone_number_validator],
+            **kwargs)
+
+    def random_value(self, instance, fake, cache):
+        return fake.phone_number()
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        if connection.vendor == 'postgresql':
+            return f'''p_in = (
+            case
+                when p_in::text ~* '{self.PHONE_NUMBER_REGEX}'
+                then p_in::text
+                else ''
+                end
+            );'''
+
+        return super().get_alter_column_prepare_new_value(connection, from_field,
+                                                          to_field)
+
+    def contains_query(self, *args):
+        return contains_filter(*args)

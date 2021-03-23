@@ -1,22 +1,20 @@
 import logging
 from copy import deepcopy
 
+from django.conf import settings
 from django.db import connections
 from django.db.utils import ProgrammingError, DataError
-from django.conf import settings
 
-from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.db.schema import lenient_schema_editor
 from baserow.contrib.database.views.handler import ViewHandler
-
+from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     PrimaryFieldAlreadyExists, CannotDeletePrimaryField, CannotChangeFieldType,
     FieldDoesNotExist, IncompatiblePrimaryFieldTypeError
 )
-from .registries import field_type_registry, field_converter_registry
 from .models import Field, SelectOption
+from .registries import field_type_registry, field_converter_registry
 from .signals import field_created, field_updated, field_deleted
-
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +157,8 @@ class FieldHandler:
         # If the provided field type does not match with the current one we need to
         # migrate the field to the new type. Because the type has changed we also need
         # to remove all view filters.
-        if new_type_name and field_type.type != new_type_name:
+        baserow_field_type_changed = new_type_name and field_type.type != new_type_name
+        if baserow_field_type_changed:
             field_type = field_type_registry.get(new_type_name)
 
             if field.primary and not field_type.can_be_primary_field:
@@ -217,6 +216,17 @@ class FieldHandler:
                 connection
             )
         else:
+            if baserow_field_type_changed:
+                # If the baserow type has changed we always want to force run any alter
+                # column SQL as otherwise it might not run if the two baserow fields
+                # share the same underlying database column type.
+                force_alter_column = True
+            else:
+                force_alter_column = field_type.force_same_type_alter_column(
+                    old_field,
+                    field
+                )
+
             # If no field converter is found we are going to alter the field using the
             # the lenient schema editor.
             with lenient_schema_editor(
@@ -225,7 +235,8 @@ class FieldHandler:
                     connection, old_field, field),
                 field_type.get_alter_column_prepare_new_value(
                     connection, old_field, field
-                )
+                ),
+                force_alter_column
             ) as schema_editor:
                 try:
                     schema_editor.alter_field(from_model, from_model_field,

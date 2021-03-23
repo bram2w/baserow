@@ -1,18 +1,126 @@
-import pytest
+import itertools
+from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
 
-from baserow.core.exceptions import UserNotInGroupError
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import (
-    Field, TextField, NumberField, BooleanField, SelectOption
-)
-from baserow.contrib.database.fields.field_types import TextFieldType
-from baserow.contrib.database.fields.registries import field_type_registry
+import pytest
+from django.db import models
+from faker import Faker
+
 from baserow.contrib.database.fields.exceptions import (
     FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
     FieldDoesNotExist, IncompatiblePrimaryFieldTypeError, CannotChangeFieldType
 )
+from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import (
+    Field, TextField, NumberField, BooleanField, SelectOption, LongTextField,
+    NUMBER_TYPE_CHOICES
+)
+from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.exceptions import UserNotInGroupError
+
+
+def dict_to_pairs(field_type_kwargs):
+    pairs_dict = {}
+    for name, options in field_type_kwargs.items():
+        pairs_dict[name] = []
+        if not isinstance(options, list):
+            options = [options]
+        for option in options:
+            pairs_dict[name].append((name, option))
+    return pairs_dict
+
+
+def construct_all_possible_kwargs(field_type_kwargs):
+    pairs_dict = dict_to_pairs(field_type_kwargs)
+    args = [dict(pairwise_args) for pairwise_args in itertools.product(
+        *pairs_dict.values())]
+
+    return args
+
+
+# You must add --runslow to pytest to run this test, you can do this in intellij by
+# editing the run config for this test and adding --runslow to additional args.
+@pytest.mark.django_db
+@pytest.mark.slow
+def test_can_convert_between_all_fields(data_fixture):
+    """
+    A nuclear option test turned off by default to help verify changes made to
+    field conversions work in every possible conversion scenario. This test checks
+    is possible to convert from every possible field to every other possible field
+    including converting to themselves. It only checks that the conversion does not
+    raise any exceptions.
+    """
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database, user=user)
+    link_table = data_fixture.create_database_table(database=database, user=user)
+    handler = FieldHandler()
+    row_handler = RowHandler()
+    fake = Faker()
+
+    model = table.get_model()
+    cache = {}
+    # Make a blank row to test empty field conversion also.
+    model.objects.create(**{})
+    second_row_with_values = model.objects.create(**{})
+
+    # Some baserow field types have multiple different 'modes' which result in
+    # different conversion behaviour or entirely different database columns being
+    # created. Here the kwargs which control these modes are enumerated so we can then
+    # generate every possible type of conversion.
+    extra_kwargs_for_type = {
+        'date': {
+            'date_include_time': [True, False],
+        },
+        'number': {
+            'number_type': [number_type for number_type, _ in NUMBER_TYPE_CHOICES],
+            'number_negative': [True, False],
+        },
+        'link_row': {
+            'link_row_table': link_table
+        }
+    }
+
+    all_possible_kwargs_per_type = {}
+    for field_type_name in field_type_registry.get_types():
+        extra_kwargs = extra_kwargs_for_type.get(field_type_name, {})
+        all_possible_kwargs = construct_all_possible_kwargs(extra_kwargs)
+        all_possible_kwargs_per_type[field_type_name] = all_possible_kwargs
+
+    i = 1
+    for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
+        for kwargs in all_possible_kwargs:
+            for inner_field_type_name in field_type_registry.get_types():
+                for inner_kwargs in all_possible_kwargs_per_type[inner_field_type_name]:
+                    field_type = field_type_registry.get(field_type_name)
+                    field_name = f'field_{i}'
+                    from_field = handler.create_field(
+                        user=user, table=table, type_name=field_type_name,
+                        name=field_name,
+                        **kwargs
+                    )
+                    random_value = field_type.random_value(
+                        from_field,
+                        fake,
+                        cache
+                    )
+                    if isinstance(random_value, date):
+                        # Faker produces subtypes of date / datetime which baserow
+                        # does not want, instead just convert to str.
+                        random_value = str(random_value)
+                    row_handler.update_row(user=user, table=table,
+                                           row_id=second_row_with_values.id,
+                                           values={
+                                               f'field_{from_field.id}': random_value
+                                           })
+                    handler.update_field(user=user, field=from_field,
+                                         new_type_name=inner_field_type_name,
+                                         **inner_kwargs)
+                    i = i + 1
 
 
 @pytest.mark.django_db
@@ -267,6 +375,295 @@ def test_update_field_failing(data_fixture):
     handler.update_field(user, field=field, new_type_name='text')
     assert Field.objects.all().count() == 1
     assert TextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
+    class AlwaysLowercaseTextField(TextFieldType):
+        type = 'lowercase_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (lower(p_in));'''
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'lowercase_text': AlwaysLowercaseTextField()}
+    ):
+        handler.update_field(user=user,
+                             field=existing_text_field,
+                             new_type_name='lowercase_text')
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) == 'test'
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 0
+        assert LongTextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_field_which_changes_its_underlying_type_will_have_alter_sql_run(data_fixture):
+    class ReversingTextFieldUsingBothVarCharAndTextSqlTypes(TextFieldType):
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (reverse(p_in));'''
+
+        def get_model_field(self, instance, **kwargs):
+            kwargs['null'] = True
+            kwargs['blank'] = True
+            if instance.text_default == 'use_other_sql_type':
+                return models.TextField(**kwargs)
+            else:
+                return models.CharField(**kwargs)
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'text': ReversingTextFieldUsingBothVarCharAndTextSqlTypes()}
+    ):
+        # Update to the same baserow type, but due to this fields implementation of
+        # get_model_field this will alter the underlying database column from type
+        # of varchar to text, which should make our reversing alter sql run.
+        handler.update_field(user=user,
+                             field=existing_text_field,
+                             new_type_name='text',
+                             text_default='use_other_sql_type')
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) == 'tseT'
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_just_changing_a_fields_name_will_not_run_alter_sql(data_fixture):
+    class AlwaysReverseOnUpdateField(TextFieldType):
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (reverse(p_in));'''
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'text': AlwaysReverseOnUpdateField()}
+    ):
+        handler.update_field(user=user, field=existing_text_field,
+                             new_type_name='text', name='new_name')
+
+        row.refresh_from_db()
+        # The field has not been reversed as just the name changed!
+        assert getattr(row, field_name) == 'Test'
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_when_field_type_forces_same_type_alter_fields_alter_sql_is_run(data_fixture):
+    class SameTypeAlwaysReverseOnUpdateField(TextFieldType):
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (reverse(p_in));'''
+
+        def force_same_type_alter_column(self, from_field, to_field):
+            return True
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'text': SameTypeAlwaysReverseOnUpdateField()}
+    ):
+        handler.update_field(user=user, field=existing_text_field,
+                             new_type_name='text', name='new_name')
+
+        row.refresh_from_db()
+        # The alter sql has been run due to the force override
+        assert getattr(row, field_name) == 'tseT'
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_update_field_with_type_error_on_conversion_should_null_field(data_fixture):
+    class AlwaysThrowsSqlExceptionOnConversionField(TextFieldType):
+        type = 'throws_field'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (lower(p_in::numeric::text));'''
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_text_field = data_fixture.create_text_field(table=table, order=1)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_text_field.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {'throws_field': AlwaysThrowsSqlExceptionOnConversionField()}
+    ):
+        handler.update_field(user=user,
+                             field=existing_text_field,
+                             new_type_name='throws_field')
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) is None
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 0
+        assert LongTextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixture):
+    class ReversesWhenConvertsAwayTextField(LongTextFieldType):
+        type = 'reserves_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+            return '''p_in = concat(reverse(p_in), %(some_variable)s);''', {
+                "some_variable": "_POST_FIX"
+            }
+
+    class AlwaysLowercaseTextField(TextFieldType):
+        type = 'lowercase_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = concat(%(other_variable)s, lower(p_in));''', {
+                "other_variable": "pre_fix_"
+            }
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_field_with_old_value_prep = data_fixture.create_long_text_field(
+        table=table)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_field_with_old_value_prep.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {
+            'lowercase_text': AlwaysLowercaseTextField(),
+            'long_text': ReversesWhenConvertsAwayTextField()
+        }
+    ):
+        handler.update_field(user=user,
+                             field=existing_field_with_old_value_prep,
+                             new_type_name='lowercase_text')
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) == 'pre_fix_tset_post_fix'
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 0
+        assert LongTextField.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixture):
+    class ReversesWhenConvertsAwayTextField(LongTextFieldType):
+        type = 'reserves_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+            return '''p_in = (reverse(p_in));'''
+
+    class AlwaysLowercaseTextField(TextFieldType):
+        type = 'lowercase_text'
+        model_class = LongTextField
+
+        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+            return '''p_in = (lower(p_in));'''
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_field_with_old_value_prep = data_fixture.create_long_text_field(
+        table=table)
+
+    model = table.get_model()
+
+    field_name = f'field_{existing_field_with_old_value_prep.id}'
+    row = model.objects.create(**{
+        field_name: 'Test',
+    })
+
+    handler = FieldHandler()
+
+    with patch.dict(
+        field_type_registry.registry,
+        {
+            'lowercase_text': AlwaysLowercaseTextField(),
+            'long_text': ReversesWhenConvertsAwayTextField()
+        }
+    ):
+        handler.update_field(user=user,
+                             field=existing_field_with_old_value_prep,
+                             new_type_name='lowercase_text')
+
+        row.refresh_from_db()
+        assert getattr(row, field_name) == 'tset'
+        assert Field.objects.all().count() == 1
+        assert TextField.objects.all().count() == 0
+        assert LongTextField.objects.all().count() == 1
 
 
 @pytest.mark.django_db

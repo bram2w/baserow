@@ -161,12 +161,13 @@ def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
                                    date_format="US", date_include_time=True,
                                    date_time_format="24")
     data_fixture.create_file_field(table=table, order=6, name='File')
-    select = data_fixture.create_single_select_field(table=table, order=6,
+    select = data_fixture.create_single_select_field(table=table, order=7,
                                                      name='select')
     option_a = data_fixture.create_select_option(field=select, value='Option A',
                                                  color='blue')
     option_b = data_fixture.create_select_option(field=select, value='Option B',
                                                  color='red')
+    data_fixture.create_phone_number_field(table=table, order=8, name='PhoneNumber')
 
     model = table.get_model(attribute_names=True)
     row_1 = model.objects.create(
@@ -178,6 +179,7 @@ def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
         datetime=make_aware(datetime(4006, 7, 8, 0, 0, 0), utc),
         file=[{'visible_name': 'test_file.png'}],
         select=option_a,
+        phonenumber='99999'
     )
     row_2 = model.objects.create(
         name='Audi',
@@ -188,6 +190,7 @@ def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
         datetime=make_aware(datetime(5, 5, 5, 0, 48, 0), utc),
         file=[{'visible_name': 'other_file.png'}],
         select=option_b,
+        phonenumber='++--999999'
     )
     row_3 = model.objects.create(
         name='Volkswagen',
@@ -197,6 +200,7 @@ def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
         date='9999-05-05',
         datetime=make_aware(datetime(5, 5, 5, 9, 59, 0), utc),
         file=[],
+        phonenumber=''
     )
 
     results = model.objects.all().search_all_fields('FASTEST')
@@ -258,6 +262,15 @@ def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
 
     results = model.objects.all().search_all_fields('Option B')
     assert len(results) == 1
+    assert row_2 in results
+
+    results = model.objects.all().search_all_fields('999999')
+    assert len(results) == 1
+    assert row_2 in results
+
+    results = model.objects.all().search_all_fields('99999')
+    assert len(results) == 2
+    assert row_1 in results
     assert row_2 in results
 
     results = model.objects.all().search_all_fields('white car')
