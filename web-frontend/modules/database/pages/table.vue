@@ -90,6 +90,7 @@
 import { mapState } from 'vuex'
 
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
@@ -253,7 +254,11 @@ export default {
     async refresh(event) {
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
-      await type.refresh({ store: this.$store }, this.view)
+      try {
+        await type.refresh({ store: this.$store }, this.view)
+      } catch (error) {
+        notifyIf(error)
+      }
       if (
         Object.prototype.hasOwnProperty.call(this.$refs, 'view') &&
         Object.prototype.hasOwnProperty.call(this.$refs.view, 'refresh')
