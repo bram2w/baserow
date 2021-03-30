@@ -1,6 +1,7 @@
 import re
 
 from django.db import models
+from django.db.models import Q
 
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
@@ -39,9 +40,10 @@ class TableModelQuerySet(models.QuerySet):
 
     def search_all_fields(self, search):
         """
-        Searches very broad in all supported fields with the given search query. If the
-        primary key value matches then that result would be returned and if a char/text
-        field contains the search query then that result would be returned.
+        Performs a very broad search across all supported fields with the given search
+        query. If the primary key value matches then that result will be returned
+        otherwise all field types other than link row and boolean fields are currently
+        searched.
 
         :param search: The search query.
         :type search: str
@@ -49,15 +51,8 @@ class TableModelQuerySet(models.QuerySet):
         :rtype: QuerySet
         """
 
-        try:
-            id_field_filter = models.Q(**{
-                f'id__contains': int(search)
-            })
-        except ValueError:
-            id_field_filter = models.Q()
-
         filter_builder = FilterBuilder(filter_type=FILTER_TYPE_OR).filter(
-            id_field_filter
+            Q(id__contains=search)
         )
         for field_object in self.model._field_objects.values():
             field_name = field_object['name']
