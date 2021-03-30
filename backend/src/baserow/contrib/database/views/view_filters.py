@@ -8,14 +8,15 @@ from django.db.models import Q, IntegerField, BooleanField
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone
 
+from baserow.contrib.database.fields.field_filters import filename_contains_filter, \
+    OptionallyAnnotatedQ
 from baserow.contrib.database.fields.field_types import (
     TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType, DateFieldType,
     LinkRowFieldType, BooleanFieldType, EmailFieldType, FileFieldType,
     SingleSelectFieldType, PhoneNumberFieldType
 )
+from baserow.contrib.database.fields.registries import field_type_registry
 from .registries import ViewFilterType
-from baserow.contrib.database.fields.field_filters import contains_filter, \
-    filename_contains_filter
 
 
 class NotViewFilterTypeMixin:
@@ -91,11 +92,15 @@ class ContainsViewFilterType(ViewFilterType):
         LongTextFieldType.type,
         URLFieldType.type,
         EmailFieldType.type,
-        PhoneNumberFieldType.type
+        PhoneNumberFieldType.type,
+        DateFieldType.type,
+        SingleSelectFieldType.type,
+        NumberFieldType.type,
     ]
 
-    def get_filter(self, *args):
-        return contains_filter(*args)
+    def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
+        field_type = field_type_registry.get_by_model(field)
+        return field_type.contains_query(field_name, value, model_field, field)
 
 
 class ContainsNotViewFilterType(NotViewFilterTypeMixin, ContainsViewFilterType):

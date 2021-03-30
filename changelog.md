@@ -22,6 +22,8 @@
 * Fixed bug where an invalid date could be converted to 0001-01-01.
 * The list_database_table_rows search query parameter now searches all possible field types.
 * Add Phone Number field.
+* Add support for Date, Number and Single Select fields to the Contains and Not Contains view 
+  filters.
 
 ## Released (2021-03-01)
 

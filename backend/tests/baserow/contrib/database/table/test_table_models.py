@@ -233,6 +233,9 @@ def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
     assert row_2 in results
     assert row_3 in results
 
+    results = model.objects.all().search_all_fields('0' + str(row_1.id))
+    assert len(results) == 0
+
     results = model.objects.all().search_all_fields('05/05/9999')
     assert len(results) == 1
     assert row_3 in results
@@ -389,6 +392,9 @@ def test_filter_by_fields_object_queryset(data_fixture):
     name_field = data_fixture.create_text_field(table=table, order=0, name='Name')
     data_fixture.create_text_field(table=table, order=1, name='Color')
     price_field = data_fixture.create_number_field(table=table, order=2, name='Price')
+    active_field = data_fixture.create_boolean_field(table=table,
+                                                     order=2,
+                                                     name='Active')
     description_field = data_fixture.create_long_text_field(
         table=table, order=3, name='Description'
     )
@@ -436,7 +442,7 @@ def test_filter_by_fields_object_queryset(data_fixture):
 
     with pytest.raises(ViewFilterTypeNotAllowedForField):
         model.objects.all().filter_by_fields_object(filter_object={
-            f'filter__field_{price_field.id}__contains': '10',
+            f'filter__field_{active_field.id}__contains': '10',
         }, filter_type='AND')
 
     # All the entries are not following the correct format and should be ignored.

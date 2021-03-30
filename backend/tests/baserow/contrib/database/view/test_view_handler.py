@@ -276,7 +276,7 @@ def test_field_type_changed(data_fixture):
     assert ViewSort.objects.all().count() == 1
 
     field_handler.update_field(user=user, field=long_text_field,
-                               new_type_name='number')
+                               new_type_name='boolean')
     assert ViewFilter.objects.all().count() == 0
     assert ViewSort.objects.all().count() == 1
 

@@ -10,6 +10,7 @@ from django.core.validators import URLValidator, EmailValidator, RegexValidator
 from django.db import models
 from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
+from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 from pytz import timezone
 from rest_framework import serializers
@@ -302,13 +303,22 @@ class DateFieldType(FieldType):
                                                           to_field)
 
     def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == '':
+            return Q()
         return AnnotatedQ(
-            annotation={f"formatted_date_{field_name}": Func(
-                F(field_name),
-                Value(field.get_psql_format()),
-                function='to_char',
-                output_field=CharField()
-            )},
+            annotation={
+                f"formatted_date_{field_name}":
+                    Coalesce(
+                        Func(
+                            F(field_name),
+                            Value(field.get_psql_format()),
+                            function='to_char',
+                            output_field=CharField()
+                        ),
+                        Value(''))
+            },
             q={f'formatted_date_{field_name}__icontains': value}
         )
 
@@ -986,6 +996,11 @@ class SingleSelectFieldType(FieldType):
         return select_options[random_choice]
 
     def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == '':
+            return Q()
+
         option_value_mappings = []
         option_values = []
         # We have to query for all option values here as the user table we are
@@ -1015,7 +1030,10 @@ class SingleSelectFieldType(FieldType):
         query = RawSQL(convert_rows_select_id_to_value_sql, params=option_values,
                        output_field=models.CharField())
         return AnnotatedQ(
-            annotation={f"select_option_value_{field_name}": query},
+            annotation={
+                f"select_option_value_{field_name}":
+                Coalesce(query, Value(''))
+            },
             q={f'select_option_value_{field_name}__icontains': value}
         )
 

@@ -193,10 +193,24 @@ export class ContainsViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'phone_number']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'phone_number',
+      'date',
+      'single_select',
+      'number',
+    ]
   }
 
   matches(rowValue, filterValue) {
+    if (rowValue === null) {
+      rowValue = ''
+    } else if (typeof rowValue === 'object' && 'value' in rowValue) {
+      rowValue = rowValue.value
+    }
     rowValue = rowValue.toString().toLowerCase().trim()
     filterValue = filterValue.toString().toLowerCase().trim()
     return filterValue === '' || rowValue.includes(filterValue)
@@ -217,10 +231,24 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'phone_number']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'phone_number',
+      'date',
+      'single_select',
+      'number',
+    ]
   }
 
   matches(rowValue, filterValue) {
+    if (rowValue === null) {
+      rowValue = ''
+    } else if (typeof rowValue === 'object' && 'value' in rowValue) {
+      rowValue = rowValue.value
+    }
     rowValue = rowValue.toString().toLowerCase().trim()
     filterValue = filterValue.toString().toLowerCase().trim()
     return filterValue === '' || !rowValue.includes(filterValue)
