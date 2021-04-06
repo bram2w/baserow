@@ -48,7 +48,7 @@ Baserow's code to your computer.
 
 ```
 $ cd ~/baserow
-$ git clone git@gitlab.com:bramw/baserow.git
+$ git clone https://gitlab.com/bramw/baserow.git
 Cloning into 'baserow'...
 ...
 $ cd baserow
