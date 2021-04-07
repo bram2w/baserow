@@ -49,7 +49,7 @@
     <GridViewSection
       ref="right"
       class="grid-view__right"
-      :fields="fields"
+      :fields="visibleFields"
       :table="table"
       :view="view"
       :include-add-field="true"
@@ -124,6 +124,7 @@ import GridViewSection from '@baserow/modules/database/components/view/grid/Grid
 import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
+import { GridViewType } from '@baserow/modules/database/viewTypes'
 
 export default {
   name: 'GridView',
@@ -162,6 +163,43 @@ export default {
     }
   },
   computed: {
+    /**
+     * Returns only the visible fields in the correct order.
+     */
+    visibleFields() {
+      return this.fields
+        .filter((field) => {
+          const exists = Object.prototype.hasOwnProperty.call(
+            this.fieldOptions,
+            field.id
+          )
+          return !exists || (exists && !this.fieldOptions[field.id].hidden)
+        })
+        .sort((a, b) => {
+          const orderA = this.fieldOptions[a.id]
+            ? this.fieldOptions[a.id].order
+            : GridViewType.getMaxPossibleOrderValue()
+          const orderB = this.fieldOptions[b.id]
+            ? this.fieldOptions[b.id].order
+            : GridViewType.getMaxPossibleOrderValue()
+
+          // First by order.
+          if (orderA > orderB) {
+            return 1
+          } else if (orderA < orderB) {
+            return -1
+          }
+
+          // Then by id.
+          if (a.id < b.id) {
+            return -1
+          } else if (a.id > b.id) {
+            return 1
+          } else {
+            return 0
+          }
+        })
+    },
     leftFields() {
       return [this.primary]
     },
@@ -501,7 +539,7 @@ export default {
      * direction and will select that one.
      */
     selectNextCell({ row, field, direction = 'next' }) {
-      const fields = this.fields
+      const fields = this.visibleFields
       const primary = this.primary
       let nextFieldId = -1
       let nextRowId = -1
