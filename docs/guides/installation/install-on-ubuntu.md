@@ -81,7 +81,7 @@ $ sudo -i
 # Clone the baserow project
 $ mkdir /baserow
 $ cd /baserow
-$ git clone https://gitlab.com/bramw/baserow/ .
+$ git clone https://gitlab.com/bramw/baserow.git .
 ```
 
 The password used for the `baserow` user does not have to be the same as the one used
