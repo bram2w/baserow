@@ -8,7 +8,7 @@ export const uuid = function () {
   return uuid
 }
 
-export const lowerCaseFirst = function (string) {
+export const upperCaseFirst = function (string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
 

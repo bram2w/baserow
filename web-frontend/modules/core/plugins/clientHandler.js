@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { lowerCaseFirst } from '@baserow/modules/core/utils/string'
+import { upperCaseFirst } from '@baserow/modules/core/utils/string'
 
 export class ResponseErrorMessage {
   constructor(title, message) {
@@ -133,7 +133,7 @@ class ErrorHandler {
   getNotFoundMessage(name) {
     if (!Object.prototype.hasOwnProperty.call(this.notFoundMap, name)) {
       return new ResponseErrorMessage(
-        `${lowerCaseFirst(name)} not found.`,
+        `${upperCaseFirst(name)} not found.`,
         `The selected ${name.toLowerCase()} wasn't found, maybe it has already been deleted.`
       )
     }
