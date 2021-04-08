@@ -194,6 +194,9 @@ $ export DATABASE_HOST="localhost"
 # Create database schema
 $ baserow migrate
 
+# Sync the template files with the database
+$ baserow sync_templates
+
 $ deactivate
 ```
 
@@ -306,6 +309,7 @@ $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST='localhost'
 $ baserow migrate
+$ baserow sync_templates
 $ deactivate
 $ cd web-frontend
 $ yarn install

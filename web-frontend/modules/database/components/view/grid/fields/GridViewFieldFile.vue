@@ -44,7 +44,7 @@
       >
         <div class="grid-field-file__loading"></div>
       </li>
-      <li v-show="selected" class="grid-field-file__item">
+      <li v-if="!readOnly" v-show="selected" class="grid-field-file__item">
         <a class="grid-field-file__item-add" @click.prevent="showUploadModal()">
           <i class="fas fa-plus"></i>
         </a>
@@ -55,7 +55,7 @@
       </li>
     </ul>
     <UserFilesModal
-      v-if="Array.isArray(value)"
+      v-if="Array.isArray(value) && !this.readOnly"
       ref="uploadModal"
       @uploaded="addFiles(value, $event)"
       @hidden="hideModal"
@@ -64,6 +64,7 @@
       v-if="Array.isArray(value)"
       ref="fileModal"
       :files="value"
+      :read-only="readOnly"
       @hidden="hideModal"
       @removed="removeFile(value, $event)"
       @renamed="renameFile(value, $event.index, $event.value)"
@@ -100,6 +101,10 @@ export default {
      * automatically be uploaded to the user files and added to the field after that.
      */
     async uploadFiles(event) {
+      if (this.readOnly) {
+        return
+      }
+
       this.dragging = false
 
       // Indicates that this component must not be destroyed even though the user might
@@ -181,6 +186,10 @@ export default {
       return fileField.methods.removeFile.call(this, event, index)
     },
     showUploadModal() {
+      if (this.readOnly) {
+        return
+      }
+
       this.modalOpen = true
       this.$refs.uploadModal.show(UploadFileUserFileUploadType.getType())
     },
@@ -208,11 +217,15 @@ export default {
       return !this.modalOpen
     },
     dragEnter(event) {
+      if (this.readOnly) {
+        return
+      }
+
       this.dragging = true
       this.dragTarget = event.target
     },
     dragLeave(event) {
-      if (this.dragTarget === event.target) {
+      if (this.dragTarget === event.target && !this.readOnly) {
         event.stopPropagation()
         event.preventDefault()
         this.dragging = false

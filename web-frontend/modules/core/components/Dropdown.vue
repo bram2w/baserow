@@ -1,5 +1,11 @@
 <template>
-  <div class="dropdown" :class="{ 'dropdown--floating': !showInput }">
+  <div
+    class="dropdown"
+    :class="{
+      'dropdown--floating': !showInput,
+      'dropdown--disabled': disabled,
+    }"
+  >
     <a v-if="showInput" class="dropdown__selected" @click="show()">
       <template v-if="hasValue()">
         <i

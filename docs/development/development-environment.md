@@ -74,15 +74,17 @@ Starting web-frontend   ... done
 ## Starting backend development server
 
 Now that you have your development environment up and running, you need to apply all the
-database migrations and start the backend's development server. You need to execute the
-bash command of the backend container first. Because Baserow is not installed as a
-dependency you have to use the manage.py file in the source directory.
+database migrations, synchronize the templates and start the backend's development
+server. You need to execute the bash command of the backend container first. Because
+Baserow is not installed as a dependency you have to use the manage.py file in the
+source directory.
 
 ```
 $ docker exec -it backend bash
 $ python src/baserow/manage.py migrate
 Running migrations:
 ...
+$ python src/baserow/manage.py sync_templates
 $ python src/baserow/manage.py runserver 0.0.0.0:8000
 ```
 

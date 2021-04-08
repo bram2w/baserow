@@ -7,7 +7,7 @@
       <div class="control margin-bottom-1">
         <div class="control__elements">
           <div
-            class="input__with-icon"
+            class="input__with-icon input__with-icon--left"
             :class="{ 'input__with-icon--loading': loading }"
           >
             <input
@@ -45,6 +45,18 @@ export default {
   props: {
     view: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
+      required: true,
+    },
+    primary: {
+      type: Object,
+      required: true,
+    },
+    storePrefix: {
+      type: String,
       required: true,
     },
   },
@@ -91,12 +103,14 @@ export default {
       }
     },
     debouncedServerSearchRefresh: debounce(async function () {
-      await this.$store.dispatch('view/grid/updateSearch', {
+      await this.$store.dispatch(this.storePrefix + 'view/grid/updateSearch', {
         activeSearchTerm: this.activeSearchTerm,
         hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
         // The refresh event we fire below will cause the table to refresh it state from
         // the server using the newly set search terms.
         refreshMatchesOnClient: false,
+        fields: this.fields,
+        primary: this.primary,
       })
       this.$emit('refresh', {
         callback: this.finishedLoading,
@@ -105,10 +119,12 @@ export default {
     // Debounce even the client side only refreshes as otherwise spamming the keyboard
     // can cause many refreshes to queue up quickly bogging down the UI.
     debouncedClientSideSearchRefresh: debounce(async function () {
-      await this.$store.dispatch('view/grid/updateSearch', {
+      await this.$store.dispatch(this.storePrefix + 'view/grid/updateSearch', {
         activeSearchTerm: this.activeSearchTerm,
         hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
         refreshMatchesOnClient: true,
+        fields: this.fields,
+        primary: this.primary,
       })
       this.finishedLoading()
     }, 10),

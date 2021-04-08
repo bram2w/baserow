@@ -1,0 +1,896 @@
+{
+    "baserow_template_version": 1,
+    "name": "Personal Todo Tracker",
+    "icon": "clipboard-list",
+    "keywords": [
+        "todo",
+        "tracker",
+        "tasks",
+        "personal"
+    ],
+    "categories": [
+        "Personal"
+    ],
+    "export": [
+        {
+            "id": 5,
+            "name": "Personal Todo Tracker",
+            "order": 2,
+            "type": "database",
+            "tables": [
+                {
+                    "id": 13,
+                    "name": "Todos",
+                    "order": 1,
+                    "fields": [
+                        {
+                            "id": 75,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 76,
+                            "type": "long_text",
+                            "name": "Notes",
+                            "order": 1,
+                            "primary": false
+                        },
+                        {
+                            "id": 77,
+                            "type": "boolean",
+                            "name": "Done",
+                            "order": 2,
+                            "primary": false
+                        },
+                        {
+                            "id": 87,
+                            "type": "date",
+                            "name": "Due By",
+                            "order": 3,
+                            "primary": false,
+                            "date_format": "EU",
+                            "date_include_time": true,
+                            "date_time_format": "24"
+                        },
+                        {
+                            "id": 88,
+                            "type": "link_row",
+                            "name": "Shopping List",
+                            "order": 4,
+                            "primary": false,
+                            "link_row_table_id": 15,
+                            "link_row_related_field_id": 89
+                        },
+                        {
+                            "id": 90,
+                            "type": "link_row",
+                            "name": "Categories",
+                            "order": 5,
+                            "primary": false,
+                            "link_row_table_id": 14,
+                            "link_row_related_field_id": 91
+                        },
+                        {
+                            "id": 96,
+                            "type": "link_row",
+                            "name": "People",
+                            "order": 7,
+                            "primary": false,
+                            "link_row_table_id": 16,
+                            "link_row_related_field_id": 97
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 19,
+                            "type": "grid",
+                            "name": "Outstanding Todos",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 7,
+                                    "field_id": 77,
+                                    "type": "boolean",
+                                    "value": "0"
+                                }
+                            ],
+                            "sortings": [
+                                {
+                                    "id": 2,
+                                    "field_id": 87,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "field_options": [
+                                {
+                                    "id": 131,
+                                    "field_id": 75,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 129,
+                                    "field_id": 76,
+                                    "width": 400,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 130,
+                                    "field_id": 77,
+                                    "width": 100,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 148,
+                                    "field_id": 87,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 0
+                                },
+                                {
+                                    "id": 149,
+                                    "field_id": 88,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 153,
+                                    "field_id": 90,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 158,
+                                    "field_id": 96,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4
+                                }
+                            ]
+                        },
+                        {
+                            "id": 23,
+                            "type": "grid",
+                            "name": "Done Todos",
+                            "order": 2,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [
+                                {
+                                    "id": 8,
+                                    "field_id": 77,
+                                    "type": "boolean",
+                                    "value": "1"
+                                }
+                            ],
+                            "sortings": [
+                                {
+                                    "id": 12,
+                                    "field_id": 87,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "field_options": [
+                                {
+                                    "id": 141,
+                                    "field_id": 75,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 142,
+                                    "field_id": 76,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 143,
+                                    "field_id": 77,
+                                    "width": 100,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 150,
+                                    "field_id": 87,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 0
+                                },
+                                {
+                                    "id": 151,
+                                    "field_id": 88,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 154,
+                                    "field_id": 90,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 162,
+                                    "field_id": 96,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 5
+                                }
+                            ]
+                        },
+                        {
+                            "id": 24,
+                            "type": "grid",
+                            "name": "All Todos",
+                            "order": 3,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [
+                                {
+                                    "id": 13,
+                                    "field_id": 87,
+                                    "order": "DESC"
+                                }
+                            ],
+                            "field_options": [
+                                {
+                                    "id": 144,
+                                    "field_id": 75,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 6
+                                },
+                                {
+                                    "id": 145,
+                                    "field_id": 76,
+                                    "width": 257,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 146,
+                                    "field_id": 77,
+                                    "width": 100,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 415,
+                                    "field_id": 87,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 0
+                                },
+                                {
+                                    "id": 416,
+                                    "field_id": 88,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 417,
+                                    "field_id": 90,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 418,
+                                    "field_id": 96,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 5
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "field_75": "Go Shopping",
+                            "field_76": "For the Onion Soup!",
+                            "field_77": "false",
+                            "field_87": "2021-04-16T13:00:00+00:00",
+                            "field_88": [
+                                1,
+                                2,
+                                3
+                            ],
+                            "field_90": [
+                                1
+                            ],
+                            "field_96": []
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "field_75": "Pay Rent",
+                            "field_76": "$450",
+                            "field_77": "false",
+                            "field_87": "2021-04-30T00:00:00+00:00",
+                            "field_88": [],
+                            "field_90": [
+                                4
+                            ],
+                            "field_96": []
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "field_75": "Finish Invoices",
+                            "field_76": "",
+                            "field_77": "true",
+                            "field_87": "2021-04-22T13:00:42+00:00",
+                            "field_88": [],
+                            "field_90": [
+                                2
+                            ],
+                            "field_96": []
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "field_75": "Call Mary about next week",
+                            "field_76": "Can she make the party?",
+                            "field_77": "false",
+                            "field_87": "2021-04-08T10:00:00+00:00",
+                            "field_88": [],
+                            "field_90": [
+                                1
+                            ],
+                            "field_96": [
+                                2
+                            ]
+                        },
+                        {
+                            "id": 5,
+                            "order": "5.00000000000000000000",
+                            "field_75": "Steve's Birthday!",
+                            "field_76": "He better like the Soup...",
+                            "field_77": "false",
+                            "field_87": "2021-04-17T17:39:12+00:00",
+                            "field_88": [],
+                            "field_90": [
+                                1
+                            ],
+                            "field_96": [
+                                1,
+                                2
+                            ]
+                        },
+                        {
+                            "id": 6,
+                            "order": "6.00000000000000000000",
+                            "field_75": "Buy New Garden Tools",
+                            "field_76": "",
+                            "field_77": "false",
+                            "field_87": "2021-05-14T17:42:58+00:00",
+                            "field_88": [
+                                4
+                            ],
+                            "field_90": [
+                                5
+                            ],
+                            "field_96": []
+                        },
+                        {
+                            "id": 7,
+                            "order": "7.00000000000000000000",
+                            "field_75": "Buy Mum Birthday Flowers",
+                            "field_76": "She likes Roses.",
+                            "field_77": "false",
+                            "field_87": "2021-07-17T17:48:52+00:00",
+                            "field_88": [
+                                5
+                            ],
+                            "field_90": [
+                                6
+                            ],
+                            "field_96": [
+                                4
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": 14,
+                    "name": "Categories",
+                    "order": 2,
+                    "fields": [
+                        {
+                            "id": 78,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 79,
+                            "type": "long_text",
+                            "name": "Notes",
+                            "order": 1,
+                            "primary": false
+                        },
+                        {
+                            "id": 91,
+                            "type": "link_row",
+                            "name": "Todos",
+                            "order": 2,
+                            "primary": false,
+                            "link_row_table_id": 13,
+                            "link_row_related_field_id": 90
+                        },
+                        {
+                            "id": 93,
+                            "type": "link_row",
+                            "name": "Contacts",
+                            "order": 3,
+                            "primary": false,
+                            "link_row_table_id": 16,
+                            "link_row_related_field_id": 92
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 20,
+                            "type": "grid",
+                            "name": "Grid",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "field_options": [
+                                {
+                                    "id": 134,
+                                    "field_id": 78,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 132,
+                                    "field_id": 79,
+                                    "width": 400,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 152,
+                                    "field_id": 91,
+                                    "width": 256,
+                                    "hidden": false,
+                                    "order": 32767
+                                },
+                                {
+                                    "id": 160,
+                                    "field_id": 93,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 32767
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "field_78": "Steve's Birthday",
+                            "field_79": null,
+                            "field_91": [
+                                1,
+                                5,
+                                4
+                            ],
+                            "field_93": []
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "field_78": "Work",
+                            "field_79": null,
+                            "field_91": [
+                                3
+                            ],
+                            "field_93": [
+                                2,
+                                1
+                            ]
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "field_78": "Health",
+                            "field_79": "",
+                            "field_91": [],
+                            "field_93": []
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "field_78": "Financial",
+                            "field_79": "",
+                            "field_91": [
+                                2
+                            ],
+                            "field_93": []
+                        },
+                        {
+                            "id": 5,
+                            "order": "5.00000000000000000000",
+                            "field_78": "Garden Cleanup",
+                            "field_79": "",
+                            "field_91": [
+                                6
+                            ],
+                            "field_93": []
+                        },
+                        {
+                            "id": 6,
+                            "order": "6.00000000000000000000",
+                            "field_78": "Personal",
+                            "field_79": "",
+                            "field_91": [
+                                7
+                            ],
+                            "field_93": [
+                                3,
+                                4
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": 15,
+                    "name": "Shopping",
+                    "order": 3,
+                    "fields": [
+                        {
+                            "id": 81,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 82,
+                            "type": "long_text",
+                            "name": "Notes",
+                            "order": 1,
+                            "primary": false
+                        },
+                        {
+                            "id": 89,
+                            "type": "link_row",
+                            "name": "Todos",
+                            "order": 3,
+                            "primary": false,
+                            "link_row_table_id": 13,
+                            "link_row_related_field_id": 88
+                        },
+                        {
+                            "id": 286,
+                            "type": "single_select",
+                            "name": "Shop",
+                            "order": 4,
+                            "primary": false,
+                            "select_options": [
+                                {
+                                    "id": 42,
+                                    "value": "Grocery Store",
+                                    "color": "light-red",
+                                    "order": 0
+                                },
+                                {
+                                    "id": 43,
+                                    "value": "Petrol Station",
+                                    "color": "blue",
+                                    "order": 1
+                                },
+                                {
+                                    "id": 44,
+                                    "value": "Hardware Store",
+                                    "color": "green",
+                                    "order": 2
+                                },
+                                {
+                                    "id": 45,
+                                    "value": "Flower Shop",
+                                    "color": "light-gray",
+                                    "order": 3
+                                }
+                            ]
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 21,
+                            "type": "grid",
+                            "name": "Grid",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [],
+                            "field_options": [
+                                {
+                                    "id": 137,
+                                    "field_id": 81,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 135,
+                                    "field_id": 82,
+                                    "width": 400,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 147,
+                                    "field_id": 89,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 414,
+                                    "field_id": 286,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 0
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "field_81": "Cheese",
+                            "field_82": null,
+                            "field_89": [
+                                1
+                            ],
+                            "field_286": 42
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "field_81": "Onions",
+                            "field_82": null,
+                            "field_89": [
+                                1
+                            ],
+                            "field_286": 42
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "field_81": "Petrol",
+                            "field_82": "",
+                            "field_89": [
+                                1
+                            ],
+                            "field_286": 43
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "field_81": "Garden Tools",
+                            "field_82": "",
+                            "field_89": [
+                                6
+                            ],
+                            "field_286": 44
+                        },
+                        {
+                            "id": 5,
+                            "order": "5.00000000000000000000",
+                            "field_81": "Roses",
+                            "field_82": "",
+                            "field_89": [
+                                7
+                            ],
+                            "field_286": 45
+                        }
+                    ]
+                },
+                {
+                    "id": 16,
+                    "name": "Contacts",
+                    "order": 4,
+                    "fields": [
+                        {
+                            "id": 84,
+                            "type": "text",
+                            "name": "Name",
+                            "order": 0,
+                            "primary": true,
+                            "text_default": ""
+                        },
+                        {
+                            "id": 85,
+                            "type": "long_text",
+                            "name": "Notes",
+                            "order": 1,
+                            "primary": false
+                        },
+                        {
+                            "id": 86,
+                            "type": "phone_number",
+                            "name": "Mobile Phone",
+                            "order": 2,
+                            "primary": false
+                        },
+                        {
+                            "id": 92,
+                            "type": "link_row",
+                            "name": "Categories",
+                            "order": 3,
+                            "primary": false,
+                            "link_row_table_id": 14,
+                            "link_row_related_field_id": 93
+                        },
+                        {
+                            "id": 94,
+                            "type": "email",
+                            "name": "Email",
+                            "order": 4,
+                            "primary": false
+                        },
+                        {
+                            "id": 97,
+                            "type": "link_row",
+                            "name": "Todos",
+                            "order": 5,
+                            "primary": false,
+                            "link_row_table_id": 13,
+                            "link_row_related_field_id": 96
+                        }
+                    ],
+                    "views": [
+                        {
+                            "id": 22,
+                            "type": "grid",
+                            "name": "Grid",
+                            "order": 1,
+                            "filter_type": "AND",
+                            "filters_disabled": false,
+                            "filters": [],
+                            "sortings": [
+                                {
+                                    "id": 11,
+                                    "field_id": 84,
+                                    "order": "ASC"
+                                }
+                            ],
+                            "field_options": [
+                                {
+                                    "id": 140,
+                                    "field_id": 84,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 5
+                                },
+                                {
+                                    "id": 138,
+                                    "field_id": 85,
+                                    "width": 400,
+                                    "hidden": false,
+                                    "order": 1
+                                },
+                                {
+                                    "id": 139,
+                                    "field_id": 86,
+                                    "width": 149,
+                                    "hidden": false,
+                                    "order": 2
+                                },
+                                {
+                                    "id": 155,
+                                    "field_id": 92,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 4
+                                },
+                                {
+                                    "id": 156,
+                                    "field_id": 94,
+                                    "width": 200,
+                                    "hidden": false,
+                                    "order": 3
+                                },
+                                {
+                                    "id": 159,
+                                    "field_id": 97,
+                                    "width": 310,
+                                    "hidden": false,
+                                    "order": 0
+                                }
+                            ]
+                        }
+                    ],
+                    "rows": [
+                        {
+                            "id": 1,
+                            "order": "1.00000000000000000000",
+                            "field_84": "Steve",
+                            "field_85": null,
+                            "field_86": "048580394",
+                            "field_92": [
+                                2
+                            ],
+                            "field_94": "steve.yoshep@gmail.com",
+                            "field_97": [
+                                5
+                            ]
+                        },
+                        {
+                            "id": 2,
+                            "order": "2.00000000000000000000",
+                            "field_84": "Mary",
+                            "field_85": null,
+                            "field_86": "442343243",
+                            "field_92": [
+                                2
+                            ],
+                            "field_94": "mary.hannah@gmail.com",
+                            "field_97": [
+                                4,
+                                5
+                            ]
+                        },
+                        {
+                            "id": 3,
+                            "order": "3.00000000000000000000",
+                            "field_84": "Charlie",
+                            "field_85": "Does Charlie have an email?",
+                            "field_86": "+445632345",
+                            "field_92": [
+                                6
+                            ],
+                            "field_94": "",
+                            "field_97": []
+                        },
+                        {
+                            "id": 4,
+                            "order": "4.00000000000000000000",
+                            "field_84": "Mum",
+                            "field_85": "",
+                            "field_86": "+3234045934",
+                            "field_92": [
+                                6
+                            ],
+                            "field_94": "margret.taylor@blueyonder.co.uk",
+                            "field_97": [
+                                7
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

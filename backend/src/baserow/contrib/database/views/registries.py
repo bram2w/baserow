@@ -1,7 +1,7 @@
 from baserow.core.registry import (
     Instance, Registry, ModelInstanceMixin, ModelRegistryMixin,
     CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin
+    APIUrlsInstanceMixin, ImportExportMixin
 )
 from .exceptions import (
     ViewTypeAlreadyRegistered, ViewTypeDoesNotExist, ViewFilterTypeAlreadyRegistered,
@@ -11,7 +11,7 @@ from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 
 
 class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMixin,
-               Instance):
+               ImportExportMixin, Instance):
     """
     This abstract class represents a custom view type that can be added to the
     view type registry. It must be extended so customisation can be done. Each view type
@@ -57,6 +57,120 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
     Indicates if the view support sortings. If not, it will not be possible to add a
     sort to the view.
     """
+
+    def export_serialized(self, view):
+        """
+        Exports the view to a serialized dict that can be imported by the
+        `import_serialized` method. This dict is also JSON serializable.
+
+        :param view: The view instance that must be exported.
+        :type view: View
+        :return: The exported view.
+        :rtype: dict
+        """
+
+        serialized = {
+            'id': view.id,
+            'type': self.type,
+            'name': view.name,
+            'order': view.order
+        }
+
+        if self.can_filter:
+            serialized['filter_type'] = view.filter_type
+            serialized['filters_disabled'] = view.filters_disabled
+            serialized['filters'] = [
+                {
+                    'id': view_filter.id,
+                    'field_id': view_filter.field_id,
+                    'type': view_filter.type,
+                    'value': view_filter_type_registry.get(
+                        view_filter.type
+                    ).get_export_serialized_value(view_filter.value)
+                }
+                for view_filter in view.viewfilter_set.all()
+            ]
+
+        if self.can_sort:
+            serialized['sortings'] = [
+                {
+                    'id': sort.id,
+                    'field_id': sort.field_id,
+                    'order': sort.order
+                }
+                for sort in view.viewsort_set.all()
+            ]
+
+        return serialized
+
+    def import_serialized(self, table, serialized_values, id_mapping):
+        """
+        Imported an exported serialized view dict that was exported via the
+        `export_serialized` method. Note that all the fields must be imported first
+        because we depend on the new field id to be in the mapping.
+
+        :param table: The table where the view should be added to.
+        :type table: Table
+        :param serialized_values: The exported serialized view values that need to
+            be imported.
+        :type serialized_values: dict
+        :param id_mapping: The map of exported ids to newly created ids that must be
+            updated when a new instance has been created.
+        :type id_mapping: dict
+        :return: The newly created view instance.
+        :rtype: View
+        """
+
+        from .models import ViewFilter, ViewSort
+
+        if 'database_views' not in id_mapping:
+            id_mapping['database_views'] = {}
+            id_mapping['database_view_filters'] = {}
+            id_mapping['database_view_sortings'] = {}
+
+        serialized_copy = serialized_values.copy()
+        view_id = serialized_copy.pop('id')
+        serialized_copy.pop('type')
+        filters = serialized_copy.pop('filters') if self.can_filter else []
+        sortings = serialized_copy.pop('sortings') if self.can_sort else []
+        view = self.model_class.objects.create(table=table, **serialized_copy)
+        id_mapping['database_views'][view_id] = view.id
+
+        if self.can_filter:
+            for view_filter in filters:
+                view_filter_type = view_filter_type_registry.get(view_filter['type'])
+                view_filter_copy = view_filter.copy()
+                view_filter_id = view_filter_copy.pop('id')
+                view_filter_copy['field_id'] = (
+                    id_mapping['database_fields'][view_filter_copy['field_id']]
+                )
+                view_filter_copy['value'] = (
+                    view_filter_type.set_import_serialized_value(
+                        view_filter_copy['value'],
+                        id_mapping
+                    )
+                )
+                view_filter_object = ViewFilter.objects.create(
+                    view=view,
+                    **view_filter_copy
+                )
+                id_mapping['database_view_filters'][view_filter_id] = (
+                    view_filter_object.id
+                )
+
+        if self.can_sort:
+            for view_sort in sortings:
+                view_sort_copy = view_sort.copy()
+                view_sort_id = view_sort_copy.pop('id')
+                view_sort_copy['field_id'] = (
+                    id_mapping['database_fields'][view_sort_copy['field_id']]
+                )
+                view_sort_object = ViewSort.objects.create(view=view, **view_sort_copy)
+                id_mapping['database_view_sortings'][view_sort_id] = (
+                    view_sort_object.id
+                )
+
+        return view
 
 
 class ViewTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,
@@ -121,6 +235,36 @@ class ViewFilterType(Instance):
         """
 
         raise NotImplementedError('Each must have his own get_filter method.')
+
+    def get_export_serialized_value(self, value) -> str:
+        """
+        This method is called before the filter value is exported. Here it can
+        optionally be modified.
+
+        :param value: The original value.
+        :type value: str
+        :return: The updated value.
+        :rtype: str
+        """
+
+        return value
+
+    def set_import_serialized_value(self, value, id_mapping) -> str:
+        """
+        This method is called before a field is imported. It can optionally be
+        modified. If the value for example points to a field or select option id, it
+        can be replaced with the correct value by doing a lookup in the id_mapping.
+
+        :param value: The original exported value.
+        :type value: str
+        :param id_mapping: The map of exported ids to newly created ids that must be
+            updated when a new instance has been created.
+        :type id_mapping: dict
+        :return: The new value that will be imported.
+        :rtype: str
+        """
+
+        return value
 
 
 class ViewFilterTypeRegistry(Registry):

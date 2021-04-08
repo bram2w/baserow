@@ -62,6 +62,19 @@
             </div>
           </div>
           <div class="control">
+            <label class="control__label">Icon text field left</label>
+            <div class="control__elements">
+              <div class="input__with-icon input__with-icon--left">
+                <input
+                  type="text"
+                  class="input"
+                  placeholder="Enter something here"
+                />
+                <i class="fas fa-search"></i>
+              </div>
+            </div>
+          </div>
+          <div class="control">
             <label class="control__label">Large text field</label>
             <div class="control__elements">
               <input
@@ -82,7 +95,7 @@
             </div>
           </div>
           <div class="control">
-            <label class="control__label">Large password field</label>
+            <label class="control__label">Large icon field</label>
             <div class="control__elements">
               <div class="input__with-icon">
                 <input
@@ -91,6 +104,19 @@
                   placeholder="Please enter your password"
                 />
                 <i class="fas fa-calculator"></i>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Large icon field</label>
+            <div class="control__elements">
+              <div class="input__with-icon input__with-icon--left">
+                <input
+                  type="text"
+                  class="input input--large"
+                  placeholder="Enter something here"
+                />
+                <i class="fas fa-search"></i>
               </div>
             </div>
           </div>

@@ -18,6 +18,11 @@ export default {
       required: false,
       default: false,
     },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   computed: {
     classNames() {
@@ -27,6 +32,7 @@ export default {
           'default'
         ),
         'switch--large': this.large,
+        'switch--disabled': this.disabled,
         active: this.value === true,
         unknown: this.value !== true && this.value !== false,
       }
@@ -34,6 +40,9 @@ export default {
   },
   methods: {
     toggle(value) {
+      if (this.disabled) {
+        return
+      }
       this.$emit('input', !value)
     },
   },

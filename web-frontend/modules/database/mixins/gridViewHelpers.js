@@ -1,15 +1,25 @@
 import { mapGetters } from 'vuex'
 
 export default {
+  props: {
+    storePrefix: {
+      type: String,
+      required: true,
+    },
+  },
   data() {
     return {
       gridViewRowDetailsWidth: 60,
     }
   },
-  computed: {
-    ...mapGetters({
-      fieldOptions: 'view/grid/getAllFieldOptions',
-    }),
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        fieldOptions:
+          this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
+      }),
+    }
   },
   methods: {
     getFieldWidth(fieldId) {

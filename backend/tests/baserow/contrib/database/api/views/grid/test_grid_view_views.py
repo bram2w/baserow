@@ -1,6 +1,8 @@
 import pytest
 
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
+)
 
 from django.shortcuts import reverse
 
@@ -190,6 +192,15 @@ def test_list_rows(api_client, data_fixture):
     assert not response_json['next']
     assert len(response_json['results']) == 0
 
+    url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data_fixture.create_template(group=grid.table.database.group)
+    url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_200_OK
+
 
 @pytest.mark.django_db
 def test_list_rows_include_field_options(api_client, data_fixture):
@@ -273,6 +284,10 @@ def test_list_filtered_rows(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+
+    url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
 
     url = reverse('api:database:views:grid:list', kwargs={'view_id': grid.id})
     response = api_client.post(

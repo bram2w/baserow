@@ -15,5 +15,6 @@ RUN apt-get -y install gnupg2
 RUN make install-dependencies
 
 ENTRYPOINT python src/baserow/manage.py migrate && \
+           python src/baserow/manage.py sync_templates && \
            celery -A baserow worker -l INFO --detach && \
            gunicorn --workers=3 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker baserow.config.asgi:application

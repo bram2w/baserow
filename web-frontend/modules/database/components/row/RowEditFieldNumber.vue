@@ -6,6 +6,7 @@
       type="text"
       class="input input--large field-number"
       :class="{ 'input--error': !isValid() }"
+      :disabled="readOnly"
       @keyup.enter="$refs.input.blur()"
       @focus="select()"
       @blur="unselect()"

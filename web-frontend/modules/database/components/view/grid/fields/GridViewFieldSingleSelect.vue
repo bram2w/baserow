@@ -3,6 +3,7 @@
     <div
       ref="dropdownLink"
       class="grid-field-single-select grid-field-single-select--selected"
+      :class="{ 'grid-field-single-select--read-only': readOnly }"
       @click="toggleDropdown()"
     >
       <div
@@ -12,9 +13,13 @@
       >
         {{ value.value }}
       </div>
-      <i class="fa fa-caret-down grid-field-single-select__icon"></i>
+      <i
+        v-if="!readOnly"
+        class="fa fa-caret-down grid-field-single-select__icon"
+      ></i>
     </div>
     <FieldSingleSelectDropdown
+      v-if="!readOnly"
       ref="dropdown"
       :value="valueId"
       :options="field.select_options"
@@ -43,6 +48,10 @@ export default {
   },
   methods: {
     toggleDropdown(value, query) {
+      if (this.readOnly) {
+        return
+      }
+
       this.$refs.dropdown.toggle(this.$refs.dropdownLink, value, query)
     },
     hideDropdown() {

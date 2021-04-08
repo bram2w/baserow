@@ -31,6 +31,10 @@ export default {
      * will only enable the editing state.
      */
     select() {
+      if (this.readOnly) {
+        return
+      }
+
       this.editing = true
     },
     /**
@@ -51,6 +55,10 @@ export default {
      * method and not directly.
      */
     save() {
+      if (this.readOnly) {
+        return
+      }
+
       const newValue = this.beforeSave(this.copy)
 
       // If the value hasn't changed we don't want to do anything.

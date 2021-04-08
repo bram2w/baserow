@@ -3,9 +3,6 @@ from django.apps import AppConfig
 from baserow.core.registries import plugin_registry, application_type_registry
 from baserow.ws.registries import page_registry
 
-from .views.registries import view_type_registry, view_filter_type_registry
-from .fields.registries import field_type_registry, field_converter_registry
-
 
 class DatabaseConfig(AppConfig):
     name = 'baserow.contrib.database'
@@ -40,6 +37,9 @@ class DatabaseConfig(AppConfig):
 
     def ready(self):
         self.prevent_generated_model_for_registering()
+
+        from .views.registries import view_type_registry, view_filter_type_registry
+        from .fields.registries import field_type_registry, field_converter_registry
 
         from .plugins import DatabasePlugin
         plugin_registry.register(DatabasePlugin())

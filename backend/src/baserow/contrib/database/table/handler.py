@@ -241,7 +241,8 @@ class TableHandler:
 
     def delete_table(self, user, table):
         """
-        Deletes an existing table instance.
+        Deletes an existing table instance if the user has access to the related group.
+        The table deleted signals are also fired.
 
         :param user: The user on whose behalf the table is deleted.
         :type user: User
@@ -256,12 +257,16 @@ class TableHandler:
         table.database.group.has_user(user, raise_error=True)
         table_id = table.id
 
-        # Delete the table schema from the database.
+        self._delete_table(table)
+
+        table_deleted.send(self, table_id=table_id, table=table, user=user)
+
+    def _delete_table(self, table):
+        """Deletes the table schema and instance."""
+
         connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
             model = table.get_model()
             schema_editor.delete_model(model)
 
         table.delete()
-
-        table_deleted.send(self, table_id=table_id, table=table, user=user)

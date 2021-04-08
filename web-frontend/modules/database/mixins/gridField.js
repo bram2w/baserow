@@ -32,6 +32,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -157,7 +161,7 @@ export default {
             .get('field', this.field.type)
             .getEmptyValue(this.field)
           const oldValue = this.value
-          if (value !== oldValue) {
+          if (value !== oldValue && !this.readOnly) {
             this.$emit('update', value, oldValue)
           }
         }
@@ -174,7 +178,7 @@ export default {
           .get('field', this.field.type)
           .prepareValueForPaste(this.field, event.clipboardData)
         const oldValue = this.value
-        if (value !== oldValue) {
+        if (value !== oldValue && !this.readOnly) {
           this.$emit('update', value, oldValue)
         }
       }

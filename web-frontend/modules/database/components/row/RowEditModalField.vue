@@ -7,6 +7,7 @@
       ></i>
       {{ field.name }}
       <a
+        v-if="!readOnly"
         ref="contextLink"
         class="control__context"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 0)"
@@ -26,6 +27,7 @@
       ref="field"
       :field="field"
       :value="row['field_' + field.id]"
+      :read-only="readOnly"
       @update="update"
     />
   </div>
@@ -48,6 +50,10 @@ export default {
     },
     row: {
       type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

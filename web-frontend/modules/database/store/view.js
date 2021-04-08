@@ -55,7 +55,6 @@ export function populateView(view, registry) {
 export const state = () => ({
   types: {},
   loading: false,
-  loaded: false,
   items: [],
   selected: {},
 })
@@ -72,9 +71,6 @@ export const mutations = {
       return
     }
     view._.loading = value
-  },
-  SET_LOADED(state, value) {
-    state.loaded = value
   },
   ADD_ITEM(state, item) {
     state.items.push(item)
@@ -173,7 +169,6 @@ export const actions = {
    */
   async fetchAll({ commit, getters, dispatch, state }, table) {
     commit('SET_LOADING', true)
-    commit('SET_LOADED', false)
     commit('UNSELECT', {})
 
     try {
@@ -187,7 +182,6 @@ export const actions = {
       })
       commit('SET_ITEMS', data)
       commit('SET_LOADING', false)
-      commit('SET_LOADED', true)
     } catch (error) {
       commit('SET_ITEMS', [])
       commit('SET_LOADING', false)
@@ -594,9 +588,6 @@ export const getters = {
   },
   getSelectedId(state) {
     return state.selected.id || 0
-  },
-  isLoaded(state) {
-    return state.loaded
   },
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)

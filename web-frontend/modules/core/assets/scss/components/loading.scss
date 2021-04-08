@@ -19,3 +19,10 @@
     @include absolute(50%, 0, auto, 50%);
   }
 }
+
+.loading-absolute-center {
+  margin: -7px auto auto -7px;
+
+  @include loading(14px);
+  @include absolute(50%, auto, auto, 50%);
+}

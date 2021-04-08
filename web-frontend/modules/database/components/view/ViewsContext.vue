@@ -12,21 +12,19 @@
     <div v-if="isLoading" class="context--loading">
       <div class="loading"></div>
     </div>
-    <ul v-if="!isLoading && isLoaded && views.length > 0" class="select__items">
+    <ul v-if="!isLoading && views.length > 0" class="select__items">
       <ViewsContextItem
         v-for="view in search(views)"
         :key="view.id"
         :view="view"
-        @selected="hide"
+        :read-only="readOnly"
+        @selected="selectedView"
       ></ViewsContextItem>
     </ul>
-    <div
-      v-if="!isLoading && isLoaded && views.length == 0"
-      class="context__description"
-    >
+    <div v-if="!isLoading && views.length == 0" class="context__description">
       No views found
     </div>
-    <div class="select__footer">
+    <div v-if="!readOnly" class="select__footer">
       <div class="select__footer-multiple">
         <div class="select__footer-multiple-label">Add a view:</div>
         <a
@@ -71,6 +69,15 @@ export default {
       type: Object,
       required: true,
     },
+    views: {
+      type: Array,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
   },
   data() {
     return {
@@ -84,10 +91,13 @@ export default {
     ...mapState({
       isLoading: (state) => state.view.loading,
       isLoaded: (state) => state.view.loaded,
-      views: (state) => state.view.items,
     }),
   },
   methods: {
+    selectedView(view) {
+      this.hide()
+      this.$emit('selected-view', view)
+    },
     toggleCreateViewModal(type) {
       const target = this.$refs['createViewModalToggle' + type][0]
       this.$refs['createViewModal' + type][0].toggle(target)

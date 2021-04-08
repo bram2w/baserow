@@ -24,6 +24,7 @@
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
       :state="props.state"
+      :read-only="props.readOnly"
     />
     <component
       :is="$options.methods.getComponent(parent, props)"
@@ -32,6 +33,7 @@
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
       :selected="parent.isCellSelected(props.field.id)"
+      :read-only="props.readOnly"
       @update="(...args) => $options.methods.update(listeners, props, ...args)"
       @edit="(...args) => $options.methods.edit(listeners, props, ...args)"
       @unselect="$options.methods.unselect(parent, props)"

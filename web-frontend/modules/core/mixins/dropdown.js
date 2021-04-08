@@ -22,6 +22,11 @@ export default {
       required: false,
       default: true,
     },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -82,6 +87,10 @@ export default {
      * Shows the lists of choices, so a user can change the value.
      */
     show(target) {
+      if (this.disabled) {
+        return
+      }
+
       const isElementOrigin = isDomElement(target)
 
       this.open = true

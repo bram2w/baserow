@@ -139,7 +139,7 @@ export const actions = {
     // need to change things in loaded data. For example the grid field will add the
     // field to all of the rows that are in memory.
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldCreated(context, table, data, fieldType)
+      await viewType.fieldCreated(context, table, data, fieldType, 'page/')
     }
   },
   /**
@@ -195,7 +195,7 @@ export const actions = {
     // Call the field updated event on all the registered views because they might
     // need to change things in loaded data. For example the changed rows.
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldUpdated(context, data, oldField, fieldType)
+      await viewType.fieldUpdated(context, data, oldField, fieldType, 'page/')
     }
   },
   /**
@@ -236,7 +236,7 @@ export const actions = {
     // field options of that field.
     const fieldType = this.$registry.get('field', field.type)
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldDeleted(context, field, fieldType)
+      await viewType.fieldDeleted(context, field, fieldType, 'page/')
     }
   },
 }
@@ -253,9 +253,6 @@ export const getters = {
   },
   getAll(state) {
     return state.items
-  },
-  getAllWithPrimary(state) {
-    return [state.primary, ...state.items]
   },
 }
 

@@ -7,8 +7,17 @@
   margin: auto;
   border-radius: 3px;
   color: $color-success-600;
+  cursor: pointer;
 
   @include center-text(18px, 11px);
+
+  &.grid-field-boolean__checkbox--read-only {
+    cursor: initial;
+
+    .grid-view__cell.active & {
+      background-color: $color-neutral-50;
+    }
+  }
 
   .grid-view__cell.active & {
     border: 1px solid $color-neutral-300;

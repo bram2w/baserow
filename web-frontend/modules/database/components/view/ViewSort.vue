@@ -16,6 +16,7 @@
       :view="view"
       :fields="fields"
       :primary="primary"
+      :read-only="readOnly"
       @changed="$emit('changed')"
     ></ViewSortContext>
   </div>
@@ -38,6 +39,10 @@ export default {
     },
     view: {
       type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

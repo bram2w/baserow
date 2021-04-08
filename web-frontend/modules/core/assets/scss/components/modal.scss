@@ -21,6 +21,14 @@
     max-width: 860px;
   }
 
+  &.modal__box--full-screen {
+    @include absolute(20px);
+
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
   .box__title {
     margin-top: 0;
   }

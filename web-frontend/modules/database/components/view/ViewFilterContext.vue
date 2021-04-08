@@ -20,27 +20,42 @@
         'filters__item--loading': filter._.loading,
       }"
     >
-      <a class="filters__remove" @click.prevent="deleteFilter(filter)">
+      <a
+        v-if="!readOnly"
+        class="filters__remove"
+        @click.prevent="deleteFilter(filter)"
+      >
         <i class="fas fa-times"></i>
       </a>
       <div class="filters__operator">
         <span v-if="index === 0">Where</span>
         <Dropdown
-          v-if="index === 1"
+          v-if="index === 1 && !readOnly"
           :value="view.filter_type"
           :show-search="false"
-          class="dropdown--floating"
+          class="dropdown--floating dropdown--tiny"
           @input="updateView(view, { filter_type: $event })"
         >
           <DropdownItem name="And" value="AND"></DropdownItem>
           <DropdownItem name="Or" value="OR"></DropdownItem>
         </Dropdown>
-        <span v-if="index > 1 && view.filter_type === 'AND'">And</span>
-        <span v-if="index > 1 && view.filter_type === 'OR'">Or</span>
+        <span
+          v-if="
+            (index > 1 || (index > 0 && readOnly)) && view.filter_type === 'AND'
+          "
+          >And</span
+        >
+        <span
+          v-if="
+            (index > 1 || (index > 0 && readOnly)) && view.filter_type === 'OR'
+          "
+          >Or</span
+        >
       </div>
       <div class="filters__field">
         <Dropdown
           :value="filter.field"
+          :disabled="readOnly"
           class="dropdown--floating dropdown--tiny"
           @input="updateFilter(filter, { field: $event })"
         >
@@ -61,6 +76,7 @@
       </div>
       <div class="filters__type">
         <Dropdown
+          :disabled="readOnly"
           :value="filter.type"
           class="dropdown--floating dropdown--tiny"
           @input="updateFilter(filter, { type: $event })"
@@ -86,11 +102,12 @@
           :field-id="filter.field"
           :fields="fields"
           :primary="primary"
+          :read-only="readOnly"
           @input="updateFilter(filter, { value: $event })"
         />
       </div>
     </div>
-    <div class="filters_footer">
+    <div v-if="!readOnly" class="filters_footer">
       <a class="filters__add" @click.prevent="addFilter()">
         <i class="fas fa-plus"></i>
         add filter
@@ -124,6 +141,10 @@ export default {
     },
     view: {
       type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

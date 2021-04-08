@@ -246,10 +246,13 @@ export default {
       }
 
       try {
-        await this.$store.dispatch('view/grid/updateFieldOptionsOrder', {
-          gridId: this.view.id,
-          order: newOrder,
-        })
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateFieldOptionsOrder',
+          {
+            gridId: this.view.id,
+            order: newOrder,
+          }
+        )
       } catch (error) {
         notifyIf(error, 'view')
       }

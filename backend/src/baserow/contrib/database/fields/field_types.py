@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from datetime import datetime, date
 from decimal import Decimal
 from random import randrange, randint
@@ -203,6 +205,10 @@ class NumberFieldType(FieldType):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def get_export_serialized_value(self, row, field_name, cache):
+        value = getattr(row, field_name)
+        return value if value is None else str(value)
+
 
 class BooleanFieldType(FieldType):
     type = 'boolean'
@@ -216,6 +222,12 @@ class BooleanFieldType(FieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.pybool()
+
+    def get_export_serialized_value(self, row, field_name, cache):
+        return 'true' if getattr(row, field_name) else 'false'
+
+    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+        setattr(row, field_name, value == 'true')
 
 
 class DateFieldType(FieldType):
@@ -359,6 +371,20 @@ class DateFieldType(FieldType):
 
         return super().get_alter_column_prepare_old_value(connection, from_field,
                                                           to_field)
+
+    def get_export_serialized_value(self, row, field_name, cache):
+        value = getattr(row, field_name)
+
+        if value is None:
+            return value
+
+        return value.isoformat()
+
+    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+        if not value:
+            return value
+
+        setattr(row, field_name, datetime.fromisoformat(value))
 
 
 class LinkRowFieldType(FieldType):
@@ -667,6 +693,75 @@ class LinkRowFieldType(FieldType):
 
         return values
 
+    def export_serialized(self, field):
+        serialized = super().export_serialized(field, False)
+        serialized['link_row_table_id'] = field.link_row_table_id
+        serialized['link_row_related_field_id'] = field.link_row_related_field_id
+        return serialized
+
+    def import_serialized(self, table, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        serialized_copy['link_row_table_id'] = (
+            id_mapping['database_tables'][serialized_copy['link_row_table_id']]
+        )
+        link_row_related_field_id = serialized_copy.pop('link_row_related_field_id')
+        related_field_found = (
+            'database_fields' in id_mapping and
+            link_row_related_field_id in id_mapping['database_fields']
+        )
+
+        if related_field_found:
+            # If the related field is found, it means that it has already been
+            # imported. In that case, we can directly set the `link_row_relation_id`
+            # when creating the current field.
+            serialized_copy['link_row_related_field_id'] = (
+                id_mapping['database_fields'][link_row_related_field_id]
+            )
+            related_field = LinkRowField.objects.get(
+                pk=serialized_copy['link_row_related_field_id']
+            )
+            serialized_copy['link_row_relation_id'] = related_field.link_row_relation_id
+
+        field = super().import_serialized(table, serialized_copy, id_mapping)
+
+        if related_field_found:
+            # If the related field is found, it means that when creating that field
+            # the `link_row_relation_id` was not yet set because this field,
+            # where the relation is being made to, did not yet exist. So we need to
+            # set it right now.
+            related_field.link_row_related_field_id = field.id
+            related_field.save()
+            # By returning None, the field is ignored when creating the table schema
+            # and inserting the data, which is exactly what we want because the
+            # through table has already been created and will result in an error if
+            # we do it again.
+            return None
+
+        return field
+
+    def get_export_serialized_value(self, row, field_name, cache):
+        cache_entry = f'{field_name}_relations'
+        if cache_entry not in cache:
+            # In order to prevent a lot of lookup queries in the through table,
+            # we want to fetch all the relations and add it to a temporary in memory
+            # cache containing a mapping of the old ids to the new ids. Every relation
+            # can use the cached mapped relations to find the correct id.
+            cache[cache_entry] = defaultdict(list)
+            through_model = row._meta.get_field(field_name).remote_field.through
+            through_model_fields = through_model._meta.get_fields()
+            current_field_name = through_model_fields[1].name
+            relation_field_name = through_model_fields[2].name
+            for relation in through_model.objects.all():
+                cache[cache_entry][getattr(
+                    relation,
+                    f'{current_field_name}_id'
+                )].append(getattr(relation, f'{relation_field_name}_id'))
+
+        return cache[cache_entry][row.id]
+
+    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+        getattr(row, field_name).set(value)
+
 
 class EmailFieldType(FieldType):
     type = 'email'
@@ -810,6 +905,12 @@ class FileFieldType(FieldType):
 
     def contains_query(self, *args):
         return filename_contains_filter(*args)
+
+    def get_export_serialized_value(self, row, field_name, cache):
+        raise NotImplementedError('@TODO file field type export')
+
+    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+        raise NotImplementedError('@TODO file field type import')
 
 
 class SingleSelectFieldType(FieldType):
@@ -1035,6 +1136,19 @@ class SingleSelectFieldType(FieldType):
                 Coalesce(query, Value(''))
             },
             q={f'select_option_value_{field_name}__icontains': value}
+        )
+
+    def get_export_serialized_value(self, row, field_name, cache):
+        return getattr(row, field_name + '_id')
+
+    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+        if not value:
+            return
+
+        setattr(
+            row,
+            field_name + '_id',
+            id_mapping['database_field_select_options'][value]
         )
 
 

@@ -1,10 +1,11 @@
 <template>
   <Context ref="context" class="hidings">
     <div>
-      <ul class="context__menu">
+      <ul class="context__menu margin-bottom-0">
         <li v-for="field in fields" :key="field.id" class="hidings__item">
           <SwitchInput
             :value="!isHidden(field.id)"
+            :disabled="readOnly"
             @input="updateFieldOptionsOfField(field, { hidden: !$event })"
           >
             <i
@@ -16,7 +17,7 @@
         </li>
       </ul>
     </div>
-    <div class="hidings__footer">
+    <div v-if="!readOnly" class="hidings__footer">
       <button
         class="button button--ghost hidings__footer-button"
         @click="!noneSelected && updateAllFieldOptions({ hidden: true })"
@@ -52,6 +53,14 @@ export default {
       type: Object,
       required: true,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    storePrefix: {
+      type: String,
+      required: true,
+    },
   },
   computed: {
     noneSelected() {
@@ -70,9 +79,15 @@ export default {
       }
       return true
     },
-    ...mapGetters({
-      fieldOptions: 'view/grid/getAllFieldOptions',
-    }),
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        fieldOptions:
+          this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
+      }),
+    }
   },
   methods: {
     async updateAllFieldOptions(values) {
@@ -85,23 +100,29 @@ export default {
       })
 
       try {
-        await this.$store.dispatch('view/grid/updateAllFieldOptions', {
-          gridId: this.view.id,
-          newFieldOptions,
-          oldFieldOptions,
-        })
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateAllFieldOptions',
+          {
+            gridId: this.view.id,
+            newFieldOptions,
+            oldFieldOptions,
+          }
+        )
       } catch (error) {
         notifyIf(error, 'view')
       }
     },
     async updateFieldOptionsOfField(field, values) {
       try {
-        await this.$store.dispatch('view/grid/updateFieldOptionsOfField', {
-          gridId: this.view.id,
-          field,
-          values,
-          oldValues: { hidden: this.fieldOptions[field.id].hidden },
-        })
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateFieldOptionsOfField',
+          {
+            gridId: this.view.id,
+            field,
+            values,
+            oldValues: { hidden: this.fieldOptions[field.id].hidden },
+          }
+        )
       } catch (error) {
         notifyIf(error, 'view')
       }

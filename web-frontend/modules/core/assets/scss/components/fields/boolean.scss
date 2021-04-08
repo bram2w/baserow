@@ -2,9 +2,16 @@
   border: 1px solid $color-neutral-200;
   border-radius: 3px;
   color: $color-success-600;
-  cursor: pointer;
 
   @include center-text(18px, 11px);
+
+  &:not(.field-boolean__checkbox--disabled) {
+    cursor: pointer;
+  }
+
+  &.field-boolean__checkbox--disabled {
+    background-color: $color-neutral-50;
+  }
 
   .field-boolean__checkbox.active & {
     border-color: $color-neutral-300;

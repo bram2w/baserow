@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import LimitOffsetPagination
 
 from drf_spectacular.utils import extend_schema
@@ -31,6 +31,12 @@ from .serializers import GridViewFilterSerializer
 
 class GridViewView(APIView):
     permission_classes = (IsAuthenticated,)
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+
+        return super().get_permissions()
 
     @extend_schema(
         parameters=[
@@ -124,7 +130,8 @@ class GridViewView(APIView):
 
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
-        view.table.database.group.has_user(request.user, raise_error=True)
+        view.table.database.group.has_user(request.user, raise_error=True,
+                                           allow_if_template=True)
 
         model = view.table.get_model()
         queryset = model.objects.all().enhance_by_fields()

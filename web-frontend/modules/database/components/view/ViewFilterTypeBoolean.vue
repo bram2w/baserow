@@ -1,5 +1,7 @@
 <template>
-  <Checkbox :value="copy" @input="input($event)"> Selected </Checkbox>
+  <Checkbox :value="copy" :disabled="readOnly" @input="input($event)">
+    Selected
+  </Checkbox>
 </template>
 
 <script>
@@ -10,6 +12,10 @@ export default {
   props: {
     value: {
       type: String,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

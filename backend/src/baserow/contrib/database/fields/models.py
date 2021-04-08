@@ -272,10 +272,7 @@ class LinkRowField(Field):
         """
 
         if self.link_row_relation_id is None:
-            last_id = LinkRowField.objects.all().aggregate(
-                largest=models.Max('link_row_relation_id')
-            )['largest'] or 0
-            self.link_row_relation_id = last_id + 1
+            self.link_row_relation_id = self.get_new_relation_id()
 
         super().save(*args, **kwargs)
 
@@ -292,6 +289,13 @@ class LinkRowField(Field):
             raise ValueError('The link row field does not yet have a relation id.')
 
         return f'database_relation_{self.link_row_relation_id}'
+
+    @staticmethod
+    def get_new_relation_id():
+        last_id = LinkRowField.objects.all().aggregate(
+            largest=models.Max('link_row_relation_id')
+        )['largest'] or 0
+        return last_id + 1
 
 
 class EmailField(Field):

@@ -13,11 +13,13 @@
       :field="field"
       :filters="view.filters"
       :include-field-width-handles="includeFieldWidthHandles"
+      :read-only="readOnly"
+      :store-prefix="storePrefix"
       @refresh="$emit('refresh', $event)"
       @dragging="$emit('dragging', $event)"
     ></GridViewFieldType>
     <div
-      v-if="includeAddField"
+      v-if="includeAddField && !readOnly"
       class="grid-view__column"
       :style="{ width: 100 + 'px' }"
     >
@@ -75,6 +77,10 @@ export default {
       type: Boolean,
       required: false,
       default: () => false,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
     },
   },
 }

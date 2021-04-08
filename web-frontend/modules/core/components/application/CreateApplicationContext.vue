@@ -19,18 +19,27 @@
           @created="hide"
         ></CreateApplicationModal>
       </li>
+      <li>
+        <a @click=";[$refs.templateModal.show(), hide()]">
+          <i class="context__menu-icon fas fa-fw fa-file-alt"></i>
+          From template
+        </a>
+        <TemplateModal ref="templateModal" :group="group"></TemplateModal>
+      </li>
     </ul>
   </Context>
 </template>
 
 <script>
 import CreateApplicationModal from '@baserow/modules/core/components/application/CreateApplicationModal'
+import TemplateModal from '@baserow/modules/core/components/template/TemplateModal'
 import context from '@baserow/modules/core/mixins/context'
 
 export default {
   name: 'CreateApplicationContext',
   components: {
     CreateApplicationModal,
+    TemplateModal,
   },
   mixins: [context],
   props: {
