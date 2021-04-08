@@ -752,10 +752,6 @@ export const actions = {
     { commit, getters, rootGetters },
     { row, fields, primary = null, overrides }
   ) {
-    if (fields === undefined || primary === null) {
-      throw new Error('FIELDS OR PRIMARY CANT BE NULL @TODO')
-    }
-
     const rowSearchMatches = calculateSingleRowSearchMatches(
       row,
       getters.getActiveSearchTerm,
@@ -869,8 +865,6 @@ export const actions = {
       windowHeight: null,
     })
 
-    dispatch('onRowChange', { view, row, fields, primary })
-
     try {
       const { data } = await RowService(this.$client).create(
         table.id,
@@ -878,6 +872,7 @@ export const actions = {
         before !== null ? before.id : null
       )
       commit('FINALIZE_ROW', { oldId: row.id, id: data.id, order: data.order })
+      dispatch('onRowChange', { view, row, fields, primary })
     } catch (error) {
       commit('DELETE_ROW', row.id)
       throw error

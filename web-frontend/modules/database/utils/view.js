@@ -91,7 +91,10 @@ function _findFieldsInRowMatchingSearch(
   overrides
 ) {
   const fieldSearchMatches = new Set()
-  if (row.id.toString().includes(activeSearchTerm)) {
+  // If the row is loading then a temporary UUID is put in its id. We don't want to
+  // accidentally match against that UUID as it will be shortly replaced with its
+  // real id.
+  if (!row._.loading && row.id.toString().includes(activeSearchTerm)) {
     fieldSearchMatches.add('row_id')
   }
   for (const field of fields) {
