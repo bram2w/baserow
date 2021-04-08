@@ -1,6 +1,6 @@
 Django==2.2.11
 django-cors-headers==3.2.1
-djangorestframework==3.11.0
+djangorestframework==3.11.2
 djangorestframework-jwt==1.11.0
 psycopg2==2.8.4
 mysqlclient==1.4.6
