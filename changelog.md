@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Released (2021-04-08)
 
 * Added support for importing tables from XML files.
 * Added support for different character encodings when importing CSV files.
