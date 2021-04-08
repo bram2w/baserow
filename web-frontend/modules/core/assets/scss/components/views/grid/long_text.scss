@@ -27,4 +27,8 @@
   &:focus {
     outline: 0;
   }
+
+  .grid-view__column--matches-search & {
+    background-color: $color-primary-100;
+  }
 }

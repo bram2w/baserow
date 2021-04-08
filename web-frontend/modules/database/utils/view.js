@@ -39,7 +39,13 @@ export function getRowSortFunction(
  * filters. Returning false indicates that the row should not be visible for that
  * view.
  */
-export const rowMatchesFilters = ($registry, filterType, filters, values) => {
+export const matchSearchFilters = (
+  $registry,
+  filterType,
+  filters,
+  fields,
+  values
+) => {
   // If there aren't any filters then it is not possible to check if the row
   // matches any of the filters, so we can mark it as valid.
   if (filters.length === 0) {
@@ -47,11 +53,14 @@ export const rowMatchesFilters = ($registry, filterType, filters, values) => {
   }
 
   for (const i in filters) {
-    const filterValue = filters[i].value
-    const rowValue = values[`field_${filters[i].field}`]
+    const filter = filters[i]
+    const filterValue = filter.value
+    const rowValue = values[`field_${filter.field}`]
+    const field = fields.find((f) => f.id === filter.field)
+    const fieldType = $registry.get('field', field.type)
     const matches = $registry
-      .get('viewFilter', filters[i].type)
-      .matches(rowValue, filterValue)
+      .get('viewFilter', filter.type)
+      .matches(rowValue, filterValue, field, fieldType)
     if (filterType === 'AND' && !matches) {
       // With an `AND` filter type, the row must match all the filters, so if
       // one of the filters doesn't match we can mark it as isvalid.
@@ -72,4 +81,63 @@ export const rowMatchesFilters = ($registry, filterType, filters, values) => {
     // the row matches none of the filters and therefore we can mark it as invalid.
     return false
   }
+}
+
+function _findFieldsInRowMatchingSearch(
+  row,
+  activeSearchTerm,
+  fields,
+  registry,
+  overrides
+) {
+  const fieldSearchMatches = new Set()
+  if (row.id.toString().includes(activeSearchTerm)) {
+    fieldSearchMatches.add('row_id')
+  }
+  for (const field of fields) {
+    const fieldName = `field_${field.id}`
+    const rowValue =
+      fieldName in overrides ? overrides[fieldName] : row[fieldName]
+    if (rowValue) {
+      const doesMatch = registry
+        .get('field', field.type)
+        .containsFilter(rowValue, activeSearchTerm, field)
+      if (doesMatch) {
+        fieldSearchMatches.add(field.id.toString())
+      }
+    }
+  }
+
+  return fieldSearchMatches
+}
+
+/**
+ * Helper function which calculates if a given row and which of it's fields matches a
+ * given search term. The rows values can be overridden by providing an overrides
+ * object containing a mapping of the field name to override to a value that will be
+ * used to check for matches instead of the rows real one. The rows values will not be
+ * changed.
+ */
+export function calculateSingleRowSearchMatches(
+  row,
+  activeSearchTerm,
+  hideRowsNotMatchingSearch,
+  fields,
+  registry,
+  overrides = {}
+) {
+  const searchIsBlank = activeSearchTerm === ''
+  const fieldSearchMatches = searchIsBlank
+    ? new Set()
+    : _findFieldsInRowMatchingSearch(
+        row,
+        activeSearchTerm,
+        fields,
+        registry,
+        overrides
+      )
+
+  const matchSearch =
+    !hideRowsNotMatchingSearch || searchIsBlank || fieldSearchMatches.size > 0
+  return { row, matchSearch, fieldSearchMatches }
 }

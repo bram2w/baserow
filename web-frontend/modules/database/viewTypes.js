@@ -99,12 +99,13 @@ export class ViewType extends Registerable {
   fetch() {}
 
   /**
-   * Should refresh the data inside a few. This is method could be called when a filter
+   * Should refresh the data inside a view. This is method could be called when a filter
    * or sort has been changed or when a field is updated or deleted. It should keep the
    * state as much the same as it was before. So for example the scroll offset should
-   * stay the same if possible.
+   * stay the same if possible. Can throw a RefreshCancelledException when the view
+   * wishes to cancel the current refresh call due to a new refresh call.
    */
-  refresh() {}
+  refresh({ store }, view) {}
 
   /**
    * Method that is called when a field has been created. This can be useful to
@@ -215,6 +216,20 @@ export class GridViewType extends ViewType {
     await dispatch('view/grid/forceDeleteFieldOptions', field.id, {
       root: true,
     })
+  }
+
+  async fieldUpdated({ dispatch }, field, oldField, fieldType) {
+    // The field changing may change which cells in the field should be highlighted so
+    // we refresh them to ensure that they still correctly match. E.g. changing a date
+    // fields date_format needs a search update as search string might no longer
+    // match the new format.
+    await dispatch(
+      'view/grid/updateSearch',
+      {},
+      {
+        root: true,
+      }
+    )
   }
 
   isCurrentView(store, tableId) {

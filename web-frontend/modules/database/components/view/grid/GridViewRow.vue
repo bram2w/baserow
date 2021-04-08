@@ -5,7 +5,8 @@
       'grid-view__row--selected': row._.selectedBy.length > 0,
       'grid-view__row--loading': row._.loading,
       'grid-view__row--hover': row._.hover,
-      'grid-view__row--warning': !row._.matchFilters || !row._.matchSortings,
+      'grid-view__row--warning':
+        !row._.matchFilters || !row._.matchSortings || !row._.matchSearch,
     }"
     @mouseover="$emit('row-hover', { row, value: true })"
     @mouseleave="$emit('row-hover', { row, value: false })"
@@ -13,19 +14,28 @@
   >
     <template v-if="includeRowDetails">
       <div
-        v-if="!row._.matchFilters || !row._.matchSortings"
+        v-if="!row._.matchFilters || !row._.matchSortings || !row._.matchSearch"
         class="grid-view__row-warning"
       >
         <template v-if="!row._.matchFilters">
           Row does not match filters
         </template>
-        <template v-else-if="!row._.matchSortings">Row has moved</template>
+        <template v-else-if="!row._.matchSearch">
+          Row does not match search
+        </template>
+        <template v-else-if="!row._.matchSortings"> Row has moved</template>
       </div>
       <div
         class="grid-view__column"
         :style="{ width: gridViewRowDetailsWidth + 'px' }"
       >
-        <div class="grid-view__row-info">
+        <div
+          class="grid-view__row-info"
+          :class="{
+            'grid-view__row-info--matches-search':
+              row._.matchSearch && row._.fieldSearchMatches.includes('row_id'),
+          }"
+        >
           <div class="grid-view__row-count" :title="row.id">
             {{ row.id }}
           </div>
@@ -42,7 +52,7 @@
     -->
     <GridViewCell
       v-for="field in fields"
-      :key="'row-field-' + row.id + '-' + field.id"
+      :key="'row-field-' + row.id + '-' + field.id.toString()"
       :field="field"
       :row="row"
       :state="state"

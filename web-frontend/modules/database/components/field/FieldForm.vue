@@ -37,7 +37,7 @@
         </div>
       </div>
     </div>
-    <template v-if="!!values.type">
+    <template v-if="hasFormComponent">
       <component
         :is="getFormComponent(values.type)"
         ref="childForm"
@@ -81,6 +81,9 @@ export default {
   computed: {
     fieldTypes() {
       return this.$registry.getAll('field')
+    },
+    hasFormComponent() {
+      return !!this.values.type && this.getFormComponent(this.values.type)
     },
   },
   validations: {

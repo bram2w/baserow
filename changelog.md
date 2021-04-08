@@ -25,6 +25,7 @@
 * Add Phone Number field.
 * Add support for Date, Number and Single Select fields to the Contains and Not Contains view 
   filters.
+* Searching all rows can now be done by clicking the new search icon in the top right.
 
 ## Released (2021-03-01)
 

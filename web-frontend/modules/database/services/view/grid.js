@@ -6,6 +6,7 @@ export default (client) => {
       offset = null,
       cancelToken = null,
       includeFieldOptions = false,
+      search = false,
     }) {
       const config = {
         params: {
@@ -30,13 +31,24 @@ export default (client) => {
         config.params.include = include.join(',')
       }
 
+      if (search) {
+        config.params.search = search
+      }
+
       return client.get(`/database/views/grid/${gridId}/`, config)
     },
-    fetchCount(gridId) {
+    fetchCount({ gridId, search, cancelToken = null }) {
       const config = {
         params: {
           count: true,
         },
+      }
+      if (cancelToken !== null) {
+        config.cancelToken = cancelToken
+      }
+
+      if (search) {
+        config.params.search = search
       }
 
       return client.get(`/database/views/grid/${gridId}/`, config)

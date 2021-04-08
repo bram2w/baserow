@@ -1,5 +1,10 @@
 .control {
   margin-bottom: 20px;
+
+  &.control--align-right {
+    display: flex;
+    justify-content: right;
+  }
 }
 
 .control__label {
@@ -81,6 +86,19 @@
     line-height: 12px;
     margin-top: -6px;
     color: $color-neutral-300;
+  }
+
+  &.input__with-icon--loading {
+    &::after {
+      content: " ";
+
+      @include loading(14px);
+      @include absolute(10px, 10px, auto, auto);
+    }
+
+    i {
+      display: none;
+    }
   }
 }
 
