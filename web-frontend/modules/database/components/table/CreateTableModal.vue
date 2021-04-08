@@ -16,7 +16,7 @@
                 @click="importer = ''"
               >
                 <i class="choice-items__icon fas fa-clone"></i>
-                Start with an empty table
+                Start with a new table
               </a>
             </li>
             <li v-for="importerType in importerTypes" :key="importerType.type">

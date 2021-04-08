@@ -22,7 +22,9 @@ export default {
         delete file.original_name
         return file
       })
-      this.$refs.uploadModal.hide()
+      if (this.$refs.uploadModal) {
+        this.$refs.uploadModal.hide()
+      }
       const newValue = JSON.parse(JSON.stringify(value))
       newValue.push(...files)
       this.$emit('update', newValue, value)

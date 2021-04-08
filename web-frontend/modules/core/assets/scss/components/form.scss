@@ -1,5 +1,10 @@
 .control {
   margin-bottom: 20px;
+
+  &.control--align-right {
+    display: flex;
+    justify-content: right;
+  }
 }
 
 .control__label {
@@ -57,6 +62,16 @@
   &.input--error {
     border-color: $color-error-500;
   }
+
+  &[disabled] {
+    color: $color-primary-900;
+    background-color: $color-neutral-50;
+
+    &:active,
+    &:focus {
+      border-color: $color-neutral-400;
+    }
+  }
 }
 
 .textarea--modal {
@@ -81,6 +96,40 @@
     line-height: 12px;
     margin-top: -6px;
     color: $color-neutral-300;
+  }
+
+  &.input__with-icon--left {
+    .input {
+      padding-left: 32px;
+      padding-right: 8px;
+
+      &.input--large {
+        padding-right: 12px;
+      }
+    }
+
+    i {
+      right: auto;
+      left: 12px;
+    }
+  }
+
+  &.input__with-icon--loading {
+    &::after {
+      content: " ";
+
+      @include loading(14px);
+      @include absolute(10px, 10px, auto, auto);
+    }
+
+    i {
+      display: none;
+    }
+
+    &.input__with-icon--left::after {
+      left: 10px;
+      right: auto;
+    }
   }
 }
 
@@ -114,6 +163,14 @@
 
   &.active::before {
     content: fa-content($fa-var-check);
+  }
+
+  &.checkbox--disabled {
+    cursor: inherit;
+
+    &::before {
+      background-color: $color-neutral-50;
+    }
   }
 }
 
@@ -200,6 +257,18 @@
 
     &.unknown::after {
       left: 10.5px;
+    }
+  }
+
+  &.switch--disabled {
+    cursor: inherit;
+
+    &.active::before {
+      background-color: $color-neutral-600;
+    }
+
+    &.unknown::before {
+      background-color: $color-neutral-400;
     }
   }
 }

@@ -10,9 +10,9 @@ class PostgresqlLenientDatabaseSchemaEditor:
     format. If the casting still fails the value will be set to null.
     """
 
-    sql_alter_column_type = "ALTER COLUMN %(column)s TYPE %(type)s " \
-                            "USING pg_temp.try_cast(%(column)s::text)"
-    sql_drop_try_cast = "DROP FUNCTION IF EXISTS pg_temp.try_cast(text, int)"
+    sql_alter_column_type = 'ALTER COLUMN %(column)s TYPE %(type)s ' \
+                            'USING pg_temp.try_cast(%(column)s::text)'
+    sql_drop_try_cast = 'DROP FUNCTION IF EXISTS pg_temp.try_cast(text, int)'
     sql_create_try_cast = """
         create or replace function pg_temp.try_cast(
             p_in text,
@@ -35,16 +35,20 @@ class PostgresqlLenientDatabaseSchemaEditor:
     """
 
     def __init__(self, *args, alter_column_prepare_old_value='',
-                 alter_column_prepare_new_value=''):
+                 alter_column_prepare_new_value='',
+                 force_alter_column=False):
         self.alter_column_prepare_old_value = alter_column_prepare_old_value
         self.alter_column_prepare_new_value = alter_column_prepare_new_value
+        self.force_alter_column = force_alter_column
         super().__init__(*args)
 
     def _alter_field(self, model, old_field, new_field, old_type, new_type,
                      old_db_params, new_db_params, strict=False):
+        if self.force_alter_column:
+            old_type = f'{old_type}_forced'
+
         if old_type != new_type:
             variables = {}
-
             if isinstance(self.alter_column_prepare_old_value, tuple):
                 alter_column_prepare_old_value, v = self.alter_column_prepare_old_value
                 variables = {**variables, **v}
@@ -57,12 +61,13 @@ class PostgresqlLenientDatabaseSchemaEditor:
             else:
                 alter_column_prepare_new_value = self.alter_column_prepare_new_value
 
+            quoted_column_name = self.quote_name(new_field.column)
             self.execute(self.sql_drop_try_cast)
             self.execute(self.sql_create_try_cast % {
-                "column": self.quote_name(new_field.column),
-                "type": new_type,
-                "alter_column_prepare_old_value": alter_column_prepare_old_value,
-                "alter_column_prepare_new_value": alter_column_prepare_new_value
+                'column': quoted_column_name,
+                'type': new_type,
+                'alter_column_prepare_old_value': alter_column_prepare_old_value,
+                'alter_column_prepare_new_value': alter_column_prepare_new_value
             }, variables)
 
         return super()._alter_field(model, old_field, new_field, old_type, new_type,
@@ -71,7 +76,8 @@ class PostgresqlLenientDatabaseSchemaEditor:
 
 @contextlib.contextmanager
 def lenient_schema_editor(connection, alter_column_prepare_old_value=None,
-                          alter_column_prepare_new_value=None):
+                          alter_column_prepare_new_value=None,
+                          force_alter_column=False):
     """
     A contextual function that yields a modified version of the connection's schema
     editor. This temporary version is more lenient then the regular editor. Normally
@@ -89,6 +95,9 @@ def lenient_schema_editor(connection, alter_column_prepare_old_value=None,
     :param alter_column_prepare_new_value: Optionally a query statement converting the
         `p_in` text value to the new type.
     :type alter_column_prepare_new_value: None or str
+    :param force_alter_column: When true forces the schema editor to run an alter
+        column statement using the previous two alter_column_prepare parameters.
+    :type force_alter_column: bool
     :raises ValueError: When the provided connection is not supported. For now only
         `postgresql` is supported.
     """
@@ -109,7 +118,9 @@ def lenient_schema_editor(connection, alter_column_prepare_old_value=None,
 
     connection.SchemaEditorClass = schema_editor_class
 
-    kwargs = {}
+    kwargs = {
+        'force_alter_column': force_alter_column
+    }
 
     if alter_column_prepare_old_value:
         kwargs['alter_column_prepare_old_value'] = alter_column_prepare_old_value

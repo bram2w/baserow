@@ -10,11 +10,12 @@
       :table="table"
       :field="field"
       :row="row"
+      :read-only="readOnly"
       @update="update"
       @field-updated="$emit('field-updated', $event)"
       @field-deleted="$emit('field-deleted')"
     ></RowEditModalField>
-    <div class="actions">
+    <div v-if="!readOnly" class="actions">
       <a
         ref="createFieldContextLink"
         @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
@@ -58,6 +59,10 @@ export default {
     },
     rows: {
       type: Array,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

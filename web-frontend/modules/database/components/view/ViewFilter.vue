@@ -9,13 +9,14 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-filter"></i>
-      Filter
+      {{ filterTitle }}
     </a>
     <ViewFilterContext
       ref="context"
       :view="view"
       :fields="fields"
       :primary="primary"
+      :read-only="readOnly"
       @changed="$emit('changed')"
     ></ViewFilterContext>
   </div>
@@ -39,6 +40,22 @@ export default {
     view: {
       type: Object,
       required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+  },
+  computed: {
+    filterTitle() {
+      const numberOfFilters = this.view.filters.length
+      if (numberOfFilters === 0) {
+        return 'Filter'
+      } else if (numberOfFilters === 1) {
+        return `${numberOfFilters} Filter`
+      } else {
+        return `${numberOfFilters} Filters`
+      }
     },
   },
   beforeMount() {

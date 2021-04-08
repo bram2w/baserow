@@ -1,5 +1,32 @@
 # Changelog
 
+## Released (2021-04-08)
+
+* Added support for importing tables from XML files.
+* Added support for different character encodings when importing CSV files.
+* Prevent websocket reconnect loop when the authentication fails.
+* Refactored the GridView component and improved interface speed.
+* Prevent websocket reconnect when the connection closes without error.
+* Added gunicorn worker test to the CI pipeline.
+* Made it possible to re-order fields in a grid view.
+* Show the number of filters and sorts active in the header of a grid view.
+* The first user to sign-up after installation now gets given staff status.
+* Rename the "includes" get parameter across all API endpoints to "include" to be 
+  consistent.
+* Add missing include query parameter and corresponding response attributes to API docs. 
+* Remove incorrectly included "filters_disabled" field from 
+  list_database_table_grid_view_rows api endpoint.
+* Show an error to the user when the web socket connection could not be made and the
+  reconnect loop stops.
+* Fixed 100X backend web socket errors when refreshing the page.
+* Fixed SSRF bug in the file upload by URL by blocking urls to the private network.
+* Fixed bug where an invalid date could be converted to 0001-01-01.
+* The list_database_table_rows search query parameter now searches all possible field types.
+* Add Phone Number field.
+* Add support for Date, Number and Single Select fields to the Contains and Not Contains view 
+  filters.
+* Searching all rows can now be done by clicking the new search icon in the top right.
+
 ## Released (2021-03-01)
 
 * Redesigned the left sidebar.

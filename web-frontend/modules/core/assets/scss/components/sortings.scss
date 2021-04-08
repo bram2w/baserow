@@ -95,15 +95,6 @@
   color: $color-neutral-900;
   width: 80px;
 
-  &:hover {
-    background-color: $color-neutral-100;
-    text-decoration: none;
-  }
-
-  &.active {
-    background-color: $color-primary-100;
-  }
-
   &:not(:last-child) {
     margin-right: 10px;
   }
@@ -113,6 +104,24 @@
 
     &:not(:last-child) {
       margin-right: 8px;
+    }
+  }
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+
+    .sortings__order--disabled & {
+      cursor: inherit;
+      background-color: transparent;
+    }
+  }
+
+  &.active {
+    background-color: $color-primary-100;
+
+    .sortings__order--disabled & {
+      background-color: $color-neutral-100;
     }
   }
 }

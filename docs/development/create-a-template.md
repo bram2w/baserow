@@ -1,0 +1,104 @@
+# Create a template
+
+Templates are a starting point for other users. They can use them for inspiration and
+easily install them into their groups. A template consists of one or more applications 
+that will be copied into the desired group if a user decides to install it. It is also
+possible for the user to see an example of the template before installing.
+
+## Build your own
+
+If you want to create your own template, you first need to make one in an installation
+of  Baserow. You need at least version 1.1 because that contains the exporting
+functionality that you are going to need later.
+
+The first step is creating a new empty group. It doesn't matter what it is named. Next
+you can create the applications that you want to have in your template in the group
+you just created.
+
+If you for example want to create a content calendar, you might want to create a
+database named `Content Calendar` that contains three tables names `Pipeline`,
+`Campaigns` and `Authors`. Once you have filled in all the tables in the way you want, 
+you can proceed to the next step, which is exporting the group you just made to then
+create a template based off it.
+
+## Exporting the applications
+
+It is possible to make an export of all the applications that are in a group. When a 
+user installs a template, then that export is used to import the applications
+into the user's desired group. It is only possible to make this export via the command 
+line interface of Baserow.
+
+Before you can export the application, you first need to figure out what the ID of your
+group is. You will see a list of all your groups when you click on the name of your
+group in the sidebar. If you hover over a group there, you will see the click-able
+three  dots. If you click on that you will see another context menu containing the name
+of that group, and a number between brackets. That number is your group ID.
+
+Now that you have the group ID that contains your template, you need to export it to
+JSON format. In order to do that you need access to the command line of your Baserow
+environment. This could be different depending on how your environment is installed.
+A couple of examples:
+
+### Development environment
+
+Inside the backend container you need to execute the following command:
+
+```
+$ python src/baserow/manage.py export_group_applications YOUR_GROUP_ID --indent
+```
+
+### Cloudron environment
+
+By logging into your Cloudron environment, you can access to the terminal of your
+Baserow app. There you can enter the following command to export your application:
+
+```
+$ /app/code/env/bin/python /app/code/baserow/backend/src/baserow/manage.py export_group_applications YOUR_GROUP_ID --indent --settings=cloudron.settings
+```
+
+### Ubuntu environment
+
+Connect to your server via SSH and execute the following commands:
+
+```
+$ cd /baserow
+$ source backend/env/bin/activate
+$ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
+$ export DATABASE_PASSWORD='yourpassword'
+$ export DATABASE_HOST='localhost'
+$ baserow export_group_applications YOUR_GROUP_ID --indent
+```
+
+## Creating the template file
+
+Inside the `backend/templates` directory you will find all the existing templates. You
+need to create a new JSON file here that has the same content as shown below. You can 
+replace the values with something that matches your template. We keep all the templates 
+as JSON files so that everyone who self hosts also has access them.
+
+* **name**: The name of the template that is visible to the user.
+* **icon**: A font awesome class name that is visible to the user (`fa-{icon}`).
+* **keyword**: Additional keywords will only be used to improve searching.
+* **categories**: The categories that the template belongs to.
+* **export**: The export value must contain the output of the
+  `export_group_applications` command.
+
+```json
+{
+  "baserow_template_version": 1,
+  "name": "Content Calendar",
+  "icon": "file",
+  "keywords": ["Example", "Template", "For", "Search"],
+  "categories": ["Test category 1"],
+  "export": []
+}
+```
+
+## Synchronizing the template
+
+In order to try out your template, you need to run the `sync_templates` management
+command. This will make sure that a copy of the template is added to the database so
+that the user can see a quick preview.
+
+If everything works, you could create a merge request and share your template with the
+community.

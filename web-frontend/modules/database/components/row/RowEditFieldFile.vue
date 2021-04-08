@@ -30,6 +30,7 @@
         </div>
         <div class="field-file__actions">
           <a
+            v-if="!readOnly"
             v-tooltip="'rename'"
             class="field-file__action"
             @click="$refs['rename-' + index][0].edit()"
@@ -45,6 +46,7 @@
             <i class="fas fa-download"></i>
           </a>
           <a
+            v-if="!readOnly"
             v-tooltip="'delete'"
             class="field-file__action"
             @click="removeFile(value, index)"
@@ -54,11 +56,12 @@
         </div>
       </li>
     </ul>
-    <a class="add" @click.prevent="showModal()">
+    <a v-if="!readOnly" class="add" @click.prevent="showModal()">
       <i class="fas fa-plus add__icon"></i>
       Add a file
     </a>
     <UserFilesModal
+      v-if="!readOnly"
       ref="uploadModal"
       @uploaded="addFiles(value, $event)"
     ></UserFilesModal>
@@ -66,6 +69,7 @@
       v-if="Boolean(value)"
       ref="fileModal"
       :files="value"
+      :read-only="readOnly"
       @removed="removeFile(value, $event)"
       @renamed="renameFile(value, $event.index, $event.value)"
     ></FileFieldModal>

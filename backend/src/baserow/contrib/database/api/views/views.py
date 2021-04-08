@@ -2,7 +2,7 @@ from django.db import transaction
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -46,6 +46,12 @@ from .errors import (
 class ViewsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+
+        return super().get_permissions()
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -54,18 +60,31 @@ class ViewsView(APIView):
                 type=OpenApiTypes.INT,
                 description='Returns only views of the table related to the provided '
                             'value.'
-            )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'A comma separated list of extra attributes to include on each '
+                    'view in the response. The supported attributes are `filters` and '
+                    '`sortings`. For example `include=filters,sortings` will add the '
+                    'attributes `filters` and `sortings` to every returned view, '
+                    'containing a list of the views filters and sortings respectively.'
+                )
+            ),
         ],
         tags=['Database table views'],
         operation_id='list_database_table_views',
         description=(
             'Lists all views of the table related to the provided `table_id` if the '
-            'user has access to the related database\'s group. A table can have '
-            'multiple views. Each view can display the data in a different way. For '
-            'example the `grid` view shows the in a spreadsheet like way. That type '
-            'has custom endpoints for data retrieval and manipulation. In the future '
-            'other views types like a calendar or Kanban are going to be added. Each '
-            'type can have different properties.'
+            'user has access to the related database\'s group. If the group is '
+            'related to a template, then this endpoint will be publicly accessible. A '
+            'table can have multiple views. Each view can display the data in a '
+            'different way. For example the `grid` view shows the in a spreadsheet '
+            'like way. That type has custom endpoints for data retrieval and '
+            'manipulation. In the future other views types like a calendar or Kanban '
+            'are going to be added. Each type can have different properties.'
         ),
         responses={
             200: PolymorphicCustomFieldRegistrySerializer(
@@ -89,7 +108,8 @@ class ViewsView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
+        table.database.group.has_user(request.user, raise_error=True,
+                                      allow_if_template=True)
         views = View.objects.filter(table=table).select_related('content_type')
 
         if filters:
@@ -117,7 +137,20 @@ class ViewsView(APIView):
                 type=OpenApiTypes.INT,
                 description='Creates a view for the table related to the provided '
                             'value.'
-            )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'A comma separated list of extra attributes to include on each '
+                    'view in the response. The supported attributes are `filters` and '
+                    '`sortings`. '
+                    'For example `include=filters,sortings` will add the attributes '
+                    '`filters` and `sortings` to every returned view, containing '
+                    'a list of the views filters and sortings respectively.'
+                )
+            ),
         ],
         tags=['Database table views'],
         operation_id='create_database_table_view',
@@ -176,7 +209,20 @@ class ViewView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description='Returns the view related to the provided value.'
-            )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'A comma separated list of extra attributes to include on the '
+                    'returned view. The supported attributes are are `filters` and '
+                    '`sortings`. '
+                    'For example `include=filters,sortings` will add the attributes '
+                    '`filters` and `sortings` to every returned view, containing '
+                    'a list of the views filters and sortings respectively.'
+                )
+            ),
         ],
         tags=['Database table views'],
         operation_id='get_database_table_view',
@@ -219,7 +265,20 @@ class ViewView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description='Updates the view related to the provided value.'
-            )
+            ),
+            OpenApiParameter(
+                name='include',
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    'A comma separated list of extra attributes to include on the '
+                    'returned view. The supported attributes are are `filters` and '
+                    '`sortings`. '
+                    'For example `include=filters,sortings` will add the attributes '
+                    '`filters` and `sortings` to every returned view, containing '
+                    'a list of the views filters and sortings respectively.'
+                )
+            ),
         ],
         tags=['Database table views'],
         operation_id='update_database_table_view',

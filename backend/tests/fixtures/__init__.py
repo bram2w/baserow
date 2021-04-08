@@ -9,9 +9,10 @@ from .table import TableFixtures
 from .view import ViewFixtures
 from .field import FieldFixtures
 from .token import TokenFixtures
+from .template import TemplateFixtures
 
 
 class Fixtures(SettingsFixtures, UserFixtures, UserFileFixtures, GroupFixtures,
                ApplicationFixtures, TableFixtures, ViewFixtures, FieldFixtures,
-               TokenFixtures):
+               TokenFixtures, TemplateFixtures):
     fake = Faker()

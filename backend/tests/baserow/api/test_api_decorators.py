@@ -250,7 +250,7 @@ def test_allowed_includes():
 
     request = Request(factory.get(
         '/some-page/',
-        data={'includes': 'test_1,test_2'},
+        data={'include': 'test_1,test_2'},
     ))
 
     @allowed_includes('test_1', 'test_3')
@@ -262,7 +262,7 @@ def test_allowed_includes():
 
     request = Request(factory.get(
         '/some-page/',
-        data={'includes': 'test_3'},
+        data={'include': 'test_3'},
     ))
 
     @allowed_includes('test_1', 'test_3')

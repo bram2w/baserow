@@ -7,7 +7,7 @@
 By default Baserow uses PostgreSQL for persistent storage. In the near future MySQL and 
 SQLite are also going to by supported, but this is not yet the case. Most things will
 probably work with the other engines, but it will probably fail when converting a field
-to another type. Haven't tested if the other engines work though.
+to another type. However, it hasn't yet been tested if the other engines work.
 
 https://www.postgresql.org/
 
@@ -44,9 +44,9 @@ https://docs.pytest.org/en/latest/contents.html
 ### Flake8
 
 Flake8 makes it easy to enforce our python code style. The code is checked in the 
-continuous integration pipeline. It can also by checked manually in the development
+continuous integration pipeline. It can also be checked manually in the development
 environment. Make sure that you are in the `backend` container and execute the 
-following command. If all code meets the standards you should not see any output.
+following command. If all the code meets the standards you should not see any output.
 
 ```
 $ make lint
@@ -75,7 +75,7 @@ In order to simplify the process of creating HTML emails we use MJML. This tool 
 it easy to create responsive emails that work with most email clients. This might seem
 a bit like over engineering to use this for only the password forgot email, but more
 complicated emails are going to be added in the future and we wanted to have a solid 
-base. To make this integrate very nicely with Django templates we use the liminispace
+base. To make this integrate nicely with Django templates we use the liminispace
 django mjml package.
 
 https://mjml.io/
@@ -149,5 +149,5 @@ https://fontawesome.com/
 
 ## Thanks!
 
-Big thanks to creators and and contributors of the tools described above! Without you
-Baserow would not have been where it it today.
+Big thanks to creators and contributors of the tools described above! Without you
+Baserow would not have been where it is today.

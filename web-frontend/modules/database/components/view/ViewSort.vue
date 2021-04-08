@@ -9,13 +9,14 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-sort"></i>
-      Sort
+      {{ sortTitle }}
     </a>
     <ViewSortContext
       ref="context"
       :view="view"
       :fields="fields"
       :primary="primary"
+      :read-only="readOnly"
       @changed="$emit('changed')"
     ></ViewSortContext>
   </div>
@@ -39,6 +40,22 @@ export default {
     view: {
       type: Object,
       required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+  },
+  computed: {
+    sortTitle() {
+      const numberOfSortings = this.view.sortings.length
+      if (numberOfSortings === 0) {
+        return 'Sort'
+      } else if (numberOfSortings === 1) {
+        return `${numberOfSortings} Sort`
+      } else {
+        return `${numberOfSortings} Sorts`
+      }
     },
   },
 }

@@ -73,7 +73,13 @@ export default {
      * Calculate the position, show the context menu and register a click event on the
      * body to check if the user has clicked outside the context.
      */
-    show(target, vertical, horizontal, verticalOffset, horizontalOffset) {
+    show(
+      target,
+      vertical,
+      horizontal,
+      verticalOffset = 10,
+      horizontalOffset = 0
+    ) {
       const isElementOrigin = isDomElement(target)
       const updatePosition = () => {
         const css = isElementOrigin
@@ -134,6 +140,8 @@ export default {
       }
       window.addEventListener('scroll', this.$el.updatePositionEvent, true)
       window.addEventListener('resize', this.$el.updatePositionEvent)
+
+      this.$emit('shown')
     },
     /**
      * Hide the context menu and make sure the body event is removed.

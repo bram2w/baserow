@@ -1,7 +1,10 @@
 <template>
   <div
     class="dropdown"
-    :class="{ 'dropdown--floating': !showInput }"
+    :class="{
+      'dropdown--floating': !showInput,
+      'dropdown--disabled': disabled,
+    }"
     @contextmenu.stop
   >
     <a
@@ -16,7 +19,7 @@
       >
         {{ selectedName }}
       </div>
-      <i class="dropdown__toggle-icon fas fa-caret-down"></i>
+      <i v-if="!disabled" class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <div class="dropdown__items" :class="{ hidden: !open }">
       <div v-if="showSearch" class="select__search">

@@ -12,6 +12,7 @@
           {{ item.value || 'unnamed row ' + item.id }}
         </span>
         <a
+          v-if="!readOnly"
           class="field-link-row__remove"
           @click.prevent="removeValue($event, value, item.id)"
         >
@@ -19,11 +20,12 @@
         </a>
       </li>
     </ul>
-    <a class="add" @click.prevent="$refs.selectModal.show()">
+    <a v-if="!readOnly" class="add" @click.prevent="$refs.selectModal.show()">
       <i class="fas fa-plus add__icon"></i>
       Add another link
     </a>
     <SelectRowModal
+      v-if="!readOnly"
       ref="selectModal"
       :table-id="field.link_row_table"
       :value="value"

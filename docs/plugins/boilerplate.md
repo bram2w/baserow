@@ -15,7 +15,7 @@ python and pip.
 ```
 $ cd ~/baserow
 $ pip install cookiecutter
-$ git clone git@gitlab.com:bramw/baserow.git
+$ git clone https://gitlab.com/bramw/baserow.git
 Cloning into 'baserow'...
 ```
 
@@ -56,12 +56,13 @@ Starting my-baserow-plugin-web-frontend ... done
 ```
 
 The development environment is now running, but the development servers have not yet 
-been started. First we will apply all the migrations and start the Django backend 
-development server by executing the following commands.
+been started. First we will apply all the migrations, sync the templates and start the
+Django backend development server by executing the following commands.
 
 ```
 $ docker exec -it my-baserow-plugin-backend bash
 $ baserow migrate
+$ baserow sync_templates
 $ baserow runserver 0.0.0.0:8000
 ```
 
@@ -106,7 +107,7 @@ is working!
 The most important part inside the my-baserow-plugin folder is the 
 plugins/my_baserow_plugin folder. Here you will find all the code of your plugin. For
 example purposes we are going to add a simple endpoint which always returns the same 
-response and we are going to show this text on a page in the web frontend.
+response, and we are going to show this text on a page in the web frontend.
 
 ### Backend changes
 
@@ -212,9 +213,9 @@ commands in the correct container.
 
 ### Distribution not found
 
-It could be that you get an error like `pkg_resources.DistributionNotFound: The 
+You could get an error like `pkg_resources.DistributionNotFound: The 
 'baserow==*.*.*' distribution was not found and is required by the application` when 
-starting the development for the first time in the backend containing. This is because
+starting the development for the first time in the backend container. This is because
 the baserow directory is only being mounted after the image has been created and the
 egg-info folder is missing then. You can fix this by running the command 
 `make install-python-dependencies` in the backend container. That should generate the 

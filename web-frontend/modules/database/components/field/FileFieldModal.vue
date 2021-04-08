@@ -22,6 +22,7 @@
               @editing="renaming = $event"
             ></Editable>
             <a
+              v-if="!readOnly"
               v-show="!renaming"
               class="file-field-modal__rename"
               @click="$refs.rename.edit()"
@@ -91,7 +92,11 @@
           >
             <i class="fas fa-download"></i>
           </a>
-          <a class="file-field-modal__action" @click="remove(selected)">
+          <a
+            v-if="!readOnly"
+            class="file-field-modal__action"
+            @click="remove(selected)"
+          >
             <i class="fas fa-trash"></i>
           </a>
         </ul>
@@ -112,6 +117,10 @@ export default {
   props: {
     files: {
       type: Array,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

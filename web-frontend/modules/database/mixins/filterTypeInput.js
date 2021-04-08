@@ -12,6 +12,10 @@ export default {
       type: String,
       required: true,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -29,6 +33,10 @@ export default {
   },
   methods: {
     delayedUpdate(value, immediately = false) {
+      if (this.readOnly) {
+        return
+      }
+
       clearTimeout(delayTimeout)
       this.$v.$touch()
 

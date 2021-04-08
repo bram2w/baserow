@@ -81,7 +81,7 @@ $ sudo -i
 # Clone the baserow project
 $ mkdir /baserow
 $ cd /baserow
-$ git clone https://gitlab.com/bramw/baserow/ .
+$ git clone https://gitlab.com/bramw/baserow.git .
 ```
 
 The password used for the `baserow` user does not have to be the same as the one used
@@ -134,7 +134,7 @@ $ ./node_modules/nuxt/bin/nuxt.js build --config-file config/nuxt.config.demo.js
 
 ## Install NGINX
 
-Baserow uses NGINX as a reverse proxy for it's frontend and backend. Through that, you
+Baserow uses NGINX as a reverse proxy for its frontend and backend. Through that, you
 can easily add SSL Certificates and add more applications to your server if you want
 to. 
 
@@ -150,7 +150,7 @@ $ service nginx start
 ## Setup NGINX
 
 If you're unfamiliar with NGINX: NGINX uses so called "virtualhosts" to direct web
-traffic from outside of your network to the correct application on your server. These
+traffic from outside your network to the correct application on your server. These
 virtual hosts are defined in `.conf` files which are put into the
 `/etc/nginx/sites-enabled/` directory where NGINX will then process them on startup.
 Baserow comes with two configuration files for NGINX. After moving these over, change
@@ -194,6 +194,9 @@ $ export DATABASE_HOST="localhost"
 # Create database schema
 $ baserow migrate
 
+# Sync the template files with the database
+$ baserow sync_templates
+
 $ deactivate
 ```
 
@@ -201,7 +204,7 @@ $ deactivate
 
 Supervisor is an application that starts and keeps track of processes and will restart
 them if the process finishes. For Baserow this is used to reduce downtime and in order
-to restart the application in the unlikely event of an unforseen termination. You can
+to restart the application in the unlikely event of an unforeseen termination. You can
 install and configure it with these commands:
 
 ```bash
@@ -255,7 +258,7 @@ $ supervisorctl update
 $ supervisorctl status
 ```
 
-If the `reread` oder the `update` command fail, try checking the logs at
+If the `reread` or the `update` commands fail, try checking the logs at
 `/var/log/baserow/` - it is possible that another process is listening to one of the
 ports which would terminate NGINX, or parts of Baserow.
 
@@ -286,7 +289,7 @@ $ sudo certbot --nginx
 $ supervisorctl restart nginx
 ```
 
-## Ending
+## Conclusion 
 
 You now have a full installation of Baserow, which will keep the Front- & Backend
 running even if there is an unforeseen termination of them. 
@@ -306,6 +309,7 @@ $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST='localhost'
 $ baserow migrate
+$ baserow sync_templates
 $ deactivate
 $ cd web-frontend
 $ yarn install

@@ -3,6 +3,7 @@
   right: auto;
   height: auto;
   min-width: calc(100% + 4px);
+  min-height: calc(100% + 4px);
 }
 
 .grid-field-link-row__list {
@@ -32,6 +33,10 @@
 
   .grid-field-link-row__cell.active & {
     background-color: $color-primary-100;
+
+    .grid-view__column--matches-search & {
+      background-color: $color-primary-200;
+    }
   }
 
   &.grid-field-link-row__item--link {
@@ -41,6 +46,10 @@
 
     &:hover {
       background-color: $color-primary-200;
+
+      .grid-view__column--matches-search & {
+        background-color: $color-primary-300;
+      }
     }
 
     .grid-field-link-row__cell.active & {

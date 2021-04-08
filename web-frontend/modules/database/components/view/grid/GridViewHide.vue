@@ -4,23 +4,19 @@
       ref="contextLink"
       class="header__filter-link"
       :class="{
-        'active--primary': hiddenFields.length > 0,
+        'active--error': hiddenFields.length > 0,
       }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-eye-slash"></i>
-      <span v-if="hiddenFields.length === 1"
-        >{{ hiddenFields.length }} hidden field</span
-      >
-      <span v-else-if="hiddenFields.length > 1"
-        >{{ hiddenFields.length }} hidden fields</span
-      >
-      <span v-else>Hide fields</span>
+      {{ hiddenFieldsTitle }}
     </a>
     <GridViewHideContext
       ref="context"
       :view="view"
       :fields="fields"
+      :read-only="readOnly"
+      :store-prefix="storePrefix"
     ></GridViewHideContext>
   </div>
 </template>
@@ -41,6 +37,14 @@ export default {
       type: Object,
       required: true,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    storePrefix: {
+      type: String,
+      required: true,
+    },
   },
   computed: {
     hiddenFields() {
@@ -52,9 +56,25 @@ export default {
         return !exists || (exists && this.fieldOptions[field.id].hidden)
       })
     },
-    ...mapGetters({
-      fieldOptions: 'view/grid/getAllFieldOptions',
-    }),
+    hiddenFieldsTitle() {
+      const numberOfHiddenFields = this.hiddenFields.length
+      if (numberOfHiddenFields === 0) {
+        return 'Hide Fields'
+      } else if (numberOfHiddenFields === 1) {
+        return `${numberOfHiddenFields} hidden field`
+      } else {
+        return `${numberOfHiddenFields} hidden fields`
+      }
+    },
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        fieldOptions:
+          this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
+      }),
+    }
   },
 }
 </script>

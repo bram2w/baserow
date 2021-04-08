@@ -82,8 +82,8 @@ class UpdateViewSortSerializer(serializers.ModelSerializer):
 class ViewSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
     table = TableSerializer()
-    filters = ViewFilterSerializer(many=True, source='viewfilter_set')
-    sortings = ViewSortSerializer(many=True, source='viewsort_set')
+    filters = ViewFilterSerializer(many=True, source='viewfilter_set', required=False)
+    sortings = ViewSortSerializer(many=True, source='viewsort_set', required=False)
 
     class Meta:
         model = View
@@ -95,15 +95,23 @@ class ViewSerializer(serializers.ModelSerializer):
         }
 
     def __init__(self, *args, **kwargs):
-        include_filters = kwargs.pop('filters') if 'filters' in kwargs else False
-        include_sortings = kwargs.pop('sortings') if 'sortings' in kwargs else False
+        context = kwargs.setdefault("context", {})
+        context['include_filters'] = kwargs.pop('filters', False)
+        context['include_sortings'] = kwargs.pop('sortings', False)
         super().__init__(*args, **kwargs)
 
-        if not include_filters:
-            self.fields.pop('filters')
+    def to_representation(self, instance):
+        # We remove the fields in to_representation rather than __init__ as otherwise
+        # drf-spectacular will not know that filters and sortings exist as optional
+        # return fields. This way the fields are still dynamic and also show up in the
+        # OpenAPI specification.
+        if not self.context['include_filters']:
+            self.fields.pop('filters', None)
 
-        if not include_sortings:
-            self.fields.pop('sortings')
+        if not self.context['include_sortings']:
+            self.fields.pop('sortings', None)
+
+        return super().to_representation(instance)
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):

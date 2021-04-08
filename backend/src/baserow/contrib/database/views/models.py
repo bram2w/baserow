@@ -1,14 +1,14 @@
-from django.db import models
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
 
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND, FILTER_TYPE_OR
+)
+from baserow.contrib.database.fields.models import Field
 from baserow.core.mixins import (
     OrderableMixin, PolymorphicContentTypeMixin, CreatedAndUpdatedOnMixin
 )
-from baserow.contrib.database.fields.models import Field
 
-
-FILTER_TYPE_AND = 'AND'
-FILTER_TYPE_OR = 'OR'
 FILTER_TYPES = (
     (FILTER_TYPE_AND, 'And'),
     (FILTER_TYPE_OR, 'Or')
@@ -159,6 +159,9 @@ class GridViewFieldOptions(models.Model):
     # abstraction in the web-frontend.
     width = models.PositiveIntegerField(default=200)
     hidden = models.BooleanField(default=False)
+    # The default value is the maximum value of the small integer field because a newly
+    # created field must always be last.
+    order = models.SmallIntegerField(default=32767)
 
     class Meta:
         ordering = ('field_id',)

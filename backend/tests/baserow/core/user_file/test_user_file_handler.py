@@ -13,7 +13,7 @@ from django.core.files.storage import FileSystemStorage
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import (
     InvalidFileStreamError, FileSizeTooLargeError, FileURLCouldNotBeReached,
-    MaximumUniqueTriesError
+    MaximumUniqueTriesError, InvalidFileURLError
 )
 from baserow.core.user_files.handler import UserFileHandler
 
@@ -263,7 +263,7 @@ def test_upload_user_file_by_url(data_fixture, tmpdir):
 
     responses.add(
         responses.GET,
-        'http://localhost/test.txt',
+        'https://baserow.io/test.txt',
         body=b'Hello World',
         status=200,
         content_type="text/plain",
@@ -272,31 +272,30 @@ def test_upload_user_file_by_url(data_fixture, tmpdir):
 
     responses.add(
         responses.GET,
-        'http://localhost/not-found.pdf',
-        body=b'Hello World',
+        'https://baserow.io/not-found.pdf',
         status=404,
-        content_type="application/pdf",
-        stream=True,
     )
 
+    # Could not be reached because it it responds with a 404
     with pytest.raises(FileURLCouldNotBeReached):
         handler.upload_user_file_by_url(
             user,
-            'http://localhost/test2.txt',
+            'https://baserow.io/not-found.pdf',
+            storage=storage
+        )
+
+    # Only the http and https protocol are supported.
+    with pytest.raises(InvalidFileURLError):
+        handler.upload_user_file_by_url(
+            user,
+            'ftp://baserow.io/not-found.pdf',
             storage=storage
         )
 
     with freeze_time('2020-01-01 12:00'):
         user_file = handler.upload_user_file_by_url(
             user,
-            'http://localhost/test.txt',
-            storage=storage
-        )
-
-    with pytest.raises(FileURLCouldNotBeReached):
-        handler.upload_user_file_by_url(
-            user,
-            'http://localhost/not-found.pdf',
+            'https://baserow.io/test.txt',
             storage=storage
         )
 
@@ -318,3 +317,26 @@ def test_upload_user_file_by_url(data_fixture, tmpdir):
     file_path = tmpdir.join('user_files', user_file.name)
     assert file_path.isfile()
     assert file_path.open().read() == 'Hello World'
+
+
+@pytest.mark.django_db
+def test_upload_user_file_by_url_within_private_network(data_fixture, tmpdir):
+    user = data_fixture.create_user()
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url='http://localhost')
+    handler = UserFileHandler()
+
+    # Could not be reached because it is an internal private URL.
+    with pytest.raises(FileURLCouldNotBeReached):
+        handler.upload_user_file_by_url(
+            user,
+            'http://localhost/test.txt',
+            storage=storage
+        )
+
+    with pytest.raises(FileURLCouldNotBeReached):
+        handler.upload_user_file_by_url(
+            user,
+            'http://192.168.1.1/test.txt',
+            storage=storage
+        )

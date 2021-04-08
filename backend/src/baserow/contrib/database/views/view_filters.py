@@ -1,21 +1,21 @@
-from math import floor, ceil
-from pytz import timezone
 from decimal import Decimal
+from math import floor, ceil
 
 from dateutil import parser
 from dateutil.parser import ParserError
-
-from django.db.models import Q, IntegerField, BooleanField
-from django.db.models.expressions import RawSQL
-from django.db.models.fields.related import ManyToManyField, ForeignKey
 from django.contrib.postgres.fields import JSONField
+from django.db.models import Q, IntegerField, BooleanField
+from django.db.models.fields.related import ManyToManyField, ForeignKey
+from pytz import timezone
 
+from baserow.contrib.database.fields.field_filters import filename_contains_filter, \
+    OptionallyAnnotatedQ
 from baserow.contrib.database.fields.field_types import (
     TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType, DateFieldType,
     LinkRowFieldType, BooleanFieldType, EmailFieldType, FileFieldType,
-    SingleSelectFieldType
+    SingleSelectFieldType, PhoneNumberFieldType
 )
-
+from baserow.contrib.database.fields.registries import field_type_registry
 from .registries import ViewFilterType
 
 
@@ -39,10 +39,11 @@ class EqualViewFilterType(ViewFilterType):
         URLFieldType.type,
         NumberFieldType.type,
         BooleanFieldType.type,
-        EmailFieldType.type
+        EmailFieldType.type,
+        PhoneNumberFieldType.type
     ]
 
-    def get_filter(self, field_name, value, model_field):
+    def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
 
         # If an empty value has been provided we do not want to filter at all.
@@ -75,44 +76,8 @@ class FilenameContainsViewFilterType(ViewFilterType):
         FileFieldType.type
     ]
 
-    def get_annotation(self, field_name, value):
-        value = value.strip()
-
-        # If an empty value has been provided we do not want to filter at all.
-        if value == '':
-            return None
-
-        # It is not possible to use Django's ORM to query for if one item in a JSONB
-        # list has has a key which contains a specified value.
-        #
-        # The closest thing the Django ORM provides is:
-        #   queryset.filter(your_json_field__contains=[{"key":"value"}])
-        # However this is an exact match, so in the above example [{"key":"value_etc"}]
-        # would not match the filter.
-        #
-        # Instead we have to resort to RawSQL to use various built in PostgreSQL JSON
-        # Array manipulation functions to be able to 'iterate' over a JSONB list
-        # performing `like` on individual keys in said list.
-        num_files_with_name_like_value = f"""
-            EXISTS(
-                SELECT attached_files ->> 'visible_name'
-                FROM JSONB_ARRAY_ELEMENTS("{field_name}") as attached_files
-                WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%s)
-            )
-        """
-        query = RawSQL(num_files_with_name_like_value, params=[f"%{value}%"],
-                       output_field=BooleanField())
-        return {f"{field_name}_matches_visible_names": query}
-
-    def get_filter(self, field_name, value, model_field):
-        value = value.strip()
-
-        # If an empty value has been provided we do not want to filter at all.
-        if value == '':
-            return Q()
-
-        # Check if the model_field has a file which matches the provided filter value.
-        return Q(**{f'{field_name}_matches_visible_names': True})
+    def get_filter(self, *args):
+        return filename_contains_filter(*args)
 
 
 class ContainsViewFilterType(ViewFilterType):
@@ -126,24 +91,16 @@ class ContainsViewFilterType(ViewFilterType):
         TextFieldType.type,
         LongTextFieldType.type,
         URLFieldType.type,
-        EmailFieldType.type
+        EmailFieldType.type,
+        PhoneNumberFieldType.type,
+        DateFieldType.type,
+        SingleSelectFieldType.type,
+        NumberFieldType.type,
     ]
 
-    def get_filter(self, field_name, value, model_field):
-        value = value.strip()
-
-        # If an empty value has been provided we do not want to filter at all.
-        if value == '':
-            return Q()
-
-        # Check if the model_field accepts the value.
-        try:
-            model_field.get_prep_value(value)
-            return Q(**{f'{field_name}__icontains': value})
-        except Exception:
-            pass
-
-        return Q()
+    def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
+        field_type = field_type_registry.get_by_model(field)
+        return field_type.contains_query(field_name, value, model_field, field)
 
 
 class ContainsNotViewFilterType(NotViewFilterTypeMixin, ContainsViewFilterType):
@@ -160,7 +117,7 @@ class HigherThanViewFilterType(ViewFilterType):
     type = 'higher_than'
     compatible_field_types = [NumberFieldType.type]
 
-    def get_filter(self, field_name, value, model_field):
+    def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
 
         # If an empty value has been provided we do not want to filter at all.
@@ -191,7 +148,7 @@ class LowerThanViewFilterType(ViewFilterType):
     type = 'lower_than'
     compatible_field_types = [NumberFieldType.type]
 
-    def get_filter(self, field_name, value, model_field):
+    def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
 
         # If an empty value has been provided we do not want to filter at all.
@@ -222,7 +179,7 @@ class DateEqualViewFilterType(ViewFilterType):
     type = 'date_equal'
     compatible_field_types = [DateFieldType.type]
 
-    def get_filter(self, field_name, value, model_field):
+    def get_filter(self, field_name, value, model_field, field):
         """
         Parses the provided value string and converts it to an aware datetime object.
         That object will used to make a comparison with the provided field name.
@@ -267,7 +224,7 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
     type = 'single_select_equal'
     compatible_field_types = [SingleSelectFieldType.type]
 
-    def get_filter(self, field_name, value, model_field):
+    def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
 
         if value == '':
@@ -278,6 +235,14 @@ class SingleSelectEqualViewFilterType(ViewFilterType):
             return Q(**{f'{field_name}_id': value})
         except Exception:
             return Q()
+
+    def set_import_serialized_value(self, value, id_mapping):
+        try:
+            value = int(value)
+        except ValueError:
+            return ''
+
+        return str(id_mapping['database_field_select_options'].get(value, ''))
 
 
 class SingleSelectNotEqualViewFilterType(NotViewFilterTypeMixin,
@@ -296,7 +261,7 @@ class BooleanViewFilterType(ViewFilterType):
     type = 'boolean'
     compatible_field_types = [BooleanFieldType.type]
 
-    def get_filter(self, field_name, value, model_field):
+    def get_filter(self, field_name, value, model_field, field):
         value = value.strip().lower()
         value = value in [
             'y',
@@ -335,10 +300,11 @@ class EmptyViewFilterType(ViewFilterType):
         LinkRowFieldType.type,
         EmailFieldType.type,
         FileFieldType.type,
-        SingleSelectFieldType.type
+        SingleSelectFieldType.type,
+        PhoneNumberFieldType.type
     ]
 
-    def get_filter(self, field_name, value, model_field):
+    def get_filter(self, field_name, value, model_field, field):
         # If the model_field is a ManyToMany field we only have to check if it is None.
         if (
             isinstance(model_field, ManyToManyField) or

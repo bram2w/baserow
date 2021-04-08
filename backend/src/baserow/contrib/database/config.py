@@ -3,9 +3,6 @@ from django.apps import AppConfig
 from baserow.core.registries import plugin_registry, application_type_registry
 from baserow.ws.registries import page_registry
 
-from .views.registries import view_type_registry, view_filter_type_registry
-from .fields.registries import field_type_registry, field_converter_registry
-
 
 class DatabaseConfig(AppConfig):
     name = 'baserow.contrib.database'
@@ -41,13 +38,16 @@ class DatabaseConfig(AppConfig):
     def ready(self):
         self.prevent_generated_model_for_registering()
 
+        from .views.registries import view_type_registry, view_filter_type_registry
+        from .fields.registries import field_type_registry, field_converter_registry
+
         from .plugins import DatabasePlugin
         plugin_registry.register(DatabasePlugin())
 
         from .fields.field_types import (
             TextFieldType, LongTextFieldType, URLFieldType, NumberFieldType,
             BooleanFieldType, DateFieldType, LinkRowFieldType, EmailFieldType,
-            FileFieldType, SingleSelectFieldType
+            FileFieldType, SingleSelectFieldType, PhoneNumberFieldType
         )
         field_type_registry.register(TextFieldType())
         field_type_registry.register(LongTextFieldType())
@@ -59,6 +59,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())
         field_type_registry.register(SingleSelectFieldType())
+        field_type_registry.register(PhoneNumberFieldType())
 
         from .fields.field_converters import LinkRowFieldConverter, FileFieldConverter
         field_converter_registry.register(LinkRowFieldConverter())

@@ -58,7 +58,10 @@ export const registerRealtimeEvents = (realtime) => {
         })
       }
       if (store.getters['table/getSelectedId'] === data.field.table_id) {
-        app.$bus.$emit('table-refresh', { callback })
+        app.$bus.$emit('table-refresh', {
+          callback,
+          tableId: store.getters['table/getSelectedId'],
+        })
       } else {
         // If the current page is not the table we don't have to wait for the
         // refresh so we can update the field right away.
@@ -72,29 +75,52 @@ export const registerRealtimeEvents = (realtime) => {
     if (field !== undefined) {
       store.dispatch('field/forceDelete', field)
       if (store.getters['table/getSelectedId'] === data.table_id) {
-        app.$bus.$emit('table-refresh')
+        app.$bus.$emit('table-refresh', {
+          tableId: store.getters['table/getSelectedId'],
+        })
       }
     }
   })
 
   realtime.registerEvent('row_created', (context, data) => {
-    const { app } = context
+    const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
-      viewType.rowCreated(context, data.table_id, data.row, data.before_row_id)
+      viewType.rowCreated(
+        context,
+        data.table_id,
+        data.row,
+        store.getters['field/getAll'],
+        store.getters['field/getPrimary'],
+        'page/'
+      )
     }
   })
 
   realtime.registerEvent('row_updated', (context, data) => {
-    const { app } = context
+    const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
-      viewType.rowUpdated(context, data.table_id, data.row)
+      viewType.rowUpdated(
+        context,
+        data.table_id,
+        data.row,
+        store.getters['field/getAll'],
+        store.getters['field/getPrimary'],
+        'page/'
+      )
     }
   })
 
   realtime.registerEvent('row_deleted', (context, data) => {
-    const { app } = context
+    const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
-      viewType.rowDeleted(context, data.table_id, data.row_id)
+      viewType.rowDeleted(
+        context,
+        data.table_id,
+        data.row_id,
+        store.getters['field/getAll'],
+        store.getters['field/getPrimary'],
+        'page/'
+      )
     }
   })
 
@@ -115,7 +141,9 @@ export const registerRealtimeEvents = (realtime) => {
         (filterType !== data.view.filter_type ||
           filtersDisabled !== data.view.filters_disabled)
       ) {
-        app.$bus.$emit('table-refresh')
+        app.$bus.$emit('table-refresh', {
+          tableId: store.getters['table/getSelectedId'],
+        })
       }
     }
   })
@@ -135,7 +163,9 @@ export const registerRealtimeEvents = (realtime) => {
         values: data.view_filter,
       })
       if (store.getters['view/getSelectedId'] === view.id) {
-        app.$bus.$emit('table-refresh')
+        app.$bus.$emit('table-refresh', {
+          tableId: store.getters['table/getSelectedId'],
+        })
       }
     }
   })
@@ -152,7 +182,9 @@ export const registerRealtimeEvents = (realtime) => {
           values: data.view_filter,
         })
         if (store.getters['view/getSelectedId'] === view.id) {
-          app.$bus.$emit('table-refresh')
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
         }
       }
     }
@@ -167,7 +199,9 @@ export const registerRealtimeEvents = (realtime) => {
       if (filter !== undefined) {
         store.dispatch('view/forceDeleteFilter', { view, filter })
         if (store.getters['view/getSelectedId'] === view.id) {
-          app.$bus.$emit('table-refresh')
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
         }
       }
     }
@@ -181,7 +215,9 @@ export const registerRealtimeEvents = (realtime) => {
         values: data.view_sort,
       })
       if (store.getters['view/getSelectedId'] === view.id) {
-        app.$bus.$emit('table-refresh')
+        app.$bus.$emit('table-refresh', {
+          tableId: store.getters['table/getSelectedId'],
+        })
       }
     }
   })
@@ -196,7 +232,9 @@ export const registerRealtimeEvents = (realtime) => {
           values: data.view_sort,
         })
         if (store.getters['view/getSelectedId'] === view.id) {
-          app.$bus.$emit('table-refresh')
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
         }
       }
     }
@@ -209,7 +247,9 @@ export const registerRealtimeEvents = (realtime) => {
       if (sort !== undefined) {
         store.dispatch('view/forceDeleteSort', { view, sort })
         if (store.getters['view/getSelectedId'] === view.id) {
-          app.$bus.$emit('table-refresh')
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
         }
       }
     }
@@ -221,7 +261,7 @@ export const registerRealtimeEvents = (realtime) => {
       const view = store.getters['view/get'](data.grid_view_id)
       if (view !== null && view.id === store.getters['view/getSelectedId']) {
         store.dispatch(
-          'view/grid/forceUpdateAllFieldOptions',
+          'page/view/grid/forceUpdateAllFieldOptions',
           data.grid_view_field_options
         )
       }

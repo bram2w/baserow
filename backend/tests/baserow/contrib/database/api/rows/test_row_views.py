@@ -21,6 +21,8 @@ def test_list_rows(api_client, data_fixture):
     field_1 = data_fixture.create_text_field(name='Name', table=table, primary=True)
     field_2 = data_fixture.create_number_field(name='Price', table=table)
     field_3 = data_fixture.create_text_field()
+    field_4 = data_fixture.create_boolean_field(
+        name='InStock', table=table)
 
     token = TokenHandler().create_token(user, table.database.group, 'Good')
     wrong_token = TokenHandler().create_token(user, table.database.group, 'Wrong')
@@ -169,7 +171,7 @@ def test_list_rows(api_client, data_fixture):
 
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
     response = api_client.get(
-        f'{url}?search=1',
+        f'{url}?search=4',
         format='json',
         HTTP_AUTHORIZATION=f'JWT {jwt_token}'
     )
@@ -177,7 +179,7 @@ def test_list_rows(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json['count'] == 1
     assert len(response_json['results']) == 1
-    assert response_json['results'][0]['id'] == row_1.id
+    assert response_json['results'][0]['id'] == row_4.id
 
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
     response = api_client.get(
@@ -262,7 +264,7 @@ def test_list_rows(api_client, data_fixture):
     assert response_json['error'] == 'ERROR_FILTER_FIELD_NOT_FOUND'
 
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
-    get_params = [f'filter__field_{field_2.id}__contains=100']
+    get_params = [f'filter__field_{field_4.id}__contains=100']
     response = api_client.get(
         f'{url}?{"&".join(get_params)}',
         format='json',

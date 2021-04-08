@@ -1,10 +1,9 @@
-.grid-field-file__cell {
-  &.active {
-    bottom: auto;
-    right: auto;
-    height: auto;
-    min-width: calc(100% + 4px);
-  }
+.grid-field-file__cell.active {
+  bottom: auto;
+  right: auto;
+  height: auto;
+  min-width: calc(100% + 4px);
+  min-height: calc(100% + 4px);
 }
 
 .grid-field-file__dragging {
@@ -101,10 +100,18 @@
   color: $color-primary-900;
   background-color: $color-primary-100;
 
+  .grid-view__column--matches-search & {
+    background-color: $color-primary-200;
+  }
+
   @include center-text(22px, 11px);
 
   &:hover {
     background-color: $color-primary-200;
+
+    .grid-view__column--matches-search & {
+      background-color: $color-primary-300;
+    }
   }
 }
 

@@ -167,11 +167,20 @@ def test_upload_file_via_url(api_client, data_fixture, tmpdir):
 
     response = api_client.post(
         reverse('api:user_files:upload_via_url'),
-        data={'url': 'http://localhost/test2.txt'},
+        data={'url': 'https://baserow.io/test2.txt'},
         HTTP_AUTHORIZATION=f'JWT {token}'
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_FILE_URL_COULD_NOT_BE_REACHED'
+
+    # Only the http and https protocol are allowed.
+    response = api_client.post(
+        reverse('api:user_files:upload_via_url'),
+        data={'url': 'ftp://baserow.io/test2.txt'},
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['error'] == 'ERROR_INVALID_FILE_URL'
 
     responses.add(
         responses.GET,
@@ -215,3 +224,19 @@ def test_upload_file_via_url(api_client, data_fixture, tmpdir):
     user_file = UserFile.objects.all().last()
     file_path = tmpdir.join('user_files', user_file.name)
     assert file_path.isfile()
+
+
+@pytest.mark.django_db
+def test_upload_file_via_url_within_private_network(api_client, data_fixture, tmpdir):
+    user, token = data_fixture.create_user_and_token(
+        email='test@test.nl', password='password', first_name='Test1'
+    )
+
+    # Could not be reached because it is an internal private URL.
+    response = api_client.post(
+        reverse('api:user_files:upload_via_url'),
+        data={'url': 'https://localhost/test2.txt'},
+        HTTP_AUTHORIZATION=f'JWT {token}'
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['error'] == 'ERROR_FILE_URL_COULD_NOT_BE_REACHED'

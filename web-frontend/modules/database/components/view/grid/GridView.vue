@@ -2,298 +2,85 @@
   <div v-scroll="scroll" class="grid-view">
     <Scrollbars
       ref="scrollbars"
-      horizontal="right"
-      vertical="rightBody"
-      :style="{ left: widths.left + 'px' }"
+      horizontal="getHorizontalScrollbarElement"
+      vertical="getVerticalScrollbarElement"
+      :style="{ left: leftWidth + 'px' }"
       @vertical="verticalScroll"
       @horizontal="horizontalScroll"
     ></Scrollbars>
-    <div class="grid-view__left" :style="{ width: widths.left + 'px' }">
-      <div class="grid-view__inner" :style="{ width: widths.left + 'px' }">
-        <div class="grid-view__head">
-          <div
-            class="grid-view__column"
-            :style="{ width: widths.leftReserved + 'px' }"
-          ></div>
-          <GridViewFieldType
-            v-if="primary !== null"
-            :table="table"
-            :view="view"
-            :field="primary"
-            :filters="view.filters"
-            :style="{ width: widths.fields[primary.id] + 'px' }"
-            @refresh="$emit('refresh', $event)"
-          ></GridViewFieldType>
+    <GridViewSection
+      ref="left"
+      class="grid-view__left"
+      :fields="leftFields"
+      :table="table"
+      :view="view"
+      :include-field-width-handles="false"
+      :include-row-details="true"
+      :read-only="readOnly"
+      :store-prefix="storePrefix"
+      :style="{ width: leftWidth + 'px' }"
+      @refresh="$emit('refresh', $event)"
+      @row-hover="setRowHover($event.row, $event.value)"
+      @row-context="showRowContext($event.event, $event.row)"
+      @add-row="addRow()"
+      @update="updateValue"
+      @edit="editValue"
+      @selected="selectedCell($event)"
+      @unselected="unselectedCell($event)"
+      @select-next="selectNextCell($event)"
+      @edit-modal="$refs.rowEditModal.show($event.id)"
+    >
+      <template #foot>
+        <div class="grid-view__column" :style="{ width: leftWidth + 'px' }">
+          <div class="grid-view__foot-info">{{ count }} rows</div>
         </div>
-        <div ref="leftBody" class="grid-view__body">
-          <div class="grid-view__body-inner">
-            <div
-              class="grid-view__placeholder"
-              :style="{
-                height: placeholderHeight + 'px',
-                width: widths.left + 'px',
-              }"
-            >
-              <div
-                class="grid-view__placeholder-column"
-                :style="{
-                  width: widths.left + 'px',
-                }"
-              ></div>
-            </div>
-            <div
-              class="grid-view__rows"
-              :style="{ transform: `translateY(${rowsTop}px)` }"
-            >
-              <div
-                v-for="row in rows"
-                :key="'left-row-' + view.id + '-' + row.id"
-                class="grid-view__row"
-                :class="{
-                  'grid-view__row--selected': row._.selectedBy.length > 0,
-                  'grid-view__row--loading': row._.loading,
-                  'grid-view__row--hover': row._.hover,
-                  'grid-view__row--warning':
-                    !row._.matchFilters || !row._.matchSortings,
-                }"
-                @mouseover="setRowHover(row, true)"
-                @mouseleave="setRowHover(row, false)"
-                @contextmenu.prevent="showRowContext($event, row)"
-              >
-                <div
-                  v-if="!row._.matchFilters || !row._.matchSortings"
-                  class="grid-view__row-warning"
-                >
-                  <template v-if="!row._.matchFilters">
-                    Row does not match filters
-                  </template>
-                  <template v-else-if="!row._.matchSortings">
-                    Row has moved
-                  </template>
-                </div>
-                <div
-                  class="grid-view__column"
-                  :style="{ width: widths.leftReserved + 'px' }"
-                >
-                  <div class="grid-view__row-info">
-                    <div class="grid-view__row-count" :title="row.id">
-                      {{ row.id }}
-                    </div>
-                    <a
-                      class="grid-view__row-more"
-                      @click="$refs.rowEditModal.show(row.id)"
-                    >
-                      <i class="fas fa-expand"></i>
-                    </a>
-                  </div>
-                </div>
-                <GridViewField
-                  v-if="primary !== null"
-                  :ref="'row-' + row.id + '-field-' + primary.id"
-                  :field="primary"
-                  :row="row"
-                  :style="{ width: widths.fields[primary.id] + 'px' }"
-                  @selected="selectedField(primary, $event)"
-                  @unselected="unselectedField(primary, $event)"
-                  @selectNext="selectNextField(row, primary, fields, primary)"
-                  @selectAbove="
-                    selectNextField(row, primary, fields, primary, 'above')
-                  "
-                  @selectBelow="
-                    selectNextField(row, primary, fields, primary, 'below')
-                  "
-                  @update="updateValue"
-                  @edit="editValue"
-                ></GridViewField>
-              </div>
-            </div>
-            <div class="grid-view__row">
-              <div
-                class="grid-view__column"
-                :style="{ width: widths.left + 'px' }"
-              >
-                <a
-                  class="grid-view__add-row"
-                  :class="{ hover: addHover }"
-                  @mouseover="addHover = true"
-                  @mouseleave="addHover = false"
-                  @click="addRow()"
-                >
-                  <i class="fas fa-plus"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="grid-view__foot">
-          <div class="grid-view__column" :style="{ width: widths.left + 'px' }">
-            <div class="grid-view__foot-info">{{ count }} rows</div>
-          </div>
-        </div>
-      </div>
-    </div>
+      </template>
+    </GridViewSection>
     <div
       ref="divider"
       class="grid-view__divider"
-      :style="{ left: widths.left + 'px' }"
+      :style="{ left: leftWidth + 'px' }"
     ></div>
     <GridViewFieldWidthHandle
       class="grid-view__divider-width"
-      :style="{ left: widths.left + 'px' }"
+      :style="{ left: leftWidth + 'px' }"
       :grid="view"
       :field="primary"
-      :width="widths.fields[primary.id]"
+      :width="leftFieldsWidth"
+      :store-prefix="storePrefix"
     ></GridViewFieldWidthHandle>
-    <div
+    <GridViewSection
       ref="right"
       class="grid-view__right"
-      :style="{ left: widths.left + 'px' }"
-    >
-      <div
-        class="grid-view__inner"
-        :style="{ 'min-width': widths.right + 'px' }"
-      >
-        <div class="grid-view__head">
-          <GridViewFieldType
-            v-for="field in visibleFields"
-            :key="'right-head-field-' + view.id + '-' + field.id"
-            :table="table"
-            :view="view"
-            :field="field"
-            :filters="view.filters"
-            :style="{ width: widths.fields[field.id] + 'px' }"
-            @refresh="$emit('refresh', $event)"
-          >
-            <GridViewFieldWidthHandle
-              class="grid-view__description-width"
-              :grid="view"
-              :field="field"
-              :width="widths.fields[field.id]"
-            ></GridViewFieldWidthHandle>
-          </GridViewFieldType>
-          <div
-            class="grid-view__column"
-            :style="{ width: widths.rightAdd + 'px' }"
-          >
-            <a
-              ref="createFieldContextLink"
-              class="grid-view__add-column"
-              @click="
-                $refs.createFieldContext.toggle($refs.createFieldContextLink)
-              "
-            >
-              <i class="fas fa-plus"></i>
-            </a>
-            <CreateFieldContext
-              ref="createFieldContext"
-              :table="table"
-            ></CreateFieldContext>
-          </div>
-        </div>
-        <div ref="rightBody" class="grid-view__body">
-          <div class="grid-view__body-inner">
-            <div
-              class="grid-view__placeholder"
-              :style="{
-                height: placeholderHeight + 'px',
-                width: widths.rightFieldsOnly + 'px',
-              }"
-            >
-              <div
-                v-for="(value, id) in widths.placeholderPositions"
-                :key="'right-placeholder-column-' + view.id + '-' + id"
-                class="grid-view__placeholder-column"
-                :style="{ left: value - 1 + 'px' }"
-              ></div>
-            </div>
-            <div
-              class="grid-view__rows"
-              :style="{ transform: `translateY(${rowsTop}px)` }"
-            >
-              <!-- @TODO figure out a faster way to render the rows on scroll. -->
-              <div
-                v-for="row in rows"
-                :key="'right-row-' + view.id + '-' + row.id"
-                class="grid-view__row"
-                :class="{
-                  'grid-view__row--selected': row._.selectedBy.length > 0,
-                  'grid-view__row--loading': row._.loading,
-                  'grid-view__row--hover': row._.hover,
-                  'grid-view__row--warning':
-                    !row._.matchFilters || !row._.matchSortings,
-                }"
-                @mouseover="setRowHover(row, true)"
-                @mouseleave="setRowHover(row, false)"
-                @contextmenu.prevent="showRowContext($event, row)"
-              >
-                <GridViewField
-                  v-for="field in visibleFields"
-                  :ref="'row-' + row.id + '-field-' + field.id"
-                  :key="
-                    'right-row-field-' + view.id + '-' + row.id + '-' + field.id
-                  "
-                  :field="field"
-                  :row="row"
-                  :style="{ width: widths.fields[field.id] + 'px' }"
-                  @selected="selectedField(field, $event)"
-                  @unselected="unselectedField(field, $event)"
-                  @selectPrevious="
-                    selectNextField(row, field, fields, primary, 'previous')
-                  "
-                  @selectNext="selectNextField(row, field, fields, primary)"
-                  @selectAbove="
-                    selectNextField(row, field, fields, primary, 'above')
-                  "
-                  @selectBelow="
-                    selectNextField(row, field, fields, primary, 'below')
-                  "
-                  @update="updateValue"
-                  @edit="editValue"
-                ></GridViewField>
-              </div>
-            </div>
-            <div
-              class="grid-view__row"
-              :style="{ width: widths.rightFieldsOnly + 'px' }"
-            >
-              <div
-                class="grid-view__column"
-                :style="{ width: widths.rightFieldsOnly + 'px' }"
-              >
-                <a
-                  class="grid-view__add-row"
-                  :class="{ hover: addHover }"
-                  @mouseover="addHover = true"
-                  @mouseleave="addHover = false"
-                  @click="addRow()"
-                ></a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="grid-view__foot"></div>
-      </div>
-    </div>
-    <div
-      v-if="view.filters.length > 0 && count === 0"
-      class="grid-view__filtered-no-results"
-    >
-      <div class="grid-view__filtered-no-results-icon">
-        <i class="fas fa-filter"></i>
-      </div>
-      <div class="grid-view__filtered-no-results-content">
-        Rows are filtered
-      </div>
-    </div>
+      :fields="visibleFields"
+      :table="table"
+      :view="view"
+      :include-add-field="true"
+      :can-order-fields="true"
+      :read-only="readOnly"
+      :store-prefix="storePrefix"
+      :style="{ left: leftWidth + 'px' }"
+      @refresh="$emit('refresh', $event)"
+      @row-hover="setRowHover($event.row, $event.value)"
+      @row-context="showRowContext($event.event, $event.row)"
+      @add-row="addRow()"
+      @update="updateValue"
+      @edit="editValue"
+      @selected="selectedCell($event)"
+      @unselected="unselectedCell($event)"
+      @select-next="selectNextCell($event)"
+      @edit-modal="$refs.rowEditModal.show($event.id)"
+      @scroll="scroll($event.pixelY, $event.pixelX)"
+    ></GridViewSection>
     <Context ref="rowContext">
       <ul class="context__menu">
-        <li>
+        <li v-if="!readOnly">
           <a @click=";[addRow(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
             Insert row above
           </a>
         </li>
-        <li>
+        <li v-if="!readOnly">
           <a @click=";[addRowAfter(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
             Insert row below
@@ -312,7 +99,7 @@
             Enlarge row
           </a>
         </li>
-        <li>
+        <li v-if="!readOnly">
           <a @click="deleteRow(selectedRow)">
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
             Delete row
@@ -326,6 +113,7 @@
       :primary="primary"
       :fields="fields"
       :rows="allRows"
+      :read-only="readOnly"
       @update="updateValue"
       @hidden="rowEditModalHidden"
       @field-updated="$emit('refresh', $event)"
@@ -337,23 +125,21 @@
 <script>
 import { mapGetters } from 'vuex'
 
-import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
-import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
-import GridViewField from '@baserow/modules/database/components/view/grid/GridViewField'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import GridViewSection from '@baserow/modules/database/components/view/grid/GridViewSection'
 import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
-import { notifyIf } from '@baserow/modules/core/utils/error'
-import _ from 'lodash'
+import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
+import { GridViewType } from '@baserow/modules/database/viewTypes'
 
 export default {
   name: 'GridView',
   components: {
-    CreateFieldContext,
-    GridViewFieldType,
-    GridViewField,
+    GridViewSection,
     GridViewFieldWidthHandle,
     RowEditModal,
   },
+  mixins: [gridViewHelpers],
   props: {
     primary: {
       type: Object,
@@ -375,55 +161,94 @@ export default {
       type: Object,
       required: true,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
-      addHover: false,
-      selectedRow: null,
       lastHoveredRow: null,
-      widths: {
-        fields: {},
-      },
+      selectedRow: null,
     }
   },
   computed: {
+    /**
+     * Returns only the visible fields in the correct order.
+     */
     visibleFields() {
-      return this.fields.filter((field) => {
-        const exists = Object.prototype.hasOwnProperty.call(
-          this.fieldOptions,
-          field.id
-        )
-        return !exists || (exists && !this.fieldOptions[field.id].hidden)
-      })
+      return this.fields
+        .filter((field) => {
+          const exists = Object.prototype.hasOwnProperty.call(
+            this.fieldOptions,
+            field.id
+          )
+          return !exists || (exists && !this.fieldOptions[field.id].hidden)
+        })
+        .sort((a, b) => {
+          const orderA = this.fieldOptions[a.id]
+            ? this.fieldOptions[a.id].order
+            : GridViewType.getMaxPossibleOrderValue()
+          const orderB = this.fieldOptions[b.id]
+            ? this.fieldOptions[b.id].order
+            : GridViewType.getMaxPossibleOrderValue()
+
+          // First by order.
+          if (orderA > orderB) {
+            return 1
+          } else if (orderA < orderB) {
+            return -1
+          }
+
+          // Then by id.
+          if (a.id < b.id) {
+            return -1
+          } else if (a.id > b.id) {
+            return 1
+          } else {
+            return 0
+          }
+        })
     },
-    ...mapGetters({
-      allRows: 'view/grid/getAllRows',
-      rows: 'view/grid/getRows',
-      count: 'view/grid/getCount',
-      rowHeight: 'view/grid/getRowHeight',
-      rowsTop: 'view/grid/getRowsTop',
-      placeholderHeight: 'view/grid/getPlaceholderHeight',
-      fieldOptions: 'view/grid/getAllFieldOptions',
-    }),
+    leftFields() {
+      return [this.primary]
+    },
+    leftFieldsWidth() {
+      return this.leftFields.reduce(
+        (value, field) => this.getFieldWidth(field.id) + value,
+        0
+      )
+    },
+    leftWidth() {
+      return this.leftFieldsWidth + this.gridViewRowDetailsWidth
+    },
   },
   watch: {
-    // The field options contain the widths of the field. Every time one of the values
-    // changes we need to recalculate all the widths.
     fieldOptions: {
       deep: true,
-      handler(value) {
-        this.calculateWidths(this.primary, this.fields, value)
+      handler() {
+        // When the field options have changed, it could be that the width of the
+        // fields have changed and in that case we want to update the scrollbars.
+        this.fieldsUpdated()
       },
     },
-    // If a field is added or removed we need to recalculate all the widths.
-    fields(value) {
-      this.calculateWidths(this.primary, this.fields, this.fieldOptions)
+    fields() {
+      // When a field is added or removed, we want to update the scrollbars.
+      this.fieldsUpdated()
     },
   },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        allRows: this.$options.propsData.storePrefix + 'view/grid/getAllRows',
+        count: this.$options.propsData.storePrefix + 'view/grid/getCount',
+      }),
+    }
+  },
   created() {
-    // We have to calculate the widths when the component is created so that we can
-    // render the page properly on the server side.
-    this.calculateWidths(this.primary, this.fields, this.fieldOptions)
+    // When the grid view is created we want to update the scrollbars.
+    this.fieldsUpdated()
   },
   beforeMount() {
     this.$bus.$on('field-deleted', this.fieldDeleted)
@@ -449,21 +274,24 @@ export default {
       }
     },
     /**
-     * This method is called from the parent component when the data in the view has
-     * been reset. This can for example happen when a user filters.
+     * Is called when anything related to a field has changed and in that case we want
+     * to update the scrollbars.
      */
-    async refresh() {
-      await this.$store.dispatch('view/grid/visibleByScrollTop', {
-        scrollTop: this.$refs.rightBody.scrollTop,
-        windowHeight: this.$refs.rightBody.clientHeight,
-      })
-      this.$nextTick(() => {
-        this.$refs.scrollbars.update()
-      })
+    fieldsUpdated() {
+      const scrollbars = this.$refs.scrollbars
+      // Vue can sometimes trigger this via watch before the child component
+      // scrollbars has been created, check it exists and has the expected method
+      if (scrollbars && scrollbars.update) {
+        scrollbars.update()
+      }
     },
+    /**
+     * Called when a cell value has been updated. This can for example happen via the
+     * row edit modal or when editing a cell directly in the grid.
+     */
     async updateValue({ field, row, value, oldValue }) {
       try {
-        await this.$store.dispatch('view/grid/updateValue', {
+        await this.$store.dispatch(this.storePrefix + 'view/grid/updateValue', {
           table: this.table,
           view: this.view,
           fields: this.fields,
@@ -484,22 +312,34 @@ export default {
     editValue({ field, row, value, oldValue }) {
       const overrides = {}
       overrides[`field_${field.id}`] = value
-      this.$store.dispatch('view/grid/updateMatchFilters', {
+      this.$store.dispatch(this.storePrefix + 'view/grid/onRowChange', {
         view: this.view,
         row,
-        overrides,
-      })
-      this.$store.dispatch('view/grid/updateMatchSortings', {
-        view: this.view,
         fields: this.fields,
         primary: this.primary,
-        row,
         overrides,
       })
     },
+    /**
+     * This method is called by the Scrollbars component and should return the element
+     * that handles the the horizontal scrolling.
+     */
+    getHorizontalScrollbarElement() {
+      return this.$refs.right.$el
+    },
+    /**
+     * This method is called by the Scrollbars component and should return the element
+     * that handles the the vertical scrolling.
+     */
+    getVerticalScrollbarElement() {
+      return this.$refs.right.$refs.body
+    },
+    /**
+     * Called when a user scrolls without using the scrollbar.
+     */
     scroll(pixelY, pixelX) {
-      const $rightBody = this.$refs.rightBody
-      const $right = this.$refs.right
+      const $rightBody = this.$refs.right.$refs.body
+      const $right = this.$refs.right.$el
 
       const top = $rightBody.scrollTop + pixelY
       const left = $right.scrollLeft + pixelX
@@ -509,108 +349,46 @@ export default {
 
       this.$refs.scrollbars.update()
     },
+    /**
+     * Called when the user scrolls vertically. The scroll offset of both the left and
+     * right section must be updated and we want might need to fetch new rows which
+     * is handled by the grid view store.
+     */
     verticalScroll(top) {
-      this.$refs.leftBody.scrollTop = top
-      this.$refs.rightBody.scrollTop = top
+      this.$refs.left.$refs.body.scrollTop = top
+      this.$refs.right.$refs.body.scrollTop = top
 
-      this.$store.dispatch('view/grid/fetchByScrollTopDelayed', {
-        gridId: this.view.id,
-        scrollTop: this.$refs.rightBody.scrollTop,
-        windowHeight: this.$refs.rightBody.clientHeight,
-      })
+      this.$store.dispatch(
+        this.storePrefix + 'view/grid/fetchByScrollTopDelayed',
+        {
+          gridId: this.view.id,
+          scrollTop: this.$refs.left.$refs.body.scrollTop,
+          windowHeight: this.$refs.left.$refs.body.clientHeight,
+          fields: this.fields,
+          primary: this.primary,
+        }
+      )
     },
+    /**
+     * Called when the user scrolls horizontally. If the user scrolls we might want to
+     * show a shadow next to the left section because that one has a fixed position.
+     */
     horizontalScroll(left) {
-      const $right = this.$refs.right
+      const $right = this.$refs.right.$el
       const $divider = this.$refs.divider
       const canScroll = $right.scrollWidth > $right.clientWidth
 
       $divider.classList.toggle('shadow', canScroll && left > 0)
       $right.scrollLeft = left
     },
-    /**
-     * Calculates the widths of all fields, left side, right side and place holder
-     * positions and returns the values in an object.
-     */
-    getCalculatedWidths(primary, fields, fieldOptions) {
-      const getFieldWidth = (fieldId) => {
-        const hasFieldOptions = Object.prototype.hasOwnProperty.call(
-          fieldOptions,
-          fieldId
-        )
-
-        if (hasFieldOptions && fieldOptions[fieldId].hidden) {
-          return 0
-        }
-
-        return hasFieldOptions ? fieldOptions[fieldId].width : 200
-      }
-
-      // Calculate the widths left side of the grid view. This is the sticky side that
-      // contains the primary field and ids.
-      const leftReserved = 60
-      const leftFieldsOnly = getFieldWidth(primary.id)
-      const left = leftFieldsOnly + leftReserved
-
-      // Calculate the widths of the right side that contains all the other fields.
-      const rightAdd = 100
-      const rightReserved = 100
-      const rightFieldsOnly = fields.reduce(
-        (value, field) => getFieldWidth(field.id) + value,
-        0
-      )
-      const right = rightFieldsOnly + rightAdd + rightReserved
-
-      // Calculate the left positions of the placeholder columns. These are the gray
-      // vertical lines that are always visible, even when the data hasn't loaded yet.
-      let last = 0
-      const placeholderPositions = {}
-      fields.forEach((field) => {
-        last += getFieldWidth(field.id)
-        placeholderPositions[field.id] = last
-      })
-
-      const fieldWidths = {}
-      fieldWidths[primary.id] = getFieldWidth(primary.id)
-      fields.forEach((field) => {
-        fieldWidths[field.id] = getFieldWidth(field.id)
-      })
-
-      return {
-        left,
-        leftReserved,
-        leftFieldsOnly,
-        right,
-        rightReserved,
-        rightAdd,
-        rightFieldsOnly,
-        placeholderPositions,
-        fields: fieldWidths,
-      }
-    },
-    /**
-     * This method is called when the fieldOptions or fields changes. The reason why we
-     * don't have smaller methods that are called from the template to calculate the
-     * widths is that because that would quickly result in thousands of function calls
-     * when the smallest things change in the data. This is a speed improving
-     * workaround.
-     */
-    calculateWidths(primary, fields, fieldOptions) {
-      _.assign(
-        this.widths,
-        this.getCalculatedWidths(primary, fields, fieldOptions)
-      )
-
-      if (this.$refs.scrollbars) {
-        this.$refs.scrollbars.update()
-      }
-    },
     async addRow(before = null) {
       try {
-        await this.$store.dispatch('view/grid/create', {
+        await this.$store.dispatch(this.storePrefix + 'view/grid/create', {
           view: this.view,
           table: this.table,
           // We need a list of all fields including the primary one here.
-          fields: [this.primary].concat(...this.fields),
+          fields: this.fields,
+          primary: this.primary,
           values: {},
           before,
         })
@@ -624,7 +402,9 @@ export default {
      * next row is not found, we can safely assume it is the last row and add it last.
      */
     addRowAfter(row) {
-      const rows = this.$store.getters['view/grid/getAllRows']
+      const rows = this.$store.getters[
+        this.storePrefix + 'view/grid/getAllRows'
+      ]
       const index = rows.findIndex((r) => r.id === row.id)
       let nextRow = null
 
@@ -633,6 +413,42 @@ export default {
       }
 
       this.addRow(nextRow)
+    },
+    async deleteRow(row) {
+      try {
+        this.$refs.rowContext.hide()
+        // We need a small helper function that calculates the current scrollTop because
+        // the delete action will recalculate the visible scroll range and buffer.
+        const getScrollTop = () => this.$refs.left.$refs.body.scrollTop
+        await this.$store.dispatch(this.storePrefix + 'view/grid/delete', {
+          table: this.table,
+          grid: this.view,
+          row,
+          fields: this.fields,
+          primary: this.primary,
+          getScrollTop,
+        })
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
+    },
+    setRowHover(row, value) {
+      // Sometimes the mouseleave is not triggered, but because you can hover only one
+      // row at a time we can remember which was hovered last and set the hover state to
+      // false if it differs.
+      if (this.lastHoveredRow !== null && this.lastHoveredRow.id !== row.id) {
+        this.$store.dispatch(this.storePrefix + 'view/grid/setRowHover', {
+          row: this.lastHoveredRow,
+          value: false,
+        })
+        this.lastHoveredRow = null
+      }
+
+      this.$store.dispatch(this.storePrefix + 'view/grid/setRowHover', {
+        row,
+        value,
+      })
+      this.lastHoveredRow = row
     },
     showRowContext(event, row) {
       this.selectedRow = row
@@ -646,30 +462,36 @@ export default {
         0
       )
     },
-    async deleteRow(row) {
-      try {
-        this.$refs.rowContext.hide()
-        // We need a small helper function that calculates the current scrollTop because
-        // the delete action will recalculate the visible scroll range and buffer.
-        const getScrollTop = () => this.$refs.leftBody.scrollTop
-        await this.$store.dispatch('view/grid/delete', {
-          table: this.table,
-          grid: this.view,
-          row,
-          getScrollTop,
-        })
-      } catch (error) {
-        notifyIf(error, 'row')
+    /**
+     * When the modal hides and the related row does not match the filters anymore it
+     * must be deleted.
+     */
+    rowEditModalHidden({ row }) {
+      // It could be that the row is not in the buffer anymore and in that case we also
+      // don't need to refresh the row.
+      if (
+        row === undefined ||
+        !Object.prototype.hasOwnProperty.call(row, 'id')
+      ) {
+        return
       }
+
+      this.$store.dispatch(this.storePrefix + 'view/grid/refreshRow', {
+        grid: this.view,
+        fields: this.fields,
+        primary: this.primary,
+        row,
+        getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+      })
     },
     /**
-     * When a field is selected we want to make sure it is visible in the viewport, so
+     * When a cell is selected we want to make sure it is visible in the viewport, so
      * we might need to scroll a little bit.
      */
-    selectedField(field, { component, row }) {
+    selectedCell({ component, row, field }) {
       const element = component.$el
-      const verticalContainer = this.$refs.rightBody
-      const horizontalContainer = this.$refs.right
+      const verticalContainer = this.$refs.right.$refs.body
+      const horizontalContainer = this.$refs.right.$el
 
       const verticalContainerRect = verticalContainer.getBoundingClientRect()
       const verticalContainerHeight = verticalContainer.clientHeight
@@ -717,24 +539,40 @@ export default {
         this.$refs.scrollbars.updateHorizontal()
       }
 
-      this.$store.dispatch('view/grid/addRowSelectedBy', { row, field })
-    },
-    unselectedField(field, { row }) {
-      this.$store.dispatch('view/grid/removeRowSelectedBy', {
-        grid: this.view,
-        fields: this.fields,
-        primary: this.primary,
+      this.$store.dispatch(this.storePrefix + 'view/grid/addRowSelectedBy', {
         row,
         field,
-        getScrollTop: () => this.$refs.leftBody.scrollTop,
       })
     },
     /**
-     * This method is called when the next field must be selected. This can for example
-     * happen when the tab key is pressed. It tries to find the next field and will
-     * select that one.
+     * When a cell is unselected need to change the selected state of the row.
      */
-    selectNextField(row, field, fields, primary, direction = 'next') {
+    unselectedCell({ row, field }) {
+      // We want to change selected state of the row on the next tick because if another
+      // cell within a row is selected, we want to wait for that selected state tot
+      // change. This will make sure that the row is stays selected.
+      this.$nextTick(() => {
+        this.$store.dispatch(
+          this.storePrefix + 'view/grid/removeRowSelectedBy',
+          {
+            grid: this.view,
+            fields: this.fields,
+            primary: this.primary,
+            row,
+            field,
+            getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+          }
+        )
+      })
+    },
+    /**
+     * This method is called when the next cell must be selected. This can for example
+     * happen when the tab key is pressed. It tries to find the next field based on the
+     * direction and will select that one.
+     */
+    selectNextCell({ row, field, direction = 'next' }) {
+      const fields = this.visibleFields
+      const primary = this.primary
       let nextFieldId = -1
       let nextRowId = -1
 
@@ -767,7 +605,9 @@ export default {
 
       if (direction === 'below' || direction === 'above') {
         nextFieldId = field.id
-        const rows = this.$store.getters['view/grid/getAllRows']
+        const rows = this.$store.getters[
+          this.storePrefix + 'view/grid/getAllRows'
+        ]
         const index = rows.findIndex((r) => r.id === row.id)
 
         if (index !== -1 && direction === 'below' && rows.length > index + 1) {
@@ -784,51 +624,26 @@ export default {
         return
       }
 
-      const current = this.$refs['row-' + row.id + '-field-' + field.id]
-      const next = this.$refs['row-' + nextRowId + '-field-' + nextFieldId]
-
-      if (next === undefined || current === undefined) {
-        return
-      }
-
-      current[0].unselect()
-      next[0].select()
-    },
-    setRowHover(row, value) {
-      // Sometimes the mouseleave is not triggered, but because you can hover only one
-      // row at a time we can remember which was hovered last and set the hover state to
-      // false if it differs.
-      if (this.lastHoveredRow !== null && this.lastHoveredRow.id !== row.id) {
-        this.$store.dispatch('view/grid/setRowHover', {
-          row: this.lastHoveredRow,
-          value: false,
-        })
-        this.lastHoveredRow = true
-      }
-
-      this.$store.dispatch('view/grid/setRowHover', { row, value })
-      this.lastHoveredRow = row
+      this.$store.dispatch(this.storePrefix + 'view/grid/setSelectedCell', {
+        rowId: nextRowId,
+        fieldId: nextFieldId,
+      })
     },
     /**
-     * When the modal hides and the related row does not match the filters anymore it
-     * must be deleted.
+     * This method is called from the parent component when the data in the view has
+     * been reset. This can for example happen when a user creates or updates a filter
+     * or wants to sort on a field.
      */
-    rowEditModalHidden({ row }) {
-      // It could be that the row is not in the buffer anymore and in that case we also
-      // don't need to refresh the row.
-      if (
-        row === undefined ||
-        !Object.prototype.hasOwnProperty.call(row, 'id')
-      ) {
-        return
-      }
-
-      this.$store.dispatch('view/grid/refreshRow', {
-        grid: this.view,
-        fields: this.fields,
-        primary: this.primary,
-        row,
-        getScrollTop: () => this.$refs.leftBody.scrollTop,
+    async refresh() {
+      await this.$store.dispatch(
+        this.storePrefix + 'view/grid/visibleByScrollTop',
+        {
+          scrollTop: this.$refs.right.$refs.body.scrollTop,
+          windowHeight: this.$refs.right.$refs.body.clientHeight,
+        }
+      )
+      this.$nextTick(() => {
+        this.fieldsUpdated()
       })
     },
   },

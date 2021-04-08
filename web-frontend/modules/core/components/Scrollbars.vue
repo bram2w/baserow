@@ -105,7 +105,7 @@ export default {
      * parent.
      */
     updateVertical() {
-      const element = this.$parent.$refs[this.vertical]
+      const element = this.$parent[this.vertical]()
       const show = element.scrollHeight > element.clientHeight
       // @TODO if the client height is very high we have a minimum of 2%, but this needs
       //  to be subtracted from the top position so that it fits. Same goes for the
@@ -126,7 +126,7 @@ export default {
      * parent.
      */
     updateHorizontal() {
-      const element = this.$parent.$refs[this.horizontal]
+      const element = this.$parent[this.horizontal]()
       const show = element.scrollWidth > element.clientWidth
       const width = Math.max(
         floor((element.clientWidth / element.scrollWidth) * 100, 2),
@@ -164,7 +164,7 @@ export default {
     mouseMove(event) {
       if (this.dragging === 'vertical') {
         event.preventDefault()
-        const element = this.$parent.$refs[this.vertical]
+        const element = this.$parent[this.vertical]()
         const delta = event.clientY - this.mouseStart
         const pixel = element.scrollHeight / element.clientHeight
         const top = Math.ceil((this.elementStart + delta) * pixel)
@@ -175,7 +175,7 @@ export default {
 
       if (this.dragging === 'horizontal') {
         event.preventDefault()
-        const element = this.$parent.$refs[this.horizontal]
+        const element = this.$parent[this.horizontal]()
         const delta = event.clientX - this.mouseStart
         const pixel = element.scrollWidth / element.clientWidth
         const left = Math.ceil((this.elementStart + delta) * pixel)

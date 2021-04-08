@@ -23,7 +23,6 @@ from baserow.core.user.exceptions import (
 )
 from baserow.core.user.handler import UserHandler
 
-
 User = get_user_model()
 
 
@@ -100,6 +99,22 @@ def test_create_user(data_fixture):
 
     with pytest.raises(UserAlreadyExist):
         user_handler.create_user('Test1', 'test@test.nl', 'password')
+
+
+@pytest.mark.django_db
+def test_first_ever_created_user_is_staff(data_fixture):
+    user_handler = UserHandler()
+
+    data_fixture.update_settings(allow_new_signups=True)
+
+    first_user = user_handler.create_user('First Ever User', 'test@test.nl',
+                                          'password')
+    assert first_user.first_name == 'First Ever User'
+    assert first_user.is_staff
+
+    second_user = user_handler.create_user('Second User', 'test2@test.nl', 'password')
+    assert second_user.first_name == 'Second User'
+    assert not second_user.is_staff
 
 
 @pytest.mark.django_db

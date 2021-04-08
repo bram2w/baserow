@@ -6,7 +6,7 @@
   width: 100%;
   user-select: none;
 
-  .grid-view__cell.active &:hover {
+  .grid-view__cell.active &:not(.grid-field-single-select--read-only):hover {
     cursor: pointer;
   }
 
@@ -24,6 +24,12 @@
   padding: 0 10px;
   max-width: 100%;
   margin-top: 6px;
+
+  &.background-color--light-blue {
+    .grid-view__column--matches-search & {
+      box-shadow: 0 0 2px 1px rgba($black, 0.16);
+    }
+  }
 
   @include fixed-height(20px, 12px);
 }

@@ -1,6 +1,7 @@
 import { ApplicationType } from '@baserow/modules/core/applicationTypes'
-import Sidebar from '@baserow/modules/database/components/Sidebar'
-import Context from '@baserow/modules/database/components/Context'
+import Sidebar from '@baserow/modules/database/components/sidebar/Sidebar'
+import TemplateSidebar from '@baserow/modules/database/components/sidebar/TemplateSidebar'
+import TableTemplate from '@baserow/modules/database/components/table/TableTemplate'
 import { populateTable } from '@baserow/modules/database/store/table'
 
 export class DatabaseApplicationType extends ApplicationType {
@@ -16,12 +17,26 @@ export class DatabaseApplicationType extends ApplicationType {
     return 'Database'
   }
 
-  getSelectedSidebarComponent() {
+  getSidebarComponent() {
     return Sidebar
   }
 
-  getContextComponent() {
-    return Context
+  getTemplateSidebarComponent() {
+    return TemplateSidebar
+  }
+
+  getTemplatesPageComponent() {
+    return TableTemplate
+  }
+
+  getTemplatePage(application) {
+    if (application.tables.length === 0) {
+      return null
+    }
+    return {
+      database: application,
+      table: application.tables[0],
+    }
   }
 
   getDependentsName() {

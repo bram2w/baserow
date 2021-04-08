@@ -6,13 +6,14 @@ export default (client) => {
       offset = null,
       cancelToken = null,
       includeFieldOptions = false,
+      search = false,
     }) {
       const config = {
         params: {
           limit,
         },
       }
-      const includes = []
+      const include = []
 
       if (offset !== null) {
         config.params.offset = offset
@@ -23,20 +24,31 @@ export default (client) => {
       }
 
       if (includeFieldOptions) {
-        includes.push('field_options')
+        include.push('field_options')
       }
 
-      if (includes.length > 0) {
-        config.params.includes = includes.join(',')
+      if (include.length > 0) {
+        config.params.include = include.join(',')
+      }
+
+      if (search) {
+        config.params.search = search
       }
 
       return client.get(`/database/views/grid/${gridId}/`, config)
     },
-    fetchCount(gridId) {
+    fetchCount({ gridId, search, cancelToken = null }) {
       const config = {
         params: {
           count: true,
         },
+      }
+      if (cancelToken !== null) {
+        config.cancelToken = cancelToken
+      }
+
+      if (search) {
+        config.params.search = search
       }
 
       return client.get(`/database/views/grid/${gridId}/`, config)

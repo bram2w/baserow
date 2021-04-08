@@ -1,0 +1,32 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+' Visit http://www.plantuml.com/ and paste in this document to edit and re-render.
+
+Person(customer, "Customer")
+
+
+Boundary(boundary0, "backend") {
+    Container(api, "API", "python/Django", "")
+    Container(worker, "Celery worker", "python", "worker should run as a daemon")
+}
+Boundary(boundary1, "web frontend") {
+    Container(webfrontend, "web", "Vue.js/Nuxt.js", "output the server side rendered initial DOM provided by Nuxt")
+}
+Boundary(boundary2, "backend dependencies") {
+    Container(db, "database", "PostgreSQL", "persistent storage")
+    Container(mjml, "MJML", "Node.js", "simplify the process of creating HTML emails")
+    Container(redis, "Redis", "", "asynchronous tasks and the real time collaboration")
+    Container(smtp_server, "SMTP Email Server", "", "Sends emails using SMTP to users")
+}
+
+
+Rel(customer, webfrontend, "visits Baserow using browser", "https")
+Rel(webfrontend, api, "calls api for initial render", "https")
+Rel(customer, api, "calls api directly after page load", "https")
+Rel(api, db, "write/read data", "tcp")
+Rel(api, redis, "write/read data", "tcp")
+Rel(worker, redis, "execute asynchronous tasks", "tcp")
+Rel(worker, smtp_server, "send email", "smtp")
+Rel(api, mjml, "render email templates", "tcp")
+BiRel(customer, api, "real time collaboration", "WebSocket")
+@enduml

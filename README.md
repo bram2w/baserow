@@ -72,6 +72,15 @@ Visit http://localhost:8000/api/groups/ in your browser and you should see a JSO
 response containing "Authentication credentials were not provided.". This means that it
 is working!
 
+In order to process asynchronous tasks you also need to start a Celery worker this is
+mainly used for the real time collaboration. Open a new tab or window and execute the
+following commands. 
+
+```
+$ docker exec -it backend bash
+$ watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A baserow worker -l INFO
+```
+
 In order to start the web-frontend environment you may execute the following commands.
 
 ```
@@ -109,7 +118,7 @@ Created by Bram Wiepjes (Baserow) - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 1.0.1
+Version: 1.1.0
 
 The official repository can be found at https://gitlab.com/bramw/baserow.
 

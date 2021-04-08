@@ -2,7 +2,7 @@ import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import ApplicationService from '@baserow/modules/core/services/application'
 import { clone } from '@baserow/modules/core/utils/object'
 
-function populateApplication(application, registry) {
+export function populateApplication(application, registry) {
   const type = registry.get('application', application.type)
 
   application._ = {

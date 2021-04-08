@@ -29,6 +29,15 @@
     height: 32px;
     line-height: 32px;
   }
+
+  .dropdown--disabled & {
+    background-color: $color-neutral-50;
+    cursor: inherit;
+
+    &:hover {
+      border-color: $color-neutral-400;
+    }
+  }
 }
 
 .dropdown__selected-icon {

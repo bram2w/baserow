@@ -1,14 +1,15 @@
-from django.db import connection
+from django.conf import settings
+from django.db import connections
 
 from baserow.contrib.database.fields.models import (
     TextField, LongTextField, NumberField, BooleanField, DateField, LinkRowField,
-    FileField, SingleSelectField, SelectOption
+    FileField, SingleSelectField, SelectOption, URLField, EmailField, PhoneNumberField
 )
 
 
 class FieldFixtures:
     def create_model_field(self, table, field):
-        with connection.schema_editor() as schema_editor:
+        with connections[settings.USER_TABLE_DATABASE].schema_editor() as schema_editor:
             to_model = table.get_model(field_ids=[field.id])
             model_field = to_model._meta.get_field(field.db_column)
             schema_editor.add_field(to_model, model_field)
@@ -161,6 +162,57 @@ class FieldFixtures:
             kwargs['order'] = 0
 
         field = SingleSelectField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs['table'], field)
+
+        return field
+
+    def create_url_field(self, user=None, create_field=True, **kwargs):
+        if 'table' not in kwargs:
+            kwargs['table'] = self.create_database_table(user=user)
+
+        if 'name' not in kwargs:
+            kwargs['name'] = self.fake.url()
+
+        if 'order' not in kwargs:
+            kwargs['order'] = 0
+
+        field = URLField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs['table'], field)
+
+        return field
+
+    def create_email_field(self, user=None, create_field=True, **kwargs):
+        if 'table' not in kwargs:
+            kwargs['table'] = self.create_database_table(user=user)
+
+        if 'name' not in kwargs:
+            kwargs['name'] = self.fake.email()
+
+        if 'order' not in kwargs:
+            kwargs['order'] = 0
+
+        field = EmailField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs['table'], field)
+
+        return field
+
+    def create_phone_number_field(self, user=None, create_field=True, **kwargs):
+        if 'table' not in kwargs:
+            kwargs['table'] = self.create_database_table(user=user)
+
+        if 'name' not in kwargs:
+            kwargs['name'] = self.fake.phone_number()
+
+        if 'order' not in kwargs:
+            kwargs['order'] = 0
+
+        field = PhoneNumberField.objects.create(**kwargs)
 
         if create_field:
             self.create_model_field(kwargs['table'], field)

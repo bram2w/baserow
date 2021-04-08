@@ -1,6 +1,6 @@
 {
   "name": "baserow",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": true,
   "description": "Baserow: open source no-code database web frontend.",
   "author": "Bram Wiepjes (Baserow)",
@@ -54,6 +54,7 @@
     "eslint-plugin-promise": ">=4.0.1",
     "eslint-plugin-standard": ">=4.0.0",
     "eslint-plugin-vue": "^7.5.0",
+    "flush-promises": "^1.0.2",
     "jest": "^26.6.3",
     "jsdom": "^16.2.2",
     "jsdom-global": "^3.0.2",

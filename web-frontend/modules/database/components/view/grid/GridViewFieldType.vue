@@ -8,6 +8,8 @@
       'grid-view__column--sorted':
         view.sortings.findIndex((sort) => sort.field === field.id) !== -1,
     }"
+    :style="{ width: width + 'px' }"
+    @mousedown="startDragging($event, field)"
   >
     <div
       class="grid-view__description"
@@ -18,13 +20,16 @@
       </div>
       <div class="grid-view__description-name">{{ field.name }}</div>
       <a
+        v-if="!readOnly"
         ref="contextLink"
         class="grid-view__description-options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
+        @mousedown.stop
       >
         <i class="fas fa-caret-down"></i>
       </a>
       <FieldContext
+        v-if="!readOnly"
         ref="context"
         :table="table"
         :field="field"
@@ -90,18 +95,30 @@
           </a>
         </li>
       </FieldContext>
-      <slot></slot>
+      <GridViewFieldWidthHandle
+        v-if="includeFieldWidthHandles && !readOnly"
+        class="grid-view__description-width"
+        :grid="view"
+        :field="field"
+        :width="width"
+        :store-prefix="storePrefix"
+      ></GridViewFieldWidthHandle>
     </div>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
+import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewFieldType',
-  components: { FieldContext },
+  components: { FieldContext, GridViewFieldWidthHandle },
+  mixins: [gridViewHelpers],
   props: {
     table: {
       type: Object,
@@ -115,8 +132,24 @@ export default {
       type: Object,
       required: true,
     },
+    includeFieldWidthHandles: {
+      type: Boolean,
+      required: false,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      dragging: false,
+    }
   },
   computed: {
+    width() {
+      return this.getFieldWidth(this.field.id)
+    },
     canFilter() {
       const filters = Object.values(this.$registry.getAll('viewFilter'))
       for (const type in filters) {
@@ -126,6 +159,15 @@ export default {
       }
       return false
     },
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        fieldOptions:
+          this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
+      }),
+    }
   },
   methods: {
     async createFilter(event, view, field) {
@@ -166,9 +208,16 @@ export default {
 
       try {
         if (sort === undefined) {
-          await this.$store.dispatch('view/createSort', { view, field, values })
+          await this.$store.dispatch('view/createSort', {
+            view,
+            field,
+            values,
+          })
         } else {
-          await this.$store.dispatch('view/updateSort', { sort, values })
+          await this.$store.dispatch('view/updateSort', {
+            sort,
+            values,
+          })
         }
 
         this.$emit('refresh')
@@ -178,15 +227,26 @@ export default {
     },
     async hide(event, view, field) {
       try {
-        await this.$store.dispatch('view/grid/updateFieldOptionsOfField', {
-          gridId: view.id,
-          field,
-          values: { hidden: true },
-          oldValues: { hidden: false },
-        })
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateFieldOptionsOfField',
+          {
+            gridId: view.id,
+            field,
+            values: { hidden: true },
+            oldValues: { hidden: false },
+          }
+        )
       } catch (error) {
         notifyIf(error, 'view')
       }
+    },
+    startDragging(event, field) {
+      if (this.readOnly) {
+        return
+      }
+
+      event.preventDefault()
+      this.$emit('dragging', { field, event })
     },
   },
 }

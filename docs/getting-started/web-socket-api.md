@@ -1,20 +1,21 @@
 # WebSocket API
 
 The web socket API is used for real time collaboration. When a user makes a change, for
-example when creating a new database application, then the backend broad casts a
-message containing that application to all the users within the related group and who
-are connected to the web socket. The web-frontend uses the web socket to update already
+example when creating a new database application, then the backend broadcasts a message
+containing that application to all the users within the related group and who are
+connected to the web socket. The web-frontend uses the web socket to update already
 fetched data in real time when it has changed. This ensures that the user is always
 working with the most recent data without reloading the page.
 
 ## Connecting
 
 In order to connect to the web socket you first need to authenticate via the REST API
-and obtain a JSON Web Token. After that you can connect to the following URL providing
-your JWT as query parameter: `wss://api.baserow.io/ws/core/?jwt_token=YOUR_JWT_TOKEN`.
-If you self host you need to replace `api.baserow.io` with our backend URL of course.
-The web socket connection only receives messages of the groups that the authenticated
-user belongs to. Below an example how to connect to the web socket in JavaScript.
+and obtain a [JSON Web Token](https://jwt.io/). After that you can connect to the
+following URL providing your JWT as query parameter: 
+`wss://api.baserow.io/ws/core/?jwt_token=YOUR_JWT_TOKEN`. If you self host
+you need to replace `api.baserow.io` with your own backend URL. The web socket
+connection only receives messages targeted at the groups that the authenticated user
+belongs to. Below is an example of how to connect to the web socket in JavaScript.
 
 ```javascript
 const socket = new WebSocket('wss://api.baserow.io/ws/core/?jwt_token=YOUR_JWT_TOKEN')
@@ -28,14 +29,14 @@ socket.onmessage = (message) => {
 
 ## Messages
 
-Broad casted messages containing real time updates are always in JSON format and they
-will always contain a key named `type` which indicates what has changed. For example
+Broadcasted messages containing real time updates are always JSON, and they
+always contain a key named `type` which indicates what has changed. For example
 `create_application` could be the value of the type and in this case an additional key
 `application` is provided containing the newly created application in serialized form.
 
 Below you will find an example of a message when another user has created a database
-application in a group that the receiver also belongs to. There are of course many
-event types, they are described at the bottom of this page.
+application in a group that the receiver also belongs to. There are of course many event
+types, they are described at the bottom of this page.
 
 ```json
 {
@@ -62,7 +63,7 @@ the JWT token authentication was successful. If so, the message will also contai
 application, you can provide that id as header `WebSocketId: {YOUR_WEB_SOCKET_ID}` to
 exclude yourself from the message containing the change that has already been executed.
 Below you will find such an example authentication message including `web_socket_id`
-and an example HTTP request containing the `WebSocketId` header. 
+and an example HTTP request containing the `WebSocketId` header.
 
 ```json
 {
@@ -103,8 +104,8 @@ At the moment there is only one page, which is the table page and it expects a
 }
 ```
 
-Once successfully subscribed you will receive a confirmation message indicating that
-you are subscribed to the page.
+Once successfully subscribed you will receive a confirmation message indicating that you
+are subscribed to the page.
 
 ```json
 {

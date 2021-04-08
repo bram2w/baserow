@@ -2,7 +2,8 @@ from django.db import transaction
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import permission_classes as method_permission_classes
 
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -35,6 +36,12 @@ from .serializers import (
 class FieldsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+
+        return super().get_permissions()
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -49,10 +56,11 @@ class FieldsView(APIView):
         operation_id='list_database_table_fields',
         description=(
             'Lists all the fields of the table related to the provided parameter if '
-            'the user has access to the related database\'s group. A table consists of '
-            'fields and each field can have a different type. Each type can have '
-            'different properties. A field is comparable with a regular table\'s '
-            'column.'
+            'the user has access to the related database\'s group. If the group is '
+            'related to a template, then this endpoint will be publicly accessible. A '
+            'table consists of fields and each field can have a different type. Each '
+            'type can have different properties. A field is comparable with a regular '
+            'table\'s column.'
         ),
         responses={
             200: PolymorphicCustomFieldRegistrySerializer(
@@ -68,6 +76,7 @@ class FieldsView(APIView):
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
     })
+    @method_permission_classes([AllowAny])
     def get(self, request, table_id):
         """
         Responds with a list of serialized fields that belong to the table if the user
@@ -75,7 +84,8 @@ class FieldsView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-        table.database.group.has_user(request.user, raise_error=True)
+        table.database.group.has_user(request.user, raise_error=True,
+                                      allow_if_template=True)
         fields = Field.objects.filter(table=table).select_related('content_type')
 
         data = [

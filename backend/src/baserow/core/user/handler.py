@@ -104,6 +104,13 @@ class UserHandler:
 
         user = User(first_name=name, email=email, username=email)
         user.set_password(password)
+
+        if not User.objects.exists():
+            # This is the first ever user created in this baserow instance and
+            # therefore the administrator user, lets give them staff rights so they
+            # can set baserow wide settings.
+            user.is_staff = True
+
         user.save()
 
         if group_invitation_token:

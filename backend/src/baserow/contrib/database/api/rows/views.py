@@ -1,32 +1,28 @@
-from django.db import transaction
 from django.conf import settings
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
-from drf_spectacular.utils import extend_schema
+from django.db import transaction
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from baserow.api.utils import validate_data
 from baserow.api.decorators import map_exceptions
-from baserow.api.pagination import PageNumberPagination
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 from baserow.api.user_files.errors import ERROR_USER_FILE_DOES_NOT_EXIST
-from baserow.core.exceptions import UserNotInGroupError
-from baserow.core.user_files.exceptions import UserFileDoesNotExist
-from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
-from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
-from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
-from baserow.contrib.database.api.rows.serializers import (
-    example_pagination_row_serializer_class
-)
-from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
+from baserow.api.utils import validate_data
 from baserow.contrib.database.api.fields.errors import (
     ERROR_ORDER_BY_FIELD_NOT_POSSIBLE, ERROR_ORDER_BY_FIELD_NOT_FOUND,
     ERROR_FILTER_FIELD_NOT_FOUND
 )
+from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
+from baserow.contrib.database.api.rows.serializers import (
+    example_pagination_row_serializer_class
+)
+from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
+from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
+from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
 from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD
@@ -34,21 +30,23 @@ from baserow.contrib.database.api.views.errors import (
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
 )
-from baserow.contrib.database.table.handler import TableHandler
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
-from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
-from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
-from baserow.contrib.database.views.models import FILTER_TYPE_AND, FILTER_TYPE_OR
+from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeNotAllowedForField, ViewFilterTypeDoesNotExist
 )
 from baserow.contrib.database.views.registries import view_filter_type_registry
-
+from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .serializers import (
     RowSerializer, get_example_row_serializer_class, get_row_serializer_class
 )
+from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, \
+    FILTER_TYPE_OR
 
 
 class RowsView(APIView):

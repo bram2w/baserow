@@ -19,7 +19,7 @@ $ sudo npm install -g cloudron
 
 ## Installing Baserow
 
-If you have not already been logged into your Cloudron platfrom you can do so by
+If you have not already been logged into your Cloudron platform you can do so by
 executing the following command.
 
 ```
@@ -38,7 +38,7 @@ $ cd baserow/deploy/cloudron
 After that you can install the Baserow Cloudron app by executing the following commands.
 
 ```
-$ cloudron install -l baserow.{YOUR_DOMAIN} --image registry.gitlab.com/bramw/baserow/cloudron:1.0.1
+$ cloudron install -l baserow.{YOUR_DOMAIN} --image registry.gitlab.com/bramw/baserow/cloudron:1.1.0
 App is being installed.
 ...
 App is installed.
@@ -58,7 +58,7 @@ First you need to figure out what your app id is. You can do so by executing the
 the latest version.
 
 ```
-cloudron update --app {YOUR_APP_ID} --image registry.gitlab.com/bramw/baserow/cloudron:1.0.1
+cloudron update --app {YOUR_APP_ID} --image registry.gitlab.com/bramw/baserow/cloudron:1.1.0
 ```
 
 > Note that you must replace the image with the most recent image of Baserow. The

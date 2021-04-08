@@ -2,7 +2,8 @@
   <FieldSingleSelectDropdown
     :value="copy"
     :options="field.select_options"
-    class="dropdown--floating filters__value-dropdown"
+    :disabled="readOnly"
+    class="dropdown--floating filters__value-dropdown dropdown--tiny"
     @input="input"
   ></FieldSingleSelectDropdown>
 </template>
@@ -28,6 +29,10 @@ export default {
     },
     fields: {
       type: Array,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },

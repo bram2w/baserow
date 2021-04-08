@@ -4,9 +4,10 @@
     :class="{
       active: view._.selected,
       'select__item--loading': view._.loading,
+      'select__item--no-options': readOnly,
     }"
   >
-    <a class="select__item-link" @click="selectView(view)">
+    <a class="select__item-link" @click="$emit('selected', view)">
       <div class="select__item-name">
         <i
           class="select__item-icon fas fa-fw color-primary"
@@ -19,30 +20,32 @@
         ></Editable>
       </div>
     </a>
-    <a
-      ref="contextLink"
-      class="select__item-options"
-      @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
-    >
-      <i class="fas fa-ellipsis-v"></i>
-    </a>
-    <Context ref="context">
-      <ul class="context__menu">
-        <li>
-          <a @click="enableRename()">
-            <i class="context__menu-icon fas fa-fw fa-pen"></i>
-            Rename view
-          </a>
-        </li>
-        <li>
-          <a @click="deleteView()">
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
-            Delete view
-          </a>
-        </li>
-      </ul>
-    </Context>
-    <DeleteViewModal ref="deleteViewModal" :view="view" />
+    <template v-if="!readOnly">
+      <a
+        ref="contextLink"
+        class="select__item-options"
+        @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
+      >
+        <i class="fas fa-ellipsis-v"></i>
+      </a>
+      <Context ref="context">
+        <ul class="context__menu">
+          <li>
+            <a @click="enableRename()">
+              <i class="context__menu-icon fas fa-fw fa-pen"></i>
+              Rename view
+            </a>
+          </li>
+          <li>
+            <a @click="deleteView()">
+              <i class="context__menu-icon fas fa-fw fa-trash"></i>
+              Delete view
+            </a>
+          </li>
+        </ul>
+      </Context>
+      <DeleteViewModal ref="deleteViewModal" :view="view" />
+    </template>
   </li>
 </template>
 
@@ -59,6 +62,11 @@ export default {
     view: {
       type: Object,
       required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   methods: {
@@ -88,16 +96,6 @@ export default {
     deleteView() {
       this.$refs.context.hide()
       this.$refs.deleteViewModal.show()
-    },
-    selectView(view) {
-      this.$nuxt.$router.push({
-        name: 'database-table',
-        params: {
-          viewId: view.id,
-        },
-      })
-
-      this.$emit('selected')
     },
   },
 }

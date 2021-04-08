@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-import { lowerCaseFirst } from '@baserow/modules/core/utils/string'
+import { upperCaseFirst } from '@baserow/modules/core/utils/string'
 
 export class ResponseErrorMessage {
   constructor(title, message) {
@@ -52,6 +52,10 @@ class ErrorHandler {
         'Invalid URL',
         'The provided file URL could not be reached.'
       ),
+      ERROR_INVALID_FILE_URL: new ResponseErrorMessage(
+        'Invalid URL',
+        'The provided file URL is invalid or not allowed.'
+      ),
     }
 
     // A temporary notFoundMap containing the error messages for when the
@@ -82,6 +86,15 @@ class ErrorHandler {
    */
   isNotFound() {
     return this.response !== undefined && this.response.status === 404
+  }
+
+  /**
+   * Returns true if the response status code is equal to not found (429) which
+   * means that the user is sending too much requests to the server.
+   * @return {boolean}
+   */
+  isTooManyRequests() {
+    return this.response !== undefined && this.response.status === 429
   }
 
   /**
@@ -120,7 +133,7 @@ class ErrorHandler {
   getNotFoundMessage(name) {
     if (!Object.prototype.hasOwnProperty.call(this.notFoundMap, name)) {
       return new ResponseErrorMessage(
-        `${lowerCaseFirst(name)} not found.`,
+        `${upperCaseFirst(name)} not found.`,
         `The selected ${name.toLowerCase()} wasn't found, maybe it has already been deleted.`
       )
     }
@@ -139,10 +152,24 @@ class ErrorHandler {
   }
 
   /**
+   * Returns a standard network error message. For example if the API server
+   * could not be reached.
+   */
+  getTooManyRequestsError() {
+    return new ResponseErrorMessage(
+      'Too many requests',
+      'You are sending too many requests to the server. Please wait a moment.'
+    )
+  }
+
+  /**
    * If there is an error or the requested detail is not found an error
    * message related to the problem is returned.
    */
   getMessage(name = null, specificErrorMap = null) {
+    if (this.isTooManyRequests()) {
+      return this.getTooManyRequestsError()
+    }
     if (this.hasNetworkError()) {
       return this.getNetworkErrorMessage()
     }

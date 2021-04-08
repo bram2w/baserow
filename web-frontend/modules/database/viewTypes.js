@@ -99,45 +99,52 @@ export class ViewType extends Registerable {
   fetch() {}
 
   /**
-   * Should refresh the data inside a few. This is method could be called when a filter
+   * Should refresh the data inside a view. This is method could be called when a filter
    * or sort has been changed or when a field is updated or deleted. It should keep the
    * state as much the same as it was before. So for example the scroll offset should
-   * stay the same if possible.
+   * stay the same if possible. Can throw a RefreshCancelledException when the view
+   * wishes to cancel the current refresh call due to a new refresh call.
    */
-  refresh() {}
+  refresh({ store }, view) {}
 
   /**
    * Method that is called when a field has been created. This can be useful to
    * maintain data integrity for example to add the field to the grid view store.
    */
-  fieldCreated(context, table, field, fieldType) {}
+  fieldCreated(context, table, field, fieldType, storePrefix) {}
+
+  /**
+   * Method that is called when a field has been deleted. This can be useful to
+   * maintain data integrity.
+   */
+  fieldDeleted(context, field, fieldType, storePrefix) {}
 
   /**
    * Method that is called when a field has been changed. This can be useful to
    * maintain data integrity by updating the values.
    */
-  fieldUpdated(context, field, oldField, fieldType) {}
+  fieldUpdated(context, field, oldField, fieldType, storePrefix) {}
 
   /**
    * Event that is called when a row is created from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowCreated(context, tableId, rowValues) {}
+  rowCreated(context, tableId, rowValues, fields, primary, storePrefix) {}
 
   /**
    * Event that is called when a row is updated from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowUpdated(context, tableId, rowValues) {}
+  rowUpdated(context, tableId, rowValues, fields, primary, storePrefix) {}
 
   /**
    * Event that is called when a row is deleted from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowDeleted(context, tableId, rowId) {}
+  rowDeleted(context, tableId, rowId, fields, primary, storePrefix) {}
 
   /**
    * @return object
@@ -154,6 +161,10 @@ export class ViewType extends Registerable {
 }
 
 export class GridViewType extends ViewType {
+  static getMaxPossibleOrderValue() {
+    return 32767
+  }
+
   static getType() {
     return 'grid'
   }
@@ -174,19 +185,31 @@ export class GridViewType extends ViewType {
     return GridView
   }
 
-  async fetch({ store }, view) {
-    await store.dispatch('view/grid/fetchInitial', { gridId: view.id })
+  async fetch({ store }, view, fields, primary, storePrefix = '') {
+    await store.dispatch(storePrefix + 'view/grid/fetchInitial', {
+      gridId: view.id,
+      fields,
+      primary,
+    })
   }
 
-  async refresh({ store }, view) {
-    await store.dispatch('view/grid/refresh', { gridId: view.id })
+  async refresh({ store }, view, fields, primary, storePrefix = '') {
+    await store.dispatch(storePrefix + 'view/grid/refresh', {
+      gridId: view.id,
+      fields,
+      primary,
+    })
   }
 
-  async fieldCreated({ dispatch }, table, field, fieldType) {
+  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
     const value = fieldType.getEmptyValue(field)
-    await dispatch('view/grid/addField', { field, value }, { root: true })
     await dispatch(
-      'view/grid/setFieldOptionsOfField',
+      storePrefix + 'view/grid/addField',
+      { field, value },
+      { root: true }
+    )
+    await dispatch(
+      storePrefix + 'view/grid/setFieldOptionsOfField',
       {
         field,
         // The default values should be the same as in the `GridViewFieldOptions`
@@ -194,9 +217,43 @@ export class GridViewType extends ViewType {
         values: {
           width: 200,
           hidden: false,
+          order: GridViewType.getMaxPossibleOrderValue(),
         },
       },
       { root: true }
+    )
+  }
+
+  async fieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
+    await dispatch(
+      storePrefix + 'view/grid/forceDeleteFieldOptions',
+      field.id,
+      {
+        root: true,
+      }
+    )
+  }
+
+  async fieldUpdated(
+    { dispatch, rootGetters },
+    field,
+    oldField,
+    fieldType,
+    storePrefix
+  ) {
+    // The field changing may change which cells in the field should be highlighted so
+    // we refresh them to ensure that they still correctly match. E.g. changing a date
+    // fields date_format needs a search update as search string might no longer
+    // match the new format.
+    await dispatch(
+      storePrefix + 'view/grid/updateSearch',
+      {
+        fields: rootGetters['field/getAll'],
+        primary: rootGetters['field/getPrimary'],
+      },
+      {
+        root: true,
+      }
     )
   }
 
@@ -210,35 +267,37 @@ export class GridViewType extends ViewType {
     )
   }
 
-  rowCreated({ store }, tableId, rowValues) {
+  rowCreated({ store }, tableId, rowValues, fields, primary, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
-      store.dispatch('view/grid/forceCreate', {
+      store.dispatch(storePrefix + 'view/grid/forceCreate', {
         view: store.getters['view/getSelected'],
-        fields: store.getters['field/getAll'],
-        primary: store.getters['field/getPrimary'],
+        fields,
+        primary,
         values: rowValues,
         getScrollTop: () => store.getters['view/grid/getScrollTop'],
       })
     }
   }
 
-  rowUpdated({ store }, tableId, rowValues) {
+  rowUpdated({ store }, tableId, rowValues, fields, primary, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
-      store.dispatch('view/grid/forceUpdate', {
+      store.dispatch(storePrefix + 'view/grid/forceUpdate', {
         view: store.getters['view/getSelected'],
-        fields: store.getters['field/getAll'],
-        primary: store.getters['field/getPrimary'],
+        fields,
+        primary,
         values: rowValues,
         getScrollTop: () => store.getters['view/grid/getScrollTop'],
       })
     }
   }
 
-  rowDeleted({ store }, tableId, rowId) {
+  rowDeleted({ store }, tableId, rowId, fields, primary, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
       const row = { id: rowId }
-      store.dispatch('view/grid/forceDelete', {
+      store.dispatch(storePrefix + 'view/grid/forceDelete', {
         grid: store.getters['view/getSelected'],
+        fields,
+        primary,
         row,
         getScrollTop: () => store.getters['view/grid/getScrollTop'],
       })

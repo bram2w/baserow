@@ -31,7 +31,7 @@ def test_create_user(client, data_fixture):
     assert 'password' not in response_json['user']
     assert response_json['user']['username'] == 'test@test.nl'
     assert response_json['user']['first_name'] == 'Test1'
-    assert response_json['user']['is_staff'] is False
+    assert response_json['user']['is_staff'] is True
 
     response_failed = client.post(reverse('api:user:index'), {
         'name': 'Test1',

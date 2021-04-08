@@ -4,6 +4,7 @@
       :value="valueId"
       :options="field.select_options"
       :allow-create-option="true"
+      :disabled="readOnly"
       @input="updateValue($event, value)"
       @create-option="createOption($event)"
     ></FieldSingleSelectDropdown>

@@ -4,6 +4,7 @@ from pytz import timezone
 
 from django.utils.timezone import make_aware, datetime
 
+from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.fields.handler import FieldHandler
 
@@ -257,6 +258,17 @@ def test_contains_filter_type(data_fixture):
     grid_view = data_fixture.create_grid_view(table=table)
     text_field = data_fixture.create_text_field(table=table)
     long_text_field = data_fixture.create_long_text_field(table=table)
+    date_field = data_fixture.create_date_field(table=table, date_include_time=True,
+                                                date_format="ISO")
+    number_field = data_fixture.create_number_field(table=table,
+                                                    number_type='DECIMAL',
+                                                    number_negative=True,
+                                                    number_decimal_places=2)
+    single_select_field = data_fixture.create_single_select_field(table=table)
+    option_a = data_fixture.create_select_option(field=single_select_field, value='AC',
+                                                 color='blue')
+    option_b = data_fixture.create_select_option(field=single_select_field, value='BC',
+                                                 color='red')
 
     handler = ViewHandler()
     model = table.get_model()
@@ -264,15 +276,24 @@ def test_contains_filter_type(data_fixture):
     row = model.objects.create(**{
         f'field_{text_field.id}': 'My name is John Doe.',
         f'field_{long_text_field.id}': 'Long text that is not empty.',
+        f'field_{date_field.id}': '2020-02-01 01:23',
+        f'field_{number_field.id}': '98989898',
+        f'field_{single_select_field.id}': option_a
     })
     model.objects.create(**{
         f'field_{text_field.id}': '',
         f'field_{long_text_field.id}': '',
+        f'field_{date_field.id}': None,
+        f'field_{number_field.id}': None,
+        f'field_{single_select_field.id}': None,
     })
     row_3 = model.objects.create(**{
         f'field_{text_field.id}': 'This is a test field.',
         f'field_{long_text_field.id}': 'This text is a bit longer, but it also '
                                        'contains.\n A multiline approach.',
+        f'field_{date_field.id}': '0001-01-01 00:12',
+        f'field_{number_field.id}': '10000',
+        f'field_{single_select_field.id}': option_b
     })
 
     filter = data_fixture.create_view_filter(
@@ -321,6 +342,72 @@ def test_contains_filter_type(data_fixture):
     assert len(ids) == 1
     assert row_3.id in ids
 
+    filter.field = date_field
+    filter.value = '2020-02-01'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    filter.field = date_field
+    filter.value = '01/02/2020'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    filter.field = date_field
+    filter.value = ''
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.field = number_field
+    filter.value = '98'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    filter.field = number_field
+    filter.value = '0' + str(row.id)
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    filter.field = number_field
+    filter.value = ''
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.field = date_field
+    filter.value = '00:12'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    filter.field = single_select_field
+    filter.value = 'A'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    filter.field = single_select_field
+    filter.value = ''
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.field = single_select_field
+    filter.value = 'C'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id in ids
+    assert row_3.id in ids
+
 
 @pytest.mark.django_db
 def test_contains_not_filter_type(data_fixture):
@@ -329,6 +416,17 @@ def test_contains_not_filter_type(data_fixture):
     grid_view = data_fixture.create_grid_view(table=table)
     text_field = data_fixture.create_text_field(table=table)
     long_text_field = data_fixture.create_long_text_field(table=table)
+    date_field = data_fixture.create_date_field(table=table, date_include_time=True,
+                                                date_format="ISO")
+    number_field = data_fixture.create_number_field(table=table,
+                                                    number_type='DECIMAL',
+                                                    number_negative=True,
+                                                    number_decimal_places=2)
+    single_select_field = data_fixture.create_single_select_field(table=table)
+    option_a = data_fixture.create_select_option(field=single_select_field, value='AC',
+                                                 color='blue')
+    option_b = data_fixture.create_select_option(field=single_select_field, value='BC',
+                                                 color='red')
 
     handler = ViewHandler()
     model = table.get_model()
@@ -336,15 +434,24 @@ def test_contains_not_filter_type(data_fixture):
     row = model.objects.create(**{
         f'field_{text_field.id}': 'My name is John Doe.',
         f'field_{long_text_field.id}': 'Long text that is not empty.',
+        f'field_{date_field.id}': '2020-02-01 01:23',
+        f'field_{number_field.id}': '98989898',
+        f'field_{single_select_field.id}': option_a
     })
     row_2 = model.objects.create(**{
         f'field_{text_field.id}': '',
         f'field_{long_text_field.id}': '',
+        f'field_{date_field.id}': None,
+        f'field_{number_field.id}': None,
+        f'field_{single_select_field.id}': None,
     })
     row_3 = model.objects.create(**{
         f'field_{text_field.id}': 'This is a test field.',
         f'field_{long_text_field.id}': 'This text is a bit longer, but it also '
                                        'contains.\n A multiline approach.',
+        f'field_{date_field.id}': '0001-01-01 00:12',
+        f'field_{number_field.id}': '10000',
+        f'field_{single_select_field.id}': option_b
     })
 
     filter = data_fixture.create_view_filter(
@@ -394,6 +501,65 @@ def test_contains_not_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 2
     assert row.id in ids
+    assert row_2.id in ids
+
+    filter.field = date_field
+    filter.value = '2020-02-01'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    filter.field = date_field
+    filter.value = '01/02/2020'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.field = date_field
+    filter.value = ''
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.field = number_field
+    filter.value = '98'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    filter.field = number_field
+    filter.value = ''
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.field = date_field
+    filter.value = '00:12'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_3.id not in ids
+
+    filter.field = single_select_field
+    filter.value = 'A'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id not in ids
+
+    filter.field = single_select_field
+    filter.value = ''
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    filter.field = single_select_field
+    filter.value = 'C'
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
     assert row_2.id in ids
 
 
@@ -449,6 +615,16 @@ def test_single_select_equal_filter_type(data_fixture):
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 3
+
+
+@pytest.mark.django_db
+def test_single_select_equal_filter_type_export_import():
+    view_filter_type = view_filter_type_registry.get('single_select_equal')
+    id_mapping = {'database_field_select_options': {1: 2}}
+    assert view_filter_type.get_export_serialized_value('1') == '1'
+    assert view_filter_type.set_import_serialized_value('1', id_mapping) == '2'
+    assert view_filter_type.set_import_serialized_value('', id_mapping) == ''
+    assert view_filter_type.set_import_serialized_value('wrong', id_mapping) == ''
 
 
 @pytest.mark.django_db

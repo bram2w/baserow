@@ -14,7 +14,14 @@ class FileSizeTooLargeError(Exception):
 
 
 class FileURLCouldNotBeReached(Exception):
-    """Raised when the provided URL could not be reached."""
+    """
+    Raised when the provided URL could not be reached or points to an internal
+    service.
+    """
+
+
+class InvalidFileURLError(Exception):
+    """Raised when the provided file URL is invalid."""
 
 
 class InvalidUserFileNameError(Exception):

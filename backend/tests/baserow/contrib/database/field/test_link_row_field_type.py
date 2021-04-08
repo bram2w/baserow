@@ -5,6 +5,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD
 from django.shortcuts import reverse
 from django.db import connections
 
+from baserow.core.handler import CoreHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import LinkRowField
@@ -692,3 +693,69 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json[f'field_{link_row_field.id}']) == 0
+
+
+@pytest.mark.django_db
+def test_import_export_link_row_field(data_fixture, user_tables_in_separate_db):
+    user = data_fixture.create_user()
+    imported_group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(user=user, name='Placeholder')
+    table = data_fixture.create_database_table(name='Example', database=database)
+    customers_table = data_fixture.create_database_table(
+        name='Customers', database=database
+    )
+    field_handler = FieldHandler()
+    core_handler = CoreHandler()
+    link_row_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name='link_row',
+        link_row_table=customers_table
+    )
+
+    row_handler = RowHandler()
+    c_row = row_handler.create_row(user=user, table=customers_table, values={})
+    c_row_2 = row_handler.create_row(user=user, table=customers_table, values={})
+    row = row_handler.create_row(user=user, table=table, values={
+        f'field_{link_row_field.id}': [c_row.id, c_row_2.id]
+    })
+
+    exported_applications = core_handler.export_group_applications(database.group)
+    imported_applications, id_mapping = core_handler.import_application_to_group(
+        imported_group,
+        exported_applications
+    )
+    imported_database = imported_applications[0]
+    imported_tables = imported_database.table_set.all()
+    imported_table = imported_tables[0]
+    imported_customers_table = imported_tables[1]
+    imported_link_row_field = imported_table.field_set.all().first().specific
+    imported_link_row_relation_field = (
+        imported_customers_table.field_set.all().first().specific
+    )
+
+    assert imported_table.id != table.id
+    assert imported_table.name == table.name
+    assert imported_customers_table.id != customers_table.id
+    assert imported_customers_table.name == customers_table.name
+    assert imported_link_row_field.id != link_row_field.id
+    assert imported_link_row_field.name == link_row_field.name
+    assert imported_link_row_field.link_row_table_id == imported_customers_table.id
+    assert imported_link_row_relation_field.link_row_table_id == imported_table.id
+    assert imported_link_row_field.link_row_relation_id == (
+        imported_link_row_relation_field.link_row_relation_id
+    )
+
+    imported_c_row = row_handler.get_row(user=user, table=imported_customers_table,
+                                         row_id=c_row.id)
+    imported_c_row_2 = row_handler.get_row(user=user, table=imported_customers_table,
+                                           row_id=c_row_2.id)
+    imported_row = row_handler.get_row(user=user, table=imported_table, row_id=row.id)
+
+    assert imported_row.id == row.id
+    assert imported_c_row.id == c_row.id
+    assert imported_c_row_2.id == c_row_2.id
+    assert [
+        r.id
+        for r in getattr(imported_row, f'field_{imported_link_row_field.id}').all()
+    ] == [imported_c_row.id, imported_c_row_2.id]

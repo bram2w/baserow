@@ -8,7 +8,7 @@ export const uuid = function () {
   return uuid
 }
 
-export const lowerCaseFirst = function (string) {
+export const upperCaseFirst = function (string) {
   return string.charAt(0).toUpperCase() + string.slice(1)
 }
 
@@ -51,6 +51,15 @@ export const isValidURL = (str) => {
 export const isValidEmail = (str) => {
   const pattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
   return !!pattern.test(str)
+}
+
+// Regex duplicated from
+// src/baserow/contrib/database/fields/field_types.py#PhoneNumberFieldType
+// Docs reference what characters are valid in PhoneNumberFieldType.getDocsDescription
+// Ensure they are kept in sync.
+export const isSimplePhoneNumber = (str) => {
+  const pattern = /^[0-9NnXx,+._*()#=;/ -]{1,100}$/
+  return pattern.test(str)
 }
 
 export const isSecureURL = (str) => {

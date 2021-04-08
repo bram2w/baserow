@@ -1,9 +1,12 @@
 import pathlib
 import mimetypes
+
 from os.path import join
 from io import BytesIO
+from urllib.parse import urlparse
 
-import requests
+import advocate
+from advocate.exceptions import UnacceptableAddressException
 from requests.exceptions import RequestException
 
 from PIL import Image, ImageOps
@@ -16,7 +19,7 @@ from baserow.core.utils import sha256_hash, stream_size, random_string, truncate
 
 from .exceptions import (
     InvalidFileStreamError, FileSizeTooLargeError, FileURLCouldNotBeReached,
-    MaximumUniqueTriesError
+    MaximumUniqueTriesError, InvalidFileURLError
 )
 from .models import UserFile
 
@@ -241,15 +244,21 @@ class UserFileHandler:
         :param storage: The storage where the file must be saved to.
         :type storage: Storage
         :raises FileURLCouldNotBeReached: If the file could not be downloaded from
-            the URL.
+            the URL or if it points to an internal service.
+        :raises InvalidFileURLError: If the provided file url is invalid.
         :return: The newly created user file.
         :rtype: UserFile
         """
 
+        parsed_url = urlparse(url)
+
+        if parsed_url.scheme not in ['http', 'https']:
+            raise InvalidFileURLError('Only http and https are allowed.')
+
         file_name = url.split('/')[-1]
 
         try:
-            response = requests.get(url, stream=True, timeout=10)
+            response = advocate.get(url, stream=True, timeout=10)
 
             if not response.ok:
                 raise FileURLCouldNotBeReached('The response did not respond with an '
@@ -259,7 +268,7 @@ class UserFileHandler:
                 settings.USER_FILE_SIZE_LIMIT + 1,
                 decode_content=True
             )
-        except RequestException:
+        except (RequestException, UnacceptableAddressException):
             raise FileURLCouldNotBeReached('The provided URL could not be reached.')
 
         file = SimpleUploadedFile(file_name, content)
