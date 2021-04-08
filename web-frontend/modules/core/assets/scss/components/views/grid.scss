@@ -249,6 +249,10 @@
   .grid-view__row--selected & {
     background-color: $color-neutral-50;
   }
+
+  &.grid-view__row-info--matches-search {
+    background-color: $color-primary-100;
+  }
 }
 
 .grid-view__row-count {
@@ -319,6 +323,14 @@
 
     &.active {
       background-color: $white;
+    }
+  }
+
+  .grid-view__column--matches-search & {
+    background-color: $color-primary-100;
+
+    &.active {
+      background-color: $color-primary-100;
     }
   }
 

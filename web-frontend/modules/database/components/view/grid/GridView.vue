@@ -263,8 +263,11 @@ export default {
      * to update the scrollbars.
      */
     fieldsUpdated() {
-      if (this.$refs.scrollbars) {
-        this.$refs.scrollbars.update()
+      const scrollbars = this.$refs.scrollbars
+      // Vue can sometimes trigger this via watch before the child component
+      // scrollbars has been created, check it exists and has the expected method
+      if (scrollbars && scrollbars.update) {
+        scrollbars.update()
       }
     },
     /**
@@ -294,16 +297,11 @@ export default {
     editValue({ field, row, value, oldValue }) {
       const overrides = {}
       overrides[`field_${field.id}`] = value
-      this.$store.dispatch('view/grid/updateMatchFilters', {
+      this.$store.dispatch('view/grid/onRowChange', {
         view: this.view,
         row,
-        overrides,
-      })
-      this.$store.dispatch('view/grid/updateMatchSortings', {
-        view: this.view,
         fields: this.fields,
         primary: this.primary,
-        row,
         overrides,
       })
     },
@@ -606,7 +604,7 @@ export default {
         windowHeight: this.$refs.right.$refs.body.clientHeight,
       })
       this.$nextTick(() => {
-        this.$refs.scrollbars.update()
+        this.fieldsUpdated()
       })
     },
   },

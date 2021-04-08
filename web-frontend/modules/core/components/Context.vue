@@ -140,6 +140,8 @@ export default {
       }
       window.addEventListener('scroll', this.$el.updatePositionEvent, true)
       window.addEventListener('resize', this.$el.updatePositionEvent)
+
+      this.$emit('shown')
     },
     /**
      * Hide the context menu and make sure the body event is removed.

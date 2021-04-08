@@ -53,6 +53,10 @@ import {
   getDateMomentFormat,
   getTimeMomentFormat,
 } from '@baserow/modules/database/utils/date'
+import {
+  filenameContainsFilter,
+  genericContainsFilter,
+} from '@baserow/modules/database/utils/fieldFilters'
 
 export class FieldType extends Registerable {
   /**
@@ -280,6 +284,43 @@ export class FieldType extends Registerable {
   getDocsResponseExample(field) {
     return this.getDocsRequestExample(field)
   }
+
+  /**
+   * Should return a contains filter function unique for this field type.
+   */
+  getContainsFilterFunction() {
+    return (rowValue, humanReadableRowValue, filterValue) => false
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the
+   * filter returned from getContainsFilterFunction.
+   */
+  containsFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      this.getContainsFilterFunction()(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
+  }
+
+  /**
+   * Converts rowValue to its human readable form first before applying the field
+   * filter returned by getContainsFilterFunction's notted.
+   */
+  notContainsFilter(rowValue, filterValue, field) {
+    return (
+      filterValue === '' ||
+      !this.getContainsFilterFunction()(
+        rowValue,
+        this.toHumanReadableString(field, rowValue),
+        filterValue
+      )
+    )
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -337,6 +378,10 @@ export class TextFieldType extends FieldType {
   getDocsRequestExample(field) {
     return 'string'
   }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -389,6 +434,10 @@ export class LongTextFieldType extends FieldType {
 
   getDocsRequestExample(field) {
     return 'string'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -636,6 +685,10 @@ export class NumberFieldType extends FieldType {
     }
     return 0
   }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -807,6 +860,10 @@ export class DateFieldType extends FieldType {
   getDocsRequestExample(field) {
     return field.date_include_time ? '2020-01-01T12:00:00Z' : '2020-01-01'
   }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class URLFieldType extends FieldType {
@@ -861,6 +918,10 @@ export class URLFieldType extends FieldType {
   getDocsRequestExample(field) {
     return 'https://baserow.io'
   }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class EmailFieldType extends FieldType {
@@ -914,6 +975,10 @@ export class EmailFieldType extends FieldType {
 
   getDocsRequestExample(field) {
     return 'example@baserow.io'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }
 
@@ -1026,6 +1091,10 @@ export class FileFieldType extends FieldType {
       },
     ]
   }
+
+  getContainsFilterFunction() {
+    return filenameContainsFilter
+  }
 }
 
 export class SingleSelectFieldType extends FieldType {
@@ -1135,6 +1204,10 @@ export class SingleSelectFieldType extends FieldType {
       color: 'light-blue',
     }
   }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
 }
 
 export class PhoneNumberFieldType extends FieldType {
@@ -1196,5 +1269,9 @@ export class PhoneNumberFieldType extends FieldType {
 
   getDocsRequestExample(field) {
     return '+1-541-754-3010'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 }

@@ -254,6 +254,9 @@ export const getters = {
   getAll(state) {
     return state.items
   },
+  getAllWithPrimary(state) {
+    return [state.primary, ...state.items]
+  },
 }
 
 export default {

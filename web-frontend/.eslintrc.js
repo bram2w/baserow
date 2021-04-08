@@ -3,6 +3,10 @@ module.exports = {
   env: {
     browser: true,
     node: true,
+    jest: true,
+    // required as jest uses jasmine's fail method
+    // https://stackoverflow.com/questions/64413927/jest-eslint-fail-is-not-defined
+    jasmine: true,
   },
   parserOptions: {
     parser: 'babel-eslint',
