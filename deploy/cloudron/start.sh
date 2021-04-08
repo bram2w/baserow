@@ -12,6 +12,9 @@ mkdir -p /app/data/redis
 echo "==> Executing database migrations"
 /app/code/env/bin/python /app/code/baserow/backend/src/baserow/manage.py migrate --settings=cloudron.settings
 
+echo "==> Syncing templates"
+/app/code/env/bin/python /app/code/baserow/backend/src/baserow/manage.py sync_templates --settings=cloudron.settings
+
 chown -R cloudron:cloudron /app/data
 
 echo "==> Starting"

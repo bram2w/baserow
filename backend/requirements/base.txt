@@ -14,6 +14,7 @@ requests==2.25.0
 itsdangerous==1.1.0
 drf-spectacular==0.13.1
 Pillow==8.0.1
+asgiref==3.3.1
 channels==3.0.3
 channels-redis==3.2.0
 celery[redis]==5.0.5

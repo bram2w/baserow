@@ -20,6 +20,7 @@
       </div>
       <div class="grid-view__description-name">{{ field.name }}</div>
       <a
+        v-if="!readOnly"
         ref="contextLink"
         class="grid-view__description-options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
@@ -28,6 +29,7 @@
         <i class="fas fa-caret-down"></i>
       </a>
       <FieldContext
+        v-if="!readOnly"
         ref="context"
         :table="table"
         :field="field"
@@ -94,11 +96,12 @@
         </li>
       </FieldContext>
       <GridViewFieldWidthHandle
-        v-if="includeFieldWidthHandles"
+        v-if="includeFieldWidthHandles && !readOnly"
         class="grid-view__description-width"
         :grid="view"
         :field="field"
         :width="width"
+        :store-prefix="storePrefix"
       ></GridViewFieldWidthHandle>
     </div>
   </div>
@@ -133,6 +136,10 @@ export default {
       type: Boolean,
       required: false,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -152,9 +159,15 @@ export default {
       }
       return false
     },
-    ...mapGetters({
-      fieldOptions: 'view/grid/getAllFieldOptions',
-    }),
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        fieldOptions:
+          this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
+      }),
+    }
   },
   methods: {
     async createFilter(event, view, field) {
@@ -195,9 +208,16 @@ export default {
 
       try {
         if (sort === undefined) {
-          await this.$store.dispatch('view/createSort', { view, field, values })
+          await this.$store.dispatch('view/createSort', {
+            view,
+            field,
+            values,
+          })
         } else {
-          await this.$store.dispatch('view/updateSort', { sort, values })
+          await this.$store.dispatch('view/updateSort', {
+            sort,
+            values,
+          })
         }
 
         this.$emit('refresh')
@@ -207,17 +227,24 @@ export default {
     },
     async hide(event, view, field) {
       try {
-        await this.$store.dispatch('view/grid/updateFieldOptionsOfField', {
-          gridId: view.id,
-          field,
-          values: { hidden: true },
-          oldValues: { hidden: false },
-        })
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateFieldOptionsOfField',
+          {
+            gridId: view.id,
+            field,
+            values: { hidden: true },
+            oldValues: { hidden: false },
+          }
+        )
       } catch (error) {
         notifyIf(error, 'view')
       }
     },
     startDragging(event, field) {
+      if (this.readOnly) {
+        return
+      }
+
       event.preventDefault()
       this.$emit('dragging', { field, event })
     },

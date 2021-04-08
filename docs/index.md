@@ -42,8 +42,10 @@ Everything related to contributing and developing for Baserow.
   directories in the Baserow repository explained.
 * [Tools](./development/tools.md): The tools (flake8, pytest, eslint, etc) and how to 
   use them. 
-* [Code quality](./development/code-quality.md): More information about the the code 
-  style, quality, choices we made, and how we enforce them.
+* [Code quality](./development/code-quality.md): More information about the code style,
+  quality, choices we made, and how we enforce them.
+* [Create a template](./development/create-a-template.md): Create a template that can
+  be previewed and installed by others.
 
 ## Plugins
 

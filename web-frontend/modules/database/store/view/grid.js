@@ -336,7 +336,7 @@ export const actions = {
    */
   fetchByScrollTop(
     { commit, getters, dispatch },
-    { gridId, scrollTop, windowHeight }
+    { gridId, scrollTop, windowHeight, fields, primary }
   ) {
     commit('SET_LAST_GRID_ID', gridId)
 
@@ -458,7 +458,7 @@ export const actions = {
             scrollTop: null,
             windowHeight: null,
           })
-          dispatch('updateSearch', {})
+          dispatch('updateSearch', { fields, primary })
           lastRequest = null
         })
         .catch((error) => {
@@ -544,14 +544,23 @@ export const actions = {
    * of calls. Therefore it will dispatch the related actions, but only every 100
    * milliseconds to prevent calling the actions who do a lot of calculating a lot.
    */
-  fetchByScrollTopDelayed({ dispatch }, { gridId, scrollTop, windowHeight }) {
+  fetchByScrollTopDelayed(
+    { dispatch },
+    { gridId, scrollTop, windowHeight, fields, primary }
+  ) {
     const fire = (scrollTop, windowHeight) => {
       lastFire = new Date().getTime()
       if (scrollTop === lastScrollTop) {
         return
       }
       lastScrollTop = scrollTop
-      dispatch('fetchByScrollTop', { gridId, scrollTop, windowHeight })
+      dispatch('fetchByScrollTop', {
+        gridId,
+        scrollTop,
+        windowHeight,
+        fields,
+        primary,
+      })
       dispatch('visibleByScrollTop', { scrollTop, windowHeight })
     }
 
@@ -569,7 +578,14 @@ export const actions = {
   /**
    * Fetches an initial set of rows and adds that data to the store.
    */
-  async fetchInitial({ dispatch, commit, getters }, { gridId }) {
+  async fetchInitial(
+    { dispatch, commit, getters },
+    { gridId, fields, primary }
+  ) {
+    commit('SET_SEARCH', {
+      activeSearchTerm: '',
+      hideRowsNotMatchingSearch: true,
+    })
     commit('SET_LAST_GRID_ID', gridId)
 
     const limit = getters.getBufferRequestSize * 2
@@ -600,7 +616,7 @@ export const actions = {
       top: 0,
     })
     commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
-    dispatch('updateSearch', {})
+    dispatch('updateSearch', { fields, primary })
   },
   /**
    * Refreshes the current state with fresh data. It keeps the scroll offset the same
@@ -608,7 +624,7 @@ export const actions = {
    * update search highlighting if a new activeSearchTerm and hideRowsNotMatchingSearch
    * are provided in the refreshEvent.
    */
-  refresh({ dispatch, commit, getters }, { gridId }) {
+  refresh({ dispatch, commit, getters }, { gridId, fields, primary }) {
     if (lastRefreshRequest !== null) {
       lastRefreshRequestSource.cancel('Cancelled in favor of new request')
     }
@@ -658,7 +674,7 @@ export const actions = {
           bufferStartIndex: offset,
           bufferLimit: data.results.length,
         })
-        dispatch('updateSearch', {})
+        dispatch('updateSearch', { fields, primary })
         lastRefreshRequest = null
       })
       .catch((error) => {
@@ -675,13 +691,10 @@ export const actions = {
    * Triggered when a row has been changed, or has a pending change in the provided
    * overrides.
    */
-  onRowChange(
-    { dispatch },
-    { view, row, fields, primary = null, overrides = {} }
-  ) {
+  onRowChange({ dispatch }, { view, row, fields, primary, overrides = {} }) {
     dispatch('updateMatchFilters', { view, row, fields, primary, overrides })
     dispatch('updateMatchSortings', { view, row, fields, primary, overrides })
-    dispatch('updateSearchMatchesForRow', { row, overrides })
+    dispatch('updateSearchMatchesForRow', { row, fields, primary, overrides })
   },
   /**
    * Checks if the given row still matches the given view filters. The row's
@@ -716,6 +729,8 @@ export const actions = {
   updateSearch(
     { commit, dispatch, getters, state },
     {
+      fields,
+      primary = null,
       activeSearchTerm = state.activeSearchTerm,
       hideRowsNotMatchingSearch = state.hideRowsNotMatchingSearch,
       refreshMatchesOnClient = true,
@@ -724,7 +739,7 @@ export const actions = {
     commit('SET_SEARCH', { activeSearchTerm, hideRowsNotMatchingSearch })
     if (refreshMatchesOnClient) {
       getters.getAllRows.forEach((row) =>
-        dispatch('updateSearchMatchesForRow', { row })
+        dispatch('updateSearchMatchesForRow', { row, fields, primary })
       )
     }
   },
@@ -735,13 +750,17 @@ export const actions = {
    */
   updateSearchMatchesForRow(
     { commit, getters, rootGetters },
-    { row, overrides }
+    { row, fields, primary = null, overrides }
   ) {
+    if (fields === undefined || primary === null) {
+      throw new Error('FIELDS OR PRIMARY CANT BE NULL @TODO')
+    }
+
     const rowSearchMatches = calculateSingleRowSearchMatches(
       row,
       getters.getActiveSearchTerm,
       getters.isHidingRowsNotMatchingSearch,
-      rootGetters['field/getAllWithPrimary'],
+      [primary, ...fields],
       this.$registry,
       overrides
     )
@@ -754,7 +773,7 @@ export const actions = {
    * actually belong to the row to do some preliminary checks.
    */
   updateMatchSortings(
-    { commit, getters, rootGetters },
+    { commit, getters },
     { view, row, fields, primary = null, overrides = {} }
   ) {
     const values = JSON.parse(JSON.stringify(row))
@@ -803,12 +822,13 @@ export const actions = {
    * which will be added to the store. Only if the request fails the row is removed.
    */
   async create(
-    { commit, getters, rootGetters, dispatch },
-    { view, table, fields, values = {}, before = null }
+    { commit, getters, dispatch },
+    { view, table, fields, primary, values = {}, before = null }
   ) {
     // Fill the not provided values with the empty value of the field type so we can
     // immediately commit the created row to the state.
-    fields.forEach((field) => {
+    const allFields = [primary].concat(fields)
+    allFields.forEach((field) => {
       const name = `field_${field.id}`
       if (!(name in values)) {
         const fieldType = this.$registry.get('field', field._.type.type)
@@ -849,7 +869,7 @@ export const actions = {
       windowHeight: null,
     })
 
-    dispatch('onRowChange', { view, row, fields })
+    dispatch('onRowChange', { view, row, fields, primary })
 
     try {
       const { data } = await RowService(this.$client).create(
@@ -922,13 +942,13 @@ export const actions = {
    */
   async delete(
     { commit, dispatch, getters },
-    { table, grid, row, getScrollTop }
+    { table, grid, row, fields, primary, getScrollTop }
   ) {
     commit('SET_ROW_LOADING', { row, value: true })
 
     try {
       await RowService(this.$client).delete(table.id, row.id)
-      dispatch('forceDelete', { grid, row, getScrollTop })
+      dispatch('forceDelete', { grid, row, fields, primary, getScrollTop })
     } catch (error) {
       commit('SET_ROW_LOADING', { row, value: false })
       throw error
@@ -942,7 +962,7 @@ export const actions = {
    */
   forceDelete(
     { commit, dispatch, getters },
-    { grid, row, getScrollTop, moved = false }
+    { grid, row, fields, primary, getScrollTop, moved = false }
   ) {
     if (moved === 'up') {
       commit('DELETE_ROW_MOVED_UP', row.id)
@@ -961,6 +981,8 @@ export const actions = {
       gridId: grid.id,
       scrollTop,
       windowHeight,
+      fields,
+      primary,
     })
     dispatch('visibleByScrollTop', { scrollTop, windowHeight })
   },
@@ -1102,7 +1124,7 @@ export const actions = {
   ) {
     const rowShouldBeHidden = !row._.matchFilters || !row._.matchSearch
     if (row._.selectedBy.length === 0 && rowShouldBeHidden) {
-      dispatch('forceDelete', { grid, row, getScrollTop })
+      dispatch('forceDelete', { grid, row, fields, primary, getScrollTop })
       return
     }
 
@@ -1125,7 +1147,14 @@ export const actions = {
         getters.isLast(row.id) && getters.getBufferEndIndex < getters.getCount
       if (up || down) {
         const moved = up ? 'up' : 'down'
-        dispatch('forceDelete', { grid, row, getScrollTop, moved })
+        dispatch('forceDelete', {
+          grid,
+          row,
+          fields,
+          primary,
+          getScrollTop,
+          moved,
+        })
       }
     }
   },

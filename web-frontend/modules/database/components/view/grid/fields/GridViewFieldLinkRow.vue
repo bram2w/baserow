@@ -16,6 +16,7 @@
           {{ item.value || 'unnamed row ' + item.id }}
         </span>
         <a
+          v-if="!readOnly"
           class="grid-field-link-row__remove"
           @click.prevent="removeValue($event, value, item.id)"
         >
@@ -23,6 +24,7 @@
         </a>
       </div>
       <a
+        v-if="!readOnly"
         class="grid-field-link-row__item grid-field-link-row__item--link"
         @click.prevent="showModal()"
       >
@@ -87,6 +89,10 @@ export default {
       return linkRowField.methods.removeValue.call(this, event, value, id)
     },
     showModal() {
+      if (this.readOnly) {
+        return
+      }
+
       this.modalOpen = true
       this.$refs.selectModal.show()
     },

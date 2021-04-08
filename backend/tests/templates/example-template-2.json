@@ -1,0 +1,220 @@
+{
+  "baserow_template_version": 1,
+  "name": "Example template",
+  "icon": "file",
+  "keywords": ["Example", "Template", "For", "Search"],
+  "categories": ["Test category 1"],
+  "export": [
+    {
+      "id": 2,
+      "name": "Event marketing",
+      "order": 1,
+      "type": "database",
+      "tables": [
+        {
+          "id": 3,
+          "name": "Customers",
+          "order": 1,
+          "fields": [
+            {
+              "id": 8,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 9,
+              "type": "text",
+              "name": "Last name",
+              "order": 1,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 10,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 2,
+              "primary": false
+            },
+            {
+              "id": 11,
+              "type": "boolean",
+              "name": "Active",
+              "order": 3,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 3,
+              "type": "grid",
+              "name": "Grid",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 11,
+                  "field_id": 8,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 12,
+                  "field_id": 9,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 8,
+                  "field_id": 10,
+                  "width": 400,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 9,
+                  "field_id": 11,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_8": "Elon",
+              "field_9": "Musk",
+              "field_10": null,
+              "field_11": "true"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_8": "Bill",
+              "field_9": "Gates",
+              "field_10": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce dignissim, urna eget rutrum sollicitudin, sapien diam interdum nisi, quis malesuada nibh eros a est.",
+              "field_11": "false"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_8": "Mark",
+              "field_9": "Zuckerburg",
+              "field_10": null,
+              "field_11": "true"
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_8": "Jeffrey",
+              "field_9": "Bezos",
+              "field_10": null,
+              "field_11": "true"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "name": "Projects",
+          "order": 2,
+          "fields": [
+            {
+              "id": 12,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 13,
+              "type": "date",
+              "name": "Started",
+              "order": 1,
+              "primary": false,
+              "date_format": "EU",
+              "date_include_time": false,
+              "date_time_format": "24"
+            },
+            {
+              "id": 14,
+              "type": "boolean",
+              "name": "Active",
+              "order": 2,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 4,
+              "type": "grid",
+              "name": "Grid",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 13,
+                  "field_id": 12,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 14,
+                  "field_id": 13,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 10,
+                  "field_id": 14,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_12": "Tesla",
+              "field_13": "2020-06-01",
+              "field_14": "true"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_12": "SpaceX",
+              "field_13": null,
+              "field_14": "false"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_12": "Amazon",
+              "field_13": "2018-01-01",
+              "field_14": "false"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

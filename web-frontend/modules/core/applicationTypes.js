@@ -24,14 +24,6 @@ export class ApplicationType extends Registerable {
   }
 
   /**
-   * Must return the route name where the application can navigate to when the
-   * application is selected.
-   */
-  getRouteName() {
-    return null
-  }
-
-  /**
    * The form component that will be rendered when creating a new instance of
    * this application. By default the ApplicationForm component is returned, but
    * this only contains a name field. If custom fields are required upon
@@ -42,21 +34,39 @@ export class ApplicationType extends Registerable {
   }
 
   /**
-   * The sidebar component that will be rendered when an application instance
-   * is selected. By default no component will rendered. This could be used for
-   * example to render a list of tables that belong to a database.
+   * The sidebar component will be rendered in the sidebar if the application is
+   * in the selected group. All the applications of a group are listed in the
+   * sidebar and this component should give the user the possibility to select
+   * that application.
    */
-  getSelectedSidebarComponent() {
+  getSidebarComponent() {
     return null
   }
 
   /**
-   * A user can open a small context menu related to the application. He might need
-   * this for example for changing the name or to delete the application. Optionally
-   * extra options can be added unique per application type by providing a component
-   * that will be added to the context menu.
+   * The sidebar component that will be rendered in the sidebar of the templates
+   * modal. It should represent an application that is in the template and should
+   * also give the possibility to select that application.
    */
-  getContextComponent() {
+  getTemplateSidebarComponent() {
+    return null
+  }
+
+  /**
+   * When an application is selected in the templates modal, it must show a
+   * preview. This method should return a component that shows this preview if
+   * this application is selected.
+   */
+  getTemplatesPageComponent() {
+    return null
+  }
+
+  /**
+   * Should return an object that will be passed as property into the component
+   * returned by the `getTemplatesPageComponent` method. It can for example
+   * contain the selected application id.
+   */
+  getTemplatePage(application) {
     return null
   }
 
@@ -87,7 +97,6 @@ export class ApplicationType extends Registerable {
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
-    this.routeName = this.getRouteName()
 
     if (this.type === null) {
       throw new Error('The type name of an application type must be set.')
@@ -109,7 +118,7 @@ export class ApplicationType extends Registerable {
       iconClass: this.iconClass,
       name: this.name,
       routeName: this.routeName,
-      hasSelectedSidebarComponent: this.getSelectedSidebarComponent() !== null,
+      hasSidebarComponent: this.getSidebarComponent() !== null,
     }
   }
 

@@ -3,7 +3,10 @@
     <div class="grid-field-boolean">
       <div
         class="grid-field-boolean__checkbox"
-        :class="{ active: value }"
+        :class="{
+          active: value,
+          'grid-field-boolean__checkbox--read-only': readOnly,
+        }"
         @click="toggle(value)"
       >
         <i class="fas fa-check grid-field-boolean__checkbox-icon"></i>
@@ -32,6 +35,10 @@ export default {
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     toggle(value) {
+      if (this.readOnly) {
+        return
+      }
+
       const oldValue = !!value
       const newValue = !value
       this.$emit('update', newValue, oldValue)

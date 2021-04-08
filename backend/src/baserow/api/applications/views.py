@@ -2,7 +2,7 @@ from django.db import transaction
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -80,6 +80,12 @@ class AllApplicationsView(APIView):
 class ApplicationsView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+
+        return super().get_permissions()
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -94,9 +100,10 @@ class ApplicationsView(APIView):
         operation_id='list_applications',
         description=(
             'Lists all the applications of the group related to the provided '
-            '`group_id` parameter if the authorized user is in that group. The '
-            'properties that belong to the application can differ per type. An '
-            'application always belongs to a single group.'
+            '`group_id` parameter if the authorized user is in that group. If the'
+            'group is related to a template, then this endpoint will be publicly '
+            'accessible. The properties that belong to the application can differ per '
+            'type. An application always belongs to a single group.'
         ),
         responses={
             200: PolymorphicMappingSerializer(
@@ -120,7 +127,7 @@ class ApplicationsView(APIView):
         """
 
         group = CoreHandler().get_group(group_id)
-        group.has_user(request.user, raise_error=True)
+        group.has_user(request.user, raise_error=True, allow_if_template=True)
 
         applications = Application.objects.select_related(
             'content_type', 'group'

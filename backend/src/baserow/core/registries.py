@@ -1,6 +1,6 @@
 from .registry import (
     Instance, Registry, ModelInstanceMixin, ModelRegistryMixin, APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin
+    APIUrlsInstanceMixin, ImportExportMixin
 )
 from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
 
@@ -107,7 +107,8 @@ class PluginRegistry(APIUrlsRegistryMixin, Registry):
         return urls
 
 
-class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, Instance):
+class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixin,
+                      Instance):
     """
     This abstract class represents a custom application that can be added to the
     application registry. It must be extended so customisation can be done. Each
@@ -149,6 +150,52 @@ class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, Instance):
         :param application: The application model instance that needs to be deleted.
         :type application: Application
         """
+
+    def export_serialized(self, application):
+        """
+        Exports the application to a serialized dict that can be imported by the
+        `import_serialized` method. The dict is JSON serializable.
+
+        :param application: The application that must be exported.
+        :type application: Application
+        :return: The exported and serialized application.
+        :rtype: dict
+        """
+
+        return {
+            'id': application.id,
+            'name': application.name,
+            'order': application.order,
+            'type': self.type
+        }
+
+    def import_serialized(self, group, serialized_values, id_mapping):
+        """
+        Imports the exported serialized application by the `export_serialized` as a new
+        application to a group.
+
+        :param group: The group that the application must be added to.
+        :type group: Group
+        :param serialized_values: The exported serialized values by the
+            `export_serialized` method.
+        :type serialized_values: dict`
+        :param id_mapping: The map of exported ids to newly created ids that must be
+            updated when a new instance has been created.
+        :type id_mapping: dict
+        :return: The newly created application.
+        :rtype: Application
+        """
+
+        if 'applications' not in id_mapping:
+            id_mapping['applications'] = {}
+
+        serialized_copy = serialized_values.copy()
+        application_id = serialized_copy.pop('id')
+        serialized_copy.pop('type')
+        application = self.model_class.objects.create(group=group, **serialized_copy)
+        id_mapping['applications'][application_id] = application.id
+
+        return application
 
 
 class ApplicationTypeRegistry(APIUrlsRegistryMixin, ModelRegistryMixin, Registry):

@@ -41,7 +41,7 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import DeleteTableModal from './DeleteTableModal'
+import DeleteTableModal from '@baserow/modules/database/components/table/DeleteTableModal'
 
 export default {
   name: 'SidebarItem',

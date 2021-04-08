@@ -94,6 +94,10 @@ export default {
      * Method that can be called to initiate the edit state.
      */
     edit(value = null, event = null) {
+      if (this.readOnly) {
+        return
+      }
+
       this.editing = true
       this.copy = value === null ? this.value : value
       this.afterEdit(event)

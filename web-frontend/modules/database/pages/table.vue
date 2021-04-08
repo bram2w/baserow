@@ -1,112 +1,29 @@
 <template>
-  <div>
-    <header class="layout__col-2-1 header">
-      <div v-show="tableLoading" class="header__loading"></div>
-      <ul v-if="!tableLoading" class="header__filter">
-        <li class="header__filter-item header__filter-item--grids">
-          <a
-            ref="viewsSelectToggle"
-            class="header__filter-link"
-            @click="
-              $refs.viewsContext.toggle(
-                $refs.viewsSelectToggle,
-                'bottom',
-                'left',
-                4
-              )
-            "
-          >
-            <span v-if="hasSelectedView">
-              <i
-                class="header__filter-icon header-filter-icon--view fas"
-                :class="'fa-' + view._.type.iconClass"
-              ></i>
-              {{ view.name }}
-            </span>
-            <span v-else>
-              <i
-                class="header__filter-icon header-filter-icon-no-choice fas fa-caret-square-down"
-              ></i>
-              Choose view
-            </span>
-          </a>
-          <ViewsContext ref="viewsContext" :table="table"></ViewsContext>
-        </li>
-        <li
-          v-if="hasSelectedView && view._.type.canFilter"
-          class="header__filter-item"
-        >
-          <ViewFilter
-            :view="view"
-            :fields="fields"
-            :primary="primary"
-            @changed="refresh()"
-          ></ViewFilter>
-        </li>
-        <li
-          v-if="hasSelectedView && view._.type.canSort"
-          class="header__filter-item"
-        >
-          <ViewSort
-            :view="view"
-            :fields="fields"
-            :primary="primary"
-            @changed="refresh()"
-          ></ViewSort>
-        </li>
-      </ul>
-      <component
-        :is="getViewHeaderComponent(view)"
-        v-if="hasSelectedView"
-        :database="database"
-        :table="table"
-        :view="view"
-        :fields="fields"
-        :primary="primary"
-        @refresh="refresh"
-      />
-    </header>
-    <div class="layout__col-2-2 content">
-      <component
-        :is="getViewComponent(view)"
-        v-if="hasSelectedView && !tableLoading"
-        ref="view"
-        :database="database"
-        :table="table"
-        :view="view"
-        :fields="fields"
-        :primary="primary"
-        @refresh="refresh"
-      />
-      <div v-if="viewLoading" class="loading-overlay"></div>
-    </div>
-  </div>
+  <Table
+    :database="database"
+    :table="table"
+    :fields="fields"
+    :primary="primary"
+    :views="views"
+    :view="view"
+    :table-loading="tableLoading"
+    store-prefix="page/"
+    @selected-view="selectedView"
+  ></Table>
 </template>
 
 <script>
 import { mapState } from 'vuex'
 
-import {
-  RefreshCancelledError,
-  StoreItemLookupError,
-} from '@baserow/modules/core/errors'
-import { notifyIf } from '@baserow/modules/core/utils/error'
-import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
-import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
-import ViewSort from '@baserow/modules/database/components/view/ViewSort'
-import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
+import Table from '@baserow/modules/database/components/table/Table'
+import { StoreItemLookupError } from '@baserow/modules/core/errors'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
  * will load the correct components into the header and body.
  */
 export default {
-  components: {
-    ViewsContext,
-    ViewFilter,
-    ViewSort,
-    ViewSearch,
-  },
+  components: { Table },
   /**
    * When the user leaves to another page we want to unselect the selected table. This
    * way it will not be highlighted the left sidebar.
@@ -158,6 +75,7 @@ export default {
     // the data.
     data.fields = store.getters['field/getAll']
     data.primary = store.getters['field/getPrimary']
+    data.view = undefined
 
     // Because we do not have a dashboard for the table yet we're going to redirect to
     // the first available view.
@@ -177,7 +95,7 @@ export default {
         // It might be possible that the view also has some stores that need to be
         // filled with initial data so we're going to call the fetch function here.
         const type = app.$registry.get('view', view.type)
-        await type.fetch({ store }, view)
+        await type.fetch({ store }, view, data.fields, data.primary, 'page/')
       } catch (e) {
         // In case of a network error we want to fail hard.
         if (e.response === undefined && !(e instanceof StoreItemLookupError)) {
@@ -190,28 +108,12 @@ export default {
 
     return data
   },
-  data() {
-    return {
-      // Shows a small spinning loading animation when the view is being refreshed.
-      viewLoading: false,
-    }
-  },
   head() {
     return {
       title: (this.view ? this.view.name + ' - ' : '') + this.table.name,
     }
   },
   computed: {
-    /**
-     * Indicates if there is a selected view by checking if the view object has been
-     * populated.
-     */
-    hasSelectedView() {
-      return (
-        this.view !== undefined &&
-        Object.prototype.hasOwnProperty.call(this.view, '_')
-      )
-    },
     ...mapState({
       // We need the tableLoading state to show a small loading animation when
       // switching between views. Because some of the data will be populated by
@@ -220,6 +122,7 @@ export default {
       // renders at the same time. That is why we show this loading animation. Store
       // changes are always rendered right away.
       tableLoading: (state) => state.table.loading,
+      views: (state) => state.view.items,
     }),
   },
   /**
@@ -230,60 +133,19 @@ export default {
   beforeCreate() {
     this.$store.dispatch('table/setLoading', false)
   },
-  beforeMount() {
-    this.$bus.$on('table-refresh', this.refresh)
-  },
   mounted() {
     this.$realtime.subscribe('table', { table_id: this.table.id })
   },
   beforeDestroy() {
-    this.$bus.$off('table-refresh', this.refresh)
     this.$realtime.subscribe(null)
   },
   methods: {
-    getViewComponent(view) {
-      const type = this.$registry.get('view', view.type)
-      return type.getComponent()
-    },
-    getViewHeaderComponent(view) {
-      const type = this.$registry.get('view', view.type)
-      return type.getHeaderComponent()
-    },
-    /**
-     * Refreshes the whole view. All data will be reloaded and it will visually look
-     * the same as seeing the view for the first time.
-     */
-    async refresh(event) {
-      this.viewLoading = true
-      const type = this.$registry.get('view', this.view.type)
-      try {
-        await type.refresh({ store: this.$store }, this.view)
-      } catch (error) {
-        if (error instanceof RefreshCancelledError) {
-          // Multiple refresh calls have been made and the view has indicated that
-          // this particular one should be cancelled. However we do not want to
-          // set viewLoading back to false as the other non cancelled call/s might
-          // still be loading.
-          return
-        } else {
-          notifyIf(error)
-        }
-      }
-      if (
-        Object.prototype.hasOwnProperty.call(this.$refs, 'view') &&
-        Object.prototype.hasOwnProperty.call(this.$refs.view, 'refresh')
-      ) {
-        await this.$refs.view.refresh()
-      }
-      // It might be possible that the event has a callback that needs to be called
-      // after the rows are refreshed. This is for example the case when a field has
-      // changed. In that case we want to update the field in the store after the rows
-      // have been refreshed to prevent incompatible values in field types.
-      if (event && Object.prototype.hasOwnProperty.call(event, 'callback')) {
-        await event.callback()
-      }
-      this.$nextTick(() => {
-        this.viewLoading = false
+    selectedView(view) {
+      this.$nuxt.$router.push({
+        name: 'database-table',
+        params: {
+          viewId: view.id,
+        },
       })
     },
   },

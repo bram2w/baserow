@@ -1,10 +1,9 @@
-.grid-field-file__cell {
-  &.active {
-    bottom: auto;
-    right: auto;
-    height: auto;
-    min-width: calc(100% + 4px);
-  }
+.grid-field-file__cell.active {
+  bottom: auto;
+  right: auto;
+  height: auto;
+  min-width: calc(100% + 4px);
+  min-height: calc(100% + 4px);
 }
 
 .grid-field-file__dragging {

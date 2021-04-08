@@ -10,6 +10,8 @@
       :fields="fields"
       :field-widths="fieldWidths"
       :include-row-details="includeRowDetails"
+      :read-only="readOnly"
+      :store-prefix="storePrefix"
       v-on="$listeners"
     ></GridViewRow>
   </div>
@@ -43,6 +45,10 @@ export default {
       required: false,
       default: () => false,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
   },
   computed: {
     fieldWidths() {
@@ -52,10 +58,15 @@ export default {
       })
       return fieldWidths
     },
-    ...mapGetters({
-      rows: 'view/grid/getRows',
-      rowsTop: 'view/grid/getRowsTop',
-    }),
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        rows: this.$options.propsData.storePrefix + 'view/grid/getRows',
+        rowsTop: this.$options.propsData.storePrefix + 'view/grid/getRowsTop',
+      }),
+    }
   },
 }
 </script>

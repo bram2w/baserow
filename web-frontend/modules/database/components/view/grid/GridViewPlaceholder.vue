@@ -57,9 +57,16 @@ export default {
       }
       return width
     },
-    ...mapGetters({
-      placeholderHeight: 'view/grid/getPlaceholderHeight',
-    }),
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        placeholderHeight:
+          this.$options.propsData.storePrefix +
+          'view/grid/getPlaceholderHeight',
+      }),
+    }
   },
 }
 </script>

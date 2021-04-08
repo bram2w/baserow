@@ -20,6 +20,10 @@ export default {
       type: Number,
       required: true,
     },
+    storePrefix: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
@@ -47,10 +51,13 @@ export default {
       const difference = event.clientX - this.mouseStart
       const newWidth = Math.max(this.startWidth + difference, 100)
 
-      this.$store.dispatch('view/grid/setFieldOptionsOfField', {
-        field: this.field,
-        values: { width: newWidth },
-      })
+      this.$store.dispatch(
+        this.storePrefix + 'view/grid/setFieldOptionsOfField',
+        {
+          field: this.field,
+          values: { width: newWidth },
+        }
+      )
     },
     async up(event) {
       event.preventDefault()
@@ -66,12 +73,15 @@ export default {
       }
 
       try {
-        await this.$store.dispatch('view/grid/updateFieldOptionsOfField', {
-          gridId: this.grid.id,
-          field: this.field,
-          values: { width: newWidth },
-          oldValues: { width: this.startWidth },
-        })
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateFieldOptionsOfField',
+          {
+            gridId: this.grid.id,
+            field: this.field,
+            values: { width: newWidth },
+            oldValues: { width: this.startWidth },
+          }
+        )
       } catch (error) {
         notifyIf(error, 'field')
       }

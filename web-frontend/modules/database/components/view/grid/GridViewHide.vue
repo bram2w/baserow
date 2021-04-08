@@ -15,6 +15,8 @@
       ref="context"
       :view="view"
       :fields="fields"
+      :read-only="readOnly"
+      :store-prefix="storePrefix"
     ></GridViewHideContext>
   </div>
 </template>
@@ -33,6 +35,14 @@ export default {
     },
     view: {
       type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    storePrefix: {
+      type: String,
       required: true,
     },
   },
@@ -56,9 +66,15 @@ export default {
         return `${numberOfHiddenFields} hidden fields`
       }
     },
-    ...mapGetters({
-      fieldOptions: 'view/grid/getAllFieldOptions',
-    }),
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        fieldOptions:
+          this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
+      }),
+    }
   },
 }
 </script>

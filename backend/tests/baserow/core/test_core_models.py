@@ -3,6 +3,8 @@ from pytz import timezone
 from freezegun import freeze_time
 from datetime import datetime
 
+from rest_framework.exceptions import NotAuthenticated
+
 from baserow.core.models import GroupUser, Group
 from baserow.core.exceptions import (
     UserNotInGroupError, UserInvalidGroupPermissionsError
@@ -45,6 +47,8 @@ def test_group_has_user(data_fixture):
     user = data_fixture.create_user()
     user_group = data_fixture.create_user_group(permissions='ADMIN')
     user_group_2 = data_fixture.create_user_group(permissions='MEMBER')
+    user_group_3 = data_fixture.create_user_group()
+    data_fixture.create_template(group=user_group_3.group)
 
     assert user_group.group.has_user(user_group.user)
     assert not user_group.group.has_user(user)
@@ -74,6 +78,16 @@ def test_group_has_user(data_fixture):
 
     user_group.group.has_user(user_group.user, 'ADMIN', raise_error=True)
     user_group_2.group.has_user(user_group_2.user, 'MEMBER', raise_error=True)
+
+    assert user_group_3.group.has_user(None) is False
+    assert user_group_2.group.has_user(None, allow_if_template=True) is False
+    assert user_group_3.group.has_user(None, allow_if_template=True) is True
+
+    with pytest.raises(NotAuthenticated):
+        user_group_3.group.has_user(None, raise_error=True)
+
+    with pytest.raises(NotAuthenticated):
+        user_group_2.group.has_user(None, raise_error=True, allow_if_template=True)
 
 
 @pytest.mark.django_db

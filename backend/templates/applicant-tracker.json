@@ -1,0 +1,939 @@
+{
+  "baserow_template_version": 1,
+  "name": "Applicant tracker",
+  "icon": "user-plus",
+  "keywords": ["applicant", "vacancy", "job", "offers", "candidates"],
+  "categories": ["Local Business", "Human Resources"],
+  "export": [
+    {
+      "id": 9,
+      "name": "Applicant Tracker",
+      "order": 1,
+      "type": "database",
+      "tables": [
+        {
+          "id": 27,
+          "name": "Applicants",
+          "order": 1,
+          "fields": [
+            {
+              "id": 151,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 160,
+              "type": "single_select",
+              "name": "Stage",
+              "order": 1,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 48,
+                  "value": "Make appointment",
+                  "color": "light-gray",
+                  "order": 0
+                },
+                {
+                  "id": 49,
+                  "value": "Interviewing",
+                  "color": "light-orange",
+                  "order": 1
+                },
+                {
+                  "id": 50,
+                  "value": "Decision needed",
+                  "color": "light-blue",
+                  "order": 2
+                },
+                {
+                  "id": 51,
+                  "value": "Hired",
+                  "color": "light-green",
+                  "order": 3
+                },
+                {
+                  "id": 63,
+                  "value": "Rejected",
+                  "color": "light-red",
+                  "order": 4
+                }
+              ]
+            },
+            {
+              "id": 161,
+              "type": "link_row",
+              "name": "Applying for",
+              "order": 2,
+              "primary": false,
+              "link_row_table_id": 28,
+              "link_row_related_field_id": 162
+            },
+            {
+              "id": 163,
+              "type": "email",
+              "name": "Email address",
+              "order": 3,
+              "primary": false
+            },
+            {
+              "id": 164,
+              "type": "phone_number",
+              "name": "Phone number",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 165,
+              "type": "link_row",
+              "name": "Phone interviewer",
+              "order": 5,
+              "primary": false,
+              "link_row_table_id": 29,
+              "link_row_related_field_id": 166
+            },
+            {
+              "id": 167,
+              "type": "single_select",
+              "name": "Phone interview score",
+              "order": 6,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 52,
+                  "value": "No hire",
+                  "color": "light-red",
+                  "order": 0
+                },
+                {
+                  "id": 53,
+                  "value": "Worth consideration",
+                  "color": "light-orange",
+                  "order": 1
+                },
+                {
+                  "id": 54,
+                  "value": "Good",
+                  "color": "light-blue",
+                  "order": 2
+                },
+                {
+                  "id": 55,
+                  "value": "Must hire",
+                  "color": "light-green",
+                  "order": 3
+                }
+              ]
+            },
+            {
+              "id": 168,
+              "type": "long_text",
+              "name": "Phone interview notes",
+              "order": 7,
+              "primary": false
+            },
+            {
+              "id": 169,
+              "type": "date",
+              "name": "Phone interview",
+              "order": 8,
+              "primary": false,
+              "date_format": "US",
+              "date_include_time": true,
+              "date_time_format": "12"
+            },
+            {
+              "id": 170,
+              "type": "date",
+              "name": "On-site interview",
+              "order": 9,
+              "primary": false,
+              "date_format": "US",
+              "date_include_time": true,
+              "date_time_format": "12"
+            },
+            {
+              "id": 171,
+              "type": "link_row",
+              "name": "On-site interview",
+              "order": 10,
+              "primary": false,
+              "link_row_table_id": 29,
+              "link_row_related_field_id": 172
+            },
+            {
+              "id": 173,
+              "type": "single_select",
+              "name": "On-site interview score",
+              "order": 11,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 56,
+                  "value": "No hire",
+                  "color": "light-red",
+                  "order": 0
+                },
+                {
+                  "id": 57,
+                  "value": "Worth consideration",
+                  "color": "light-orange",
+                  "order": 1
+                },
+                {
+                  "id": 58,
+                  "value": "Good",
+                  "color": "light-blue",
+                  "order": 2
+                },
+                {
+                  "id": 59,
+                  "value": "Must hire",
+                  "color": "light-green",
+                  "order": 3
+                }
+              ]
+            },
+            {
+              "id": 174,
+              "type": "long_text",
+              "name": "On-site interview notes",
+              "order": 12,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 36,
+              "type": "grid",
+              "name": "Participating candidates",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 10,
+                  "field_id": 160,
+                  "type": "single_select_not_equal",
+                  "value": "63"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 243,
+                  "field_id": 151,
+                  "width": 167,
+                  "hidden": false,
+                  "order": 8
+                },
+                {
+                  "id": 250,
+                  "field_id": 160,
+                  "width": 162,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 251,
+                  "field_id": 161,
+                  "width": 232,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 252,
+                  "field_id": 163,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 253,
+                  "field_id": 164,
+                  "width": 161,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 254,
+                  "field_id": 165,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 255,
+                  "field_id": 167,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 256,
+                  "field_id": 168,
+                  "width": 252,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 257,
+                  "field_id": 169,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 262,
+                  "field_id": 170,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 263,
+                  "field_id": 171,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 264,
+                  "field_id": 173,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 265,
+                  "field_id": 174,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            },
+            {
+              "id": 42,
+              "type": "grid",
+              "name": "All candidates",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 289,
+                  "field_id": 151,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 290,
+                  "field_id": 160,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 291,
+                  "field_id": 161,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 292,
+                  "field_id": 163,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 293,
+                  "field_id": 164,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 294,
+                  "field_id": 165,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 295,
+                  "field_id": 167,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 296,
+                  "field_id": 168,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 297,
+                  "field_id": 169,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 298,
+                  "field_id": 170,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 299,
+                  "field_id": 171,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 300,
+                  "field_id": 173,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 301,
+                  "field_id": 174,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 3,
+              "order": "1.00000000000000000000",
+              "field_151": "Davy Bartram",
+              "field_160": 63,
+              "field_161": [
+                6
+              ],
+              "field_163": "davy.bartram@email.com",
+              "field_164": "+310999888777",
+              "field_165": [
+                4
+              ],
+              "field_167": 52,
+              "field_168": "Refused to turn on his web-cam. So we decided not to move forward.",
+              "field_169": "2021-03-01T00:30:00+00:00",
+              "field_170": null,
+              "field_171": [],
+              "field_173": null,
+              "field_174": ""
+            },
+            {
+              "id": 4,
+              "order": "2.00000000000000000000",
+              "field_151": "Gerry Hanson",
+              "field_160": 51,
+              "field_161": [
+                5
+              ],
+              "field_163": "gerry.hanson@email.com",
+              "field_164": "+310666444555",
+              "field_165": [
+                5
+              ],
+              "field_167": 55,
+              "field_168": "Knew a lot about the subject at hand.",
+              "field_169": "2021-03-01T00:30:00+00:00",
+              "field_170": "2021-05-12T04:00:00+00:00",
+              "field_171": [
+                3,
+                5
+              ],
+              "field_173": 59,
+              "field_174": "Could present us with a great solution for our problem."
+            },
+            {
+              "id": 5,
+              "order": "3.00000000000000000000",
+              "field_151": "Egill Attaway",
+              "field_160": 49,
+              "field_161": [
+                4
+              ],
+              "field_163": "egill.attaway@email.com",
+              "field_164": "+310333444555",
+              "field_165": [
+                4
+              ],
+              "field_167": 53,
+              "field_168": "Might be a little bit to junior for this position, but still a very good match.",
+              "field_169": "2021-04-06T10:35:00+00:00",
+              "field_170": null,
+              "field_171": [],
+              "field_173": null,
+              "field_174": ""
+            },
+            {
+              "id": 6,
+              "order": "4.00000000000000000000",
+              "field_151": "Maxi McAfee",
+              "field_160": 49,
+              "field_161": [
+                4
+              ],
+              "field_163": "maxi.mcafee@email.com",
+              "field_164": "+310333444666",
+              "field_165": [
+                4
+              ],
+              "field_167": 54,
+              "field_168": "Checks all the boxes, but did not had a good personal click.",
+              "field_169": "2021-04-06T10:00:00+00:00",
+              "field_170": null,
+              "field_171": [],
+              "field_173": null,
+              "field_174": ""
+            },
+            {
+              "id": 7,
+              "order": "5.00000000000000000000",
+              "field_151": "Amira Day",
+              "field_160": 48,
+              "field_161": [
+                6
+              ],
+              "field_163": "amira.day@email.com",
+              "field_164": "",
+              "field_165": [],
+              "field_167": null,
+              "field_168": "",
+              "field_169": null,
+              "field_170": null,
+              "field_171": [],
+              "field_173": null,
+              "field_174": ""
+            },
+            {
+              "id": 8,
+              "order": "6.00000000000000000000",
+              "field_151": "Gus Lyon",
+              "field_160": 51,
+              "field_161": [
+                3
+              ],
+              "field_163": "gus.lyon@email.com",
+              "field_164": "+311333444222",
+              "field_165": [
+                6
+              ],
+              "field_167": 54,
+              "field_168": "Professional appearance and even suggested a couple of good ideas.",
+              "field_169": "2021-04-07T16:00:00+00:00",
+              "field_170": "2021-04-12T20:30:37+00:00",
+              "field_171": [
+                3,
+                6
+              ],
+              "field_173": 58,
+              "field_174": "Good match on personal level and good technical skills. This is a no brainer."
+            },
+            {
+              "id": 9,
+              "order": "7.00000000000000000000",
+              "field_151": "Trey Forrest",
+              "field_160": 50,
+              "field_161": [
+                6
+              ],
+              "field_163": "trey.forrest@email.com",
+              "field_164": "+312333444555",
+              "field_165": [
+                7
+              ],
+              "field_167": 53,
+              "field_168": "Was more a medoir level developer.",
+              "field_169": "2021-03-24T16:00:00+00:00",
+              "field_170": "2021-04-01T00:00:00+00:00",
+              "field_171": [
+                3,
+                7
+              ],
+              "field_173": 57,
+              "field_174": "We are probably going to reject him."
+            },
+            {
+              "id": 10,
+              "order": "8.00000000000000000000",
+              "field_151": "Thelma Everly",
+              "field_160": 63,
+              "field_161": [
+                5
+              ],
+              "field_163": "thelma.everly@email.com",
+              "field_164": "",
+              "field_165": [],
+              "field_167": null,
+              "field_168": "",
+              "field_169": null,
+              "field_170": null,
+              "field_171": [],
+              "field_173": null,
+              "field_174": ""
+            }
+          ]
+        },
+        {
+          "id": 28,
+          "name": "Positions",
+          "order": 2,
+          "fields": [
+            {
+              "id": 154,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 162,
+              "type": "link_row",
+              "name": "Applying for position",
+              "order": 1,
+              "primary": false,
+              "link_row_table_id": 27,
+              "link_row_related_field_id": 161
+            },
+            {
+              "id": 176,
+              "type": "boolean",
+              "name": "Filled",
+              "order": 2,
+              "primary": false
+            },
+            {
+              "id": 177,
+              "type": "long_text",
+              "name": "Description",
+              "order": 3,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 37,
+              "type": "grid",
+              "name": "All positions",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 246,
+                  "field_id": 154,
+                  "width": 242,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 258,
+                  "field_id": 162,
+                  "width": 302,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 266,
+                  "field_id": 176,
+                  "width": 118,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 267,
+                  "field_id": 177,
+                  "width": 320,
+                  "hidden": false,
+                  "order": 1
+                }
+              ]
+            },
+            {
+              "id": 43,
+              "type": "grid",
+              "name": "Open positions",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 11,
+                  "field_id": 176,
+                  "type": "boolean",
+                  "value": ""
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 302,
+                  "field_id": 154,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 303,
+                  "field_id": 162,
+                  "width": 317,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 304,
+                  "field_id": 176,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 305,
+                  "field_id": 177,
+                  "width": 307,
+                  "hidden": false,
+                  "order": 1
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 3,
+              "order": "1.00000000000000000000",
+              "field_154": "Junior full stack software engineer",
+              "field_162": [
+                8
+              ],
+              "field_176": "true",
+              "field_177": "Cras pulvinar feugiat arcu, vel vestibulum odio laoreet eget. Aliquam erat volutpat. Donec a ipsum justo. Proin sed blandit velit, nec iaculis sem. Duis eget magna quis enim auctor varius id eget ante."
+            },
+            {
+              "id": 6,
+              "order": "1.99999999999999999999",
+              "field_154": "Senior full stack software engineer",
+              "field_162": [
+                3,
+                7,
+                9
+              ],
+              "field_176": "false",
+              "field_177": "Nunc euismod massa et enim malesuada, a molestie felis vehicula. Duis aliquet ex et metus mattis, eu semper turpis placerat. Nam cursus elit ex. Pellentesque facilisis lectus ullamcorper lacinia feugiat."
+            },
+            {
+              "id": 4,
+              "order": "2.00000000000000000000",
+              "field_154": "Growth Hacker",
+              "field_162": [
+                5,
+                6
+              ],
+              "field_176": "false",
+              "field_177": "Phasellus commodo, justo quis hendrerit aliquet, ligula leo rhoncus nisi, nec consectetur velit justo fermentum ligula. Nullam venenatis gravida fringilla."
+            },
+            {
+              "id": 5,
+              "order": "3.00000000000000000000",
+              "field_154": "Customer Success manager",
+              "field_162": [
+                4,
+                10
+              ],
+              "field_176": "true",
+              "field_177": "Morbi vel diam et metus egestas lobortis tristique sit amet tortor. Nullam gravida dictum massa et cursus. Vestibulum ornare elit nec quam tristique mollis. Vivamus blandit viverra nisi lacinia elementum."
+            }
+          ]
+        },
+        {
+          "id": 29,
+          "name": "Interviewers",
+          "order": 3,
+          "fields": [
+            {
+              "id": 157,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 166,
+              "type": "link_row",
+              "name": "Phone applicants",
+              "order": 1,
+              "primary": false,
+              "link_row_table_id": 27,
+              "link_row_related_field_id": 165
+            },
+            {
+              "id": 172,
+              "type": "link_row",
+              "name": "On-site applicants",
+              "order": 2,
+              "primary": false,
+              "link_row_table_id": 27,
+              "link_row_related_field_id": 171
+            },
+            {
+              "id": 175,
+              "type": "single_select",
+              "name": "Role",
+              "order": 3,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 60,
+                  "value": "Developer",
+                  "color": "light-green",
+                  "order": 0
+                },
+                {
+                  "id": 61,
+                  "value": "Manager",
+                  "color": "light-orange",
+                  "order": 1
+                },
+                {
+                  "id": 62,
+                  "value": "CEO",
+                  "color": "light-blue",
+                  "order": 2
+                }
+              ]
+            }
+          ],
+          "views": [
+            {
+              "id": 38,
+              "type": "grid",
+              "name": "Grid",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 249,
+                  "field_id": 157,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 259,
+                  "field_id": 166,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 260,
+                  "field_id": 172,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 261,
+                  "field_id": 175,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 0
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 3,
+              "order": "1.00000000000000000000",
+              "field_157": "Toni MacDougall",
+              "field_166": [],
+              "field_172": [
+                8,
+                4,
+                9
+              ],
+              "field_175": 62
+            },
+            {
+              "id": 4,
+              "order": "2.00000000000000000000",
+              "field_157": "Amilia Durant",
+              "field_166": [
+                3,
+                5,
+                6
+              ],
+              "field_172": [],
+              "field_175": 61
+            },
+            {
+              "id": 5,
+              "order": "3.00000000000000000000",
+              "field_157": "Elena Nogueira",
+              "field_166": [
+                4
+              ],
+              "field_172": [
+                4
+              ],
+              "field_175": 61
+            },
+            {
+              "id": 6,
+              "order": "4.00000000000000000000",
+              "field_157": "Anand Walther",
+              "field_166": [
+                8
+              ],
+              "field_172": [
+                8
+              ],
+              "field_175": 60
+            },
+            {
+              "id": 7,
+              "order": "5.00000000000000000000",
+              "field_157": "Simran Tos",
+              "field_166": [
+                9
+              ],
+              "field_172": [
+                9
+              ],
+              "field_175": 60
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

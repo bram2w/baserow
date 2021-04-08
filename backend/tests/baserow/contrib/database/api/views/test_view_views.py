@@ -1,6 +1,8 @@
 import pytest
 
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
+)
 
 from django.shortcuts import reverse
 
@@ -66,6 +68,15 @@ def test_list_views(api_client, data_fixture):
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()['error'] == 'ERROR_TABLE_DOES_NOT_EXIST'
+
+    url = reverse('api:database:views:list', kwargs={'table_id': table_1.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    data_fixture.create_template(group=table_1.database.group)
+    url = reverse('api:database:views:list', kwargs={'table_id': table_1.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db
@@ -204,6 +215,10 @@ def test_create_view(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['error'] == 'ERROR_USER_NOT_IN_GROUP'
+
+    url = reverse('api:database:views:list', kwargs={'table_id': table_2.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
 
     response = api_client.post(
         reverse('api:database:views:list', kwargs={'table_id': table.id}),

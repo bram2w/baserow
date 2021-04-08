@@ -7,9 +7,11 @@ from django.core.exceptions import ValidationError
 
 from faker import Faker
 
+from baserow.core.handler import CoreHandler
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption, SingleSelectField
 from baserow.contrib.database.fields.field_types import SingleSelectFieldType
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.api.rows.serializers import (
@@ -647,3 +649,76 @@ def test_single_select_field_type_random_value(data_fixture):
     )
     random_choice_2 = SingleSelectFieldType().random_value(email_field, fake, cache)
     assert random_choice_2 is None
+
+
+@pytest.mark.django_db
+def test_import_export_single_select_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user, table=table, type_name='single_select', name='Single select',
+        select_options=[{'value': 'Option 1', 'color': 'blue'}]
+    )
+    select_option = field.select_options.all().first()
+    field_type = field_type_registry.get_by_model(field)
+    field_serialized = field_type.export_serialized(field)
+    id_mapping = {}
+    field_imported = field_type.import_serialized(
+        table,
+        field_serialized,
+        id_mapping
+    )
+
+    assert field_imported.select_options.all().count() == 1
+    imported_select_option = field_imported.select_options.all().first()
+    assert imported_select_option.id != select_option.id
+    assert imported_select_option.value == select_option.value
+    assert imported_select_option.color == select_option.color
+    assert imported_select_option.order == select_option.order
+
+
+@pytest.mark.django_db
+def test_get_set_export_serialized_value_single_select_field(data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    imported_group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(group=group)
+    table = data_fixture.create_database_table(database=database)
+    field = data_fixture.create_single_select_field(table=table)
+    option_a = data_fixture.create_select_option(field=field, value='A', color='green')
+    option_b = data_fixture.create_select_option(field=field, value='B', color='red')
+
+    core_handler = CoreHandler()
+
+    model = table.get_model()
+    model.objects.create()
+    model.objects.create(**{f'field_{field.id}_id': option_a.id})
+    model.objects.create(**{f'field_{field.id}_id': option_b.id})
+
+    exported_applications = core_handler.export_group_applications(group)
+    imported_applications, id_mapping = core_handler.import_application_to_group(
+        imported_group,
+        exported_applications
+    )
+    imported_database = imported_applications[0]
+    imported_table = imported_database.table_set.all()[0]
+    imported_field = imported_table.field_set.all().first().specific
+
+    assert imported_table.id != table.id
+    assert imported_field.id != field.id
+
+    imported_model = imported_table.get_model()
+    all = imported_model.objects.all()
+    assert len(all) == 3
+    imported_row_1 = all[0]
+    imported_row_2 = all[1]
+    imported_row_3 = all[2]
+
+    assert getattr(imported_row_1, f'field_{imported_field.id}') is None
+    assert getattr(imported_row_2, f'field_{imported_field.id}_id') != option_a.id
+    assert getattr(imported_row_2, f'field_{imported_field.id}').value == 'A'
+    assert getattr(imported_row_2, f'field_{imported_field.id}').color == 'green'
+    assert getattr(imported_row_3, f'field_{imported_field.id}_id') != option_b.id
+    assert getattr(imported_row_3, f'field_{imported_field.id}').value == 'B'
+    assert getattr(imported_row_3, f'field_{imported_field.id}').color == 'red'

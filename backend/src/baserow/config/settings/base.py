@@ -190,6 +190,7 @@ SPECTACULAR_SETTINGS = {
         {'name': 'User files'},
         {'name': 'Groups'},
         {'name': 'Group invitations'},
+        {'name': 'Templates'},
         {'name': 'Applications'},
         {'name': 'Database tables'},
         {'name': 'Database table fields'},
@@ -258,3 +259,11 @@ USER_THUMBNAILS = {
     'tiny': [None, 21],
     'small': [48, 48]
 }
+
+# The directory that contains the all the templates in JSON format. When for example
+# the `sync_templates` management command is called, then the templates in the
+# database will be synced with these files.
+APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, '../../../templates')
+# The template that must be selected when the user first opens the templates select
+# modal.
+DEFAULT_APPLICATION_TEMPLATE = 'project-management'

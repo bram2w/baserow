@@ -1,5 +1,6 @@
 <template>
   <Context ref="context">
+    <div class="context__menu-title">{{ group.name }} ({{ group.id }})</div>
     <ul class="context__menu">
       <li>
         <a @click="$emit('rename')">

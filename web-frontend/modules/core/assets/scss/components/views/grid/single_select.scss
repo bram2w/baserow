@@ -6,7 +6,7 @@
   width: 100%;
   user-select: none;
 
-  .grid-view__cell.active &:hover {
+  .grid-view__cell.active &:not(.grid-field-single-select--read-only):hover {
     cursor: pointer;
   }
 

@@ -5,6 +5,7 @@
       v-model="copy"
       type="text"
       class="input input--large field-long-text"
+      :disabled="readOnly"
       @focus="select()"
       @blur="unselect()"
     />

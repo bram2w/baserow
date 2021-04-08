@@ -37,7 +37,7 @@ describe('View Filter Tests', () => {
       }
     )
 
-    const row = store.getters['view/grid/getRow'](1)
+    const row = store.getters['page/view/grid/getRow'](1)
 
     await editFieldWithoutSavingNewValue(row, 'exactly_matching_string')
     expect(row._.matchFilters).toBe(true)
@@ -53,7 +53,11 @@ describe('View Filter Tests', () => {
     const fields = mockServer.createFields(application, table, [field])
 
     mockServer.createRows(gridView, fields, [row])
-    await store.dispatch('view/grid/fetchInitial', { gridId: 1 })
+    await store.dispatch('page/view/grid/fetchInitial', {
+      gridId: 1,
+      fields: [field],
+      primary: {},
+    })
     await store.dispatch('view/fetchAll', { id: 1 })
   }
 
@@ -74,7 +78,7 @@ describe('View Filter Tests', () => {
       }
     )
 
-    const row = store.getters['view/grid/getRow'](1)
+    const row = store.getters['page/view/grid/getRow'](1)
 
     await editFieldWithoutSavingNewValue(row, [createFile('test_file_name')])
     expect(row._.matchFilters).toBe(true)
@@ -92,7 +96,7 @@ describe('View Filter Tests', () => {
   })
 
   async function editFieldWithoutSavingNewValue(row, newValue) {
-    await store.dispatch('view/grid/updateMatchFilters', {
+    await store.dispatch('page/view/grid/updateMatchFilters', {
       view: store.getters['view/first'],
       fields: [],
       primary: {

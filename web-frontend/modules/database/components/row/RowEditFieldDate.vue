@@ -8,6 +8,7 @@
           type="text"
           class="input input--large"
           :placeholder="getDatePlaceholder(field)"
+          :disabled="readOnly"
           @keyup.enter="$refs.date.blur()"
           @keyup="updateDate(field, date)"
           @focus="focus($refs.dateContext, $event)"
@@ -21,6 +22,7 @@
         >
           <client-only>
             <date-picker
+              v-if="!readOnly"
               :inline="true"
               :monday-first="true"
               :use-utc="true"
@@ -41,6 +43,7 @@
           type="text"
           class="input input--large"
           :placeholder="getTimePlaceholder(field)"
+          :disabled="readOnly"
           @keyup.enter="$refs.time.blur()"
           @keyup="updateTime(field, time)"
           @focus="focus($refs.timeContext, $event)"
@@ -48,6 +51,7 @@
         />
         <i class="fas fa-clock"></i>
         <TimeSelectContext
+          v-if="!readOnly"
           ref="timeContext"
           :value="time"
           :hide-on-click-outside="false"

@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
+from rest_framework.exceptions import NotAuthenticated
+
 from baserow.core.user_files.models import UserFile
 
 from .managers import GroupQuerySet
@@ -50,7 +52,8 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
 
     objects = GroupQuerySet.as_manager()
 
-    def has_user(self, user, permissions=None, raise_error=False):
+    def has_user(self, user, permissions=None, raise_error=False,
+                 allow_if_template=False):
         """
         Checks if the provided user belongs to the group.
 
@@ -62,6 +65,9 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
         :param raise_error: If True an error will be raised when the user does not
             belong to the group or doesn't have the right permissions.
         :type raise_error: bool
+        :param allow_if_template: If true and if the group is related to a template,
+            then True is always returned and no exception will be raised.
+        :type allow_if_template: bool
         :raises UserNotInGroupError: If the user does not belong to the group.
         :raises UserInvalidGroupPermissionsError: If the user does belong to the group,
             but doesn't have the right permissions.
@@ -71,6 +77,14 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
 
         if permissions and not isinstance(permissions, list):
             permissions = [permissions]
+
+        if allow_if_template and self.template_set.all().exists():
+            return True
+        elif not bool(user and user.is_authenticated):
+            if raise_error:
+                raise NotAuthenticated()
+            else:
+                return False
 
         queryset = GroupUser.objects.filter(
             user_id=user.id,
@@ -179,3 +193,46 @@ class Application(CreatedAndUpdatedOnMixin, OrderableMixin,
     def get_last_order(cls, group):
         queryset = Application.objects.filter(group=group)
         return cls.get_highest_order_of_queryset(queryset) + 1
+
+
+class TemplateCategory(models.Model):
+    name = models.CharField(max_length=32)
+
+    class Meta:
+        ordering = ('name',)
+
+
+class Template(models.Model):
+    name = models.CharField(max_length=64)
+    slug = models.SlugField(
+        help_text='The template slug that is used to match the template with the JSON '
+                  'file name.'
+    )
+    icon = models.CharField(
+        max_length=32,
+        help_text='The font awesome class name that can be used for displaying '
+                  'purposes.'
+    )
+    categories = models.ManyToManyField(TemplateCategory, related_name='templates')
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.SET_NULL,
+        null=True,
+        help_text='The group containing the applications related to the template. The '
+                  'read endpoints related to that group are publicly accessible for '
+                  'preview purposes.'
+    )
+    export_hash = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text='The export hash that is used to compare if the exported group '
+                  'applications have changed when syncing the templates.'
+    )
+    keywords = models.TextField(
+        default='',
+        blank=True,
+        help_text='Keywords related to the template that can be used for search.'
+    )
+
+    class Meta:
+        ordering = ('name',)

@@ -135,11 +135,12 @@
               </div>
             </li>
             <ul class="tree">
-              <SidebarApplication
+              <component
+                :is="getApplicationComponent(application)"
                 v-for="application in applications"
                 :key="application.id"
                 :application="application"
-              ></SidebarApplication>
+              ></component>
             </ul>
             <li class="sidebar__new-wrapper">
               <a
@@ -271,6 +272,11 @@ export default {
     }),
   },
   methods: {
+    getApplicationComponent(application) {
+      return this.$registry
+        .get('application', application.type)
+        .getSidebarComponent()
+    },
     logoff() {
       this.$store.dispatch('auth/logoff')
       this.$nuxt.$router.push({ name: 'login' })

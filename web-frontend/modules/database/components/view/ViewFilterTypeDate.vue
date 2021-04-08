@@ -5,6 +5,7 @@
       v-model="dateString"
       type="text"
       class="input filters__value-input"
+      :disabled="readOnly"
       :class="{ 'input--error': $v.copy.$error }"
       :placeholder="getDatePlaceholder(field)"
       @focus="$refs.dateContext.toggle($refs.date, 'bottom', 'left', 0)"

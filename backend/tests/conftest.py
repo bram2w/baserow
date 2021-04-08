@@ -87,7 +87,7 @@ def user_tables_in_separate_db(settings):
                                    f'CREATE DATABASE {user_table_db_name}'],
                                   default_db)
 
-    yield
+    yield connections['user_tables_database']
 
     # Close django's connection to the user table db so we can drop it.
     connections['user_tables_database'].close()

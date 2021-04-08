@@ -16,7 +16,7 @@
         }"
         :set="(field = getField(sort.field))"
       >
-        <a class="sortings__remove" @click="deleteSort(sort)">
+        <a v-if="!readOnly" class="sortings__remove" @click="deleteSort(sort)">
           <i class="fas fa-times"></i>
         </a>
         <div class="sortings__description">
@@ -26,6 +26,7 @@
         <div class="sortings__field">
           <Dropdown
             :value="sort.field"
+            :disabled="readOnly"
             class="dropdown--floating dropdown--tiny"
             @input="updateSort(sort, { field: $event })"
           >
@@ -46,7 +47,10 @@
             ></DropdownItem>
           </Dropdown>
         </div>
-        <div class="sortings__order">
+        <div
+          class="sortings__order"
+          :class="{ 'sortings__order--disabled': readOnly }"
+        >
           <a
             class="sortings__order-item"
             :class="{ active: sort.order === 'ASC' }"
@@ -107,7 +111,9 @@
           </a>
         </div>
       </div>
-      <template v-if="view.sortings.length < availableFieldsLength">
+      <template
+        v-if="view.sortings.length < availableFieldsLength && !readOnly"
+      >
         <a
           ref="addContextToggle"
           class="sortings__add"
@@ -167,6 +173,10 @@ export default {
     },
     view: {
       type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
       required: true,
     },
   },
@@ -230,6 +240,10 @@ export default {
       }
     },
     async updateSort(sort, values) {
+      if (this.readOnly) {
+        return
+      }
+
       try {
         await this.$store.dispatch('view/updateSort', {
           sort,

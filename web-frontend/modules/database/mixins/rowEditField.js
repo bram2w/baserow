@@ -21,5 +21,9 @@ export default {
       type: [String, Number, Object, Boolean, Array],
       required: false,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
   },
 }

@@ -155,6 +155,43 @@ class MapAPIExceptionsInstanceMixin:
             yield
 
 
+class ImportExportMixin:
+    def export_serialized(self, instance):
+        """
+        Should return with a serialized version of the provided instance. It must be
+        JSON serializable and it must be possible to the import via the
+        `import_serialized` method.
+
+        :param instance: The instance that must be serialized and exported. Could be
+            any object type because it depends on the type instance that uses this
+            mixin.
+        :type instance: Object
+        :return: Serialized version of the instance.
+        :rtype: dict
+        """
+
+        raise NotImplementedError('The export_serialized method must be implemented.')
+
+    def import_serialized(self, parent, serialized_values, id_mapping):
+        """
+        Should import and create the correct instances in the database based on the
+        serialized values exported by the `export_serialized` method. It should create
+        a copy. An entry to the mapping could be made if a new instance is created.
+
+        :param parent: Optionally a parent instance can be provided here.
+        :type parent: Object
+        :param serialized_values: The values that must be inserted.
+        :type serialized_values: dict
+        :param id_mapping: The map of exported ids to newly created ids that must be
+            updated when a new instance has been created.
+        :type id_mapping: dict
+        :return: The newly created instance.
+        :rtype: Object
+        """
+
+        raise NotImplementedError('The import_serialized method must be implemented.')
+
+
 class Registry(object):
     name = None
     """The unique name that is used when raising exceptions."""

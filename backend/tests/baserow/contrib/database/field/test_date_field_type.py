@@ -3,11 +3,12 @@ from pytz import timezone
 from datetime import date
 
 from django.core.exceptions import ValidationError
-from django.utils.timezone import make_aware, datetime
+from django.utils.timezone import make_aware, datetime, utc
 
 from baserow.contrib.database.fields.field_types import DateFieldType
 from baserow.contrib.database.fields.models import DateField
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 
 
@@ -442,3 +443,78 @@ def test_negative_date_field_value(data_fixture):
     assert getattr(results[8], f'field_{datetime_field.id}') == (
         datetime(2012, 1, 28, 12, 30, 0, tzinfo=timezone('utc'))
     )
+
+
+@pytest.mark.django_db
+def test_import_export_date_field(data_fixture):
+    date_field = data_fixture.create_date_field()
+    date_field_type = field_type_registry.get_by_model(date_field)
+    number_serialized = date_field_type.export_serialized(date_field)
+    number_field_imported = date_field_type.import_serialized(
+        date_field.table,
+        number_serialized,
+        {}
+    )
+    assert date_field.date_format == number_field_imported.date_format
+    assert date_field.date_include_time == number_field_imported.date_include_time
+    assert date_field.date_time_format == number_field_imported.date_time_format
+
+
+@pytest.mark.django_db
+def test_get_set_export_serialized_value_date_field(data_fixture):
+    table = data_fixture.create_database_table()
+    date_field = data_fixture.create_date_field(table=table)
+    datetime_field = data_fixture.create_date_field(table=table,
+                                                    date_include_time=True)
+
+    date_field_name = f'field_{date_field.id}'
+    datetime_field_name = f'field_{datetime_field.id}'
+    date_field_type = field_type_registry.get_by_model(date_field)
+
+    model = table.get_model()
+    row_1 = model.objects.create()
+    row_2 = model.objects.create(**{
+        f'field_{date_field.id}': '2010-02-03',
+        f'field_{datetime_field.id}': make_aware(datetime(2010, 2, 3, 12, 30, 0), utc),
+    })
+
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+
+    old_row_1_date = getattr(row_1, date_field_name)
+    old_row_1_datetime = getattr(row_1, datetime_field_name)
+    old_row_2_date = getattr(row_2, date_field_name)
+    old_row_2_datetime = getattr(row_2, datetime_field_name)
+
+    date_field_type.set_import_serialized_value(
+        row_1,
+        date_field_name,
+        date_field_type.get_export_serialized_value(row_1, date_field_name, {}),
+        {}
+    )
+    date_field_type.set_import_serialized_value(
+        row_1,
+        datetime_field_name,
+        date_field_type.get_export_serialized_value(row_1, datetime_field_name, {}),
+        {}
+    )
+    date_field_type.set_import_serialized_value(
+        row_2,
+        date_field_name,
+        date_field_type.get_export_serialized_value(row_2, date_field_name, {}),
+        {}
+    )
+    date_field_type.set_import_serialized_value(
+        row_2,
+        datetime_field_name,
+        date_field_type.get_export_serialized_value(row_2, datetime_field_name, {}),
+        {}
+    )
+
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+
+    assert old_row_1_date == getattr(row_1, date_field_name)
+    assert old_row_1_datetime == getattr(row_1, datetime_field_name)
+    assert old_row_2_date == getattr(row_2, date_field_name)
+    assert old_row_2_datetime == getattr(row_2, datetime_field_name)

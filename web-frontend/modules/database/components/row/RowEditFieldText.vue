@@ -5,6 +5,7 @@
       v-model="copy"
       type="text"
       class="input input--large"
+      :disabled="readOnly"
       @keyup.enter="$refs.input.blur()"
       @focus="select()"
       @blur="unselect()"

@@ -1,10 +1,21 @@
 <template>
   <ul v-if="!tableLoading" class="header__filter header__filter--full-width">
     <li class="header__filter-item">
-      <GridViewHide :view="view" :fields="fields"></GridViewHide>
+      <GridViewHide
+        :view="view"
+        :fields="fields"
+        :read-only="readOnly"
+        :store-prefix="storePrefix"
+      ></GridViewHide>
     </li>
     <li class="header__filter-item header__filter-item--right">
-      <ViewSearch :view="view" @refresh="$emit('refresh', $event)"></ViewSearch>
+      <ViewSearch
+        :view="view"
+        :fields="fields"
+        :primary="primary"
+        :store-prefix="storePrefix"
+        @refresh="$emit('refresh', $event)"
+      ></ViewSearch>
     </li>
   </ul>
 </template>
@@ -19,12 +30,24 @@ export default {
   name: 'GridViewHeader',
   components: { GridViewHide, ViewSearch },
   props: {
+    view: {
+      type: Object,
+      required: true,
+    },
     fields: {
       type: Array,
       required: true,
     },
-    view: {
+    primary: {
       type: Object,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    storePrefix: {
+      type: String,
       required: true,
     },
   },
