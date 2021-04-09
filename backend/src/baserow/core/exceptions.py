@@ -5,7 +5,7 @@ class IsNotAdminError(Exception):
     """
 
 
-class UserNotInGroupError(Exception):
+class UserNotInGroup(Exception):
     """Raised when the user doesn't have access to the related group."""
 
     def __init__(self, user=None, group=None, *args, **kwargs):

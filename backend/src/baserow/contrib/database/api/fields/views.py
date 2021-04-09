@@ -13,7 +13,7 @@ from baserow.api.utils import validate_data_custom_fields, type_from_data_or_reg
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.utils import PolymorphicCustomFieldRegistrySerializer
 from baserow.api.schemas import get_error_schema
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
@@ -74,7 +74,7 @@ class FieldsView(APIView):
     )
     @map_exceptions({
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     @method_permission_classes([AllowAny])
     def get(self, request, table_id):
@@ -132,7 +132,7 @@ class FieldsView(APIView):
         field_type_registry, base_serializer_class=CreateFieldSerializer)
     @map_exceptions({
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def post(self, request, data, table_id):
         """Creates a new field for a table."""
@@ -182,7 +182,7 @@ class FieldView(APIView):
     )
     @map_exceptions({
         FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, field_id):
         """Selects a single field and responds with a serialized version."""
@@ -232,7 +232,7 @@ class FieldView(APIView):
     @transaction.atomic
     @map_exceptions({
         FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         CannotChangeFieldType: ERROR_CANNOT_CHANGE_FIELD_TYPE
     })
     def patch(self, request, field_id):
@@ -284,7 +284,7 @@ class FieldView(APIView):
     @transaction.atomic
     @map_exceptions({
         FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         CannotDeletePrimaryField: ERROR_CANNOT_DELETE_PRIMARY_FIELD
     })
     def delete(self, request, field_id):

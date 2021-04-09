@@ -47,7 +47,7 @@ def test_list_group_users(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
 
     response = api_client.get(
         reverse(
@@ -110,7 +110,7 @@ def test_update_group_user(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
 
     response = api_client.patch(
         reverse(
@@ -177,7 +177,7 @@ def test_delete_group_user(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
 
     response = api_client.delete(
         reverse(

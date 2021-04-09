@@ -6,20 +6,21 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 
 
 def test_get_field_ids_from_dict():
     handler = RowHandler()
-    assert handler.extract_field_ids_from_dict({
+    fields_dict = {
         1: 'Included',
         'field_2': 'Included',
         '3': 'Included',
         'abc': 'Not included',
         'fieldd_3': 'Not included'
-    }) == [1, 2, 3]
+    }
+    assert handler.extract_field_ids_from_dict(fields_dict) == [1, 2, 3]
 
 
 def test_extract_field_ids_from_string():
@@ -147,7 +148,7 @@ def test_create_row(send_mock, data_fixture):
 
     handler = RowHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.create_row(user=user_2, table=table)
 
     row_1 = handler.create_row(user=user, table=table, values={
@@ -284,7 +285,7 @@ def test_get_row(data_fixture):
         f'field_{price_field.id}': Decimal('59999.99')
     })
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.get_row(user=user_2, table=table, row_id=row.id)
 
     with pytest.raises(RowDoesNotExist):
@@ -318,7 +319,7 @@ def test_update_row(send_mock, data_fixture):
     handler = RowHandler()
     row = handler.create_row(user=user, table=table)
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.update_row(user=user_2, table=table, row_id=row.id, values={})
 
     with pytest.raises(RowDoesNotExist):
@@ -359,7 +360,7 @@ def test_delete_row(send_mock, data_fixture):
     row = handler.create_row(user=user, table=table)
     handler.create_row(user=user, table=table)
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.delete_row(user=user_2, table=table, row_id=row.id)
 
     with pytest.raises(RowDoesNotExist):

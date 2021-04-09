@@ -85,7 +85,7 @@ def test_update_group(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token_2}'
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response.json()['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
 
     url = reverse('api:groups:item', kwargs={'group_id': group.id})
     response = api_client.patch(
@@ -134,7 +134,7 @@ def test_delete_group(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token_2}'
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response.json()['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
 
     url = reverse('api:groups:item', kwargs={'group_id': group.id})
     response = api_client.delete(

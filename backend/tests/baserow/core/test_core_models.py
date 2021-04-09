@@ -7,7 +7,7 @@ from rest_framework.exceptions import NotAuthenticated
 
 from baserow.core.models import GroupUser, Group
 from baserow.core.exceptions import (
-    UserNotInGroupError, UserInvalidGroupPermissionsError
+    UserNotInGroup, UserInvalidGroupPermissionsError
 )
 from baserow.contrib.database.models import Database
 
@@ -63,10 +63,10 @@ def test_group_has_user(data_fixture):
 
     user_group.group.has_user(user_group.user, raise_error=True)
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         user_group.group.has_user(user, raise_error=True)
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         user_group.group.has_user(user, 'ADMIN', raise_error=True)
 
     with pytest.raises(UserInvalidGroupPermissionsError):

@@ -8,5 +8,8 @@ install-dev-dependencies:
 lint:
 	flake8 src tests || exit;
 
+format:
+	black . || exit;
+
 test:
 	pytest tests || exit;

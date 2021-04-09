@@ -745,13 +745,15 @@ def test_number_field_type(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
 
     # Add a row with correct values
+    valid_pos_int = '99999999999999999999999999999999999999999999999999'
+    valid_neg_int = '-99999999999999999999999999999999999999999999999999'
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),
         {
             f'field_{positive_int_field_id}':
-                '99999999999999999999999999999999999999999999999999',
+                valid_pos_int,
             f'field_{negative_int_field_id}':
-                '-99999999999999999999999999999999999999999999999999',
+                valid_neg_int,
             f'field_{positive_decimal_field_id}': 1000.00,
             f'field_{negative_decimal_field_id}': -1000.00,
         },
@@ -762,11 +764,11 @@ def test_number_field_type(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert (
         response_json[f'field_{positive_int_field_id}'] ==
-        '99999999999999999999999999999999999999999999999999'
+        valid_pos_int
     )
     assert (
         response_json[f'field_{negative_int_field_id}'] ==
-        '-99999999999999999999999999999999999999999999999999'
+        valid_neg_int
     )
     assert response_json[f'field_{positive_decimal_field_id}'] == '1000.00'
     assert response_json[f'field_{negative_decimal_field_id}'] == '-1000.00'
@@ -775,11 +777,11 @@ def test_number_field_type(api_client, data_fixture):
     row = model.objects.all().last()
     assert (
         row.positiveintedit ==
-        Decimal('99999999999999999999999999999999999999999999999999')
+        Decimal(valid_pos_int)
     )
     assert (
         row.negativeint ==
-        Decimal('-99999999999999999999999999999999999999999999999999')
+        Decimal(valid_neg_int)
     )
     assert row.positivedecimal == Decimal(1000.00)
     assert row.negativedecimal == Decimal(-1000.00)
@@ -810,11 +812,12 @@ def test_number_field_type(api_client, data_fixture):
     assert row.negativedecimal is None
 
     # Add a row with an integer that's too big
+    invalid_pos_int = '999999999999999999999999999999999999999999999999999'
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),
         {
             f'field_{positive_int_field_id}':
-                '999999999999999999999999999999999999999999999999999',
+                invalid_pos_int,
         },
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'
@@ -828,11 +831,12 @@ def test_number_field_type(api_client, data_fixture):
     )
 
     # Add a row with an integer that's too small
+    invalid_neg_int = '-9999999999999999999999999999999999999999999999999999'
     response = api_client.post(
         reverse('api:database:rows:list', kwargs={'table_id': table.id}),
         {
             f'field_{negative_int_field_id}':
-                '-9999999999999999999999999999999999999999999999999999',
+                invalid_neg_int,
         },
         format='json',
         HTTP_AUTHORIZATION=f'JWT {token}'

@@ -25,7 +25,7 @@ from baserow.contrib.database.api.tokens.authentications import TokenAuthenticat
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
 from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
-    ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD
+    ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD
 )
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound, OrderByFieldNotPossible, FilterFieldNotFound
@@ -40,7 +40,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeNotAllowedForField, ViewFilterTypeDoesNotExist
 )
 from baserow.contrib.database.views.registries import view_filter_type_registry
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .serializers import (
     RowSerializer, get_example_row_serializer_class, get_row_serializer_class
@@ -171,21 +171,21 @@ class RowsView(APIView):
                 'ERROR_ORDER_BY_FIELD_NOT_POSSIBLE',
                 'ERROR_FILTER_FIELD_NOT_FOUND',
                 'ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST',
-                'ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD'
+                'ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD'
             ]),
             401: get_error_schema(['ERROR_NO_PERMISSION_TO_TABLE']),
             404: get_error_schema(['ERROR_TABLE_DOES_NOT_EXIST'])
         }
     )
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
         OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
         OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
         FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
         ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
-        ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD
+        ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD
     })
     def get(self, request, table_id):
         """
@@ -275,7 +275,7 @@ class RowsView(APIView):
     )
     @transaction.atomic
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
         UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
@@ -350,7 +350,7 @@ class RowView(APIView):
         }
     )
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
         NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE
@@ -414,7 +414,7 @@ class RowView(APIView):
     )
     @transaction.atomic
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
         NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
@@ -470,7 +470,7 @@ class RowView(APIView):
     )
     @transaction.atomic
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
         NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE

@@ -10,7 +10,7 @@ from .managers import GroupQuerySet
 from .mixins import (
     OrderableMixin, PolymorphicContentTypeMixin, CreatedAndUpdatedOnMixin
 )
-from .exceptions import UserNotInGroupError, UserInvalidGroupPermissionsError
+from .exceptions import UserNotInGroup, UserInvalidGroupPermissionsError
 
 
 __all__ = ['UserFile']
@@ -68,7 +68,7 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
         :param allow_if_template: If true and if the group is related to a template,
             then True is always returned and no exception will be raised.
         :type allow_if_template: bool
-        :raises UserNotInGroupError: If the user does not belong to the group.
+        :raises UserNotInGroup: If the user does not belong to the group.
         :raises UserInvalidGroupPermissionsError: If the user does belong to the group,
             but doesn't have the right permissions.
         :return: Indicates if the user belongs to the group.
@@ -95,7 +95,7 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
             try:
                 group_user = queryset.get()
             except GroupUser.DoesNotExist:
-                raise UserNotInGroupError(user, self)
+                raise UserNotInGroup(user, self)
 
             if permissions is not None and group_user.permissions not in permissions:
                 raise UserInvalidGroupPermissionsError(user, self, permissions)

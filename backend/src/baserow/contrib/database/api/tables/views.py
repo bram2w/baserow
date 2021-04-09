@@ -11,7 +11,7 @@ from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
-from baserow.core.exceptions import UserNotInGroupError, ApplicationDoesNotExist
+from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
@@ -58,7 +58,7 @@ class TablesView(APIView):
     )
     @map_exceptions({
         ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, database_id):
         """Lists all the tables of a database."""
@@ -103,7 +103,7 @@ class TablesView(APIView):
     @transaction.atomic
     @map_exceptions({
         ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA,
         InitialTableDataLimitExceeded: ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED
     })
@@ -151,7 +151,7 @@ class TableView(APIView):
     )
     @map_exceptions({
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, table_id):
         """Responds with a serialized table instance."""
@@ -188,7 +188,7 @@ class TableView(APIView):
     @transaction.atomic
     @map_exceptions({
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     @validate_body(TableUpdateSerializer)
     def patch(self, request, data, table_id):
@@ -227,7 +227,7 @@ class TableView(APIView):
     @transaction.atomic
     @map_exceptions({
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, table_id):
         """Deletes an existing table."""

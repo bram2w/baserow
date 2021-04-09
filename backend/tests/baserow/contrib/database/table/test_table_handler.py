@@ -5,7 +5,7 @@ from django.db import connection
 from django.conf import settings
 from decimal import Decimal
 
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import (
@@ -65,7 +65,7 @@ def test_create_database_table(send_mock, data_fixture):
     assert send_mock.call_args[1]['table'].id == table.id
     assert send_mock.call_args[1]['user'].id == user.id
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.create_table(user=user_2, database=database, name='')
 
     assert f'database_table_{table.id}' in connection.introspection.table_names()
@@ -211,7 +211,7 @@ def test_update_database_table(send_mock, data_fixture):
 
     handler = TableHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.update_table(user=user_2, table=table, name='Test 1')
 
     handler.update_table(user=user, table=table, name='Test 1')
@@ -236,7 +236,7 @@ def test_delete_database_table(send_mock, data_fixture):
 
     handler = TableHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.delete_table(user=user_2, table=table)
 
     assert Table.objects.all().count() == 1

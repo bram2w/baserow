@@ -8,7 +8,7 @@ from rest_framework.authentication import (
 )
 from rest_framework.exceptions import AuthenticationFailed
 
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.exceptions import TokenDoesNotExist
 
@@ -43,7 +43,7 @@ class TokenAuthentication(BaseAuthentication):
 
         try:
             token = handler.get_by_key(decoded_key)
-        except UserNotInGroupError:
+        except UserNotInGroup:
             msg = _('The token\'s user does not belong to the group anymore.')
             raise AuthenticationFailed({
                 'detail': msg,

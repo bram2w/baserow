@@ -10,7 +10,7 @@ from baserow.api.decorators import map_exceptions, allowed_includes, validate_bo
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class, RowSerializer,
     example_pagination_row_serializer_class_with_field_options
@@ -112,7 +112,7 @@ class GridViewView(APIView):
         }
     )
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST
     })
     @allowed_includes('field_options')
@@ -203,7 +203,7 @@ class GridViewView(APIView):
         }
     )
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST
     })
     @validate_body(GridViewFilterSerializer)
@@ -254,7 +254,7 @@ class GridViewView(APIView):
         }
     )
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
         UnrelatedFieldError: ERROR_UNRELATED_FIELD
     })

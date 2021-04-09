@@ -21,8 +21,8 @@ ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST = (
     HTTP_400_BAD_REQUEST,
     'The view filter type {e.type_name} doesn\'t exist.'
 )
-ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD = (
-    'ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD',
+ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD = (
+    'ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD',
     HTTP_400_BAD_REQUEST,
     'The filter {e.filter_type} is not compatible with field type {e.field_type}.'
 )

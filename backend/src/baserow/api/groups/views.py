@@ -11,14 +11,14 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import (
     ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST,
-    ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
+    ERROR_USER_INVALID_GROUP_PERMISSIONS
 )
 from baserow.api.schemas import get_error_schema
 from baserow.api.groups.users.serializers import GroupUserGroupSerializer
 from baserow.core.models import GroupUser, Group
 from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import (
-    UserNotInGroupError, GroupDoesNotExist, UserInvalidGroupPermissionsError
+    UserNotInGroup, GroupDoesNotExist, UserInvalidGroupPermissionsError
 )
 
 from .serializers import GroupSerializer, OrderGroupsSerializer
@@ -96,7 +96,7 @@ class GroupView(APIView):
             200: GroupSerializer,
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',
-                'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+                'ERROR_USER_INVALID_GROUP_PERMISSIONS'
             ]),
             404: get_error_schema(['ERROR_GROUP_DOES_NOT_EXIST'])
         }
@@ -105,8 +105,8 @@ class GroupView(APIView):
     @validate_body(GroupSerializer)
     @map_exceptions({
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
-        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS
     })
     def patch(self, request, data, group_id):
         """Updates the group if it belongs to a user."""
@@ -143,7 +143,7 @@ class GroupView(APIView):
             200: group_user_schema,
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',
-                'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+                'ERROR_USER_INVALID_GROUP_PERMISSIONS'
             ]),
             404: get_error_schema(['ERROR_GROUP_DOES_NOT_EXIST'])
         }
@@ -151,8 +151,8 @@ class GroupView(APIView):
     @transaction.atomic
     @map_exceptions({
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
-        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS
     })
     def delete(self, request, group_id):
         """Deletes an existing group if it belongs to a user."""

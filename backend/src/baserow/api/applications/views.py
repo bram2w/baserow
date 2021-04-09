@@ -15,7 +15,7 @@ from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.core.models import Application
 from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import (
-    UserNotInGroupError, GroupDoesNotExist, ApplicationDoesNotExist
+    UserNotInGroup, GroupDoesNotExist, ApplicationDoesNotExist
 )
 from baserow.core.registries import application_type_registry
 
@@ -55,7 +55,7 @@ class AllApplicationsView(APIView):
         }
     )
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request):
         """
@@ -117,7 +117,7 @@ class ApplicationsView(APIView):
     )
     @map_exceptions({
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, group_id):
         """
@@ -175,7 +175,7 @@ class ApplicationsView(APIView):
     @validate_body(ApplicationCreateSerializer)
     @map_exceptions({
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def post(self, request, data, group_id):
         """Creates a new application for a user."""
@@ -221,7 +221,7 @@ class ApplicationView(APIView):
     )
     @map_exceptions({
         ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, application_id):
         """Selects a single application and responds with a serialized version."""
@@ -263,7 +263,7 @@ class ApplicationView(APIView):
     @validate_body(ApplicationUpdateSerializer)
     @map_exceptions({
         ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def patch(self, request, data, application_id):
         """Updates the application if the user belongs to the group."""
@@ -303,7 +303,7 @@ class ApplicationView(APIView):
     @transaction.atomic
     @map_exceptions({
         ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, application_id):
         """Deletes an existing application if the user belongs to the group."""

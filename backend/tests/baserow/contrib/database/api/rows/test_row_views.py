@@ -272,7 +272,7 @@ def test_list_rows(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD'
+    assert response_json['error'] == 'ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD'
 
     url = reverse('api:database:rows:list', kwargs={'table_id': table.id})
     get_params = [f'filter__field_{field_2.id}__INVALID=100']

@@ -116,5 +116,5 @@ class GridViewFilterSerializer(serializers.Serializer):
     row_ids = serializers.ListField(
         allow_empty=False,
         child=serializers.IntegerField(),
-        help_text='Only the rows related to the provided ids are added to the response.'
+        help_text='Only rows related to the provided ids are added to the response.'
     )

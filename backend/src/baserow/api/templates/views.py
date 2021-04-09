@@ -15,7 +15,7 @@ from baserow.api.applications.views import application_type_serializers
 from baserow.core.models import TemplateCategory
 from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import (
-    UserNotInGroupError, GroupDoesNotExist, TemplateDoesNotExist,
+    UserNotInGroup, GroupDoesNotExist, TemplateDoesNotExist,
     TemplateFileDoesNotExist
 )
 
@@ -91,7 +91,7 @@ class InstallTemplateView(APIView):
     )
     @map_exceptions({
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         TemplateDoesNotExist: ERROR_TEMPLATE_DOES_NOT_EXIST,
         TemplateFileDoesNotExist: ERROR_TEMPLATE_FILE_DOES_NOT_EXIST
     })

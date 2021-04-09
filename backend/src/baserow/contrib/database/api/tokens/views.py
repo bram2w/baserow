@@ -10,7 +10,7 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.core.handler import CoreHandler
 from baserow.contrib.database.api.errors import (
     ERROR_DATABASE_DOES_NOT_BELONG_TO_GROUP
@@ -70,7 +70,7 @@ class TokensView(APIView):
     )
     @transaction.atomic
     @map_exceptions({
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     @validate_body(TokenCreateSerializer)
     def post(self, request, data):
@@ -108,7 +108,7 @@ class TokenView(APIView):
     )
     @map_exceptions({
         TokenDoesNotExist: ERROR_TOKEN_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, token_id):
         """Responds with a serialized token instance."""
@@ -146,7 +146,7 @@ class TokenView(APIView):
     @transaction.atomic
     @map_exceptions({
         TokenDoesNotExist: ERROR_TOKEN_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         DatabaseDoesNotBelongToGroup: ERROR_DATABASE_DOES_NOT_BELONG_TO_GROUP,
         TableDoesNotBelongToGroup: ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP
     })
@@ -198,7 +198,7 @@ class TokenView(APIView):
     @transaction.atomic
     @map_exceptions({
         TokenDoesNotExist: ERROR_TOKEN_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, token_id):
         """Deletes an existing token."""

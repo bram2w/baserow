@@ -47,7 +47,7 @@ def test_list_group_invitations(api_client, data_fixture):
         HTTP_AUTHORIZATION=f'JWT {token_2}'
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response.json()['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
     assert response.json()['detail'] == 'You need [\'ADMIN\'] permissions.'
 
     response = api_client.get(
@@ -132,7 +132,7 @@ def test_create_group_invitation(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
 
     response = api_client.post(
         reverse('api:groups:invitations:list', kwargs={'group_id': group_1.id}),
@@ -233,7 +233,7 @@ def test_get_group_invitation(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
 
     response = api_client.get(
         reverse(
@@ -299,7 +299,7 @@ def test_update_group_invitation(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
 
     response = api_client.patch(
         reverse(
@@ -398,7 +398,7 @@ def test_delete_group_invitation(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+    assert response_json['error'] == 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
 
     response = api_client.delete(
         reverse(

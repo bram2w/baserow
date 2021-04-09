@@ -14,7 +14,7 @@ from baserow.core.models import (
     TemplateCategory, GROUP_USER_PERMISSION_ADMIN
 )
 from baserow.core.exceptions import (
-    UserNotInGroupError, ApplicationTypeDoesNotExist, GroupDoesNotExist,
+    UserNotInGroup, ApplicationTypeDoesNotExist, GroupDoesNotExist,
     GroupUserDoesNotExist, ApplicationDoesNotExist, UserInvalidGroupPermissionsError,
     BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
     GroupInvitationDoesNotExist, GroupUserAlreadyExists, IsNotAdminError,
@@ -104,7 +104,7 @@ def test_update_group_user(send_mock, data_fixture):
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.update_group_user(user=user_3, group_user=group_user_2)
 
     with pytest.raises(UserInvalidGroupPermissionsError):
@@ -136,7 +136,7 @@ def test_delete_group_user(send_mock, data_fixture):
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.delete_group_user(user=user_3, group_user=group_user_2)
 
     with pytest.raises(UserInvalidGroupPermissionsError):
@@ -197,7 +197,7 @@ def test_update_group(send_mock, data_fixture):
 
     assert group.name == 'New name'
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.update_group(user=user_2, group=group, name='New name')
 
     with pytest.raises(ValueError):
@@ -230,7 +230,7 @@ def test_delete_group(send_mock, data_fixture):
     assert Group.objects.all().count() == 2
     assert GroupUser.objects.all().count() == 2
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.delete_group(user, group_3)
 
     handler.delete_group(user_2, group_3)
@@ -392,7 +392,7 @@ def test_create_group_invitation(mock_send_email, data_fixture):
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.create_group_invitation(
             user=user_2,
             group=group,
@@ -491,7 +491,7 @@ def test_update_group_invitation(data_fixture):
     user_2 = data_fixture.create_user()
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.update_group_invitation(
             user=user_2,
             invitation=group_invitation,
@@ -523,7 +523,7 @@ def test_delete_group_invitation(data_fixture):
     user_2 = data_fixture.create_user()
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.delete_group_invitation(
             user=user_2,
             invitation=group_invitation,
@@ -657,7 +657,7 @@ def test_create_database_application(send_mock, data_fixture):
     assert send_mock.call_args[1]['user'].id == user.id
     assert send_mock.call_args[1]['type_name'] == 'database'
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.create_application(user=user_2, group=group, type_name='database',
                                    name='')
 
@@ -676,7 +676,7 @@ def test_update_database_application(send_mock, data_fixture):
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.update_application(user=user_2, application=database, name='Test 1')
 
     with pytest.raises(ValueError):
@@ -704,7 +704,7 @@ def test_delete_database_application(send_mock, data_fixture):
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.delete_application(user=user_2, application=database)
 
     with pytest.raises(ValueError):
@@ -874,7 +874,7 @@ def test_install_template(send_mock, data_fixture):
 
     template = Template.objects.get(slug='example-template')
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.install_template(user, group_2, template)
 
     applications, id_mapping = handler.install_template(user, group, template)

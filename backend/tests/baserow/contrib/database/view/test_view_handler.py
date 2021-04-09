@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch
 from decimal import Decimal
 
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View, GridView, ViewFilter, ViewSort
 from baserow.contrib.database.views.registries import (
@@ -105,7 +105,7 @@ def test_create_view(send_mock, data_fixture):
     assert grid.filter_type == 'OR'
     assert not grid.filters_disabled
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.create_view(user=user_2, table=table, type_name='grid', name='')
 
     with pytest.raises(ViewTypeDoesNotExist):
@@ -122,7 +122,7 @@ def test_update_view(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.update_view(user=user_2, view=grid, name='Test 1')
 
     with pytest.raises(ValueError):
@@ -156,7 +156,7 @@ def test_delete_view(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.delete_view(user=user_2, view=grid)
 
     with pytest.raises(ValueError):
@@ -193,7 +193,7 @@ def test_update_grid_view_field_options(send_mock, data_fixture):
             }
         )
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         ViewHandler().update_grid_view_field_options(
             user=data_fixture.create_user(),
             grid_view=grid_view,
@@ -438,7 +438,7 @@ def test_get_filter(data_fixture):
     with pytest.raises(ViewFilterDoesNotExist):
         handler.get_filter(user=user, view_filter_id=99999)
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.get_filter(user=user_2, view_filter_id=equal_filter.id)
 
     with pytest.raises(AttributeError):
@@ -468,7 +468,7 @@ def test_create_filter(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.create_filter(user=user_2, view=grid_view, field=text_field,
                               type_name='equal', value='test')
 
@@ -538,7 +538,7 @@ def test_update_filter(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.update_filter(user=user_2, view_filter=equal_filter)
 
     with pytest.raises(ViewFilterTypeDoesNotExist):
@@ -585,7 +585,7 @@ def test_delete_filter(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.delete_filter(user=user, view_filter=filter_2)
 
     filter_1_id = filter_1.id
@@ -743,7 +743,7 @@ def test_get_sort(data_fixture):
     with pytest.raises(ViewSortDoesNotExist):
         handler.get_sort(user=user, view_sort_id=99999)
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.get_sort(user=user_2, view_sort_id=equal_sort.id)
 
     with pytest.raises(AttributeError):
@@ -774,7 +774,7 @@ def test_create_sort(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.create_sort(user=user_2, view=grid_view, field=text_field,
                             order='ASC')
 
@@ -837,7 +837,7 @@ def test_update_sort(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.update_sort(user=user_2, view_sort=view_sort)
 
     with pytest.raises(ViewSortFieldNotSupported):
@@ -879,7 +879,7 @@ def test_delete_sort(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.delete_sort(user=user, view_sort=sort_2)
 
     sort_1_id = sort_1.id

@@ -14,7 +14,7 @@ from baserow.api.utils import validate_data_custom_fields
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.utils import PolymorphicCustomFieldRegistrySerializer
 from baserow.api.schemas import get_error_schema
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.fields.models import Field
@@ -37,7 +37,7 @@ from .serializers import (
 )
 from .errors import (
     ERROR_VIEW_DOES_NOT_EXIST, ERROR_VIEW_FILTER_DOES_NOT_EXIST,
-    ERROR_VIEW_FILTER_NOT_SUPPORTED, ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD,
+    ERROR_VIEW_FILTER_NOT_SUPPORTED, ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
     ERROR_VIEW_SORT_DOES_NOT_EXIST, ERROR_VIEW_SORT_NOT_SUPPORTED,
     ERROR_VIEW_SORT_FIELD_ALREADY_EXISTS, ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED
 )
@@ -98,7 +98,7 @@ class ViewsView(APIView):
     )
     @map_exceptions({
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     @allowed_includes('filters', 'sortings')
     def get(self, request, table_id, filters, sortings):
@@ -180,7 +180,7 @@ class ViewsView(APIView):
         view_type_registry, base_serializer_class=CreateViewSerializer)
     @map_exceptions({
         TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     @allowed_includes('filters', 'sortings')
     def post(self, request, data, table_id, filters, sortings):
@@ -242,7 +242,7 @@ class ViewView(APIView):
     )
     @map_exceptions({
         ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     @allowed_includes('filters', 'sortings')
     def get(self, request, view_id, filters, sortings):
@@ -305,7 +305,7 @@ class ViewView(APIView):
     @transaction.atomic
     @map_exceptions({
         ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     @allowed_includes('filters', 'sortings')
     def patch(self, request, view_id, filters, sortings):
@@ -354,7 +354,7 @@ class ViewView(APIView):
     @transaction.atomic
     @map_exceptions({
         ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, view_id):
         """Deletes an existing view if the user belongs to the group."""
@@ -394,7 +394,7 @@ class ViewFiltersView(APIView):
     )
     @map_exceptions({
         ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, view_id):
         """
@@ -435,7 +435,7 @@ class ViewFiltersView(APIView):
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_REQUEST_BODY_VALIDATION',
                 'ERROR_FIELD_NOT_IN_TABLE', 'ERROR_VIEW_FILTER_NOT_SUPPORTED',
-                'ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD'
+                'ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD'
             ]),
             404: get_error_schema(['ERROR_VIEW_DOES_NOT_EXIST'])
         }
@@ -444,10 +444,10 @@ class ViewFiltersView(APIView):
     @validate_body(CreateViewFilterSerializer)
     @map_exceptions({
         ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
         ViewFilterNotSupported: ERROR_VIEW_FILTER_NOT_SUPPORTED,
-        ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD
+        ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD
     })
     def post(self, request, data, view_id):
         """Creates a new filter for the provided view."""
@@ -490,7 +490,7 @@ class ViewFilterView(APIView):
     )
     @map_exceptions({
         ViewFilterDoesNotExist: ERROR_VIEW_FILTER_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, view_filter_id):
         """Selects a single filter and responds with a serialized version."""
@@ -520,7 +520,7 @@ class ViewFilterView(APIView):
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP', 'ERROR_FIELD_NOT_IN_TABLE',
                 'ERROR_VIEW_FILTER_NOT_SUPPORTED',
-                'ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD'
+                'ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD'
             ]),
             404: get_error_schema(['ERROR_VIEW_FILTER_DOES_NOT_EXIST'])
         }
@@ -529,9 +529,9 @@ class ViewFilterView(APIView):
     @validate_body(UpdateViewFilterSerializer)
     @map_exceptions({
         ViewFilterDoesNotExist: ERROR_VIEW_FILTER_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
-        ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_NOT_ALLOWED_FOR_FIELD
+        ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD
     })
     def patch(self, request, data, view_filter_id):
         """Updates the view filter if the user belongs to the group."""
@@ -580,7 +580,7 @@ class ViewFilterView(APIView):
     @transaction.atomic
     @map_exceptions({
         ViewFilterDoesNotExist: ERROR_VIEW_FILTER_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, view_filter_id):
         """Deletes an existing filter if the user belongs to the group."""
@@ -620,7 +620,7 @@ class ViewSortingsView(APIView):
     )
     @map_exceptions({
         ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, view_id):
         """
@@ -669,7 +669,7 @@ class ViewSortingsView(APIView):
     @validate_body(CreateViewSortSerializer)
     @map_exceptions({
         ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
         ViewSortNotSupported: ERROR_VIEW_SORT_NOT_SUPPORTED,
         ViewSortFieldAlreadyExist: ERROR_VIEW_SORT_FIELD_ALREADY_EXISTS,
@@ -715,7 +715,7 @@ class ViewSortView(APIView):
     )
     @map_exceptions({
         ViewSortDoesNotExist: ERROR_VIEW_SORT_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def get(self, request, view_sort_id):
         """Selects a single sort and responds with a serialized version."""
@@ -753,7 +753,7 @@ class ViewSortView(APIView):
     @validate_body(UpdateViewSortSerializer)
     @map_exceptions({
         ViewSortDoesNotExist: ERROR_VIEW_SORT_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
         ViewSortFieldAlreadyExist: ERROR_VIEW_SORT_FIELD_ALREADY_EXISTS,
         ViewSortFieldNotSupported: ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED,
@@ -802,7 +802,7 @@ class ViewSortView(APIView):
     @transaction.atomic
     @map_exceptions({
         ViewSortDoesNotExist: ERROR_VIEW_SORT_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP
     })
     def delete(self, request, view_sort_id):
         """Deletes an existing sort if the user belongs to the group."""

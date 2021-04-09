@@ -7,7 +7,7 @@ from datetime import datetime
 from django.http import HttpRequest
 from rest_framework.request import Request
 
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
 from baserow.contrib.database.table.exceptions import TableDoesNotBelongToGroup
 from baserow.contrib.database.tokens.models import Token, TokenPermission
@@ -55,7 +55,7 @@ def test_get_token(data_fixture):
     with pytest.raises(TokenDoesNotExist):
         handler.get_token(user=user_2, token_id=token.id)
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.get_token(user=user, token_id=token_2.id)
 
     token_tmp = handler.get_token(user, token.id)
@@ -101,7 +101,7 @@ def test_create_token(data_fixture):
 
     handler = TokenHandler()
 
-    with pytest.raises(UserNotInGroupError):
+    with pytest.raises(UserNotInGroup):
         handler.create_token(user=user, group=group_2, name='Test')
 
     token = handler.create_token(user=user, group=group_1, name='Test')

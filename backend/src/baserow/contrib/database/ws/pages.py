@@ -1,6 +1,6 @@
 from baserow.ws.registries import PageType
 
-from baserow.core.exceptions import UserNotInGroupError
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 
@@ -22,7 +22,7 @@ class TablePageType(PageType):
             handler = TableHandler()
             table = handler.get_table(table_id)
             table.database.group.has_user(user, raise_error=True)
-        except (UserNotInGroupError, TableDoesNotExist):
+        except (UserNotInGroup, TableDoesNotExist):
             return False
 
         return True

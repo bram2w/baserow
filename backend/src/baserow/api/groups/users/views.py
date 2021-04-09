@@ -10,14 +10,14 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import (
     ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP,
-    ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
+    ERROR_USER_INVALID_GROUP_PERMISSIONS
 )
 from baserow.api.groups.users.errors import ERROR_GROUP_USER_DOES_NOT_EXIST
 from baserow.api.schemas import get_error_schema
 from baserow.core.models import GroupUser
 from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import (
-    UserNotInGroupError, UserInvalidGroupPermissionsError, GroupDoesNotExist,
+    UserNotInGroup, UserInvalidGroupPermissionsError, GroupDoesNotExist,
     GroupUserDoesNotExist
 )
 
@@ -46,7 +46,7 @@ class GroupUsersView(APIView):
         responses={
             200: GroupUserSerializer(many=True),
             400: get_error_schema([
-                'ERROR_USER_NOT_IN_GROUP', 'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+                'ERROR_USER_NOT_IN_GROUP', 'ERROR_USER_INVALID_GROUP_PERMISSIONS'
             ]),
             404: get_error_schema(['ERROR_GROUP_DOES_NOT_EXIST']),
 
@@ -54,8 +54,8 @@ class GroupUsersView(APIView):
     )
     @map_exceptions({
         GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
-        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS
     })
     def get(self, request, group_id):
         """Responds with a list of serialized users that are part of the group."""
@@ -91,7 +91,7 @@ class GroupUserView(APIView):
             200: GroupUserGroupSerializer,
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP',
-                'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR',
+                'ERROR_USER_INVALID_GROUP_PERMISSIONS',
                 'ERROR_REQUEST_BODY_VALIDATION'
             ]),
             404: get_error_schema(['ERROR_GROUP_USER_DOES_NOT_EXIST'])
@@ -101,8 +101,8 @@ class GroupUserView(APIView):
     @validate_body(UpdateGroupUserSerializer)
     @map_exceptions({
         GroupUserDoesNotExist: ERROR_GROUP_USER_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
-        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS
     })
     def patch(self, request, data, group_user_id):
         """Updates the group user if the user has admin permissions to the group."""
@@ -138,7 +138,7 @@ class GroupUserView(APIView):
             204: None,
             400: get_error_schema([
                 'ERROR_USER_NOT_IN_GROUP',
-                'ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR'
+                'ERROR_USER_INVALID_GROUP_PERMISSIONS'
             ]),
             404: get_error_schema(['ERROR_GROUP_INVITATION_DOES_NOT_EXIST'])
         },
@@ -146,8 +146,8 @@ class GroupUserView(APIView):
     @transaction.atomic
     @map_exceptions({
         GroupUserDoesNotExist: ERROR_GROUP_USER_DOES_NOT_EXIST,
-        UserNotInGroupError: ERROR_USER_NOT_IN_GROUP,
-        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR
+        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS
     })
     def delete(self, request, group_user_id):
         """Deletes an existing group_user if the user belongs to the group."""
