@@ -86,6 +86,14 @@ class Plugin(APIUrlsInstanceMixin, Instance):
         :type group_invitation: GroupInvitation
         """
 
+    def user_signed_in(self, user):
+        """
+        A hook that is called after an existing user has signed in.
+
+        :param user: The user that just signed in.
+        :type user: User
+        """
+
 
 class PluginRegistry(APIUrlsRegistryMixin, Registry):
     """

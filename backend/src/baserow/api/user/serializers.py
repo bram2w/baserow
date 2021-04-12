@@ -80,6 +80,12 @@ class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
 
         validated_data = super().validate(attrs)
         update_last_login(None, validated_data["user"])
+        # Call the user_signed_in method for each plugin that is un the registry to
+        # notify all plugins that a user has signed in.
+        from baserow.core.registries import plugin_registry
+
+        for plugin in plugin_registry.registry.values():
+            plugin.user_signed_in(validated_data["user"])
         return validated_data
 
 
