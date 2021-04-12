@@ -15,7 +15,7 @@ def test_fill_table_no_table():
     table_id_that_does_not_exist = 5
 
     with pytest.raises(SystemExit) as sys_exit:
-        call_command('fill_table', table_id_that_does_not_exist, 10, stdout=output)
+        call_command("fill_table", table_id_that_does_not_exist, 10, stdout=output)
     assert sys_exit.type == SystemExit
     assert sys_exit.value.code == 1
 
@@ -38,7 +38,7 @@ def test_fill_table_empty_table(data_fixture, test_limit):
     table = data_fixture.create_database_table(user=user)
     data_fixture.create_text_field(user=user, table=table)
 
-    call_command('fill_table', table.id, test_limit)
+    call_command("fill_table", table.id, test_limit)
 
     model = table.get_model()
     results = model.objects.all()
@@ -70,7 +70,7 @@ def test_fill_table_no_empty_table(data_fixture, test_limit):
     first_row_value_before = getattr(results[0], f"field_{text_field.id}")
 
     # execute the fill_table command
-    call_command('fill_table', table.id, test_limit)
+    call_command("fill_table", table.id, test_limit)
 
     results = model.objects.all()
     first_row_value_after = getattr(results[0], f"field_{text_field.id}")

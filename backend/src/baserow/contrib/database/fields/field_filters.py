@@ -3,8 +3,8 @@ from typing import Dict, Any, Union
 from django.db.models import Q, BooleanField
 from django.db.models.expressions import RawSQL
 
-FILTER_TYPE_AND = 'AND'
-FILTER_TYPE_OR = 'OR'
+FILTER_TYPE_AND = "AND"
+FILTER_TYPE_OR = "OR"
 
 
 class AnnotatedQ:
@@ -54,13 +54,13 @@ class FilterBuilder:
         """
 
         if filter_type not in [FILTER_TYPE_AND, FILTER_TYPE_OR]:
-            raise ValueError(f'Unknown filter type {filter_type}.')
+            raise ValueError(f"Unknown filter type {filter_type}.")
 
         self._annotation = {}
         self._q_filters = Q()
         self._filter_type = filter_type
 
-    def filter(self, q: OptionallyAnnotatedQ) -> 'FilterBuilder':
+    def filter(self, q: OptionallyAnnotatedQ) -> "FilterBuilder":
         """
         Adds a Q or AnnotatedQ filter into this builder to be joined together with
         existing filters based on the builders `filter_type`.
@@ -92,27 +92,27 @@ class FilterBuilder:
 
         return queryset.annotate(**self._annotation).filter(self._q_filters)
 
-    def _annotate(self, annotation_dict: Dict[str, Any]) -> 'FilterBuilder':
+    def _annotate(self, annotation_dict: Dict[str, Any]) -> "FilterBuilder":
         self._annotation = {**self._annotation, **annotation_dict}
 
-    def _filter(self, q_filter: Q) -> 'FilterBuilder':
+    def _filter(self, q_filter: Q) -> "FilterBuilder":
         if self._filter_type == FILTER_TYPE_AND:
             self._q_filters &= q_filter
         elif self._filter_type == FILTER_TYPE_OR:
             self._q_filters |= q_filter
         else:
-            raise ValueError(f'Unknown filter type {self._filter_type}.')
+            raise ValueError(f"Unknown filter type {self._filter_type}.")
 
 
 def contains_filter(field_name, value, model_field, _) -> OptionallyAnnotatedQ:
     value = value.strip()
     # If an empty value has been provided we do not want to filter at all.
-    if value == '':
+    if value == "":
         return Q()
     # Check if the model_field accepts the value.
     try:
         model_field.get_prep_value(value)
-        return Q(**{f'{field_name}__icontains': value})
+        return Q(**{f"{field_name}__icontains": value})
     except Exception:
         pass
     return Q()
@@ -121,15 +121,14 @@ def contains_filter(field_name, value, model_field, _) -> OptionallyAnnotatedQ:
 def filename_contains_filter(field_name, value, _, field) -> OptionallyAnnotatedQ:
     value = value.strip()
     # If an empty value has been provided we do not want to filter at all.
-    if value == '':
+    if value == "":
         return Q()
     # Check if the model_field has a file which matches the provided filter value.
     annotation_query = _build_filename_contains_raw_query(field, value)
-    return AnnotatedQ(annotation={
-        f'{field_name}_matches_visible_names': annotation_query
-    }, q={
-        f'{field_name}_matches_visible_names': True
-    })
+    return AnnotatedQ(
+        annotation={f"{field_name}_matches_visible_names": annotation_query},
+        q={f"{field_name}_matches_visible_names": True},
+    )
 
 
 def _build_filename_contains_raw_query(field, value):
@@ -151,5 +150,8 @@ def _build_filename_contains_raw_query(field, value):
         WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%s)
     )
 """
-    return RawSQL(num_files_with_name_like_value, params=[f"%{value}%"],
-                  output_field=BooleanField())
+    return RawSQL(
+        num_files_with_name_like_value,
+        params=[f"%{value}%"],
+        output_field=BooleanField(),
+    )

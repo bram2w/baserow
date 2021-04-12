@@ -8,7 +8,7 @@ from .managers import UserFileQuerySet
 
 User = get_user_model()
 deconstruct_user_file_regex = re.compile(
-    r'([a-zA-Z0-9]*)_([a-zA-Z0-9]*)\.([a-zA-Z0-9]*)$'
+    r"([a-zA-Z0-9]*)_([a-zA-Z0-9]*)\.([a-zA-Z0-9]*)$"
 )
 
 
@@ -28,7 +28,7 @@ class UserFile(models.Model):
     objects = UserFileQuerySet.as_manager()
 
     class Meta:
-        ordering = ('id',)
+        ordering = ("id",)
 
     def serialize(self):
         """
@@ -40,18 +40,18 @@ class UserFile(models.Model):
         """
 
         return {
-            'name': self.name,
-            'size': self.size,
-            'mime_type': self.mime_type,
-            'is_image': self.is_image,
-            'image_width': self.image_width,
-            'image_height': self.image_height,
-            'uploaded_at': self.uploaded_at.isoformat()
+            "name": self.name,
+            "size": self.size,
+            "mime_type": self.mime_type,
+            "is_image": self.is_image,
+            "image_width": self.image_width,
+            "image_height": self.image_height,
+            "uploaded_at": self.uploaded_at.isoformat(),
         }
 
     @property
     def name(self):
-        return f'{self.unique}_{self.sha256_hash}.{self.original_extension}'
+        return f"{self.unique}_{self.sha256_hash}.{self.original_extension}"
 
     @staticmethod
     def deconstruct_name(name):
@@ -69,12 +69,11 @@ class UserFile(models.Model):
 
         if not matches:
             raise InvalidUserFileNameError(
-                name,
-                'The provided name is not in the correct format.'
+                name, "The provided name is not in the correct format."
             )
 
         return {
-            'unique': matches[1],
-            'sha256_hash': matches[2],
-            'original_extension': matches[3]
+            "unique": matches[1],
+            "sha256_hash": matches[2],
+            "original_extension": matches[3],
         }

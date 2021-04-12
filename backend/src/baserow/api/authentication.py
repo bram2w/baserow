@@ -7,7 +7,7 @@ from django.utils.translation import ugettext as _
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import (
     jwt_decode_handler,
-    JSONWebTokenAuthentication as JWTJSONWebTokenAuthentication
+    JSONWebTokenAuthentication as JWTJSONWebTokenAuthentication,
 )
 
 
@@ -26,37 +26,35 @@ class JSONWebTokenAuthentication(JWTJSONWebTokenAuthentication):
         try:
             payload = jwt_decode_handler(jwt_value)
         except jwt.ExpiredSignature:
-            msg = _('Signature has expired.')
-            raise exceptions.AuthenticationFailed({
-                'detail': msg,
-                'error': 'ERROR_SIGNATURE_HAS_EXPIRED'
-            })
+            msg = _("Signature has expired.")
+            raise exceptions.AuthenticationFailed(
+                {"detail": msg, "error": "ERROR_SIGNATURE_HAS_EXPIRED"}
+            )
         except jwt.DecodeError:
-            msg = _('Error decoding signature.')
-            raise exceptions.AuthenticationFailed({
-                'detail': msg,
-                'error': 'ERROR_DECODING_SIGNATURE'
-            })
+            msg = _("Error decoding signature.")
+            raise exceptions.AuthenticationFailed(
+                {"detail": msg, "error": "ERROR_DECODING_SIGNATURE"}
+            )
         except jwt.InvalidTokenError:
             raise exceptions.AuthenticationFailed()
 
         user = self.authenticate_credentials(payload)
 
         # @TODO this should actually somehow be moved to the ws app.
-        user.web_socket_id = request.headers.get('WebSocketId')
+        user.web_socket_id = request.headers.get("WebSocketId")
 
         return user, jwt_value
 
 
 class JSONWebTokenAuthenticationExtension(OpenApiAuthenticationExtension):
-    target_class = 'baserow.api.authentication.JSONWebTokenAuthentication'
-    name = 'JWT'
+    target_class = "baserow.api.authentication.JSONWebTokenAuthentication"
+    name = "JWT"
     match_subclasses = True
     priority = -1
 
     def get_security_definition(self, auto_schema):
         return {
-            'type': 'http',
-            'scheme': 'bearer',
-            'bearerFormat': 'JWT your_token',
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT your_token",
         }

@@ -9,21 +9,17 @@ def test_import_export_database(data_fixture, user_tables_in_separate_db):
     table = data_fixture.create_database_table(database=database)
     text_field = data_fixture.create_text_field(table=table)
     view = data_fixture.create_grid_view(table=table)
-    data_fixture.create_view_filter(view=view, field=text_field, value='Test')
+    data_fixture.create_view_filter(view=view, field=text_field, value="Test")
     data_fixture.create_view_sort(view=view, field=text_field)
     model = table.get_model()
-    row = model.objects.create(**{
-        f'field_{text_field.id}': 'Test'
-    })
+    row = model.objects.create(**{f"field_{text_field.id}": "Test"})
 
-    database_type = application_type_registry.get('database')
+    database_type = application_type_registry.get("database")
     serialized = database_type.export_serialized(database)
     imported_group = data_fixture.create_group()
     id_mapping = {}
     imported_database = database_type.import_serialized(
-        imported_group,
-        serialized,
-        id_mapping
+        imported_group, serialized, id_mapping
     )
 
     assert imported_database.id != database.id
@@ -52,9 +48,8 @@ def test_import_export_database(data_fixture, user_tables_in_separate_db):
     assert imported_row.id == row.id
     assert imported_row.order == row.order
     assert getattr(
-        imported_row,
-        f'field_{id_mapping["database_fields"][text_field.id]}'
-    ) == (getattr(row, f'field_{text_field.id}'))
+        imported_row, f'field_{id_mapping["database_fields"][text_field.id]}'
+    ) == (getattr(row, f"field_{text_field.id}"))
 
     # It must still be possible to create a new row in the imported table
     row_2 = imported_model.objects.create()

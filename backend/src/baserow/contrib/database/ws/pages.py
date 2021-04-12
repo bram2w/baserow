@@ -6,8 +6,8 @@ from baserow.contrib.database.table.exceptions import TableDoesNotExist
 
 
 class TablePageType(PageType):
-    type = 'table'
-    parameters = ['table_id']
+    type = "table"
+    parameters = ["table_id"]
 
     def can_add(self, user, web_socket_id, table_id, **kwargs):
         """
@@ -28,4 +28,4 @@ class TablePageType(PageType):
         return True
 
     def get_group_name(self, table_id, **kwargs):
-        return f'table-{table_id}'
+        return f"table-{table_id}"

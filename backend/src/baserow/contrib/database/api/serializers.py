@@ -9,13 +9,13 @@ from baserow.contrib.database.api.tables.serializers import TableSerializer
 
 class DatabaseSerializer(ApplicationSerializer):
     tables = serializers.SerializerMethodField(
-        help_text='This field is specific to the `database` application and contains '
-                  'an array of tables that are in the database.'
+        help_text="This field is specific to the `database` application and contains "
+        "an array of tables that are in the database."
     )
 
     class Meta(ApplicationSerializer.Meta):
-        ref_name = 'DatabaseApplication'
-        fields = ApplicationSerializer.Meta.fields + ('tables',)
+        ref_name = "DatabaseApplication"
+        fields = ApplicationSerializer.Meta.fields + ("tables",)
 
     @extend_schema_field(TableSerializer(many=True))
     def get_tables(self, instance):

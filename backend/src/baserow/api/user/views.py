@@ -12,35 +12,48 @@ from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.views import (
     ObtainJSONWebToken as RegularObtainJSONWebToken,
     RefreshJSONWebToken as RegularRefreshJSONWebToken,
-    VerifyJSONWebToken as RegularVerifyJSONWebToken
+    VerifyJSONWebToken as RegularVerifyJSONWebToken,
 )
 
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.errors import (
-    BAD_TOKEN_SIGNATURE, EXPIRED_TOKEN_SIGNATURE, ERROR_HOSTNAME_IS_NOT_ALLOWED
+    BAD_TOKEN_SIGNATURE,
+    EXPIRED_TOKEN_SIGNATURE,
+    ERROR_HOSTNAME_IS_NOT_ALLOWED,
 )
 from baserow.api.groups.invitations.errors import (
-    ERROR_GROUP_INVITATION_DOES_NOT_EXIST, ERROR_GROUP_INVITATION_EMAIL_MISMATCH
+    ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
+    ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
 )
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import (
-    BaseURLHostnameNotAllowed, GroupInvitationEmailMismatch,
-    GroupInvitationDoesNotExist
+    BaseURLHostnameNotAllowed,
+    GroupInvitationEmailMismatch,
+    GroupInvitationDoesNotExist,
 )
 from baserow.core.models import GroupInvitation
 from baserow.core.user.handler import UserHandler
 from baserow.core.user.exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, DisabledSignupError
+    UserAlreadyExist,
+    UserNotFound,
+    InvalidPassword,
+    DisabledSignupError,
 )
 
 from .serializers import (
-    RegisterSerializer, UserSerializer, SendResetPasswordEmailBodyValidationSerializer,
-    ResetPasswordBodyValidationSerializer, ChangePasswordBodyValidationSerializer,
-    NormalizedEmailWebTokenSerializer, DashboardSerializer
+    RegisterSerializer,
+    UserSerializer,
+    SendResetPasswordEmailBodyValidationSerializer,
+    ResetPasswordBodyValidationSerializer,
+    ChangePasswordBodyValidationSerializer,
+    NormalizedEmailWebTokenSerializer,
+    DashboardSerializer,
 )
 from .errors import (
-    ERROR_ALREADY_EXISTS, ERROR_USER_NOT_FOUND, ERROR_INVALID_OLD_PASSWORD,
-    ERROR_DISABLED_SIGNUP
+    ERROR_ALREADY_EXISTS,
+    ERROR_USER_NOT_FOUND,
+    ERROR_INVALID_OLD_PASSWORD,
+    ERROR_DISABLED_SIGNUP,
 )
 from .schemas import create_user_response_schema, authenticate_user_schema
 
@@ -59,26 +72,26 @@ class ObtainJSONWebToken(RegularObtainJSONWebToken):
     serializer_class = NormalizedEmailWebTokenSerializer
 
     @extend_schema(
-        tags=['User'],
-        operation_id='token_auth',
+        tags=["User"],
+        operation_id="token_auth",
         description=(
-            'Authenticates an existing user based on their username, which is their '
-            'email address, and their password. If successful a JWT token will be '
-            'generated that can be used to authorize for other endpoints that require '
-            'authorization. The token will be valid for {valid} minutes, so it has to '
-            'be refreshed using the **token_refresh** endpoint before that '
-            'time.'.format(
-                valid=int(settings.JWT_AUTH['JWT_EXPIRATION_DELTA'].seconds / 60)
+            "Authenticates an existing user based on their username, which is their "
+            "email address, and their password. If successful a JWT token will be "
+            "generated that can be used to authorize for other endpoints that require "
+            "authorization. The token will be valid for {valid} minutes, so it has to "
+            "be refreshed using the **token_refresh** endpoint before that "
+            "time.".format(
+                valid=int(settings.JWT_AUTH["JWT_EXPIRATION_DELTA"].seconds / 60)
             )
         ),
         responses={
             200: authenticate_user_schema,
             400: {
-                'description': 'A user with the provided username and password is '
-                               'not found.'
-            }
+                "description": "A user with the provided username and password is "
+                "not found."
+            },
         },
-        auth=[None]
+        auth=[None],
     )
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
@@ -86,20 +99,20 @@ class ObtainJSONWebToken(RegularObtainJSONWebToken):
 
 class RefreshJSONWebToken(RegularRefreshJSONWebToken):
     @extend_schema(
-        tags=['User'],
-        operation_id='token_refresh',
+        tags=["User"],
+        operation_id="token_refresh",
         description=(
-            'Refreshes an existing JWT token. If the the token is valid, a new '
-            'token will be included in the response. It will be valid for {valid} '
-            'minutes.'.format(
-                valid=int(settings.JWT_AUTH['JWT_EXPIRATION_DELTA'].seconds / 60)
+            "Refreshes an existing JWT token. If the the token is valid, a new "
+            "token will be included in the response. It will be valid for {valid} "
+            "minutes.".format(
+                valid=int(settings.JWT_AUTH["JWT_EXPIRATION_DELTA"].seconds / 60)
             )
         ),
         responses={
             200: authenticate_user_schema,
-            400: {'description': 'The token is invalid or expired.'}
+            400: {"description": "The token is invalid or expired."},
         },
-        auth=[None]
+        auth=[None],
     )
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
@@ -107,14 +120,14 @@ class RefreshJSONWebToken(RegularRefreshJSONWebToken):
 
 class VerifyJSONWebToken(RegularVerifyJSONWebToken):
     @extend_schema(
-        tags=['User'],
-        operation_id='token_verify',
-        description='Verifies if the a token is still valid.',
+        tags=["User"],
+        operation_id="token_verify",
+        description="Verifies if the a token is still valid.",
         responses={
             200: authenticate_user_schema,
-            400: {'description': 'The token is invalid or expired.'}
+            400: {"description": "The token is invalid or expired."},
         },
-        auth=[None]
+        auth=[None],
     )
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
@@ -124,46 +137,52 @@ class UserView(APIView):
     permission_classes = (AllowAny,)
 
     @extend_schema(
-        tags=['User'],
+        tags=["User"],
         request=RegisterSerializer,
-        operation_id='create_user',
+        operation_id="create_user",
         description=(
-            'Creates a new user based on the provided values. If desired an '
-            'authentication token can be generated right away. After creating an '
-            'account the initial group containing a database is created.'
+            "Creates a new user based on the provided values. If desired an "
+            "authentication token can be generated right away. After creating an "
+            "account the initial group containing a database is created."
         ),
         responses={
             200: create_user_response_schema,
-            400: get_error_schema([
-                'ERROR_ALREADY_EXISTS', 'ERROR_GROUP_INVITATION_DOES_NOT_EXIST'
-                'ERROR_REQUEST_BODY_VALIDATION', 'BAD_TOKEN_SIGNATURE'
-            ]),
-            404: get_error_schema(['ERROR_GROUP_INVITATION_DOES_NOT_EXIST'])
+            400: get_error_schema(
+                [
+                    "ERROR_ALREADY_EXISTS",
+                    "ERROR_GROUP_INVITATION_DOES_NOT_EXIST"
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "BAD_TOKEN_SIGNATURE",
+                ]
+            ),
+            404: get_error_schema(["ERROR_GROUP_INVITATION_DOES_NOT_EXIST"]),
         },
-        auth=[None]
+        auth=[None],
     )
     @transaction.atomic
-    @map_exceptions({
-        UserAlreadyExist: ERROR_ALREADY_EXISTS,
-        BadSignature: BAD_TOKEN_SIGNATURE,
-        GroupInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
-        GroupInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
-        DisabledSignupError: ERROR_DISABLED_SIGNUP
-    })
+    @map_exceptions(
+        {
+            UserAlreadyExist: ERROR_ALREADY_EXISTS,
+            BadSignature: BAD_TOKEN_SIGNATURE,
+            GroupInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
+            GroupInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
+            DisabledSignupError: ERROR_DISABLED_SIGNUP,
+        }
+    )
     @validate_body(RegisterSerializer)
     def post(self, request, data):
         """Registers a new user."""
 
         user = UserHandler().create_user(
-            name=data['name'],
-            email=data['email'],
-            password=data['password'],
-            group_invitation_token=data.get('group_invitation_token')
+            name=data["name"],
+            email=data["email"],
+            password=data["password"],
+            group_invitation_token=data.get("group_invitation_token"),
         )
 
-        response = {'user': UserSerializer(user).data}
+        response = {"user": UserSerializer(user).data}
 
-        if data['authenticate']:
+        if data["authenticate"]:
             payload = jwt_payload_handler(user)
             token = jwt_encode_handler(payload)
             response.update(token=token)
@@ -175,31 +194,28 @@ class SendResetPasswordEmailView(APIView):
     permission_classes = (AllowAny,)
 
     @extend_schema(
-        tags=['User'],
+        tags=["User"],
         request=SendResetPasswordEmailBodyValidationSerializer,
-        operation_id='send_password_reset_email',
+        operation_id="send_password_reset_email",
         description=(
-            'Sends an email containing the password reset link to the email address '
-            'of the user. This will only be done if a user is found with the given '
-            'email address. The endpoint will not fail if the email address is not '
-            'found. The link is going to the valid for {valid} hours.'.format(
+            "Sends an email containing the password reset link to the email address "
+            "of the user. This will only be done if a user is found with the given "
+            "email address. The endpoint will not fail if the email address is not "
+            "found. The link is going to the valid for {valid} hours.".format(
                 valid=int(settings.RESET_PASSWORD_TOKEN_MAX_AGE / 60 / 60)
             )
         ),
         responses={
             204: None,
-            400: get_error_schema([
-                'ERROR_REQUEST_BODY_VALIDATION',
-                'ERROR_HOSTNAME_IS_NOT_ALLOWED'
-            ])
+            400: get_error_schema(
+                ["ERROR_REQUEST_BODY_VALIDATION", "ERROR_HOSTNAME_IS_NOT_ALLOWED"]
+            ),
         },
         auth=[None],
     )
     @transaction.atomic
     @validate_body(SendResetPasswordEmailBodyValidationSerializer)
-    @map_exceptions({
-        BaseURLHostnameNotAllowed: ERROR_HOSTNAME_IS_NOT_ALLOWED
-    })
+    @map_exceptions({BaseURLHostnameNotAllowed: ERROR_HOSTNAME_IS_NOT_ALLOWED})
     def post(self, request, data):
         """
         If the email is found, an email containing the password reset link is send to
@@ -209,112 +225,115 @@ class SendResetPasswordEmailView(APIView):
         handler = UserHandler()
 
         try:
-            user = handler.get_user(email=data['email'])
-            handler.send_reset_password_email(user, data['base_url'])
+            user = handler.get_user(email=data["email"])
+            handler.send_reset_password_email(user, data["base_url"])
         except UserNotFound:
             pass
 
-        return Response('', status=204)
+        return Response("", status=204)
 
 
 class ResetPasswordView(APIView):
     permission_classes = (AllowAny,)
 
     @extend_schema(
-        tags=['User'],
+        tags=["User"],
         request=ResetPasswordBodyValidationSerializer,
-        operation_id='reset_password',
+        operation_id="reset_password",
         description=(
-            'Changes the password of a user if the reset token is valid. The '
-            '**send_password_reset_email** endpoint sends an email to the user '
-            'containing the token. That token can be used to change the password '
-            'here without providing the old password.'
+            "Changes the password of a user if the reset token is valid. The "
+            "**send_password_reset_email** endpoint sends an email to the user "
+            "containing the token. That token can be used to change the password "
+            "here without providing the old password."
         ),
         responses={
             204: None,
-            400: get_error_schema([
-                'BAD_TOKEN_SIGNATURE', 'EXPIRED_TOKEN_SIGNATURE',
-                'ERROR_USER_NOT_FOUND', 'ERROR_REQUEST_BODY_VALIDATION'
-            ])
+            400: get_error_schema(
+                [
+                    "BAD_TOKEN_SIGNATURE",
+                    "EXPIRED_TOKEN_SIGNATURE",
+                    "ERROR_USER_NOT_FOUND",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
         },
-        auth=[None]
+        auth=[None],
     )
     @transaction.atomic
-    @map_exceptions({
-        BadSignature: BAD_TOKEN_SIGNATURE,
-        SignatureExpired: EXPIRED_TOKEN_SIGNATURE,
-        UserNotFound: ERROR_USER_NOT_FOUND
-    })
+    @map_exceptions(
+        {
+            BadSignature: BAD_TOKEN_SIGNATURE,
+            SignatureExpired: EXPIRED_TOKEN_SIGNATURE,
+            UserNotFound: ERROR_USER_NOT_FOUND,
+        }
+    )
     @validate_body(ResetPasswordBodyValidationSerializer)
     def post(self, request, data):
         """Changes users password if the provided token is valid."""
 
         handler = UserHandler()
-        handler.reset_password(data['token'], data['password'])
+        handler.reset_password(data["token"], data["password"])
 
-        return Response('', status=204)
+        return Response("", status=204)
 
 
 class ChangePasswordView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        tags=['User'],
+        tags=["User"],
         request=ChangePasswordBodyValidationSerializer,
-        operation_id='change_password',
+        operation_id="change_password",
         description=(
-            'Changes the password of an authenticated user, but only if the old '
-            'password matches.'
+            "Changes the password of an authenticated user, but only if the old "
+            "password matches."
         ),
         responses={
             204: None,
-            400: get_error_schema([
-                'ERROR_INVALID_OLD_PASSWORD',
-                'ERROR_REQUEST_BODY_VALIDATION'
-            ])
-        }
+            400: get_error_schema(
+                ["ERROR_INVALID_OLD_PASSWORD", "ERROR_REQUEST_BODY_VALIDATION"]
+            ),
+        },
     )
     @transaction.atomic
-    @map_exceptions({
-        InvalidPassword: ERROR_INVALID_OLD_PASSWORD,
-    })
+    @map_exceptions(
+        {
+            InvalidPassword: ERROR_INVALID_OLD_PASSWORD,
+        }
+    )
     @validate_body(ChangePasswordBodyValidationSerializer)
     def post(self, request, data):
         """Changes the authenticated user's password if the old password is correct."""
 
         handler = UserHandler()
-        handler.change_password(request.user, data['old_password'],
-                                data['new_password'])
+        handler.change_password(
+            request.user, data["old_password"], data["new_password"]
+        )
 
-        return Response('', status=204)
+        return Response("", status=204)
 
 
 class DashboardView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        tags=['User'],
-        operation_id='dashboard',
+        tags=["User"],
+        operation_id="dashboard",
         description=(
-            'Lists all the relevant user information that for example could be shown '
-            'on a dashboard. It will contain all the pending group invitations for '
-            'that user.'
+            "Lists all the relevant user information that for example could be shown "
+            "on a dashboard. It will contain all the pending group invitations for "
+            "that user."
         ),
-        responses={
-            200: DashboardSerializer
-        }
+        responses={200: DashboardSerializer},
     )
     @transaction.atomic
     def get(self, request):
         """Lists all the data related to the user dashboard page."""
 
         group_invitations = GroupInvitation.objects.select_related(
-            'group',
-            'invited_by'
-        ).filter(
-            email=request.user.username
+            "group", "invited_by"
+        ).filter(email=request.user.username)
+        dashboard_serializer = DashboardSerializer(
+            {"group_invitations": group_invitations}
         )
-        dashboard_serializer = DashboardSerializer({
-            'group_invitations': group_invitations
-        })
         return Response(dashboard_serializer.data)

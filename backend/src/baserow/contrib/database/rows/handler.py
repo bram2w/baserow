@@ -30,12 +30,12 @@ class RowHandler:
         """
 
         return {
-            field['name']: field['type'].prepare_value_for_db(
-                field['field'],
-                values[field_id] if field_id in values else values[field['name']]
+            field["name"]: field["type"].prepare_value_for_db(
+                field["field"],
+                values[field_id] if field_id in values else values[field["name"]],
             )
             for field_id, field in fields.items()
-            if field_id in values or field['name'] in values
+            if field_id in values or field["name"] in values
         }
 
     def extract_field_ids_from_dict(self, values):
@@ -73,7 +73,7 @@ class RowHandler:
 
         return [
             int(re.sub("[^0-9]", "", str(v)))
-            for v in value.split(',')
+            for v in value.split(",")
             if any(c.isdigit() for c in v)
         ]
 
@@ -168,7 +168,7 @@ class RowHandler:
         try:
             row = model.objects.get(id=row_id)
         except model.DoesNotExist:
-            raise RowDoesNotExist(f'The row with id {row_id} does not exist.')
+            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
         return row
 
@@ -211,27 +211,30 @@ class RowHandler:
             # before. The same fraction is also going to be subtracted from the other
             # rows that have been placed before. By using these fractions we don't
             # have to re-order every row in the table.
-            change = Decimal('0.00000000000000000001')
-            values['order'] = before.order - change
+            change = Decimal("0.00000000000000000001")
+            values["order"] = before.order - change
             model.objects.filter(
-                order__gt=floor(values['order']),
-                order__lte=values['order']
-            ).update(order=F('order') - change)
+                order__gt=floor(values["order"]), order__lte=values["order"]
+            ).update(order=F("order") - change)
         else:
             # Because the row is by default added as last, we have to figure out what
             # the highest order is and increase that by one. Because the order of new
             # rows should always be a whole number we round it up.
-            values['order'] = ceil(
-                model.objects.aggregate(max=Max('order')).get('max') or Decimal('0')
-            ) + 1
+            values["order"] = (
+                ceil(
+                    model.objects.aggregate(max=Max("order")).get("max") or Decimal("0")
+                )
+                + 1
+            )
 
         instance = model.objects.create(**values)
 
         for name, value in manytomany_values.items():
             getattr(instance, name).set(value)
 
-        row_created.send(self, row=instance, before=before, user=user, table=table,
-                         model=model)
+        row_created.send(
+            self, row=instance, before=before, user=user, table=table, model=model
+        )
 
         return instance
 
@@ -268,7 +271,7 @@ class RowHandler:
             try:
                 row = model.objects.select_for_update().get(id=row_id)
             except model.DoesNotExist:
-                raise RowDoesNotExist(f'The row with id {row_id} does not exist.')
+                raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
             values = self.prepare_values(model._field_objects, values)
             values, manytomany_values = self.extract_manytomany_values(values, model)
@@ -306,10 +309,11 @@ class RowHandler:
         try:
             row = model.objects.get(id=row_id)
         except model.DoesNotExist:
-            raise RowDoesNotExist(f'The row with id {row_id} does not exist.')
+            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
         row_id = row.id
         row.delete()
 
-        row_deleted.send(self, row_id=row_id, row=row, user=user, table=table,
-                         model=model)
+        row_deleted.send(
+            self, row_id=row_id, row=row, user=user, table=table, model=model
+        )

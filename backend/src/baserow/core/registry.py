@@ -18,7 +18,7 @@ class Instance(object):
 
     def __init__(self):
         if not self.type:
-            raise ImproperlyConfigured('The type of an instance must be set.')
+            raise ImproperlyConfigured("The type of an instance must be set.")
 
 
 class ModelInstanceMixin:
@@ -31,7 +31,7 @@ class ModelInstanceMixin:
 
     def __init__(self):
         if not self.model_class:
-            raise ImproperlyConfigured('The model_class of an instance must be set.')
+            raise ImproperlyConfigured("The model_class of an instance must be set.")
 
 
 class CustomFieldsInstanceMixin:
@@ -57,15 +57,19 @@ class CustomFieldsInstanceMixin:
         :rtype: ModelSerializer
         """
 
-        model_class = getattr(self, 'model_class')
+        model_class = getattr(self, "model_class")
         if not model_class:
-            raise ValueError('Attribute model_class must be set, maybe you forgot to '
-                             'extend the ModelInstanceMixin?')
+            raise ValueError(
+                "Attribute model_class must be set, maybe you forgot to "
+                "extend the ModelInstanceMixin?"
+            )
 
         return get_serializer_class(
-            model_class, self.serializer_field_names,
+            model_class,
+            self.serializer_field_names,
             field_overrides=self.serializer_field_overrides,
-            *args, **kwargs
+            *args,
+            **kwargs,
         )
 
     def get_serializer(self, model_instance, base_class=None, **kwargs):
@@ -86,8 +90,9 @@ class CustomFieldsInstanceMixin:
 
         model_instance = model_instance.specific
         serializer_class = self.get_serializer_class(base_class=base_class)
-        return serializer_class(model_instance, context={'instance_type': self},
-                                **kwargs)
+        return serializer_class(
+            model_instance, context={"instance_type": self}, **kwargs
+        )
 
 
 class APIUrlsInstanceMixin:
@@ -170,7 +175,7 @@ class ImportExportMixin:
         :rtype: dict
         """
 
-        raise NotImplementedError('The export_serialized method must be implemented.')
+        raise NotImplementedError("The export_serialized method must be implemented.")
 
     def import_serialized(self, parent, serialized_values, id_mapping):
         """
@@ -189,7 +194,7 @@ class ImportExportMixin:
         :rtype: Object
         """
 
-        raise NotImplementedError('The import_serialized method must be implemented.')
+        raise NotImplementedError("The import_serialized method must be implemented.")
 
 
 class Registry(object):
@@ -204,8 +209,10 @@ class Registry(object):
 
     def __init__(self):
         if not self.name:
-            raise ImproperlyConfigured('The name must be set on an '
-                                       'InstanceModelRegistry to raise proper errors.')
+            raise ImproperlyConfigured(
+                "The name must be set on an "
+                "InstanceModelRegistry to raise proper errors."
+            )
 
         self.registry = {}
 
@@ -223,7 +230,7 @@ class Registry(object):
 
         if type_name not in self.registry:
             raise self.does_not_exist_exception_class(
-                type_name, f'The {self.name} type {type_name} does not exist.'
+                type_name, f"The {self.name} type {type_name} does not exist."
             )
 
         return self.registry[type_name]
@@ -250,12 +257,12 @@ class Registry(object):
         """
 
         if not isinstance(instance, Instance):
-            raise ValueError(f'The {self.name} must be an instance of '
-                             f'Instance.')
+            raise ValueError(f"The {self.name} must be an instance of " f"Instance.")
 
         if instance.type in self.registry:
             raise self.already_registered_exception_class(
-                f'The {self.name} with type {instance.type} is already registered.')
+                f"The {self.name} with type {instance.type} is already registered."
+            )
 
         self.registry[instance.type] = instance
 
@@ -278,8 +285,9 @@ class Registry(object):
         if isinstance(value, str):
             del self.registry[value]
         else:
-            raise ValueError(f'The value must either be an {self.name} instance or '
-                             f'type name')
+            raise ValueError(
+                f"The value must either be an {self.name} instance or " f"type name"
+            )
 
 
 class ModelRegistryMixin:
@@ -297,14 +305,14 @@ class ModelRegistryMixin:
         """
 
         for value in self.registry.values():
-            if (
-                value.model_class == model_instance
-                or isinstance(model_instance, value.model_class)
+            if value.model_class == model_instance or isinstance(
+                model_instance, value.model_class
             ):
                 return value
 
-        raise self.does_not_exist_exception_class(f'The {self.name} model instance '
-                                                  f'{model_instance} does not exist.')
+        raise self.does_not_exist_exception_class(
+            f"The {self.name} model instance " f"{model_instance} does not exist."
+        )
 
 
 class CustomFieldsRegistryMixin:
@@ -326,15 +334,18 @@ class CustomFieldsRegistryMixin:
         :rtype: ModelSerializer
         """
 
-        get_by_model = getattr(self, 'get_by_model')
+        get_by_model = getattr(self, "get_by_model")
         if not get_by_model:
-            raise ValueError('The method get_by_model must exist on the registry in '
-                             'order to generate the serializer, maybe you forgot to '
-                             'extend the ModelRegistryMixin?')
+            raise ValueError(
+                "The method get_by_model must exist on the registry in "
+                "order to generate the serializer, maybe you forgot to "
+                "extend the ModelRegistryMixin?"
+            )
 
         instance_type = self.get_by_model(model_instance.specific_class)
-        return instance_type.get_serializer(model_instance, base_class=base_class,
-                                            **kwargs)
+        return instance_type.get_serializer(
+            model_instance, base_class=base_class, **kwargs
+        )
 
 
 class APIUrlsRegistryMixin:

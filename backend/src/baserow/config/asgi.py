@@ -9,7 +9,4 @@ from baserow.ws.routers import websocket_router
 django.setup()
 
 
-application = ProtocolTypeRouter({
-    'http': AsgiHandler(),
-    'websocket': websocket_router
-})
+application = ProtocolTypeRouter({"http": AsgiHandler(), "websocket": websocket_router})

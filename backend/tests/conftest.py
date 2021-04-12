@@ -9,12 +9,14 @@ import sys
 @pytest.fixture
 def data_fixture():
     from .fixtures import Fixtures
+
     return Fixtures()
 
 
 @pytest.fixture()
 def api_client():
     from rest_framework.test import APIClient
+
     return APIClient()
 
 
@@ -39,9 +41,12 @@ def pytest_collection_modifyitems(config, items):
 
 
 def run_non_transactional_raw_sql(sqls, dbinfo):
-    conn = psycopg2.connect(host=dbinfo['HOST'], user=dbinfo['USER'],
-                            password=dbinfo['PASSWORD'],
-                            port=int(dbinfo['PORT']))
+    conn = psycopg2.connect(
+        host=dbinfo["HOST"],
+        user=dbinfo["USER"],
+        password=dbinfo["PASSWORD"],
+        port=int(dbinfo["PORT"]),
+    )
     conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
     cursor = conn.cursor()
     for sql in sqls:
@@ -67,29 +72,33 @@ def user_tables_in_separate_db(settings):
     scope lets us keep it simple and quick.
     """
 
-    default_db = settings.DATABASES['default']
+    default_db = settings.DATABASES["default"]
     user_table_db_name = f'{default_db["NAME"]}_user_tables'
 
     # Print to stderr to match pytest-django's behaviour for logging about test
     # database setup and teardown.
     eprint(f"Dropping and recreating {user_table_db_name} for test.")
 
-    settings.USER_TABLE_DATABASE = 'user_tables_database'
-    settings.DATABASES['user_tables_database'] = dict(default_db)
-    settings.DATABASES['user_tables_database']['NAME'] = user_table_db_name
+    settings.USER_TABLE_DATABASE = "user_tables_database"
+    settings.DATABASES["user_tables_database"] = dict(default_db)
+    settings.DATABASES["user_tables_database"]["NAME"] = user_table_db_name
 
     # You cannot drop databases inside transactions and django provides no easy way
     # of turning them off temporarily. Instead we need to open our own connection so
     # we can turn off transactions to perform the required setup/teardown sql. See:
     # https://pytest-django.readthedocs.io/en/latest/database.html#using-a-template
     # -database-for-tests
-    run_non_transactional_raw_sql([f'DROP DATABASE IF EXISTS {user_table_db_name}; ',
-                                   f'CREATE DATABASE {user_table_db_name}'],
-                                  default_db)
+    run_non_transactional_raw_sql(
+        [
+            f"DROP DATABASE IF EXISTS {user_table_db_name}; ",
+            f"CREATE DATABASE {user_table_db_name}",
+        ],
+        default_db,
+    )
 
-    yield connections['user_tables_database']
+    yield connections["user_tables_database"]
 
     # Close django's connection to the user table db so we can drop it.
-    connections['user_tables_database'].close()
+    connections["user_tables_database"].close()
 
-    run_non_transactional_raw_sql([f'DROP DATABASE {user_table_db_name}'], default_db)
+    run_non_transactional_raw_sql([f"DROP DATABASE {user_table_db_name}"], default_db)

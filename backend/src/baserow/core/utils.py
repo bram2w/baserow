@@ -89,7 +89,7 @@ def to_pascal_case(value):
     :rtype: str
     """
 
-    return ''.join(character for character in value.title() if not character.isspace())
+    return "".join(character for character in value.title() if not character.isspace())
 
 
 def to_snake_case(value):
@@ -102,7 +102,7 @@ def to_snake_case(value):
     :rtype: str
     """
 
-    return re.sub(' +', ' ', value).lower().replace(' ', '_').strip()
+    return re.sub(" +", " ", value).lower().replace(" ", "_").strip()
 
 
 def remove_special_characters(value, remove_spaces=True):
@@ -117,10 +117,10 @@ def remove_special_characters(value, remove_spaces=True):
     :rtype: str
     """
 
-    return ''.join(
+    return "".join(
         character
         for character in value
-        if character.isalnum() or (character == ' ' and not remove_spaces)
+        if character.isalnum() or (character == " " and not remove_spaces)
     )
 
 
@@ -138,16 +138,14 @@ def model_default_values(model_class, not_provided=None):
 
     return {
         field.name: (
-            field.default
-            if field.default is not NOT_PROVIDED else
-            not_provided
+            field.default if field.default is not NOT_PROVIDED else not_provided
         )
         for field in model_class._meta.get_fields()
-        if hasattr(field, 'default')
+        if hasattr(field, "default")
     }
 
 
-def dict_to_object(values, name='Struct'):
+def dict_to_object(values, name="Struct"):
     """
     Converts a dict to an object.
 
@@ -173,10 +171,9 @@ def random_string(length):
     :type: str
     """
 
-    return ''.join(
-        random.SystemRandom().choice(
-            string.ascii_letters + string.digits
-        ) for _ in range(length)
+    return "".join(
+        random.SystemRandom().choice(string.ascii_letters + string.digits)
+        for _ in range(length)
     )
 
 
@@ -194,7 +191,7 @@ def sha256_hash(stream, block_size=65536):
 
     stream.seek(0)
     hasher = hashlib.sha256()
-    for stream_chunk in iter(lambda: stream.read(block_size), b''):
+    for stream_chunk in iter(lambda: stream.read(block_size), b""):
         hasher.update(stream_chunk)
     stream.seek(0)
     return hasher.hexdigest()
@@ -216,7 +213,7 @@ def stream_size(stream):
     return size
 
 
-def truncate_middle(content, max_length, middle='...'):
+def truncate_middle(content, max_length, middle="..."):
     """
     Truncates the middle part of the string if the total length if too long.
 
@@ -238,14 +235,15 @@ def truncate_middle(content, max_length, middle='...'):
         return content
 
     if max_length <= len(middle):
-        raise ValueError('The max_length cannot be lower than the length if the '
-                         'middle string.')
+        raise ValueError(
+            "The max_length cannot be lower than the length if the " "middle string."
+        )
 
     total = max_length - len(middle)
     start = math.ceil(total / 2)
     end = math.floor(total / 2)
 
     left = content[:start]
-    right = content[-end:] if end else ''
+    right = content[-end:] if end else ""
 
-    return f'{left}{middle}{right}'
+    return f"{left}{middle}{right}"

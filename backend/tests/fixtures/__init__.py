@@ -12,7 +12,16 @@ from .token import TokenFixtures
 from .template import TemplateFixtures
 
 
-class Fixtures(SettingsFixtures, UserFixtures, UserFileFixtures, GroupFixtures,
-               ApplicationFixtures, TableFixtures, ViewFixtures, FieldFixtures,
-               TokenFixtures, TemplateFixtures):
+class Fixtures(
+    SettingsFixtures,
+    UserFixtures,
+    UserFileFixtures,
+    GroupFixtures,
+    ApplicationFixtures,
+    TableFixtures,
+    ViewFixtures,
+    FieldFixtures,
+    TokenFixtures,
+    TemplateFixtures,
+):
     fake = Faker()

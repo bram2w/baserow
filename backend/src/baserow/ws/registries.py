@@ -41,7 +41,7 @@ class PageType(Instance):
         """
 
         raise NotImplementedError(
-            'Each web socket page must have his own can_add method.'
+            "Each web socket page must have his own can_add method."
         )
 
     def get_group_name(self, **kwargs):
@@ -58,7 +58,7 @@ class PageType(Instance):
         """
 
         raise NotImplementedError(
-            'Each web socket page must have his own get_group_name method.'
+            "Each web socket page must have his own get_group_name method."
         )
 
     def broadcast(self, payload, ignore_web_socket_id=None, **kwargs):
@@ -76,14 +76,12 @@ class PageType(Instance):
         """
 
         broadcast_to_channel_group.delay(
-            self.get_group_name(**kwargs),
-            payload,
-            ignore_web_socket_id
+            self.get_group_name(**kwargs), payload, ignore_web_socket_id
         )
 
 
 class PageRegistry(Registry):
-    name = 'ws_page'
+    name = "ws_page"
 
 
 page_registry = PageRegistry()

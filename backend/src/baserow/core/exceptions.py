@@ -10,10 +10,11 @@ class UserNotInGroup(Exception):
 
     def __init__(self, user=None, group=None, *args, **kwargs):
         if user and group:
-            super().__init__(f'User {user} doesn\'t belong to group {group}.', *args,
-                             **kwargs)
+            super().__init__(
+                f"User {user} doesn't belong to group {group}.", *args, **kwargs
+            )
         else:
-            super().__init__('The user doesn\'t belong to the group', *args, **kwargs)
+            super().__init__("The user doesn't belong to the group", *args, **kwargs)
 
 
 class UserInvalidGroupPermissionsError(Exception):
@@ -24,10 +25,10 @@ class UserInvalidGroupPermissionsError(Exception):
         self.group = group
         self.permissions = permissions
         super().__init__(
-            f'The user {user} doesn\'t have the right permissions {permissions} to '
-            f'{group}.',
+            f"The user {user} doesn't have the right permissions {permissions} to "
+            f"{group}.",
             *args,
-            **kwargs
+            **kwargs,
         )
 
 

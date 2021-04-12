@@ -8,23 +8,25 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         await self.accept()
 
-        user = self.scope['user']
-        web_socket_id = self.scope['web_socket_id']
+        user = self.scope["user"]
+        web_socket_id = self.scope["web_socket_id"]
 
-        await self.send_json({
-            'type': 'authentication',
-            'success': user is not None,
-            'web_socket_id': web_socket_id
-        })
+        await self.send_json(
+            {
+                "type": "authentication",
+                "success": user is not None,
+                "web_socket_id": web_socket_id,
+            }
+        )
 
         if not user:
             await self.close()
             return
 
-        await self.channel_layer.group_add('users', self.channel_name)
+        await self.channel_layer.group_add("users", self.channel_name)
 
     async def receive_json(self, content, **parameters):
-        if 'page' in content:
+        if "page" in content:
             await self.add_to_page(content)
 
     async def add_to_page(self, content):
@@ -39,8 +41,8 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         :type content: dict
         """
 
-        user = self.scope['user']
-        web_socket_id = self.scope['web_socket_id']
+        user = self.scope["user"]
+        web_socket_id = self.scope["web_socket_id"]
 
         if not user:
             return
@@ -50,19 +52,16 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         await self.discard_current_page()
 
         try:
-            page_type = page_registry.get(content['page'])
+            page_type = page_registry.get(content["page"])
         except page_registry.does_not_exist_exception_class:
             return
 
         parameters = {
-            parameter: content.get(parameter)
-            for parameter in page_type.parameters
+            parameter: content.get(parameter) for parameter in page_type.parameters
         }
 
         can_add = await database_sync_to_async(page_type.can_add)(
-            user,
-            web_socket_id,
-            **parameters
+            user, web_socket_id, **parameters
         )
 
         if not can_add:
@@ -70,14 +69,12 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
 
         group_name = page_type.get_group_name(**parameters)
         await self.channel_layer.group_add(group_name, self.channel_name)
-        self.scope['page'] = page_type
-        self.scope['page_parameters'] = parameters
+        self.scope["page"] = page_type
+        self.scope["page_parameters"] = parameters
 
-        await self.send_json({
-            'type': 'page_add',
-            'page': page_type.type,
-            'parameters': parameters
-        })
+        await self.send_json(
+            {"type": "page_add", "page": page_type.type, "parameters": parameters}
+        )
 
     async def discard_current_page(self, send_confirmation=True):
         """
@@ -85,24 +82,26 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         the last page.
         """
 
-        page = self.scope.get('page')
+        page = self.scope.get("page")
         if not page:
             return
 
         page_type = page.type
-        page_parameters = self.scope['page_parameters']
+        page_parameters = self.scope["page_parameters"]
 
-        group_name = page.get_group_name(**self.scope['page_parameters'])
+        group_name = page.get_group_name(**self.scope["page_parameters"])
         await self.channel_layer.group_discard(group_name, self.channel_name)
-        del self.scope['page']
-        del self.scope['page_parameters']
+        del self.scope["page"]
+        del self.scope["page_parameters"]
 
         if send_confirmation:
-            await self.send_json({
-                'type': 'page_discard',
-                'page': page_type,
-                'parameters': page_parameters
-            })
+            await self.send_json(
+                {
+                    "type": "page_discard",
+                    "page": page_type,
+                    "parameters": page_parameters,
+                }
+            )
 
     async def broadcast_to_users(self, event):
         """
@@ -115,15 +114,14 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         :type event: dict
         """
 
-        web_socket_id = self.scope['web_socket_id']
-        payload = event['payload']
-        user_ids = event['user_ids']
-        ignore_web_socket_id = event['ignore_web_socket_id']
+        web_socket_id = self.scope["web_socket_id"]
+        payload = event["payload"]
+        user_ids = event["user_ids"]
+        ignore_web_socket_id = event["ignore_web_socket_id"]
 
         if (
-            (not ignore_web_socket_id or ignore_web_socket_id != web_socket_id) and
-            self.scope['user'].id in user_ids
-        ):
+            not ignore_web_socket_id or ignore_web_socket_id != web_socket_id
+        ) and self.scope["user"].id in user_ids:
             await self.send_json(payload)
 
     async def broadcast_to_group(self, event):
@@ -135,13 +133,13 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         :type event: dict
         """
 
-        web_socket_id = self.scope['web_socket_id']
-        payload = event['payload']
-        ignore_web_socket_id = event['ignore_web_socket_id']
+        web_socket_id = self.scope["web_socket_id"]
+        payload = event["payload"]
+        ignore_web_socket_id = event["ignore_web_socket_id"]
 
         if not ignore_web_socket_id or ignore_web_socket_id != web_socket_id:
             await self.send_json(payload)
 
     async def disconnect(self, message):
         await self.discard_current_page(send_confirmation=False)
-        await self.channel_layer.group_discard('users', self.channel_name)
+        await self.channel_layer.group_discard("users", self.channel_name)

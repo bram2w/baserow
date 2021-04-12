@@ -1,6 +1,11 @@
 from .registry import (
-    Instance, Registry, ModelInstanceMixin, ModelRegistryMixin, APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin, ImportExportMixin
+    Instance,
+    Registry,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    APIUrlsRegistryMixin,
+    APIUrlsInstanceMixin,
+    ImportExportMixin,
 )
 from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
 
@@ -89,7 +94,7 @@ class PluginRegistry(APIUrlsRegistryMixin, Registry):
     register extra api and root urls.
     """
 
-    name = 'plugin'
+    name = "plugin"
 
     @property
     def urls(self):
@@ -107,8 +112,9 @@ class PluginRegistry(APIUrlsRegistryMixin, Registry):
         return urls
 
 
-class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixin,
-                      Instance):
+class ApplicationType(
+    APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixin, Instance
+):
     """
     This abstract class represents a custom application that can be added to the
     application registry. It must be extended so customisation can be done. Each
@@ -163,10 +169,10 @@ class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixi
         """
 
         return {
-            'id': application.id,
-            'name': application.name,
-            'order': application.order,
-            'type': self.type
+            "id": application.id,
+            "name": application.name,
+            "order": application.order,
+            "type": self.type,
         }
 
     def import_serialized(self, group, serialized_values, id_mapping):
@@ -186,14 +192,14 @@ class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixi
         :rtype: Application
         """
 
-        if 'applications' not in id_mapping:
-            id_mapping['applications'] = {}
+        if "applications" not in id_mapping:
+            id_mapping["applications"] = {}
 
         serialized_copy = serialized_values.copy()
-        application_id = serialized_copy.pop('id')
-        serialized_copy.pop('type')
+        application_id = serialized_copy.pop("id")
+        serialized_copy.pop("type")
         application = self.model_class.objects.create(group=group, **serialized_copy)
-        id_mapping['applications'][application_id] = application.id
+        id_mapping["applications"][application_id] = application.id
 
         return application
 
@@ -206,7 +212,7 @@ class ApplicationTypeRegistry(APIUrlsRegistryMixin, ModelRegistryMixin, Registry
     register api related urls.
     """
 
-    name = 'application'
+    name = "application"
     does_not_exist_exception_class = ApplicationTypeDoesNotExist
     already_registered_exception_class = ApplicationTypeAlreadyRegistered
 

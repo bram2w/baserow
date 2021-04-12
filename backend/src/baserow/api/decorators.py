@@ -1,6 +1,8 @@
 from .utils import (
-    map_exceptions as map_exceptions_utility, get_request, validate_data,
-    validate_data_custom_fields
+    map_exceptions as map_exceptions_utility,
+    get_request,
+    validate_data,
+    validate_data_custom_fields,
 )
 from .exceptions import RequestBodyValidationException
 
@@ -39,7 +41,9 @@ def map_exceptions(exceptions):
         def func_wrapper(*args, **kwargs):
             with map_exceptions_utility(exceptions):
                 return func(*args, **kwargs)
+
         return func_wrapper
+
     return map_exceptions_decorator
 
 
@@ -82,17 +86,20 @@ def validate_body(serializer_class):
         def func_wrapper(*args, **kwargs):
             request = get_request(args)
 
-            if 'data' in kwargs:
-                raise ValueError('The data attribute is already in the kwargs.')
+            if "data" in kwargs:
+                raise ValueError("The data attribute is already in the kwargs.")
 
-            kwargs['data'] = validate_data(serializer_class, request.data)
+            kwargs["data"] = validate_data(serializer_class, request.data)
             return func(*args, **kwargs)
+
         return func_wrapper
+
     return validate_decorator
 
 
-def validate_body_custom_fields(registry, base_serializer_class=None,
-                                type_attribute_name='type'):
+def validate_body_custom_fields(
+    registry, base_serializer_class=None, type_attribute_name="type"
+):
     """
     This decorator can validate the request data dynamically using the generated
     serializer that belongs to the type instance. Based on a provided
@@ -122,25 +129,28 @@ def validate_body_custom_fields(registry, base_serializer_class=None,
             if not type_name:
                 # If the type name isn't provided in the data we will raise a machine
                 # readable validation error.
-                raise RequestBodyValidationException({
-                    type_attribute_name: [
-                        {
-                            "error": "This field is required.",
-                            "code": "required"
-                        }
-                    ]
-                })
+                raise RequestBodyValidationException(
+                    {
+                        type_attribute_name: [
+                            {"error": "This field is required.", "code": "required"}
+                        ]
+                    }
+                )
 
-            if 'data' in kwargs:
-                raise ValueError('The data attribute is already in the kwargs.')
+            if "data" in kwargs:
+                raise ValueError("The data attribute is already in the kwargs.")
 
-            kwargs['data'] = validate_data_custom_fields(
-                type_name, registry, request.data,
+            kwargs["data"] = validate_data_custom_fields(
+                type_name,
+                registry,
+                request.data,
                 base_serializer_class=base_serializer_class,
-                type_attribute_name=type_attribute_name
+                type_attribute_name=type_attribute_name,
             )
             return func(*args, **kwargs)
+
         return func_wrapper
+
     return validate_decorator
 
 
@@ -174,12 +184,14 @@ def allowed_includes(*allowed):
     def validate_decorator(func):
         def func_wrapper(*args, **kwargs):
             request = get_request(args)
-            raw_include = request.GET.get('include', None)
-            includes = raw_include.split(',') if raw_include else []
+            raw_include = request.GET.get("include", None)
+            includes = raw_include.split(",") if raw_include else []
 
             for include in allowed:
                 kwargs[include] = include in includes
 
             return func(*args, **kwargs)
+
         return func_wrapper
+
     return validate_decorator

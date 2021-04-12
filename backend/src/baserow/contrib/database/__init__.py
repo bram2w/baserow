@@ -1,1 +1,1 @@
-default_app_config = 'baserow.contrib.database.config.DatabaseConfig'
+default_app_config = "baserow.contrib.database.config.DatabaseConfig"

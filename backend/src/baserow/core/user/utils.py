@@ -12,4 +12,4 @@ def normalize_email_address(email):
     :rtype: str
     """
 
-    return unicodedata.normalize('NFKC', email).strip().lower()
+    return unicodedata.normalize("NFKC", email).strip().lower()

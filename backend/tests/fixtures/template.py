@@ -3,8 +3,8 @@ from baserow.core.models import Template, TemplateCategory
 
 class TemplateFixtures:
     def create_template_category(self, template=None, templates=None, **kwargs):
-        if 'name' not in kwargs:
-            kwargs['name'] = self.fake.name()
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
 
         category = TemplateCategory.objects.create(**kwargs)
 
@@ -19,17 +19,17 @@ class TemplateFixtures:
         return category
 
     def create_template(self, category=None, categories=None, **kwargs):
-        if 'name' not in kwargs:
-            kwargs['name'] = self.fake.name()
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
 
-        if 'slug' not in kwargs:
-            kwargs['slug'] = self.fake.slug()
+        if "slug" not in kwargs:
+            kwargs["slug"] = self.fake.slug()
 
-        if 'icon' not in kwargs:
-            kwargs['icon'] = 'document'
+        if "icon" not in kwargs:
+            kwargs["icon"] = "document"
 
-        if 'group' not in kwargs:
-            kwargs['group'] = self.create_group()
+        if "group" not in kwargs:
+            kwargs["group"] = self.create_group()
 
         template = Template.objects.create(**kwargs)
 

@@ -11,15 +11,19 @@ from rest_framework.permissions import IsAuthenticated
 from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.schemas import get_error_schema
 from baserow.core.user_files.exceptions import (
-    InvalidFileStreamError, FileSizeTooLargeError, FileURLCouldNotBeReached,
-    InvalidFileURLError
+    InvalidFileStreamError,
+    FileSizeTooLargeError,
+    FileURLCouldNotBeReached,
+    InvalidFileURLError,
 )
 from baserow.core.user_files.handler import UserFileHandler
 
 from .serializers import UserFileSerializer, UserFileUploadViaURLRequestSerializer
 from .errors import (
-    ERROR_INVALID_FILE, ERROR_FILE_SIZE_TOO_LARGE, ERROR_FILE_URL_COULD_NOT_BE_REACHED,
-    ERROR_INVALID_FILE_URL
+    ERROR_INVALID_FILE,
+    ERROR_FILE_SIZE_TOO_LARGE,
+    ERROR_FILE_URL_COULD_NOT_BE_REACHED,
+    ERROR_INVALID_FILE_URL,
 )
 
 
@@ -28,30 +32,32 @@ class UploadFileView(APIView):
     parser_classes = (MultiPartParser,)
 
     @extend_schema(
-        tags=['User files'],
-        operation_id='upload_file',
+        tags=["User files"],
+        operation_id="upload_file",
         description=(
-            'Uploads a file to Baserow by uploading the file contents directly. A '
-            '`file` multipart is expected containing the file contents.'
+            "Uploads a file to Baserow by uploading the file contents directly. A "
+            "`file` multipart is expected containing the file contents."
         ),
         request=None,
         responses={
             200: UserFileSerializer,
-            400: get_error_schema(['ERROR_INVALID_FILE', 'ERROR_FILE_SIZE_TOO_LARGE'])
-        }
+            400: get_error_schema(["ERROR_INVALID_FILE", "ERROR_FILE_SIZE_TOO_LARGE"]),
+        },
     )
     @transaction.atomic
-    @map_exceptions({
-        InvalidFileStreamError: ERROR_INVALID_FILE,
-        FileSizeTooLargeError: ERROR_FILE_SIZE_TOO_LARGE
-    })
+    @map_exceptions(
+        {
+            InvalidFileStreamError: ERROR_INVALID_FILE,
+            FileSizeTooLargeError: ERROR_FILE_SIZE_TOO_LARGE,
+        }
+    )
     def post(self, request):
         """Uploads a file by uploading the contents directly."""
 
-        if 'file' not in request.FILES:
-            raise InvalidFileStreamError('No file was provided.')
+        if "file" not in request.FILES:
+            raise InvalidFileStreamError("No file was provided.")
 
-        file = request.FILES.get('file')
+        file = request.FILES.get("file")
         user_file = UserFileHandler().upload_user_file(request.user, file.name, file)
         serializer = UserFileSerializer(user_file)
         return Response(serializer.data)
@@ -61,34 +67,38 @@ class UploadViaURLView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        tags=['User files'],
-        operation_id='upload_via_url',
+        tags=["User files"],
+        operation_id="upload_via_url",
         description=(
-            'Uploads a file to Baserow by downloading it from the provided URL.'
+            "Uploads a file to Baserow by downloading it from the provided URL."
         ),
         request=UserFileUploadViaURLRequestSerializer,
         responses={
             200: UserFileSerializer,
-            400: get_error_schema([
-                'ERROR_INVALID_FILE',
-                'ERROR_FILE_SIZE_TOO_LARGE',
-                'ERROR_FILE_URL_COULD_NOT_BE_REACHED',
-                'ERROR_INVALID_FILE_URL'
-            ])
-        }
+            400: get_error_schema(
+                [
+                    "ERROR_INVALID_FILE",
+                    "ERROR_FILE_SIZE_TOO_LARGE",
+                    "ERROR_FILE_URL_COULD_NOT_BE_REACHED",
+                    "ERROR_INVALID_FILE_URL",
+                ]
+            ),
+        },
     )
     @transaction.atomic
-    @map_exceptions({
-        InvalidFileStreamError: ERROR_INVALID_FILE,
-        FileSizeTooLargeError: ERROR_FILE_SIZE_TOO_LARGE,
-        FileURLCouldNotBeReached: ERROR_FILE_URL_COULD_NOT_BE_REACHED,
-        InvalidFileURLError: ERROR_INVALID_FILE_URL
-    })
+    @map_exceptions(
+        {
+            InvalidFileStreamError: ERROR_INVALID_FILE,
+            FileSizeTooLargeError: ERROR_FILE_SIZE_TOO_LARGE,
+            FileURLCouldNotBeReached: ERROR_FILE_URL_COULD_NOT_BE_REACHED,
+            InvalidFileURLError: ERROR_INVALID_FILE_URL,
+        }
+    )
     @validate_body(UserFileUploadViaURLRequestSerializer)
     def post(self, request, data):
         """Uploads a user file by downloading it from the provided URL."""
 
-        url = data['url']
+        url = data["url"]
         user_file = UserFileHandler().upload_user_file_by_url(request.user, url)
         serializer = UserFileSerializer(user_file)
         return Response(serializer.data)
