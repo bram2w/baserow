@@ -14,12 +14,9 @@ class TablesDatabaseRouter(object):
         # USER_TABLE_DATABASE because it could be that the user data does not live in
         # the default database. This is also the case when the model is automatically
         # created by a generated table model.
-        if (
-            hasattr(model, '_generated_table_model') or
-            (
-                model._meta.auto_created and
-                hasattr(model._meta.auto_created, '_generated_table_model')
-            )
+        if hasattr(model, "_generated_table_model") or (
+            model._meta.auto_created
+            and hasattr(model._meta.auto_created, "_generated_table_model")
         ):
             return settings.USER_TABLE_DATABASE
 
@@ -35,7 +32,7 @@ class TablesDatabaseRouter(object):
         database table can make references to for example a select option.
         """
 
-        allowed = ('default', settings.USER_TABLE_DATABASE)
+        allowed = ("default", settings.USER_TABLE_DATABASE)
         if obj1._state.db in allowed and obj2._state.db in allowed:
             return True
         return None

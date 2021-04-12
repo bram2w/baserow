@@ -6,37 +6,24 @@ from baserow.contrib.database.views.registries import view_type_registry
 @pytest.mark.django_db
 def test_import_export_grid_view(data_fixture):
     grid_view = data_fixture.create_grid_view(
-        name='Test',
-        order=1,
-        filter_type='AND',
-        filters_disabled=False
+        name="Test", order=1, filter_type="AND", filters_disabled=False
     )
     field = data_fixture.create_text_field(table=grid_view.table)
     imported_field = data_fixture.create_text_field(table=grid_view.table)
     field_option = data_fixture.create_grid_view_field_option(
-        grid_view=grid_view,
-        field=field
+        grid_view=grid_view, field=field
     )
     view_filter = data_fixture.create_view_filter(
-        view=grid_view,
-        field=field,
-        value='test',
-        type='equal'
+        view=grid_view, field=field, value="test", type="equal"
     )
-    view_sort = data_fixture.create_view_sort(
-        view=grid_view,
-        field=field,
-        order='ASC'
-    )
+    view_sort = data_fixture.create_view_sort(view=grid_view, field=field, order="ASC")
 
-    id_mapping = {'database_fields': {field.id: imported_field.id}}
+    id_mapping = {"database_fields": {field.id: imported_field.id}}
 
-    grid_view_type = view_type_registry.get('grid')
+    grid_view_type = view_type_registry.get("grid")
     serialized = grid_view_type.export_serialized(grid_view)
     imported_grid_view = grid_view_type.import_serialized(
-        grid_view.table,
-        serialized,
-        id_mapping
+        grid_view.table, serialized, id_mapping
     )
 
     assert grid_view.id != imported_grid_view.id

@@ -9,28 +9,26 @@ from baserow.core.models import GroupInvitation
 class GroupInvitationSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupInvitation
-        fields = ('id', 'group', 'email', 'permissions', 'message', 'created_on')
-        extra_kwargs = {
-            'id': {'read_only': True}
-        }
+        fields = ("id", "group", "email", "permissions", "message", "created_on")
+        extra_kwargs = {"id": {"read_only": True}}
 
 
 class CreateGroupInvitationSerializer(serializers.ModelSerializer):
     base_url = serializers.URLField(
-        help_text='The base URL where the user can publicly accept his invitation.'
-                  'The accept token is going to be appended to the base_url (base_url '
-                  '\'/token\').'
+        help_text="The base URL where the user can publicly accept his invitation."
+        "The accept token is going to be appended to the base_url (base_url "
+        "'/token')."
     )
 
     class Meta:
         model = GroupInvitation
-        fields = ('email', 'permissions', 'message', 'base_url')
+        fields = ("email", "permissions", "message", "base_url")
 
 
 class UpdateGroupInvitationSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupInvitation
-        fields = ('permissions',)
+        fields = ("permissions",)
 
 
 class UserGroupInvitationSerializer(serializers.ModelSerializer):
@@ -45,12 +43,19 @@ class UserGroupInvitationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GroupInvitation
-        fields = ('id', 'invited_by', 'group', 'email', 'message', 'created_on',
-                  'email_exists')
+        fields = (
+            "id",
+            "invited_by",
+            "group",
+            "email",
+            "message",
+            "created_on",
+            "email_exists",
+        )
         extra_kwargs = {
-            'id': {'read_only': True},
-            'message': {'read_only': True},
-            'created_on': {'read_only': True}
+            "id": {"read_only": True},
+            "message": {"read_only": True},
+            "created_on": {"read_only": True},
         }
 
     @extend_schema_field(OpenApiTypes.STR)
@@ -63,4 +68,4 @@ class UserGroupInvitationSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.BOOL)
     def get_email_exists(self, object):
-        return object.email_exists if hasattr(object, 'email_exists') else None
+        return object.email_exists if hasattr(object, "email_exists") else None

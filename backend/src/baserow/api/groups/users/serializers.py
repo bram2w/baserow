@@ -17,7 +17,7 @@ class GroupUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GroupUser
-        fields = ('id', 'name', 'email', 'group', 'permissions', 'created_on')
+        fields = ("id", "name", "email", "group", "permissions", "created_on")
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_name(self, object):
@@ -36,7 +36,7 @@ class GroupUserGroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GroupUser
-        fields = ('order', 'permissions')
+        fields = ("order", "permissions")
 
     def to_representation(self, instance):
         from baserow.api.groups.serializers import GroupSerializer
@@ -49,4 +49,4 @@ class GroupUserGroupSerializer(serializers.ModelSerializer):
 class UpdateGroupUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupUser
-        fields = ('permissions',)
+        fields = ("permissions",)

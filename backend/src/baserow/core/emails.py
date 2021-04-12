@@ -35,8 +35,8 @@ class BaseEmailMessage(EmailMultiAlternatives):
         html_content = render_to_string(template_name, context)
 
         try:
-            body_start_index = html_content.index('<body>')
-            body_end_index = html_content.index('</body>')
+            body_start_index = html_content.index("<body>")
+            body_end_index = html_content.index("</body>")
             html_content = html_content[body_start_index:body_end_index]
         except ValueError:
             pass
@@ -44,19 +44,16 @@ class BaseEmailMessage(EmailMultiAlternatives):
         text_content = strip_tags(html_content)
 
         super().__init__(
-            subject=subject,
-            body=text_content,
-            from_email=from_email,
-            to=to
+            subject=subject, body=text_content, from_email=from_email, to=to
         )
-        self.attach_alternative(html_content, 'text/html')
+        self.attach_alternative(html_content, "text/html")
 
     def get_context(self):
         return {
-            'public_backend_hostname': settings.PUBLIC_BACKEND_HOSTNAME,
-            'public_backend_url': settings.PUBLIC_BACKEND_URL,
-            'public_web_frontend_hostname': settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
-            'public_web_frontend_url': settings.PUBLIC_WEB_FRONTEND_URL
+            "public_backend_hostname": settings.PUBLIC_BACKEND_HOSTNAME,
+            "public_backend_url": settings.PUBLIC_BACKEND_URL,
+            "public_web_frontend_hostname": settings.PUBLIC_WEB_FRONTEND_HOSTNAME,
+            "public_web_frontend_url": settings.PUBLIC_WEB_FRONTEND_URL,
         }
 
     def get_from_email(self):
@@ -64,18 +61,18 @@ class BaseEmailMessage(EmailMultiAlternatives):
 
     def get_subject(self):
         if not self.subject:
-            raise NotImplementedError('The subject must be implement.')
+            raise NotImplementedError("The subject must be implement.")
         return self.subject
 
     def get_template_name(self):
         if not self.template_name:
-            raise NotImplementedError('The template_name must be implement.')
+            raise NotImplementedError("The template_name must be implement.")
         return self.template_name
 
 
 class GroupInvitationEmail(BaseEmailMessage):
-    subject = _('Group invitation')
-    template_name = 'baserow/core/group_invitation.html'
+    subject = _("Group invitation")
+    template_name = "baserow/core/group_invitation.html"
 
     def __init__(self, invitation, public_accept_url, *args, **kwargs):
         self.public_accept_url = public_accept_url
@@ -83,13 +80,14 @@ class GroupInvitationEmail(BaseEmailMessage):
         super().__init__(*args, **kwargs)
 
     def get_subject(self):
-        return f'{self.invitation.invited_by.first_name} invited you to ' \
-               f'{self.invitation.group.name} - Baserow'
+        return (
+            f"{self.invitation.invited_by.first_name} invited you to "
+            f"{self.invitation.group.name} - Baserow"
+        )
 
     def get_context(self):
         context = super().get_context()
         context.update(
-            invitation=self.invitation,
-            public_accept_url=self.public_accept_url
+            invitation=self.invitation, public_accept_url=self.public_accept_url
         )
         return context

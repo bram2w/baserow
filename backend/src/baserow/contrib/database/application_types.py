@@ -13,7 +13,7 @@ from .api.serializers import DatabaseSerializer
 
 
 class DatabaseApplicationType(ApplicationType):
-    type = 'database'
+    type = "database"
     model_class = Database
     instance_serializer_class = DatabaseSerializer
 
@@ -23,7 +23,7 @@ class DatabaseApplicationType(ApplicationType):
         handler.
         """
 
-        database_tables = database.table_set.all().select_related('database__group')
+        database_tables = database.table_set.all().select_related("database__group")
         table_handler = TableHandler()
 
         for table in database_tables:
@@ -33,7 +33,7 @@ class DatabaseApplicationType(ApplicationType):
         from .api import urls as api_urls
 
         return [
-            path('database/', include(api_urls, namespace=self.type)),
+            path("database/", include(api_urls, namespace=self.type)),
         ]
 
     def export_serialized(self, database):
@@ -43,10 +43,10 @@ class DatabaseApplicationType(ApplicationType):
         """
 
         tables = database.table_set.all().prefetch_related(
-            'field_set',
-            'view_set',
-            'view_set__viewfilter_set',
-            'view_set__viewsort_set'
+            "field_set",
+            "view_set",
+            "view_set__viewfilter_set",
+            "view_set__viewsort_set",
         )
         serialized_tables = []
         for table in tables:
@@ -67,31 +67,28 @@ class DatabaseApplicationType(ApplicationType):
             serialized_rows = []
             table_cache = {}
             for row in model.objects.all():
-                serialized_row = {
-                    'id': row.id,
-                    'order': str(row.order)
-                }
+                serialized_row = {"id": row.id, "order": str(row.order)}
                 for field_object in model._field_objects.values():
-                    field_name = field_object['name']
-                    field_type = field_object['type']
+                    field_name = field_object["name"]
+                    field_type = field_object["type"]
                     serialized_row[field_name] = field_type.get_export_serialized_value(
-                        row,
-                        field_name,
-                        table_cache
+                        row, field_name, table_cache
                     )
                 serialized_rows.append(serialized_row)
 
-            serialized_tables.append({
-                'id': table.id,
-                'name': table.name,
-                'order': table.order,
-                'fields': serialized_fields,
-                'views': serialized_views,
-                'rows': serialized_rows,
-            })
+            serialized_tables.append(
+                {
+                    "id": table.id,
+                    "name": table.name,
+                    "order": table.order,
+                    "fields": serialized_fields,
+                    "views": serialized_views,
+                    "rows": serialized_rows,
+                }
+            )
 
         serialized = super().export_serialized(database)
-        serialized['tables'] = serialized_tables
+        serialized["tables"] = serialized_tables
         return serialized
 
     def import_serialized(self, group, serialized_values, id_mapping):
@@ -99,10 +96,10 @@ class DatabaseApplicationType(ApplicationType):
         Imports a database application exported by the `export_serialized` method.
         """
 
-        if 'database_tables' not in id_mapping:
-            id_mapping['database_tables'] = {}
+        if "database_tables" not in id_mapping:
+            id_mapping["database_tables"] = {}
 
-        tables = serialized_values.pop('tables')
+        tables = serialized_values.pop("tables")
         database = super().import_serialized(group, serialized_values, id_mapping)
         connection = connections[settings.USER_TABLE_DATABASE]
 
@@ -111,58 +108,54 @@ class DatabaseApplicationType(ApplicationType):
         for table in tables:
             table_object = Table.objects.create(
                 database=database,
-                name=table['name'],
-                order=table['order'],
+                name=table["name"],
+                order=table["order"],
             )
-            id_mapping['database_tables'][table['id']] = table_object.id
-            table['_object'] = table_object
-            table['_field_objects'] = []
+            id_mapping["database_tables"][table["id"]] = table_object.id
+            table["_object"] = table_object
+            table["_field_objects"] = []
 
         # Because view properties might depend on fields, we first want to create all
         # the fields.
         for table in tables:
-            for field in table['fields']:
-                field_type = field_type_registry.get(field['type'])
+            for field in table["fields"]:
+                field_type = field_type_registry.get(field["type"])
                 field_object = field_type.import_serialized(
-                    table['_object'],
-                    field,
-                    id_mapping
+                    table["_object"], field, id_mapping
                 )
 
                 if field_object:
-                    table['_field_objects'].append(field_object)
+                    table["_field_objects"].append(field_object)
 
         # Now that the all tables and fields exist, we can create the views and create
         # the table schema in the database.
         for table in tables:
-            for view in table['views']:
-                view_type = view_type_registry.get(view['type'])
-                view_type.import_serialized(table['_object'], view, id_mapping)
+            for view in table["views"]:
+                view_type = view_type_registry.get(view["type"])
+                view_type.import_serialized(table["_object"], view, id_mapping)
 
             # We don't need to create all the fields individually because the schema
             # editor can handle the creation of the table schema in one go.
             with connection.schema_editor() as schema_editor:
-                model = table['_object'].get_model(
-                    fields=table['_field_objects'],
-                    field_ids=[]
+                model = table["_object"].get_model(
+                    fields=table["_field_objects"], field_ids=[]
                 )
                 schema_editor.create_model(model)
 
         # Now that everything is in place we can start filling the table with the rows
         # in an efficient matter by using the bulk_create functionality.
         for table in tables:
-            model = table['_object'].get_model(
-                fields=table['_field_objects'],
-                field_ids=[]
+            model = table["_object"].get_model(
+                fields=table["_field_objects"], field_ids=[]
             )
-            field_ids = [field_object.id for field_object in table['_field_objects']]
+            field_ids = [field_object.id for field_object in table["_field_objects"]]
             rows_to_be_inserted = []
 
-            for row in table['rows']:
-                row_object = model(id=row['id'], order=row['order'])
+            for row in table["rows"]:
+                row_object = model(id=row["id"], order=row["order"])
 
-                for field in table['fields']:
-                    field_type = field_type_registry.get(field['type'])
+                for field in table["fields"]:
+                    field_type = field_type_registry.get(field["type"])
                     new_field_id = id_mapping["database_fields"][field["id"]]
 
                     # If the new field id is not present in the field_ids then we don't
@@ -176,7 +169,7 @@ class DatabaseApplicationType(ApplicationType):
                             row_object,
                             f'field_{id_mapping["database_fields"][field["id"]]}',
                             row[f'field_{field["id"]}'],
-                            id_mapping
+                            id_mapping,
                         )
 
                 rows_to_be_inserted.append(row_object)

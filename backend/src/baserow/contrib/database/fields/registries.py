@@ -1,18 +1,30 @@
 from django.db.models import Q
 
 from baserow.core.registry import (
-    Instance, Registry, ModelInstanceMixin, ModelRegistryMixin,
-    CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, MapAPIExceptionsInstanceMixin,
-    APIUrlsRegistryMixin, APIUrlsInstanceMixin, ImportExportMixin
+    Instance,
+    Registry,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    CustomFieldsInstanceMixin,
+    CustomFieldsRegistryMixin,
+    MapAPIExceptionsInstanceMixin,
+    APIUrlsRegistryMixin,
+    APIUrlsInstanceMixin,
+    ImportExportMixin,
 )
 
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 from .models import SelectOption
 
 
-class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
-                CustomFieldsInstanceMixin, ModelInstanceMixin, ImportExportMixin,
-                Instance):
+class FieldType(
+    MapAPIExceptionsInstanceMixin,
+    APIUrlsInstanceMixin,
+    CustomFieldsInstanceMixin,
+    ModelInstanceMixin,
+    ImportExportMixin,
+    Instance,
+):
     """
     This abstract class represents a custom field type that can be added to the
     field type registry. It must be extended so customisation can be done. Each field
@@ -126,7 +138,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :rtype: serializer.Field
         """
 
-        raise NotImplementedError('Each must have his own get_serializer_field method.')
+        raise NotImplementedError("Each must have his own get_serializer_field method.")
 
     def get_response_serializer_field(self, instance, **kwargs):
         """
@@ -158,7 +170,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :rtype: str
         """
 
-        return ''
+        return ""
 
     def get_model_field(self, instance, **kwargs):
         """
@@ -174,7 +186,7 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :rtype: model.Field
         """
 
-        raise NotImplementedError('Each must have his own get_model_field method.')
+        raise NotImplementedError("Each must have his own get_model_field method.")
 
     def after_model_generation(self, instance, model, field_name, manytomany_models):
         """
@@ -329,8 +341,16 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :type user: User
         """
 
-    def before_schema_change(self, from_field, to_field, from_model, to_model,
-                             from_model_field, to_model_field, user):
+    def before_schema_change(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        from_model_field,
+        to_model_field,
+        user,
+    ):
         """
         This hook is called just before the database's schema change. In some cases
         some additional cleanup or creation of related instances has to happen if the
@@ -354,8 +374,17 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :type user: User
         """
 
-    def after_update(self, from_field, to_field, from_model, to_model, user, connection,
-                     altered_column, before):
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+    ):
         """
         This hook is called right after a field has been updated. In some cases data
         mutation still has to be done in order to maintain data integrity. For example
@@ -457,11 +486,11 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         """
 
         serialized = {
-            'id': field.id,
-            'type': self.type,
-            'name': field.name,
-            'order': field.order,
-            'primary': field.primary
+            "id": field.id,
+            "type": self.type,
+            "name": field.name,
+            "order": field.order,
+            "primary": field.primary,
         }
 
         if include_allowed_fields:
@@ -469,12 +498,12 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
                 serialized[field_name] = getattr(field, field_name)
 
         if self.can_have_select_options:
-            serialized['select_options'] = [
+            serialized["select_options"] = [
                 {
-                    'id': select_option.id,
-                    'value': select_option.value,
-                    'color': select_option.color,
-                    'order': select_option.order,
+                    "id": select_option.id,
+                    "value": select_option.value,
+                    "color": select_option.color,
+                    "order": select_option.order,
                 }
                 for select_option in field.select_options.all()
             ]
@@ -498,33 +527,32 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         :rtype: Field
         """
 
-        if 'database_fields' not in id_mapping:
-            id_mapping['database_fields'] = {}
-            id_mapping['database_field_select_options'] = {}
+        if "database_fields" not in id_mapping:
+            id_mapping["database_fields"] = {}
+            id_mapping["database_field_select_options"] = {}
 
         serialized_copy = serialized_values.copy()
-        field_id = serialized_copy.pop('id')
-        serialized_copy.pop('type')
+        field_id = serialized_copy.pop("id")
+        serialized_copy.pop("type")
         select_options = (
-            serialized_copy.pop('select_options')
-            if self.can_have_select_options else
-            []
+            serialized_copy.pop("select_options")
+            if self.can_have_select_options
+            else []
         )
         field = self.model_class.objects.create(table=table, **serialized_copy)
 
-        id_mapping['database_fields'][field_id] = field.id
+        id_mapping["database_fields"][field_id] = field.id
 
         if self.can_have_select_options:
             for select_option in select_options:
                 select_option_copy = select_option.copy()
-                select_option_id = select_option_copy.pop('id')
+                select_option_id = select_option_copy.pop("id")
                 select_option_object = SelectOption.objects.create(
-                    field=field,
-                    **select_option_copy
+                    field=field, **select_option_copy
                 )
-                id_mapping['database_field_select_options'][select_option_id] = (
-                    select_option_object.id
-                )
+                id_mapping["database_field_select_options"][
+                    select_option_id
+                ] = select_option_object.id
 
         return field
 
@@ -565,15 +593,16 @@ class FieldType(MapAPIExceptionsInstanceMixin, APIUrlsInstanceMixin,
         setattr(row, field_name, value)
 
 
-class FieldTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,
-                        ModelRegistryMixin, Registry):
+class FieldTypeRegistry(
+    APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
+):
     """
     With the field type registry it is possible to register new field types.  A field
     type is an abstraction made specifically for Baserow. If added to the registry a
     user can create new fields based on this type.
     """
 
-    name = 'field'
+    name = "field"
     does_not_exist_exception_class = FieldTypeDoesNotExist
     already_registered_exception_class = FieldTypeAlreadyRegistered
 
@@ -639,11 +668,21 @@ class FieldConverter(Instance):
         :rtype: bool
         """
 
-        raise NotImplementedError('Each field converter must have an is_applicable '
-                                  'method.')
+        raise NotImplementedError(
+            "Each field converter must have an is_applicable " "method."
+        )
 
-    def alter_field(self, from_field, to_field, from_model, to_model,
-                    from_model_field, to_model_field, user, connection):
+    def alter_field(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        from_model_field,
+        to_model_field,
+        user,
+        connection,
+    ):
         """
         Should perform the schema change and changes related to the field change. It
         must bring the field's schema into the desired state.
@@ -668,8 +707,9 @@ class FieldConverter(Instance):
         :type connection: DatabaseWrapper
         """
 
-        raise NotImplementedError('Each field converter must have an alter_field '
-                                  'method.')
+        raise NotImplementedError(
+            "Each field converter must have an alter_field " "method."
+        )
 
 
 class FieldConverterRegistry(Registry):
@@ -680,7 +720,7 @@ class FieldConverterRegistry(Registry):
     default lenient schema editor does not work.
     """
 
-    name = 'field_converter'
+    name = "field_converter"
 
     def find_applicable_converter(self, *args, **kwargs):
         """

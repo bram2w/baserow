@@ -9,8 +9,10 @@ from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
 from baserow.contrib.database.table.exceptions import TableDoesNotBelongToGroup
 
 from .exceptions import (
-    TokenDoesNotExist, MaximumUniqueTokenTriesError, TokenDoesNotBelongToUser,
-    NoPermissionToTable
+    TokenDoesNotExist,
+    MaximumUniqueTokenTriesError,
+    TokenDoesNotBelongToUser,
+    NoPermissionToTable,
 )
 from .models import Token, TokenPermission
 
@@ -29,9 +31,9 @@ class TokenHandler:
         """
 
         try:
-            token = Token.objects.select_related('group').get(key=key)
+            token = Token.objects.select_related("group").get(key=key)
         except Token.DoesNotExist:
-            raise TokenDoesNotExist(f'The token with key {key} does not exist.')
+            raise TokenDoesNotExist(f"The token with key {key} does not exist.")
 
         return token
 
@@ -56,12 +58,9 @@ class TokenHandler:
             base_queryset = Token.objects
 
         try:
-            token = base_queryset.select_related('group').get(
-                id=token_id,
-                user=user
-            )
+            token = base_queryset.select_related("group").get(id=token_id, user=user)
         except Token.DoesNotExist:
-            raise TokenDoesNotExist(f'The token with id {token_id} does not exist.')
+            raise TokenDoesNotExist(f"The token with id {token_id} does not exist.")
 
         group = token.group
         group.has_user(user, raise_error=True)
@@ -89,7 +88,7 @@ class TokenHandler:
         while True:
             if i > max_tries:
                 raise MaximumUniqueTokenTriesError(
-                    f'Tried {max_tries} tokens, but none of them are unique.'
+                    f"Tried {max_tries} tokens, but none of them are unique."
                 )
 
             i += 1
@@ -115,16 +114,14 @@ class TokenHandler:
         group.has_user(user, raise_error=True)
 
         token = Token.objects.create(
-            name=name,
-            key=self.generate_unique_key(),
-            user=user,
-            group=group
+            name=name, key=self.generate_unique_key(), user=user, group=group
         )
 
         # The newly created token should have access to all the tables in the group
         # when it is created.
-        self.update_token_permissions(user, token, create=True, read=True, update=True,
-                                      delete=True)
+        self.update_token_permissions(
+            user, token, create=True, read=True, update=True, delete=True
+        )
 
         return token
 
@@ -143,8 +140,9 @@ class TokenHandler:
         """
 
         if not user.id == token.user_id:
-            raise TokenDoesNotBelongToUser('The user is not authorized to rotate the '
-                                           'key.')
+            raise TokenDoesNotBelongToUser(
+                "The user is not authorized to rotate the " "key."
+            )
 
         token.key = self.generate_unique_key()
         token.save()
@@ -168,8 +166,9 @@ class TokenHandler:
         """
 
         if not user.id == token.user_id:
-            raise TokenDoesNotBelongToUser('The user is not authorized to rotate the '
-                                           'key.')
+            raise TokenDoesNotBelongToUser(
+                "The user is not authorized to rotate the " "key."
+            )
 
         token.name = name
         token.save()
@@ -177,13 +176,7 @@ class TokenHandler:
         return token
 
     def update_token_permissions(
-        self,
-        user,
-        token,
-        create=None,
-        read=None,
-        update=None,
-        delete=None
+        self, user, token, create=None, read=None, update=None, delete=None
     ):
         """
         Updates create, read, update and delete permissions of the provided token.
@@ -238,12 +231,13 @@ class TokenHandler:
         """
 
         if not user.id == token.user_id:
-            raise TokenDoesNotBelongToUser('The user is not authorized to delete the '
-                                           'token.')
+            raise TokenDoesNotBelongToUser(
+                "The user is not authorized to delete the " "token."
+            )
 
         existing_permissions = token.tokenpermission_set.all()
         desired_permissions = []
-        types = ['create', 'read', 'update', 'delete']
+        types = ["create", "read", "update", "delete"]
 
         # Create a list of desired tokens based on the provided create, read, update
         # and delete parameters.
@@ -257,27 +251,27 @@ class TokenHandler:
                     if isinstance(instance, Database):
                         if instance.group_id != token.group_id:
                             raise DatabaseDoesNotBelongToGroup(
-                                f'The database {instance.id} does not belong to the '
-                                f'token\'s group.'
+                                f"The database {instance.id} does not belong to the "
+                                f"token's group."
                             )
 
-                        desired_permissions.append(TokenPermission(
-                            token=token,
-                            type=type_name,
-                            database_id=instance.id
-                        ))
+                        desired_permissions.append(
+                            TokenPermission(
+                                token=token, type=type_name, database_id=instance.id
+                            )
+                        )
                     elif isinstance(instance, Table):
                         if instance.database.group_id != token.group_id:
                             raise TableDoesNotBelongToGroup(
-                                f'The table {instance.id} does not belong to the '
-                                f'token\'s group.'
+                                f"The table {instance.id} does not belong to the "
+                                f"token's group."
                             )
 
-                        desired_permissions.append(TokenPermission(
-                            token=token,
-                            type=type_name,
-                            table_id=instance.id
-                        ))
+                        desired_permissions.append(
+                            TokenPermission(
+                                token=token, type=type_name, table_id=instance.id
+                            )
+                        )
 
         def equals(permission_1, permission_2):
             """
@@ -285,10 +279,10 @@ class TokenHandler:
             """
 
             return (
-                permission_1.token_id == permission_2.token_id and
-                permission_1.type == permission_2.type and
-                permission_1.database_id == permission_2.database_id and
-                permission_1.table_id == permission_2.table_id
+                permission_1.token_id == permission_2.token_id
+                and permission_1.type == permission_2.type
+                and permission_1.database_id == permission_2.database_id
+                and permission_1.table_id == permission_2.table_id
             )
 
         # Check which existing permissions must be deleted by comparing them to the
@@ -304,9 +298,7 @@ class TokenHandler:
         to_create = [
             desired
             for desired in desired_permissions
-            if not any([
-                equals(desired, existing) for existing in existing_permissions
-            ])
+            if not any([equals(desired, existing) for existing in existing_permissions])
         ]
 
         # Delete the permissions that must be delete in bulk.
@@ -341,16 +333,16 @@ class TokenHandler:
             return False
 
         return TokenPermission.objects.filter(
-            Q(database__table=table) | Q(table_id=table.id) | Q(
-                table__isnull=True,
-                database__isnull=True
-            ),
+            Q(database__table=table)
+            | Q(table_id=table.id)
+            | Q(table__isnull=True, database__isnull=True),
             token=token,
-            type=type_name
+            type=type_name,
         ).exists()
 
-    def check_table_permissions(self, request_or_token, type_name, table,
-                                force_check=False):
+    def check_table_permissions(
+        self, request_or_token, type_name, table, force_check=False
+    ):
         """
         Instead of returning True or False, this method will raise an exception if the
         token does not have permission to the table.
@@ -374,16 +366,15 @@ class TokenHandler:
 
         token = None
 
-        if (
-            not isinstance(request_or_token, Request) and
-            not isinstance(request_or_token, Token)
+        if not isinstance(request_or_token, Request) and not isinstance(
+            request_or_token, Token
         ):
-            raise ValueError('The provided instance should be a HttpRequest or Token '
-                             'object.')
+            raise ValueError(
+                "The provided instance should be a HttpRequest or Token " "object."
+            )
 
-        if (
-            isinstance(request_or_token, Request) and
-            hasattr(request_or_token, 'user_token')
+        if isinstance(request_or_token, Request) and hasattr(
+            request_or_token, "user_token"
         ):
             token = request_or_token.user_token
 
@@ -394,11 +385,14 @@ class TokenHandler:
             return
 
         if (
-            not token and force_check or
-            not TokenHandler().has_table_permission(token, type_name, table)
+            not token
+            and force_check
+            or not TokenHandler().has_table_permission(token, type_name, table)
         ):
-            raise NoPermissionToTable(f'The provided token does not have {type_name} '
-                                      f'permissions to table {table.id}.')
+            raise NoPermissionToTable(
+                f"The provided token does not have {type_name} "
+                f"permissions to table {table.id}."
+            )
 
     def delete_token(self, user, token):
         """
@@ -413,8 +407,9 @@ class TokenHandler:
         """
 
         if not user.id == token.user_id:
-            raise TokenDoesNotBelongToUser('The user is not authorized to delete the '
-                                           'token.')
+            raise TokenDoesNotBelongToUser(
+                "The user is not authorized to delete the " "token."
+            )
 
         token.delete()
 

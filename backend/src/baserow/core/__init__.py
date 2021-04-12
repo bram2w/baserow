@@ -1,1 +1,1 @@
-default_app_config = 'baserow.core.config.CoreConfig'
+default_app_config = "baserow.core.config.CoreConfig"

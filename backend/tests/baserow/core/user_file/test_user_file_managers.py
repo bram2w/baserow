@@ -11,7 +11,7 @@ def test_user_file_name(data_fixture):
     user_file_3 = data_fixture.create_user_file()
 
     with pytest.raises(InvalidUserFileNameError):
-        UserFile.objects.all().name('wrong.jpg')
+        UserFile.objects.all().name("wrong.jpg")
 
     queryset = UserFile.objects.all().name(user_file.name)
     assert len(queryset) == 1

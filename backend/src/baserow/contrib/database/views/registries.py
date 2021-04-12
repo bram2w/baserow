@@ -1,17 +1,30 @@
 from baserow.core.registry import (
-    Instance, Registry, ModelInstanceMixin, ModelRegistryMixin,
-    CustomFieldsInstanceMixin, CustomFieldsRegistryMixin, APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin, ImportExportMixin
+    Instance,
+    Registry,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    CustomFieldsInstanceMixin,
+    CustomFieldsRegistryMixin,
+    APIUrlsRegistryMixin,
+    APIUrlsInstanceMixin,
+    ImportExportMixin,
 )
 from .exceptions import (
-    ViewTypeAlreadyRegistered, ViewTypeDoesNotExist, ViewFilterTypeAlreadyRegistered,
-    ViewFilterTypeDoesNotExist
+    ViewTypeAlreadyRegistered,
+    ViewTypeDoesNotExist,
+    ViewFilterTypeAlreadyRegistered,
+    ViewFilterTypeDoesNotExist,
 )
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 
 
-class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMixin,
-               ImportExportMixin, Instance):
+class ViewType(
+    APIUrlsInstanceMixin,
+    CustomFieldsInstanceMixin,
+    ModelInstanceMixin,
+    ImportExportMixin,
+    Instance,
+):
     """
     This abstract class represents a custom view type that can be added to the
     view type registry. It must be extended so customisation can be done. Each view type
@@ -70,34 +83,30 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
         """
 
         serialized = {
-            'id': view.id,
-            'type': self.type,
-            'name': view.name,
-            'order': view.order
+            "id": view.id,
+            "type": self.type,
+            "name": view.name,
+            "order": view.order,
         }
 
         if self.can_filter:
-            serialized['filter_type'] = view.filter_type
-            serialized['filters_disabled'] = view.filters_disabled
-            serialized['filters'] = [
+            serialized["filter_type"] = view.filter_type
+            serialized["filters_disabled"] = view.filters_disabled
+            serialized["filters"] = [
                 {
-                    'id': view_filter.id,
-                    'field_id': view_filter.field_id,
-                    'type': view_filter.type,
-                    'value': view_filter_type_registry.get(
+                    "id": view_filter.id,
+                    "field_id": view_filter.field_id,
+                    "type": view_filter.type,
+                    "value": view_filter_type_registry.get(
                         view_filter.type
-                    ).get_export_serialized_value(view_filter.value)
+                    ).get_export_serialized_value(view_filter.value),
                 }
                 for view_filter in view.viewfilter_set.all()
             ]
 
         if self.can_sort:
-            serialized['sortings'] = [
-                {
-                    'id': sort.id,
-                    'field_id': sort.field_id,
-                    'order': sort.order
-                }
+            serialized["sortings"] = [
+                {"id": sort.id, "field_id": sort.field_id, "order": sort.order}
                 for sort in view.viewsort_set.all()
             ]
 
@@ -123,65 +132,62 @@ class ViewType(APIUrlsInstanceMixin, CustomFieldsInstanceMixin, ModelInstanceMix
 
         from .models import ViewFilter, ViewSort
 
-        if 'database_views' not in id_mapping:
-            id_mapping['database_views'] = {}
-            id_mapping['database_view_filters'] = {}
-            id_mapping['database_view_sortings'] = {}
+        if "database_views" not in id_mapping:
+            id_mapping["database_views"] = {}
+            id_mapping["database_view_filters"] = {}
+            id_mapping["database_view_sortings"] = {}
 
         serialized_copy = serialized_values.copy()
-        view_id = serialized_copy.pop('id')
-        serialized_copy.pop('type')
-        filters = serialized_copy.pop('filters') if self.can_filter else []
-        sortings = serialized_copy.pop('sortings') if self.can_sort else []
+        view_id = serialized_copy.pop("id")
+        serialized_copy.pop("type")
+        filters = serialized_copy.pop("filters") if self.can_filter else []
+        sortings = serialized_copy.pop("sortings") if self.can_sort else []
         view = self.model_class.objects.create(table=table, **serialized_copy)
-        id_mapping['database_views'][view_id] = view.id
+        id_mapping["database_views"][view_id] = view.id
 
         if self.can_filter:
             for view_filter in filters:
-                view_filter_type = view_filter_type_registry.get(view_filter['type'])
+                view_filter_type = view_filter_type_registry.get(view_filter["type"])
                 view_filter_copy = view_filter.copy()
-                view_filter_id = view_filter_copy.pop('id')
-                view_filter_copy['field_id'] = (
-                    id_mapping['database_fields'][view_filter_copy['field_id']]
-                )
-                view_filter_copy['value'] = (
-                    view_filter_type.set_import_serialized_value(
-                        view_filter_copy['value'],
-                        id_mapping
-                    )
+                view_filter_id = view_filter_copy.pop("id")
+                view_filter_copy["field_id"] = id_mapping["database_fields"][
+                    view_filter_copy["field_id"]
+                ]
+                view_filter_copy[
+                    "value"
+                ] = view_filter_type.set_import_serialized_value(
+                    view_filter_copy["value"], id_mapping
                 )
                 view_filter_object = ViewFilter.objects.create(
-                    view=view,
-                    **view_filter_copy
+                    view=view, **view_filter_copy
                 )
-                id_mapping['database_view_filters'][view_filter_id] = (
-                    view_filter_object.id
-                )
+                id_mapping["database_view_filters"][
+                    view_filter_id
+                ] = view_filter_object.id
 
         if self.can_sort:
             for view_sort in sortings:
                 view_sort_copy = view_sort.copy()
-                view_sort_id = view_sort_copy.pop('id')
-                view_sort_copy['field_id'] = (
-                    id_mapping['database_fields'][view_sort_copy['field_id']]
-                )
+                view_sort_id = view_sort_copy.pop("id")
+                view_sort_copy["field_id"] = id_mapping["database_fields"][
+                    view_sort_copy["field_id"]
+                ]
                 view_sort_object = ViewSort.objects.create(view=view, **view_sort_copy)
-                id_mapping['database_view_sortings'][view_sort_id] = (
-                    view_sort_object.id
-                )
+                id_mapping["database_view_sortings"][view_sort_id] = view_sort_object.id
 
         return view
 
 
-class ViewTypeRegistry(APIUrlsRegistryMixin, CustomFieldsRegistryMixin,
-                       ModelRegistryMixin, Registry):
+class ViewTypeRegistry(
+    APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
+):
     """
     With the view type registry it is possible to register new view types.  A view type
     is an abstraction made specifically for Baserow. If added to the registry a user can
     create new views based on this type.
     """
 
-    name = 'view'
+    name = "view"
     does_not_exist_exception_class = ViewTypeDoesNotExist
     already_registered_exception_class = ViewTypeAlreadyRegistered
 
@@ -234,7 +240,7 @@ class ViewFilterType(Instance):
             later combined with other filters to generate the final total view filter.
         """
 
-        raise NotImplementedError('Each must have his own get_filter method.')
+        raise NotImplementedError("Each must have his own get_filter method.")
 
     def get_export_serialized_value(self, value) -> str:
         """
@@ -275,7 +281,7 @@ class ViewFilterTypeRegistry(Registry):
     and all the rows must match those filters.
     """
 
-    name = 'view_filter'
+    name = "view_filter"
     does_not_exist_exception_class = ViewFilterTypeDoesNotExist
     already_registered_exception_class = ViewFilterTypeAlreadyRegistered
 

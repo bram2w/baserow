@@ -8,13 +8,14 @@ from baserow.core.registries import plugin_registry
 
 
 def health(request):
-    return HttpResponse('OK')
+    return HttpResponse("OK")
 
 
-urlpatterns = [
-    url(r'^api/', include('baserow.api.urls', namespace='api')),
-    url(r'^_health$', health, name='health_check')
-] + plugin_registry.urls + static(
-    settings.MEDIA_URL_PATH,
-    document_root=settings.MEDIA_ROOT
+urlpatterns = (
+    [
+        url(r"^api/", include("baserow.api.urls", namespace="api")),
+        url(r"^_health$", health, name="health_check"),
+    ]
+    + plugin_registry.urls
+    + static(settings.MEDIA_URL_PATH, document_root=settings.MEDIA_ROOT)
 )

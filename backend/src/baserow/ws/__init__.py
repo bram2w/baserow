@@ -1,1 +1,1 @@
-default_app_config = 'baserow.ws.config.WSConfig'
+default_app_config = "baserow.ws.config.WSConfig"

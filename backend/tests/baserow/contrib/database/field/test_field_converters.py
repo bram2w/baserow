@@ -10,12 +10,15 @@ def test_link_row_field_converter_applicable(data_fixture):
     table_2 = data_fixture.create_database_table(database=table.database)
     table_3 = data_fixture.create_database_table(database=table.database)
     text_field = data_fixture.create_text_field(table=table)
-    link_row_field_1 = LinkRowField.objects.create(table=table,
-                                                   link_row_table=table_2, order=1)
-    link_row_field_2 = LinkRowField.objects.create(table=table,
-                                                   link_row_table=table_3, order=2)
-    link_row_field_3 = LinkRowField.objects.create(table=table,
-                                                   link_row_table=table_2, order=3)
+    link_row_field_1 = LinkRowField.objects.create(
+        table=table, link_row_table=table_2, order=1
+    )
+    link_row_field_2 = LinkRowField.objects.create(
+        table=table, link_row_table=table_3, order=2
+    )
+    link_row_field_3 = LinkRowField.objects.create(
+        table=table, link_row_table=table_2, order=3
+    )
 
     converter = LinkRowFieldConverter()
     assert converter.is_applicable(None, text_field, link_row_field_1)

@@ -13,17 +13,19 @@ from .schemas import token_permissions_field_schema
 
 class TokenPermissionsField(serializers.Field):
     default_error_messages = {
-        'invalid_key': _('Only create, read, update and delete keys are allowed.'),
-        'invalid_value': _(
-            'The value must either be a bool, or a list containing database or table '
+        "invalid_key": _("Only create, read, update and delete keys are allowed."),
+        "invalid_value": _(
+            "The value must either be a bool, or a list containing database or table "
             'ids like [["database", 1], ["table", 1]].'
         ),
-        'invalid_instance_type': _('The instance type can only be a database or table.')
+        "invalid_instance_type": _(
+            "The instance type can only be a database or table."
+        ),
     }
-    valid_types = ['create', 'read', 'update', 'delete']
+    valid_types = ["create", "read", "update", "delete"]
 
     def __init__(self, **kwargs):
-        kwargs['source'] = '*'
+        kwargs["source"] = "*"
         super().__init__(**kwargs)
 
     def to_internal_value(self, data):
@@ -59,39 +61,39 @@ class TokenPermissionsField(serializers.Field):
         databases = {}
 
         if not isinstance(data, dict) or len(data) != len(self.valid_types):
-            self.fail('invalid_key')
+            self.fail("invalid_key")
 
         for key, value in data.items():
             if key not in self.valid_types:
-                self.fail('invalid_key')
+                self.fail("invalid_key")
 
             if not isinstance(value, bool) and not isinstance(value, list):
-                self.fail('invalid_value')
+                self.fail("invalid_value")
 
             if isinstance(value, list):
                 for instance in value:
                     if (
-                        not isinstance(instance, list) or
-                        not len(instance) == 2 or
-                        not isinstance(instance[0], str) or
-                        not isinstance(instance[1], int)
+                        not isinstance(instance, list)
+                        or not len(instance) == 2
+                        or not isinstance(instance[0], str)
+                        or not isinstance(instance[1], int)
                     ):
-                        self.fail('invalid_value')
+                        self.fail("invalid_value")
 
                     instance_type, instance_id = instance
-                    if instance_type == 'database':
+                    if instance_type == "database":
                         databases[instance_id] = None
-                    elif instance_type == 'table':
+                    elif instance_type == "table":
                         tables[instance_id] = None
                     else:
-                        self.fail('invalid_instance_type')
+                        self.fail("invalid_instance_type")
 
         if len(tables) > 0:
             tables = {
                 table.id: table
-                for table in Table.objects.filter(
-                    id__in=tables.keys()
-                ).select_related('database')
+                for table in Table.objects.filter(id__in=tables.keys()).select_related(
+                    "database"
+                )
             }
 
         if len(databases) > 0:
@@ -103,16 +105,16 @@ class TokenPermissionsField(serializers.Field):
         for key, value in data.items():
             if isinstance(value, list):
                 for index, (instance_type, instance_id) in enumerate(value):
-                    if instance_type == 'database':
+                    if instance_type == "database":
                         data[key][index] = databases[instance_id]
-                    elif instance_type == 'table':
+                    elif instance_type == "table":
                         data[key][index] = tables[instance_id]
 
         return {
-            'create': data['create'],
-            'read': data['read'],
-            'update': data['update'],
-            'delete': data['delete']
+            "create": data["create"],
+            "read": data["read"],
+            "update": data["update"],
+            "delete": data["delete"],
         }
 
     def to_representation(self, value):
@@ -132,10 +134,10 @@ class TokenPermissionsField(serializers.Field):
 
         if isinstance(value, Token):
             permissions = {
-                'create': False,
-                'read': False,
-                'update': False,
-                'delete': False
+                "create": False,
+                "read": False,
+                "update": False,
+                "delete": False,
             }
 
             for permission in value.tokenpermission_set.all():
@@ -149,11 +151,11 @@ class TokenPermissionsField(serializers.Field):
                         permissions[permission.type] = []
                     if permission.database_id is not None:
                         permissions[permission.type].append(
-                            ('database', permission.database_id)
+                            ("database", permission.database_id)
                         )
                     elif permission.table_id is not None:
                         permissions[permission.type].append(
-                            ('table', permission.table_id)
+                            ("table", permission.table_id)
                         )
 
             return permissions
@@ -168,8 +170,7 @@ class TokenPermissionsField(serializers.Field):
 
 class TokenPermissionsFieldFix(OpenApiSerializerFieldExtension):
     target_class = (
-        'baserow.contrib.database.api.tokens.serializers.'
-        'TokenPermissionsField'
+        "baserow.contrib.database.api.tokens.serializers." "TokenPermissionsField"
     )
 
     def map_serializer_field(self, auto_schema, direction):
@@ -181,18 +182,25 @@ class TokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Token
-        fields = ('id', 'name', 'group', 'key', 'permissions',)
+        fields = (
+            "id",
+            "name",
+            "group",
+            "key",
+            "permissions",
+        )
         extra_kwargs = {
-            'id': {
-                'read_only': True
-            },
+            "id": {"read_only": True},
         }
 
 
 class TokenCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Token
-        fields = ('name', 'group',)
+        fields = (
+            "name",
+            "group",
+        )
 
 
 class TokenUpdateSerializer(serializers.ModelSerializer):
@@ -200,12 +208,12 @@ class TokenUpdateSerializer(serializers.ModelSerializer):
     rotate_key = serializers.BooleanField(
         default=False,
         required=False,
-        help_text='Indicates if a new key must be generated.'
+        help_text="Indicates if a new key must be generated.",
     )
 
     class Meta:
         model = Token
-        fields = ('name', 'permissions', 'rotate_key')
+        fields = ("name", "permissions", "rotate_key")
         extra_kwargs = {
-            'name': {'required': False},
+            "name": {"required": False},
         }

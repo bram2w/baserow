@@ -10,14 +10,14 @@ from baserow.core.models import TemplateCategory, Template
 
 class TemplateSerializer(serializers.ModelSerializer):
     is_default = serializers.SerializerMethodField(
-        help_text='Indicates if the template must be selected by default. The '
-                  'web-frontend automatically selects the first `is_default` template '
-                  'that it can find.'
+        help_text="Indicates if the template must be selected by default. The "
+        "web-frontend automatically selects the first `is_default` template "
+        "that it can find."
     )
 
     class Meta:
         model = Template
-        fields = ('id', 'name', 'icon', 'keywords', 'group_id', 'is_default')
+        fields = ("id", "name", "icon", "keywords", "group_id", "is_default")
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_is_default(self, instance):
@@ -29,4 +29,4 @@ class TemplateCategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TemplateCategory
-        fields = ('id', 'name', 'templates')
+        fields = ("id", "name", "templates")

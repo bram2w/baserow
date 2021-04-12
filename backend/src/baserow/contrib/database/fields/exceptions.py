@@ -1,5 +1,6 @@
 from baserow.core.exceptions import (
-    InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
+    InstanceTypeDoesNotExist,
+    InstanceTypeAlreadyRegistered,
 )
 
 

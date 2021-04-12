@@ -7,12 +7,15 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.field_types import (
-    LongTextFieldType, BooleanFieldType
+    LongTextFieldType,
+    BooleanFieldType,
 )
 
 from .models import Table
 from .exceptions import (
-    TableDoesNotExist, InvalidInitialTableData, InitialTableDataLimitExceeded
+    TableDoesNotExist,
+    InvalidInitialTableData,
+    InitialTableDataLimitExceeded,
 )
 from .signals import table_created, table_updated, table_deleted
 
@@ -36,14 +39,21 @@ class TableHandler:
             base_queryset = Table.objects
 
         try:
-            table = base_queryset.select_related('database__group').get(id=table_id)
+            table = base_queryset.select_related("database__group").get(id=table_id)
         except Table.DoesNotExist:
-            raise TableDoesNotExist(f'The table with id {table_id} doe not exist.')
+            raise TableDoesNotExist(f"The table with id {table_id} doe not exist.")
 
         return table
 
-    def create_table(self, user, database, fill_example=False, data=None,
-                     first_row_header=True, **kwargs):
+    def create_table(
+        self,
+        user,
+        database,
+        fill_example=False,
+        data=None,
+        first_row_header=True,
+        **kwargs,
+    ):
         """
         Creates a new table and a primary text field.
 
@@ -72,10 +82,11 @@ class TableHandler:
         if data is not None:
             fields, data = self.normalize_initial_table_data(data, first_row_header)
 
-        table_values = extract_allowed(kwargs, ['name'])
+        table_values = extract_allowed(kwargs, ["name"])
         last_order = Table.get_last_order(database)
-        table = Table.objects.create(database=database, order=last_order,
-                                     **table_values)
+        table = Table.objects.create(
+            database=database, order=last_order, **table_values
+        )
 
         if data is not None:
             # If the initial data has been provided we will create those fields before
@@ -83,16 +94,13 @@ class TableHandler:
             # away.
             for index, name in enumerate(fields):
                 fields[index] = TextField.objects.create(
-                    table=table,
-                    order=index,
-                    primary=index == 0,
-                    name=name
+                    table=table, order=index, primary=index == 0, name=name
                 )
 
         else:
             # If no initial data is provided we want to create a primary text field for
             # the table.
-            TextField.objects.create(table=table, order=0, primary=True, name='Name')
+            TextField.objects.create(table=table, order=0, primary=True, name="Name")
 
         # Create the table schema in the database database.
         connection = connections[settings.USER_TABLE_DATABASE]
@@ -125,28 +133,28 @@ class TableHandler:
         """
 
         if len(data) == 0:
-            raise InvalidInitialTableData('At least one row should be provided.')
+            raise InvalidInitialTableData("At least one row should be provided.")
 
         limit = settings.INITIAL_TABLE_DATA_LIMIT
         if limit and len(data) > limit:
             raise InitialTableDataLimitExceeded(
-                f'It is not possible to import more than '
-                f'{settings.INITIAL_TABLE_DATA_LIMIT} rows when creating a table.'
+                f"It is not possible to import more than "
+                f"{settings.INITIAL_TABLE_DATA_LIMIT} rows when creating a table."
             )
 
         largest_column_count = len(max(data, key=len))
 
         if largest_column_count == 0:
-            raise InvalidInitialTableData('At least one column should be provided.')
+            raise InvalidInitialTableData("At least one column should be provided.")
 
         fields = data.pop(0) if first_row_header else []
 
         for i in range(len(fields), largest_column_count):
-            fields.append(f'Field {i + 1}')
+            fields.append(f"Field {i + 1}")
 
         for row in data:
             for i in range(len(row), largest_column_count):
-                row.append('')
+                row.append("")
 
         return fields, data
 
@@ -169,13 +177,16 @@ class TableHandler:
         :type model: TableModel
         """
 
-        ViewHandler().create_view(user, table, GridViewType.type, name='Grid')
+        ViewHandler().create_view(user, table, GridViewType.type, name="Grid")
 
         bulk_data = [
-            model(order=index + 1, **{
-                f'field_{fields[index].id}': str(value)
-                for index, value in enumerate(row)
-            })
+            model(
+                order=index + 1,
+                **{
+                    f"field_{fields[index].id}": str(value)
+                    for index, value in enumerate(row)
+                },
+            )
             for index, row in enumerate(data)
         ]
         model.objects.bulk_create(bulk_data)
@@ -194,23 +205,23 @@ class TableHandler:
         view_handler = ViewHandler()
         field_handler = FieldHandler()
 
-        view = view_handler.create_view(user, table, GridViewType.type, name='Grid')
-        notes = field_handler.create_field(user, table, LongTextFieldType.type,
-                                           name='Notes')
-        active = field_handler.create_field(user, table, BooleanFieldType.type,
-                                            name='Active')
+        view = view_handler.create_view(user, table, GridViewType.type, name="Grid")
+        notes = field_handler.create_field(
+            user, table, LongTextFieldType.type, name="Notes"
+        )
+        active = field_handler.create_field(
+            user, table, BooleanFieldType.type, name="Active"
+        )
 
-        field_options = {
-            notes.id: {'width': 400},
-            active.id: {'width': 100}
-        }
+        field_options = {notes.id: {"width": 400}, active.id: {"width": 100}}
         fields = [notes, active]
-        view_handler.update_grid_view_field_options(user, view, field_options,
-                                                    fields=fields)
+        view_handler.update_grid_view_field_options(
+            user, view, field_options, fields=fields
+        )
 
         model = table.get_model(attribute_names=True)
-        model.objects.create(name='Tesla', active=True, order=1)
-        model.objects.create(name='Amazon', active=False, order=2)
+        model.objects.create(name="Tesla", active=True, order=1)
+        model.objects.create(name="Amazon", active=False, order=2)
 
     def update_table(self, user, table, **kwargs):
         """
@@ -228,11 +239,11 @@ class TableHandler:
         """
 
         if not isinstance(table, Table):
-            raise ValueError('The table is not an instance of Table')
+            raise ValueError("The table is not an instance of Table")
 
         table.database.group.has_user(user, raise_error=True)
 
-        table = set_allowed_attrs(kwargs, ['name'], table)
+        table = set_allowed_attrs(kwargs, ["name"], table)
         table.save()
 
         table_updated.send(self, table=table, user=user)
@@ -252,7 +263,7 @@ class TableHandler:
         """
 
         if not isinstance(table, Table):
-            raise ValueError('The table is not an instance of Table')
+            raise ValueError("The table is not an instance of Table")
 
         table.database.group.has_user(user, raise_error=True)
         table_id = table.id

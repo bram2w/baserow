@@ -1,13 +1,13 @@
 from rest_framework.exceptions import NotFound, APIException
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.pagination import (
-    PageNumberPagination as RestFrameworkPageNumberPagination
+    PageNumberPagination as RestFrameworkPageNumberPagination,
 )
 
 
 class PageNumberPagination(RestFrameworkPageNumberPagination):
     page_size = 100
-    page_size_query_param = 'size'
+    page_size_query_param = "size"
 
     def __init__(self, limit_page_size=None, *args, **kwargs):
         self.limit_page_size = limit_page_size
@@ -17,10 +17,12 @@ class PageNumberPagination(RestFrameworkPageNumberPagination):
         page_size = super().get_page_size(request)
 
         if self.limit_page_size and page_size > self.limit_page_size:
-            exception = APIException({
-                'error': 'ERROR_PAGE_SIZE_LIMIT',
-                'detail': f'The page size is limited to {self.limit_page_size}.'
-            })
+            exception = APIException(
+                {
+                    "error": "ERROR_PAGE_SIZE_LIMIT",
+                    "detail": f"The page size is limited to {self.limit_page_size}.",
+                }
+            )
             exception.status_code = HTTP_400_BAD_REQUEST
             raise exception
 
@@ -32,9 +34,6 @@ class PageNumberPagination(RestFrameworkPageNumberPagination):
         try:
             return super().paginate_queryset(*args, **kwargs)
         except NotFound as e:
-            exception = APIException({
-                'error': 'ERROR_INVALID_PAGE',
-                'detail': str(e)
-            })
+            exception = APIException({"error": "ERROR_INVALID_PAGE", "detail": str(e)})
             exception.status_code = HTTP_400_BAD_REQUEST
             raise exception

@@ -17,115 +17,131 @@ User = get_user_model()
 
 @pytest.mark.django_db
 def test_create_user(client, data_fixture):
-    response = client.post(reverse('api:user:index'), {
-        'name': 'Test1',
-        'email': 'test@test.nl',
-        'password': 'test12'
-    }, format='json')
+    response = client.post(
+        reverse("api:user:index"),
+        {"name": "Test1", "email": "test@test.nl", "password": "test12"},
+        format="json",
+    )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    user = User.objects.get(email='test@test.nl')
-    assert user.first_name == 'Test1'
-    assert user.email == 'test@test.nl'
-    assert user.password != ''
-    assert 'password' not in response_json['user']
-    assert response_json['user']['username'] == 'test@test.nl'
-    assert response_json['user']['first_name'] == 'Test1'
-    assert response_json['user']['is_staff'] is True
+    user = User.objects.get(email="test@test.nl")
+    assert user.first_name == "Test1"
+    assert user.email == "test@test.nl"
+    assert user.password != ""
+    assert "password" not in response_json["user"]
+    assert response_json["user"]["username"] == "test@test.nl"
+    assert response_json["user"]["first_name"] == "Test1"
+    assert response_json["user"]["is_staff"] is True
 
-    response_failed = client.post(reverse('api:user:index'), {
-        'name': 'Test1',
-        'email': 'test@test.nl',
-        'password': 'test12'
-    }, format='json')
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {"name": "Test1", "email": "test@test.nl", "password": "test12"},
+        format="json",
+    )
     assert response_failed.status_code == 400
-    assert response_failed.json()['error'] == 'ERROR_EMAIL_ALREADY_EXISTS'
+    assert response_failed.json()["error"] == "ERROR_EMAIL_ALREADY_EXISTS"
 
-    response_failed = client.post(reverse('api:user:index'), {
-        'name': 'Test1',
-        'email': ' teSt@teST.nl ',
-        'password': 'test12'
-    }, format='json')
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {"name": "Test1", "email": " teSt@teST.nl ", "password": "test12"},
+        format="json",
+    )
     assert response_failed.status_code == 400
-    assert response_failed.json()['error'] == 'ERROR_EMAIL_ALREADY_EXISTS'
+    assert response_failed.json()["error"] == "ERROR_EMAIL_ALREADY_EXISTS"
 
     data_fixture.update_settings(allow_new_signups=False)
-    response_failed = client.post(reverse('api:user:index'), {
-        'name': 'Test1',
-        'email': 'test10@test.nl',
-        'password': 'test12'
-    }, format='json')
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {"name": "Test1", "email": "test10@test.nl", "password": "test12"},
+        format="json",
+    )
     assert response_failed.status_code == 400
-    assert response_failed.json()['error'] == 'ERROR_DISABLED_SIGNUP'
+    assert response_failed.json()["error"] == "ERROR_DISABLED_SIGNUP"
     data_fixture.update_settings(allow_new_signups=True)
 
-    response_failed_2 = client.post(reverse('api:user:index'), {
-        'email': 'test'
-    }, format='json')
+    response_failed_2 = client.post(
+        reverse("api:user:index"), {"email": "test"}, format="json"
+    )
     assert response_failed_2.status_code == 400
 
-    long_password = 'x' * 256
-    response = client.post(reverse('api:user:index'), {
-        'name': 'Test2',
-        'email': 'test2@test.nl',
-        'password': long_password
-    }, format='json')
+    long_password = "x" * 256
+    response = client.post(
+        reverse("api:user:index"),
+        {"name": "Test2", "email": "test2@test.nl", "password": long_password},
+        format="json",
+    )
     assert response.status_code == HTTP_200_OK
-    user = User.objects.get(email='test2@test.nl')
+    user = User.objects.get(email="test2@test.nl")
     assert user.check_password(long_password)
 
-    long_password = 'x' * 257
-    response = client.post(reverse('api:user:index'), {
-        'name': 'Test2',
-        'email': 'test2@test.nl',
-        'password': long_password
-    }, format='json')
+    long_password = "x" * 257
+    response = client.post(
+        reverse("api:user:index"),
+        {"name": "Test2", "email": "test2@test.nl", "password": long_password},
+        format="json",
+    )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
-    assert response_json['detail']['password'][0]['code'] == 'max_length'
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["password"][0]["code"] == "max_length"
 
 
 @pytest.mark.django_db
 def test_create_user_with_invitation(data_fixture, client):
     core_handler = CoreHandler()
-    invitation = data_fixture.create_group_invitation(email='test0@test.nl')
+    invitation = data_fixture.create_group_invitation(email="test0@test.nl")
     signer = core_handler.get_group_invitation_signer()
 
-    response_failed = client.post(reverse('api:user:index'), {
-        'name': 'Test1',
-        'email': 'test@test.nl',
-        'password': 'test12',
-        'group_invitation_token': 'INVALID'
-    }, format='json')
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test@test.nl",
+            "password": "test12",
+            "group_invitation_token": "INVALID",
+        },
+        format="json",
+    )
     assert response_failed.status_code == 400
-    assert response_failed.json()['error'] == 'BAD_TOKEN_SIGNATURE'
+    assert response_failed.json()["error"] == "BAD_TOKEN_SIGNATURE"
 
-    response_failed = client.post(reverse('api:user:index'), {
-        'name': 'Test1',
-        'email': 'test@test.nl',
-        'password': 'test12',
-        'group_invitation_token': signer.dumps(99999)
-    }, format='json')
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test@test.nl",
+            "password": "test12",
+            "group_invitation_token": signer.dumps(99999),
+        },
+        format="json",
+    )
     assert response_failed.status_code == 404
-    assert response_failed.json()['error'] == 'ERROR_GROUP_INVITATION_DOES_NOT_EXIST'
+    assert response_failed.json()["error"] == "ERROR_GROUP_INVITATION_DOES_NOT_EXIST"
 
-    response_failed = client.post(reverse('api:user:index'), {
-        'name': 'Test1',
-        'email': 'test@test.nl',
-        'password': 'test12',
-        'group_invitation_token': signer.dumps(invitation.id)
-    }, format='json')
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test@test.nl",
+            "password": "test12",
+            "group_invitation_token": signer.dumps(invitation.id),
+        },
+        format="json",
+    )
     assert response_failed.status_code == 400
-    assert response_failed.json()['error'] == 'ERROR_GROUP_INVITATION_EMAIL_MISMATCH'
+    assert response_failed.json()["error"] == "ERROR_GROUP_INVITATION_EMAIL_MISMATCH"
     assert User.objects.all().count() == 1
 
-    response_failed = client.post(reverse('api:user:index'), {
-        'name': 'Test1',
-        'email': 'test0@test.nl',
-        'password': 'test12',
-        'group_invitation_token': signer.dumps(invitation.id)
-    }, format='json')
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test0@test.nl",
+            "password": "test12",
+            "group_invitation_token": signer.dumps(invitation.id),
+        },
+        format="json",
+    )
     assert response_failed.status_code == 200
     assert User.objects.all().count() == 2
     assert Group.objects.all().count() == 1
@@ -137,223 +153,177 @@ def test_create_user_with_invitation(data_fixture, client):
 
 @pytest.mark.django_db
 def test_send_reset_password_email(data_fixture, client, mailoutbox):
-    data_fixture.create_user(email='test@localhost.nl')
+    data_fixture.create_user(email="test@localhost.nl")
 
     response = client.post(
-        reverse('api:user:send_reset_password_email'),
-        {},
-        format='json'
+        reverse("api:user:send_reset_password_email"), {}, format="json"
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
     response = client.post(
-        reverse('api:user:send_reset_password_email'),
-        {
-            'email': 'unknown@localhost.nl',
-            'base_url': 'http://localhost:3000'
-        },
-        format='json'
+        reverse("api:user:send_reset_password_email"),
+        {"email": "unknown@localhost.nl", "base_url": "http://localhost:3000"},
+        format="json",
     )
     assert response.status_code == 204
     assert len(mailoutbox) == 0
 
     response = client.post(
-        reverse('api:user:send_reset_password_email'),
-        {
-            'email': 'test@localhost.nl',
-            'base_url': 'http://test.nl'
-        },
-        format='json'
+        reverse("api:user:send_reset_password_email"),
+        {"email": "test@localhost.nl", "base_url": "http://test.nl"},
+        format="json",
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_HOSTNAME_IS_NOT_ALLOWED'
+    assert response_json["error"] == "ERROR_HOSTNAME_IS_NOT_ALLOWED"
     assert len(mailoutbox) == 0
 
     response = client.post(
-        reverse('api:user:send_reset_password_email'),
-        {
-            'email': 'test@localhost.nl',
-            'base_url': 'http://localhost:3000'
-        },
-        format='json'
+        reverse("api:user:send_reset_password_email"),
+        {"email": "test@localhost.nl", "base_url": "http://localhost:3000"},
+        format="json",
     )
     assert response.status_code == 204
     assert len(mailoutbox) == 1
 
     response = client.post(
-        reverse('api:user:send_reset_password_email'),
-        {
-            'email': ' teST@locAlhost.nl ',
-            'base_url': 'http://localhost:3000'
-        },
-        format='json'
+        reverse("api:user:send_reset_password_email"),
+        {"email": " teST@locAlhost.nl ", "base_url": "http://localhost:3000"},
+        format="json",
     )
     assert response.status_code == 204
     assert len(mailoutbox) == 2
 
     email = mailoutbox[0]
-    assert 'test@localhost.nl' in email.to
-    assert email.body.index('http://localhost:3000')
+    assert "test@localhost.nl" in email.to
+    assert email.body.index("http://localhost:3000")
 
 
 @pytest.mark.django_db
 def test_password_reset(data_fixture, client):
-    user = data_fixture.create_user(email='test@localhost')
+    user = data_fixture.create_user(email="test@localhost")
     handler = UserHandler()
     signer = handler.get_reset_password_signer()
 
+    response = client.post(reverse("api:user:reset_password"), {}, format="json")
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
     response = client.post(
-        reverse('api:user:reset_password'),
-        {},
-        format='json'
+        reverse("api:user:reset_password"),
+        {"token": "test", "password": "test"},
+        format="json",
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json["error"] == "BAD_TOKEN_SIGNATURE"
 
-    response = client.post(
-        reverse('api:user:reset_password'),
-        {
-            'token': 'test',
-            'password': 'test'
-        },
-        format='json'
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'BAD_TOKEN_SIGNATURE'
-
-    with freeze_time('2020-01-01 12:00'):
+    with freeze_time("2020-01-01 12:00"):
         token = signer.dumps(user.id)
 
-    with freeze_time('2020-01-04 12:00'):
+    with freeze_time("2020-01-04 12:00"):
         response = client.post(
-            reverse('api:user:reset_password'),
-            {
-                'token': token,
-                'password': 'test'
-            },
-            format='json'
+            reverse("api:user:reset_password"),
+            {"token": token, "password": "test"},
+            format="json",
         )
         response_json = response.json()
         assert response.status_code == HTTP_400_BAD_REQUEST
-        assert response_json['error'] == 'EXPIRED_TOKEN_SIGNATURE'
+        assert response_json["error"] == "EXPIRED_TOKEN_SIGNATURE"
 
-    with freeze_time('2020-01-01 12:00'):
+    with freeze_time("2020-01-01 12:00"):
         token = signer.dumps(9999)
 
-    with freeze_time('2020-01-02 12:00'):
+    with freeze_time("2020-01-02 12:00"):
         response = client.post(
-            reverse('api:user:reset_password'),
-            {
-                'token': token,
-                'password': 'test'
-            },
-            format='json'
+            reverse("api:user:reset_password"),
+            {"token": token, "password": "test"},
+            format="json",
         )
         response_json = response.json()
         assert response.status_code == HTTP_400_BAD_REQUEST
-        assert response_json['error'] == 'ERROR_USER_NOT_FOUND'
+        assert response_json["error"] == "ERROR_USER_NOT_FOUND"
 
-    with freeze_time('2020-01-01 12:00'):
+    with freeze_time("2020-01-01 12:00"):
         token = signer.dumps(user.id)
 
-    with freeze_time('2020-01-02 12:00'):
+    with freeze_time("2020-01-02 12:00"):
         response = client.post(
-            reverse('api:user:reset_password'),
-            {
-                'token': token,
-                'password': 'test'
-            },
-            format='json'
+            reverse("api:user:reset_password"),
+            {"token": token, "password": "test"},
+            format="json",
         )
         assert response.status_code == 204
 
     user.refresh_from_db()
-    assert user.check_password('test')
+    assert user.check_password("test")
 
 
 @pytest.mark.django_db
 def test_change_password(data_fixture, client):
     user, token = data_fixture.create_user_and_token(
-        email='test@localhost',
-        password='test'
+        email="test@localhost", password="test"
     )
 
     response = client.post(
-        reverse('api:user:change_password'),
+        reverse("api:user:change_password"),
         {},
-        format='json',
-        HTTP_AUTHORIZATION=f'JWT {token}'
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_REQUEST_BODY_VALIDATION'
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
     response = client.post(
-        reverse('api:user:change_password'),
-        {
-            'old_password': 'INCORRECT',
-            'new_password': 'new'
-        },
-        format='json',
-        HTTP_AUTHORIZATION=f'JWT {token}'
+        reverse("api:user:change_password"),
+        {"old_password": "INCORRECT", "new_password": "new"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json['error'] == 'ERROR_INVALID_OLD_PASSWORD'
+    assert response_json["error"] == "ERROR_INVALID_OLD_PASSWORD"
 
     user.refresh_from_db()
-    assert user.check_password('test')
+    assert user.check_password("test")
 
     response = client.post(
-        reverse('api:user:change_password'),
-        {
-            'old_password': 'test',
-            'new_password': 'new'
-        },
-        format='json',
-        HTTP_AUTHORIZATION=f'JWT {token}'
+        reverse("api:user:change_password"),
+        {"old_password": "test", "new_password": "new"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 204
 
     user.refresh_from_db()
-    assert user.check_password('new')
+    assert user.check_password("new")
 
 
 @pytest.mark.django_db
 def test_dashboard(data_fixture, client):
-    user, token = data_fixture.create_user_and_token(email='test@localhost')
-    group_1 = data_fixture.create_group(name='Test1')
+    user, token = data_fixture.create_user_and_token(email="test@localhost")
+    group_1 = data_fixture.create_group(name="Test1")
     group_2 = data_fixture.create_group()
     invitation_1 = data_fixture.create_group_invitation(
-        group=group_1,
-        email='test@localhost'
+        group=group_1, email="test@localhost"
     )
-    data_fixture.create_group_invitation(
-        group=group_1,
-        email='test2@localhost'
-    )
-    data_fixture.create_group_invitation(
-        group=group_2,
-        email='test3@localhost'
-    )
+    data_fixture.create_group_invitation(group=group_1, email="test2@localhost")
+    data_fixture.create_group_invitation(group=group_2, email="test3@localhost")
 
     response = client.get(
-        reverse('api:user:dashboard'),
-        format='json',
-        HTTP_AUTHORIZATION=f'JWT {token}'
+        reverse("api:user:dashboard"), format="json", HTTP_AUTHORIZATION=f"JWT {token}"
     )
     response_json = response.json()
-    assert len(response_json['group_invitations']) == 1
-    assert response_json['group_invitations'][0]['id'] == invitation_1.id
-    assert response_json['group_invitations'][0]['email'] == invitation_1.email
-    assert response_json['group_invitations'][0]['invited_by'] == (
-           invitation_1.invited_by.first_name
+    assert len(response_json["group_invitations"]) == 1
+    assert response_json["group_invitations"][0]["id"] == invitation_1.id
+    assert response_json["group_invitations"][0]["email"] == invitation_1.email
+    assert response_json["group_invitations"][0]["invited_by"] == (
+        invitation_1.invited_by.first_name
     )
-    assert response_json['group_invitations'][0]['group'] == 'Test1'
-    assert response_json['group_invitations'][0]['message'] == invitation_1.message
-    assert 'created_on' in response_json['group_invitations'][0]
+    assert response_json["group_invitations"][0]["group"] == "Test1"
+    assert response_json["group_invitations"][0]["message"] == invitation_1.message
+    assert "created_on" in response_json["group_invitations"][0]

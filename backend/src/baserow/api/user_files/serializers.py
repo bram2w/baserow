@@ -23,41 +23,49 @@ class UserFileURLAndThumbnailsSerializerMixin(serializers.Serializer):
 
     @extend_schema_field(OpenApiTypes.URI)
     def get_url(self, instance):
-        name = self.get_instance_attr(instance, 'name')
+        name = self.get_instance_attr(instance, "name")
         path = UserFileHandler().user_file_path(name)
         url = default_storage.url(path)
         return url
 
     @extend_schema_field(OpenApiTypes.OBJECT)
     def get_thumbnails(self, instance):
-        if not self.get_instance_attr(instance, 'is_image'):
+        if not self.get_instance_attr(instance, "is_image"):
             return None
 
-        name = self.get_instance_attr(instance, 'name')
+        name = self.get_instance_attr(instance, "name")
 
         return {
             thumbnail_name: {
-                'url': default_storage.url(
-                    UserFileHandler().user_file_thumbnail_path(
-                        name,
-                        thumbnail_name
-                    )
+                "url": default_storage.url(
+                    UserFileHandler().user_file_thumbnail_path(name, thumbnail_name)
                 ),
-                'width': size[0],
-                'height': size[1]
+                "width": size[0],
+                "height": size[1],
             }
             for thumbnail_name, size in settings.USER_THUMBNAILS.items()
         }
 
 
-class UserFileSerializer(UserFileURLAndThumbnailsSerializerMixin,
-                         serializers.ModelSerializer):
+class UserFileSerializer(
+    UserFileURLAndThumbnailsSerializerMixin, serializers.ModelSerializer
+):
     name = serializers.SerializerMethodField()
 
     class Meta:
         model = UserFile
-        fields = ('size', 'mime_type', 'is_image', 'image_width', 'image_height',
-                  'uploaded_at', 'url', 'thumbnails', 'name', 'original_name')
+        fields = (
+            "size",
+            "mime_type",
+            "is_image",
+            "image_width",
+            "image_height",
+            "uploaded_at",
+            "url",
+            "thumbnails",
+            "name",
+            "original_name",
+        )
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_name(self, instance):

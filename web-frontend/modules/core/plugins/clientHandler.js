@@ -24,7 +24,7 @@ class ErrorHandler {
         "The action couldn't be completed because you aren't a " +
           'member of the related group.'
       ),
-      ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR: new ResponseErrorMessage(
+      ERROR_USER_INVALID_GROUP_PERMISSIONS: new ResponseErrorMessage(
         'Action not allowed.',
         "The action couldn't be completed because you don't have the right " +
           'permissions to the related group.'

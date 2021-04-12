@@ -60,13 +60,13 @@ class JWTTokenAuthMiddleware(BaseMiddleware):
 
     async def __call__(self, scope, receive, send):
         get = parse_qs(scope["query_string"].decode("utf8"))
-        scope['user'] = None
-        scope['web_socket_id'] = None
+        scope["user"] = None
+        scope["web_socket_id"] = None
 
-        jwt_token = get.get('jwt_token')
+        jwt_token = get.get("jwt_token")
 
         if jwt_token:
-            scope['user'] = await get_user(jwt_token[0])
-            scope['web_socket_id'] = str(uuid.uuid4())
+            scope["user"] = await get_user(jwt_token[0])
+            scope["web_socket_id"] = str(uuid.uuid4())
 
         return await self.inner(scope, receive, send)
