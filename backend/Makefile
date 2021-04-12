@@ -6,7 +6,7 @@ install-dev-dependencies:
 	pip install -r requirements/dev.txt
 
 lint:
-	flake8 src tests || exit;
+	flake8 src tests && black . --check || exit;
 
 format:
 	black . || exit;
