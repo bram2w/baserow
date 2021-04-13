@@ -1,4 +1,3 @@
-import itertools
 from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
@@ -15,6 +14,9 @@ from baserow.contrib.database.fields.exceptions import (
     IncompatiblePrimaryFieldTypeError,
     CannotChangeFieldType,
 )
+from baserow.contrib.database.fields.field_helpers import (
+    construct_all_possible_field_kwargs,
+)
 from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
@@ -24,31 +26,10 @@ from baserow.contrib.database.fields.models import (
     BooleanField,
     SelectOption,
     LongTextField,
-    NUMBER_TYPE_CHOICES,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.exceptions import UserNotInGroup
-
-
-def dict_to_pairs(field_type_kwargs):
-    pairs_dict = {}
-    for name, options in field_type_kwargs.items():
-        pairs_dict[name] = []
-        if not isinstance(options, list):
-            options = [options]
-        for option in options:
-            pairs_dict[name].append((name, option))
-    return pairs_dict
-
-
-def construct_all_possible_kwargs(field_type_kwargs):
-    pairs_dict = dict_to_pairs(field_type_kwargs)
-    args = [
-        dict(pairwise_args) for pairwise_args in itertools.product(*pairs_dict.values())
-    ]
-
-    return args
 
 
 # You must add --runslow to pytest to run this test, you can do this in intellij by
@@ -82,22 +63,7 @@ def test_can_convert_between_all_fields(data_fixture):
     # different conversion behaviour or entirely different database columns being
     # created. Here the kwargs which control these modes are enumerated so we can then
     # generate every possible type of conversion.
-    extra_kwargs_for_type = {
-        "date": {
-            "date_include_time": [True, False],
-        },
-        "number": {
-            "number_type": [number_type for number_type, _ in NUMBER_TYPE_CHOICES],
-            "number_negative": [True, False],
-        },
-        "link_row": {"link_row_table": link_table},
-    }
-
-    all_possible_kwargs_per_type = {}
-    for field_type_name in field_type_registry.get_types():
-        extra_kwargs = extra_kwargs_for_type.get(field_type_name, {})
-        all_possible_kwargs = construct_all_possible_kwargs(extra_kwargs)
-        all_possible_kwargs_per_type[field_type_name] = all_possible_kwargs
+    all_possible_kwargs_per_type = construct_all_possible_field_kwargs(link_table)
 
     i = 1
     for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
