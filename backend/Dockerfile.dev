@@ -4,7 +4,7 @@ ADD . /backend
 
 WORKDIR /backend
 
-ENV PYTHONPATH $PYTHONPATH:/backend/src
+ENV PYTHONPATH $PYTHONPATH:/backend/src:/premium-backend/src
 ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.dev'
 
 RUN apt-get update
