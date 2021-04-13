@@ -30,6 +30,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./backend:/backend
+      - ./premium/backend:/premium-backend
     ports:
       - 8000:8000
     depends_on:
@@ -43,6 +44,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./web-frontend:/web-frontend
+      - ./premium/web-frontend:/premium-frontend
     ports:
       - 3000:3000
     depends_on:
