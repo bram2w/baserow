@@ -1,24 +1,13 @@
-import pytest
 import os
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+from django.conf import settings
+from django.db import connection
 from itsdangerous.exc import BadSignature
 
-from django.db import connection
-from django.conf import settings
-
-from baserow.core.handler import CoreHandler
-from baserow.core.models import (
-    Settings,
-    Group,
-    GroupUser,
-    GroupInvitation,
-    Application,
-    Template,
-    TemplateCategory,
-    GROUP_USER_PERMISSION_ADMIN,
-)
+from baserow.contrib.database.models import Database, Table
 from baserow.core.exceptions import (
     UserNotInGroup,
     ApplicationTypeDoesNotExist,
@@ -34,7 +23,17 @@ from baserow.core.exceptions import (
     TemplateFileDoesNotExist,
     TemplateDoesNotExist,
 )
-from baserow.contrib.database.models import Database, Table
+from baserow.core.handler import CoreHandler
+from baserow.core.models import (
+    Settings,
+    Group,
+    GroupUser,
+    GroupInvitation,
+    Application,
+    Template,
+    TemplateCategory,
+    GROUP_USER_PERMISSION_ADMIN,
+)
 
 
 @pytest.mark.django_db
@@ -354,7 +353,7 @@ def test_get_group_invitation(data_fixture):
         )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_send_group_invitation_email(data_fixture, mailoutbox):
     group_invitation = data_fixture.create_group_invitation()
     handler = CoreHandler()
