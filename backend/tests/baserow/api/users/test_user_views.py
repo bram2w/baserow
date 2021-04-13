@@ -1,16 +1,13 @@
 import pytest
-from freezegun import freeze_time
-
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
-
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
+from freezegun import freeze_time
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
+from baserow.contrib.database.models import Database, Table
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser
 from baserow.core.user.handler import UserHandler
-from baserow.contrib.database.models import Database, Table
-
 
 User = get_user_model()
 
@@ -151,7 +148,7 @@ def test_create_user_with_invitation(data_fixture, client):
     assert Table.objects.all().count() == 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_send_reset_password_email(data_fixture, client, mailoutbox):
     data_fixture.create_user(email="test@localhost.nl")
 

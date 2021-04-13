@@ -1,14 +1,11 @@
-import pytest
 from decimal import Decimal
 from unittest.mock import MagicMock
-from freezegun import freeze_time
 
+import pytest
+from django.contrib.auth import get_user_model
+from freezegun import freeze_time
 from itsdangerous.exc import SignatureExpired, BadSignature
 
-from django.contrib.auth import get_user_model
-
-from baserow.core.models import Group, GroupUser
-from baserow.core.registries import plugin_registry
 from baserow.contrib.database.models import (
     Database,
     Table,
@@ -25,6 +22,8 @@ from baserow.core.exceptions import (
     GroupInvitationDoesNotExist,
 )
 from baserow.core.handler import CoreHandler
+from baserow.core.models import Group, GroupUser
+from baserow.core.registries import plugin_registry
 from baserow.core.user.exceptions import (
     UserAlreadyExist,
     UserNotFound,
@@ -170,7 +169,7 @@ def test_create_user_with_invitation(data_fixture):
     assert Table.objects.all().count() == 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_send_reset_password_email(data_fixture, mailoutbox):
     user = data_fixture.create_user(email="test@localhost")
     handler = UserHandler()

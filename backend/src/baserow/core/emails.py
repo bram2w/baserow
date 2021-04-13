@@ -3,6 +3,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils.translation import gettext as _
+from django.db import transaction
 
 
 class BaseEmailMessage(EmailMultiAlternatives):
@@ -68,6 +69,10 @@ class BaseEmailMessage(EmailMultiAlternatives):
         if not self.template_name:
             raise NotImplementedError("The template_name must be implement.")
         return self.template_name
+
+    def send(self, fail_silently=False):
+        s = super()
+        transaction.on_commit(lambda: s.send(fail_silently))
 
 
 class GroupInvitationEmail(BaseEmailMessage):
