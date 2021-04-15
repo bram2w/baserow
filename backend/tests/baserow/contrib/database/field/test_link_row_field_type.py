@@ -4,6 +4,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD
 
 from django.shortcuts import reverse
 from django.db import connections
+from django.apps.registry import apps
 
 from baserow.core.handler import CoreHandler
 from baserow.contrib.database.fields.models import Field
@@ -14,6 +15,29 @@ from baserow.contrib.database.fields.exceptions import (
     LinkRowTableNotProvided,
 )
 from baserow.contrib.database.rows.handler import RowHandler
+
+
+@pytest.mark.django_db
+def test_call_apps_registry_pending_operations(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    field_handler = FieldHandler()
+    field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Test",
+        link_row_table=customers_table,
+    )
+    table.get_model()
+    # Make sure that there are no pending operations in the app registry. Because a
+    # Django ManyToManyField registers pending operations every time a table model is
+    # generated, which can causes a memory leak if they are not triggered.
+    assert len(apps._pending_operations) == 0
 
 
 @pytest.mark.django_db

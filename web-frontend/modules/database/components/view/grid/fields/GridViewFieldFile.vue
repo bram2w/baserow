@@ -55,7 +55,7 @@
       </li>
     </ul>
     <UserFilesModal
-      v-if="Array.isArray(value) && !this.readOnly"
+      v-if="Array.isArray(value) && !readOnly"
       ref="uploadModal"
       @uploaded="addFiles(value, $event)"
       @hidden="hideModal"
