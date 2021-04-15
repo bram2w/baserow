@@ -208,13 +208,13 @@ export const mutations = {
     row[`field_${field.id}`] = value
   },
   UPDATE_ROW(state, { row, values }) {
-    _.assign(row, values)
+    Object.assign(row, values)
   },
   UPDATE_ROWS(state, { rows }) {
     rows.forEach((newRow) => {
       const row = state.rows.find((row) => row.id === newRow.id)
       if (row !== undefined) {
-        _.assign(row, newRow)
+        Object.assign(row, newRow)
       }
     })
   },
@@ -249,9 +249,9 @@ export const mutations = {
   },
   UPDATE_FIELD_OPTIONS_OF_FIELD(state, { fieldId, values }) {
     if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
-      _.assign(state.fieldOptions[fieldId], values)
+      Object.assign(state.fieldOptions[fieldId], values)
     } else {
-      state.fieldOptions = _.assign({}, state.fieldOptions, {
+      state.fieldOptions = Object.assign({}, state.fieldOptions, {
         [fieldId]: values,
       })
     }
@@ -706,9 +706,8 @@ export const actions = {
     { view, row, fields, primary, overrides = {} }
   ) {
     const values = JSON.parse(JSON.stringify(row))
-    Object.keys(overrides).forEach((key) => {
-      values[key] = overrides[key]
-    })
+    Object.assign(values, overrides)
+
     // The value is always valid if the filters are disabled.
     const matches = view.filters_disabled
       ? true
@@ -773,9 +772,7 @@ export const actions = {
     { view, row, fields, primary = null, overrides = {} }
   ) {
     const values = JSON.parse(JSON.stringify(row))
-    Object.keys(overrides).forEach((key) => {
-      values[key] = overrides[key]
-    })
+    Object.assign(values, overrides)
 
     const allRows = getters.getAllRows
     const currentIndex = getters.getAllRows.findIndex((r) => r.id === row.id)
@@ -835,7 +832,7 @@ export const actions = {
 
     // Populate the row and set the loading state to indicate that the row has not
     // yet been added.
-    const row = _.assign({}, values)
+    const row = Object.assign({}, values)
     populateRow(row)
     row.id = uuid()
     row._.loading = true
@@ -887,7 +884,7 @@ export const actions = {
     { commit, dispatch, getters },
     { view, fields, primary, values, getScrollTop }
   ) {
-    const row = _.assign({}, values)
+    const row = Object.assign({}, values)
     populateRow(row)
     commit('ADD_ROWS', {
       rows: [row],

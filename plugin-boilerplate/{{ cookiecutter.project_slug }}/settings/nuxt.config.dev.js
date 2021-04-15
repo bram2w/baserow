@@ -1,9 +1,8 @@
-import _ from 'lodash'
 import StyleLintPlugin from 'stylelint-webpack-plugin'
 
 import baseConfig from './nuxt.config.base'
 
-export default _.assign(baseConfig, {
+export default Object.assign(baseConfig, {
   build: {
     extend(config, ctx) {
       if (ctx.isDev && ctx.isClient) {
