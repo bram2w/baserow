@@ -555,7 +555,6 @@ class LinkRowFieldType(FieldType):
 
         # Note that the through model will not be registered with the apps because of
         # the `DatabaseConfig.prevent_generated_model_for_registering` hack.
-
         models.ManyToManyField(
             to=related_model,
             related_name=related_name,
@@ -565,8 +564,17 @@ class LinkRowFieldType(FieldType):
             db_constraint=False,
         ).contribute_to_class(model, field_name)
 
+        # Trigger the newly created pending operations of all the models related to the
+        # created ManyToManyField. They need to be called manually because normally
+        # they are triggered when a new new model is registered. Not triggering them
+        # can cause a memory leak because everytime a table model is generated, it will
+        # register new pending operations.
+        apps = model._meta.apps
         model_field = model._meta.get_field(field_name)
-        model_field.do_related_class(model_field.remote_field.model, None)
+        apps.do_pending_operations(model)
+        apps.do_pending_operations(related_model)
+        apps.do_pending_operations(model_field.remote_field.through)
+        apps.clear_cache()
 
     def prepare_values(self, values, user):
         """
