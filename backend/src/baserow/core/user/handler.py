@@ -56,7 +56,9 @@ class UserHandler:
         except User.DoesNotExist:
             raise UserNotFound("The user with the provided parameters is not found.")
 
-    def create_user(self, name, email, password, group_invitation_token=None):
+    def create_user(
+        self, name, email, password, group_invitation_token=None, template=None
+    ):
         """
         Creates a new user with the provided information and creates a new group and
         application for him. If the optional group invitation is provided then the user
@@ -71,6 +73,9 @@ class UserHandler:
         :param group_invitation_token: If provided and valid, the invitation will be
             accepted and and initial group will not be created.
         :type group_invitation_token: str
+        :param template: If provided, that template will be installed into the newly
+            created group.
+        :type template: Template
         :raises: UserAlreadyExist: When a user with the provided username (email)
             already exists.
         :raises GroupInvitationEmailMismatch: If the group invitation email does not
@@ -80,7 +85,9 @@ class UserHandler:
         :rtype: User
         """
 
-        if not CoreHandler().get_settings().allow_new_signups:
+        core_handler = CoreHandler()
+
+        if not core_handler.get_settings().allow_new_signups:
             raise DisabledSignupError("Sign up is disabled.")
 
         email = normalize_email_address(email)
@@ -88,7 +95,6 @@ class UserHandler:
         if User.objects.filter(Q(email=email) | Q(username=email)).exists():
             raise UserAlreadyExist(f"A user with username {email} already exists.")
 
-        core_handler = CoreHandler()
         group_invitation = None
         group_user = None
 
@@ -120,9 +126,12 @@ class UserHandler:
         if not group_user:
             group_user = core_handler.create_group(user=user, name=f"{name}'s group")
 
+        if not group_invitation_token and template:
+            core_handler.install_template(user, group_user.group, template)
+
         # Call the user_created method for each plugin that is un the registry.
         for plugin in plugin_registry.registry.values():
-            plugin.user_created(user, group_user.group, group_invitation)
+            plugin.user_created(user, group_user.group, group_invitation, template)
 
         return user
 

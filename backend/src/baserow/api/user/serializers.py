@@ -6,6 +6,7 @@ from django.contrib.auth.models import update_last_login
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.core.user.utils import normalize_email_address
+from baserow.core.models import Template
 
 User = get_user_model()
 
@@ -36,6 +37,14 @@ class RegisterSerializer(serializers.Serializer):
         required=False,
         help_text="If provided and valid, the user accepts the group invitation and "
         "will have access to the group after signing up.",
+    )
+    template_id = serializers.PrimaryKeyRelatedField(
+        required=False,
+        default=None,
+        queryset=Template.objects.all(),
+        help_text="The id of the template that must be installed after creating the "
+        "account. This only works if the `group_invitation_token` param is not "
+        "provided.",
     )
 
 
