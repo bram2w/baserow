@@ -9,7 +9,7 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-eye-slash"></i>
-      {{ hiddenFieldsTitle }}
+      <span class="header__filter-name">{{ hiddenFieldsTitle }}</span>
     </a>
     <GridViewHideContext
       ref="context"

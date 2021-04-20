@@ -16,7 +16,8 @@ export default (client) => {
       name,
       password,
       authenticate = true,
-      groupInvitationToken = null
+      groupInvitationToken = null,
+      templateId = null
     ) {
       const values = {
         name,
@@ -27,6 +28,10 @@ export default (client) => {
 
       if (groupInvitationToken !== null) {
         values.group_invitation_token = groupInvitationToken
+      }
+
+      if (templateId !== null) {
+        values.template_id = templateId
       }
 
       return client.post('/user/', values)

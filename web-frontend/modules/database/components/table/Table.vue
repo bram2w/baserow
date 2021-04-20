@@ -1,6 +1,10 @@
 <template>
   <div>
-    <header class="layout__col-2-1 header">
+    <header
+      ref="header"
+      class="layout__col-2-1 header"
+      :class="{ 'header--overflow': headerOverflow }"
+    >
       <div v-show="tableLoading" class="header__loading"></div>
       <ul v-if="!tableLoading" class="header__filter">
         <li class="header__filter-item header__filter-item--grids">
@@ -16,13 +20,15 @@
               )
             "
           >
-            <span v-if="hasSelectedView">
+            <template v-if="hasSelectedView">
               <i
                 class="header__filter-icon header-filter-icon--view fas"
                 :class="'fa-' + view._.type.iconClass"
               ></i>
-              {{ view.name }}
-            </span>
+              <span class="header__filter-name header__filter-name--forced">{{
+                view.name
+              }}</span>
+            </template>
             <span v-else>
               <i
                 class="header__filter-icon header-filter-icon-no-choice fas fa-caret-square-down"
@@ -35,6 +41,7 @@
             :table="table"
             :views="views"
             :read-only="readOnly"
+            :header-overflow="headerOverflow"
             @selected-view="$emit('selected-view', $event)"
           ></ViewsContext>
         </li>
@@ -96,6 +103,8 @@
 </template>
 
 <script>
+import ResizeObserver from 'resize-observer-polyfill'
+
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
@@ -143,8 +152,9 @@ export default {
       required: true,
     },
     view: {
-      validator: (prop) => typeof prop === 'object' || prop === undefined,
+      type: Object,
       required: true,
+      validator: (prop) => typeof prop === 'object' || prop === undefined,
     },
     tableLoading: {
       type: Boolean,
@@ -165,6 +175,9 @@ export default {
     return {
       // Shows a small spinning loading animation when the view is being refreshed.
       viewLoading: false,
+      // Indicates if the elements within the header are overflowing. In case of true,
+      // we can hide certain values to make sure that it fits within the header.
+      headerOverflow: false,
     }
   },
   computed: {
@@ -179,11 +192,25 @@ export default {
       )
     },
   },
+  watch: {
+    tableLoading(value) {
+      if (!value) {
+        this.$nextTick(() => {
+          this.checkHeaderOverflow()
+        })
+      }
+    },
+  },
   beforeMount() {
     this.$bus.$on('table-refresh', this.refresh)
   },
+  mounted() {
+    this.$el.resizeObserver = new ResizeObserver(this.checkHeaderOverflow)
+    this.$el.resizeObserver.observe(this.$el)
+  },
   beforeDestroy() {
     this.$bus.$off('table-refresh', this.refresh)
+    this.$el.resizeObserver.unobserve(this.$el)
   },
   methods: {
     getViewComponent(view) {
@@ -193,6 +220,26 @@ export default {
     getViewHeaderComponent(view) {
       const type = this.$registry.get('view', view.type)
       return type.getHeaderComponent()
+    },
+    /**
+     * When the window resizes, we want to check if the content of the header is
+     * overflowing. If that is the case, we want to make some space by removing some
+     * content. We do this by copying the header content into a new HTMLElement and
+     * check if the elements still fit within the header. We copy the html because we
+     * want to measure the header in the full width state.
+     */
+    checkHeaderOverflow() {
+      const header = this.$refs.header
+      const width = header.getBoundingClientRect().width
+      const wrapper = document.createElement('div')
+      wrapper.innerHTML = header.outerHTML
+      const el = wrapper.childNodes[0]
+      el.style = `position: absolute; left: 0; top: 0; width: ${width}px; overflow: auto;`
+      el.classList.remove('header--overflow')
+      document.body.appendChild(el)
+      this.headerOverflow =
+        el.clientWidth < el.scrollWidth || el.clientHeight < el.scrollHeight
+      document.body.removeChild(el)
     },
     /**
      * Refreshes the whole view. All data will be reloaded and it will visually look

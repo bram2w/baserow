@@ -1,10 +1,12 @@
+import os
 from decimal import Decimal
 from unittest.mock import MagicMock
-
 import pytest
-from django.contrib.auth import get_user_model
 from freezegun import freeze_time
 from itsdangerous.exc import SignatureExpired, BadSignature
+
+from django.contrib.auth import get_user_model
+from django.conf import settings
 
 from baserow.contrib.database.models import (
     Database,
@@ -104,7 +106,7 @@ def test_create_user(data_fixture):
     assert model_2_results[1].order == Decimal("2.00000000000000000000")
     assert model_2_results[2].order == Decimal("3.00000000000000000000")
 
-    plugin_mock.user_created.assert_called_with(user, group, None)
+    plugin_mock.user_created.assert_called_with(user, group, None, None)
 
     with pytest.raises(UserAlreadyExist):
         user_handler.create_user("Test1", "test@test.nl", "password")
@@ -167,6 +169,26 @@ def test_create_user_with_invitation(data_fixture):
     # We do not expect any initial data to have been created.
     assert Database.objects.all().count() == 0
     assert Table.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_create_user_with_template(data_fixture):
+    old_templates = settings.APPLICATION_TEMPLATES_DIR
+    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
+        settings.BASE_DIR, "../../../tests/templates"
+    )
+    template = data_fixture.create_template(slug="example-template")
+    user_handler = UserHandler()
+    user_handler.create_user("Test1", "test0@test.nl", "password", template=template)
+
+    assert Group.objects.all().count() == 2
+    assert GroupUser.objects.all().count() == 1
+    # We expect the example template to be installed
+    assert Database.objects.all().count() == 1
+    assert Database.objects.all().first().name == "Event marketing"
+    assert Table.objects.all().count() == 2
+
+    settings.APPLICATION_TEMPLATES_DIR = old_templates
 
 
 @pytest.mark.django_db(transaction=True)

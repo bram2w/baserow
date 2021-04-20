@@ -32,6 +32,7 @@ export default {
       this.open = true
       this.$emit('show')
       window.addEventListener('keyup', this.keyup)
+      document.body.classList.add('prevent-scroll')
     },
     /**
      * Hide the modal.
@@ -52,6 +53,7 @@ export default {
       }
 
       window.removeEventListener('keyup', this.keyup)
+      document.body.classList.remove('prevent-scroll')
     },
     /**
      * If someone actually clicked on the modal wrapper and not one of his children the

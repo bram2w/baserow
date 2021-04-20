@@ -9,7 +9,7 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-sort"></i>
-      {{ sortTitle }}
+      <span class="header__filter-name">{{ sortTitle }}</span>
     </a>
     <ViewSortContext
       ref="context"

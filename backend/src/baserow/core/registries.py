@@ -71,7 +71,7 @@ class Plugin(APIUrlsInstanceMixin, Instance):
 
         return []
 
-    def user_created(self, user, group, group_invitation):
+    def user_created(self, user, group, group_invitation, template):
         """
         A hook that is called after a new user has been created. This is the place to
         create some data the user can start with. A group has already been created
@@ -84,6 +84,9 @@ class Plugin(APIUrlsInstanceMixin, Instance):
         :param group_invitation: Is provided if the user has signed up using a valid
             group invitation token.
         :type group_invitation: GroupInvitation
+        :param template: The template that is installed right after creating the
+            account. Is `None` if the template was not created.
+        :type template: Template or None
         """
 
     def user_signed_in(self, user):

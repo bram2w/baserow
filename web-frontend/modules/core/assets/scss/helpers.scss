@@ -82,6 +82,10 @@
   user-select: initial !important;
 }
 
+.prevent-scroll {
+  overflow: hidden !important;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0);

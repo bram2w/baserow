@@ -1,8 +1,11 @@
+import os
 import pytest
+from freezegun import freeze_time
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
-from freezegun import freeze_time
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from django.conf import settings
 
 from baserow.contrib.database.models import Database, Table
 from baserow.core.handler import CoreHandler
@@ -99,7 +102,7 @@ def test_create_user_with_invitation(data_fixture, client):
         },
         format="json",
     )
-    assert response_failed.status_code == 400
+    assert response_failed.status_code == HTTP_400_BAD_REQUEST
     assert response_failed.json()["error"] == "BAD_TOKEN_SIGNATURE"
 
     response_failed = client.post(
@@ -112,7 +115,7 @@ def test_create_user_with_invitation(data_fixture, client):
         },
         format="json",
     )
-    assert response_failed.status_code == 404
+    assert response_failed.status_code == HTTP_404_NOT_FOUND
     assert response_failed.json()["error"] == "ERROR_GROUP_INVITATION_DOES_NOT_EXIST"
 
     response_failed = client.post(
@@ -125,7 +128,7 @@ def test_create_user_with_invitation(data_fixture, client):
         },
         format="json",
     )
-    assert response_failed.status_code == 400
+    assert response_failed.status_code == HTTP_400_BAD_REQUEST
     assert response_failed.json()["error"] == "ERROR_GROUP_INVITATION_EMAIL_MISMATCH"
     assert User.objects.all().count() == 1
 
@@ -139,13 +142,72 @@ def test_create_user_with_invitation(data_fixture, client):
         },
         format="json",
     )
-    assert response_failed.status_code == 200
+    assert response_failed.status_code == HTTP_200_OK
     assert User.objects.all().count() == 2
     assert Group.objects.all().count() == 1
     assert Group.objects.all().first().id == invitation.group_id
     assert GroupUser.objects.all().count() == 2
     assert Database.objects.all().count() == 0
     assert Table.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_create_user_with_template(data_fixture, client):
+    old_templates = settings.APPLICATION_TEMPLATES_DIR
+    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
+        settings.BASE_DIR, "../../../tests/templates"
+    )
+    template = data_fixture.create_template(slug="example-template")
+
+    response = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test0@test.nl",
+            "password": "test12",
+            "template_id": -1,
+        },
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["template_id"][0]["code"] == "does_not_exist"
+
+    response = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test0@test.nl",
+            "password": "test12",
+            "template_id": "random",
+        },
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["template_id"][0]["code"] == "incorrect_type"
+
+    response = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test0@test.nl",
+            "password": "test12",
+            "template_id": template.id,
+        },
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert Group.objects.all().count() == 2
+    assert GroupUser.objects.all().count() == 1
+    # We expect the example template to be installed
+    assert Database.objects.all().count() == 1
+    assert Database.objects.all().first().name == "Event marketing"
+    assert Table.objects.all().count() == 2
+
+    settings.APPLICATION_TEMPLATES_DIR = old_templates
 
 
 @pytest.mark.django_db(transaction=True)

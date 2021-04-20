@@ -31,7 +31,7 @@ from baserow.core.exceptions import (
     GroupInvitationEmailMismatch,
     GroupInvitationDoesNotExist,
 )
-from baserow.core.models import GroupInvitation
+from baserow.core.models import GroupInvitation, Template
 from baserow.core.user.handler import UserHandler
 from baserow.core.user.exceptions import (
     UserAlreadyExist,
@@ -173,11 +173,18 @@ class UserView(APIView):
     def post(self, request, data):
         """Registers a new user."""
 
+        template = (
+            Template.objects.get(pk=data["template_id"])
+            if data["template_id"]
+            else None
+        )
+
         user = UserHandler().create_user(
             name=data["name"],
             email=data["email"],
             password=data["password"],
             group_invitation_token=data.get("group_invitation_token"),
+            template=template,
         )
 
         response = {"user": UserSerializer(user).data}
