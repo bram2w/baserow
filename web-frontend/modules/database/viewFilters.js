@@ -479,7 +479,7 @@ export class EmptyViewFilterType extends ViewFilterType {
   matches(rowValue, filterValue, field, fieldType) {
     return (
       rowValue === null ||
-      rowValue === [] ||
+      (Array.isArray(rowValue) && rowValue.length === 0) ||
       rowValue === false ||
       rowValue.toString().trim() === ''
     )
@@ -522,7 +522,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
   matches(rowValue, filterValue, field, fieldType) {
     return !(
       rowValue === null ||
-      rowValue === [] ||
+      (Array.isArray(rowValue) && rowValue.length === 0) ||
       rowValue === false ||
       rowValue.toString().trim() === ''
     )
