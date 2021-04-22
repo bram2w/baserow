@@ -23,10 +23,10 @@ This whole directory is also added to the backend container.
   source directory. This file is registered as a command via the `setup.py`. When 
   someone adds Baserow as a dependency they can use the command `baserow migrate` which
   is the same as `python src/baserow/manage.py migrate`.
-* `Dockerfile.demo`: the dockerfile that is used to build the demo image of the 
-  backend.
-* `Dockerfile.dev`: the dockerfile that is used to build the development image of the
-  backend.
+* `Dockerfile`: the dockerfile that is used to build the image of the 
+  backend for running baserow on your local machine.
+* `docker/Dockerfile.dev`: the dockerfile that is used to build the development image 
+  of the backend.
 * `Makefile`: contains a few commands to install the dependencies, run the linter and
   run the tests.
 * `pytest.ini`: pytest configuration when running the tests.
@@ -85,10 +85,10 @@ web frontend. This whole directory is also added to the web-frontend container.
 * `.eslintrc.js`: the configuration for the eslint linter.
 * `.prettierrc`: configuration for prettier.
 * `.stylelintrc`: configuration for stylelint which lints the scss code.
-* `Dockerfile.demo`: the dockerfile that is used to build the demo image of the 
-  web-frontend.
-* `Dockerfile.dev`: the dockerfile that is used to build the development image of the
-  web-frontend.
+* `Dockerfile`: the dockerfile that is used to build the image of the
+  web-frontend for running baserow on your local machine.
+* `docker/Dockerfile.dev`: the dockerfile that is used to build the development image
+  of the web-frontend.
 * `intellij-idea.webpack.config.js` a webpack config file that can be used by Intellij
   iDEA. It adds the correct aliases for the editor.
 * `jest.config.js`: config file for running the tests with JEST.
@@ -128,3 +128,10 @@ https://baserow.io/docs.
 
 Contains a cookiecutter boilerplate for a Baserow plugin. More information can be found
 on the [plugin boilerplate page](../plugins/boilerplate.md).
+
+## media
+
+Contains a nginx based docker image which is used in Baserow's docker setup to serve
+any uploaded user files. This is needed as Django will not serve media files when
+not in debug mode and instead requires you to run your own web server to serve these
+assets.

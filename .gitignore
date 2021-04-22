@@ -97,3 +97,6 @@ venv/
 
 # intellij config files
 *.iml
+
+web-frontend/plugins/
+backend/plugins/

@@ -91,7 +91,7 @@ are accepted.
 * `DATABASE_HOST` (default `db`): The hostname of the PostgreSQL server.
 * `DATABASE_PORT` (default `5432`): The port of the PostgreSQL server.
 * `MJML_SERVER_HOST` (default `mjml`): The hostname of the MJML TCP server. In the
-  development environment we use the `liminspace/mjml-tcpserver:latest` image.
+  development environment we use the `liminspace/mjml-tcpserver:0.10` image.
 * `MJML_SERVER_PORT` (default `28101`): The port of the MJML TCP server.
 * `PUBLIC_BACKEND_URL` (default `http://localhost:8000`): The publicly accessible URL of
   the backend. For the development environment this is `http://localhost:8000`, but if

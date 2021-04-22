@@ -6,6 +6,7 @@
 * Switch to using a celery based email backend by default.
 * Added `--add-columns` flag to the `fill_table` management command. It creates all the
   field types before filling the table with random data.
+* Reworked Baserow's Docker setup to be easier to use, faster to build and more secure.
 * Make the view header more compact when the content doesn't fit anymore.
 * Allow providing a `template_id` when registering a new account, which will install
   that template instead of the default database.

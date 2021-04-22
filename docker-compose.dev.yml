@@ -1,0 +1,51 @@
+version: "3.7"
+
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/docker/Dockerfile.dev
+      args:
+        # We allow configuring the UID/GID here so you can run as the dev's actual user
+        # reducing the chance the containers screw up the bind mounted folders.
+        UID: "${UID:-}"
+        GID: "${GID:-}"
+    image: baserow_backend_dev:latest
+    volumes:
+      - ./backend:/baserow/backend
+      - ./premium/backend/:/baserow/backend/plugins/premium
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
+  celery:
+    image: baserow_backend_dev:latest
+    command: celery-dev
+    volumes:
+      - ./backend:/baserow/backend
+      - ./premium/backend/:/baserow/backend/plugins/premium
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
+  web-frontend:
+    build:
+      context: .
+      dockerfile: ./web-frontend/docker/Dockerfile.dev
+      args:
+        # We allow configuring the UID/GID here so you can run as the dev's actual user
+        # reducing the chance the containers screw up the bind mounted folders.
+        UID: "${UID:-}"
+        GID: "${GID:-}"
+    image: baserow_web-frontend_dev:latest
+    volumes:
+      - ./web-frontend:/baserow/web-frontend
+      - ./premium/web-frontend/:/baserow/web-frontend/plugins/premium
+
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
+  media-volume-fixer:
+    command: chown ${UID:-1000}:${GID:-1000} -R /baserow/media
