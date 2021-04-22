@@ -129,7 +129,7 @@ $ cd web-frontend
 $ yarn install
 
 # Build frontend
-$ ./node_modules/nuxt/bin/nuxt.js build --config-file config/nuxt.config.demo.js
+$ ./node_modules/nuxt/bin/nuxt.js build --config-file config/nuxt.config.local.js
 ```
 
 ## Install NGINX
@@ -313,7 +313,7 @@ $ baserow sync_templates
 $ deactivate
 $ cd web-frontend
 $ yarn install
-$ ./node_modules/nuxt/bin/nuxt.js build --config-file config/nuxt.config.demo.js
+$ ./node_modules/nuxt/bin/nuxt.js build --config-file config/nuxt.config.local.js
 $ supervisorctl reread
 $ supervisorctl update
 $ supervisorctl restart all

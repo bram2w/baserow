@@ -3,7 +3,6 @@ django-cors-headers==3.2.1
 djangorestframework==3.11.0
 djangorestframework-jwt==1.11.0
 psycopg2==2.8.4
-mysqlclient==1.4.6
 ipython==7.13.0
 Faker==4.0.2
 Twisted==20.3.0

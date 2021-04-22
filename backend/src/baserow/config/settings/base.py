@@ -1,5 +1,5 @@
-import os
 import datetime
+import os
 from urllib.parse import urlparse, urljoin
 
 from corsheaders.defaults import default_headers
@@ -32,6 +32,10 @@ INSTALLED_APPS = [
     "baserow.ws",
     "baserow.contrib.database",
 ]
+
+ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", None)
+if ADDITIONAL_APPS is not None:
+    INSTALLED_APPS += ADDITIONAL_APPS.split(",")
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -230,7 +234,7 @@ if "INITIAL_TABLE_DATA_LIMIT" in os.environ:
 
 MEDIA_URL_PATH = "/media/"
 MEDIA_URL = os.getenv("MEDIA_URL", urljoin(PUBLIC_BACKEND_URL, MEDIA_URL_PATH))
-MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/media")
+MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/baserow/media")
 
 # Indicates the directory where the user files and user thumbnails are stored.
 USER_FILES_DIRECTORY = "user_files"
@@ -246,6 +250,8 @@ if os.getenv("EMAIL_SMTP", ""):
     EMAIL_PORT = os.getenv("EMAIL_SMTP_PORT", "25")
     EMAIL_HOST_USER = os.getenv("EMAIL_SMTP_USER", "")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_SMTP_PASSWORD", "")
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 
 # Configurable thumbnails that are going to be generated when a user uploads an image

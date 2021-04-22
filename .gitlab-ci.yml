@@ -10,6 +10,7 @@ web-frontend-eslint:
   stage: lint
   image: node:10
   script:
+    - mkdir web-frontend/plugins && cp -r premium/web-frontend web-frontend/plugins/premium
     - cd web-frontend
     - make install-dependencies
     - make eslint
@@ -18,6 +19,7 @@ web-frontend-stylelint:
   stage: lint
   image: node:10
   script:
+    - mkdir web-frontend/plugins && cp -r premium/web-frontend web-frontend/plugins/premium
     - cd web-frontend
     - make install-dependencies
     - make stylelint
@@ -26,6 +28,7 @@ web-frontend-test:
   stage: test
   image: node:10
   script:
+    - mkdir web-frontend/plugins && cp -r premium/web-frontend web-frontend/plugins/premium
     - cd web-frontend
     - make install-dependencies
     - make test
@@ -34,6 +37,7 @@ backend-flake8:
   stage: lint
   image: python:3.7
   script:
+    - mkdir backend/plugins && cp -r premium/backend backend/plugins/premium
     - cd backend
     - make install-dependencies
     - make install-dev-dependencies
@@ -45,17 +49,18 @@ backend-pytest:
   services:
     - name: postgres:11.3
       alias: db
-    - name: liminspace/mjml-tcpserver:latest
+    - name: liminspace/mjml-tcpserver:0.10
       alias: mjml
   variables:
     POSTGRES_USER: baserow
     POSTGRES_PASSWORD: baserow
     POSTGRES_DB: baserow
   script:
+    - mkdir backend/plugins && cp -r premium/backend backend/plugins/premium
     - cd backend
     - make install-dependencies
     - make install-dev-dependencies
-    - export PYTHONPATH=$CI_PROJECT_DIR/backend/src
+    - export PYTHONPATH=$CI_PROJECT_DIR/backend/src:$CI_PROJECT_DIR/backend/plugins/premium/src
     - make test
 
 backend-setup:
@@ -64,5 +69,5 @@ backend-setup:
   script:
     - pip install -e ./backend
     - python -c 'import baserow'
-    - export DJANGO_SETTINGS_MODULE='baserow.config.settings.demo'
+    - export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
     - timeout --preserve-status 10s gunicorn --workers=1 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker baserow.config.asgi:application

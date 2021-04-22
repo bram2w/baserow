@@ -1,1 +1,1 @@
-default_app_config = 'baserow_premium.config.BaserowPremiumConfig'
+default_app_config = "baserow_premium.config.BaserowPremiumConfig"
