@@ -6,6 +6,7 @@ from django.conf import settings
 from decimal import Decimal
 
 from baserow.core.exceptions import UserNotInGroup
+from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import (
@@ -131,6 +132,16 @@ def test_fill_table_with_initial_data(data_fixture):
 
     settings.INITIAL_TABLE_DATA_LIMIT = limit
 
+    field_limit = settings.MAX_FIELD_LIMIT
+    settings.MAX_FIELD_LIMIT = 2
+
+    with pytest.raises(MaxFieldLimitExceeded):
+        table_handler.create_table(
+            user, database, name="Table 1", data=[["fields"] * 3, ["rows"] * 3]
+        )
+
+    settings.MAX_FIELD_LIMIT = field_limit
+
     data = [
         ["A", "B", "C", "D"],
         ["1-1", "1-2", "1-3", "1-4", "1-5"],
@@ -204,6 +215,22 @@ def test_fill_table_with_initial_data(data_fixture):
 
     assert getattr(results[2], f"field_{text_fields[0].id}") == "3-1"
     assert getattr(results[2], f"field_{text_fields[1].id}") == "3-2"
+
+    field_limit = settings.MAX_FIELD_LIMIT
+    settings.MAX_FIELD_LIMIT = 5
+    data = [
+        ["A", "B", "C", "D", "E"],
+        ["1-1", "1-2", "1-3", "1-4", "1-5"],
+    ]
+    table = table_handler.create_table(
+        user, database, name="Table 3", data=data, first_row_header=True
+    )
+    num_fields = table.field_set.count()
+
+    assert GridView.objects.all().count() == 3
+    assert num_fields == settings.MAX_FIELD_LIMIT
+
+    settings.MAX_FIELD_LIMIT = field_limit
 
 
 @pytest.mark.django_db
