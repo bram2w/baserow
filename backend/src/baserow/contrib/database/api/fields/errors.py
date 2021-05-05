@@ -40,3 +40,5 @@ ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE = (
     HTTP_400_BAD_REQUEST,
     "The field type {e.field_type} is not compatible with the primary field.",
 )
+
+ERROR_MAX_FIELD_COUNT_EXCEEDED = "ERROR_MAX_FIELD_COUNT_EXCEEDED"

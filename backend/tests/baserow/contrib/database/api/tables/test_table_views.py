@@ -122,6 +122,20 @@ def test_create_table_with_data(api_client, data_fixture):
     assert response_json["error"] == "ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED"
     settings.INITIAL_TABLE_DATA_LIMIT = limit
 
+    field_limit = settings.MAX_FIELD_LIMIT
+    settings.MAX_FIELD_LIMIT = 2
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {"name": "Test 1", "data": [["fields"] * 3, ["rows"] * 3]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_MAX_FIELD_COUNT_EXCEEDED"
+    settings.MAX_FIELD_LIMIT = field_limit
+
     url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
     response = api_client.post(
         url,

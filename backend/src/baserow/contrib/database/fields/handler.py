@@ -14,6 +14,7 @@ from .exceptions import (
     CannotChangeFieldType,
     FieldDoesNotExist,
     IncompatiblePrimaryFieldTypeError,
+    MaxFieldLimitExceeded,
 )
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
@@ -80,6 +81,8 @@ class FieldHandler:
         :type kwargs: object
         :raises PrimaryFieldAlreadyExists: When we try to create a primary field,
             but one already exists.
+        :raises MaxFieldLimitExceeded: When we try to create a field,
+            but exceeds the field limit.
         :return: The created field instance.
         :rtype: Field
         """
@@ -101,6 +104,12 @@ class FieldHandler:
         allowed_fields = ["name"] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
+
+        num_fields = table.field_set.count()
+        if (num_fields + 1) > settings.MAX_FIELD_LIMIT:
+            raise MaxFieldLimitExceeded(
+                f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
+            )
 
         field_values = field_type.prepare_values(field_values, user)
         before = field_type.before_create(

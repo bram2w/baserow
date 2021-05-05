@@ -3,6 +3,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.db import models
 from faker import Faker
 
@@ -13,6 +14,7 @@ from baserow.contrib.database.fields.exceptions import (
     FieldDoesNotExist,
     IncompatiblePrimaryFieldTypeError,
     CannotChangeFieldType,
+    MaxFieldLimitExceeded,
 )
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
@@ -223,6 +225,20 @@ def test_create_field(send_mock, data_fixture):
     assert TextField.objects.all().count() == 1
     assert NumberField.objects.all().count() == 1
     assert BooleanField.objects.all().count() == 1
+
+    field_limit = settings.MAX_FIELD_LIMIT
+    settings.MAX_FIELD_LIMIT = 2
+
+    with pytest.raises(MaxFieldLimitExceeded):
+        handler.create_field(
+            user=user,
+            table=table,
+            type_name="text",
+            name="Test text field",
+            text_default="Some default",
+        )
+
+    settings.MAX_FIELD_LIMIT = field_limit
 
     with pytest.raises(UserNotInGroup):
         handler.create_field(user=user_2, table=table, type_name="text")

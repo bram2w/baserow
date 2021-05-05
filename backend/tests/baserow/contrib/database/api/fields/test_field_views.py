@@ -8,6 +8,7 @@ from rest_framework.status import (
 )
 
 from django.shortcuts import reverse
+from django.conf import settings
 
 from baserow.contrib.database.fields.models import Field, TextField, NumberField
 
@@ -108,6 +109,18 @@ def test_create_field(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    field_limit = settings.MAX_FIELD_LIMIT
+    settings.MAX_FIELD_LIMIT = 0
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "Test 1", "type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_MAX_FIELD_COUNT_EXCEEDED"
+    settings.MAX_FIELD_LIMIT = field_limit
 
     url = reverse("api:database:fields:list", kwargs={"table_id": table_2.id})
     response = api_client.get(url)

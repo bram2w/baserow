@@ -265,3 +265,5 @@ APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 # The template that must be selected when the user first opens the templates select
 # modal.
 DEFAULT_APPLICATION_TEMPLATE = "project-management"
+
+MAX_FIELD_LIMIT = 1500

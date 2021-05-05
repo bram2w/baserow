@@ -13,6 +13,8 @@ from baserow.api.schemas import get_error_schema
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
 from baserow.core.handler import CoreHandler
+from baserow.contrib.database.api.fields.errors import ERROR_MAX_FIELD_COUNT_EXCEEDED
+from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
@@ -114,6 +116,7 @@ class TablesView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA,
             InitialTableDataLimitExceeded: ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
+            MaxFieldLimitExceeded: ERROR_MAX_FIELD_COUNT_EXCEEDED,
         }
     )
     @validate_body(TableCreateSerializer)
