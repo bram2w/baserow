@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3"
 
 services:
   db:
@@ -40,6 +40,8 @@ services:
       context: .
     image: baserow_backend:latest
     environment:
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:3000}
       - MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
       - SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
       - DATABASE_USER=${DATABASE_USER:-baserow}
@@ -62,6 +64,9 @@ services:
   celery:
     container_name: celery
     image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
     command: celery
     depends_on:
       - backend
@@ -77,6 +82,8 @@ services:
       dockerfile: ./web-frontend/Dockerfile
     image: baserow_web-frontend:latest
     environment:
+      - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}
+      - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:3000}
       - ADDITIONAL_MODULES
     ports:
       - "${WEB_FRONTEND_PORT:-3000}:3000"

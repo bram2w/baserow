@@ -1,0 +1,9 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# So the bash scripts work when run inside the baserow docker images
+*.sh text eol=lf
+# Prettier does not allow windows file endings by default
+*.js text eol=lf
+*.vue text eol=lf
+*.scss text eol=lf
