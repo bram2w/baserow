@@ -10,7 +10,13 @@ from django.conf import settings
 from baserow.contrib.database.fields.models import Field
 
 from .exceptions import RowDoesNotExist
-from .signals import row_created, row_updated, row_deleted
+from .signals import (
+    before_row_update,
+    before_row_delete,
+    row_created,
+    row_updated,
+    row_deleted,
+)
 
 
 class RowHandler:
@@ -141,6 +147,44 @@ class RowHandler:
 
         return values, manytomany_values
 
+    def get_order_before_row(self, before, model):
+        """
+        Calculates a new unique order which will be before the provided before row
+        order. This order can be used by an existing or new row. Several other rows
+        could be updated as their order might need to change.
+
+        :param before: The row instance where the before order must be calculated for.
+        :type before: Table
+        :param model: The model of the related table
+        :type model: Model
+        :return: The new order.
+        :rtype: Decimal
+        """
+
+        if before:
+            # Here we calculate the order value, which indicates the position of the
+            # row, by subtracting a fraction of the row that it must be placed
+            # before. The same fraction is also going to be subtracted from the other
+            # rows that have been placed before. By using these fractions we don't
+            # have to re-order every row in the table.
+            change = Decimal("0.00000000000000000001")
+            order = before.order - change
+            model.objects.filter(order__gt=floor(order), order__lte=order).update(
+                order=F("order") - change
+            )
+        else:
+            # Because the row is by default added as last, we have to figure out what
+            # the highest order is and increase that by one. Because the order of new
+            # rows should always be a whole number we round it up.
+            order = (
+                ceil(
+                    model.objects.aggregate(max=Max("order")).get("max") or Decimal("0")
+                )
+                + 1
+            )
+
+        return order
+
     def get_row(self, user, table, row_id, model=None):
         """
         Fetches a single row from the provided table.
@@ -204,29 +248,7 @@ class RowHandler:
 
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
-
-        if before:
-            # Here we calculate the order value, which indicates the position of the
-            # row, by subtracting a fraction of the row that it must be placed
-            # before. The same fraction is also going to be subtracted from the other
-            # rows that have been placed before. By using these fractions we don't
-            # have to re-order every row in the table.
-            change = Decimal("0.00000000000000000001")
-            values["order"] = before.order - change
-            model.objects.filter(
-                order__gt=floor(values["order"]), order__lte=values["order"]
-            ).update(order=F("order") - change)
-        else:
-            # Because the row is by default added as last, we have to figure out what
-            # the highest order is and increase that by one. Because the order of new
-            # rows should always be a whole number we round it up.
-            values["order"] = (
-                ceil(
-                    model.objects.aggregate(max=Max("order")).get("max") or Decimal("0")
-                )
-                + 1
-            )
-
+        values["order"] = self.get_order_before_row(before, model)
         instance = model.objects.create(**values)
 
         for name, value in manytomany_values.items():
@@ -273,6 +295,10 @@ class RowHandler:
             except model.DoesNotExist:
                 raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
+            before_return = before_row_update.send(
+                self, row=row, user=user, table=table, model=model
+            )
+
             values = self.prepare_values(model._field_objects, values)
             values, manytomany_values = self.extract_manytomany_values(values, model)
 
@@ -284,11 +310,71 @@ class RowHandler:
             for name, value in manytomany_values.items():
                 getattr(row, name).set(value)
 
-        row_updated.send(self, row=row, user=user, table=table, model=model)
+        row_updated.send(
+            self,
+            row=row,
+            user=user,
+            table=table,
+            model=model,
+            before_return=before_return,
+        )
 
         return row
 
-    def delete_row(self, user, table, row_id):
+    def move_row(self, user, table, row_id, before=None, model=None):
+        """
+        Moves the row related to the row_id before another row or to the end if no
+        before row is provided. This moving is done by updating the `order` value of
+        the order.
+
+        :param user: The user of whose behalf the row is moved
+        :type user: User
+        :param table: The table that contains the row that needs to be moved.
+        :type table: Table
+        :param row_id: The row id that needs to be moved.
+        :type row_id: int
+        :param before: If provided the new row will be placed right before that row
+            instance. Otherwise the row will be moved to the end.
+        :type before: Table
+        :param model: If the correct model has already been generated, it can be
+            provided so that it does not have to be generated for a second time.
+        :type model: Model
+        """
+
+        group = table.database.group
+        group.has_user(user, raise_error=True)
+
+        if not model:
+            model = table.get_model()
+
+        # Because it is possible to have a different database for the user tables we
+        # need to start another transaction here, otherwise it is not possible to use
+        # the select_for_update function.
+        with transaction.atomic(settings.USER_TABLE_DATABASE):
+            try:
+                row = model.objects.select_for_update().get(id=row_id)
+            except model.DoesNotExist:
+                raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+
+            before_return = before_row_update.send(
+                self, row=row, user=user, table=table, model=model
+            )
+
+            row.order = self.get_order_before_row(before, model)
+            row.save()
+
+        row_updated.send(
+            self,
+            row=row,
+            user=user,
+            table=table,
+            model=model,
+            before_return=before_return,
+        )
+
+        return row
+
+    def delete_row(self, user, table, row_id, model=None):
         """
         Deletes an existing row of the given table and with row_id.
 
@@ -298,22 +384,35 @@ class RowHandler:
         :type table: Table
         :param row_id: The id of the row that must be deleted.
         :type row_id: int
+        :param model: If the correct model has already been generated, it can be
+            provided so that it does not have to be generated for a second time.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
         group = table.database.group
         group.has_user(user, raise_error=True)
 
-        model = table.get_model(field_ids=[])
+        if not model:
+            model = table.get_model()
 
         try:
             row = model.objects.get(id=row_id)
         except model.DoesNotExist:
             raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
+        before_return = before_row_delete.send(
+            self, row=row, user=user, table=table, model=model
+        )
+
         row_id = row.id
         row.delete()
 
         row_deleted.send(
-            self, row_id=row_id, row=row, user=user, table=table, model=model
+            self,
+            row_id=row_id,
+            row=row,
+            user=user,
+            table=table,
+            model=model,
+            before_return=before_return,
         )

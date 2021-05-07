@@ -22,6 +22,7 @@
       @refresh="$emit('refresh', $event)"
       @row-hover="setRowHover($event.row, $event.value)"
       @row-context="showRowContext($event.event, $event.row)"
+      @row-dragging="rowDragStart"
       @add-row="addRow()"
       @update="updateValue"
       @edit="editValue"
@@ -72,6 +73,16 @@
       @edit-modal="$refs.rowEditModal.show($event.id)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     ></GridViewSection>
+    <GridViewRowDragging
+      ref="rowDragging"
+      :table="table"
+      :view="view"
+      :primary="primary"
+      :fields="visibleFields"
+      :store-prefix="storePrefix"
+      vertical="getVerticalScrollbarElement"
+      @scroll="scroll($event.pixelY, $event.pixelX)"
+    ></GridViewRowDragging>
     <Context ref="rowContext">
       <ul class="context__menu">
         <li v-if="!readOnly">
@@ -128,6 +139,7 @@ import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import GridViewSection from '@baserow/modules/database/components/view/grid/GridViewSection'
 import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import GridViewRowDragging from '@baserow/modules/database/components/view/grid/GridViewRowDragging'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import { GridViewType } from '@baserow/modules/database/viewTypes'
@@ -137,6 +149,7 @@ export default {
   components: {
     GridViewSection,
     GridViewFieldWidthHandle,
+    GridViewRowDragging,
     RowEditModal,
   },
   mixins: [gridViewHelpers],
@@ -253,7 +266,19 @@ export default {
   beforeMount() {
     this.$bus.$on('field-deleted', this.fieldDeleted)
   },
+  mounted() {
+    this.$el.resizeEvent = () => {
+      const height = this.$refs.left.$refs.body.clientHeight
+      this.$store.dispatch(
+        this.storePrefix + 'view/grid/setWindowHeight',
+        height
+      )
+    }
+    this.$el.resizeEvent()
+    window.addEventListener('resize', this.$el.resizeEvent)
+  },
   beforeDestroy() {
+    window.removeEventListener('resize', this.$el.resizeEvent)
     this.$bus.$off('field-deleted', this.fieldDeleted)
   },
   methods: {
@@ -291,16 +316,19 @@ export default {
      */
     async updateValue({ field, row, value, oldValue }) {
       try {
-        await this.$store.dispatch(this.storePrefix + 'view/grid/updateValue', {
-          table: this.table,
-          view: this.view,
-          fields: this.fields,
-          primary: this.primary,
-          row,
-          field,
-          value,
-          oldValue,
-        })
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateRowValue',
+          {
+            table: this.table,
+            view: this.view,
+            fields: this.fields,
+            primary: this.primary,
+            row,
+            field,
+            value,
+            oldValue,
+          }
+        )
       } catch (error) {
         notifyIf(error, 'field')
       }
@@ -361,9 +389,7 @@ export default {
       this.$store.dispatch(
         this.storePrefix + 'view/grid/fetchByScrollTopDelayed',
         {
-          gridId: this.view.id,
           scrollTop: this.$refs.left.$refs.body.scrollTop,
-          windowHeight: this.$refs.left.$refs.body.clientHeight,
           fields: this.fields,
           primary: this.primary,
         }
@@ -383,15 +409,18 @@ export default {
     },
     async addRow(before = null) {
       try {
-        await this.$store.dispatch(this.storePrefix + 'view/grid/create', {
-          view: this.view,
-          table: this.table,
-          // We need a list of all fields including the primary one here.
-          fields: this.fields,
-          primary: this.primary,
-          values: {},
-          before,
-        })
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/createNewRow',
+          {
+            view: this.view,
+            table: this.table,
+            // We need a list of all fields including the primary one here.
+            fields: this.fields,
+            primary: this.primary,
+            values: {},
+            before,
+          }
+        )
       } catch (error) {
         notifyIf(error, 'row')
       }
@@ -420,14 +449,17 @@ export default {
         // We need a small helper function that calculates the current scrollTop because
         // the delete action will recalculate the visible scroll range and buffer.
         const getScrollTop = () => this.$refs.left.$refs.body.scrollTop
-        await this.$store.dispatch(this.storePrefix + 'view/grid/delete', {
-          table: this.table,
-          grid: this.view,
-          row,
-          fields: this.fields,
-          primary: this.primary,
-          getScrollTop,
-        })
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/deleteExistingRow',
+          {
+            table: this.table,
+            view: this.view,
+            fields: this.fields,
+            primary: this.primary,
+            row,
+            getScrollTop,
+          }
+        )
       } catch (error) {
         notifyIf(error, 'row')
       }
@@ -461,6 +493,13 @@ export default {
         'right',
         0
       )
+    },
+    /**
+     * Called when the user starts dragging the row. This will initiate the dragging
+     * effect and allows the user to move it to another position.
+     */
+    rowDragStart({ event, row }) {
+      this.$refs.rowDragging.start(row, event)
     },
     /**
      * When the modal hides and the related row does not match the filters anymore it
@@ -637,10 +676,7 @@ export default {
     async refresh() {
       await this.$store.dispatch(
         this.storePrefix + 'view/grid/visibleByScrollTop',
-        {
-          scrollTop: this.$refs.right.$refs.body.scrollTop,
-          windowHeight: this.$refs.right.$refs.body.clientHeight,
-        }
+        this.$refs.right.$refs.body.scrollTop
       )
       this.$nextTick(() => {
         this.fieldsUpdated()
