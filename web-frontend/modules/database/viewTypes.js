@@ -130,21 +130,21 @@ export class ViewType extends Registerable {
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowCreated(context, tableId, rowValues, fields, primary, storePrefix) {}
+  rowCreated(context, tableId, fields, primary, values, storePrefix) {}
 
   /**
    * Event that is called when a row is updated from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowUpdated(context, tableId, rowValues, fields, primary, storePrefix) {}
+  rowUpdated(context, tableId, fields, primary, row, values, storePrefix) {}
 
   /**
    * Event that is called when a row is deleted from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
    */
-  rowDeleted(context, tableId, rowId, fields, primary, storePrefix) {}
+  rowDeleted(context, tableId, fields, primary, row, storePrefix) {}
 
   /**
    * @return object
@@ -195,7 +195,6 @@ export class GridViewType extends ViewType {
 
   async refresh({ store }, view, fields, primary, storePrefix = '') {
     await store.dispatch(storePrefix + 'view/grid/refresh', {
-      gridId: view.id,
       fields,
       primary,
     })
@@ -267,39 +266,66 @@ export class GridViewType extends ViewType {
     )
   }
 
-  rowCreated({ store }, tableId, rowValues, fields, primary, storePrefix = '') {
+  async rowCreated(
+    { store },
+    tableId,
+    fields,
+    primary,
+    values,
+    storePrefix = ''
+  ) {
     if (this.isCurrentView(store, tableId)) {
-      store.dispatch(storePrefix + 'view/grid/forceCreate', {
+      await store.dispatch(storePrefix + 'view/grid/createdNewRow', {
         view: store.getters['view/getSelected'],
         fields,
         primary,
-        values: rowValues,
-        getScrollTop: () => store.getters['view/grid/getScrollTop'],
+        values,
+      })
+      await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
+        scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
+        fields,
+        primary,
       })
     }
   }
 
-  rowUpdated({ store }, tableId, rowValues, fields, primary, storePrefix = '') {
+  async rowUpdated(
+    { store },
+    tableId,
+    fields,
+    primary,
+    row,
+    values,
+    storePrefix = ''
+  ) {
     if (this.isCurrentView(store, tableId)) {
-      store.dispatch(storePrefix + 'view/grid/forceUpdate', {
+      await store.dispatch(storePrefix + 'view/grid/updatedExistingRow', {
         view: store.getters['view/getSelected'],
-        fields,
-        primary,
-        values: rowValues,
-        getScrollTop: () => store.getters['view/grid/getScrollTop'],
-      })
-    }
-  }
-
-  rowDeleted({ store }, tableId, rowId, fields, primary, storePrefix = '') {
-    if (this.isCurrentView(store, tableId)) {
-      const row = { id: rowId }
-      store.dispatch(storePrefix + 'view/grid/forceDelete', {
-        grid: store.getters['view/getSelected'],
         fields,
         primary,
         row,
-        getScrollTop: () => store.getters['view/grid/getScrollTop'],
+        values,
+      })
+      await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
+        scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
+        fields,
+        primary,
+      })
+    }
+  }
+
+  async rowDeleted({ store }, tableId, fields, primary, row, storePrefix = '') {
+    if (this.isCurrentView(store, tableId)) {
+      await store.dispatch(storePrefix + 'view/grid/deletedExistingRow', {
+        view: store.getters['view/getSelected'],
+        fields,
+        primary,
+        row,
+      })
+      await store.dispatch(storePrefix + 'view/grid/fetchByScrollTopDelayed', {
+        scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
+        fields,
+        primary,
       })
     }
   }

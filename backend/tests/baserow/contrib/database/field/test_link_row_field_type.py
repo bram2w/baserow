@@ -232,6 +232,7 @@ def test_link_row_field_type_rows(data_fixture):
     customers_table = data_fixture.create_database_table(
         name="Customers", database=database
     )
+    data_fixture.create_text_field(name="Name", table=customers_table, primary=True)
     users_table = data_fixture.create_database_table(name="Users", database=database)
 
     field_handler = FieldHandler()
@@ -352,7 +353,8 @@ def test_link_row_field_type_rows(data_fixture):
 
     # Just check if the field can be deleted can be deleted.
     field_handler.delete_field(user=user, field=link_row_field)
-    assert Field.objects.all().count() == 0
+    # We expect only the primary field to be left.
+    assert Field.objects.all().count() == 1
 
 
 @pytest.mark.django_db

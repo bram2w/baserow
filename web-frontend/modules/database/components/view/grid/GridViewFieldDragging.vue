@@ -249,7 +249,6 @@ export default {
         await this.$store.dispatch(
           this.storePrefix + 'view/grid/updateFieldOptionsOrder',
           {
-            gridId: this.view.id,
             order: newOrder,
           }
         )

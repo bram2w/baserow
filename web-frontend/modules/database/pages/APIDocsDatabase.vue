@@ -67,6 +67,7 @@
                 navActive === 'section-table-' + table.id + '-get' ||
                 navActive === 'section-table-' + table.id + '-create' ||
                 navActive === 'section-table-' + table.id + '-update' ||
+                navActive === 'section-table-' + table.id + '-move' ||
                 navActive === 'section-table-' + table.id + '-delete',
             }"
           >
@@ -124,6 +125,16 @@
                   navigate('section-table-' + table.id + '-update')
                 "
                 >Update row</a
+              >
+            </li>
+            <li>
+              <a
+                class="api-docs__nav-link"
+                :class="{
+                  active: navActive === 'section-table-' + table.id + '-move',
+                }"
+                @click.prevent="navigate('section-table-' + table.id + '-move')"
+                >Move row</a
               >
             </li>
             <li>
@@ -427,7 +438,7 @@
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter name="row_id" type="integer">
-                The unique identifier or the row that is requested.
+                The unique identifier of the row that is requested.
               </APIDocsParameter>
             </ul>
           </div>
@@ -489,7 +500,7 @@
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter name="row_id" type="integer">
-                The unique identifier or the row that needs to be updated.
+                The unique identifier of the row that needs to be updated.
               </APIDocsParameter>
             </ul>
             <h4 class="api-docs__heading-4">Request body schema</h4>
@@ -520,6 +531,48 @@
         <div class="api-docs__item">
           <div class="api-docs__left">
             <h3
+              :id="'section-table-' + table.id + '-move'"
+              class="api-docs__heading-3"
+            >
+              Move row
+            </h3>
+            <p class="api-docs__content">
+              Moves an existing {{ table.name }} row before another row. If no
+              `before_row_id` is provided, then the row will be moved to the end
+              of the table.
+            </p>
+            <h4 class="api-docs__heading-4">Path parameters</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter name="row_id" type="integer">
+                Moves the row related to the value.
+              </APIDocsParameter>
+            </ul>
+            <h4 class="api-docs__heading-4">Query parameters</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter
+                name="before_row_id"
+                type="integer"
+                :optional="true"
+              >
+                Moves the row related to the given `row_id` before the row
+                related to the provided value. If not provided, then the row
+                will be moved to the end.
+              </APIDocsParameter>
+            </ul>
+          </div>
+          <div class="api-docs__right">
+            <APIDocsExample
+              v-model="exampleType"
+              type="PATCH"
+              :url="getItemURL(table) + 'move/'"
+              :response="getResponseItem(table)"
+              :mapping="getFieldMapping(table)"
+            ></APIDocsExample>
+          </div>
+        </div>
+        <div class="api-docs__item">
+          <div class="api-docs__left">
+            <h3
               :id="'section-table-' + table.id + '-delete'"
               class="api-docs__heading-3"
             >
@@ -531,7 +584,7 @@
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter name="row_id" type="integer">
-                The unique identifier or the row that needs to be deleted.
+                The unique identifier of the row that needs to be deleted.
               </APIDocsParameter>
             </ul>
           </div>
@@ -591,7 +644,7 @@
                 <td>400</td>
                 <td>Bad request</td>
                 <td>
-                  The request contains invalid values or the JSON could not be
+                  The request contains invalid values of the JSON could not be
                   parsed.
                 </td>
               </tr>
@@ -783,7 +836,7 @@ export default {
      * Generates an example response object based on the available fields of the table.
      */
     getResponseItem(table) {
-      const item = { id: 0 }
+      const item = { id: 0, order: '1.00000000000000000000' }
       Object.assign(item, this.getRequestExample(table, true))
       return item
     },

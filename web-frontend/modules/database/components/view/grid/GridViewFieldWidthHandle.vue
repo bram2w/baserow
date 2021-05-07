@@ -76,7 +76,6 @@ export default {
         await this.$store.dispatch(
           this.storePrefix + 'view/grid/updateFieldOptionsOfField',
           {
-            gridId: this.grid.id,
             field: this.field,
             values: { width: newWidth },
             oldValues: { width: this.startWidth },

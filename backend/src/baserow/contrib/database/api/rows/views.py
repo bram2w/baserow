@@ -516,3 +516,79 @@ class RowView(APIView):
         RowHandler().delete_row(request.user, table, row_id)
 
         return Response(status=204)
+
+
+class RowMoveView(APIView):
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Moves the row in the table related to the value.",
+            ),
+            OpenApiParameter(
+                name="row_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Moves the row related to the value.",
+            ),
+            OpenApiParameter(
+                name="before_row_id",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Moves the row related to the given `row_id` before the "
+                "row related to the provided value. If not provided, "
+                "then the row will be moved to the end.",
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="move_database_table_row",
+        description="Moves the row related to given `row_id` parameter to another "
+        "position. It is only possible to move the row before another existing row or "
+        "to the end. If the `before_row_id` is provided then the row related to "
+        "the `row_id` parameter is moved before that row. If the `before_row_id` "
+        "parameter is not provided, then the row will be moved to the end.",
+        responses={
+            200: get_example_row_serializer_class(True),
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
+            404: get_error_schema(
+                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_ROW_DOES_NOT_EXIST"]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+            NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+        }
+    )
+    def patch(self, request, table_id, row_id):
+        """Moves the row to another position."""
+
+        table = TableHandler().get_table(table_id)
+        TokenHandler().check_table_permissions(request, "update", table, False)
+
+        model = table.get_model()
+        before_id = request.GET.get("before_id")
+        before = (
+            RowHandler().get_row(request.user, table, before_id, model)
+            if before_id
+            else None
+        )
+        row = RowHandler().move_row(
+            request.user, table, row_id, before=before, model=model
+        )
+
+        serializer_class = get_row_serializer_class(
+            model, RowSerializer, is_response=True
+        )
+        serializer = serializer_class(row)
+        return Response(serializer.data)

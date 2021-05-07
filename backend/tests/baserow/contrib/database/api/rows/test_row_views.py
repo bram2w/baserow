@@ -13,6 +13,7 @@ from django.shortcuts import reverse
 
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.contrib.database.rows.handler import RowHandler
 
 
 @pytest.mark.django_db
@@ -901,6 +902,126 @@ def test_update_row(api_client, data_fixture):
     assert getattr(row_3, f"field_{decimal_field.id}") == Decimal("10.22")
     assert getattr(row_2, f"field_{number_field.id}") is None
     assert getattr(row_2, f"field_{boolean_field.id}") is False
+
+
+@pytest.mark.django_db
+def test_move_row(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table()
+
+    token = TokenHandler().create_token(user, table.database.group, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    TokenHandler().update_token_permissions(user, wrong_token, True, True, False, True)
+
+    handler = RowHandler()
+    row_1 = handler.create_row(user=user, table=table)
+    row_2 = handler.create_row(user=user, table=table)
+    row_3 = handler.create_row(user=user, table=table)
+
+    url = reverse("api:database:rows:move", kwargs={"table_id": 9999, "row_id": 9999})
+    response = api_client.patch(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+    url = reverse(
+        "api:database:rows:move", kwargs={"table_id": table_2.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    url = reverse(
+        "api:database:rows:move", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION="Token abc123",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_TOKEN_DOES_NOT_EXIST"
+
+    url = reverse(
+        "api:database:rows:move", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {wrong_token.key}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
+
+    url = reverse(
+        "api:database:rows:move", kwargs={"table_id": table.id, "row_id": 99999}
+    )
+    response = api_client.patch(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ROW_DOES_NOT_EXIST"
+
+    url = reverse(
+        "api:database:rows:move", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        f"{url}?before_id=-1",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ROW_DOES_NOT_EXIST"
+
+    url = reverse(
+        "api:database:rows:move", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json_row_1 = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json_row_1["id"] == row_1.id
+    assert response_json_row_1["order"] == "4.00000000000000000000"
+
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+    row_3.refresh_from_db()
+    assert row_1.order == Decimal("4.00000000000000000000")
+    assert row_2.order == Decimal("2.00000000000000000000")
+    assert row_3.order == Decimal("3.00000000000000000000")
+
+    url = reverse(
+        "api:database:rows:move", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        f"{url}?before_id={row_3.id}",
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    response_json_row_1 = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json_row_1["id"] == row_1.id
+    assert response_json_row_1["order"] == "2.99999999999999999999"
+
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+    row_3.refresh_from_db()
+    assert row_1.order == Decimal("2.99999999999999999999")
+    assert row_2.order == Decimal("2.00000000000000000000")
+    assert row_3.order == Decimal("3.00000000000000000000")
 
 
 @pytest.mark.django_db
