@@ -23,5 +23,12 @@ module.exports = {
   rules: {
     'no-console': 0,
     'vue/no-mutating-props': 0,
+    'prettier/prettier': [
+      'error',
+      {
+        singleQuote: true,
+        semi: false,
+      },
+    ],
   },
 }

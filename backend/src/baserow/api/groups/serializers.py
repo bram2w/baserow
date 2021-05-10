@@ -5,7 +5,7 @@ from baserow.core.models import Group
 from .users.serializers import GroupUserGroupSerializer
 
 
-__all__ = ["GroupUserGroupSerializer"]
+__all__ = ["GroupUserGroupSerializer", "GroupSerializer", "OrderGroupsSerializer"]
 
 
 class GroupSerializer(serializers.ModelSerializer):

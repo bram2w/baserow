@@ -1,0 +1,138 @@
+.user-admin-username {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.user-admin-username__initials {
+  flex: 0 0 28px;
+  font-weight: bold;
+  color: $white;
+  background-color: $color-primary-500;
+  border-radius: 100%;
+  margin-right: 12px;
+
+  @include center-text(28px, 12px);
+}
+
+.user-admin-username__name {
+  @extend %ellipsis;
+
+  word-wrap: break-word;
+}
+
+.user-admin-username__icon {
+  margin-left: 5px;
+}
+
+.user-admin-username__menu {
+  @include fixed-height(24px, 14px);
+
+  border-radius: 3px;
+  color: $color-primary-900;
+  padding: 0 5px;
+  margin-left: auto;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+}
+
+.user-admin-active__icon {
+  margin-right: 5px;
+
+  &.user-admin-active__icon--activated {
+    color: $color-success-500;
+  }
+
+  &.user-admin-active__icon--deactivated {
+    color: $color-error-500;
+  }
+}
+
+.user-admin-group {
+  display: flex;
+  align-items: center;
+}
+
+.user-admin-group__icon {
+  width: $fa-fw-width;
+  color: $color-neutral-700;
+}
+
+// The user-admin-group css below uses flexbox wrapping behaviour to hide overflowing
+// groups.
+.user-admin-group__container {
+  height: 49px;
+  margin-right: 5px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  overflow: hidden;
+  flex-shrink: 3;
+}
+
+// Groups which do not fit in the groups cell will wrap down into new hidden rows below
+.user-admin-group__item {
+  @include fixed-height(28px, 12px);
+
+  flex: 0 1 auto;
+  border-radius: 15px;
+  padding: 0 10px;
+  margin-right: 5px;
+  margin-top: 11px;
+  margin-bottom: 10px;
+  background-color: $color-neutral-100;
+  box-sizing: border-box;
+}
+
+// An empty no width item always at the start of the .user-admin-group__container will
+// ensure the first real group will wrap down into a new row if it does not fit.
+// Otherwise this first group will be shown in the cell but overflowing with it's text
+// cut off which is not desired.
+.user-admin-group__empty-item {
+  @include fixed-height(28px, 12px);
+
+  flex: 0 1 auto;
+  margin-top: 11px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  order: -2;
+}
+
+.user-admin-group__dropdown-item {
+  @include fixed-height(28px, 12px);
+
+  border-radius: 15px;
+  margin: 5px 10px;
+  background-color: $color-neutral-100;
+  box-sizing: border-box;
+  width: fit-content;
+}
+
+.user-admin-group__expand {
+  @include fixed-height(28px, 12px);
+
+  padding: 0 10px;
+  border-radius: 15px;
+  border: 1px solid $color-neutral-200;
+  color: $color-primary-900;
+  box-sizing: border-box;
+  margin-top: 10px;
+  margin-bottom: 9px;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+}
+
+.user-admin-delete__strong {
+  word-break: break-word;
+}
+
+.user-admin-edit__delete {
+  color: $color-error-500;
+  font-size: 14px;
+}

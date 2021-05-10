@@ -54,39 +54,11 @@
             </div>
           </div>
           <div class="select-row-modal__foot">
-            <div class="select-row-modal__pagination">
-              <div class="select-row-modal__pagination-name">page</div>
-              <div class="select-row-modal__pagination-group">
-                <a
-                  class="select-row-modal__pagination-button"
-                  :class="{
-                    'select-row-modal__pagination-button--disabled': page === 1,
-                  }"
-                  @click="fetch(page - 1)"
-                >
-                  <i class="fas fa-caret-left"></i>
-                </a>
-                <input
-                  v-model="visiblePage"
-                  class="input select-row-modal__pagination-page-input"
-                  type="number"
-                  @keypress.enter="fetch(visiblePage)"
-                />
-                <div class="select-row-modal__pagination-count">
-                  of {{ totalPages }}
-                </div>
-                <a
-                  class="select-row-modal__pagination-button"
-                  :class="{
-                    'select-row-modal__pagination-button--disabled':
-                      page === totalPages,
-                  }"
-                  @click="fetch(page + 1)"
-                >
-                  <i class="fas fa-caret-right"></i>
-                </a>
-              </div>
-            </div>
+            <Paginator
+              :total-pages="totalPages"
+              :page="page"
+              @change-page="fetch"
+            ></Paginator>
           </div>
         </div>
         <div ref="right" class="select-row-modal__right">
@@ -144,11 +116,12 @@ import { populateField } from '@baserow/modules/database/store/field'
 import RowService from '@baserow/modules/database/services/row'
 import { populateRow } from '@baserow/modules/database/store/view/grid'
 
+import Paginator from '@baserow/modules/core/components/Paginator'
 import SelectRowField from './SelectRowField'
 
 export default {
   name: 'SelectRowContent',
-  components: { SelectRowField },
+  components: { Paginator, SelectRowField },
   props: {
     tableId: {
       type: Number,
@@ -170,7 +143,6 @@ export default {
       search: '',
       visibleSearch: '',
       page: 1,
-      visiblePage: 1,
       totalPages: null,
       lastHoveredRow: null,
     }
@@ -264,15 +236,6 @@ export default {
      * has been stored in the state then that will be remembered.
      */
     async fetch(page) {
-      if (
-        this.totalPages !== null &&
-        this.totalPages !== 0 &&
-        (page > this.totalPages || page < 1)
-      ) {
-        this.visiblePage = this.page
-        return
-      }
-
       this.loading = true
 
       try {
@@ -285,7 +248,6 @@ export default {
         data.results.forEach((part, index) => populateRow(data.results[index]))
 
         this.page = page
-        this.visiblePage = page
         this.totalPages = Math.ceil(data.count / 10)
         this.rows = data.results
       } catch (error) {

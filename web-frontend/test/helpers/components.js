@@ -1,6 +1,7 @@
 import Vuelidate from 'vuelidate'
 import Vue from 'vue'
 import Vuex from 'vuex'
+import '@baserow/modules/core/plugins/global'
 
 const addVuex = (context) => {
   context.vuex = Vuex

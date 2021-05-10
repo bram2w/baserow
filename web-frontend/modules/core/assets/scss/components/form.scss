@@ -283,6 +283,11 @@
   color: $color-error-500;
 }
 
+.warning {
+  margin-top: 6px;
+  color: $color-warning-600;
+}
+
 .actions {
   @extend %first-last-no-margin;
 

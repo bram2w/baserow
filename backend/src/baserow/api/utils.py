@@ -61,7 +61,7 @@ def map_exceptions(mapping):
         raise exc
 
 
-def validate_data(serializer_class, data):
+def validate_data(serializer_class, data, partial=False):
     """
     Validates the provided data via the provided serializer class. If the data doesn't
     match with the schema of the serializer an api exception containing more detailed
@@ -71,6 +71,8 @@ def validate_data(serializer_class, data):
     :type serializer_class: Serializer
     :param data: The data that needs to be validated.
     :type data: dict
+    :param partial: Whether the data is a partial update.
+    :type partial: bool
     :return: The data after being validated by the serializer.
     :rtype: dict
     """
@@ -85,7 +87,7 @@ def validate_data(serializer_class, data):
         else:
             return {"error": force_text(error), "code": error.code}
 
-    serializer = serializer_class(data=data)
+    serializer = serializer_class(data=data, partial=partial)
     if not serializer.is_valid():
         detail = serialize_errors_recursive(serializer.errors)
         raise RequestBodyValidationException(detail)

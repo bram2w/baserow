@@ -80,6 +80,14 @@
             {{ $v.account.password.$params.maxLength.max }} characters is
             allowed here.
           </div>
+          <div
+            v-if="$v.account.password.$error && !$v.account.password.minLength"
+            class="error"
+          >
+            A minimum of
+            {{ $v.account.password.$params.minLength.min }} characters is
+            allowed here.
+          </div>
         </div>
       </div>
       <div class="control">
@@ -213,6 +221,7 @@ export default {
       password: {
         required,
         maxLength: maxLength(256),
+        minLength: minLength(8),
       },
       passwordConfirm: {
         sameAsPassword: sameAs('password'),
