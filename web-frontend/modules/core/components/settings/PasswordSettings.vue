@@ -23,8 +23,33 @@
             class="input input--large"
             @blur="$v.account.oldPassword.$touch()"
           />
-          <div v-if="$v.account.oldPassword.$error" class="error">
+          <div
+            v-if="
+              $v.account.oldPassword.$error && !$v.account.oldPassword.required
+            "
+            class="error"
+          >
             An old password is required.
+          </div>
+          <div
+            v-if="
+              $v.account.oldPassword.$error && !$v.account.oldPassword.maxLength
+            "
+            class="error"
+          >
+            A maximum of
+            {{ $v.account.oldPassword.$params.maxLength.max }} characters is
+            allowed here.
+          </div>
+          <div
+            v-if="
+              $v.account.oldPassword.$error && !$v.account.oldPassword.minLength
+            "
+            class="error"
+          >
+            A minimum of
+            {{ $v.account.oldPassword.$params.minLength.min }} characters is
+            required here.
           </div>
         </div>
       </div>
@@ -38,8 +63,33 @@
             class="input input--large"
             @blur="$v.account.newPassword.$touch()"
           />
-          <div v-if="$v.account.newPassword.$error" class="error">
+          <div
+            v-if="
+              $v.account.newPassword.$error && !$v.account.newPassword.required
+            "
+            class="error"
+          >
             A new password is required.
+          </div>
+          <div
+            v-if="
+              $v.account.newPassword.$error && !$v.account.newPassword.maxLength
+            "
+            class="error"
+          >
+            A maximum of
+            {{ $v.account.newPassword.$params.maxLength.max }} characters is
+            allowed here.
+          </div>
+          <div
+            v-if="
+              $v.account.newPassword.$error && !$v.account.newPassword.minLength
+            "
+            class="error"
+          >
+            A minimum of
+            {{ $v.account.newPassword.$params.minLength.min }} characters is
+            required here.
           </div>
         </div>
       </div>
@@ -73,7 +123,12 @@
 </template>
 
 <script>
-import { required, sameAs } from 'vuelidate/lib/validators'
+import {
+  maxLength,
+  minLength,
+  required,
+  sameAs,
+} from 'vuelidate/lib/validators'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
@@ -123,8 +178,16 @@ export default {
   },
   validations: {
     account: {
-      oldPassword: { required },
-      newPassword: { required },
+      oldPassword: {
+        required,
+        maxLength: maxLength(256),
+        minLength: minLength(8),
+      },
+      newPassword: {
+        required,
+        maxLength: maxLength(256),
+        minLength: minLength(8),
+      },
       passwordConfirm: {
         sameAsPassword: sameAs('newPassword'),
       },

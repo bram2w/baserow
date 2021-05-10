@@ -47,7 +47,7 @@ def map_exceptions(exceptions):
     return map_exceptions_decorator
 
 
-def validate_body(serializer_class):
+def validate_body(serializer_class, partial=False):
     """
     This decorator can validate the request body using a serializer. If the body is
     valid it will add the data to the kwargs. If not it will raise an APIException with
@@ -76,6 +76,7 @@ def validate_body(serializer_class):
         }
 
     :param serializer_class: The serializer that must be used for validating.
+    :param partial: Whether partial data passed to the serializer is considered valid.
     :type serializer_class: Serializer
     :raises ValueError: When the `data` attribute is already in the kwargs. This
         decorator tries to add the `data` attribute, but cannot do that if it is
@@ -89,7 +90,7 @@ def validate_body(serializer_class):
             if "data" in kwargs:
                 raise ValueError("The data attribute is already in the kwargs.")
 
-            kwargs["data"] = validate_data(serializer_class, request.data)
+            kwargs["data"] = validate_data(serializer_class, request.data, partial)
             return func(*args, **kwargs)
 
         return func_wrapper

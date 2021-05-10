@@ -7,3 +7,9 @@ class RequestBodyValidationException(APIException):
             {"error": "ERROR_REQUEST_BODY_VALIDATION", "detail": detail}, code=code
         )
         self.status_code = 400
+
+
+class UnknownFieldProvided(Exception):
+    """
+    Raised when an unknown field is provided to an API endpoint.
+    """

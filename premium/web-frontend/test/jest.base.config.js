@@ -5,7 +5,7 @@ module.exports = {
   forceExit: true,
   moduleNameMapper: {
     '^@baserow/(.*)$': '<rootDir>/../../$1',
-    '^@baserow_premium/(.*)$': '<rootDir>/$1',
+    '^@baserow_premium/(.*)$': '<rootDir>/modules/baserow_premium/$1',
     '^@/(.*)$': '<rootDir>/$1',
     '^~/(.*)$': '<rootDir>/$1',
     '^vue$': 'vue/dist/vue.common.js',
