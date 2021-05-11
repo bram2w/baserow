@@ -36,7 +36,7 @@ class DatabaseApplicationType(ApplicationType):
             path("database/", include(api_urls, namespace=self.type)),
         ]
 
-    def export_serialized(self, database):
+    def export_serialized(self, database, files_zip, storage):
         """
         Exports the database application type to a serialized format that can later be
         be imported via the `import_serialized`.
@@ -72,7 +72,7 @@ class DatabaseApplicationType(ApplicationType):
                     field_name = field_object["name"]
                     field_type = field_object["type"]
                     serialized_row[field_name] = field_type.get_export_serialized_value(
-                        row, field_name, table_cache
+                        row, field_name, table_cache, files_zip, storage
                     )
                 serialized_rows.append(serialized_row)
 
@@ -87,11 +87,13 @@ class DatabaseApplicationType(ApplicationType):
                 }
             )
 
-        serialized = super().export_serialized(database)
+        serialized = super().export_serialized(database, files_zip, storage)
         serialized["tables"] = serialized_tables
         return serialized
 
-    def import_serialized(self, group, serialized_values, id_mapping):
+    def import_serialized(
+        self, group, serialized_values, id_mapping, files_zip, storage
+    ):
         """
         Imports a database application exported by the `export_serialized` method.
         """
@@ -100,7 +102,9 @@ class DatabaseApplicationType(ApplicationType):
             id_mapping["database_tables"] = {}
 
         tables = serialized_values.pop("tables")
-        database = super().import_serialized(group, serialized_values, id_mapping)
+        database = super().import_serialized(
+            group, serialized_values, id_mapping, files_zip, storage
+        )
         connection = connections[settings.USER_TABLE_DATABASE]
 
         # First, we want to create all the table instances because it could be that
@@ -170,6 +174,8 @@ class DatabaseApplicationType(ApplicationType):
                             f'field_{id_mapping["database_fields"][field["id"]]}',
                             row[f'field_{field["id"]}'],
                             id_mapping,
+                            files_zip,
+                            storage,
                         )
 
                 rows_to_be_inserted.append(row_object)

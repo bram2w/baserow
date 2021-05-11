@@ -1,5 +1,7 @@
 import pytest
 
+from io import BytesIO
+
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
 from django.shortcuts import reverse
@@ -696,9 +698,9 @@ def test_get_set_export_serialized_value_single_select_field(data_fixture):
     model.objects.create(**{f"field_{field.id}_id": option_a.id})
     model.objects.create(**{f"field_{field.id}_id": option_b.id})
 
-    exported_applications = core_handler.export_group_applications(group)
-    imported_applications, id_mapping = core_handler.import_application_to_group(
-        imported_group, exported_applications
+    exported_applications = core_handler.export_group_applications(group, BytesIO())
+    imported_applications, id_mapping = core_handler.import_applications_to_group(
+        imported_group, exported_applications, BytesIO(), None
     )
     imported_database = imported_applications[0]
     imported_table = imported_database.table_set.all()[0]

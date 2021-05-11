@@ -1,5 +1,7 @@
 import pytest
 
+from io import BytesIO
+
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
 from django.shortcuts import reverse
@@ -759,9 +761,11 @@ def test_import_export_link_row_field(data_fixture, user_tables_in_separate_db):
         values={f"field_{link_row_field.id}": [c_row.id, c_row_2.id]},
     )
 
-    exported_applications = core_handler.export_group_applications(database.group)
-    imported_applications, id_mapping = core_handler.import_application_to_group(
-        imported_group, exported_applications
+    exported_applications = core_handler.export_group_applications(
+        database.group, BytesIO()
+    )
+    imported_applications, id_mapping = core_handler.import_applications_to_group(
+        imported_group, exported_applications, BytesIO(), None
     )
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()

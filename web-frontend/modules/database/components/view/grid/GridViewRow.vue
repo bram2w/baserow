@@ -39,7 +39,7 @@
           <div
             class="grid-view__row-count"
             :class="{ 'grid-view__row-count--small': row.id > 9999 }"
-            :title="row.order + ' - ' + row.id"
+            :title="row.id"
           >
             {{ row.id }}
           </div>

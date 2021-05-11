@@ -19,3 +19,4 @@ channels-redis==3.2.0
 celery[redis]==5.0.5
 django-celery-email==3.0.0
 advocate==1.0.0
+zipp==3.4.1
