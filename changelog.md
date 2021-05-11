@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Released (2021-05-11)
+
 * Added configurable field limit.
 * Fixed memory leak in the `link_row` field.
 * Switch to using a celery based email backend by default.
