@@ -172,6 +172,7 @@ export default {
      */
     canUnselectByClickingOutside(event) {
       return (
+        this.$refs.uploadModal &&
         !isElement(this.$refs.uploadModal.$el, event.target) &&
         !isElement(this.$refs.fileModal.$el, event.target)
       )

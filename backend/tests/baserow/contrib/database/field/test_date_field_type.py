@@ -563,26 +563,42 @@ def test_get_set_export_serialized_value_date_field(data_fixture):
     date_field_type.set_import_serialized_value(
         row_1,
         date_field_name,
-        date_field_type.get_export_serialized_value(row_1, date_field_name, {}),
+        date_field_type.get_export_serialized_value(
+            row_1, date_field_name, {}, None, None
+        ),
         {},
+        None,
+        None,
     )
     date_field_type.set_import_serialized_value(
         row_1,
         datetime_field_name,
-        date_field_type.get_export_serialized_value(row_1, datetime_field_name, {}),
+        date_field_type.get_export_serialized_value(
+            row_1, datetime_field_name, {}, None, None
+        ),
         {},
+        None,
+        None,
     )
     date_field_type.set_import_serialized_value(
         row_2,
         date_field_name,
-        date_field_type.get_export_serialized_value(row_2, date_field_name, {}),
+        date_field_type.get_export_serialized_value(
+            row_2, date_field_name, {}, None, None
+        ),
         {},
+        None,
+        None,
     )
     date_field_type.set_import_serialized_value(
         row_2,
         datetime_field_name,
-        date_field_type.get_export_serialized_value(row_2, datetime_field_name, {}),
+        date_field_type.get_export_serialized_value(
+            row_2, datetime_field_name, {}, None, None
+        ),
         {},
+        None,
+        None,
     )
 
     row_1.refresh_from_db()

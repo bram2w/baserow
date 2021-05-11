@@ -15,11 +15,11 @@ def test_import_export_database(data_fixture, user_tables_in_separate_db):
     row = model.objects.create(**{f"field_{text_field.id}": "Test"})
 
     database_type = application_type_registry.get("database")
-    serialized = database_type.export_serialized(database)
+    serialized = database_type.export_serialized(database, None, None)
     imported_group = data_fixture.create_group()
     id_mapping = {}
     imported_database = database_type.import_serialized(
-        imported_group, serialized, id_mapping
+        imported_group, serialized, id_mapping, None, None
     )
 
     assert imported_database.id != database.id

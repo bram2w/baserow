@@ -1,5 +1,4 @@
 import pytest
-import json
 
 from django.test.utils import override_settings
 from faker import Faker
@@ -7,15 +6,10 @@ from faker import Faker
 from django.core.exceptions import ValidationError
 
 from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
-from baserow.core.user_files.exceptions import (
-    InvalidUserFileNameError,
-    UserFileDoesNotExist,
-)
 from baserow.contrib.database.fields.models import (
     LongTextField,
     URLField,
     EmailField,
-    FileField,
     PhoneNumberField,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -304,176 +298,6 @@ def test_email_field_type(data_fixture):
 
     field_handler.delete_field(user=user, field=field_2)
     assert len(EmailField.objects.all()) == 2
-
-
-@pytest.mark.django_db
-def test_file_field_type(data_fixture):
-    user = data_fixture.create_user()
-    table = data_fixture.create_database_table(user=user)
-    user_file_1 = data_fixture.create_user_file()
-    user_file_2 = data_fixture.create_user_file()
-    user_file_3 = data_fixture.create_user_file()
-
-    field_handler = FieldHandler()
-    row_handler = RowHandler()
-
-    file = field_handler.create_field(
-        user=user, table=table, type_name="file", name="File"
-    )
-
-    assert FileField.objects.all().count() == 1
-    model = table.get_model(attribute_names=True)
-
-    with pytest.raises(ValidationError):
-        row_handler.create_row(
-            user=user, table=table, values={"file": "not_a_json"}, model=model
-        )
-
-    with pytest.raises(ValidationError):
-        row_handler.create_row(user=user, table=table, values={"file": {}}, model=model)
-
-    with pytest.raises(ValidationError):
-        row_handler.create_row(
-            user=user, table=table, values={"file": [{"no_name": "test"}]}, model=model
-        )
-
-    with pytest.raises(InvalidUserFileNameError):
-        row_handler.create_row(
-            user=user,
-            table=table,
-            values={"file": [{"name": "wrongfilename.jpg"}]},
-            model=model,
-        )
-
-    with pytest.raises(UserFileDoesNotExist):
-        row_handler.create_row(
-            user=user,
-            table=table,
-            values={"file": [{"name": "file_name.jpg"}]},
-            model=model,
-        )
-
-    row = row_handler.create_row(
-        user=user,
-        table=table,
-        values={"file": [{"name": user_file_1.name}]},
-        model=model,
-    )
-    assert row.file[0]["visible_name"] == user_file_1.original_name
-    del row.file[0]["visible_name"]
-    assert row.file[0] == user_file_1.serialize()
-
-    row = row_handler.create_row(
-        user=user,
-        table=table,
-        values={
-            "file": [
-                {"name": user_file_2.name},
-                {"name": user_file_1.name},
-                {"name": user_file_1.name},
-            ]
-        },
-        model=model,
-    )
-    assert row.file[0]["visible_name"] == user_file_2.original_name
-    assert row.file[1]["visible_name"] == user_file_1.original_name
-    assert row.file[2]["visible_name"] == user_file_1.original_name
-    del row.file[0]["visible_name"]
-    del row.file[1]["visible_name"]
-    del row.file[2]["visible_name"]
-    assert row.file[0] == user_file_2.serialize()
-    assert row.file[1] == user_file_1.serialize()
-    assert row.file[2] == user_file_1.serialize()
-
-    row = row_handler.create_row(
-        user=user,
-        table=table,
-        values={
-            "file": [
-                {"name": user_file_1.name},
-                {"name": user_file_3.name},
-                {"name": user_file_2.name},
-            ]
-        },
-        model=model,
-    )
-    assert row.file[0]["visible_name"] == user_file_1.original_name
-    assert row.file[1]["visible_name"] == user_file_3.original_name
-    assert row.file[2]["visible_name"] == user_file_2.original_name
-    del row.file[0]["visible_name"]
-    del row.file[1]["visible_name"]
-    del row.file[2]["visible_name"]
-    assert row.file[0] == user_file_1.serialize()
-    assert row.file[1] == user_file_3.serialize()
-    assert row.file[2] == user_file_2.serialize()
-
-    row = row_handler.update_row(
-        user=user,
-        table=table,
-        row_id=row.id,
-        values={
-            "file": [
-                {"name": user_file_1.name, "visible_name": "not_original.jpg"},
-            ]
-        },
-        model=model,
-    )
-    assert row.file[0]["visible_name"] == "not_original.jpg"
-    del row.file[0]["visible_name"]
-    assert row.file[0] == user_file_1.serialize()
-
-    assert model.objects.all().count() == 3
-    field_handler.delete_field(user=user, field=file)
-    assert FileField.objects.all().count() == 0
-    model.objects.all().delete()
-
-    text = field_handler.create_field(
-        user=user, table=table, type_name="text", name="Text"
-    )
-    model = table.get_model(attribute_names=True)
-
-    row = row_handler.create_row(
-        user=user, table=table, values={"text": "Some random text"}, model=model
-    )
-    row_handler.create_row(
-        user=user, table=table, values={"text": '["Not compatible"]'}, model=model
-    )
-    row_handler.create_row(
-        user=user,
-        table=table,
-        values={"text": json.dumps(user_file_1.serialize())},
-        model=model,
-    )
-
-    file = field_handler.update_field(
-        user=user, table=table, field=text, new_type_name="file", name="File"
-    )
-    model = table.get_model(attribute_names=True)
-    results = model.objects.all()
-    assert results[0].file == []
-    assert results[1].file == []
-    assert results[2].file == []
-
-    row_handler.update_row(
-        user=user,
-        table=table,
-        row_id=row.id,
-        values={
-            "file": [
-                {"name": user_file_1.name, "visible_name": "not_original.jpg"},
-            ]
-        },
-        model=model,
-    )
-
-    field_handler.update_field(
-        user=user, table=table, field=file, new_type_name="text", name="text"
-    )
-    model = table.get_model(attribute_names=True)
-    results = model.objects.all()
-    assert results[0].text is None
-    assert results[1].text is None
-    assert results[2].text is None
 
 
 @pytest.mark.django_db

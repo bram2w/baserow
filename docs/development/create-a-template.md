@@ -3,7 +3,7 @@
 Templates are a starting point for other users. They can use them for inspiration and
 easily install them into their groups. A template consists of one or more applications 
 that will be copied into the desired group if a user decides to install it. It is also
-possible for the user to see an example of the template before installing.
+possible for the user to see an preview of the template before installing.
 
 ## Build your own
 
@@ -69,6 +69,15 @@ $ export DATABASE_HOST='localhost'
 $ baserow export_group_applications YOUR_GROUP_ID --indent
 ```
 
+### The export
+
+After running the management command, you will notice that two files have created in
+your working directory, `group_YOUR_GROUP_ID.json` and `group_YOUR_GROUP_ID.zip`. The
+JSON file contains the structure of your export, which are the databases, tables,
+fields, views and rows. The ZIP file has all uploaded files related to the exported
+applications. A file could for example be included in the ZIP file if a table contains
+a file field and files have been uploaded.
+
 ## Creating the template file
 
 Inside the `backend/templates` directory you will find all the existing templates. You
@@ -78,10 +87,11 @@ as JSON files so that everyone who self hosts also has access them.
 
 * **name**: The name of the template that is visible to the user.
 * **icon**: A font awesome class name that is visible to the user (`fa-{icon}`).
-* **keyword**: Additional keywords will only be used to improve searching.
+* **keyword**: Invisible keywords will only be used to improve searching.
 * **categories**: The categories that the template belongs to.
-* **export**: The export value must contain the output of the
-  `export_group_applications` command.
+* **export**: The export value must contain the contents of the exported JSON file
+  after running the `export_group_applications`. This file is named
+  `group_YOUR_GROUP_ID.json`.
 
 ```json
 {
@@ -93,6 +103,12 @@ as JSON files so that everyone who self hosts also has access them.
   "export": []
 }
 ```
+
+The export has also generated a ZIP file containing all the related files. This file is
+named `group_YOUR_GROUP_ID.zip`. It must be be placed inside the `backend/templates`
+directory and should have the same name as the template JSON file. If for example the
+template is called `applicant-tracker.json`, the ZIP file must be named
+`applicant-tracker.zip`.
 
 ## Synchronizing the template
 

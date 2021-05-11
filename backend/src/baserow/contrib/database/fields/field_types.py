@@ -29,6 +29,7 @@ from baserow.contrib.database.api.fields.serializers import (
     SelectOptionSerializer,
 )
 from baserow.core.models import UserFile
+from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .exceptions import (
     LinkRowTableNotInSameDatabase,
@@ -230,7 +231,7 @@ class NumberFieldType(FieldType):
     def contains_query(self, *args):
         return contains_filter(*args)
 
-    def get_export_serialized_value(self, row, field_name, cache):
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         value = getattr(row, field_name)
         return value if value is None else str(value)
 
@@ -248,10 +249,12 @@ class BooleanFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         return fake.pybool()
 
-    def get_export_serialized_value(self, row, field_name, cache):
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         return "true" if getattr(row, field_name) else "false"
 
-    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
         setattr(row, field_name, value == "true")
 
 
@@ -401,7 +404,7 @@ class DateFieldType(FieldType):
             connection, from_field, to_field
         )
 
-    def get_export_serialized_value(self, row, field_name, cache):
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         value = getattr(row, field_name)
 
         if value is None:
@@ -409,7 +412,9 @@ class DateFieldType(FieldType):
 
         return value.isoformat()
 
-    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
         if not value:
             return value
 
@@ -793,7 +798,7 @@ class LinkRowFieldType(FieldType):
 
         return field
 
-    def get_export_serialized_value(self, row, field_name, cache):
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         cache_entry = f"{field_name}_relations"
         if cache_entry not in cache:
             # In order to prevent a lot of lookup queries in the through table,
@@ -812,7 +817,9 @@ class LinkRowFieldType(FieldType):
 
         return cache[cache_entry][row.id]
 
-    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
         getattr(row, field_name).set(value)
 
 
@@ -960,11 +967,58 @@ class FileFieldType(FieldType):
     def contains_query(self, *args):
         return filename_contains_filter(*args)
 
-    def get_export_serialized_value(self, row, field_name, cache):
-        raise NotImplementedError("@TODO file field type export")
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+        file_names = []
+        user_file_handler = UserFileHandler()
 
-    def set_import_serialized_value(self, row, field_name, value, id_mapping):
-        raise NotImplementedError("@TODO file field type import")
+        for file in getattr(row, field_name):
+            # Check if the user file object is already in the cache and if not,
+            # it must be fetched and added to to it.
+            cache_entry = f"user_file_{file['name']}"
+            if cache_entry not in cache:
+                try:
+                    user_file = UserFile.objects.all().name(file["name"]).get()
+                except UserFile.DoesNotExist:
+                    continue
+
+                if file["name"] not in files_zip.namelist():
+                    # Load the user file from the content and write it to the zip file
+                    # because it might not exist in the environment that it is going
+                    # to be imported in.
+                    file_path = user_file_handler.user_file_path(user_file.name)
+                    with storage.open(file_path, mode="rb") as storage_file:
+                        files_zip.writestr(file["name"], storage_file.read())
+
+                cache[cache_entry] = user_file
+
+            file_names.append(
+                {
+                    "name": file["name"],
+                    "visible_name": file["visible_name"],
+                    "original_name": cache[cache_entry].original_name,
+                }
+            )
+        return file_names
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
+        user_file_handler = UserFileHandler()
+        files = []
+
+        for file in value:
+            with files_zip.open(file["name"]) as stream:
+                # Try to upload the user file with the original name to make sure
+                # that if the was already uploaded, it will not be uploaded again.
+                user_file = user_file_handler.upload_user_file(
+                    None, file["original_name"], stream, storage=storage
+                )
+
+            value = user_file.serialize()
+            value["visible_name"] = file["visible_name"]
+            files.append(value)
+
+        setattr(row, field_name, files)
 
 
 class SingleSelectFieldType(FieldType):
@@ -1199,10 +1253,12 @@ class SingleSelectFieldType(FieldType):
             q={f"select_option_value_{field_name}__icontains": value},
         )
 
-    def get_export_serialized_value(self, row, field_name, cache):
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         return getattr(row, field_name + "_id")
 
-    def set_import_serialized_value(self, row, field_name, value, id_mapping):
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
         if not value:
             return
 
