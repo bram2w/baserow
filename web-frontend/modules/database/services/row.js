@@ -26,6 +26,24 @@ export default (client) => {
     update(tableId, rowId, values) {
       return client.patch(`/database/rows/table/${tableId}/${rowId}/`, values)
     },
+    /**
+     * Moves the row to the position before the row related to the beforeRowId
+     * parameters. If the before id is not provided then the row will be moved
+     * to the end.
+     */
+    move(tableId, rowId, beforeRowId = null) {
+      const config = { params: {} }
+
+      if (beforeRowId !== null) {
+        config.params.before_id = beforeRowId
+      }
+
+      return client.patch(
+        `/database/rows/table/${tableId}/${rowId}/move/`,
+        null,
+        config
+      )
+    },
     delete(tableId, rowId) {
       return client.delete(`/database/rows/table/${tableId}/${rowId}/`)
     },

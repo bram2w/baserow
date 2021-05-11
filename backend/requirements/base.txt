@@ -3,7 +3,6 @@ django-cors-headers==3.2.1
 djangorestframework==3.11.0
 djangorestframework-jwt==1.11.0
 psycopg2==2.8.4
-mysqlclient==1.4.6
 ipython==7.13.0
 Faker==4.0.2
 Twisted==20.3.0
@@ -18,4 +17,6 @@ asgiref==3.3.1
 channels==3.0.3
 channels-redis==3.2.0
 celery[redis]==5.0.5
+django-celery-email==3.0.0
 advocate==1.0.0
+zipp==3.4.1

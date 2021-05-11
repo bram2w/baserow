@@ -22,12 +22,15 @@ def broadcast_to_users(self, user_ids, payload, ignore_web_socket_id=None):
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)('users', {
-        'type': 'broadcast_to_users',
-        'user_ids': user_ids,
-        'payload': payload,
-        'ignore_web_socket_id': ignore_web_socket_id
-    })
+    async_to_sync(channel_layer.group_send)(
+        "users",
+        {
+            "type": "broadcast_to_users",
+            "user_ids": user_ids,
+            "payload": payload,
+            "ignore_web_socket_id": ignore_web_socket_id,
+        },
+    )
 
 
 @app.task(bind=True)
@@ -53,11 +56,14 @@ def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(group, {
-        'type': 'broadcast_to_group',
-        'payload': payload,
-        'ignore_web_socket_id': ignore_web_socket_id
-    })
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "broadcast_to_group",
+            "payload": payload,
+            "ignore_web_socket_id": ignore_web_socket_id,
+        },
+    )
 
 
 @app.task(bind=True)
@@ -80,8 +86,8 @@ def broadcast_to_group(self, group_id, payload, ignore_web_socket_id=None):
     from baserow.core.models import GroupUser
 
     user_ids = [
-        user['user_id']
-        for user in GroupUser.objects.filter(group_id=group_id).values('user_id')
+        user["user_id"]
+        for user in GroupUser.objects.filter(group_id=group_id).values("user_id")
     ]
 
     if len(user_ids) == 0:

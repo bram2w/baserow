@@ -1,6 +1,11 @@
 from .registry import (
-    Instance, Registry, ModelInstanceMixin, ModelRegistryMixin, APIUrlsRegistryMixin,
-    APIUrlsInstanceMixin, ImportExportMixin
+    Instance,
+    Registry,
+    ModelInstanceMixin,
+    ModelRegistryMixin,
+    APIUrlsRegistryMixin,
+    APIUrlsInstanceMixin,
+    ImportExportMixin,
 )
 from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
 
@@ -66,7 +71,7 @@ class Plugin(APIUrlsInstanceMixin, Instance):
 
         return []
 
-    def user_created(self, user, group, group_invitation):
+    def user_created(self, user, group, group_invitation, template):
         """
         A hook that is called after a new user has been created. This is the place to
         create some data the user can start with. A group has already been created
@@ -79,6 +84,17 @@ class Plugin(APIUrlsInstanceMixin, Instance):
         :param group_invitation: Is provided if the user has signed up using a valid
             group invitation token.
         :type group_invitation: GroupInvitation
+        :param template: The template that is installed right after creating the
+            account. Is `None` if the template was not created.
+        :type template: Template or None
+        """
+
+    def user_signed_in(self, user):
+        """
+        A hook that is called after an existing user has signed in.
+
+        :param user: The user that just signed in.
+        :type user: User
         """
 
 
@@ -89,7 +105,7 @@ class PluginRegistry(APIUrlsRegistryMixin, Registry):
     register extra api and root urls.
     """
 
-    name = 'plugin'
+    name = "plugin"
 
     @property
     def urls(self):
@@ -107,8 +123,9 @@ class PluginRegistry(APIUrlsRegistryMixin, Registry):
         return urls
 
 
-class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixin,
-                      Instance):
+class ApplicationType(
+    APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixin, Instance
+):
     """
     This abstract class represents a custom application that can be added to the
     application registry. It must be extended so customisation can be done. Each
@@ -151,25 +168,32 @@ class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixi
         :type application: Application
         """
 
-    def export_serialized(self, application):
+    def export_serialized(self, application, files_zip, storage):
         """
         Exports the application to a serialized dict that can be imported by the
         `import_serialized` method. The dict is JSON serializable.
 
         :param application: The application that must be exported.
         :type application: Application
+        :param files_zip: A zip file buffer where the files related to the template
+            must be copied into.
+        :type files_zip: ZipFile
+        :param storage: The storage where the files can be loaded from.
+        :type storage: Storage or None
         :return: The exported and serialized application.
         :rtype: dict
         """
 
         return {
-            'id': application.id,
-            'name': application.name,
-            'order': application.order,
-            'type': self.type
+            "id": application.id,
+            "name": application.name,
+            "order": application.order,
+            "type": self.type,
         }
 
-    def import_serialized(self, group, serialized_values, id_mapping):
+    def import_serialized(
+        self, group, serialized_values, id_mapping, files_zip, storage
+    ):
         """
         Imports the exported serialized application by the `export_serialized` as a new
         application to a group.
@@ -182,18 +206,23 @@ class ApplicationType(APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixi
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
         :type id_mapping: dict
+        :param files_zip: A zip file buffer where files related to the template can
+            be extracted from.
+        :type files_zip: ZipFile
+        :param storage: The storage where the files can be copied to.
+        :type storage: Storage or None
         :return: The newly created application.
         :rtype: Application
         """
 
-        if 'applications' not in id_mapping:
-            id_mapping['applications'] = {}
+        if "applications" not in id_mapping:
+            id_mapping["applications"] = {}
 
         serialized_copy = serialized_values.copy()
-        application_id = serialized_copy.pop('id')
-        serialized_copy.pop('type')
+        application_id = serialized_copy.pop("id")
+        serialized_copy.pop("type")
         application = self.model_class.objects.create(group=group, **serialized_copy)
-        id_mapping['applications'][application_id] = application.id
+        id_mapping["applications"][application_id] = application.id
 
         return application
 
@@ -206,7 +235,7 @@ class ApplicationTypeRegistry(APIUrlsRegistryMixin, ModelRegistryMixin, Registry
     register api related urls.
     """
 
-    name = 'application'
+    name = "application"
     does_not_exist_exception_class = ApplicationTypeDoesNotExist
     already_registered_exception_class = ApplicationTypeAlreadyRegistered
 

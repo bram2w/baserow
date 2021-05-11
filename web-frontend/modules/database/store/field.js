@@ -1,5 +1,3 @@
-import _ from 'lodash'
-
 import FieldService from '@baserow/modules/database/services/field'
 import { clone } from '@baserow/modules/core/utils/object'
 
@@ -38,7 +36,7 @@ export const mutations = {
     state.loaded = value
   },
   SET_PRIMARY(state, item) {
-    state.primary = _.assign(state.primary || {}, item)
+    state.primary = Object.assign(state.primary || {}, item)
   },
   ADD_ITEM(state, item) {
     state.items.push(item)

@@ -16,9 +16,9 @@ class SettingsView(APIView):
     permission_classes = (AllowAny,)
 
     @extend_schema(
-        tags=['Settings'],
-        operation_id='get_settings',
-        description='Responds with all the admin configured settings.',
+        tags=["Settings"],
+        operation_id="get_settings",
+        description="Responds with all the admin configured settings.",
         responses={
             200: SettingsSerializer,
         },
@@ -37,10 +37,10 @@ class UpdateSettingsView(APIView):
     permission_classes = (IsAdminUser,)
 
     @extend_schema(
-        tags=['Settings'],
-        operation_id='update_settings',
+        tags=["Settings"],
+        operation_id="update_settings",
         description=(
-            'Updates the admin configured settings if the user has admin permissions.'
+            "Updates the admin configured settings if the user has admin permissions."
         ),
         request=SettingsSerializer,
         responses={

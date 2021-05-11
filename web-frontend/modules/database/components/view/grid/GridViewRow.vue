@@ -36,9 +36,18 @@
               row._.matchSearch && row._.fieldSearchMatches.includes('row_id'),
           }"
         >
-          <div class="grid-view__row-count" :title="row.id">
+          <div
+            class="grid-view__row-count"
+            :class="{ 'grid-view__row-count--small': row.id > 9999 }"
+            :title="row.id"
+          >
             {{ row.id }}
           </div>
+          <div
+            v-if="!readOnly && canDrag"
+            class="grid-view__row-drag"
+            @mousedown="startDragging($event, row)"
+          ></div>
           <a class="grid-view__row-more" @click="$emit('edit-modal', row)">
             <i class="fas fa-expand"></i>
           </a>
@@ -99,6 +108,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    canDrag: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -136,6 +149,14 @@ export default {
       if (index > -1) {
         this.alive.splice(index, 1)
       }
+    },
+    startDragging(event, row) {
+      if (this.readOnly) {
+        return
+      }
+
+      event.preventDefault()
+      this.$emit('row-dragging', { row, event })
     },
   },
 }

@@ -61,7 +61,7 @@ export default {
           this.$store.dispatch('application/forceCreate', application)
         })
         if (data.length > 0) {
-          // If there are applications we want to select the first one right away.
+          // If there are applications, we want to select the first one right away.
           const application = this.$store.getters['application/get'](data[0].id)
           const type = this.$registry.get('application', application.type)
           type.select(application, this)

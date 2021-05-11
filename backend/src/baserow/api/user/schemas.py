@@ -1,25 +1,25 @@
 from drf_spectacular.plumbing import build_object_type
 
 
-create_user_response_schema = build_object_type({
-    'user': {
-        'type': 'object',
-        'description': 'An object containing information related to the user.',
-        'properties': {
-            'first_name': {
-                'type': 'string',
-                'description': 'The first name of related user.'
+create_user_response_schema = build_object_type(
+    {
+        "user": {
+            "type": "object",
+            "description": "An object containing information related to the user.",
+            "properties": {
+                "first_name": {
+                    "type": "string",
+                    "description": "The first name of related user.",
+                },
+                "username": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "The username of the related user. This is always "
+                    "an email address.",
+                },
             },
-            'username': {
-                'type': 'string',
-                'format': 'email',
-                'description': 'The username of the related user. This is always '
-                               'an email address.'
-            }
-        }
-    },
-    'token': {
-        'type': 'string'
+        },
+        "token": {"type": "string"},
     }
-})
+)
 authenticate_user_schema = create_user_response_schema

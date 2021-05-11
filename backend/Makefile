@@ -1,12 +1,17 @@
 install-dependencies:
-	apt-get update && apt-get install -y libpq-dev postgresql postgresql-contrib
+	apt-get update && apt-get install -y libpq-dev
 	pip install -r requirements/base.txt
 
 install-dev-dependencies:
 	pip install -r requirements/dev.txt
 
 lint:
-	flake8 src tests || exit;
+	flake8 src tests plugins && black . --check || exit;
+
+lint-python: lint
+
+format:
+	black . || exit;
 
 test:
-	pytest tests || exit;
+	pytest || exit;

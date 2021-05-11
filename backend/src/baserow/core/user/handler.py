@@ -7,13 +7,14 @@ from django.db.models import Q
 
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import plugin_registry
-from baserow.core.exceptions import (
-    BaseURLHostnameNotAllowed
-)
+from baserow.core.exceptions import BaseURLHostnameNotAllowed
 from baserow.core.exceptions import GroupInvitationEmailMismatch
 
 from .exceptions import (
-    UserAlreadyExist, UserNotFound, InvalidPassword, DisabledSignupError
+    UserAlreadyExist,
+    UserNotFound,
+    InvalidPassword,
+    DisabledSignupError,
 )
 from .emails import ResetPasswordEmail
 from .utils import normalize_email_address
@@ -39,7 +40,7 @@ class UserHandler:
         """
 
         if not user_id and not email:
-            raise ValueError('Either a user id or email must be provided.')
+            raise ValueError("Either a user id or email must be provided.")
 
         query = User.objects.all()
 
@@ -53,9 +54,11 @@ class UserHandler:
         try:
             return query.get()
         except User.DoesNotExist:
-            raise UserNotFound('The user with the provided parameters is not found.')
+            raise UserNotFound("The user with the provided parameters is not found.")
 
-    def create_user(self, name, email, password, group_invitation_token=None):
+    def create_user(
+        self, name, email, password, group_invitation_token=None, template=None
+    ):
         """
         Creates a new user with the provided information and creates a new group and
         application for him. If the optional group invitation is provided then the user
@@ -70,6 +73,9 @@ class UserHandler:
         :param group_invitation_token: If provided and valid, the invitation will be
             accepted and and initial group will not be created.
         :type group_invitation_token: str
+        :param template: If provided, that template will be installed into the newly
+            created group.
+        :type template: Template
         :raises: UserAlreadyExist: When a user with the provided username (email)
             already exists.
         :raises GroupInvitationEmailMismatch: If the group invitation email does not
@@ -79,15 +85,16 @@ class UserHandler:
         :rtype: User
         """
 
-        if not CoreHandler().get_settings().allow_new_signups:
-            raise DisabledSignupError('Sign up is disabled.')
+        core_handler = CoreHandler()
+
+        if not core_handler.get_settings().allow_new_signups:
+            raise DisabledSignupError("Sign up is disabled.")
 
         email = normalize_email_address(email)
 
         if User.objects.filter(Q(email=email) | Q(username=email)).exists():
-            raise UserAlreadyExist(f'A user with username {email} already exists.')
+            raise UserAlreadyExist(f"A user with username {email} already exists.")
 
-        core_handler = CoreHandler()
         group_invitation = None
         group_user = None
 
@@ -98,8 +105,8 @@ class UserHandler:
 
             if email != group_invitation.email:
                 raise GroupInvitationEmailMismatch(
-                    'The email address of the invitation does not match the one of the '
-                    'user.'
+                    "The email address of the invitation does not match the one of the "
+                    "user."
                 )
 
         user = User(first_name=name, email=email, username=email)
@@ -119,9 +126,12 @@ class UserHandler:
         if not group_user:
             group_user = core_handler.create_group(user=user, name=f"{name}'s group")
 
+        if not group_invitation_token and template:
+            core_handler.install_template(user, group_user.group, template)
+
         # Call the user_created method for each plugin that is un the registry.
         for plugin in plugin_registry.registry.values():
-            plugin.user_created(user, group_user.group, group_invitation)
+            plugin.user_created(user, group_user.group, group_invitation, template)
 
         return user
 
@@ -133,7 +143,7 @@ class UserHandler:
         :rtype: URLSafeTimedSerializer
         """
 
-        return URLSafeTimedSerializer(settings.SECRET_KEY, 'user-reset-password')
+        return URLSafeTimedSerializer(settings.SECRET_KEY, "user-reset-password")
 
     def send_reset_password_email(self, user, base_url):
         """
@@ -150,14 +160,14 @@ class UserHandler:
         parsed_base_url = urlparse(base_url)
         if parsed_base_url.hostname != settings.PUBLIC_WEB_FRONTEND_HOSTNAME:
             raise BaseURLHostnameNotAllowed(
-                f'The hostname {parsed_base_url.netloc} is not allowed.'
+                f"The hostname {parsed_base_url.netloc} is not allowed."
             )
 
         signer = self.get_reset_password_signer()
         signed_user_id = signer.dumps(user.id)
 
-        if not base_url.endswith('/'):
-            base_url += '/'
+        if not base_url.endswith("/"):
+            base_url += "/"
 
         reset_url = urljoin(base_url, signed_user_id)
 
@@ -208,7 +218,7 @@ class UserHandler:
         """
 
         if not user.check_password(old_password):
-            raise InvalidPassword('The provided old password is incorrect.')
+            raise InvalidPassword("The provided old password is incorrect.")
 
         user.set_password(new_password)
         user.save()

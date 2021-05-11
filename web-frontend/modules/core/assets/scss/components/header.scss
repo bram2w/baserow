@@ -75,16 +75,17 @@
 .header__filter-item {
   @extend %first-last-no-margin;
 
-  margin-left: 12px;
+  margin-left: 10px;
 
   &.header__filter-item--right {
     margin-left: auto;
-    margin-right: 12px;
+    margin-right: 10px;
   }
 }
 
 .header__filter-link {
-  display: block;
+  display: flex;
+  align-items: center;
   font-weight: 600;
   color: $color-primary-900;
   padding: 0 10px;
@@ -115,9 +116,26 @@
   }
 }
 
+.header--overflow .header__filter-name {
+  &:not(.header__filter-name--forced) {
+    display: none;
+  }
+
+  &.header__filter-name--forced {
+    @extend %ellipsis;
+
+    max-width: 120px;
+    margin-left: 4px;
+  }
+}
+
 .header__filter-icon {
   color: $color-primary-900;
   margin-right: 4px;
+
+  .header--overflow & {
+    margin-right: 0;
+  }
 
   &.header-filter-icon--view {
     color: $color-primary-500;

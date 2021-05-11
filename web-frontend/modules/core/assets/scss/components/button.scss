@@ -86,3 +86,9 @@
     animation-timing-function: cubic-bezier(0.785, 0.135, 0.15, 0.86);
   }
 }
+
+.button--overflow {
+  @extend %ellipsis;
+
+  display: block;
+}

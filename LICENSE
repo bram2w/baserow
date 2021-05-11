@@ -1,6 +1,18 @@
-MIT License
+Copyright (c) 2019-present Baserow B.V.
 
-Copyright 2021 Baserow
+Parts of Baserow’s software are licensed as follows:
+
+* All content residing under the "docs/" directory of this repository is licensed under
+  "Creative Commons: CC BY-SA 4.0 license".
+* All content that resides under the "premium/" directory of this repository, if that
+  directory exists, is licensed under the license defined in "premium/LICENSE".
+* All client-side JavaScript (when served directly or after being compiled, arranged,
+  augmented, or combined), is licensed under the "MIT Expat" license.
+* All third party components incorporated into the Baserow Software are licensed under
+  the original license provided by the owner of the applicable component.
+* Content outside of the above mentioned directories or restrictions above [Baserow
+  Open Source Edition (“Baserow OSE”)] is available under the "MIT Expat" license as
+  defined below.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this
 software and associated documentation files (the "Software"), to deal in the Software
@@ -16,5 +28,5 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
 PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
 HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
-THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

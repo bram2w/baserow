@@ -10,7 +10,8 @@ If you have the [development environment](./development-environment.md) up and r
 you can easily run the linters. Both the backend and the web-frontend have `make` files
 to help.
 
-* `make lint` (backend): all the python code will be checked with flake8.
+* `make format` (backend): auto format all python code using black.
+* `make lint` (backend): all the python code will be checked with flake8 and black.
 * `make eslint` (web-frontend): all the javascript code will be checked with eslint.
 * `make stylelint` (web-frontend): all the scss code will be checked with stylelint.
 

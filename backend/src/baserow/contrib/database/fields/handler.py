@@ -9,8 +9,12 @@ from baserow.contrib.database.db.schema import lenient_schema_editor
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
-    PrimaryFieldAlreadyExists, CannotDeletePrimaryField, CannotChangeFieldType,
-    FieldDoesNotExist, IncompatiblePrimaryFieldTypeError
+    PrimaryFieldAlreadyExists,
+    CannotDeletePrimaryField,
+    CannotChangeFieldType,
+    FieldDoesNotExist,
+    IncompatiblePrimaryFieldTypeError,
+    MaxFieldLimitExceeded,
 )
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
@@ -46,16 +50,17 @@ class FieldHandler:
             base_queryset = field_model.objects
 
         try:
-            field = base_queryset.select_related('table__database__group').get(
+            field = base_queryset.select_related("table__database__group").get(
                 id=field_id
             )
         except Field.DoesNotExist:
-            raise FieldDoesNotExist(f'The field with id {field_id} does not exist.')
+            raise FieldDoesNotExist(f"The field with id {field_id} does not exist.")
 
         return field
 
-    def create_field(self, user, table, type_name, primary=False,
-                     do_schema_change=True, **kwargs):
+    def create_field(
+        self, user, table, type_name, primary=False, do_schema_change=True, **kwargs
+    ):
         """
         Creates a new field with the given type for a table.
 
@@ -76,6 +81,8 @@ class FieldHandler:
         :type kwargs: object
         :raises PrimaryFieldAlreadyExists: When we try to create a primary field,
             but one already exists.
+        :raises MaxFieldLimitExceeded: When we try to create a field,
+            but exceeds the field limit.
         :return: The created field instance.
         :rtype: Field
         """
@@ -86,23 +93,32 @@ class FieldHandler:
         # Because only one primary field per table can exist and we have to check if one
         # already exists. If so the field cannot be created and an exception is raised.
         if primary and Field.objects.filter(table=table, primary=True).exists():
-            raise PrimaryFieldAlreadyExists(f'A primary field already exists for the '
-                                            f'table {table}.')
+            raise PrimaryFieldAlreadyExists(
+                f"A primary field already exists for the " f"table {table}."
+            )
 
         # Figure out which model to use and which field types are allowed for the given
         # field type.
         field_type = field_type_registry.get(type_name)
         model_class = field_type.model_class
-        allowed_fields = ['name'] + field_type.allowed_fields
+        allowed_fields = ["name"] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
-        field_values = field_type.prepare_values(field_values, user)
-        before = field_type.before_create(table, primary, field_values, last_order,
-                                          user)
+        num_fields = table.field_set.count()
+        if (num_fields + 1) > settings.MAX_FIELD_LIMIT:
+            raise MaxFieldLimitExceeded(
+                f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
+            )
 
-        instance = model_class.objects.create(table=table, order=last_order,
-                                              primary=primary, **field_values)
+        field_values = field_type.prepare_values(field_values, user)
+        before = field_type.before_create(
+            table, primary, field_values, last_order, user
+        )
+
+        instance = model_class.objects.create(
+            table=table, order=last_order, primary=primary, **field_values
+        )
 
         # Add the field to the table schema.
         connection = connections[settings.USER_TABLE_DATABASE]
@@ -115,8 +131,7 @@ class FieldHandler:
 
         field_type.after_create(instance, to_model, user, connection, before)
 
-        field_created.send(self, field=instance, user=user,
-                           type_name=type_name)
+        field_created.send(self, field=instance, user=user, type_name=type_name)
 
         return instance
 
@@ -143,7 +158,7 @@ class FieldHandler:
         """
 
         if not isinstance(field, Field):
-            raise ValueError('The field is not an instance of Field.')
+            raise ValueError("The field is not an instance of Field.")
 
         group = field.table.database.group
         group.has_user(user, raise_error=True)
@@ -171,7 +186,7 @@ class FieldHandler:
             # like filters or sortings need to be changed.
             ViewHandler().field_type_changed(field)
 
-        allowed_fields = ['name'] + field_type.allowed_fields
+        allowed_fields = ["name"] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
 
         field_values = field_type.prepare_values(field_values, user)
@@ -192,14 +207,19 @@ class FieldHandler:
         # Before a field is updated we are going to call the before_schema_change
         # method of the old field because some cleanup of related instances might
         # need to happen.
-        old_field_type.before_schema_change(old_field, field, from_model, to_model,
-                                            from_model_field, to_model_field, user)
+        old_field_type.before_schema_change(
+            old_field,
+            field,
+            from_model,
+            to_model,
+            from_model_field,
+            to_model_field,
+            user,
+        )
 
         # Try to find a data converter that can be applied.
         converter = field_converter_registry.find_applicable_converter(
-            from_model,
-            old_field,
-            field
+            from_model, old_field, field
         )
 
         if converter:
@@ -213,7 +233,7 @@ class FieldHandler:
                 from_model_field,
                 to_model_field,
                 user,
-                connection
+                connection,
             )
         else:
             if baserow_field_type_changed:
@@ -223,8 +243,7 @@ class FieldHandler:
                 force_alter_column = True
             else:
                 force_alter_column = field_type.force_same_type_alter_column(
-                    old_field,
-                    field
+                    old_field, field
                 )
 
             # If no field converter is found we are going to alter the field using the
@@ -232,39 +251,51 @@ class FieldHandler:
             with lenient_schema_editor(
                 connection,
                 old_field_type.get_alter_column_prepare_old_value(
-                    connection, old_field, field),
+                    connection, old_field, field
+                ),
                 field_type.get_alter_column_prepare_new_value(
                     connection, old_field, field
                 ),
-                force_alter_column
+                force_alter_column,
             ) as schema_editor:
                 try:
-                    schema_editor.alter_field(from_model, from_model_field,
-                                              to_model_field)
+                    schema_editor.alter_field(
+                        from_model, from_model_field, to_model_field
+                    )
                 except (ProgrammingError, DataError) as e:
                     # If something is going wrong while changing the schema we will
                     # just raise a specific exception. In the future we want to have
                     # some sort of converter abstraction where the values of certain
                     # types can be converted to another value.
                     logger.error(str(e))
-                    message = f'Could not alter field when changing field type ' \
-                              f'{from_field_type} to {new_type_name}.'
+                    message = (
+                        f"Could not alter field when changing field type "
+                        f"{from_field_type} to {new_type_name}."
+                    )
                     raise CannotChangeFieldType(message)
 
-        from_model_field_type = from_model_field.db_parameters(connection)['type']
-        to_model_field_type = to_model_field.db_parameters(connection)['type']
+        from_model_field_type = from_model_field.db_parameters(connection)["type"]
+        to_model_field_type = to_model_field.db_parameters(connection)["type"]
         altered_column = from_model_field_type != to_model_field_type
 
         # If the new field doesn't support select options we can delete those
         # relations.
         if (
-            old_field_type.can_have_select_options and
-            not field_type.can_have_select_options
+            old_field_type.can_have_select_options
+            and not field_type.can_have_select_options
         ):
             old_field.select_options.all().delete()
 
-        field_type.after_update(old_field, field, from_model, to_model, user,
-                                connection, altered_column, before)
+        field_type.after_update(
+            old_field,
+            field,
+            from_model,
+            to_model,
+            user,
+            connection,
+            altered_column,
+            before,
+        )
 
         field_updated.send(self, field=field, user=user)
 
@@ -284,14 +315,15 @@ class FieldHandler:
         """
 
         if not isinstance(field, Field):
-            raise ValueError('The field is not an instance of Field')
+            raise ValueError("The field is not an instance of Field")
 
         group = field.table.database.group
         group.has_user(user, raise_error=True)
 
         if field.primary:
-            raise CannotDeletePrimaryField('Cannot delete the primary field of a '
-                                           'table.')
+            raise CannotDeletePrimaryField(
+                "Cannot delete the primary field of a " "table."
+            )
 
         field = field.specific
         field_type = field_type_registry.get_by_model(field)
@@ -340,11 +372,8 @@ class FieldHandler:
         to_delete = [
             existing.id
             for existing in existing_select_options
-            if existing.id not in [
-                desired['id']
-                for desired in select_options
-                if 'id' in desired
-            ]
+            if existing.id
+            not in [desired["id"] for desired in select_options if "id" in desired]
         ]
 
         if len(to_delete) > 0:
@@ -352,30 +381,34 @@ class FieldHandler:
 
         # Checks which existing instances must be fetched using a single query.
         to_select = [
-            select_option['id']
+            select_option["id"]
             for select_option in select_options
-            if 'id' in select_option
+            if "id" in select_option
         ]
 
         if len(to_select) > 0:
             for existing in field.select_options.filter(id__in=to_select):
                 for select_option in select_options:
-                    if select_option.get('id') == existing.id:
-                        select_option['instance'] = existing
+                    if select_option.get("id") == existing.id:
+                        select_option["instance"] = existing
 
         to_create = []
 
         for order, select_option in enumerate(select_options):
-            if 'instance' in select_option:
-                instance = select_option['instance']
+            if "instance" in select_option:
+                instance = select_option["instance"]
                 instance.order = order
-                instance.value = select_option['value']
-                instance.color = select_option['color']
+                instance.value = select_option["value"]
+                instance.color = select_option["color"]
                 instance.save()
             else:
-                to_create.append(SelectOption(
-                    field=field, order=order, value=select_option['value'],
-                    color=select_option['color'])
+                to_create.append(
+                    SelectOption(
+                        field=field,
+                        order=order,
+                        value=select_option["value"],
+                        color=select_option["color"],
+                    )
                 )
 
         if len(to_create) > 0:

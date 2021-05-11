@@ -46,14 +46,15 @@ export const actions = {
    */
   async register(
     { commit, dispatch },
-    { email, name, password, groupInvitationToken = null }
+    { email, name, password, groupInvitationToken = null, templateId = null }
   ) {
     const { data } = await AuthService(this.$client).register(
       email,
       name,
       password,
       true,
-      groupInvitationToken
+      groupInvitationToken,
+      templateId
     )
     setToken(data.token, this.app)
     commit('SET_USER_DATA', data)

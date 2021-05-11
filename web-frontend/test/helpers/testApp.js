@@ -1,5 +1,6 @@
 import setupCore from '@baserow/modules/core/plugin'
 import axios from 'axios'
+import setupClient from '@baserow/modules/core/plugins/clientHandler'
 import setupDatabasePlugin from '@baserow/modules/database/plugin'
 import { bootstrapVueContext } from '@baserow/test/helpers/components'
 import MockAdapter from 'axios-mock-adapter'
@@ -16,8 +17,12 @@ function _createBaserowStoreAndRegistry(app, vueContext) {
   setupCore({ store, app }, (name, dep) => {
     app[`$${name}`] = dep
   })
+  setupClient({ store, app }, (key, value) => {
+    app[key] = value
+  })
+  app.$client = app.client
   store.$registry = app.$registry
-  store.$client = axios
+  store.$client = app.client
   store.app = app
   app.$store = store
   setupDatabasePlugin({
@@ -54,6 +59,7 @@ function _createBaserowStoreAndRegistry(app, vueContext) {
  */
 export class TestApp {
   constructor() {
+    this.mock = new MockAdapter(axios, { onNoMatch: 'throwException' })
     // In the future we can extend this stub realtime implementation to perform
     // useful testing of realtime interaction in the frontend!
     this._realtime = {
@@ -71,11 +77,30 @@ export class TestApp {
         PUBLIC_WEB_FRONTEND_URL: 'https://localhost/',
       },
     }
-    this.mock = new MockAdapter(axios)
     this._vueContext = bootstrapVueContext()
     this.store = _createBaserowStoreAndRegistry(this._app, this._vueContext)
     this._initialCleanStoreState = _.cloneDeep(this.store.state)
     this.mockServer = new MockServer(this.mock, this.store)
+    this.failTestOnErrorResponse = true
+    this._app.client.interceptors.response.use(
+      (response) => {
+        return response
+      },
+      (error) => {
+        if (this.failTestOnErrorResponse) {
+          fail(error)
+        }
+        return Promise.reject(error)
+      }
+    )
+  }
+
+  dontFailOnErrorResponses() {
+    this.failTestOnErrorResponse = false
+  }
+
+  failOnErrorResponses() {
+    this.failTestOnErrorResponse = true
   }
 
   /**
@@ -84,6 +109,7 @@ export class TestApp {
    */
   async afterEach() {
     this.mock.reset()
+    this.failOnErrorResponses()
     this.store.replaceState(_.cloneDeep(this._initialCleanStoreState))
     this._vueContext.teardownVueContext()
     await flushPromises()
@@ -93,7 +119,13 @@ export class TestApp {
    * Creates a fully rendered version of the provided Component and calls
    * asyncData on the component at the correct time with the provided params.
    */
-  async mount(Component, { asyncDataParams = {} }) {
+  async mount(Component, { asyncDataParams = {}, ...kwargs }) {
+    // Sometimes baserow directly appends to the documents body, ensure that we
+    // are mounting into the document so we can correctly inspect the modals that
+    // are placed there.
+    const rootDiv = document.createElement('div')
+    document.body.appendChild(rootDiv)
+
     if (Object.prototype.hasOwnProperty.call(Component, 'asyncData')) {
       const data = await Component.asyncData({
         store: this.store,
@@ -105,10 +137,27 @@ export class TestApp {
         return data
       }
     }
-    return this._vueContext.vueTestUtils.mount(Component, {
+    const wrapper = this._vueContext.vueTestUtils.mount(Component, {
       localVue: this._vueContext.vue,
       mocks: this._app,
+      attachTo: rootDiv,
+      ...kwargs,
     })
+    await this.callFetchOnChildren(wrapper.vm)
+    return wrapper
+  }
+
+  async callFetchOnChildren(c) {
+    if (c.$options.fetch) {
+      const fetch = c.$options.fetch
+      if (typeof fetch !== 'function') {
+        throw new TypeError('fetch should be a function')
+      }
+      await c.$options.fetch.bind(c)()
+    }
+    for (const child of c.$children) {
+      await this.callFetchOnChildren(child)
+    }
   }
 }
 /**

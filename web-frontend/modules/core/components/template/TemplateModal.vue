@@ -18,7 +18,10 @@
           <i class="fas fa-times"></i>
         </a>
       </TemplateCategories>
-      <TemplateBody :template="selectedTemplate"></TemplateBody>
+      <TemplatePreview
+        :template="selectedTemplate"
+        class="templates__body"
+      ></TemplatePreview>
     </template>
   </Modal>
 </template>
@@ -30,11 +33,11 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 
 import TemplateHeader from '@baserow/modules/core/components/template/TemplateHeader'
 import TemplateCategories from '@baserow/modules/core/components/template/TemplateCategories'
-import TemplateBody from '@baserow/modules/core/components/template/TemplateBody'
+import TemplatePreview from '@baserow/modules/core/components/template/TemplatePreview'
 
 export default {
   name: 'TemplateModal',
-  components: { TemplateHeader, TemplateCategories, TemplateBody },
+  components: { TemplateHeader, TemplateCategories, TemplatePreview },
   mixins: [modal],
   props: {
     group: {

@@ -79,7 +79,7 @@
             </div>
             <ul v-show="isAdminPage" class="tree sidebar__tree">
               <li
-                v-for="adminType in adminTypes"
+                v-for="adminType in sortedAdminTypes"
                 :key="adminType.type"
                 class="tree__item"
                 :class="{
@@ -122,7 +122,7 @@
                 <GroupsContext ref="groupSelect"></GroupsContext>
               </div>
             </li>
-            <li class="tree__item">
+            <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
               <div class="tree__action">
                 <a class="tree__link" @click="$refs.groupMembersModal.show()">
                   <i class="tree__icon tree__icon--type fas fa-users"></i>
@@ -248,6 +248,11 @@ export default {
     adminTypes() {
       return this.$registry.getAll('admin')
     },
+    sortedAdminTypes() {
+      return Object.values(this.adminTypes)
+        .slice()
+        .sort((x) => x.getOrder())
+    },
     /**
      * Indicates whether the current user is visiting an admin page.
      */
@@ -293,10 +298,8 @@ export default {
         return
       }
 
-      const types = Object.values(this.adminTypes)
-
-      if (types.length > 0) {
-        this.$nuxt.$router.push({ name: types[0].routeName })
+      if (this.sortedAdminTypes.length > 0) {
+        this.$nuxt.$router.push({ name: this.sortedAdminTypes[0].routeName })
       }
     },
   },

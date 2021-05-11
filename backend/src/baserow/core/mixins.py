@@ -10,7 +10,7 @@ class OrderableMixin:
     """
 
     @classmethod
-    def get_highest_order_of_queryset(cls, queryset, field='order'):
+    def get_highest_order_of_queryset(cls, queryset, field="order"):
         """
         Returns the highest existing value of the provided field.
 
@@ -22,9 +22,7 @@ class OrderableMixin:
         :rtype: int
         """
 
-        return queryset.aggregate(
-            models.Max(field)
-        ).get(f'{field}__max', 0) or 0
+        return queryset.aggregate(models.Max(field)).get(f"{field}__max", 0) or 0
 
 
 class PolymorphicContentTypeMixin:
@@ -45,10 +43,12 @@ class PolymorphicContentTypeMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not hasattr(self.__class__, 'content_type'):
-            raise AttributeError(f'The attribute content_type doesn\'t exist on '
-                                 f'{self.__class__.__name__}, but is required for the '
-                                 f'PolymorphicContentTypeMixin.')
+        if not hasattr(self.__class__, "content_type"):
+            raise AttributeError(
+                f"The attribute content_type doesn't exist on "
+                f"{self.__class__.__name__}, but is required for the "
+                f"PolymorphicContentTypeMixin."
+            )
 
         if not self.id:
             if not self.content_type_id:
@@ -100,7 +100,7 @@ class PolymorphicContentTypeMixin:
 
         def get_field_name(field):
             if isinstance(field, models.ForeignKey):
-                return f'{field.name}_id'
+                return f"{field.name}_id"
             return field.name
 
         for field in field_names_to_remove:
@@ -111,9 +111,10 @@ class PolymorphicContentTypeMixin:
         for field in field_names_to_add:
             name = get_field_name(field)
             field = new_model_class._meta.get_field(name)
-            if hasattr(field, 'default'):
-                self.__dict__[name] = \
+            if hasattr(field, "default"):
+                self.__dict__[name] = (
                     field.default if field.default != NOT_PROVIDED else None
+                )
 
         # Because the field type has changed we need to invalidate the cached
         # properties so that they wont return the values of the old type.

@@ -1,7 +1,8 @@
 from drf_spectacular.openapi import AutoSchema as RegularAutoSchema
 
 from .utils import (
-    PolymorphicMappingSerializer, PolymorphicCustomFieldRegistrySerializer
+    PolymorphicMappingSerializer,
+    PolymorphicCustomFieldRegistrySerializer,
 )
 
 
@@ -13,12 +14,9 @@ class AutoSchema(RegularAutoSchema):
         """
 
         if (
-            (
-                isinstance(serializer, PolymorphicMappingSerializer) or
-                isinstance(serializer, PolymorphicCustomFieldRegistrySerializer)
-            ) and
-            serializer.many
-        ):
+            isinstance(serializer, PolymorphicMappingSerializer)
+            or isinstance(serializer, PolymorphicCustomFieldRegistrySerializer)
+        ) and serializer.many:
             return True
 
         return super()._is_list_view(serializer)

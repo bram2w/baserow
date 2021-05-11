@@ -243,7 +243,7 @@
   @include absolute(0);
 
   background-color: $white;
-  padding: 0 24px 0 6px;
+  padding: 0 22px 0 6px;
   line-height: 32px;
 
   .grid-view__row--selected & {
@@ -255,11 +255,38 @@
   }
 }
 
+.grid-view__row-drag {
+  @include absolute(0, auto, 0, 0);
+
+  width: 18px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0) 100%);
+  cursor: grab;
+  display: none;
+
+  &::before {
+    @include absolute(0);
+
+    content: '';
+    width: 8px;
+    background-image: radial-gradient($color-neutral-200 40%, transparent 40%);
+    background-size: 4px 4px;
+    background-repeat: repeat;
+  }
+
+  .grid-view__row--hover & {
+    display: block;
+  }
+}
+
 .grid-view__row-count {
   @extend %ellipsis;
 
   position: relative;
   width: 100%;
+
+  &.grid-view__row-count--small {
+    font-size: 11px;
+  }
 
   .grid-view__row--loading & {
     color: $white;
@@ -275,14 +302,16 @@
 }
 
 .grid-view__row-more {
-  @include absolute((32px - 18px) / 2, 4px, 0 auto);
-  @include center-text(18px, 11px);
+  @include absolute(50%, 4px, 0, auto);
+  @include center-text(16px, 11px);
 
   color: $color-neutral-400;
   border-radius: 100%;
   display: none;
+  margin-top: -7.5px;
 
-  .grid-view__row--hover & {
+  .grid-view__row--hover &,
+  .grid-view__row--selected & {
     display: block;
   }
 
@@ -491,4 +520,25 @@
 
   z-index: 5;
   border-left: solid 1px $color-primary-900;
+}
+
+.grid-view__row-dragging-container {
+  // Compensation for the head and foot.
+  @include absolute(33px, 0, 48px, 0);
+
+  z-index: 4;
+  overflow: hidden;
+}
+
+.grid-view__row-dragging {
+  @include absolute(auto, auto, auto, 0);
+
+  background-color: rgba(0, 0, 0, 0.08);
+  height: 33px;
+}
+
+.grid-view__row-target {
+  @include absolute(auto, auto, auto, 0);
+
+  border-top: solid 1px $color-primary-900;
 }

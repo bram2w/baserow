@@ -3,11 +3,12 @@ from django.db import connection
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.backends.dummy.base import DatabaseWrapper as DummyDatabaseWrapper
 from django.db.backends.postgresql.schema import (
-    DatabaseSchemaEditor as PostgresqlDatabaseSchemaEditor
+    DatabaseSchemaEditor as PostgresqlDatabaseSchemaEditor,
 )
 
 from baserow.contrib.database.db.schema import (
-    lenient_schema_editor, PostgresqlLenientDatabaseSchemaEditor
+    lenient_schema_editor,
+    PostgresqlLenientDatabaseSchemaEditor,
 )
 
 
@@ -23,8 +24,8 @@ def test_lenient_schema_editor():
     with lenient_schema_editor(connection) as schema_editor:
         assert isinstance(schema_editor, PostgresqlLenientDatabaseSchemaEditor)
         assert isinstance(schema_editor, BaseDatabaseSchemaEditor)
-        assert schema_editor.alter_column_prepare_old_value == ''
-        assert schema_editor.alter_column_prepare_new_value == ''
+        assert schema_editor.alter_column_prepare_old_value == ""
+        assert schema_editor.alter_column_prepare_new_value == ""
         assert not schema_editor.force_alter_column
         assert connection.SchemaEditorClass != PostgresqlDatabaseSchemaEditor
 
@@ -34,7 +35,7 @@ def test_lenient_schema_editor():
         connection,
         "p_in = REGEXP_REPLACE(p_in, '', 'test', 'g');",
         "p_in = REGEXP_REPLACE(p_in, 'test', '', 'g');",
-        True
+        True,
     ) as schema_editor:
         assert schema_editor.alter_column_prepare_old_value == (
             "p_in = REGEXP_REPLACE(p_in, '', 'test', 'g');"

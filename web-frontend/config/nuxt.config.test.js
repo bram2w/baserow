@@ -1,9 +1,8 @@
 import { resolve } from 'path'
-import _ from 'lodash'
 
 import base from './nuxt.config.base.js'
 
-export default _.assign({}, base(), {
+export default Object.assign({}, base(), {
   rootDir: resolve(__dirname, '../'),
   css: [],
   dev: false,

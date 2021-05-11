@@ -1,5 +1,6 @@
 from baserow.core.exceptions import (
-    InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
+    InstanceTypeDoesNotExist,
+    InstanceTypeAlreadyRegistered,
 )
 
 
@@ -42,6 +43,10 @@ class LinkRowTableNotInSameDatabase(Exception):
     """
     Raised when the desired link row table is not in the same database as the table.
     """
+
+
+class MaxFieldLimitExceeded(Exception):
+    """ Raised when the field count exceeds the limit"""
 
 
 class OrderByFieldNotFound(Exception):

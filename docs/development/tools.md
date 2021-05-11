@@ -54,6 +54,14 @@ $ make lint
 
 https://flake8.pycqa.org/en/latest/
 
+### Black 
+
+Black auto formats all of our python code into one opinionated consistent style. The 
+goal being to reduce and hopefully eliminate the need to worry about formatting whilst
+writing and reviewing code.
+
+https://black.readthedocs.io/en/stable/index.html
+
 ### ItsDangerous
 
 In order to safely share sensitive data like password reset tokens we use a proven

@@ -6,9 +6,9 @@ from baserow.core.handler import CoreHandler
 
 class Command(BaseCommand):
     help = (
-        'Synchronizes all the templates stored in the database with the JSON files in '
-        'the templates directory. This command must be ran everytime a template '
-        'changes.'
+        "Synchronizes all the templates stored in the database with the JSON files in "
+        "the templates directory. This command must be ran everytime a template "
+        "changes."
     )
 
     @transaction.atomic

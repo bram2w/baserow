@@ -14,6 +14,10 @@ module.exports = {
     root: path.resolve(__dirname),
     alias: {
       '@baserow': path.resolve(__dirname),
+      '@baserow_premium': path.resolve(
+        __dirname,
+        '../premium/web-frontend/modules/baserow_premium'
+      ),
     },
   },
 }

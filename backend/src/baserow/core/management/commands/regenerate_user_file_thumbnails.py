@@ -8,8 +8,10 @@ from baserow.core.user_files.handler import UserFileHandler
 
 
 class Command(BaseCommand):
-    help = 'Regenerates all the user file thumbnails based on the current settings. ' \
-           'Existing files will be overwritten.'
+    help = (
+        "Regenerates all the user file thumbnails based on the current settings. "
+        "Existing files will be overwritten."
+    )
 
     def handle(self, *args, **options):
         """
@@ -24,7 +26,7 @@ class Command(BaseCommand):
         count = queryset.count()
 
         while i < count:
-            user_files = queryset[i:min(count, i + buffer_size)]
+            user_files = queryset[i : min(count, i + buffer_size)]
             for user_file in user_files:
                 i += 1
 

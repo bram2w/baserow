@@ -1,5 +1,3 @@
-import _ from 'lodash'
-
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import { uuid } from '@baserow/modules/core/utils/string'
 import ViewService from '@baserow/modules/database/services/view'
@@ -347,7 +345,7 @@ export const actions = {
       values.type = compatibleType.type
     }
 
-    const filter = _.assign({}, values)
+    const filter = Object.assign({}, values)
     populateFilter(filter)
     filter.id = uuid()
     filter._.loading = true
@@ -372,7 +370,7 @@ export const actions = {
    * Forcefully create a new view filterwithout making a request to the backend.
    */
   forceCreateFilter({ commit }, { view, values }) {
-    const filter = _.assign({}, values)
+    const filter = Object.assign({}, values)
     populateFilter(filter)
     commit('ADD_FILTER', { view, filter })
   },
@@ -455,7 +453,7 @@ export const actions = {
       values.order = 'ASC'
     }
 
-    const sort = _.assign({}, values)
+    const sort = Object.assign({}, values)
     populateSort(sort)
     sort.id = uuid()
     sort._.loading = true
@@ -476,7 +474,7 @@ export const actions = {
    * Forcefully create a new  view sorting without making a request to the backend.
    */
   forceCreateSort({ commit }, { view, values }) {
-    const sort = _.assign({}, values)
+    const sort = Object.assign({}, values)
     populateSort(sort)
     commit('ADD_SORT', { view, sort })
   },

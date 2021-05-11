@@ -1,0 +1,41 @@
+The Baserow Premium Edition license (the "PE License")
+
+Copyright (c) 2019-present Baserow B.V.
+
+The Baserow software and associated documentation files (the "Software") may only be
+used in production, if you (and any entity that you represent) have a valid Baserow
+Premium Edition subscription for the correct number of users, you adhere to the
+applicable Baserow Subscription Terms of Service, available at
+https://baserow.io/terms/subscription (the "PE Terms") and you adhere to any other
+agreement or terms applicable to the use of the Software. Only under the conditions as
+set out in this section, and the applicable terms and conditions, Baserow grants you
+the right to modify the Software and publish patches to the Software. You agree that
+Baserow and/or its licensors (as applicable) retain all right, title and interest in
+and to all such modifications and/or patches, and all such modifications and/or patches
+may only be used, copied, modified, displayed, distributed, or otherwise exploited with
+a valid Baserow Premium Edition subscription for the correct number of users.
+Notwithstanding the foregoing, you may copy and modify the Software for development and
+testing purposes without requiring a Baserow Premium Edition subscription. You agree
+that Baserow and/or its licensors (as applicable) retain all right, title and interest
+in and to all such modifications. You are not granted any other rights beyond what is
+expressly stated herein.  Subject to the foregoing, it is forbidden to copy, merge,
+publish, distribute, sublicense, and/or sell the Software.
+
+The Software is provided "AS IS", without warranty of any kind, express or implied,
+including but not limited to the warranties of merchantability, fitness for a
+particular purpose and non-infringement. In no event shall the authors or copyright
+holders be liable for any claim, damages or other liability, whether in an action of
+contract, tort or otherwise, arising from, out of or in connection with the Software
+or the use or other dealings in the Software.
+
+The full text of this PE License shall be included in all copies or substantial
+parts of the Software. The PE License applies only to the part of the Software that
+is not distributed as part of Baserow Open Source Edition (Baserow OSE). Any part of
+the Software distributed as part of Baserow OSE or is served client-side as an image,
+font, cascading stylesheet (CSS), file which produces or is compiled, arranged,
+augmented, or combined into client-side JavaScript, in whole or in part, is copyrighted
+under the MIT Expat license.
+
+For all third party components incorporated into the Baserow Software, those components
+are licensed under the original license provided by the owner of the applicable
+component.

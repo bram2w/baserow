@@ -103,7 +103,6 @@ export default {
         await this.$store.dispatch(
           this.storePrefix + 'view/grid/updateAllFieldOptions',
           {
-            gridId: this.view.id,
             newFieldOptions,
             oldFieldOptions,
           }
@@ -117,7 +116,6 @@ export default {
         await this.$store.dispatch(
           this.storePrefix + 'view/grid/updateFieldOptionsOfField',
           {
-            gridId: this.view.id,
             field,
             values,
             oldValues: { hidden: this.fieldOptions[field.id].hidden },

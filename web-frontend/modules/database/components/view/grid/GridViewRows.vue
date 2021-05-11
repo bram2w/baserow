@@ -11,6 +11,7 @@
       :field-widths="fieldWidths"
       :include-row-details="includeRowDetails"
       :read-only="readOnly"
+      :can-drag="view.sortings.length === 0"
       :store-prefix="storePrefix"
       v-on="$listeners"
     ></GridViewRow>

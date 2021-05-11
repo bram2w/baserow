@@ -2,7 +2,8 @@ import pytest
 
 from baserow.core.registries import ApplicationType, ApplicationTypeRegistry
 from baserow.core.exceptions import (
-    ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
+    ApplicationTypeAlreadyRegistered,
+    ApplicationTypeDoesNotExist,
 )
 
 
@@ -15,19 +16,19 @@ class FakeModel2(object):
 
 
 class TemporaryApplicationType1(ApplicationType):
-    type = 'temporary_1'
+    type = "temporary_1"
     model_class = FakeModel
 
     def get_api_urls(self):
-        return ['url_1', 'url_2']
+        return ["url_1", "url_2"]
 
 
 class TemporaryApplicationType2(ApplicationType):
-    type = 'temporary_2'
+    type = "temporary_2"
     model_class = FakeModel2
 
     def get_api_urls(self):
-        return ['url_3']
+        return ["url_3"]
 
 
 def test_application_registry_register():
@@ -44,7 +45,7 @@ def test_application_registry_get():
     registry = ApplicationTypeRegistry()
 
     with pytest.raises(ApplicationTypeDoesNotExist):
-        registry.get('something')
+        registry.get("something")
 
 
 def test_application_get_api_urls():
@@ -55,4 +56,4 @@ def test_application_get_api_urls():
     registry.register(temporary_1)
     registry.register(temporary_2)
 
-    assert registry.api_urls == ['url_1', 'url_2', 'url_3']
+    assert registry.api_urls == ["url_1", "url_2", "url_3"]

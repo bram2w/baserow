@@ -1,5 +1,6 @@
 from baserow.core.exceptions import (
-    InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
+    InstanceTypeDoesNotExist,
+    InstanceTypeAlreadyRegistered,
 )
 
 
@@ -37,10 +38,10 @@ class ViewFilterTypeNotAllowedForField(Exception):
         self.filter_type = filter_type
         self.field_type = field_type
         super().__init__(
-            f'The view filter type {filter_type} is not compatible with field type '
-            f'{field_type}.',
+            f"The view filter type {filter_type} is not compatible with field type "
+            f"{field_type}.",
             *args,
-            **kwargs
+            **kwargs,
         )
 
 

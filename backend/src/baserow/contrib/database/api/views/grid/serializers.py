@@ -10,13 +10,13 @@ from .schemas import grid_view_field_options_schema
 
 class GridViewFieldOptionsField(serializers.Field):
     default_error_messages = {
-        'invalid_key': _('Field option key must be numeric.'),
-        'invalid_value': _('Must be valid field options.')
+        "invalid_key": _("Field option key must be numeric."),
+        "invalid_value": _("Must be valid field options."),
     }
 
     def __init__(self, **kwargs):
-        kwargs['source'] = '*'
-        kwargs['read_only'] = False
+        kwargs["source"] = "*"
+        kwargs["read_only"] = False
         super().__init__(**kwargs)
 
     def to_internal_value(self, data):
@@ -39,13 +39,11 @@ class GridViewFieldOptionsField(serializers.Field):
 
         internal = {}
         for key, value in data.items():
-            if not (
-                isinstance(key, int) or (isinstance(key, str) and key.isnumeric())
-            ):
-                self.fail('invalid_key')
+            if not (isinstance(key, int) or (isinstance(key, str) and key.isnumeric())):
+                self.fail("invalid_key")
             serializer = GridViewFieldOptionsSerializer(data=value)
             if not serializer.is_valid():
-                self.fail('invalid_value')
+                self.fail("invalid_value")
             internal[int(key)] = serializer.data
         return internal
 
@@ -69,10 +67,11 @@ class GridViewFieldOptionsField(serializers.Field):
             # If the fields are in the context we can pass them into the
             # `get_field_options` call so that they don't have to be fetched from the
             # database again.
-            fields = self.context.get('fields')
+            fields = self.context.get("fields")
             return {
-                field_options.field_id:
-                    GridViewFieldOptionsSerializer(field_options).data
+                field_options.field_id: GridViewFieldOptionsSerializer(
+                    field_options
+                ).data
                 for field_options in value.get_field_options(True, fields)
             }
         else:
@@ -81,8 +80,8 @@ class GridViewFieldOptionsField(serializers.Field):
 
 class GridViewFieldOptionsFieldFix(OpenApiSerializerFieldExtension):
     target_class = (
-        'baserow.contrib.database.api.views.grid.serializers.'
-        'GridViewFieldOptionsField'
+        "baserow.contrib.database.api.views.grid.serializers."
+        "GridViewFieldOptionsField"
     )
 
     def map_serializer_field(self, auto_schema, direction):
@@ -95,13 +94,13 @@ class GridViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GridView
-        fields = ('field_options', 'filters_disabled')
+        fields = ("field_options", "filters_disabled")
 
 
 class GridViewFieldOptionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = GridViewFieldOptions
-        fields = ('width', 'hidden', 'order')
+        fields = ("width", "hidden", "order")
 
 
 class GridViewFilterSerializer(serializers.Serializer):
@@ -110,11 +109,11 @@ class GridViewFilterSerializer(serializers.Serializer):
         required=False,
         default=None,
         child=serializers.IntegerField(),
-        help_text='Only the fields related to the provided ids are added to the '
-                  'response. If None are provided all fields will be returned.'
+        help_text="Only the fields related to the provided ids are added to the "
+        "response. If None are provided all fields will be returned.",
     )
     row_ids = serializers.ListField(
         allow_empty=False,
         child=serializers.IntegerField(),
-        help_text='Only the rows related to the provided ids are added to the response.'
+        help_text="Only rows related to the provided ids are added to the response.",
     )

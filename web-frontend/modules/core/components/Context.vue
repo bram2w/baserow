@@ -188,6 +188,10 @@ export default {
         target.classList.remove('forced-block')
       }
 
+      // Take into account that the document might be scrollable.
+      verticalOffset += document.documentElement.scrollTop
+      horizontalOffset += document.documentElement.scrollLeft
+
       // Calculate if top, bottom, left and right positions are possible.
       const canTop = targetRect.top - contextRect.height - verticalOffset > 0
       const canBottom =

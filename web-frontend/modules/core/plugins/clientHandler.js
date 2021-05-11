@@ -24,7 +24,7 @@ class ErrorHandler {
         "The action couldn't be completed because you aren't a " +
           'member of the related group.'
       ),
-      ERROR_USER_INVALID_GROUP_PERMISSIONS_ERROR: new ResponseErrorMessage(
+      ERROR_USER_INVALID_GROUP_PERMISSIONS: new ResponseErrorMessage(
         'Action not allowed.',
         "The action couldn't be completed because you don't have the right " +
           'permissions to the related group.'
@@ -55,6 +55,18 @@ class ErrorHandler {
       ERROR_INVALID_FILE_URL: new ResponseErrorMessage(
         'Invalid URL',
         'The provided file URL is invalid or not allowed.'
+      ),
+      USER_ADMIN_CANNOT_DEACTIVATE_SELF: new ResponseErrorMessage(
+        'Action not allowed.',
+        'You cannot de-activate or un-staff yourself.'
+      ),
+      USER_ADMIN_CANNOT_DELETE_SELF: new ResponseErrorMessage(
+        'Action not allowed.',
+        'You cannot delete yourself.'
+      ),
+      ERROR_MAX_FIELD_COUNT_EXCEEDED: new ResponseErrorMessage(
+        "Couldn't create field.",
+        "The action couldn't be completed because the field count exceeds the limit"
       ),
     }
 

@@ -88,9 +88,9 @@ export const registerRealtimeEvents = (realtime) => {
       viewType.rowCreated(
         context,
         data.table_id,
-        data.row,
         store.getters['field/getAll'],
         store.getters['field/getPrimary'],
+        data.row,
         'page/'
       )
     }
@@ -102,9 +102,10 @@ export const registerRealtimeEvents = (realtime) => {
       viewType.rowUpdated(
         context,
         data.table_id,
-        data.row,
         store.getters['field/getAll'],
         store.getters['field/getPrimary'],
+        data.row_before_update,
+        data.row,
         'page/'
       )
     }
@@ -116,9 +117,9 @@ export const registerRealtimeEvents = (realtime) => {
       viewType.rowDeleted(
         context,
         data.table_id,
-        data.row_id,
         store.getters['field/getAll'],
         store.getters['field/getPrimary'],
+        data.row,
         'page/'
       )
     }

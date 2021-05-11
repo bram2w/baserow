@@ -9,7 +9,7 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-filter"></i>
-      {{ filterTitle }}
+      <span class="header__filter-name">{{ filterTitle }}</span>
     </a>
     <ViewFilterContext
       ref="context"

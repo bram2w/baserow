@@ -18,8 +18,11 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from baserow.core.utils import sha256_hash, stream_size, random_string, truncate_middle
 
 from .exceptions import (
-    InvalidFileStreamError, FileSizeTooLargeError, FileURLCouldNotBeReached,
-    MaximumUniqueTriesError, InvalidFileURLError
+    InvalidFileStreamError,
+    FileSizeTooLargeError,
+    FileURLCouldNotBeReached,
+    MaximumUniqueTriesError,
+    InvalidFileURLError,
 )
 from .models import UserFile
 
@@ -85,16 +88,14 @@ class UserFileHandler:
         while True:
             if i > max_tries:
                 raise MaximumUniqueTriesError(
-                    f'Tried {max_tries} tokens, but none of them are unique.'
+                    f"Tried {max_tries} tokens, but none of them are unique."
                 )
 
             i += 1
             unique = random_string(length)
 
             if not UserFile.objects.filter(
-                sha256_hash=sha256_hash,
-                original_extension=extension,
-                unique=unique
+                sha256_hash=sha256_hash, original_extension=extension, unique=unique
             ).exists():
                 return unique
 
@@ -116,7 +117,7 @@ class UserFileHandler:
         """
 
         if not user_file.is_image:
-            raise ValueError('The provided user file is not an image.')
+            raise ValueError("The provided user file is not an image.")
 
         storage = storage or default_storage
         image_width = user_file.image_width
@@ -161,15 +162,14 @@ class UserFileHandler:
         :rtype: UserFile
         """
 
-        if not hasattr(stream, 'read'):
-            raise InvalidFileStreamError('The provided stream is not readable.')
+        if not hasattr(stream, "read"):
+            raise InvalidFileStreamError("The provided stream is not readable.")
 
         size = stream_size(stream)
 
         if size > settings.USER_FILE_SIZE_LIMIT:
             raise FileSizeTooLargeError(
-                settings.USER_FILE_SIZE_LIMIT,
-                'The provided file is too large.'
+                settings.USER_FILE_SIZE_LIMIT, "The provided file is too large."
             )
 
         storage = storage or default_storage
@@ -182,7 +182,7 @@ class UserFileHandler:
             pass
 
         extension = pathlib.Path(file_name).suffix[1:].lower()
-        mime_type = mimetypes.guess_type(file_name)[0] or ''
+        mime_type = mimetypes.guess_type(file_name)[0] or ""
         unique = self.generate_unique(hash, extension)
 
         # By default the provided file is not an image.
@@ -211,7 +211,7 @@ class UserFileHandler:
             sha256_hash=hash,
             is_image=is_image,
             image_width=image_width,
-            image_height=image_height
+            image_height=image_height,
         )
 
         # If the uploaded file is an image we need to generate the configurable
@@ -252,24 +252,24 @@ class UserFileHandler:
 
         parsed_url = urlparse(url)
 
-        if parsed_url.scheme not in ['http', 'https']:
-            raise InvalidFileURLError('Only http and https are allowed.')
+        if parsed_url.scheme not in ["http", "https"]:
+            raise InvalidFileURLError("Only http and https are allowed.")
 
-        file_name = url.split('/')[-1]
+        file_name = url.split("/")[-1]
 
         try:
             response = advocate.get(url, stream=True, timeout=10)
 
             if not response.ok:
-                raise FileURLCouldNotBeReached('The response did not respond with an '
-                                               'OK status code.')
+                raise FileURLCouldNotBeReached(
+                    "The response did not respond with an " "OK status code."
+                )
 
             content = response.raw.read(
-                settings.USER_FILE_SIZE_LIMIT + 1,
-                decode_content=True
+                settings.USER_FILE_SIZE_LIMIT + 1, decode_content=True
             )
         except (RequestException, UnacceptableAddressException):
-            raise FileURLCouldNotBeReached('The provided URL could not be reached.')
+            raise FileURLCouldNotBeReached("The provided URL could not be reached.")
 
         file = SimpleUploadedFile(file_name, content)
         return UserFileHandler().upload_user_file(user, file_name, file, storage)

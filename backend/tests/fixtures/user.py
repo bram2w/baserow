@@ -15,20 +15,20 @@ class UserFixtures:
         return token
 
     def create_user(self, **kwargs):
-        if 'email' not in kwargs:
-            kwargs['email'] = self.fake.email()
+        if "email" not in kwargs:
+            kwargs["email"] = self.fake.email()
 
-        if 'username' not in kwargs:
-            kwargs['username'] = kwargs['email']
+        if "username" not in kwargs:
+            kwargs["username"] = kwargs["email"]
 
-        if 'first_name' not in kwargs:
-            kwargs['first_name'] = self.fake.name()
+        if "first_name" not in kwargs:
+            kwargs["first_name"] = self.fake.name()
 
-        if 'password' not in kwargs:
-            kwargs['password'] = 'password'
+        if "password" not in kwargs:
+            kwargs["password"] = "password"
 
         user = User(**kwargs)
-        user.set_password(kwargs['password'])
+        user.set_password(kwargs["password"])
         user.save()
 
         return user

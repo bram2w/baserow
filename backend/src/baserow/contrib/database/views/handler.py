@@ -5,18 +5,29 @@ from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
-    ViewDoesNotExist, UnrelatedFieldError, ViewFilterDoesNotExist,
-    ViewFilterNotSupported, ViewFilterTypeNotAllowedForField, ViewSortDoesNotExist,
-    ViewSortNotSupported, ViewSortFieldAlreadyExist, ViewSortFieldNotSupported
+    ViewDoesNotExist,
+    UnrelatedFieldError,
+    ViewFilterDoesNotExist,
+    ViewFilterNotSupported,
+    ViewFilterTypeNotAllowedForField,
+    ViewSortDoesNotExist,
+    ViewSortNotSupported,
+    ViewSortFieldAlreadyExist,
+    ViewSortFieldNotSupported,
 )
-from .models import (
-    View, GridViewFieldOptions, ViewFilter, ViewSort
-)
+from .models import View, GridViewFieldOptions, ViewFilter, ViewSort
 from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
-    view_created, view_updated, view_deleted, view_filter_created, view_filter_updated,
-    view_filter_deleted, view_sort_created, view_sort_updated, view_sort_deleted,
-    grid_view_field_options_updated
+    view_created,
+    view_updated,
+    view_deleted,
+    view_filter_created,
+    view_filter_updated,
+    view_filter_deleted,
+    view_sort_created,
+    view_sort_updated,
+    view_sort_deleted,
+    grid_view_field_options_updated,
 )
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 
@@ -49,11 +60,11 @@ class ViewHandler:
             base_queryset = view_model.objects
 
         try:
-            view = base_queryset.select_related('table__database__group').get(
+            view = base_queryset.select_related("table__database__group").get(
                 pk=view_id
             )
         except View.DoesNotExist:
-            raise ViewDoesNotExist(f'The view with id {view_id} does not exist.')
+            raise ViewDoesNotExist(f"The view with id {view_id} does not exist.")
 
         return view
 
@@ -80,18 +91,18 @@ class ViewHandler:
         view_type = view_type_registry.get(type_name)
         model_class = view_type.model_class
         allowed_fields = [
-            'name',
-            'filter_type',
-            'filters_disabled'
+            "name",
+            "filter_type",
+            "filters_disabled",
         ] + view_type.allowed_fields
         view_values = extract_allowed(kwargs, allowed_fields)
         last_order = model_class.get_last_order(table)
 
-        instance = model_class.objects.create(table=table, order=last_order,
-                                              **view_values)
+        instance = model_class.objects.create(
+            table=table, order=last_order, **view_values
+        )
 
-        view_created.send(self, view=instance, user=user,
-                          type_name=type_name)
+        view_created.send(self, view=instance, user=user, type_name=type_name)
 
         return instance
 
@@ -111,16 +122,16 @@ class ViewHandler:
         """
 
         if not isinstance(view, View):
-            raise ValueError('The view is not an instance of View.')
+            raise ValueError("The view is not an instance of View.")
 
         group = view.table.database.group
         group.has_user(user, raise_error=True)
 
         view_type = view_type_registry.get_by_model(view)
         allowed_fields = [
-            'name',
-            'filter_type',
-            'filters_disabled'
+            "name",
+            "filter_type",
+            "filters_disabled",
         ] + view_type.allowed_fields
         view = set_allowed_attrs(kwargs, allowed_fields, view)
         view.save()
@@ -141,7 +152,7 @@ class ViewHandler:
         """
 
         if not isinstance(view, View):
-            raise ValueError('The view is not an instance of View')
+            raise ValueError("The view is not an instance of View")
 
         group = view.table.database.group
         group.has_user(user, raise_error=True)
@@ -151,8 +162,9 @@ class ViewHandler:
 
         view_deleted.send(self, view_id=view_id, view=view, user=user)
 
-    def update_grid_view_field_options(self, user, grid_view, field_options,
-                                       fields=None):
+    def update_grid_view_field_options(
+        self, user, grid_view, field_options, fields=None
+    ):
         """
         Updates the field options with the provided values if the field id exists in
         the table related to the grid view.
@@ -179,8 +191,9 @@ class ViewHandler:
         allowed_field_ids = [field.id for field in fields]
         for field_id, options in field_options.items():
             if int(field_id) not in allowed_field_ids:
-                raise UnrelatedFieldError(f'The field id {field_id} is not related to '
-                                          f'the grid view.')
+                raise UnrelatedFieldError(
+                    f"The field id {field_id} is not related to " f"the grid view."
+                )
             GridViewFieldOptions.objects.update_or_create(
                 grid_view=grid_view, field_id=field_id, defaults=options
             )
@@ -229,8 +242,8 @@ class ViewHandler:
 
         # If the model does not have the `_field_objects` property then it is not a
         # generated table model which is not supported.
-        if not hasattr(model, '_field_objects'):
-            raise ValueError('A queryset of the table model is required.')
+        if not hasattr(model, "_field_objects"):
+            raise ValueError("A queryset of the table model is required.")
 
         # If the filter are disabled we don't have to do anything with the queryset.
         if view.filters_disabled:
@@ -242,20 +255,19 @@ class ViewHandler:
             # If the to be filtered field is not present in the `_field_objects` we
             # cannot filter so we raise a ValueError.
             if view_filter.field_id not in model._field_objects:
-                raise ValueError(f'The table model does not contain field '
-                                 f'{view_filter.field_id}.')
+                raise ValueError(
+                    f"The table model does not contain field "
+                    f"{view_filter.field_id}."
+                )
 
             field_object = model._field_objects[view_filter.field_id]
-            field_name = field_object['name']
+            field_name = field_object["name"]
             model_field = model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(view_filter.type)
 
             filter_builder.filter(
                 view_filter_type.get_filter(
-                    field_name,
-                    view_filter.value,
-                    model_field,
-                    field_object['field']
+                    field_name, view_filter.value, model_field, field_object["field"]
                 )
             )
 
@@ -282,13 +294,11 @@ class ViewHandler:
 
         try:
             view_filter = base_queryset.select_related(
-                'view__table__database__group'
-            ).get(
-                pk=view_filter_id
-            )
+                "view__table__database__group"
+            ).get(pk=view_filter_id)
         except ViewFilter.DoesNotExist:
             raise ViewFilterDoesNotExist(
-                f'The view filter with id {view_filter_id} does not exist.'
+                f"The view filter with id {view_filter_id} does not exist."
             )
 
         group = view_filter.view.table.database.group
@@ -329,7 +339,7 @@ class ViewHandler:
         view_type = view_type_registry.get_by_model(view.specific_class)
         if not view_type.can_filter:
             raise ViewFilterNotSupported(
-                f'Filtering is not supported for {view_type.type} views.'
+                f"Filtering is not supported for {view_type.type} views."
             )
 
         view_filter_type = view_filter_type_registry.get(type_name)
@@ -337,20 +347,16 @@ class ViewHandler:
 
         # Check if the field is allowed for this filter type.
         if field_type.type not in view_filter_type.compatible_field_types:
-            raise ViewFilterTypeNotAllowedForField(
-                type_name, field_type.type
-            )
+            raise ViewFilterTypeNotAllowedForField(type_name, field_type.type)
 
         # Check if field belongs to the grid views table
         if not view.table.field_set.filter(id=field.pk).exists():
-            raise FieldNotInTable(f'The field {field.pk} does not belong to table '
-                                  f'{view.table.id}.')
+            raise FieldNotInTable(
+                f"The field {field.pk} does not belong to table " f"{view.table.id}."
+            )
 
         view_filter = ViewFilter.objects.create(
-            view=view,
-            field=field,
-            type=view_filter_type.type,
-            value=value
+            view=view, field=field, type=view_filter_type.type, value=value
         )
 
         view_filter_created.send(self, view_filter=view_filter, user=user)
@@ -379,26 +385,25 @@ class ViewHandler:
         group = view_filter.view.table.database.group
         group.has_user(user, raise_error=True)
 
-        type_name = kwargs.get('type_name', view_filter.type)
-        field = kwargs.get('field', view_filter.field)
-        value = kwargs.get('value', view_filter.value)
+        type_name = kwargs.get("type_name", view_filter.type)
+        field = kwargs.get("field", view_filter.field)
+        value = kwargs.get("value", view_filter.value)
         view_filter_type = view_filter_type_registry.get(type_name)
         field_type = field_type_registry.get_by_model(field.specific_class)
 
         # Check if the field is allowed for this filter type.
         if field_type.type not in view_filter_type.compatible_field_types:
-            raise ViewFilterTypeNotAllowedForField(
-                type_name,
-                field_type.type
-            )
+            raise ViewFilterTypeNotAllowedForField(type_name, field_type.type)
 
         # If the field has changed we need to check if the field belongs to the table.
         if (
-            field.id != view_filter.field_id and
-            not view_filter.view.table.field_set.filter(id=field.pk).exists()
+            field.id != view_filter.field_id
+            and not view_filter.view.table.field_set.filter(id=field.pk).exists()
         ):
-            raise FieldNotInTable(f'The field {field.pk} does not belong to table '
-                                  f'{view_filter.view.table.id}.')
+            raise FieldNotInTable(
+                f"The field {field.pk} does not belong to table "
+                f"{view_filter.view.table.id}."
+            )
 
         view_filter.field = field
         view_filter.value = value
@@ -425,8 +430,9 @@ class ViewHandler:
         view_filter_id = view_filter.id
         view_filter.delete()
 
-        view_filter_deleted.send(self, view_filter_id=view_filter_id,
-                                 view_filter=view_filter, user=user)
+        view_filter_deleted.send(
+            self, view_filter_id=view_filter_id, view_filter=view_filter, user=user
+        )
 
     def apply_sorting(self, view, queryset):
         """
@@ -458,8 +464,8 @@ class ViewHandler:
 
         # If the model does not have the `_field_objects` property then it is not a
         # generated table model which is not supported.
-        if not hasattr(model, '_field_objects'):
-            raise ValueError('A queryset of the table model is required.')
+        if not hasattr(model, "_field_objects"):
+            raise ValueError("A queryset of the table model is required.")
 
         order_by = []
 
@@ -467,12 +473,13 @@ class ViewHandler:
             # If the to be sort field is not present in the `_field_objects` we
             # cannot filter so we raise a ValueError.
             if view_sort.field_id not in model._field_objects:
-                raise ValueError(f'The table model does not contain field '
-                                 f'{view_sort.field_id}.')
+                raise ValueError(
+                    f"The table model does not contain field " f"{view_sort.field_id}."
+                )
 
-            field = model._field_objects[view_sort.field_id]['field']
-            field_name = model._field_objects[view_sort.field_id]['name']
-            field_type = model._field_objects[view_sort.field_id]['type']
+            field = model._field_objects[view_sort.field_id]["field"]
+            field_name = model._field_objects[view_sort.field_id]["name"]
+            field_type = model._field_objects[view_sort.field_id]["type"]
 
             order = field_type.get_order(field, field_name, view_sort)
 
@@ -481,15 +488,15 @@ class ViewHandler:
             if not order:
                 order = F(field_name)
 
-                if view_sort.order == 'ASC':
+                if view_sort.order == "ASC":
                     order = order.asc(nulls_first=True)
                 else:
                     order = order.desc(nulls_last=True)
 
             order_by.append(order)
 
-        order_by.append('order')
-        order_by.append('id')
+        order_by.append("order")
+        order_by.append("id")
         queryset = queryset.order_by(*order_by)
 
         return queryset
@@ -515,13 +522,11 @@ class ViewHandler:
 
         try:
             view_sort = base_queryset.select_related(
-                'view__table__database__group'
-            ).get(
-                pk=view_sort_id
-            )
+                "view__table__database__group"
+            ).get(pk=view_sort_id)
         except ViewSort.DoesNotExist:
             raise ViewSortDoesNotExist(
-                f'The view sort with id {view_sort_id} does not exist.'
+                f"The view sort with id {view_sort_id} does not exist."
             )
 
         group = view_sort.view.table.database.group
@@ -556,30 +561,29 @@ class ViewHandler:
         view_type = view_type_registry.get_by_model(view.specific_class)
         if not view_type.can_sort:
             raise ViewSortNotSupported(
-                f'Sorting is not supported for {view_type.type} views.'
+                f"Sorting is not supported for {view_type.type} views."
             )
 
         # Check if the field supports sorting.
         field_type = field_type_registry.get_by_model(field.specific_class)
         if not field_type.can_order_by:
-            raise ViewSortFieldNotSupported(f'The field {field.pk} does not support '
-                                            f'sorting.')
+            raise ViewSortFieldNotSupported(
+                f"The field {field.pk} does not support " f"sorting."
+            )
 
         # Check if field belongs to the grid views table
         if not view.table.field_set.filter(id=field.pk).exists():
-            raise FieldNotInTable(f'The field {field.pk} does not belong to table '
-                                  f'{view.table.id}.')
+            raise FieldNotInTable(
+                f"The field {field.pk} does not belong to table " f"{view.table.id}."
+            )
 
         # Check if the field already exists as sort
         if view.viewsort_set.filter(field_id=field.pk).exists():
-            raise ViewSortFieldAlreadyExist(f'A sort with the field {field.pk} '
-                                            f'already exists.')
+            raise ViewSortFieldAlreadyExist(
+                f"A sort with the field {field.pk} " f"already exists."
+            )
 
-        view_sort = ViewSort.objects.create(
-            view=view,
-            field=field,
-            order=order
-        )
+        view_sort = ViewSort.objects.create(view=view, field=field, order=order)
 
         view_sort_created.send(self, view_sort=view_sort, user=user)
 
@@ -604,35 +608,36 @@ class ViewHandler:
         group = view_sort.view.table.database.group
         group.has_user(user, raise_error=True)
 
-        field = kwargs.get('field', view_sort.field)
-        order = kwargs.get('order', view_sort.order)
+        field = kwargs.get("field", view_sort.field)
+        order = kwargs.get("order", view_sort.order)
 
         # If the field has changed we need to check if the field belongs to the table.
         if (
-            field.id != view_sort.field_id and
-            not view_sort.view.table.field_set.filter(id=field.pk).exists()
+            field.id != view_sort.field_id
+            and not view_sort.view.table.field_set.filter(id=field.pk).exists()
         ):
-            raise FieldNotInTable(f'The field {field.pk} does not belong to table '
-                                  f'{view_sort.view.table.id}.')
+            raise FieldNotInTable(
+                f"The field {field.pk} does not belong to table "
+                f"{view_sort.view.table.id}."
+            )
 
         # If the field has changed we need to check if the new field type supports
         # sorting.
         field_type = field_type_registry.get_by_model(field.specific_class)
-        if (
-            field.id != view_sort.field_id and
-            not field_type.can_order_by
-        ):
-            raise ViewSortFieldNotSupported(f'The field {field.pk} does not support '
-                                            f'sorting.')
+        if field.id != view_sort.field_id and not field_type.can_order_by:
+            raise ViewSortFieldNotSupported(
+                f"The field {field.pk} does not support " f"sorting."
+            )
 
         # If the field has changed we need to check if the new field doesn't already
         # exist as sort.
         if (
-            field.id != view_sort.field_id and
-            view_sort.view.viewsort_set.filter(field_id=field.pk).exists()
+            field.id != view_sort.field_id
+            and view_sort.view.viewsort_set.filter(field_id=field.pk).exists()
         ):
-            raise ViewSortFieldAlreadyExist(f'A sort with the field {field.pk} '
-                                            f'already exists.')
+            raise ViewSortFieldAlreadyExist(
+                f"A sort with the field {field.pk} " f"already exists."
+            )
 
         view_sort.field = field
         view_sort.order = order
@@ -658,5 +663,6 @@ class ViewHandler:
         view_sort_id = view_sort.id
         view_sort.delete()
 
-        view_sort_deleted.send(self, view_sort_id=view_sort_id, view_sort=view_sort,
-                               user=user)
+        view_sort_deleted.send(
+            self, view_sort_id=view_sort_id, view_sort=view_sort, user=user
+        )

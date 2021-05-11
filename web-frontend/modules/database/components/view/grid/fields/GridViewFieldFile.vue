@@ -55,7 +55,7 @@
       </li>
     </ul>
     <UserFilesModal
-      v-if="Array.isArray(value) && !this.readOnly"
+      v-if="Array.isArray(value) && !readOnly"
       ref="uploadModal"
       @uploaded="addFiles(value, $event)"
       @hidden="hideModal"
@@ -172,7 +172,8 @@ export default {
      */
     canUnselectByClickingOutside(event) {
       return (
-        !isElement(this.$refs.uploadModal.$el, event.target) &&
+        (!this.$refs.uploadModal ||
+          !isElement(this.$refs.uploadModal.$el, event.target)) &&
         !isElement(this.$refs.fileModal.$el, event.target)
       )
     },

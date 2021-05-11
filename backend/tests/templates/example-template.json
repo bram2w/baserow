@@ -45,6 +45,13 @@
               "name": "Active",
               "order": 3,
               "primary": false
+            },
+            {
+              "id": 15,
+              "type": "file",
+              "name": "attachments",
+              "order": 4,
+              "primary": false
             }
           ],
           "views": [
@@ -96,7 +103,14 @@
               "field_8": "Elon",
               "field_9": "Musk",
               "field_10": null,
-              "field_11": "true"
+              "field_11": "true",
+              "field_15": [
+                {
+                  "name": "qjDkbuO7mAD3iPDCNEYkUv2j57oC1bDm_a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e.txt",
+                  "visible_name": "hello.txt",
+                  "original_name": "hello.txt"
+                }
+              ]
             },
             {
               "id": 2,
@@ -104,7 +118,8 @@
               "field_8": "Bill",
               "field_9": "Gates",
               "field_10": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce dignissim, urna eget rutrum sollicitudin, sapien diam interdum nisi, quis malesuada nibh eros a est.",
-              "field_11": "false"
+              "field_11": "false",
+              "field_15": []
             },
             {
               "id": 3,
@@ -112,7 +127,8 @@
               "field_8": "Mark",
               "field_9": "Zuckerburg",
               "field_10": null,
-              "field_11": "true"
+              "field_11": "true",
+              "field_15": []
             },
             {
               "id": 4,
@@ -120,7 +136,8 @@
               "field_8": "Jeffrey",
               "field_9": "Bezos",
               "field_10": null,
-              "field_11": "true"
+              "field_11": "true",
+              "field_15": []
             }
           ]
         },
