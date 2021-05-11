@@ -49,6 +49,10 @@ export const bootstrapVueContext = (configureContext) => {
 
     jest.doMock('vue', () => context.vue)
 
+    // Ensure any error logs cause the test to fail!
+    jest.spyOn(console, 'error')
+    console.error.mockImplementation(fail)
+
     configureContext && configureContext(context)
   })
 

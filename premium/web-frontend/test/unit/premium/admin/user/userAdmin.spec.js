@@ -90,6 +90,22 @@ describe('User Admin Component Tests', () => {
     expect(isActiveCell.text()).toBe('Active')
   })
 
+  test('A user with no groups is displayed without any', async () => {
+    const { user, ui } = await whenThereIsAUserAndYouOpenUserAdmin({
+      groups: [],
+    })
+
+    await flushPromises()
+
+    const cells = ui.findCells()
+    expect(cells.length).toBe(7)
+    const { usernameCell, groupsCell } = ui.getRow(cells, 0)
+
+    expect(usernameCell.text()).toContain(user.username)
+    const groups = ui.getGroups(groupsCell)
+    expect(groups.length).toBe(0)
+  })
+
   test('A user can be deleted', async () => {
     const { user, userAdmin, ui } = await whenThereIsAUserAndYouOpenUserAdmin()
 
