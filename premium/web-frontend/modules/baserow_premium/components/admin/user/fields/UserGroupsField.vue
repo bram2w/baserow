@@ -122,11 +122,13 @@ export default {
         */
         const emptyElementTop = this.$refs.empty.getBoundingClientRect().top
 
-        for (let i = 0; i < this.$refs.groups.length; i++) {
-          const groupEl = this.$refs.groups[i]
-          const groupTop = groupEl.getBoundingClientRect().top
-          if (groupTop > emptyElementTop) {
-            /*
+        // The groups will be null when the user has no groups.
+        if (this.$refs.groups) {
+          for (let i = 0; i < this.$refs.groups.length; i++) {
+            const groupEl = this.$refs.groups[i]
+            const groupTop = groupEl.getBoundingClientRect().top
+            if (groupTop > emptyElementTop) {
+              /*
              This groupEl element has been flex-wrapped down into a new row due to no
              space. Every group after this one must also be hidden hence we now have
              calculated the number of hidden groups and can break.
@@ -135,14 +137,16 @@ export default {
              wrap down and become invisible hence we later on recheck if this has
              happened or not.
             */
-            expandOrder = i - 1
-            break
-          } else {
-            // Insert the expand button after the latest visible group
-            expandOrder = i
-            numHiddenGroups--
+              expandOrder = i - 1
+              break
+            } else {
+              // Insert the expand button after the latest visible group
+              expandOrder = i
+              numHiddenGroups--
+            }
           }
         }
+
         this.expandOrder = expandOrder
         this.numHiddenGroups = numHiddenGroups
         this.overflowing = numHiddenGroups !== 0
