@@ -124,8 +124,26 @@ Backend configuration:
 - `SYNC_TEMPLATES_ON_STARTUP` (default `true`) : When `true` on backend server startup
   it will run the baserow management command `sync_templates` which loads any templates
   found in `./backend/templates` into Baserow.
+  
+Pass through variables:
 
-### Dev Only Variables 
+These environment variables when provided to the docker-compose files are passed through
+to the correct containers. See [the introduction](../getting-started/introduction.md) 
+for what these variables do.
+
+- `PUBLIC_BACKEND_URL`
+- `PUBLIC_WEB_FRONTEND_URL`
+- `MEDIA_URL`
+- `EMAIL_SMTP`
+- `EMAIL_SMTP_HOST`
+- `EMAIL_SMTP_PORT`
+- `EMAIL_SMPT_USE_TLS`
+- `EMAIL_SMTP_USER`
+- `EMAIL_SMTP_PASSWORD`
+- `FROM_EMAIL`
+
+
+### Dev Only Variables
 
 - `UID` (default `1000` or your user id when using `./dev.sh`) : Sets which user id will
   be used to build Baserow's images with and the user id which will be used to run the
