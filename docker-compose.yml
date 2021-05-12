@@ -49,6 +49,13 @@ services:
       - DATABASE_NAME=${DATABASE_NAME:-baserow}
       - ADDITIONAL_APPS
       - MEDIA_URL=http://localhost:${MEDIA_PORT:-4000}/media/
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMPT_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
@@ -70,6 +77,15 @@ services:
     command: celery
     depends_on:
       - backend
+    environment:
+      - ADDITIONAL_APPS
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMPT_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
     volumes:
       - media:/baserow/media
     networks:
