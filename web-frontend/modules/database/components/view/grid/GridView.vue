@@ -591,6 +591,18 @@ export default {
       // cell within a row is selected, we want to wait for that selected state tot
       // change. This will make sure that the row is stays selected.
       this.$nextTick(() => {
+        // The getScrollTop function tries to find the vertically scrollable element
+        // and returns the scrollTop value. The unselectCell method could in some cases
+        // be called when the grid view component has already been destroyed. For
+        // example when a cell is selected in the template modal and the user presses
+        // the escape key which destroys the modal. We need to make sure, the lookup
+        // doesn't fail hard when that happens, so we can return the last scroll top
+        // value stored in the grid view store.
+        let getScrollTop = () => this.$refs.left.$refs.body.scrollTop
+        if (!this.$refs.left) {
+          getScrollTop = () =>
+            this.$store.getters[this.storePrefix + 'view/grid/getScrollTop']
+        }
         this.$store.dispatch(
           this.storePrefix + 'view/grid/removeRowSelectedBy',
           {
@@ -599,7 +611,7 @@ export default {
             primary: this.primary,
             row,
             field,
-            getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+            getScrollTop,
           }
         )
       })

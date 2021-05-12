@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Fixed bug where the grid view would fail hard if a cell is selected and the component
+  is destroyed.
+
 ## Released (2021-05-11)
 
 * Added configurable field limit.
