@@ -178,7 +178,7 @@ class FieldView(APIView):
         operation_id="get_database_table_field",
         description=(
             "Returns the existing field if the authorized user has access to the "
-            "related database's group. Depending on the type different properties"
+            "related database's group. Depending on the type different properties "
             "could be returned."
         ),
         responses={

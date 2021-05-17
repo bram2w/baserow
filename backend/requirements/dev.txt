@@ -1,5 +1,5 @@
 flake8==3.7.9
-pytest-django>=3.5.0
+pytest-django==4.2.0
 pytest-env==0.6.2
 pytest-asyncio==0.14.0
 pytest-ordering==0.6

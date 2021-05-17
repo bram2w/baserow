@@ -439,7 +439,7 @@ class ViewFiltersView(APIView):
             "parameter if the authorized user has access to the related database's "
             "group. When the rows of a view are requested, for example via the "
             "`list_database_table_grid_view_rows` endpoint, then only the rows that "
-            "apply to all the filters are going to be returned. A filters compares the "
+            "apply to all the filters are going to be returned. A filter compares the "
             "value of a field to the value of a filter. It depends on the type how "
             "values are going to be compared."
         ),

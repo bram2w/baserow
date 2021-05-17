@@ -42,7 +42,7 @@ class TableHandler:
         try:
             table = base_queryset.select_related("database__group").get(id=table_id)
         except Table.DoesNotExist:
-            raise TableDoesNotExist(f"The table with id {table_id} doe not exist.")
+            raise TableDoesNotExist(f"The table with id {table_id} does not exist.")
 
         return table
 
@@ -201,7 +201,7 @@ class TableHandler:
     def fill_example_table_data(self, user, table):
         """
         Fills the table with some initial example data. A new table is expected that
-        already has the a primary field named 'name'.
+        already has the primary field named 'name'.
 
         :param user: The user on whose behalf the table is filled.
         :type: user: User

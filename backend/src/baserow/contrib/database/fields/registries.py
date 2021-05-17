@@ -210,7 +210,7 @@ class FieldType(
         """
         Should return a random value that can be used as value for the field. This is
         used by the fill_table management command which will add an N amount of rows
-        to the a table with random data.
+        to the table with random data.
 
         :param instance: The field instance for which to get the random value for.
         :type instance: Field

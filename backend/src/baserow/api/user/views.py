@@ -122,7 +122,7 @@ class VerifyJSONWebToken(RegularVerifyJSONWebToken):
     @extend_schema(
         tags=["User"],
         operation_id="token_verify",
-        description="Verifies if the a token is still valid.",
+        description="Verifies if the token is still valid.",
         responses={
             200: authenticate_user_schema,
             400: {"description": "The token is invalid or expired."},
