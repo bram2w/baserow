@@ -9,7 +9,7 @@
         </li>
         <component
           :is="getApplicationComponent(application)"
-          v-for="application in applications"
+          v-for="application in sortedApplications"
           :key="application.id"
           :application="application"
           :page="page"
@@ -58,6 +58,15 @@ export default {
     collapsed: {
       type: Boolean,
       required: true,
+    },
+  },
+  computed: {
+    sortedApplications() {
+      return this.applications
+        .map((a) => a)
+        .sort((a, b) => {
+          return a.order - b.order
+        })
     },
   },
   methods: {

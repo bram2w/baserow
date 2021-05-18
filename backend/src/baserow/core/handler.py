@@ -28,6 +28,7 @@ from .models import (
 from .exceptions import (
     GroupDoesNotExist,
     ApplicationDoesNotExist,
+    ApplicationNotInGroup,
     BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch,
     GroupInvitationDoesNotExist,
@@ -43,6 +44,7 @@ from .signals import (
     application_created,
     application_updated,
     application_deleted,
+    applications_reordered,
     group_created,
     group_updated,
     group_deleted,
@@ -655,6 +657,33 @@ class CoreHandler:
         application_updated.send(self, application=application, user=user)
 
         return application
+
+    def order_applications(self, user, group, order):
+        """
+        Updates the order of the applications in the given group. The order of the
+        applications that are not in the `order` parameter set set to `0`.
+
+        :param user: The user on whose behalf the tables are ordered.
+        :type user: User
+        :param group: The group of which the applications must be updated.
+        :type group: Group
+        :param order: A list containing the application ids in the desired order.
+        :type order: list
+        :raises ApplicationNotInGroup: If one of the applications ids in the order does
+            not belong to the database.
+        """
+
+        group.has_user(user, raise_error=True)
+
+        queryset = Application.objects.filter(group_id=group.id)
+        application_ids = queryset.values_list("id", flat=True)
+
+        for application_id in order:
+            if application_id not in application_ids:
+                raise ApplicationNotInGroup(application_id)
+
+        Application.order_objects(queryset, order)
+        applications_reordered.send(self, group=group, order=order, user=user)
 
     def delete_application(self, user, application):
         """

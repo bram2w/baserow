@@ -2,6 +2,7 @@ import pytest
 
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
@@ -235,3 +236,66 @@ def test_delete_application(api_client, data_fixture):
     assert response.status_code == 204
 
     assert Database.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_order_tables(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    group_1 = data_fixture.create_group(user=user)
+    group_2 = data_fixture.create_group()
+    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    application_2 = data_fixture.create_database_application(group=group_1, order=2)
+    application_3 = data_fixture.create_database_application(group=group_1, order=3)
+
+    response = api_client.post(
+        reverse("api:applications:order", kwargs={"group_id": group_2.id}),
+        {"application_ids": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.post(
+        reverse("api:applications:order", kwargs={"group_id": 999999}),
+        {"application_ids": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        reverse("api:applications:order", kwargs={"group_id": group_1.id}),
+        {"application_ids": [0]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_APPLICATION_NOT_IN_GROUP"
+
+    response = api_client.post(
+        reverse("api:applications:order", kwargs={"group_id": group_1.id}),
+        {"application_ids": ["test"]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    response = api_client.post(
+        reverse("api:applications:order", kwargs={"group_id": group_1.id}),
+        {"application_ids": [application_3.id, application_2.id, application_1.id]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    application_1.refresh_from_db()
+    application_2.refresh_from_db()
+    application_3.refresh_from_db()
+    assert application_1.order == 3
+    assert application_2.order == 2
+    assert application_3.order == 1
