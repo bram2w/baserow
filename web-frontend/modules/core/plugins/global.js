@@ -19,6 +19,7 @@ import nameAbbreviation from '@baserow/modules/core/filters/nameAbbreviation'
 import scroll from '@baserow/modules/core/directives/scroll'
 import preventParentScroll from '@baserow/modules/core/directives/preventParentScroll'
 import tooltip from '@baserow/modules/core/directives/tooltip'
+import sortable from '@baserow/modules/core/directives/sortable'
 
 Vue.component('Context', Context)
 Vue.component('Modal', Modal)
@@ -39,3 +40,4 @@ Vue.filter('nameAbbreviation', nameAbbreviation)
 Vue.directive('scroll', scroll)
 Vue.directive('preventParentScroll', preventParentScroll)
 Vue.directive('tooltip', tooltip)
+Vue.directive('sortable', sortable)

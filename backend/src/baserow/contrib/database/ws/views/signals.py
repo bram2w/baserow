@@ -66,6 +66,18 @@ def view_deleted(sender, view_id, view, user, **kwargs):
     )
 
 
+@receiver(view_signals.views_reordered)
+def views_reordered(sender, table, order, user, **kwargs):
+    table_page_type = page_registry.get("table")
+    transaction.on_commit(
+        lambda: table_page_type.broadcast(
+            {"type": "views_reordered", "table_id": table.id, "order": order},
+            getattr(user, "web_socket_id", None),
+            table_id=table.id,
+        )
+    )
+
+
 @receiver(view_signals.view_filter_created)
 def view_filter_created(sender, view_filter, user, **kwargs):
     table_page_type = page_registry.get("table")

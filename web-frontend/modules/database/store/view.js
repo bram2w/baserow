@@ -77,6 +77,12 @@ export const mutations = {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
+  ORDER_ITEMS(state, order) {
+    state.items.forEach((view) => {
+      const index = order.findIndex((value) => value === view.id)
+      view.order = index === -1 ? 0 : index + 1
+    })
+  },
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
@@ -238,6 +244,19 @@ export const actions = {
       commit('SET_ITEM_LOADING', { view, value: false })
     } catch (error) {
       dispatch('forceUpdate', { view, values: oldValues })
+      throw error
+    }
+  },
+  /**
+   * Updates the order of all the views in a table.
+   */
+  async order({ commit, getters }, { table, order, oldOrder }) {
+    commit('ORDER_ITEMS', order)
+
+    try {
+      await ViewService(this.$client).order(table.id, order)
+    } catch (error) {
+      commit('ORDER_ITEMS', oldOrder)
       throw error
     }
   },

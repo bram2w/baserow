@@ -59,6 +59,21 @@ def test_view_deleted(mock_broadcast_to_channel_group, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_views_reordered(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    view = data_fixture.create_grid_view(user=user)
+    ViewHandler().order_views(user=user, table=view.table, order=[view.id])
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{view.table.id}"
+    assert args[0][1]["type"] == "views_reordered"
+    assert args[0][1]["table_id"] == view.table.id
+    assert args[0][1]["order"] == [view.id]
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_view_filter_created(mock_broadcast_to_channel_group, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

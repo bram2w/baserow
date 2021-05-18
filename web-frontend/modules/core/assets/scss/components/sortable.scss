@@ -1,0 +1,11 @@
+.sortable-sorting-item {
+  user-select: none !important;
+  pointer-events: none !important;
+}
+
+.sortable-position-indicator {
+  position: absolute;
+  height: 3px;
+  background-color: $color-neutral-500;
+  border-radius: 6px;
+}

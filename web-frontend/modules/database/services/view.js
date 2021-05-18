@@ -29,6 +29,11 @@ export default (client) => {
     update(viewId, values) {
       return client.patch(`/database/views/${viewId}/`, values)
     },
+    order(tableId, order) {
+      return client.post(`/database/views/table/${tableId}/order/`, {
+        view_ids: order,
+      })
+    },
     delete(viewId) {
       return client.delete(`/database/views/${viewId}/`)
     },

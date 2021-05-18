@@ -2,6 +2,7 @@ import pytest
 
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
@@ -439,6 +440,69 @@ def test_delete_view(api_client, data_fixture):
     assert response.status_code == 204
 
     assert GridView.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_order_views(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table_1 = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table()
+    view_1 = data_fixture.create_grid_view(table=table_1, order=1)
+    view_2 = data_fixture.create_grid_view(table=table_1, order=2)
+    view_3 = data_fixture.create_grid_view(table=table_1, order=3)
+
+    response = api_client.post(
+        reverse("api:database:views:order", kwargs={"table_id": table_2.id}),
+        {"view_ids": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.post(
+        reverse("api:database:views:order", kwargs={"table_id": 999999}),
+        {"view_ids": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        reverse("api:database:views:order", kwargs={"table_id": table_1.id}),
+        {"view_ids": [0]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_VIEW_NOT_IN_TABLE"
+
+    response = api_client.post(
+        reverse("api:database:views:order", kwargs={"table_id": table_1.id}),
+        {"view_ids": ["test"]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    response = api_client.post(
+        reverse("api:database:views:order", kwargs={"table_id": table_1.id}),
+        {"view_ids": [view_3.id, view_2.id, view_1.id]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    view_1.refresh_from_db()
+    view_2.refresh_from_db()
+    view_3.refresh_from_db()
+    assert view_1.order == 3
+    assert view_2.order == 2
+    assert view_3.order == 1
 
 
 @pytest.mark.django_db

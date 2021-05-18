@@ -6,6 +6,11 @@ ERROR_VIEW_DOES_NOT_EXIST = (
     HTTP_404_NOT_FOUND,
     "The requested view does not exist.",
 )
+ERROR_VIEW_NOT_IN_TABLE = (
+    "ERROR_VIEW_NOT_IN_TABLE",
+    HTTP_400_BAD_REQUEST,
+    "The view id {e.view_id} does not belong to the table.",
+)
 ERROR_VIEW_FILTER_DOES_NOT_EXIST = (
     "ERROR_VIEW_FILTER_DOES_NOT_EXIST",
     HTTP_404_NOT_FOUND,
