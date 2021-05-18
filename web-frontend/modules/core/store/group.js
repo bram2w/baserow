@@ -45,6 +45,12 @@ export const mutations = {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
+  ORDER_ITEMS(state, order) {
+    state.items.forEach((group) => {
+      const index = order.findIndex((value) => value === group.id)
+      group.order = index === -1 ? 0 : index + 1
+    })
+  },
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
@@ -136,6 +142,19 @@ export const actions = {
    */
   forceUpdate({ commit }, { group, values }) {
     commit('UPDATE_ITEM', { id: group.id, values })
+  },
+  /**
+   * Updates the order of the groups for the current user.
+   */
+  async order({ commit, getters }, { order, oldOrder }) {
+    commit('ORDER_ITEMS', order)
+
+    try {
+      await GroupService(this.$client).order(order)
+    } catch (error) {
+      commit('ORDER_ITEMS', oldOrder)
+      throw error
+    }
   },
   /**
    * Deletes an existing group with the provided id.

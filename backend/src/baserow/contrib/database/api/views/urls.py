@@ -5,6 +5,7 @@ from baserow.contrib.database.views.registries import view_type_registry
 from .views import (
     ViewsView,
     ViewView,
+    OrderViewsView,
     ViewFiltersView,
     ViewFilterView,
     ViewSortingsView,
@@ -16,6 +17,7 @@ app_name = "baserow.contrib.database.api.views"
 
 urlpatterns = view_type_registry.api_urls + [
     url(r"table/(?P<table_id>[0-9]+)/$", ViewsView.as_view(), name="list"),
+    url(r"table/(?P<table_id>[0-9]+)/order/$", OrderViewsView.as_view(), name="order"),
     url(
         r"filter/(?P<view_filter_id>[0-9]+)/$",
         ViewFilterView.as_view(),

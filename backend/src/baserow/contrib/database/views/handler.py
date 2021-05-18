@@ -6,6 +6,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     ViewDoesNotExist,
+    ViewNotInTable,
     UnrelatedFieldError,
     ViewFilterDoesNotExist,
     ViewFilterNotSupported,
@@ -21,6 +22,7 @@ from .signals import (
     view_created,
     view_updated,
     view_deleted,
+    views_reordered,
     view_filter_created,
     view_filter_updated,
     view_filter_deleted,
@@ -139,6 +141,34 @@ class ViewHandler:
         view_updated.send(self, view=view, user=user)
 
         return view
+
+    def order_views(self, user, table, order):
+        """
+        Updates the order of the views in the given table. The order of the views
+        that are not in the `order` parameter set set to `0`.
+
+        :param user: The user on whose behalf the views are ordered.
+        :type user: User
+        :param table: The table of which the views must be updated.
+        :type table: Table
+        :param order: A list containing the view ids in the desired order.
+        :type order: list
+        :raises ViewNotInTable: If one of the view ids in the order does not belong
+            to the table.
+        """
+
+        group = table.database.group
+        group.has_user(user, raise_error=True)
+
+        queryset = View.objects.filter(table_id=table.id)
+        view_ids = queryset.values_list("id", flat=True)
+
+        for view_id in order:
+            if view_id not in view_ids:
+                raise ViewNotInTable(view_id)
+
+        View.order_objects(queryset, order)
+        views_reordered.send(self, table=table, order=order, user=user)
 
     def delete_view(self, user, view):
         """

@@ -19,6 +19,7 @@
       <GroupsContextItem
         v-for="group in searchAndSort(groups)"
         :key="group.id"
+        v-sortable="{ id: group.id, update: order }"
         :group="group"
         @selected="hide"
       ></GroupsContextItem>
@@ -45,6 +46,7 @@ import { mapGetters, mapState } from 'vuex'
 import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
 import GroupsContextItem from '@baserow/modules/core/components/group/GroupsContextItem'
 import context from '@baserow/modules/core/mixins/context'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'GroupsContext',
@@ -79,13 +81,24 @@ export default {
     searchAndSort(groups) {
       const query = this.query
 
-      return groups.filter(function (group) {
-        const regex = new RegExp('(' + query + ')', 'i')
-        return group.name.match(regex)
-      })
-      // .sort((a, b) => {
-      //   return a.order - b.order
-      // })
+      return groups
+        .filter(function (group) {
+          const regex = new RegExp('(' + query + ')', 'i')
+          return group.name.match(regex)
+        })
+        .sort((a, b) => {
+          return a.order - b.order
+        })
+    },
+    async order(order, oldOrder) {
+      try {
+        await this.$store.dispatch('group/order', {
+          order,
+          oldOrder,
+        })
+      } catch (error) {
+        notifyIf(error, 'group')
+      }
     },
   },
 }

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Case, When, Value
 from django.db.models.fields import NOT_PROVIDED
 from django.contrib.contenttypes.models import ContentType
 from django.utils.functional import cached_property
@@ -23,6 +24,34 @@ class OrderableMixin:
         """
 
         return queryset.aggregate(models.Max(field)).get(f"{field}__max", 0) or 0
+
+    @classmethod
+    def order_objects(cls, queryset, order, field="order"):
+        """
+        Changes the order of the objects in the given queryset to the desired order
+        provided in the order parameter.
+
+        :param queryset: The queryset of the objects that need to be updated.
+        :type queryset: QuerySet
+        :param order: A list containing the object ids in the desired order.
+        :type order: list
+        :param field: The name of the order column/field.
+        :type field: str
+        :return: The amount of objects updated.
+        :rtype: int
+        """
+
+        return queryset.update(
+            **{
+                field: Case(
+                    *[
+                        When(id=id, then=Value(index + 1))
+                        for index, id in enumerate(order)
+                    ],
+                    default=Value(0),
+                )
+            }
+        )
 
 
 class PolymorphicContentTypeMixin:
