@@ -48,6 +48,13 @@ class ApplicationUpdateSerializer(serializers.ModelSerializer):
         fields = ("name",)
 
 
+class OrderApplicationsSerializer(serializers.Serializer):
+    application_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="Application ids in the desired order.",
+    )
+
+
 def get_application_serializer(instance, **kwargs):
     """
     Returns an instantiated serializer based on the instance class type. Custom

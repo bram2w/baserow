@@ -62,8 +62,10 @@
           >
             <div class="tree__action sidebar__action">
               <nuxt-link :to="{ name: 'dashboard' }" class="tree__link">
-                <i class="tree__icon fas fa-tachometer-alt"></i>
-                <span class="sidebar__item-name">Dashboard</span>
+                <div>
+                  <i class="tree__icon fas fa-tachometer-alt"></i>
+                  <span class="sidebar__item-name">Dashboard</span>
+                </div>
               </nuxt-link>
             </div>
           </li>
@@ -73,8 +75,10 @@
               :class="{ 'tree__action--disabled': isAdminPage }"
             >
               <a class="tree__link" @click.prevent="admin()">
-                <i class="tree__icon fas fa-users-cog"></i>
-                <span class="sidebar__item-name">Admin</span>
+                <div>
+                  <i class="tree__icon fas fa-users-cog"></i>
+                  <span class="sidebar__item-name">Admin</span>
+                </div>
               </a>
             </div>
             <ul v-show="isAdminPage" class="tree sidebar__tree">
@@ -93,11 +97,15 @@
                     :to="{ name: adminType.routeName }"
                     class="tree__link"
                   >
-                    <i
-                      class="tree__icon fas"
-                      :class="'fa-' + adminType.iconClass"
-                    ></i>
-                    <span class="sidebar__item-name">{{ adminType.name }}</span>
+                    <div>
+                      <i
+                        class="tree__icon fas"
+                        :class="'fa-' + adminType.iconClass"
+                      ></i>
+                      <span class="sidebar__item-name">{{
+                        adminType.name
+                      }}</span>
+                    </div>
                   </nuxt-link>
                 </div>
               </li>
@@ -117,7 +125,7 @@
                       0
                     )
                   "
-                  >{{ selectedGroup.name }}</a
+                  ><div>{{ selectedGroup.name }}</div></a
                 >
                 <GroupsContext ref="groupSelect"></GroupsContext>
               </div>
@@ -125,8 +133,10 @@
             <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
               <div class="tree__action">
                 <a class="tree__link" @click="$refs.groupMembersModal.show()">
-                  <i class="tree__icon tree__icon--type fas fa-users"></i>
-                  Invite others
+                  <div>
+                    <i class="tree__icon tree__icon--type fas fa-users"></i>
+                    Invite others
+                  </div>
                 </a>
                 <GroupMembersModal
                   ref="groupMembersModal"
@@ -139,6 +149,11 @@
                 :is="getApplicationComponent(application)"
                 v-for="application in applications"
                 :key="application.id"
+                v-sortable="{
+                  id: application.id,
+                  update: orderApplications,
+                  handle: '[data-sortable-handle]',
+                }"
                 :application="application"
               ></component>
             </ul>
@@ -175,7 +190,7 @@
                 <a
                   class="tree__link tree__link--group"
                   @click="$store.dispatch('group/select', group)"
-                  >{{ group.name }}</a
+                  ><div>{{ group.name }}</div></a
                 >
                 <i class="tree__right-icon fas fa-arrow-right"></i>
               </div>
@@ -218,6 +233,7 @@
 <script>
 import { mapGetters, mapState } from 'vuex'
 
+import { notifyIf } from '@baserow/modules/core/utils/error'
 import SettingsModal from '@baserow/modules/core/components/settings/SettingsModal'
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
 import CreateApplicationContext from '@baserow/modules/core/components/application/CreateApplicationContext'
@@ -243,7 +259,7 @@ export default {
     applications() {
       return this.$store.getters['application/getAllOfGroup'](
         this.selectedGroup
-      )
+      ).sort((a, b) => a.order - b.order)
     },
     adminTypes() {
       return this.$registry.getAll('admin')
@@ -300,6 +316,17 @@ export default {
 
       if (this.sortedAdminTypes.length > 0) {
         this.$nuxt.$router.push({ name: this.sortedAdminTypes[0].routeName })
+      }
+    },
+    async orderApplications(order, oldOrder) {
+      try {
+        await this.$store.dispatch('application/order', {
+          group: this.selectedGroup,
+          order,
+          oldOrder,
+        })
+      } catch (error) {
+        notifyIf(error, 'application')
       }
     },
   },

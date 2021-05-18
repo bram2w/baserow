@@ -109,3 +109,18 @@ def application_deleted(sender, application_id, application, user, **kwargs):
             getattr(user, "web_socket_id", None),
         )
     )
+
+
+@receiver(signals.applications_reordered)
+def applications_reordered(sender, group, order, user, **kwargs):
+    transaction.on_commit(
+        lambda: broadcast_to_group.delay(
+            group.id,
+            {
+                "type": "applications_reordered",
+                "group_id": group.id,
+                "order": order,
+            },
+            getattr(user, "web_socket_id", None),
+        )
+    )

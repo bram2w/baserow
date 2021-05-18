@@ -14,6 +14,7 @@ from baserow.contrib.database.models import Database, Table
 from baserow.core.exceptions import (
     UserNotInGroup,
     ApplicationTypeDoesNotExist,
+    ApplicationNotInGroup,
     GroupDoesNotExist,
     GroupUserDoesNotExist,
     ApplicationDoesNotExist,
@@ -692,6 +693,66 @@ def test_update_database_application(send_mock, data_fixture):
     database.refresh_from_db()
 
     assert database.name == "Test 1"
+
+
+@pytest.mark.django_db
+@patch("baserow.core.signals.applications_reordered.send")
+def test_order_applications(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    application_1 = data_fixture.create_database_application(group=group, order=1)
+    application_2 = data_fixture.create_database_application(group=group, order=2)
+    application_3 = data_fixture.create_database_application(group=group, order=3)
+
+    handler = CoreHandler()
+
+    with pytest.raises(UserNotInGroup):
+        handler.order_applications(user=user_2, group=group, order=[])
+
+    with pytest.raises(ApplicationNotInGroup):
+        handler.order_applications(user=user, group=group, order=[0])
+
+    handler.order_applications(
+        user=user,
+        group=group,
+        order=[application_3.id, application_2.id, application_1.id],
+    )
+    application_1.refresh_from_db()
+    application_2.refresh_from_db()
+    application_3.refresh_from_db()
+    assert application_1.order == 3
+    assert application_2.order == 2
+    assert application_3.order == 1
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["group"].id == group.id
+    assert send_mock.call_args[1]["user"].id == user.id
+    assert send_mock.call_args[1]["order"] == [
+        application_3.id,
+        application_2.id,
+        application_1.id,
+    ]
+
+    handler.order_applications(
+        user=user,
+        group=group,
+        order=[application_1.id, application_3.id, application_2.id],
+    )
+    application_1.refresh_from_db()
+    application_2.refresh_from_db()
+    application_3.refresh_from_db()
+    assert application_1.order == 1
+    assert application_2.order == 3
+    assert application_3.order == 2
+
+    handler.order_applications(user=user, group=group, order=[application_1.id])
+    application_1.refresh_from_db()
+    application_2.refresh_from_db()
+    application_3.refresh_from_db()
+    assert application_1.order == 1
+    assert application_2.order == 0
+    assert application_3.order == 0
 
 
 @pytest.mark.django_db

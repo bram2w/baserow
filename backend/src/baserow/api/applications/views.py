@@ -11,13 +11,17 @@ from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
 from baserow.api.schemas import get_error_schema
 from baserow.api.utils import PolymorphicMappingSerializer
-from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
+from baserow.api.applications.errors import (
+    ERROR_APPLICATION_DOES_NOT_EXIST,
+    ERROR_APPLICATION_NOT_IN_GROUP,
+)
 from baserow.core.models import Application
 from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import (
     UserNotInGroup,
     GroupDoesNotExist,
     ApplicationDoesNotExist,
+    ApplicationNotInGroup,
 )
 from baserow.core.registries import application_type_registry
 
@@ -25,6 +29,7 @@ from .serializers import (
     ApplicationSerializer,
     ApplicationCreateSerializer,
     ApplicationUpdateSerializer,
+    OrderApplicationsSerializer,
     get_application_serializer,
 )
 
@@ -311,4 +316,51 @@ class ApplicationView(APIView):
         )
         CoreHandler().delete_application(request.user, application)
 
+        return Response(status=204)
+
+
+class OrderApplicationsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="group_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Updates the order of the applications in the group "
+                "related to the provided value.",
+            ),
+        ],
+        tags=["Applications"],
+        operation_id="order_applications",
+        description=(
+            "Changes the order of the provided application ids to the matching "
+            "position that the id has in the list. If the authorized user does not "
+            "belong to the group it will be ignored. The order of the not provided "
+            "tables will be set to `0`."
+        ),
+        request=OrderApplicationsSerializer,
+        responses={
+            204: None,
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_APPLICATION_NOT_IN_GROUP"]
+            ),
+            404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+        },
+    )
+    @validate_body(OrderApplicationsSerializer)
+    @transaction.atomic
+    @map_exceptions(
+        {
+            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ApplicationNotInGroup: ERROR_APPLICATION_NOT_IN_GROUP,
+        }
+    )
+    def post(self, request, data, group_id):
+        """Updates to order of the applications in a table."""
+
+        group = CoreHandler().get_group(group_id)
+        CoreHandler().order_applications(request.user, group, data["application_ids"])
         return Response(status=204)

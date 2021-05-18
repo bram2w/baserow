@@ -6,22 +6,25 @@
       'tree__item--loading': application._.loading,
     }"
   >
-    <div class="tree__action tree__action--has-options">
+    <div class="tree__action tree__action--has-options" data-sortable-handle>
       <a class="tree__link" @click="$emit('selected', application)">
-        <i
-          class="tree__icon tree__icon--type fas"
-          :class="'fa-' + application._.type.iconClass"
-        ></i>
-        <Editable
-          ref="rename"
-          :value="application.name"
-          @change="renameApplication(application, $event)"
-        ></Editable>
+        <div>
+          <i
+            class="tree__icon tree__icon--type fas"
+            :class="'fa-' + application._.type.iconClass"
+          ></i>
+          <Editable
+            ref="rename"
+            :value="application.name"
+            @change="renameApplication(application, $event)"
+          ></Editable>
+        </div>
       </a>
       <a
         ref="contextLink"
         class="tree__options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
+        @mousedown.stop
       >
         <i class="fas fa-ellipsis-v"></i>
       </a>
