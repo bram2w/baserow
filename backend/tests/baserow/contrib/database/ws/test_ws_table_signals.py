@@ -36,6 +36,22 @@ def test_table_updated(mock_broadcast_to_group, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.contrib.database.ws.table.signals.broadcast_to_group")
+def test_tables_reordered(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    TableHandler().order_tables(user=user, database=database, order=[table.id])
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == table.database.group_id
+    assert args[0][1]["type"] == "tables_reordered"
+    assert args[0][1]["database_id"] == database.id
+    assert args[0][1]["order"] == [table.id]
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.contrib.database.ws.table.signals.broadcast_to_group")
 def test_table_deleted(mock_broadcast_to_users, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

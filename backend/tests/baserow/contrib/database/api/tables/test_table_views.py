@@ -1,6 +1,11 @@
 import pytest
 
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 
 from django.shortcuts import reverse
 from django.conf import settings
@@ -343,6 +348,69 @@ def test_update_table(api_client, data_fixture):
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_order_tables(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    database_1 = data_fixture.create_database_application(user=user)
+    database_2 = data_fixture.create_database_application()
+    table_1 = data_fixture.create_database_table(database=database_1, order=1)
+    table_2 = data_fixture.create_database_table(database=database_1, order=2)
+    table_3 = data_fixture.create_database_table(database=database_1, order=3)
+
+    response = api_client.post(
+        reverse("api:database:tables:order", kwargs={"database_id": database_2.id}),
+        {"table_ids": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.post(
+        reverse("api:database:tables:order", kwargs={"database_id": 999999}),
+        {"table_ids": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        reverse("api:database:tables:order", kwargs={"database_id": database_1.id}),
+        {"table_ids": [0]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_TABLE_NOT_IN_DATABASE"
+
+    response = api_client.post(
+        reverse("api:database:tables:order", kwargs={"database_id": database_1.id}),
+        {"table_ids": ["test"]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    response = api_client.post(
+        reverse("api:database:tables:order", kwargs={"database_id": database_1.id}),
+        {"table_ids": [table_3.id, table_2.id, table_1.id]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    table_1.refresh_from_db()
+    table_2.refresh_from_db()
+    table_3.refresh_from_db()
+    assert table_1.order == 3
+    assert table_2.order == 2
+    assert table_3.order == 1
 
 
 @pytest.mark.django_db

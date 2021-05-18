@@ -15,10 +15,11 @@ from baserow.contrib.database.fields.field_types import (
 from .models import Table
 from .exceptions import (
     TableDoesNotExist,
+    TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
 )
-from .signals import table_created, table_updated, table_deleted
+from .signals import table_created, table_updated, table_deleted, tables_reordered
 
 
 class TableHandler:
@@ -256,6 +257,34 @@ class TableHandler:
         table_updated.send(self, table=table, user=user)
 
         return table
+
+    def order_tables(self, user, database, order):
+        """
+        Updates the order of the tables in the given database. The order of the views
+        that are not in the `order` parameter set set to `0`.
+
+        :param user: The user on whose behalf the tables are ordered.
+        :type user: User
+        :param database: The database of which the views must be updated.
+        :type database: Database
+        :param order: A list containing the table ids in the desired order.
+        :type order: list
+        :raises TableNotInDatabase: If one of the table ids in the order does not belong
+            to the database.
+        """
+
+        group = database.group
+        group.has_user(user, raise_error=True)
+
+        queryset = Table.objects.filter(database_id=database.id)
+        table_ids = [table["id"] for table in queryset.values("id")]
+
+        for table_id in order:
+            if table_id not in table_ids:
+                raise TableNotInDatabase(table_id)
+
+        Table.order_objects(queryset, order)
+        tables_reordered.send(self, database=database, order=order, user=user)
 
     def delete_table(self, user, table):
         """

@@ -27,6 +27,13 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('tables_reordered', ({ store, app }, data) => {
+    const database = store.getters['application/get'](data.database_id)
+    if (database !== undefined) {
+      store.commit('table/ORDER_TABLES', { database, order: data.order })
+    }
+  })
+
   realtime.registerEvent('table_deleted', ({ store }, data) => {
     const database = store.getters['application/get'](data.database_id)
     if (database !== undefined) {

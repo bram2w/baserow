@@ -6,6 +6,7 @@
   is destroyed.
 * Made it possible to order the views by drag and drop.
 * Made it possible to order the groups by drag and drop.
+* Made it possible to order the tables by drag and drop.
 
 ## Released (2021-05-11)
 

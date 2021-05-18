@@ -94,6 +94,7 @@
 }
 
 .tree__subs {
+  position: relative;
   list-style: none;
   padding: 0 0 2px 0;
   margin: 0;
@@ -131,12 +132,12 @@
 
 .tree__sub-link {
   @extend %tree_sub-size;
-  @extend %ellipsis;
 
   color: $color-primary-900;
   display: block;
 
   &:hover {
+    cursor: pointer;
     text-decoration: none;
     color: $color-primary-500;
   }

@@ -8,6 +8,11 @@ ERROR_TABLE_DOES_NOT_EXIST = (
     HTTP_404_NOT_FOUND,
     "The requested table does not exist.",
 )
+ERROR_TABLE_NOT_IN_DATABASE = (
+    "ERROR_TABLE_NOT_IN_DATABASE",
+    HTTP_400_BAD_REQUEST,
+    "The table id {e.table_id} does not belong to the database.",
+)
 ERROR_INVALID_INITIAL_TABLE_DATA = (
     "ERROR_INVALID_INITIAL_TABLE_DATA",
     HTTP_400_BAD_REQUEST,

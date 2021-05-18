@@ -27,6 +27,12 @@ export const mutations = {
   UPDATE_ITEM(state, { table, values }) {
     Object.assign(table, table, values)
   },
+  ORDER_TABLES(state, { database, order }) {
+    database.tables.forEach((table) => {
+      const index = order.findIndex((value) => value === table.id)
+      table.order = index === -1 ? 0 : index + 1
+    })
+  },
   SET_SELECTED(state, { database, table }) {
     Object.values(database.tables).forEach((item) => {
       item._.selected = false
@@ -106,6 +112,19 @@ export const actions = {
    */
   forceUpdate({ commit }, { database, table, values }) {
     commit('UPDATE_ITEM', { database, table, values })
+  },
+  /**
+   * Updates the order of all the tables in a database.
+   */
+  async order({ commit, getters }, { database, order, oldOrder }) {
+    commit('ORDER_TABLES', { database, order })
+
+    try {
+      await TableService(this.$client).order(database.id, order)
+    } catch (error) {
+      commit('ORDER_TABLES', { database, order: oldOrder })
+      throw error
+    }
   },
   /**
    * Deletes an existing application.
