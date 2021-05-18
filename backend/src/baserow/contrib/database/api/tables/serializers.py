@@ -52,3 +52,9 @@ class TableUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Table
         fields = ("name",)
+
+
+class OrderTablesSerializer(serializers.Serializer):
+    table_ids = serializers.ListField(
+        child=serializers.IntegerField(), help_text="Table ids in the desired order."
+    )

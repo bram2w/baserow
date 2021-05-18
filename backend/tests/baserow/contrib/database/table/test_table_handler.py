@@ -11,6 +11,7 @@ from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import (
     TableDoesNotExist,
+    TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
 )
@@ -256,6 +257,58 @@ def test_update_database_table(send_mock, data_fixture):
     table.refresh_from_db()
 
     assert table.name == "Test 1"
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.table.signals.tables_reordered.send")
+def test_order_tables(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table_1 = data_fixture.create_database_table(database=database, order=1)
+    table_2 = data_fixture.create_database_table(database=database, order=2)
+    table_3 = data_fixture.create_database_table(database=database, order=3)
+
+    handler = TableHandler()
+
+    with pytest.raises(UserNotInGroup):
+        handler.order_tables(user=user_2, database=database, order=[])
+
+    with pytest.raises(TableNotInDatabase):
+        handler.order_tables(user=user, database=database, order=[0])
+
+    handler.order_tables(
+        user=user, database=database, order=[table_3.id, table_2.id, table_1.id]
+    )
+    table_1.refresh_from_db()
+    table_2.refresh_from_db()
+    table_3.refresh_from_db()
+    assert table_1.order == 3
+    assert table_2.order == 2
+    assert table_3.order == 1
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["database"].id == database.id
+    assert send_mock.call_args[1]["user"].id == user.id
+    assert send_mock.call_args[1]["order"] == [table_3.id, table_2.id, table_1.id]
+
+    handler.order_tables(
+        user=user, database=database, order=[table_1.id, table_3.id, table_2.id]
+    )
+    table_1.refresh_from_db()
+    table_2.refresh_from_db()
+    table_3.refresh_from_db()
+    assert table_1.order == 1
+    assert table_2.order == 3
+    assert table_3.order == 2
+
+    handler.order_tables(user=user, database=database, order=[table_1.id])
+    table_1.refresh_from_db()
+    table_2.refresh_from_db()
+    table_3.refresh_from_db()
+    assert table_1.order == 1
+    assert table_2.order == 0
+    assert table_3.order == 0
 
 
 @pytest.mark.django_db

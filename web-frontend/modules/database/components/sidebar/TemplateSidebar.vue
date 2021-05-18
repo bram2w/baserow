@@ -24,7 +24,9 @@
           :class="{ active: isTableActive(table) }"
         >
           <a class="tree__sub-link" @click="selectTable(application, table)">
-            {{ table.name }}
+            <div>
+              {{ table.name }}
+            </div>
           </a>
         </li>
       </ul>

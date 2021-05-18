@@ -46,3 +46,18 @@ def table_deleted(sender, table_id, table, user, **kwargs):
             getattr(user, "web_socket_id", None),
         )
     )
+
+
+@receiver(table_signals.tables_reordered)
+def tables_reordered(sender, database, order, user, **kwargs):
+    transaction.on_commit(
+        lambda: broadcast_to_group.delay(
+            database.group_id,
+            {
+                "type": "tables_reordered",
+                "database_id": database.id,
+                "order": order,
+            },
+            getattr(user, "web_socket_id", None),
+        )
+    )
