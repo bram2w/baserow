@@ -1,27 +1,26 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label">Choose XML file</label>
+      <label class="control__label">Choose JSON file</label>
       <div class="control__description">
-        You can import an existing XML by uploading the .XML file with tabular
-        data, i.e.:
+        You can import an existing JSON file by uploading the .json file with
+        tabular data, i.e.:
         <pre>
-&lt;notes&gt;
-  &lt;note&gt;
-    &lt;to&gt;Tove&lt;/to&gt;
-    &lt;from&gt;Jani&lt;/from&gt;
-    &lt;heading&gt;Reminder&lt;/heading&gt;
-    &lt;body&gt;Don't forget me this weekend!&lt;/body&gt;
-  &lt;/note&gt;
-  &lt;note&gt;
-    &lt;heading&gt;Reminder&lt;/heading&gt;
-    &lt;heading2&gt;Reminder2&lt;/heading2&gt;
-    &lt;to&gt;Tove&lt;/to&gt;
-    &lt;from&gt;Jani&lt;/from&gt;
-    &lt;body&gt;Don't forget me this weekend!&lt;/body&gt;
-  &lt;/note&gt;
-&lt;/notes&gt;</pre
-        >
+[
+  {
+    "to": "Tove",
+    "from": "Jani",
+    "heading": "Reminder",
+    "body": "Don't forget me this weekend!"
+  },
+  {
+    "to": "Bram",
+    "from": "Nigel",
+    "heading": "Reminder",
+    "body": "Don't forget about the export feature this week"
+  }
+]
+        </pre>
       </div>
       <div class="control__elements">
         <div class="file-upload">
@@ -29,7 +28,7 @@
             v-show="false"
             ref="file"
             type="file"
-            accept=".xml"
+            accept=".json"
             @change="select($event)"
           />
           <a
@@ -37,13 +36,19 @@
             @click.prevent="$refs.file.click($event)"
           >
             <i class="fas fa-cloud-upload-alt"></i>
-            Choose XML file
+            Choose JSON file
           </a>
           <div class="file-upload__file">{{ filename }}</div>
         </div>
         <div v-if="$v.filename.$error" class="error">
           This field is required.
         </div>
+      </div>
+    </div>
+    <div v-if="filename !== ''" class="control">
+      <label class="control__label">Encoding</label>
+      <div class="control__elements">
+        <CharsetDropdown v-model="encoding" @input="reload()"></CharsetDropdown>
       </div>
     </div>
     <div v-if="error !== ''" class="alert alert--error alert--has-icon">
@@ -66,13 +71,13 @@
 import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
+import CharsetDropdown from '@baserow/modules/core/components/helpers/CharsetDropdown'
 import importer from '@baserow/modules/database/mixins/importer'
 import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
-import { parseXML } from '@baserow/modules/database/utils/xml'
 
 export default {
-  name: 'TableXMLImporter',
-  components: { TableImporterPreview },
+  name: 'TableCSVImporter',
+  components: { TableImporterPreview, CharsetDropdown },
   mixins: [form, importer],
   data() {
     return {
@@ -80,6 +85,7 @@ export default {
         data: '',
         firstRowHeader: true,
       },
+      encoding: 'utf-8',
       filename: '',
       error: '',
       rawData: null,
@@ -113,6 +119,7 @@ export default {
         this.values.data = ''
         this.error = 'The maximum file size is 15MB.'
         this.preview = {}
+        this.$emit('input', this.value)
       } else {
         this.filename = file.name
         const reader = new FileReader()
@@ -120,43 +127,72 @@ export default {
           this.rawData = event.target.result
           this.reload()
         })
-        reader.readAsBinaryString(event.target.files[0])
+        reader.readAsArrayBuffer(event.target.files[0])
       }
     },
     reload() {
-      const [header, xmlData, errors] = parseXML(this.rawData)
+      let json
 
-      if (errors.length > 0) {
+      try {
+        const decoder = new TextDecoder(this.encoding)
+        const decoded = decoder.decode(this.rawData)
+        json = JSON.parse(decoded)
+      } catch (error) {
         this.values.data = ''
-        this.error = `Error occured while processing XML: ${errors.join('\n')}`
+        this.error = `Error occured while parsing JSON: ${error.message}`
         this.preview = {}
         return
       }
 
-      if (xmlData.length === 0) {
+      if (json.length === 0) {
         this.values.data = ''
-        this.error = 'This XML file is empty.'
+        this.error = 'This JSON file is empty.'
         this.preview = {}
         return
       }
 
-      let hasHeader = false
-      if (header.length > 0) {
-        xmlData.unshift(header)
-        hasHeader = true
+      if (!Array.isArray(json)) {
+        this.values.data = ''
+        this.error = `The JSON file is not an array.`
+        this.preview = {}
+        return
       }
 
       const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
-      if (limit !== null && xmlData.length > limit) {
+      if (limit !== null && json.length > limit - 1) {
         this.values.data = ''
         this.error = `It is not possible to import more than ${limit} rows.`
         this.preview = {}
         return
       }
 
-      this.values.data = JSON.stringify(xmlData)
+      const header = []
+      const data = []
+
+      json.forEach((entry) => {
+        const keys = Object.keys(entry)
+        const row = []
+
+        keys.forEach((key) => {
+          if (!header.includes(key)) {
+            header.push(key)
+          }
+        })
+
+        header.forEach((key) => {
+          const exists = Object.prototype.hasOwnProperty.call(entry, key)
+          const value = exists ? entry[key].toString() : ''
+          row.push(value)
+        })
+
+        data.push(row)
+      })
+
+      data.unshift(header)
+
+      this.values.data = JSON.stringify(data)
       this.error = ''
-      this.preview = this.getPreview(xmlData, hasHeader)
+      this.preview = this.getPreview(data, true)
     },
   },
 }
