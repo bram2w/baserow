@@ -51,7 +51,7 @@ class GridViewView(APIView):
             ),
             OpenApiParameter(
                 name="count",
-                location=OpenApiParameter.PATH,
+                location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.NONE,
                 description="If provided only the count will be returned.",
             ),
