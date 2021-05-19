@@ -52,7 +52,7 @@ services:
       - EMAIL_SMTP
       - EMAIL_SMTP_HOST
       - EMAIL_SMTP_PORT
-      - EMAIL_SMPT_USE_TLS
+      - EMAIL_SMTP_USE_TLS
       - EMAIL_SMTP_USER
       - EMAIL_SMTP_PASSWORD
       - FROM_EMAIL
@@ -82,7 +82,7 @@ services:
       - EMAIL_SMTP
       - EMAIL_SMTP_HOST
       - EMAIL_SMTP_PORT
-      - EMAIL_SMPT_USE_TLS
+      - EMAIL_SMTP_USE_TLS
       - EMAIL_SMTP_USER
       - EMAIL_SMTP_PASSWORD
       - FROM_EMAIL
