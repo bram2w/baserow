@@ -255,8 +255,7 @@ if os.getenv("EMAIL_SMTP", ""):
     EMAIL_HOST_USER = os.getenv("EMAIL_SMTP_USER", "")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_SMTP_PASSWORD", "")
 else:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
+    CELERY_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
