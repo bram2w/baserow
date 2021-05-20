@@ -205,6 +205,22 @@ export default {
 
     el.sortableMoved = false
 
+    // It could be that the element or a child element has a click handler. When the
+    // user releases the mouse pointer, that click event could also be triggered
+    // which we don't because we are dragging the element instead of clicking on it
+    // directly. This makes sure that when releasing the mouse pointer, that click
+    // event is stopped.
+    const preventOtherClickEvent = (event) => {
+      event.stopPropagation()
+      window.removeEventListener('click', preventOtherClickEvent, true)
+    }
+    window.addEventListener('click', preventOtherClickEvent, true)
+    // Remove the event because it could be that the user wants to click on the
+    // element right after it has been moved.
+    setTimeout(() => {
+      window.removeEventListener('click', preventOtherClickEvent, true)
+    })
+
     const oldOrder = [...parent.childNodes].map((e) => e.sortableId)
     const newOrder = oldOrder.filter((id) => id !== el.sortableId)
     const targetIndex = el.sortableBeforeElement

@@ -1,13 +1,11 @@
 <template>
   <li class="tree__sub" :class="{ active: table._.selected }">
     <a class="tree__sub-link" @click="selectTable(database, table)">
-      <div>
-        <Editable
-          ref="rename"
-          :value="table.name"
-          @change="renameTable(database, table, $event)"
-        ></Editable>
-      </div>
+      <Editable
+        ref="rename"
+        :value="table.name"
+        @change="renameTable(database, table, $event)"
+      ></Editable>
     </a>
     <a
       v-show="!database._.loading"

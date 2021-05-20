@@ -8,13 +8,11 @@
   >
     <div class="tree__action">
       <a class="tree__link">
-        <div>
-          <i
-            class="tree__icon tree__icon--type fas"
-            :class="'fa-' + application._.type.iconClass"
-          ></i>
-          {{ application.name }}
-        </div>
+        <i
+          class="tree__icon tree__icon--type fas"
+          :class="'fa-' + application._.type.iconClass"
+        ></i>
+        {{ application.name }}
       </a>
     </div>
     <template

@@ -8,13 +8,11 @@
   >
     <div class="tree__action">
       <a class="tree__link" @click="$emit('selected', application)">
-        <div>
-          <i
-            class="tree__icon tree__icon--type fas"
-            :class="'fa-' + application._.type.iconClass"
-          ></i>
-          {{ application.name }}
-        </div>
+        <i
+          class="tree__icon tree__icon--type fas"
+          :class="'fa-' + application._.type.iconClass"
+        ></i>
+        {{ application.name }}
       </a>
     </div>
     <template v-if="application._.selected">
@@ -26,9 +24,7 @@
           :class="{ active: isTableActive(table) }"
         >
           <a class="tree__sub-link" @click="selectTable(application, table)">
-            <div>
-              {{ table.name }}
-            </div>
+            {{ table.name }}
           </a>
         </li>
       </ul>

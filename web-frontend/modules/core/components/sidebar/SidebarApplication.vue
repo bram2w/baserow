@@ -8,17 +8,15 @@
   >
     <div class="tree__action tree__action--has-options" data-sortable-handle>
       <a class="tree__link" @click="$emit('selected', application)">
-        <div>
-          <i
-            class="tree__icon tree__icon--type fas"
-            :class="'fa-' + application._.type.iconClass"
-          ></i>
-          <Editable
-            ref="rename"
-            :value="application.name"
-            @change="renameApplication(application, $event)"
-          ></Editable>
-        </div>
+        <i
+          class="tree__icon tree__icon--type fas"
+          :class="'fa-' + application._.type.iconClass"
+        ></i>
+        <Editable
+          ref="rename"
+          :value="application.name"
+          @change="renameApplication(application, $event)"
+        ></Editable>
       </a>
       <a
         ref="contextLink"
