@@ -60,6 +60,7 @@
 
   color: $color-primary-900;
   font-size: 14px;
+  display: block;
 
   &:hover {
     text-decoration: none;
@@ -132,6 +133,7 @@
 
 .tree__sub-link {
   @extend %tree_sub-size;
+  @extend %ellipsis;
 
   color: $color-primary-900;
   display: block;

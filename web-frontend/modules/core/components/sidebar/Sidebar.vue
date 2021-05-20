@@ -75,10 +75,8 @@
               :class="{ 'tree__action--disabled': isAdminPage }"
             >
               <a class="tree__link" @click.prevent="admin()">
-                <div>
-                  <i class="tree__icon fas fa-users-cog"></i>
-                  <span class="sidebar__item-name">Admin</span>
-                </div>
+                <i class="tree__icon fas fa-users-cog"></i>
+                <span class="sidebar__item-name">Admin</span>
               </a>
             </div>
             <ul v-show="isAdminPage" class="tree sidebar__tree">
@@ -97,15 +95,11 @@
                     :to="{ name: adminType.routeName }"
                     class="tree__link"
                   >
-                    <div>
-                      <i
-                        class="tree__icon fas"
-                        :class="'fa-' + adminType.iconClass"
-                      ></i>
-                      <span class="sidebar__item-name">{{
-                        adminType.name
-                      }}</span>
-                    </div>
+                    <i
+                      class="tree__icon fas"
+                      :class="'fa-' + adminType.iconClass"
+                    ></i>
+                    <span class="sidebar__item-name">{{ adminType.name }}</span>
                   </nuxt-link>
                 </div>
               </li>
@@ -125,7 +119,7 @@
                       0
                     )
                   "
-                  ><div>{{ selectedGroup.name }}</div></a
+                  >{{ selectedGroup.name }}</a
                 >
                 <GroupsContext ref="groupSelect"></GroupsContext>
               </div>
@@ -133,10 +127,8 @@
             <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
               <div class="tree__action">
                 <a class="tree__link" @click="$refs.groupMembersModal.show()">
-                  <div>
-                    <i class="tree__icon tree__icon--type fas fa-users"></i>
-                    Invite others
-                  </div>
+                  <i class="tree__icon tree__icon--type fas fa-users"></i>
+                  Invite others
                 </a>
                 <GroupMembersModal
                   ref="groupMembersModal"
@@ -190,7 +182,7 @@
                 <a
                   class="tree__link tree__link--group"
                   @click="$store.dispatch('group/select', group)"
-                  ><div>{{ group.name }}</div></a
+                  >{{ group.name }}</a
                 >
                 <i class="tree__right-icon fas fa-arrow-right"></i>
               </div>
