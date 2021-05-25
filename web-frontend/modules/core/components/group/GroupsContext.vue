@@ -14,6 +14,7 @@
     </div>
     <ul
       v-if="!isLoading && isLoaded && groups.length > 0"
+      v-auto-overflow-scroll
       class="select__items"
     >
       <GroupsContextItem

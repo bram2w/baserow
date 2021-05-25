@@ -569,7 +569,7 @@
                 placeholder="Search views"
               />
             </div>
-            <ul class="select__items">
+            <ul v-auto-overflow-scroll class="select__items">
               <li class="select__item active">
                 <a href="#" class="select__item-link">
                   <div class="select__item-name">Group name 1</div>
@@ -619,7 +619,7 @@
                 placeholder="Search views"
               />
             </div>
-            <ul class="select__items">
+            <ul v-auto-overflow-scroll class="select__items">
               <li class="select__item">
                 <a href="#" class="select__item-link">
                   <div class="select__item-name">

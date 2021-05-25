@@ -93,6 +93,9 @@ class DatabaseConfig(AppConfig):
             NotEmptyViewFilterType,
             DateEqualViewFilterType,
             DateNotEqualViewFilterType,
+            DateEqualsTodayViewFilterType,
+            DateEqualsCurrentMonthViewFilterType,
+            DateEqualsCurrentYearViewFilterType,
             HigherThanViewFilterType,
             LowerThanViewFilterType,
             ContainsViewFilterType,
@@ -112,6 +115,9 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
+        view_filter_type_registry.register(DateEqualsTodayViewFilterType())
+        view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())
+        view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
         view_filter_type_registry.register(BooleanViewFilterType())

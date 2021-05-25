@@ -12,7 +12,11 @@
     <div v-if="isLoading" class="context--loading">
       <div class="loading"></div>
     </div>
-    <ul v-if="!isLoading && views.length > 0" class="select__items">
+    <ul
+      v-if="!isLoading && views.length > 0"
+      v-auto-overflow-scroll
+      class="select__items"
+    >
       <ViewsContextItem
         v-for="view in searchAndOrder(views)"
         :key="view.id"

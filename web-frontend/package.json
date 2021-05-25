@@ -25,6 +25,7 @@
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.15",
     "moment": "^2.26.0",
+    "moment-timezone": "^0.5.33",
     "node-sass": "^5.0.0",
     "normalize-scss": "^7.0.1",
     "nuxt": "^2.14.12",
