@@ -1,3 +1,5 @@
+from freezegun import freeze_time
+
 import pytest
 from datetime import date
 from pytz import timezone
@@ -1200,6 +1202,103 @@ def test_date_equal_filter_type(data_fixture):
     filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 4
+
+
+@pytest.mark.django_db
+def test_date_day_month_year_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 2, 1),
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 1, 1),
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 1, 2),
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{date_field.id}": None,
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2010, 1, 1),
+        }
+    )
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view, field=date_field, type="date_equals_today", value="UTC"
+    )
+
+    with freeze_time("2021-01-01 01:01"):
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 1
+        assert row.id not in ids
+
+        filter.type = "date_equals_month"
+        filter.save()
+
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 2
+        assert row_2.id in ids
+        assert row_3.id in ids
+
+        filter.type = "date_equals_year"
+        filter.save()
+
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 3
+        assert row.id in ids
+        assert row_2.id in ids
+        assert row_3.id in ids
+
+    filter.type = "date_equals_today"
+    filter.save()
+
+    with freeze_time("2021-01-02 01:01"):
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 1
+        assert row_3.id in ids
+
+        filter.value = "Etc/GMT+2"
+        filter.save()
+
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 1
+        assert row.id not in ids
+
+        filter.value = "NOT_EXISTING_SO_WILL_BE_UTC"
+        filter.save()
+
+        ids = [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+        assert len(ids) == 1
+        assert row_3.id in ids
 
 
 @pytest.mark.django_db

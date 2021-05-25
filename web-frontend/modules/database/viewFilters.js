@@ -1,9 +1,12 @@
+import moment from 'moment'
+
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'
 import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/view/ViewFilterTypeSelectOptions'
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
+import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
 import { trueString } from '@baserow/modules/database/utils/constants'
 
 export class ViewFilterType extends Registerable {
@@ -51,6 +54,15 @@ export class ViewFilterType extends Registerable {
    */
   getInputComponent() {
     return null
+  }
+
+  /**
+   * Should return the default value when a new filter of this type is created. In
+   * almost all cases this should be an empty string, but with timezone sensitive
+   * filters we might want use the current timezone.
+   */
+  getDefaultValue() {
+    return ''
   }
 
   /**
@@ -287,6 +299,79 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
     rowValue = rowValue.slice(0, 10)
 
     return filterValue === '' || rowValue !== filterValue
+  }
+}
+
+export class DateEqualsTodayViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_equals_today'
+  }
+
+  getName() {
+    return 'is today'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeTimeZone
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  getDefaultValue() {
+    return new Intl.DateTimeFormat().resolvedOptions().timeZone
+  }
+
+  prepareValue() {
+    return this.getDefaultValue()
+  }
+
+  getSliceLength() {
+    // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
+    return 10
+  }
+
+  matches(rowValue, filterValue) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+
+    const sliceLength = this.getSliceLength()
+    rowValue = rowValue.toString().toLowerCase().trim()
+    rowValue = rowValue.slice(0, sliceLength)
+    const format = 'YYYY-MM-DD'.slice(0, sliceLength)
+    const today = moment().tz(filterValue).format(format)
+
+    return rowValue === today
+  }
+}
+
+export class DateEqualsCurrentMonthViewFilterType extends DateEqualsTodayViewFilterType {
+  static getType() {
+    return 'date_equals_month'
+  }
+
+  getSliceLength() {
+    return 7
+  }
+
+  getName() {
+    return 'in this month'
+  }
+}
+
+export class DateEqualsCurrentYearViewFilterType extends DateEqualsTodayViewFilterType {
+  static getType() {
+    return 'date_equals_year'
+  }
+
+  getSliceLength() {
+    return 4
+  }
+
+  getName() {
+    return 'in this year'
   }
 }
 

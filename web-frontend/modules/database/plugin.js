@@ -28,6 +28,9 @@ import {
   BooleanViewFilterType,
   EmptyViewFilterType,
   NotEmptyViewFilterType,
+  DateEqualsTodayViewFilterType,
+  DateEqualsCurrentMonthViewFilterType,
+  DateEqualsCurrentYearViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -57,6 +60,15 @@ export default ({ store, app }) => {
   app.$registry.register('viewFilter', new NotEqualViewFilterType())
   app.$registry.register('viewFilter', new DateEqualViewFilterType())
   app.$registry.register('viewFilter', new DateNotEqualViewFilterType())
+  app.$registry.register('viewFilter', new DateEqualsTodayViewFilterType())
+  app.$registry.register(
+    'viewFilter',
+    new DateEqualsCurrentMonthViewFilterType()
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateEqualsCurrentYearViewFilterType()
+  )
   app.$registry.register('viewFilter', new ContainsViewFilterType())
   app.$registry.register('viewFilter', new FilenameContainsViewFilterType())
   app.$registry.register('viewFilter', new ContainsNotViewFilterType())

@@ -364,6 +364,12 @@ export const actions = {
       values.type = compatibleType.type
     }
 
+    // If the value is not provided, then we use the default value related to the type.
+    if (!Object.prototype.hasOwnProperty.call(values, 'value')) {
+      const viewFilterType = this.$registry.get('viewFilter', values.type)
+      values.value = viewFilterType.getDefaultValue()
+    }
+
     const filter = Object.assign({}, values)
     populateFilter(filter)
     filter.id = uuid()

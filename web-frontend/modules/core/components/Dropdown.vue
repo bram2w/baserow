@@ -30,7 +30,7 @@
           @keyup="search(query)"
         />
       </div>
-      <ul ref="items" class="select__items">
+      <ul ref="items" v-auto-overflow-scroll class="select__items">
         <slot></slot>
       </ul>
     </div>
