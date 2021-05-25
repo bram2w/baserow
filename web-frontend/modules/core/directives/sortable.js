@@ -48,8 +48,10 @@ export default {
       ? el.querySelector(binding.value.handle)
       : el
 
-    el.mousedownEvent = () => {
+    el.mousedownEvent = (event) => {
       el.sortableMoved = false
+      el.sortableStartClientX = event.clientX
+      el.sortableStartClientY = event.clientY
 
       el.mouseMoveEvent = (event) => binding.def.move(el, binding, event)
       window.addEventListener('mousemove', el.mouseMoveEvent)
@@ -103,7 +105,21 @@ export default {
     } else {
       event = el.sortableLastMoveEvent
     }
-    el.sortableMoved = true
+
+    // Sometimes the user could accidentally drag the element one or two pixels while
+    // clicking it. Because it could be annoying that the click doesn't work because
+    // the moving state started, we check here if the user has at least dragged
+    // the element 3 pixels vertically or horizontally before starting the moved state.
+    if (!el.sortableMoved) {
+      if (
+        Math.abs(event.clientX - el.sortableStartClientX) > 3 ||
+        Math.abs(event.clientY - el.sortableStartClientY) > 3
+      ) {
+        el.sortableMoved = true
+      } else {
+        return
+      }
+    }
 
     // Set pointer events to none because that will prevent hover and click
     // effects.
