@@ -1,3 +1,13 @@
+from datetime import datetime
+
+from pytz import timezone as pytz_timezone
+from pytz.exceptions import UnknownTimeZoneError
+
+from django.utils import timezone
+
+from rest_framework import status
+from rest_framework.exceptions import APIException
+
 from .utils import (
     map_exceptions as map_exceptions_utility,
     get_request,
@@ -190,6 +200,54 @@ def allowed_includes(*allowed):
 
             for include in allowed:
                 kwargs[include] = include in includes
+
+            return func(*args, **kwargs)
+
+        return func_wrapper
+
+    return validate_decorator
+
+
+def accept_timezone():
+    """
+    This view decorator optionally accepts a timezone GET parameter. If provided, then
+    the timezone is parsed via the pytz package and a now date is calculated with
+    that timezone. A list of supported timezones can be found on
+    https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568.
+
+    class SomeView(View):
+        @accept_timezone()
+        def get(self, request, now):
+            print(now.tzinfo)
+
+    HTTP /some-view/?timezone=Etc/GMT-1
+    >>> <StaticTzInfo 'Etc/GMT-1'>
+    """
+
+    def validate_decorator(func):
+        def func_wrapper(*args, **kwargs):
+            request = get_request(args)
+
+            timezone_string = request.GET.get("timezone")
+
+            try:
+                kwargs["now"] = (
+                    datetime.utcnow().astimezone(pytz_timezone(timezone_string))
+                    if timezone_string
+                    else timezone.now()
+                )
+            except UnknownTimeZoneError:
+                exc = APIException(
+                    {
+                        "error": "UNKNOWN_TIME_ZONE_ERROR",
+                        "detail": f"The timezone {timezone_string} is not supported. A "
+                        f"list of support timezones can be found on "
+                        f"https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3e"
+                        f"ec7568.",
+                    }
+                )
+                exc.status_code = status.HTTP_400_BAD_REQUEST
+                raise exc
 
             return func(*args, **kwargs)
 

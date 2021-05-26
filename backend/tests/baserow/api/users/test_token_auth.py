@@ -12,6 +12,7 @@ from django.contrib.auth import get_user_model
 from rest_framework_jwt.settings import api_settings
 
 from baserow.core.registries import plugin_registry, Plugin
+from baserow.core.models import UserLogEntry
 
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -75,6 +76,12 @@ def test_token_auth(api_client, data_fixture):
     user.refresh_from_db()
     assert user.last_login == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
 
+    logs = UserLogEntry.objects.all()
+    assert len(logs) == 1
+    assert logs[0].actor_id == user.id
+    assert logs[0].action == "SIGNED_IN"
+    assert logs[0].timestamp == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
+
     with freeze_time("2020-01-02 12:00"):
         response = api_client.post(
             reverse("api:user:token_auth"),
@@ -90,7 +97,7 @@ def test_token_auth(api_client, data_fixture):
         assert json["user"]["is_staff"] is False
 
     user.refresh_from_db()
-    assert user.last_login == datetime(2020, 1, 2, 12, 00, tzinfo=timezone("UTC"))
+    assert user.last_login == datetime(2020, 1, 2, 12, 0, tzinfo=timezone("UTC"))
 
 
 @pytest.mark.django_db

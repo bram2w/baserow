@@ -1,0 +1,59 @@
+.admin-dashboard {
+  padding: 30px;
+}
+
+.admin-dashboard__box {
+  position: relative;
+  border: 1px solid $color-neutral-200;
+  background-color: $white;
+  border-radius: 6px;
+  padding: 30px;
+  height: 100%;
+}
+
+.admin-dashboard__box-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.admin-dashboard__numbers {
+  &:not(:first-child) {
+    margin-top: 33px;
+  }
+
+  &:not(:last-child) {
+    margin-bottom: 33px;
+  }
+}
+
+.admin-dashboard__numbers-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: $color-neutral-300;
+  margin-bottom: 8px;
+}
+
+.admin-dashboard__numbers-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: $color-primary-900;
+  margin-bottom: 8px;
+}
+
+.admin-dashboard__numbers-percentage {
+  font-size: 14px;
+  line-height: 14px;
+  height: 14px;
+  min-width: 1px;
+  font-weight: 600;
+  color: $color-neutral-300;
+}
+
+.admin-dashboard__numbers-percentage-value {
+  color: $color-success-500;
+  margin-right: 4px;
+
+  &.admin-dashboard__numbers-percentage-value--negative {
+    color: $color-error-500;
+  }
+}
