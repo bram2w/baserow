@@ -50,6 +50,14 @@ class TokenAuthentication(BaseAuthentication):
                 {"detail": msg, "error": "ERROR_TOKEN_DOES_NOT_EXIST"}
             )
 
+        if not token.user.is_active:
+            raise AuthenticationFailed(
+                {
+                    "detail": "The user related to the token is disabled.",
+                    "error": "ERROR_USER_NOT_ACTIVE",
+                }
+            )
+
         token = handler.update_token_usage(token)
         request.user_token = token
         return token.user, token
