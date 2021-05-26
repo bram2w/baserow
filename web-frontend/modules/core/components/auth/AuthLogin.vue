@@ -133,10 +133,22 @@ export default {
           // Because the API server does not yet respond with proper error codes we
           // manually have to add the error here.
           if (response && response.status === 400) {
-            this.showError(
-              'Incorrect credentials',
-              'The provided e-mail address or password is ' + 'incorrect.'
-            )
+            // In the future we expect the backend to respond with a proper error code
+            // to indicate what went wrong.
+            if (
+              response.data.non_field_errors &&
+              response.data.non_field_errors[0] === 'User account is disabled.'
+            ) {
+              this.showError(
+                'Account disabled',
+                'This user account has been disabled.'
+              )
+            } else {
+              this.showError(
+                'Incorrect credentials',
+                'The provided e-mail address or password is incorrect.'
+              )
+            }
             this.credentials.password = ''
             this.$v.$reset()
             this.$refs.password.focus()

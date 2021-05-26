@@ -87,6 +87,8 @@ class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
         login timestamp.
         """
 
+        # In the future, when migrating away from the JWT implementation, we want to
+        # respond with machine readable error codes when authentication fails.
         validated_data = super().validate(attrs)
         update_last_login(None, validated_data["user"])
         # Call the user_signed_in method for each plugin that is un the registry to

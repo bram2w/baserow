@@ -70,6 +70,18 @@ def test_list_rows(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
     assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
 
+    user.is_active = False
+    user.save()
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_USER_NOT_ACTIVE"
+    user.is_active = True
+    user.save()
+
     response = api_client.get(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
         format="json",
