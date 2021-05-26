@@ -251,7 +251,7 @@ EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 
 if os.getenv("EMAIL_SMTP", ""):
     CELERY_EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    # EMAIL_SMTP_USE_TLS OR EMAIL_SMTP_USE_TLS for backwards compatibilty after
+    # EMAIL_SMTP_USE_TLS OR EMAIL_SMTP_USE_TLS for backwards compatibility after
     # fixing #448.
     EMAIL_USE_TLS = bool(os.getenv("EMAIL_SMTP_USE_TLS", "")) or bool(
         os.getenv("EMAIL_SMPT_USE_TLS", "")

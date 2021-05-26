@@ -237,3 +237,13 @@ class Template(models.Model):
 
     class Meta:
         ordering = ("name",)
+
+
+class UserLogEntry(models.Model):
+    actor = models.ForeignKey(User, on_delete=models.CASCADE)
+    action = models.CharField(max_length=20, choices=(("SIGNED_IN", "Signed in"),))
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        get_latest_by = "timestamp"
+        ordering = ["-timestamp"]

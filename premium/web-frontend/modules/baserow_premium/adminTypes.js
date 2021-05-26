@@ -1,5 +1,27 @@
 import { AdminType } from '@baserow/modules/core/adminTypes'
 
+export class DashboardType extends AdminType {
+  static getType() {
+    return 'dashboard'
+  }
+
+  getIconClass() {
+    return 'chart-line'
+  }
+
+  getName() {
+    return 'Dashboard'
+  }
+
+  getRouteName() {
+    return 'admin-dashboard'
+  }
+
+  getOrder() {
+    return 0
+  }
+}
+
 export class UsersAdminType extends AdminType {
   static getType() {
     return 'users'
@@ -18,6 +40,6 @@ export class UsersAdminType extends AdminType {
   }
 
   getOrder() {
-    return 0
+    return 1
   }
 }
