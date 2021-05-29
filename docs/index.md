@@ -79,3 +79,8 @@ Everything related to custom plugin development.
   format by creating a field type.
 * [Creata a field converter](./plugins/field-converter.md): Converters alter a field and
   convert the related data for specific field changes.
+
+## Other
+
+* [External resources related to Baserow](./other/external-resources.md): A list of
+  external third party resources.
