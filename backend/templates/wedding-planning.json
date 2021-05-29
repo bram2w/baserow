@@ -1,0 +1,880 @@
+{
+  "baserow_template_version": 1,
+  "name": "Wedding Planning",
+  "icon": "list-alt",
+  "keywords": [
+    "Planning",
+    "Wedding"
+  ],
+  "categories": [
+    "Personal",
+    "Events"
+  ],
+  "export": [
+    {
+      "id": 7,
+      "name": "Wedding Planning",
+      "order": 2,
+      "type": "database",
+      "tables": [
+        {
+          "id": 18,
+          "name": "Venues",
+          "order": 1,
+          "fields": [
+            {
+              "id": 107,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 108,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 109,
+              "type": "boolean",
+              "name": "Available On Date",
+              "order": 2,
+              "primary": false
+            },
+            {
+              "id": 122,
+              "type": "text",
+              "name": "Location",
+              "order": 3,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 123,
+              "type": "file",
+              "name": "Pictures",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 124,
+              "type": "file",
+              "name": "Map",
+              "order": 5,
+              "primary": false
+            },
+            {
+              "id": 125,
+              "type": "number",
+              "name": "Capacity",
+              "order": 6,
+              "primary": false,
+              "number_type": "INTEGER",
+              "number_decimal_places": 1,
+              "number_negative": false
+            },
+            {
+              "id": 126,
+              "type": "number",
+              "name": "Rental Cost",
+              "order": 7,
+              "primary": false,
+              "number_type": "DECIMAL",
+              "number_decimal_places": 2,
+              "number_negative": false
+            }
+          ],
+          "views": [
+            {
+              "id": 24,
+              "type": "grid",
+              "name": "All Venues",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 159,
+                  "field_id": 107,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 157,
+                  "field_id": 108,
+                  "width": 250,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 158,
+                  "field_id": 109,
+                  "width": 185,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 172,
+                  "field_id": 122,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 173,
+                  "field_id": 123,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 174,
+                  "field_id": 124,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 175,
+                  "field_id": 125,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 176,
+                  "field_id": 126,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_107": "Whitehall Estate",
+              "field_108": "Charming.",
+              "field_109": "true",
+              "field_122": "18301 Whitehall Estate Ln. Bluemont, VA, 20135",
+              "field_123": [
+                {
+                  "name": "YxnrH4KEFoBnMEaXrKmj8iQFrZztWbyc_b92c89baa68910a8576797b9fc54216c150da3e7cb6a48d2b73d2469acde294c.jpg",
+                  "visible_name": "0034_51_1304.jpg",
+                  "original_name": "0034_51_1304.jpg"
+                },
+                {
+                  "name": "zkCoutGVzMno7MsQAEAs8YeDA6V309cx_c91c10cf97da5e25ebeed6cf9307b891492b866c06a1822f97209f4a6e62d437.jpg",
+                  "visible_name": "0034dgw-100_51_1304.jpg",
+                  "original_name": "0034dgw-100_51_1304.jpg"
+                },
+                {
+                  "name": "af5TyEU9T48pNxaE57oxQaTPibco3Pik_10b5fb6f449297537f6ac237212354bd415bd4cb4948b5bfe004c5bd57288fc8.jpg",
+                  "visible_name": "0034sjw1089_51_1304.jpg",
+                  "original_name": "0034sjw1089_51_1304.jpg"
+                },
+                {
+                  "name": "bYnRLh8IsllugzJCtRzJCH2TJZnQDrjm_8f234a6945e785da40e35de6a7bc790846741fe4cb4f37ac2aca27dfdf55be60.jpg",
+                  "visible_name": "0107_51_1304.jpg",
+                  "original_name": "0107_51_1304.jpg"
+                }
+              ],
+              "field_124": [
+                {
+                  "name": "NGKMHHDtx5xKO8llym4nRsvVPlRdI5xx_684ea72d29bdbe3f4bb7d06f1111dfa4b884ef1253b292aa9f9543db4843fd74.png",
+                  "visible_name": "staticmap.png",
+                  "original_name": "staticmap.png"
+                }
+              ],
+              "field_125": "300",
+              "field_126": "5000.00"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_107": "The Sterling Castle",
+              "field_108": null,
+              "field_109": "true",
+              "field_122": "389 Deseret Dr. Shelby, AL, 35143",
+              "field_123": [
+                {
+                  "name": "rAtoIc2AKoddYDodfY5I5I6BWC6hLB8J_20639c6de32036c9a976d810ae217561f4d03a3b7a5515d92c0fa09bd2b06503.jpg",
+                  "visible_name": "001_51_415765.jpg",
+                  "original_name": "001_51_415765.jpg"
+                },
+                {
+                  "name": "jyufaLHg3OD6rLq8f6yw24I8LbIDz3Ku_d6ca21a3aa8d03c7afbe869441dbbd696bff45cca1a51d6ae816fb40786fd119.jpg",
+                  "visible_name": "1527155476-7af9a04bb3f3fecb-152...8e497-1527155423728-1-0001.jpg",
+                  "original_name": "1527155476-7af9a04bb3f3fecb-152...8e497-1527155423728-1-0001.jpg"
+                },
+                {
+                  "name": "XdQpn1HIoXJ2CVwgTcASkxAZ2zf0iG5h_58b505f040ed850a9162bd1779e79a38b5b2a5afc33d84416ffbf038ac20c6b9.jpg",
+                  "visible_name": "1437888555167-010.jpg",
+                  "original_name": "1437888555167-010.jpg"
+                },
+                {
+                  "name": "1MMo9chJmd2AEIGIUOxTOHOltYEC5lFh_d94b5857de2d3b7d3be039150bf8f4e2c29306009329550cbc0df184e57bfe5a.jpg",
+                  "visible_name": "alabama-indian-wedding-004_51_415765_v2.jpg",
+                  "original_name": "alabama-indian-wedding-004_51_415765_v2.jpg"
+                }
+              ],
+              "field_124": [
+                {
+                  "name": "h5iYKuQktTTPyOSdnblsptZTmXRUf2Ps_97d9ac6e75f25316d7c07d6523d663f0322b0d3414821a5d880a760946d619dc.png",
+                  "visible_name": "staticmap.png",
+                  "original_name": "staticmap.png"
+                }
+              ],
+              "field_125": "300",
+              "field_126": "6500.00"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_107": "Great Wolf Lodge",
+              "field_108": "",
+              "field_109": "false",
+              "field_122": "Address Baraboo, WI, 53913",
+              "field_123": [
+                {
+                  "name": "XnXeaHpeFXL5Kpxm5yQehPeOydl2g5uv_2102984328fff0a5841f05bfef0284775cee3daa430552e940b56aa916ed7fe5.jpg",
+                  "visible_name": "black-wolf-ballroom_51_1993675-161244083644086.jpg",
+                  "original_name": "black-wolf-ballroom_51_1993675-161244083644086.jpg"
+                },
+                {
+                  "name": "8kGWYapjqJJFI8xc7jO6xbAzC4zGgWU9_8c518dff3e2a3b12d27a5342f16b329a3e68470a14cb0a70a8a0495d2d3a13c5.jpg",
+                  "visible_name": "great-lodge-exterior_51_1993675-161244083977034.jpg",
+                  "original_name": "great-lodge-exterior_51_1993675-161244083977034.jpg"
+                },
+                {
+                  "name": "HhQiJzDCk4RHnEv4MiU3wl2ZHP4WBjyD_f214e88c8289771dba8430ba2d3a00d4879db3c66b314bd9de2ea36d0b0740aa.jpg",
+                  "visible_name": "spacious-condo_51_1993675-161244084197866.jpg",
+                  "original_name": "spacious-condo_51_1993675-161244084197866.jpg"
+                }
+              ],
+              "field_124": [
+                {
+                  "name": "G1Bu1MzWcBYOwb0dMoCrEWYn45L8suWB_fd576d95ed94fb7d1220a2b338de59389fd6b9ec56a1a4862cfc55296ecf6ee0.png",
+                  "visible_name": "staticmap.png",
+                  "original_name": "staticmap.png"
+                }
+              ],
+              "field_125": "175",
+              "field_126": null
+            }
+          ]
+        },
+        {
+          "id": 19,
+          "name": "Guests",
+          "order": 2,
+          "fields": [
+            {
+              "id": 110,
+              "type": "text",
+              "name": "Guest",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 111,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 127,
+              "type": "single_select",
+              "name": "Dinner",
+              "order": 3,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 47,
+                  "value": "Beef",
+                  "color": "orange",
+                  "order": 0
+                },
+                {
+                  "id": 48,
+                  "value": "Chicken",
+                  "color": "green",
+                  "order": 1
+                },
+                {
+                  "id": 49,
+                  "value": "Fish",
+                  "color": "light-orange",
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 128,
+              "type": "text",
+              "name": "Address",
+              "order": 4,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 129,
+              "type": "boolean",
+              "name": "Invite Sent",
+              "order": 5,
+              "primary": false
+            },
+            {
+              "id": 130,
+              "type": "file",
+              "name": "Pictures",
+              "order": 6,
+              "primary": false
+            },
+            {
+              "id": 131,
+              "type": "link_row",
+              "name": "Dinner Table",
+              "order": 7,
+              "primary": false,
+              "link_row_table_id": 22,
+              "link_row_related_field_id": 132
+            },
+            {
+              "id": 133,
+              "type": "boolean",
+              "name": "Confirmed",
+              "order": 8,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 25,
+              "type": "grid",
+              "name": "All Guests",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 162,
+                  "field_id": 110,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 160,
+                  "field_id": 111,
+                  "width": 400,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 177,
+                  "field_id": 127,
+                  "width": 145,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 178,
+                  "field_id": 128,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 179,
+                  "field_id": 129,
+                  "width": 141,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 180,
+                  "field_id": 130,
+                  "width": 131,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 181,
+                  "field_id": 131,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 182,
+                  "field_id": 133,
+                  "width": 134,
+                  "hidden": false,
+                  "order": 5
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_110": "Mrs. Shonta R. Calloway",
+              "field_111": null,
+              "field_127": 49,
+              "field_128": "4733  Biddie Lane, Richmond, VA, 23219",
+              "field_129": "true",
+              "field_130": [
+                {
+                  "name": "4yo8ZGBActbudMMgYNaBb9y6mcoMjYEP_ec9d9b3de5c1b80d18ca00085e9b61b8ad5500089988bc2dc498f930c1fd9f39.jpg",
+                  "visible_name": "shonta.jpg",
+                  "original_name": "shonta.jpg"
+                }
+              ],
+              "field_131": [
+                1
+              ],
+              "field_133": "true"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_110": "Mr. Robert Little",
+              "field_111": null,
+              "field_127": 47,
+              "field_128": "3496  Timber Ridge Road, Sacramento, CA, 95817",
+              "field_129": "false",
+              "field_130": [
+                {
+                  "name": "pqIAFjFvUAyuygxz93WtwHJbFfe1a6hl_d42b9e4b36d412972c8555e09073d96e03cca34f5e8c2ed10e43576f2fe80f95.jpg",
+                  "visible_name": "robert.jpg",
+                  "original_name": "robert.jpg"
+                }
+              ],
+              "field_131": [
+                2
+              ],
+              "field_133": "false"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_110": "Ms. Barbara K Brown",
+              "field_111": "",
+              "field_127": 48,
+              "field_128": "4914  Collins Avenue, Columbus, OH, 43213",
+              "field_129": "true",
+              "field_130": [
+                {
+                  "name": "q3unsmRhUOgzA3oHV3OaAtyZHAfAAuTx_48d63294f6fc3f9fea87871c1e88f95ccdd9a11c33786b061dec8556d836dee3.jpg",
+                  "visible_name": "barbara.jpg",
+                  "original_name": "barbara.jpg"
+                }
+              ],
+              "field_131": [
+                2
+              ],
+              "field_133": "false"
+            }
+          ]
+        },
+        {
+          "id": 20,
+          "name": "Supplies",
+          "order": 3,
+          "fields": [
+            {
+              "id": 113,
+              "type": "text",
+              "name": "Item",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 114,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 134,
+              "type": "file",
+              "name": "Pictures",
+              "order": 3,
+              "primary": false
+            },
+            {
+              "id": 135,
+              "type": "link_row",
+              "name": "Vendor",
+              "order": 4,
+              "primary": false,
+              "link_row_table_id": 21,
+              "link_row_related_field_id": 136
+            },
+            {
+              "id": 137,
+              "type": "single_select",
+              "name": "Category",
+              "order": 5,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 50,
+                  "value": "Reception",
+                  "color": "light-gray",
+                  "order": 0
+                },
+                {
+                  "id": 51,
+                  "value": "Ceremony",
+                  "color": "red",
+                  "order": 1
+                }
+              ]
+            },
+            {
+              "id": 138,
+              "type": "number",
+              "name": "Cost",
+              "order": 6,
+              "primary": false,
+              "number_type": "DECIMAL",
+              "number_decimal_places": 2,
+              "number_negative": false
+            }
+          ],
+          "views": [
+            {
+              "id": 26,
+              "type": "grid",
+              "name": "All Supplies",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 165,
+                  "field_id": 113,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 163,
+                  "field_id": 114,
+                  "width": 400,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 183,
+                  "field_id": 134,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 184,
+                  "field_id": 135,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 185,
+                  "field_id": 137,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 186,
+                  "field_id": 138,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_113": "Cake",
+              "field_114": null,
+              "field_134": [],
+              "field_135": [
+                1
+              ],
+              "field_137": 50,
+              "field_138": "1500.00"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_113": "Wedding Band",
+              "field_114": null,
+              "field_134": [],
+              "field_135": [
+                2
+              ],
+              "field_137": 51,
+              "field_138": "1000.00"
+            }
+          ]
+        },
+        {
+          "id": 21,
+          "name": "Vendors",
+          "order": 4,
+          "fields": [
+            {
+              "id": 116,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 117,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 136,
+              "type": "link_row",
+              "name": "Supplies",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 20,
+              "link_row_related_field_id": 135
+            },
+            {
+              "id": 139,
+              "type": "phone_number",
+              "name": "Phone",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 140,
+              "type": "email",
+              "name": "Email",
+              "order": 5,
+              "primary": false
+            },
+            {
+              "id": 248,
+              "type": "text",
+              "name": "Contact",
+              "order": 6,
+              "primary": false,
+              "text_default": ""
+            }
+          ],
+          "views": [
+            {
+              "id": 27,
+              "type": "grid",
+              "name": "All Vendors",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 168,
+                  "field_id": 116,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 166,
+                  "field_id": 117,
+                  "width": 400,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 187,
+                  "field_id": 136,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 188,
+                  "field_id": 139,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 189,
+                  "field_id": 140,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 310,
+                  "field_id": 248,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_116": "The Great Pâtisserie",
+              "field_117": null,
+              "field_136": [
+                1
+              ],
+              "field_139": "614-864-6446",
+              "field_140": "john@cakes.com",
+              "field_248": "John Smith"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_116": "The Great Band",
+              "field_117": null,
+              "field_136": [
+                2
+              ],
+              "field_139": "614-872-5512",
+              "field_140": "carter@band.com",
+              "field_248": "Jessie Carter"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_116": "",
+              "field_117": "",
+              "field_136": [],
+              "field_139": "",
+              "field_140": "",
+              "field_248": ""
+            }
+          ]
+        },
+        {
+          "id": 22,
+          "name": "Seating Chart",
+          "order": 5,
+          "fields": [
+            {
+              "id": 119,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 120,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 132,
+              "type": "link_row",
+              "name": "Guests",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 19,
+              "link_row_related_field_id": 131
+            }
+          ],
+          "views": [
+            {
+              "id": 28,
+              "type": "grid",
+              "name": "All Seats",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 171,
+                  "field_id": 119,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 169,
+                  "field_id": 120,
+                  "width": 400,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 190,
+                  "field_id": 132,
+                  "width": 535,
+                  "hidden": false,
+                  "order": 1
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_119": "Table A",
+              "field_120": null,
+              "field_132": [
+                1
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_119": "Table B",
+              "field_120": null,
+              "field_132": [
+                2,
+                3
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
