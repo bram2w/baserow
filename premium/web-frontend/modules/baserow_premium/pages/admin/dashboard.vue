@@ -21,7 +21,9 @@
               <div class="admin-dashboard__numbers-value">
                 {{ data.total_groups }}
               </div>
-              <div class="admin-dashboard__numbers-percentage"></div>
+              <div class="admin-dashboard__numbers-percentage">
+                <nuxt-link :to="{ name: 'admin-groups' }">view all</nuxt-link>
+              </div>
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
@@ -173,7 +175,7 @@
 
 <script>
 import ActiveUsers from '@baserow_premium/components/admin/dashboard/charts/ActiveUsers'
-import AdminDashboardService from '@baserow_premium/services/adminDashboard'
+import AdminDashboardService from '@baserow_premium/services/admin/dashboard'
 
 export default {
   components: { ActiveUsers },
@@ -183,6 +185,9 @@ export default {
     return {
       loading: true,
       data: {
+        total_users: 0,
+        total_groups: 0,
+        total_applications: 0,
         new_users_last_24_hours: 0,
         new_users_last_7_days: 0,
         new_users_last_30_days: 0,

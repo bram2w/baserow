@@ -203,6 +203,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table grid view"},
         {"name": "Database table rows"},
         {"name": "Database tokens"},
+        {"name": "Admin"},
     ],
 }
 

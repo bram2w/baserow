@@ -1,6 +1,6 @@
 import { BaserowPlugin } from '@baserow/modules/core/plugins'
 
-export class PremPlugin extends BaserowPlugin {
+export class PremiumPlugin extends BaserowPlugin {
   static getType() {
     return 'plugin'
   }

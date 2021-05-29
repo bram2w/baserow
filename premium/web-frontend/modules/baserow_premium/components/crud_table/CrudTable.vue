@@ -70,7 +70,7 @@
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import CrudTableSearch from '@baserow_premium/components/crud_table/CrudTableSearch'
 import Paginator from '@baserow/modules/core/components/Paginator'
-import CrudTableColumn from '@baserow_premium/crud_table/CrudTableColumn'
+import CrudTableColumn from '@baserow_premium/crud_table/crudTableColumn'
 
 /**
  * This component is a generic wrapper for a basic crud service which displays its
