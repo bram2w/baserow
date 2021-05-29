@@ -12,10 +12,14 @@
 * **Premium**: Added an admin dashboard.
 * **Premium**: Added group admin area allowing management of all baserow groups.
 * Added today, this month and this year filter.
-* Added Lightweight CRM, Wedding Planning and Book Catalog Template.
 * Added a page containing external resources to the docs.
 * Added a human-readable error message when a user tries to sign in with a deactivated
   account.
+* Templates:
+  * Lightweight CRM
+  * Wedding Planning
+  * Book Catalog
+  * App Pitch Planner
 
 ## Released (2021-05-11)
 

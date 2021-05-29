@@ -1,0 +1,479 @@
+{
+  "baserow_template_version": 1,
+  "name": "App Pitch Planner",
+  "icon": "chalkboard-teacher",
+  "keywords": ["keynote", "pitch", "presentation", "app", "idea", "product", "pitch deck", ",outline"],
+  "categories": ["Local Business", "Startup"],
+  "export": [
+    {
+      "id": 10001,
+      "name": "App Pitch Planner",
+      "order": 3,
+      "type": "database",
+      "tables": [
+        {
+          "id": 18672,
+          "name": "Outline",
+          "order": 1,
+          "fields": [
+            {
+              "id": 98303,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 98304,
+              "type": "long_text",
+              "name": "Outline",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 98305,
+              "type": "single_select",
+              "name": "Status",
+              "order": 2,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 3996,
+                  "value": "draft",
+                  "color": "red",
+                  "order": 0
+                },
+                {
+                  "id": 3997,
+                  "value": "in progress",
+                  "color": "dark-orange",
+                  "order": 1
+                },
+                {
+                  "id": 3998,
+                  "value": "done",
+                  "color": "dark-green",
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 98345,
+              "type": "number",
+              "name": "Duration (minutes)",
+              "order": 3,
+              "primary": false,
+              "number_type": "INTEGER",
+              "number_decimal_places": 1,
+              "number_negative": false
+            },
+            {
+              "id": 98355,
+              "type": "link_row",
+              "name": "Key points mentioned",
+              "order": 4,
+              "primary": false,
+              "link_row_table_id": 18677,
+              "link_row_related_field_id": 98356
+            },
+            {
+              "id": 98417,
+              "type": "link_row",
+              "name": "Tone / Pacing",
+              "order": 5,
+              "primary": false,
+              "link_row_table_id": 18693,
+              "link_row_related_field_id": 98418
+            }
+          ],
+          "views": [
+            {
+              "id": 19884,
+              "type": "grid",
+              "name": "Grid",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 91102,
+                  "field_id": 98303,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 91100,
+                  "field_id": 98304,
+                  "width": 368,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 91101,
+                  "field_id": 98305,
+                  "width": 115,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 91150,
+                  "field_id": 98345,
+                  "width": 126,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 91155,
+                  "field_id": 98355,
+                  "width": 202,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 91207,
+                  "field_id": 98417,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_98303": "Introduce yourself",
+              "field_98304": "Don't be cliche. Show them I am vulnerable. Be yourself. Don't be shy of being shy. Be funny, be stupid. Get their attention. Tell a story.",
+              "field_98305": null,
+              "field_98345": "1",
+              "field_98355": [],
+              "field_98417": [
+                1,
+                4
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_98303": "Define Problem",
+              "field_98304": "Otherwise, why would I create my product if there's no problem to solve?",
+              "field_98305": null,
+              "field_98345": "2",
+              "field_98355": [
+                2,
+                1
+              ],
+              "field_98417": [
+                3
+              ]
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_98303": "Provide Solution",
+              "field_98304": "Describe my idea from A to Z.",
+              "field_98305": 3998,
+              "field_98345": "5",
+              "field_98355": [
+                3,
+                2
+              ],
+              "field_98417": [
+                5
+              ]
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_98303": "Describe Market",
+              "field_98304": "An app for everybody is an app for nobody. I will focus on a particular market and make something they love. Others will follow. Mention competitors.",
+              "field_98305": 3996,
+              "field_98345": "5",
+              "field_98355": [
+                1
+              ],
+              "field_98417": [
+                5
+              ]
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_98303": "MVP",
+              "field_98304": "Show the audience my prototype, mockups, or anything tangible I made (with my team).",
+              "field_98305": 3998,
+              "field_98345": "3",
+              "field_98355": [
+                2
+              ],
+              "field_98417": [
+                1,
+                4,
+                5
+              ]
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_98303": "Roadmap",
+              "field_98304": "Show the audience my plan. Tell them how I'm gonna reach millions of people. Tell them why I am (and my team) the best to do that.",
+              "field_98305": 3997,
+              "field_98345": "3",
+              "field_98355": [],
+              "field_98417": [
+                3,
+                5
+              ]
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_98303": "Outro",
+              "field_98304": "Call to action. Make the audience think. Tell the audience how much resources (time/money) do I need. Be bold with numbers.",
+              "field_98305": 3997,
+              "field_98345": "3",
+              "field_98355": [
+                3
+              ],
+              "field_98417": [
+                1,
+                5
+              ]
+            }
+          ]
+        },
+        {
+          "id": 18677,
+          "name": "Key Points",
+          "order": 2,
+          "fields": [
+            {
+              "id": 98351,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 98352,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 98356,
+              "type": "link_row",
+              "name": "Outline",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 18672,
+              "link_row_related_field_id": 98355
+            }
+          ],
+          "views": [
+            {
+              "id": 19889,
+              "type": "grid",
+              "name": "Grid",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 91149,
+                  "field_id": 98351,
+                  "width": 276,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 91147,
+                  "field_id": 98352,
+                  "width": 299,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 91156,
+                  "field_id": 98356,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_98351": "People need focus in distracted world",
+              "field_98352": "I will talk about the problems people face during our times.",
+              "field_98356": [
+                2,
+                4
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_98351": "Great app should be invisible",
+              "field_98352": "I will talk about my technical knowledge and how my know-how can benefit customers: Notifications, integrations, clean UX, etc.",
+              "field_98356": [
+                2,
+                3,
+                5
+              ]
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_98351": "Make something people want",
+              "field_98352": "Make this my motto. Always stick to the value that my product provides to the people.",
+              "field_98356": [
+                3,
+                7
+              ]
+            }
+          ]
+        },
+        {
+          "id": 18693,
+          "name": "Tone / Pacing",
+          "order": 3,
+          "fields": [
+            {
+              "id": 98413,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 98416,
+              "type": "text",
+              "name": "Description",
+              "order": 1,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 98418,
+              "type": "link_row",
+              "name": "Outline",
+              "order": 2,
+              "primary": false,
+              "link_row_table_id": 18672,
+              "link_row_related_field_id": 98417
+            }
+          ],
+          "views": [
+            {
+              "id": 19905,
+              "type": "grid",
+              "name": "Grid",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 91205,
+                  "field_id": 98413,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 91206,
+                  "field_id": 98416,
+                  "width": 350,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 91222,
+                  "field_id": 98418,
+                  "width": 246,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_98413": "Funny",
+              "field_98416": "Improvise",
+              "field_98418": [
+                1,
+                5,
+                7
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_98413": "Fast",
+              "field_98416": "Try to avoid speaking fast",
+              "field_98418": []
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_98413": "Serious",
+              "field_98416": "Look concerned. I should care about the problem",
+              "field_98418": [
+                2,
+                6
+              ]
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_98413": "Slow",
+              "field_98416": "Try to look if I'm thinking",
+              "field_98418": [
+                1,
+                5
+              ]
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_98413": "Confident",
+              "field_98416": "Look them into the eyes (into the camera if Zoom)",
+              "field_98418": [
+                3,
+                4,
+                5,
+                6,
+                7
+              ]
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_98413": "Interactive",
+              "field_98416": "Ask questions to the audience",
+              "field_98418": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
