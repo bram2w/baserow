@@ -1,0 +1,828 @@
+{
+  "baserow_template_version": 1,
+  "name": "Lightweight CRM",
+  "icon": "address-book",
+  "keywords": [
+    "CRM",
+    "Sales",
+    "Local Business"
+  ],
+  "categories": [
+    "Local Business"
+  ],
+  "export": [
+    {
+      "id": 10,
+      "name": "Lightweight CRM",
+      "order": 1,
+      "type": "database",
+      "tables": [
+        {
+          "id": 31,
+          "name": "Companies",
+          "order": 1,
+          "fields": [
+            {
+              "id": 188,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 189,
+              "type": "text",
+              "name": "Address",
+              "order": 1,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 190,
+              "type": "single_select",
+              "name": "Industry",
+              "order": 2,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 79,
+                  "value": "Entertainment",
+                  "color": "dark-blue",
+                  "order": 0
+                },
+                {
+                  "id": 80,
+                  "value": "Food Services",
+                  "color": "red",
+                  "order": 1
+                },
+                {
+                  "id": 81,
+                  "value": "Construction",
+                  "color": "orange",
+                  "order": 2
+                },
+                {
+                  "id": 82,
+                  "value": "Financial Services",
+                  "color": "dark-green",
+                  "order": 3
+                },
+                {
+                  "id": 83,
+                  "value": "Automotive",
+                  "color": "gray",
+                  "order": 4
+                },
+                {
+                  "id": 102,
+                  "value": "Technology",
+                  "color": "red",
+                  "order": 5
+                }
+              ]
+            },
+            {
+              "id": 207,
+              "type": "link_row",
+              "name": "Pipelines",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 34,
+              "link_row_related_field_id": 200
+            },
+            {
+              "id": 209,
+              "type": "url",
+              "name": "Website",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 210,
+              "type": "link_row",
+              "name": "Contacts",
+              "order": 5,
+              "primary": false,
+              "link_row_table_id": 32,
+              "link_row_related_field_id": 211
+            },
+            {
+              "id": 214,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 7,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 39,
+              "type": "grid",
+              "name": "All Companies",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 256,
+                  "field_id": 188,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 254,
+                  "field_id": 189,
+                  "width": 219,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 255,
+                  "field_id": 190,
+                  "width": 155,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 266,
+                  "field_id": 207,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 267,
+                  "field_id": 209,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 268,
+                  "field_id": 210,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 270,
+                  "field_id": 214,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 6
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_188": "Acme Inc.",
+              "field_189": "San Francisco, CA",
+              "field_190": 81,
+              "field_207": [
+                1
+              ],
+              "field_209": "https://acme.inc",
+              "field_210": [
+                2
+              ],
+              "field_214": null
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_188": "Makers Co.",
+              "field_189": "New York, NY",
+              "field_190": 102,
+              "field_207": [
+                3
+              ],
+              "field_209": "https://makers.co",
+              "field_210": [
+                4
+              ],
+              "field_214": "High profile company."
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_188": "Orange LLC.",
+              "field_189": "Austin, TX",
+              "field_190": 80,
+              "field_207": [
+                4
+              ],
+              "field_209": "https://oran.ge",
+              "field_210": [
+                3
+              ],
+              "field_214": ""
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_188": "Smile Bros.",
+              "field_189": "Sacramento, CA",
+              "field_190": 79,
+              "field_207": [
+                2
+              ],
+              "field_209": "https://smilebros.com",
+              "field_210": [
+                1
+              ],
+              "field_214": ""
+            }
+          ]
+        },
+        {
+          "id": 32,
+          "name": "Contacts",
+          "order": 2,
+          "fields": [
+            {
+              "id": 191,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 192,
+              "type": "text",
+              "name": "Title",
+              "order": 1,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 211,
+              "type": "link_row",
+              "name": "Company",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 31,
+              "link_row_related_field_id": 210
+            },
+            {
+              "id": 215,
+              "type": "email",
+              "name": "Email",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 216,
+              "type": "phone_number",
+              "name": "Phone",
+              "order": 5,
+              "primary": false
+            },
+            {
+              "id": 217,
+              "type": "link_row",
+              "name": "Activities",
+              "order": 6,
+              "primary": false,
+              "link_row_table_id": 33,
+              "link_row_related_field_id": 218
+            },
+            {
+              "id": 219,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 7,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 40,
+              "type": "grid",
+              "name": "All Contacts",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 259,
+                  "field_id": 191,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 257,
+                  "field_id": 192,
+                  "width": 160,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 271,
+                  "field_id": 211,
+                  "width": 159,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 274,
+                  "field_id": 215,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 275,
+                  "field_id": 216,
+                  "width": 127,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 276,
+                  "field_id": 217,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 277,
+                  "field_id": 219,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_191": "John Tagliafero",
+              "field_192": "CEO",
+              "field_211": [
+                4
+              ],
+              "field_215": "john@smilebros.com",
+              "field_216": "916-244-5111",
+              "field_217": [
+                3,
+                4
+              ],
+              "field_219": null
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_191": "Wayne Smith",
+              "field_192": "Head of Operations",
+              "field_211": [
+                1
+              ],
+              "field_215": "wayne@acme.inc",
+              "field_216": "",
+              "field_217": [
+                5
+              ],
+              "field_219": null
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_191": "Sara Winter",
+              "field_192": "VP of Sales",
+              "field_211": [
+                3
+              ],
+              "field_215": "sara@oran.ge",
+              "field_216": "512-441-3333",
+              "field_217": [
+                2
+              ],
+              "field_219": ""
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_191": "Cindy Crowford",
+              "field_192": "Head of Marketing",
+              "field_211": [
+                2
+              ],
+              "field_215": "cindy@makers.co",
+              "field_216": "",
+              "field_217": [
+                1
+              ],
+              "field_219": ""
+            }
+          ]
+        },
+        {
+          "id": 33,
+          "name": "Activities",
+          "order": 3,
+          "fields": [
+            {
+              "id": 194,
+              "type": "single_select",
+              "name": "Activity",
+              "order": 0,
+              "primary": true,
+              "select_options": [
+                {
+                  "id": 90,
+                  "value": "Lunch",
+                  "color": "dark-orange",
+                  "order": 0
+                },
+                {
+                  "id": 91,
+                  "value": "Meeting",
+                  "color": "light-red",
+                  "order": 1
+                },
+                {
+                  "id": 92,
+                  "value": "Task",
+                  "color": "dark-green",
+                  "order": 2
+                },
+                {
+                  "id": 93,
+                  "value": "Email",
+                  "color": "dark-green",
+                  "order": 3
+                },
+                {
+                  "id": 94,
+                  "value": "Phone Call",
+                  "color": "dark-blue",
+                  "order": 4
+                },
+                {
+                  "id": 95,
+                  "value": "Deadline",
+                  "color": "dark-red",
+                  "order": 5
+                }
+              ]
+            },
+            {
+              "id": 218,
+              "type": "link_row",
+              "name": "Contacts",
+              "order": 4,
+              "primary": false,
+              "link_row_table_id": 32,
+              "link_row_related_field_id": 217
+            },
+            {
+              "id": 222,
+              "type": "date",
+              "name": "Date",
+              "order": 5,
+              "primary": false,
+              "date_format": "EU",
+              "date_include_time": false,
+              "date_time_format": "24"
+            },
+            {
+              "id": 223,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 6,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 41,
+              "type": "grid",
+              "name": "All Activities",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 262,
+                  "field_id": 194,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 273,
+                  "field_id": 218,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 307,
+                  "field_id": 222,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 308,
+                  "field_id": 223,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_194": 90,
+              "field_218": [
+                4
+              ],
+              "field_222": "2021-05-04",
+              "field_223": null
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_194": 93,
+              "field_218": [
+                3
+              ],
+              "field_222": "2021-04-16",
+              "field_223": null
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_194": 94,
+              "field_218": [
+                1
+              ],
+              "field_222": "2021-05-10",
+              "field_223": ""
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_194": 91,
+              "field_218": [
+                1
+              ],
+              "field_222": "2021-05-11",
+              "field_223": ""
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_194": 95,
+              "field_218": [
+                2
+              ],
+              "field_222": "2021-05-13",
+              "field_223": ""
+            }
+          ]
+        },
+        {
+          "id": 34,
+          "name": "Pipelines",
+          "order": 4,
+          "fields": [
+            {
+              "id": 197,
+              "type": "text",
+              "name": "Opportunity",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 200,
+              "type": "link_row",
+              "name": "Company",
+              "order": 1,
+              "primary": false,
+              "link_row_table_id": 31,
+              "link_row_related_field_id": 207
+            },
+            {
+              "id": 201,
+              "type": "long_text",
+              "name": "Description",
+              "order": 2,
+              "primary": false
+            },
+            {
+              "id": 202,
+              "type": "single_select",
+              "name": "Stage",
+              "order": 3,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 73,
+                  "value": "Qualified",
+                  "color": "green",
+                  "order": 0
+                },
+                {
+                  "id": 74,
+                  "value": "Follow-Up",
+                  "color": "orange",
+                  "order": 1
+                },
+                {
+                  "id": 75,
+                  "value": "Negotiation",
+                  "color": "red",
+                  "order": 2
+                },
+                {
+                  "id": 76,
+                  "value": "Contract Sent",
+                  "color": "blue",
+                  "order": 3
+                },
+                {
+                  "id": 77,
+                  "value": "Closed Won",
+                  "color": "dark-green",
+                  "order": 4
+                },
+                {
+                  "id": 78,
+                  "value": "Closed Lost",
+                  "color": "dark-gray",
+                  "order": 5
+                }
+              ]
+            },
+            {
+              "id": 203,
+              "type": "date",
+              "name": "Expected Close Date",
+              "order": 4,
+              "primary": false,
+              "date_format": "EU",
+              "date_include_time": false,
+              "date_time_format": "24"
+            },
+            {
+              "id": 205,
+              "type": "number",
+              "name": "Contract Value",
+              "order": 5,
+              "primary": false,
+              "number_type": "DECIMAL",
+              "number_decimal_places": 2,
+              "number_negative": false
+            },
+            {
+              "id": 208,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 6,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 42,
+              "type": "grid",
+              "name": "All Pipelines",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 265,
+                  "field_id": 197,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 278,
+                  "field_id": 200,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 279,
+                  "field_id": 201,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 280,
+                  "field_id": 202,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 281,
+                  "field_id": 203,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 282,
+                  "field_id": 205,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 283,
+                  "field_id": 208,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_197": "Acme Website Redesign",
+              "field_200": [
+                1
+              ],
+              "field_201": "Redesign of old WordPress website",
+              "field_202": 73,
+              "field_203": "2021-05-30",
+              "field_205": "1000.00",
+              "field_208": null
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_197": "Smile Video Production",
+              "field_200": [
+                4
+              ],
+              "field_201": "Production of video campaign for new product",
+              "field_202": 74,
+              "field_203": "2021-06-04",
+              "field_205": "12000.00",
+              "field_208": null
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_197": "Makers New Landing Page",
+              "field_200": [
+                2
+              ],
+              "field_201": "Build Makers Landing Page with Jamstack",
+              "field_202": 75,
+              "field_203": "2021-05-19",
+              "field_205": "5000.00",
+              "field_208": ""
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_197": "Orange Photo Shooting",
+              "field_200": [
+                3
+              ],
+              "field_201": "New Photo Album",
+              "field_202": 77,
+              "field_203": "2021-05-12",
+              "field_205": "4500.00",
+              "field_208": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
