@@ -259,7 +259,7 @@ export default {
     sortedAdminTypes() {
       return Object.values(this.adminTypes)
         .slice()
-        .sort((x) => x.getOrder())
+        .sort((a, b) => a.getOrder() - b.getOrder())
     },
     /**
      * Indicates whether the current user is visiting an admin page.

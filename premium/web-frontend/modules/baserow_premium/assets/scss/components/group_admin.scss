@@ -1,0 +1,25 @@
+.group-admin-name {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.group-admin-name__name {
+  @extend %ellipsis;
+
+  word-wrap: break-word;
+}
+
+.group-admin-name__menu {
+  @include fixed-height(24px, 14px);
+
+  border-radius: 3px;
+  color: $color-primary-900;
+  padding: 0 5px;
+  margin-left: auto;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+}

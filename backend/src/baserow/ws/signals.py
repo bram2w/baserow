@@ -35,7 +35,7 @@ def group_updated(sender, group, user, **kwargs):
 
 
 @receiver(signals.group_deleted)
-def group_deleted(sender, group_id, group, group_users, user, **kwargs):
+def group_deleted(sender, group_id, group, group_users, user=None, **kwargs):
     transaction.on_commit(
         lambda: broadcast_to_users.delay(
             [u.id for u in group_users],

@@ -39,22 +39,22 @@ export function createUsersForAdmin(
   if (sorts !== null) {
     params.sorts = sorts
   }
-  mock.onGet(`/admin/user/`, { params }).reply(200, {
+  mock.onGet(`/admin/users/`, { params }).reply(200, {
     count: count === null ? users.length : count,
     results: users,
   })
 }
 
 export function expectUserDeleted(mock, userId) {
-  mock.onDelete(`/admin/user/${userId}/`).reply(200)
+  mock.onDelete(`/admin/users/${userId}/`).reply(200)
 }
 
 export function expectUserUpdated(mock, user, changes) {
   mock
-    .onPatch(`/admin/user/${user.id}/`, changes)
+    .onPatch(`/admin/users/${user.id}/`, changes)
     .reply(200, Object.assign({}, user, changes))
 }
 
 export function expectUserUpdatedRespondsWithError(mock, user, error) {
-  mock.onPatch(`/admin/user/${user.id}/`).reply(500, error)
+  mock.onPatch(`/admin/users/${user.id}/`).reply(500, error)
 }

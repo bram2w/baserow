@@ -150,7 +150,6 @@
     content: '';
     z-index: 4;
     background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 6px;
 
     @include absolute(0, 0, 0, 0);
   }
