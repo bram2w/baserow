@@ -12,10 +12,13 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
 RUN apt-get update && \
     apt install -y \
     make git nginx supervisor \
+    libpq-dev \
     python3 build-essential libxslt-dev python3-dev python3-virtualenv \
     python3-setuptools zlib1g-dev libffi-dev libssl-dev python3-pip \
     nodejs \
     && rm -rf /var/cache/apt /var/lib/apt/lists
+
+RUN npm install --global yarn mjml
 
 RUN adduser --uid 1000 --disabled-login --gecos 'Heroku' heroku && \
     passwd -d heroku
@@ -26,14 +29,11 @@ WORKDIR /baserow
 RUN service supervisor stop && service nginx stop
 RUN rm -f /etc/nginx/sites-enabled/*
 
-RUN git clone https://gitlab.com/bramw/baserow.git
 # @TODO replace this with `master`
-RUN git checkout 170-add-a-guide-to-deploy-on-heroku
+RUN git clone --branch 170-add-a-guide-to-deploy-on-heroku https://gitlab.com/bramw/baserow.git
 RUN virtualenv -p python3 env
 RUN env/bin/pip install --no-cache -r baserow/backend/requirements/base.txt
 RUN (cd baserow/web-frontend && yarn install && yarn build)
-
-RUN npm install -g mjml
 
 RUN (mkdir -p /baserow/heroku/heroku && \
      mkdir /baserow/media && \
