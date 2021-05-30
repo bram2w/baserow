@@ -20,9 +20,6 @@ RUN apt-get update && \
 
 RUN npm install --global yarn mjml
 
-RUN useradd --shell /bin/bash -u 1000 -o -c "" -m heroku && \
-    passwd -d heroku
-
 RUN mkdir -p /baserow
 WORKDIR /baserow
 
@@ -47,8 +44,6 @@ ENV LANG=C.UTF-8
 ENV TMPDIR=/run/temp
 
 USER root
-
-RUN chown -R heroku:heroku /baserow
 
 ADD supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 RUN ln -sf /dev/stdout /var/log/supervisor/supervisord.log
