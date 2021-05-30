@@ -20,7 +20,7 @@ RUN apt-get update && \
 
 RUN npm install --global yarn mjml
 
-RUN adduser --uid 1000 --disabled-login --gecos 'Heroku' heroku && \
+RUN useradd --shell /bin/bash -u 1000 -o -c "" -m heroku && \
     passwd -d heroku
 
 RUN mkdir -p /baserow
