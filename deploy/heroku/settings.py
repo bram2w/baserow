@@ -1,5 +1,6 @@
 from baserow.config.settings.base import *
 import os
+import dj_database_url
 
 MEDIA_ROOT = '/baserow/media'
 
@@ -15,5 +16,5 @@ EMAIL_HOST_USER = os.environ["MAILGUN_SMTP_LOGIN"]
 EMAIL_HOST_PASSWORD = os.environ["MAILGUN_SMTP_PASSWORD"]
 
 DATABASES = {
-    'default': os.environ['DATABASE_URL']
+    'default': dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=600)
 }

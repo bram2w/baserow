@@ -33,6 +33,7 @@ RUN rm -f /etc/nginx/sites-enabled/*
 RUN git clone --branch 170-add-a-guide-to-deploy-on-heroku https://gitlab.com/bramw/baserow.git
 RUN virtualenv -p python3 env
 RUN env/bin/pip install --no-cache -r baserow/backend/requirements/base.txt
+RUN env/bin/pip install service_identity dj-database-url
 RUN (cd baserow/web-frontend && yarn install && yarn build)
 
 RUN (mkdir -p /baserow/heroku/heroku && \
