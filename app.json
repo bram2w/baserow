@@ -1,4 +1,8 @@
-{aaa
+{
+  "name": "Baserow",
+  "description": "Open source online no-code database and Airtable alternative.",
+  "repository": "https://gitlab.com/bramw/baserow",
+  "keywords": ["baserow", "no-code", "database", "airtable"],
   "addons": [
     "heroku-postgresql:hobby-dev",
     "heroku-redis:hobby-dev",
