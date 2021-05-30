@@ -12,7 +12,11 @@
     "SECRET_KEY": {
       "description": "@TODO",
       "generator": "secret"
-    }
+    },
+    "BASEROW_PUBLIC_URL": "%(HEROKU_APP_NAME)s",
+    "BASEROW_PUBLIC_URL_2": "${HEROKU_APP_NAME}",
+    "BASEROW_PUBLIC_URL_3": "$(HEROKU_APP_NAME)",
+    "BASEROW_PUBLIC_URL_4": "$(HEROKU_APP_NAME)s"
   },
   "formation": {
     "web": {
@@ -20,5 +24,8 @@
       "size": "hobby"
     }
   },
+  "labs": [
+    "runtime-dyno-metadata"
+  ],
   "stack": "container"
 }
