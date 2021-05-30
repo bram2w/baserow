@@ -6,4 +6,4 @@ release:
   command:
     - /baserow/env/bin/python /baserow/baserow/backend/src/baserow/manage.py migrate --settings=heroku.settings && /baserow/env/bin/python /baserow/baserow/backend/src/baserow/manage.py sync_templates --settings=heroku.settings
 run:
-  web: sed -i 's/$PORT/'"$PORT"'/g' /etc/nginx/sites-enabled/nginx.conf && export BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-https://$HEROKU_APP_NAME.herokuapp.com} && /usr/bin/supervisord --configuration /etc/supervisor/conf.d/supervisor.conf
+  web: sed -i 's/PORT/'"$PORT"'/g' /etc/nginx/sites-enabled/nginx.conf && export BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-https://$HEROKU_APP_NAME.herokuapp.com} && /usr/bin/supervisord --configuration /etc/supervisor/conf.d/supervisor.conf
