@@ -1,7 +1,8 @@
 setup:
   addons:
     - plan: heroku-postgresql
-      as: DATABASE
+    - plan: heroku-redis
+    - plan: mailgun
 build:
   docker:
     web: deploy/heroku/Dockerfile
