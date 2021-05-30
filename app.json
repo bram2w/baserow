@@ -3,21 +3,12 @@
   "description": "Open source online no-code database and Airtable alternative.",
   "repository": "https://gitlab.com/bramw/baserow",
   "keywords": ["baserow", "no-code", "database", "airtable"],
+  "success_url": "/",
   "addons": [
     "heroku-postgresql:hobby-dev",
     "heroku-redis:hobby-dev",
     "mailgun:starter"
   ],
-  "env": {
-    "SECRET_KEY": {
-      "description": "@TODO",
-      "generator": "secret"
-    },
-    "BASEROW_PUBLIC_URL": "%(HEROKU_APP_NAME)s",
-    "BASEROW_PUBLIC_URL_2": "${HEROKU_APP_NAME}",
-    "BASEROW_PUBLIC_URL_3": "$(HEROKU_APP_NAME)",
-    "BASEROW_PUBLIC_URL_4": "$(HEROKU_APP_NAME)s"
-  },
   "formation": {
     "web": {
       "quantity": 1,
@@ -27,5 +18,22 @@
   "labs": [
     "runtime-dyno-metadata"
   ],
-  "stack": "container"
+  "stack": "container",
+  "env": {
+    "SECRET_KEY": {
+      "description": "@TODO",
+      "generator": "secret"
+    },
+    "BASEROW_PUBLIC_URL": {
+      "description": "@TODO",
+      "value": "",
+      "required": false
+    }
+  },
+  "image": "web",
+  "build": {
+    "docker": {
+      "web": "deploy/heroku/Dockerfile"
+    }
+  }
 }
