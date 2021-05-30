@@ -38,7 +38,7 @@ RUN (cd baserow/web-frontend && yarn install && yarn build)
 RUN (mkdir -p /baserow/heroku/heroku && \
      mkdir /baserow/media && \
     touch /baserow/heroku/heroku/__init__.py)
-ADD settings.py /app/code/heroku/heroku
+ADD settings.py /baserow/heroku/heroku
 
 ENV PYTHONPATH $PYTHONPATH:/baserow/baserow/backend/src:/baserow/heroku
 ENV LC_ALL=C.UTF-8
@@ -51,7 +51,6 @@ RUN chown -R heroku:heroku /baserow
 
 ADD supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 RUN ln -sf /dev/stdout /var/log/supervisor/supervisord.log
-RUN ln -sf /dev/stdout /app/code/supervisord.log
 
 ADD nginx.conf /etc/nginx/sites-enabled/nginx.conf
 RUN ln -sf /dev/stdout /var/log/nginx/access.log
