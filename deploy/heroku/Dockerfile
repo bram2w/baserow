@@ -48,7 +48,6 @@ USER root
 ADD supervisor.conf /etc/supervisor/conf.d/supervisor.conf
 RUN ln -sf /dev/stdout /var/log/supervisor/supervisord.log
 
-ADD nginx.conf /etc/nginx/sites-enabled/nginx.conf
-RUN rm /etc/nginx/sites-available/default
+ADD nginx.conf /baserow/nginx.conf
 RUN ln -sf /dev/stdout /var/log/nginx/access.log
 RUN ln -sf /dev/stderr /var/log/nginx/error.log
