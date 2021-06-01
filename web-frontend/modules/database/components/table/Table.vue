@@ -179,7 +179,6 @@ export default {
       required: true,
     },
     view: {
-      type: Object,
       required: true,
       validator: (prop) => typeof prop === 'object' || prop === undefined,
     },

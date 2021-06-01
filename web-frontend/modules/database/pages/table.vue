@@ -87,7 +87,7 @@ export default {
     // If a view id is provided and the table is selected we can select the view. The
     // views that belong to the table have already been fetched so we just need to
     // select the correct one.
-    if (viewId !== null) {
+    if (viewId !== null && viewId !== 0) {
       try {
         const { view } = await store.dispatch('view/selectById', viewId)
         data.view = view
@@ -141,6 +141,10 @@ export default {
   },
   methods: {
     selectedView(view) {
+      if (this.view && this.view.id === view.id) {
+        return
+      }
+
       this.$nuxt.$router.push({
         name: 'database-table',
         params: {
