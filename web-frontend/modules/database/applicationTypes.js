@@ -71,12 +71,16 @@ export class DatabaseApplicationType extends ApplicationType {
   }
 
   select(application, { $router, $store }) {
-    if (application.tables.length > 0) {
+    const tables = application.tables
+      .map((t) => t)
+      .sort((a, b) => a.order - b.order)
+
+    if (tables.length > 0) {
       $router.push({
         name: 'database-table',
         params: {
           databaseId: application.id,
-          tableId: application.tables[0].id,
+          tableId: tables[0].id,
         },
       })
     } else {
