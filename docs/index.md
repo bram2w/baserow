@@ -27,10 +27,10 @@ Need some help with setting things up?
 
 * [Running Locally](guides/running-baserow-locally.md): A step-by-step guide to run
   Baserow on your computer.
-* [Install on Ubuntu](./guides/installation/install-on-ubuntu.md): A step-by-step guide
-  to install Baserow on an Ubuntu server.
 * [Install on Cloudron](guides/installation/install-on-cloudron.md): Instructions
   to manually install Baserow on Cloudron.
+* [Install on Ubuntu](./guides/installation/install-on-ubuntu.md): A step-by-step guide
+  to install Baserow on an Ubuntu server.
 
 ## Development
 

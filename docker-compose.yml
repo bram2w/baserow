@@ -74,7 +74,44 @@ services:
     build:
       dockerfile: ./backend/Dockerfile
       context: .
-    command: celery
+    command: celery worker -l INFO -Q celery
+    depends_on:
+      - backend
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:
+
+  celery-export-worker:
+    container_name: celery-export-worker
+    image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
+    command: celery worker -l INFO -Q export
+    depends_on:
+      - backend
+    environment:
+      - ADDITIONAL_APPS
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMPT_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
+    volumes:
+      - media:/baserow/media
+    networks:
+      local:
+
+  celery-beat-worker:
+    container_name: celery-beat-worker
+    image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
+    command: celery beat -l INFO -S redbeat.RedBeatScheduler
     depends_on:
       - backend
     environment:

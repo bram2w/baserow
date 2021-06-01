@@ -29,8 +29,19 @@
 
   &:hover {
     text-decoration: none;
+  }
+
+  &:not(.disabled):hover {
     background-color: $color-neutral-100;
     color: $color-primary-900;
+  }
+
+  &.disabled {
+    color: $color-neutral-400;
+
+    &:hover {
+      cursor: inherit;
+    }
   }
 
   &.active {

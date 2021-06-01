@@ -1,14 +1,14 @@
 from django.utils.functional import lazy
-
-from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
-
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.user_files.serializers import (
+    UserFileURLAndThumbnailsSerializerMixin,
+)
 from baserow.api.user_files.validators import user_file_name_validator
-from baserow.api.user_files.serializers import UserFileURLAndThumbnailsSerializerMixin
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.registries import field_type_registry
 
 
 class FieldSerializer(serializers.ModelSerializer):

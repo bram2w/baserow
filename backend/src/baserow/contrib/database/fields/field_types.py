@@ -1,5 +1,4 @@
 from collections import defaultdict
-
 from datetime import datetime, date
 from decimal import Decimal
 from random import randrange, randint
@@ -8,6 +7,7 @@ from dateutil import parser
 from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
+from django.core.files.storage import default_storage
 from django.core.validators import URLValidator, EmailValidator, RegexValidator
 from django.db import models
 from django.db.models import Case, When, Q, F, Func, Value, CharField
@@ -25,12 +25,12 @@ from baserow.contrib.database.api.fields.errors import (
 from baserow.contrib.database.api.fields.serializers import (
     LinkRowValueSerializer,
     FileFieldRequestSerializer,
-    FileFieldResponseSerializer,
     SelectOptionSerializer,
+    FileFieldResponseSerializer,
 )
 from baserow.core.models import UserFile
-from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
+from baserow.core.user_files.handler import UserFileHandler
 from .exceptions import (
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
@@ -180,6 +180,19 @@ class NumberFieldType(FieldType):
             **kwargs,
         )
 
+    def get_export_value(self, row, field_object):
+        # If the number is an integer we want it to be a literal json number and so
+        # don't convert it to a string. However if a decimal to preserve any precision
+        # we keep it as a string.
+        instance = field_object["field"]
+        value = getattr(row, field_object["name"])
+        if instance.number_type == NUMBER_TYPE_INTEGER:
+            return int(value)
+
+        # DRF's Decimal Serializer knows how to quantize and format the decimal
+        # correctly so lets use it instead of trying to do it ourselves.
+        return self.get_serializer_field(instance).to_representation(value)
+
     def get_model_field(self, instance, **kwargs):
         kwargs["decimal_places"] = (
             0
@@ -306,6 +319,13 @@ class DateFieldType(FieldType):
         raise ValidationError(
             "The value should be a date/time string, date object or " "datetime object."
         )
+
+    def get_export_value(self, row, field_object):
+        value = getattr(row, field_object["name"])
+        if value is None:
+            return value
+        python_format = field_object["field"].get_python_format()
+        return value.strftime(python_format)
 
     def get_serializer_field(self, instance, **kwargs):
         kwargs["required"] = False
@@ -477,6 +497,28 @@ class LinkRowFieldType(FieldType):
         return queryset.prefetch_related(
             models.Prefetch(name, queryset=related_queryset)
         )
+
+    def get_export_value(self, row, field_object):
+        instance = field_object["field"]
+
+        if hasattr(instance, "_related_model"):
+            related_model = instance._related_model
+            primary_field = next(
+                object
+                for object in related_model._field_objects.values()
+                if object["field"].primary
+            )
+            if primary_field:
+                primary_field_name = primary_field["name"]
+                value = getattr(row, field_object["name"])
+                primary_field_values = []
+                for sub in value.all():
+                    linked_row_primary_name = getattr(sub, primary_field_name)
+                    if linked_row_primary_name is None:
+                        linked_row_primary_name = f"unnamed row {sub.id}"
+                    primary_field_values.append(linked_row_primary_name)
+                return primary_field_values
+        return []
 
     def get_serializer_field(self, instance, **kwargs):
         """
@@ -926,6 +968,24 @@ class FileFieldType(FieldType):
             **kwargs,
         )
 
+    def get_export_value(self, row, field_object):
+        files = []
+        value = getattr(row, field_object["name"])
+        for file in value:
+            if "name" in file:
+                path = UserFileHandler().user_file_path(file["name"])
+                url = default_storage.url(path)
+            else:
+                url = None
+            files.append(
+                {
+                    "visible_name": file["visible_name"],
+                    "url": url,
+                }
+            )
+
+        return files
+
     def get_response_serializer_field(self, instance, **kwargs):
         return FileFieldResponseSerializer(many=True, required=False, **kwargs)
 
@@ -1071,6 +1131,10 @@ class SingleSelectFieldType(FieldType):
             "the field. The response represents chosen field, but also the value and "
             "color is exposed."
         )
+
+    def get_export_value(self, row, field_object):
+        value = getattr(row, field_object["name"])
+        return value.value
 
     def get_model_field(self, instance, **kwargs):
         return SingleSelectForeignKey(

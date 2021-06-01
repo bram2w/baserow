@@ -1,0 +1,32 @@
+.export-table-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.export-table-modal__loading-bar {
+  @include fixed-height(9px, 12px);
+
+  width: 100%;
+  border-radius: 5px;
+  background-color: $color-neutral-100;
+  margin-right: 30px;
+}
+
+.export-table-modal__loading-bar-inner {
+  background-color: $color-success-300;
+  border-radius: 5px;
+  height: 100%;
+  transition-timing-function: linear;
+}
+
+.export-table-modal__status-text {
+  color: $color-neutral-400;
+  padding-top: 5px;
+  position: absolute;
+}
+
+.export-table-modal__export-button {
+  flex: 0 0 160px;
+}

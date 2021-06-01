@@ -15,6 +15,9 @@
 * Added a page containing external resources to the docs.
 * Added a human-readable error message when a user tries to sign in with a deactivated
   account.
+* Tables and views can now be exported to CSV (if you have installed using the ubuntu 
+  guide please use the updated .conf files to enable this feature).
+* **Premium** Tables and views can now be exported to JSON and XML.
 * Templates:
   * Lightweight CRM
   * Wedding Planning

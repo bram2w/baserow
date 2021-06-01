@@ -7,7 +7,8 @@
     @keydown="keydown"
     @focusout="change"
     @paste="paste"
-  ></span>
+    >{{ value }}</span
+  >
 </template>
 
 <script>

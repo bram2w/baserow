@@ -81,6 +81,10 @@
     margin-left: auto;
     margin-right: 10px;
   }
+
+  &.header__filter-item--no-margin-left {
+    margin-left: 0;
+  }
 }
 
 .header__filter-link {
@@ -131,7 +135,10 @@
 
 .header__filter-icon {
   color: $color-primary-900;
-  margin-right: 4px;
+
+  &:not(:last-child) {
+    margin-right: 4px;
+  }
 
   .header--overflow & {
     margin-right: 0;
