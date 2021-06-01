@@ -1,3 +1,4 @@
+from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 from baserow.core.registry import (
     Instance,
     Registry,
@@ -15,7 +16,6 @@ from .exceptions import (
     ViewFilterTypeAlreadyRegistered,
     ViewFilterTypeDoesNotExist,
 )
-from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 
 
 class ViewType(
@@ -176,6 +176,22 @@ class ViewType(
                 id_mapping["database_view_sortings"][view_sort_id] = view_sort_object.id
 
         return view
+
+    def get_fields_and_model(self, view):
+        """
+        Returns the field objects for the provided view. Depending on the view type this
+        will only return the visible or appropriate fields as different view types can
+        hide or show fields based on their configuration.
+
+        :param view: The view to get the fields for.
+        :type view: View
+        :return: An ordered list of field objects for this view and the model for the
+            view.
+        :rtype list, Model
+        """
+
+        model = view.table.get_model()
+        return model._field_objects.values(), model
 
 
 class ViewTypeRegistry(

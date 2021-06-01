@@ -20,3 +20,7 @@ celery[redis]==5.0.5
 django-celery-email==3.0.0
 advocate==1.0.0
 zipp==3.4.1
+unicodecsv==0.14.1
+django-celery-beat==2.2.0
+celery-redbeat==2.0.0
+service-identity==21.1.0

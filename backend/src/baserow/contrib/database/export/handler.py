@@ -1,0 +1,292 @@
+import logging
+import uuid
+from io import BytesIO
+from os.path import join
+from typing import Optional, Dict, Any, BinaryIO
+
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.files.storage import default_storage
+from django.db import transaction
+from django.utils import timezone
+
+from baserow.contrib.database.export.models import (
+    ExportJob,
+    EXPORT_JOB_CANCELLED_STATUS,
+    EXPORT_JOB_PENDING_STATUS,
+    EXPORT_JOB_FAILED_STATUS,
+    EXPORT_JOB_EXPIRED_STATUS,
+    EXPORT_JOB_COMPLETED_STATUS,
+    EXPORT_JOB_EXPORTING_STATUS,
+)
+from baserow.contrib.database.export.tasks import run_export_job
+from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.exceptions import ViewNotInTable
+from baserow.contrib.database.views.registries import view_type_registry
+from .exceptions import (
+    TableOnlyExportUnsupported,
+    ViewUnsupportedForExporterType,
+    ExportJobCanceledException,
+)
+from .file_writer import PaginatedExportJobFileWriter
+from .registries import table_exporter_registry, TableExporter
+
+logger = logging.getLogger(__name__)
+
+User = get_user_model()
+
+
+class ExportHandler:
+    @staticmethod
+    def create_and_start_new_job(
+        user: User, table: Table, view: Optional[View], export_options: Dict[str, Any]
+    ) -> ExportJob:
+        """
+        For the provided user, table, optional view and options will create a new
+        export job and start an asynchronous celery task which will perform the
+        export and update the job with any results.
+
+        :param user: The user who the export job is being run for.
+        :param table: The table on which the job is being run.
+        :param view: An optional view of the table to export instead of the table
+            itself.
+        :param export_options: A dict containing exporter_type and the relevant options
+            for that type.
+        :return: The created export job.
+        """
+
+        job = ExportHandler.create_pending_export_job(user, table, view, export_options)
+        # Ensure we only trigger the job after the transaction we are in has committed
+        # and created the export job in the database. Otherwise the job might run before
+        # we commit and crash as there is no job yet.
+        transaction.on_commit(lambda: run_export_job.delay(job.id))
+        return job
+
+    @staticmethod
+    def create_pending_export_job(
+        user: User, table: Table, view: Optional[View], export_options: Dict[str, Any]
+    ):
+        """
+        Creates a new pending export job configured with the providing options but does
+        not start the job. Will cancel any previously running jobs for this user. Raises
+        exceptions if the user is not allowed to create an export job for the view/table
+        due to missing permissions or if the selected exporter doesn't support the
+        view/table.
+
+        :param user: The user who the export job is being run for.
+        :param table: The table on which the job is being run.
+        :param view: An optional view of the table to export instead of the table
+            itself.
+        :param export_options: A dict containing exporter_type and the relevant options
+            for that type.
+        :raises ViewNotInTable: If the view does not belong to the table.
+        :return: The created export job.
+        """
+
+        table.database.group.has_user(user, raise_error=True)
+
+        if view and view.table.id != table.id:
+            raise ViewNotInTable()
+
+        _cancel_unfinished_jobs(user)
+
+        exporter_type = export_options.pop("exporter_type")
+
+        _raise_if_invalid_view_or_table_for_exporter(exporter_type, view)
+
+        job = ExportJob.objects.create(
+            user=user,
+            table=table,
+            view=view,
+            exporter_type=exporter_type,
+            status=EXPORT_JOB_PENDING_STATUS,
+            export_options=export_options,
+        )
+        return job
+
+    @staticmethod
+    def run_export_job(job) -> ExportJob:
+        """
+        Given an export job will run the export and store the result in the configured
+        storage. Internally it does this in a paginated way to ensure constant memory
+        usage, meaning any size export job can be run as long as you have enough time.
+
+        If the export job fails will store the failure on the job itself and mark the
+        job as failed.
+
+        :param job: The job to run.
+        :return: An updated ExportJob instance with the exported file name.
+        """
+
+        # Ensure the user still has permissions when the export job runs.
+        job.table.database.group.has_user(job.user, raise_error=True)
+        try:
+            return _mark_job_as_finished(_open_file_and_run_export(job))
+        except ExportJobCanceledException:
+            # If the job was canceled then it must not be marked as failed.
+            pass
+        except Exception as e:
+            _mark_job_as_failed(job, e)
+            raise e
+
+    @staticmethod
+    def export_file_path(exported_file_name) -> str:
+        """
+        Given an export file name returns the path to where that export file should be
+        put in storage.
+
+        :param exported_file_name: The name of the file to generate a path for.
+        :return: The path where this export file should be put in storage.
+        """
+
+        return join(settings.EXPORT_FILES_DIRECTORY, exported_file_name)
+
+    @staticmethod
+    def clean_up_old_jobs():
+        """
+        Cleans up expired export jobs, will delete any files in storage for expired
+        jobs with exported files, will cancel any exporting or pending jobs which have
+        also expired.
+        """
+
+        jobs = ExportJob.jobs_requiring_cleanup(timezone.now())
+        logger.info(f"Cleaning up {jobs.count()} old jobs")
+        for job in jobs:
+            if job.exported_file_name:
+                # Note the django file storage api will not raise an exception if
+                # the file does not exist. This is ideal as export jobs first save
+                # their exported_file_name and then write to that file, so if the
+                # write step fails it is possible that the exported_file_name does not
+                # exist.
+                default_storage.delete(
+                    ExportHandler.export_file_path(job.exported_file_name)
+                )
+                job.exported_file_name = None
+
+            job.status = EXPORT_JOB_EXPIRED_STATUS
+            job.save()
+
+
+def _raise_if_invalid_view_or_table_for_exporter(
+    exporter_type: str, view: Optional[View]
+):
+    """
+    Raises an exception if the exporter_type does not support the provided view,
+    or if no view is provided raises if the exporter does not support exporting just the
+    table.
+
+    :param exporter_type: The exporter type to check.
+    :param view: None if we are exporting just the table, otherwise the view we are
+        exporting.
+    """
+
+    exporter = table_exporter_registry.get(exporter_type)
+    if not exporter.can_export_table and view is None:
+        raise TableOnlyExportUnsupported()
+    if view is not None:
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        if view_type.type not in exporter.supported_views:
+            raise ViewUnsupportedForExporterType()
+
+
+def _cancel_unfinished_jobs(user):
+    """
+    Will cancel any in progress jobs by setting their status to cancelled. Any
+    tasks currently running these jobs are expected to periodically check if they
+    have been cancelled and stop accordingly.
+
+    :param user: The user to cancel all unfinished jobs for.
+    :return The number of jobs cancelled.
+    """
+
+    jobs = ExportJob.unfinished_jobs(user=user)
+    return jobs.update(status=EXPORT_JOB_CANCELLED_STATUS)
+
+
+def _mark_job_as_finished(export_job: ExportJob) -> ExportJob:
+    """
+    Marks the provided job as finished with the result being the provided file name.
+
+    :param export_job: The job to update to be finished.
+    :return: The updated finished job.
+    """
+
+    export_job.status = EXPORT_JOB_COMPLETED_STATUS
+    export_job.progress_percentage = 1.0
+    export_job.save()
+    return export_job
+
+
+def _mark_job_as_failed(job, e):
+    """
+    Marks the given export job as failed and stores the exception in the job.
+
+    :param job: The job to mark as failed
+    :param e: The exception causing the failure
+    :return: The updated failed job.
+    """
+
+    job.status = EXPORT_JOB_FAILED_STATUS
+    job.progress_percentage = 0.0
+    job.error = str(e)
+    job.save()
+    return job
+
+
+def _open_file_and_run_export(job: ExportJob) -> ExportJob:
+    """
+    Using the jobs exporter type exports all data into a new file placed in the
+    default storage.
+
+    :return: An updated ExportJob instance with the exported_file_name set.
+    """
+
+    exporter: TableExporter = table_exporter_registry.get(job.exporter_type)
+    exported_file_name = _generate_random_file_name_with_extension(
+        exporter.file_extension
+    )
+    storage_location = ExportHandler.export_file_path(exported_file_name)
+    # Store the file name before we even start exporting so if the export fails
+    # and the file has been made we know where it is to clean it up correctly.
+    job.exported_file_name = exported_file_name
+    job.status = EXPORT_JOB_EXPORTING_STATUS
+    job.save()
+
+    with _create_storage_dir_if_missing_and_open(storage_location) as file:
+        queryset_serializer_class = exporter.queryset_serializer_class
+        if job.view is None:
+            serializer = queryset_serializer_class.for_table(job.table)
+        else:
+            serializer = queryset_serializer_class.for_view(job.view)
+
+        serializer.write_to_file(
+            PaginatedExportJobFileWriter(file, job), **job.export_options
+        )
+
+    return job
+
+
+def _generate_random_file_name_with_extension(file_extension):
+    return str(uuid.uuid4()) + file_extension
+
+
+def _create_storage_dir_if_missing_and_open(storage_location) -> BinaryIO:
+    """
+    Attempts to open the provided storage location in binary overwriting write mode.
+    If it encounters a FileNotFound error will attempt to create the folder structure
+    leading upto to the storage location and then open again.
+
+    :param storage_location: The storage location to open and ensure folders for.
+    :return: The open file descriptor for the storage_location
+    """
+
+    try:
+        return default_storage.open(storage_location, "wb+")
+    except FileNotFoundError:
+        # django's file system storage will not attempt to creating a missing
+        # EXPORT_FILES_DIRECTORY and instead will throw a FileNotFoundError.
+        # So we first save an empty file which will create any missing directories
+        # and then open again.
+        default_storage.save(storage_location, BytesIO())
+        return default_storage.open(storage_location, "wb")

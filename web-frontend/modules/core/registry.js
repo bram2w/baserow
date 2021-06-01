@@ -54,6 +54,21 @@ export class Registry {
   }
 
   /**
+   * Un-registers a registered type from the provided namespace in the
+   * registry. Throws an error if the registry does not exist. Returns true if the
+   * type was found and deleted successfully, or false if the type did not exist in
+   * the namespace.
+   */
+  unregister(namespace, type) {
+    if (!Object.prototype.hasOwnProperty.call(this.registry, namespace)) {
+      throw new Error(
+        `The namespace ${namespace} is not found in the registry.`
+      )
+    }
+    return delete this.registry[namespace][type]
+  }
+
+  /**
    * Returns a registered object with the given type in the provided namespace.
    */
   get(namespace, type) {

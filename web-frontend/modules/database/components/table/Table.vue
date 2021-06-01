@@ -25,14 +25,12 @@
                 class="header__filter-icon header-filter-icon--view fas"
                 :class="'fa-' + view._.type.iconClass"
               ></i>
-              <span class="header__filter-name header__filter-name--forced">{{
-                view.name
-              }}</span>
+              <span class="header__filter-name header__filter-name--forced">
+                <EditableViewName ref="rename" :view="view"></EditableViewName>
+              </span>
             </template>
             <span v-else>
-              <i
-                class="header__filter-icon header-filter-icon-no-choice fas fa-caret-square-down"
-              ></i>
+              <i class="header__filter-icon fas fa-caret-square-down"></i>
               Choose view
             </span>
           </a>
@@ -44,6 +42,31 @@
             :header-overflow="headerOverflow"
             @selected-view="$emit('selected-view', $event)"
           ></ViewsContext>
+        </li>
+        <li
+          v-if="hasSelectedView && !readOnly"
+          class="header__filter-item header__filter-item--no-margin-left"
+        >
+          <a
+            class="header__filter-link"
+            @click="
+              $refs.viewContext.toggle(
+                $event.currentTarget,
+                'bottom',
+                'left',
+                4
+              )
+            "
+          >
+            <i class="header__filter-icon fas fa-ellipsis-h"></i>
+          </a>
+          <ViewContext
+            ref="viewContext"
+            :view="view"
+            :table="table"
+            @enable-rename="$refs.rename.edit()"
+          >
+          </ViewContext>
         </li>
         <li
           v-if="hasSelectedView && view._.type.canFilter"
@@ -108,9 +131,11 @@ import ResizeObserver from 'resize-observer-polyfill'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContext from '@baserow/modules/database/components/view/ViewsContext'
+import ViewContext from '@baserow/modules/database/components/view/ViewContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
+import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -118,10 +143,12 @@ import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
  */
 export default {
   components: {
+    EditableViewName,
     ViewsContext,
     ViewFilter,
     ViewSort,
     ViewSearch,
+    ViewContext,
   },
   /**
    * Because there is no hook that is called before the route changes, we need the
@@ -152,7 +179,6 @@ export default {
       required: true,
     },
     view: {
-      type: Object,
       required: true,
       validator: (prop) => typeof prop === 'object' || prop === undefined,
     },

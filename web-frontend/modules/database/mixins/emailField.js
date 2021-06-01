@@ -14,6 +14,9 @@ export default {
       if (this.copy === null || this.copy === '') {
         return null
       }
+      if (this.copy.length > 254) {
+        return 'Max 254 chars'
+      }
       if (!isValidEmail(this.copy)) {
         return 'Invalid email'
       }

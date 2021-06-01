@@ -1,6 +1,7 @@
 from django.db.models import F
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.core.utils import extract_allowed, set_allowed_attrs
@@ -31,7 +32,6 @@ from .signals import (
     view_sort_deleted,
     grid_view_field_options_updated,
 )
-from baserow.contrib.database.fields.field_filters import FilterBuilder
 
 
 class ViewHandler:
@@ -45,7 +45,7 @@ class ViewHandler:
         :param view_model: If provided that models objects are used to select the
             view. This can for example be useful when you want to select a GridView or
             other child of the View model.
-        :type view_model: View
+        :type view_model: Type[View]
         :param base_queryset: The base queryset from where to select the view
             object. This can for example be used to do a `select_related`. Note that
             if this is used the `view_model` parameter doesn't work anymore.
@@ -696,3 +696,30 @@ class ViewHandler:
         view_sort_deleted.send(
             self, view_sort_id=view_sort_id, view_sort=view_sort, user=user
         )
+
+    def get_queryset(self, view, search=None, model=None):
+        """
+        Returns a queryset for the provided view which is appropriately sorted,
+        filtered and searched according to the view type and its settings.
+
+        :param search: A search term to apply to the resulting queryset.
+        :param model: The model for this views table to generate the queryset from, if
+            not specified then the model will be generated automatically.
+        :param view: The view to get the export queryset and fields for.
+        :type view: View
+        :return: The export queryset.
+        :rtype: QuerySet
+        """
+
+        if model is None:
+            model = view.table.get_model()
+        queryset = model.objects.all().enhance_by_fields()
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        if view_type.can_filter:
+            queryset = self.apply_filters(view, queryset)
+        if view_type.can_sort:
+            queryset = self.apply_sorting(view, queryset)
+        if search is not None:
+            queryset = queryset.search_all_fields(search)
+        return queryset

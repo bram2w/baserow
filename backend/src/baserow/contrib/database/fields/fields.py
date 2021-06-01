@@ -1,5 +1,8 @@
+from django import forms
+from django.core.validators import URLValidator
 from django.db import models
 from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor
+from django.utils.translation import gettext_lazy as _
 
 
 class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
@@ -28,3 +31,24 @@ class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
 
 class SingleSelectForeignKey(models.ForeignKey):
     forward_related_accessor_class = SingleSelectForwardManyToOneDescriptor
+
+
+class URLTextField(models.TextField):
+    """
+    This is a slightly modified django.db.models.URLField. The difference is that this
+    field is based on the TextField and does not have a max length.
+    """
+
+    default_validators = [URLValidator()]
+    description = _("URL")
+
+    def __init__(self, verbose_name=None, name=None, **kwargs):
+        super().__init__(verbose_name, name, **kwargs)
+
+    def formfield(self, **kwargs):
+        return super().formfield(
+            **{
+                "form_class": forms.URLField,
+                **kwargs,
+            }
+        )

@@ -63,13 +63,6 @@ export default {
   },
   methods: {
     /**
-     * Returns true if there is a value.
-     * @return {boolean}
-     */
-    hasValue() {
-      return this.value === 0 ? true : !!this.value
-    },
-    /**
      * Toggles the open state of the dropdown menu.
      */
     toggle(target, value) {
@@ -200,6 +193,19 @@ export default {
         }
       }
       return ''
+    },
+    /**
+     * Returns true if there is a value.
+     * @return {boolean}
+     */
+    hasValue() {
+      for (const i in this.$children) {
+        const item = this.$children[i]
+        if (item.value === this.value) {
+          return true
+        }
+      }
+      return false
     },
     /**
      * A nasty hack, but in some cases the $children have not yet been loaded when the

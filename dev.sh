@@ -1,7 +1,6 @@
 #!/bin/bash
 # Bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
-IFS=$'\n\t'
 
 
 tabname() {
@@ -237,6 +236,12 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
 
   new_tab "Backend celery" \
           "docker logs celery && docker attach celery"
+
+  new_tab "Backend celery export worker" \
+          "docker logs celery-export-worker && docker attach celery-export-worker"
+
+  new_tab "Backend celery beat worker" \
+          "docker logs celery-beat-worker && docker attach celery-beat-worker"
 
   new_tab "Web frontend" \
           "docker logs web-frontend && docker attach web-frontend"

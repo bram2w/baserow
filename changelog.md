@@ -15,6 +15,13 @@
 * Added a page containing external resources to the docs.
 * Added a human-readable error message when a user tries to sign in with a deactivated
   account.
+* Tables and views can now be exported to CSV (if you have installed using the ubuntu 
+  guide please use the updated .conf files to enable this feature).
+* **Premium** Tables and views can now be exported to JSON and XML.
+* Removed URL field max length and fixed the backend failing hard because of that.
+* Fixed bug where the focus of an Editable component was not always during and after
+  editing if the parent component had overflow hidden.
+* Fixed bug where the selected view would still be visible after deleting it.
 * Templates:
   * Lightweight CRM
   * Wedding Planning
@@ -42,7 +49,7 @@
 ## Released (2021-04-08)
 
 * Added support for importing tables from XML files.
-* Added support for different character encodings when importing CSV files.
+* Added support for different** character encodings when importing CSV files.
 * Prevent websocket reconnect loop when the authentication fails.
 * Refactored the GridView component and improved interface speed.
 * Prevent websocket reconnect when the connection closes without error.

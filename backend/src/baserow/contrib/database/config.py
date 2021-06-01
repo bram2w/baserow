@@ -46,6 +46,7 @@ class DatabaseConfig(AppConfig):
 
         from .views.registries import view_type_registry, view_filter_type_registry
         from .fields.registries import field_type_registry, field_converter_registry
+        from .export.registries import table_exporter_registry
 
         from .plugins import DatabasePlugin
 
@@ -131,6 +132,10 @@ class DatabaseConfig(AppConfig):
         from .ws.pages import TablePageType
 
         page_registry.register(TablePageType())
+
+        from .export.table_exporters.csv_table_exporter import CsvTableExporter
+
+        table_exporter_registry.register(CsvTableExporter())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

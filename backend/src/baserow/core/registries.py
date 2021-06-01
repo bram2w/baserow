@@ -1,3 +1,4 @@
+from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
 from .registry import (
     Instance,
     Registry,
@@ -7,7 +8,6 @@ from .registry import (
     APIUrlsInstanceMixin,
     ImportExportMixin,
 )
-from .exceptions import ApplicationTypeAlreadyRegistered, ApplicationTypeDoesNotExist
 
 
 class Plugin(APIUrlsInstanceMixin, Instance):
