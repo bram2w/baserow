@@ -86,7 +86,7 @@
           >
             A minimum of
             {{ $v.account.password.$params.minLength.min }} characters is
-            allowed here.
+            required here.
           </div>
         </div>
       </div>

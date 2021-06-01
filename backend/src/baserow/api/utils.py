@@ -1,11 +1,10 @@
 from contextlib import contextmanager
 
 from django.utils.encoding import force_text
-
 from rest_framework import status
 from rest_framework.exceptions import APIException
-from rest_framework.serializers import ModelSerializer
 from rest_framework.request import Request
+from rest_framework.serializers import ModelSerializer
 
 from baserow.core.exceptions import InstanceTypeDoesNotExist
 

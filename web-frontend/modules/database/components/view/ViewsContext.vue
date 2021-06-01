@@ -22,6 +22,7 @@
         :key="view.id"
         v-sortable="{ id: view.id, update: order }"
         :view="view"
+        :table="table"
         :read-only="readOnly"
         @selected="selectedView"
       ></ViewsContextItem>

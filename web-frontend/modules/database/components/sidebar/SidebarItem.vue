@@ -19,6 +19,12 @@
       <div class="context__menu-title">{{ table.name }}</div>
       <ul class="context__menu">
         <li>
+          <a @click="exportTable()">
+            <i class="context__menu-icon fas fa-fw fa-file-export"></i>
+            Export table
+          </a>
+        </li>
+        <li>
           <a @click="enableRename()">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
             Rename
@@ -36,6 +42,7 @@
         :database="database"
         :table="table"
       />
+      <ExportTableModal ref="exportTableModal" :table="table" />
     </Context>
   </li>
 </template>
@@ -43,10 +50,11 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import DeleteTableModal from '@baserow/modules/database/components/table/DeleteTableModal'
+import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 
 export default {
   name: 'SidebarItem',
-  components: { DeleteTableModal },
+  components: { ExportTableModal, DeleteTableModal },
   props: {
     database: {
       type: Object,
@@ -86,6 +94,10 @@ export default {
     deleteTable() {
       this.$refs.context.hide()
       this.$refs.deleteTableModal.show()
+    },
+    exportTable() {
+      this.$refs.context.hide()
+      this.$refs.exportTableModal.show()
     },
     enableRename() {
       this.$refs.context.hide()

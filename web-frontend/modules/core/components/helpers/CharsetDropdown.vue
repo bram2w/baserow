@@ -1,5 +1,5 @@
 <template>
-  <Dropdown :value="value" @input="$emit('input', $event)">
+  <Dropdown :value="value" :disabled="disabled" @input="$emit('input', $event)">
     <DropdownItem name="Unicode (UTF-8)" value="utf-8"></DropdownItem>
     <DropdownItem name="Arabic (ISO-8859-6)" value="iso-8859-6"></DropdownItem>
     <DropdownItem
@@ -89,10 +89,19 @@
 
 <script>
 export default {
+  // Please keep in sync with
+  // src/baserow/contrib/database/api/export/serializers.py:SUPPORTED_EXPORT_CHARSETS
   name: 'CharsetDropdown',
   props: {
     value: {
       type: String,
+      required: false,
+      default: null,
+    },
+    disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 }

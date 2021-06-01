@@ -1,18 +1,17 @@
 import sys
-from math import ceil
 from decimal import Decimal
+from math import ceil
 
 from django.core.management.base import BaseCommand
 from django.db.models import Max
-
 from faker import Faker
 
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.models import Table
 
 
 class Command(BaseCommand):
@@ -93,8 +92,6 @@ class Command(BaseCommand):
             i = 0
             for kwargs in all_possible_kwargs:
                 i = i + 1
-                postfix = str(i) if len(all_possible_kwargs) > 1 else ""
-                kwargs["name"] = field_type_name + postfix
                 field_handler.create_field(
                     table.database.group.users.first(), table, field_type_name, **kwargs
                 )

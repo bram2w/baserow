@@ -1,4 +1,5 @@
 import re
+from typing import Dict, Any
 
 from django.db import models
 from django.db.models import Q
@@ -184,6 +185,9 @@ class TableModelQuerySet(models.QuerySet):
 class TableModelManager(models.Manager):
     def get_queryset(self):
         return TableModelQuerySet(self.model, using=self._db)
+
+
+FieldObject = Dict[str, Any]
 
 
 class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):

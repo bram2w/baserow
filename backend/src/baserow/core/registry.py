@@ -3,7 +3,6 @@ import contextlib
 from django.core.exceptions import ImproperlyConfigured
 
 from baserow.api.utils import get_serializer_class, map_exceptions
-
 from .exceptions import InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
 
 

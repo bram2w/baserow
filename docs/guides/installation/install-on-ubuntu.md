@@ -61,7 +61,7 @@ $ sudo systemctl enable --now redis-server
 $ sudo systemctl restart redis.service
 ```
 
-By default Redis is not publicly accessible, so there is no need to setup a password.
+Redis is not publicly accessible by default, so there is no need to setup a password.
 
 ## Install Baserow
 
@@ -81,7 +81,7 @@ $ sudo -i
 # Clone the baserow project
 $ mkdir /baserow
 $ cd /baserow
-$ git clone https://gitlab.com/bramw/baserow.git .
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 ```
 
 The password used for the `baserow` user does not have to be the same as the one used
@@ -103,19 +103,19 @@ $ chmod 0755 media
 $ apt install python3 python3-pip virtualenv libpq-dev libmysqlclient-dev -y
 
 # Create virtual environment
-$ virtualenv -p python3 backend/env
+$ virtualenv -p python3 env
 
 # Activate the virtual environment
-$ source backend/env/bin/activate
+$ source env/bin/activate
 
 # Install backend dependencies through pip
-$ pip3 install -e ./backend
+$ pip3 install -e ./baserow/backend
 
 # Deactivate the virtual environment
 $ deactivate
 
 # Install NodeJS
-$ curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+$ curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 $ apt install nodejs -y
 
 # Install yarn
@@ -125,7 +125,7 @@ $ apt update
 $ apt install yarn -y
 
 # Install frontend dependencies through yarn
-$ cd web-frontend
+$ cd baserow/web-frontend
 $ yarn install
 
 # Build frontend
@@ -163,14 +163,14 @@ replace `media.baserow.com` with your domain to serve the user files.
 
 ```bash
 # Move virtualhost files to /etc/nginx/sites-enabled/
-$ cp docs/guides/installation/configuration-files/nginx/* /etc/nginx/sites-enabled/
+$ cp baserow/docs/guides/installation/configuration-files/nginx.conf /etc/nginx/sites-enabled/baserow.conf
 
 $ rm /etc/nginx/sites-enabled/default
 
 # Change the server_name values
-$ sed -i 's/\*YOUR_DOMAIN\*/api.domain.com/g' /etc/nginx/sites-enabled/baserow-backend.conf
-$ sed -i 's/\*YOUR_DOMAIN\*/baserow.domain.com/g' /etc/nginx/sites-enabled/baserow-frontend.conf
-$ sed -i 's/\*YOUR_DOMAIN\*/media.domain.com/g' /etc/nginx/sites-enabled/baserow-media.conf
+$ sed -i 's/\*YOUR_BACKEND_DOMAIN\*/api.domain.com/g' /etc/nginx/sites-enabled/baserow.conf
+$ sed -i 's/\*YOUR_WEB_FRONTEND_DOMAIN\*/baserow.domain.com/g' /etc/nginx/sites-enabled/baserow.conf
+$ sed -i 's/\*YOUR_MEDIA_DOMAIN\*/media.domain.com/g' /etc/nginx/sites-enabled/baserow.conf
 
 # Then restart nginx so that it processes the configuration files
 $ service nginx restart
@@ -186,10 +186,10 @@ commands:
 
 ```bash
 # Prepare for creating the database schema
-$ source backend/env/bin/activate
+$ source env/bin/activate
 $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD='yourpassword'
-$ export DATABASE_HOST="localhost"
+$ export DATABASE_HOST='localhost'
 
 # Create database schema
 $ baserow migrate
@@ -216,13 +216,13 @@ $ mkdir /var/log/baserow/
 
 # Move configuration files
 $ cd /baserow
-$ cp docs/guides/installation/configuration-files/supervisor/* /etc/supervisor/conf.d/
+$ cp baserow/docs/guides/installation/configuration-files/supervisor.conf /etc/supervisor/conf.d/baserow.conf
 ```
 
-You will need to edit the `baserow-frontend.conf` and `baserow-backend.conf` files
-(located now at `/etc/supervisor/conf.d/`) in order to set the necessary environment
+You will need to edit the `baserow.conf` file (located now at 
+`/etc/supervisor/conf.d/`) in order to set the necessary environment
 variables. You will need to change at least the following variables which can be found
-in the `environment =` section.
+in the `environment=` section.
 
 - `PUBLIC_WEB_FRONTEND_URL`: The URL under which your frontend can be reached from the
   internet.
@@ -300,6 +300,30 @@ If you already have Baserow installed on your server and you want to update to t
 latest version then you can execute the following commands. This only works if there
 aren't any additional instructions in the previous release blog posts.
 
+Follow these steps if you installed after June first 2021:
+
+```
+$ cd /baserow/baserow
+$ git pull
+$ cd /baserow
+$ source env/bin/activate
+$ pip3 install -e ./baserow/backend
+$ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
+$ export DATABASE_PASSWORD='yourpassword'
+$ export DATABASE_HOST='localhost'
+$ baserow migrate
+$ baserow sync_templates
+$ deactivate
+$ cd baserow/web-frontend
+$ yarn install
+$ ./node_modules/nuxt/bin/nuxt.js build --config-file config/nuxt.config.local.js
+$ supervisorctl reread
+$ supervisorctl update
+$ supervisorctl restart all
+```
+
+Follow these steps if you installed before June first 2021.
+
 ```
 $ cd /baserow
 $ git pull
@@ -318,4 +342,3 @@ $ supervisorctl reread
 $ supervisorctl update
 $ supervisorctl restart all
 ```
-

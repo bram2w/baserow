@@ -79,6 +79,33 @@ REDIS_URL = (
 )
 
 CELERY_BROKER_URL = REDIS_URL
+CELERY_TASK_ROUTES = {
+    "baserow.contrib.database.export.tasks.run_export_job": {"queue": "export"},
+    "baserow.contrib.database.export.tasks.clean_up_old_jobs": {"queue": "export"},
+}
+CELERY_SOFT_TIME_LIMIT = 60 * 5
+CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60
+
+CELERY_REDBEAT_REDIS_URL = REDIS_URL
+# Explicitly set the same value as the default loop interval here so we can use it
+# later. CELERY_BEAT_MAX_LOOP_INTERVAL < CELERY_REDBEAT_LOCK_TIMEOUT must be kept true
+# as otherwise a beat instance will acquire the lock, do scheduling, go to sleep for
+# CELERY_BEAT_MAX_LOOP_INTERVAL before waking up where it assumes it still owns the lock
+# however if the lock timeout is less than the interval the lock will have been released
+# and the beat instance will crash as it attempts to extend the lock which it no longer
+# owns.
+CELERY_BEAT_MAX_LOOP_INTERVAL = 300
+# By default CELERY_REDBEAT_LOCK_TIMEOUT = 5 * CELERY_BEAT_MAX_LOOP_INTERVAL
+# Only one beat instance can hold this lock and schedule tasks at any one time.
+# This means if one celery-beat instance crashes any other replicas waiting to take over
+# will by default wait 25 minutes until the lock times out and they can acquire
+# the lock to start scheduling tasks again.
+# Instead we just set it to be slightly longer than the loop interval that beat uses.
+# This means beat wakes up, checks the schedule and extends the lock every
+# CELERY_BEAT_MAX_LOOP_INTERVAL seconds. If it crashes or fails to wake up
+# then 6 minutes after the lock was last extended it will be released and a new
+# scheduler will acquire the lock and take over.
+CELERY_REDBEAT_LOCK_TIMEOUT = CELERY_BEAT_MAX_LOOP_INTERVAL + 60
 
 CHANNEL_LAYERS = {
     "default": {
@@ -202,6 +229,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table view sortings"},
         {"name": "Database table grid view"},
         {"name": "Database table rows"},
+        {"name": "Database table export"},
         {"name": "Database tokens"},
         {"name": "Admin"},
     ],
@@ -247,6 +275,10 @@ MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/baserow/media")
 USER_FILES_DIRECTORY = "user_files"
 USER_THUMBNAILS_DIRECTORY = "thumbnails"
 USER_FILE_SIZE_LIMIT = 1024 * 1024 * 20  # 20MB
+
+EXPORT_FILES_DIRECTORY = "export_files"
+EXPORT_CLEANUP_INTERVAL_MINUTES = 5
+EXPORT_FILE_EXPIRE_MINUTES = 60
 
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 
