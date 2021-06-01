@@ -37,7 +37,7 @@ from .exceptions import (
     IncompatiblePrimaryFieldTypeError,
 )
 from .field_filters import contains_filter, AnnotatedQ, filename_contains_filter
-from .fields import SingleSelectForeignKey
+from .fields import SingleSelectForeignKey, URLTextField
 from .handler import FieldHandler
 from .models import (
     NUMBER_TYPE_INTEGER,
@@ -122,7 +122,7 @@ class URLFieldType(FieldType):
         )
 
     def get_model_field(self, instance, **kwargs):
-        return models.URLField(default="", blank=True, null=True, **kwargs)
+        return URLTextField(default="", blank=True, null=True, **kwargs)
 
     def random_value(self, instance, fake, cache):
         return fake.url()

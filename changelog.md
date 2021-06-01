@@ -18,6 +18,7 @@
 * Tables and views can now be exported to CSV (if you have installed using the ubuntu 
   guide please use the updated .conf files to enable this feature).
 * **Premium** Tables and views can now be exported to JSON and XML.
+* Removed URL field max length and fixed the backend failing hard because of that.
 * Templates:
   * Lightweight CRM
   * Wedding Planning
