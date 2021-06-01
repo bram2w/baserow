@@ -21,6 +21,7 @@
 * Removed URL field max length and fixed the backend failing hard because of that.
 * Fixed bug where the focus of an Editable component was not always during and after
   editing if the parent component had overflow hidden.
+* Fixed bug where the selected view would still be visible after deleting it.
 * Templates:
   * Lightweight CRM
   * Wedding Planning
