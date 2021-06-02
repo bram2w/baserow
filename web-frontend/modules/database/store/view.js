@@ -4,7 +4,6 @@ import ViewService from '@baserow/modules/database/services/view'
 import FilterService from '@baserow/modules/database/services/filter'
 import SortService from '@baserow/modules/database/services/sort'
 import { clone } from '@baserow/modules/core/utils/object'
-import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 
 export function populateFilter(filter) {
   filter._ = {
@@ -76,6 +75,12 @@ export const mutations = {
   UPDATE_ITEM(state, { id, values }) {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
+  },
+  ORDER_ITEMS(state, order) {
+    state.items.forEach((view) => {
+      const index = order.findIndex((value) => value === view.id)
+      view.order = index === -1 ? 0 : index + 1
+    })
   },
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
@@ -242,6 +247,19 @@ export const actions = {
     }
   },
   /**
+   * Updates the order of all the views in a table.
+   */
+  async order({ commit, getters }, { table, order, oldOrder }) {
+    commit('ORDER_ITEMS', order)
+
+    try {
+      await ViewService(this.$client).order(table.id, order)
+    } catch (error) {
+      commit('ORDER_ITEMS', oldOrder)
+      throw error
+    }
+  },
+  /**
    * Forcefully update an existing view without making a request to the backend.
    */
   forceUpdate({ commit }, { view, values }) {
@@ -268,31 +286,41 @@ export const actions = {
   /**
    * Removes the view from the this store without making a delete request to the server.
    */
-  forceDelete({ commit, dispatch, rootGetters }, view) {
-    if (view._.selected) {
+  forceDelete({ commit, dispatch, getters, rootGetters }, view) {
+    // If the currently selected view is selected.
+    if (view._.selected && view.id === getters.getSelectedId) {
       commit('UNSELECT')
 
+      const route = this.$router.history.current
       const tableId = view.table.id
-      const applications = rootGetters['application/getAll']
-      let redirect = { name: 'dashboard' }
 
-      // Try to find the table and database id so we can redirect back to the table
-      // page. We might want to move this to a separate function.
-      applications.forEach((application) => {
-        if (application.type === DatabaseApplicationType.getType()) {
-          application.tables.forEach((table) => {
-            if (table.id === tableId) {
-              redirect = {
-                name: 'database-table',
-                params: { databaseId: application.id, tableId: table.id },
-              }
-            }
-          })
+      // If the current route is the same table as the deleting view.
+      if (
+        route.name === 'database-table' &&
+        parseInt(route.params.tableId) === tableId
+      ) {
+        // Check if there are any other views and figure out what the next selected
+        // view should be. This is always the first one in the list.
+        const otherViews = getters.getAll
+          .filter((v) => view.id !== v.id)
+          .sort((a, b) => a.order - b.order)
+        const nextView = otherViews.length > 0 ? otherViews[0] : null
+
+        if (nextView !== null) {
+          // If there is a next view, we can redirect to that page.
+          this.$router.replace({ params: { viewId: nextView.id } })
+        } else if (route.params.viewId) {
+          // If there isn't a next view and the user was already viewing a view, we
+          // need to redirect to the empty table page.
+          this.$router.replace({ params: { viewId: null } })
+        } else {
+          // If there isn't a next view and the user wasn't looking at a view, we need
+          // to refresh to show an empty table page. Changing the view id to 0,
+          // which never exists forces the table page to show empty. We have
+          // to do it this way because we can't navigate to the page without view.
+          this.$router.replace({ params: { viewId: '0' } })
         }
-      })
-
-      // If the database id wasn't found we redirect to the dashboard.
-      this.$router.push(redirect)
+      }
     }
 
     commit('DELETE_ITEM', view.id)
@@ -343,6 +371,12 @@ export const actions = {
         )
       }
       values.type = compatibleType.type
+    }
+
+    // If the value is not provided, then we use the default value related to the type.
+    if (!Object.prototype.hasOwnProperty.call(values, 'value')) {
+      const viewFilterType = this.$registry.get('viewFilter', values.type)
+      values.value = viewFilterType.getDefaultValue()
     }
 
     const filter = Object.assign({}, values)
@@ -591,7 +625,10 @@ export const getters = {
     return state.items.find((item) => item.id === id)
   },
   first(state) {
-    return state.items.length > 0 ? state.items[0] : null
+    const items = state.items
+      .map((item) => item)
+      .sort((a, b) => a.order - b.order)
+    return items.length > 0 ? items[0] : null
   },
   getAll(state) {
     return state.items

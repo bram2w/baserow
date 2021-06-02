@@ -6,7 +6,7 @@ from django.contrib.auth.models import update_last_login
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.core.user.utils import normalize_email_address
-from baserow.core.models import Template
+from baserow.core.models import Template, UserLogEntry
 
 User = get_user_model()
 
@@ -87,8 +87,11 @@ class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
         login timestamp.
         """
 
+        # In the future, when migrating away from the JWT implementation, we want to
+        # respond with machine readable error codes when authentication fails.
         validated_data = super().validate(attrs)
         update_last_login(None, validated_data["user"])
+        UserLogEntry.objects.create(actor=validated_data["user"], action="SIGNED_IN")
         # Call the user_signed_in method for each plugin that is un the registry to
         # notify all plugins that a user has signed in.
         from baserow.core.registries import plugin_registry

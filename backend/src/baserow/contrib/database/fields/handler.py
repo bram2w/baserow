@@ -152,7 +152,7 @@ class FieldHandler:
         :raises CannotChangeFieldType: When the database server responds with an
             error while trying to change the field type. This should rarely happen
             because of the lenient schema editor, which replaces the value with null
-            if it ould not be converted.
+            if it could not be converted.
         :return: The updated field instance.
         :rtype: Field
         """

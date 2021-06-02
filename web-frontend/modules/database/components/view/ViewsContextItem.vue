@@ -13,11 +13,7 @@
           class="select__item-icon fas fa-fw color-primary"
           :class="'fa-' + view._.type.iconClass"
         ></i>
-        <Editable
-          ref="rename"
-          :value="view.name"
-          @change="renameView(view, $event)"
-        ></Editable>
+        <EditableViewName ref="rename" :view="view"></EditableViewName>
       </div>
     </a>
     <template v-if="!readOnly">
@@ -25,41 +21,35 @@
         ref="contextLink"
         class="select__item-options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
+        @mousedown.stop
       >
         <i class="fas fa-ellipsis-v"></i>
       </a>
-      <Context ref="context">
-        <ul class="context__menu">
-          <li>
-            <a @click="enableRename()">
-              <i class="context__menu-icon fas fa-fw fa-pen"></i>
-              Rename view
-            </a>
-          </li>
-          <li>
-            <a @click="deleteView()">
-              <i class="context__menu-icon fas fa-fw fa-trash"></i>
-              Delete view
-            </a>
-          </li>
-        </ul>
-      </Context>
-      <DeleteViewModal ref="deleteViewModal" :view="view" />
+      <ViewContext
+        ref="context"
+        :table="table"
+        :view="view"
+        @enable-rename="enableRename"
+      ></ViewContext>
     </template>
   </li>
 </template>
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
-import { notifyIf } from '@baserow/modules/core/utils/error'
-import DeleteViewModal from './DeleteViewModal'
+import ViewContext from '@baserow/modules/database/components/view/ViewContext'
+import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
 
 export default {
   name: 'ViewsContextItem',
-  components: { DeleteViewModal },
+  components: { EditableViewName, ViewContext },
   mixins: [context],
   props: {
     view: {
+      type: Object,
+      required: true,
+    },
+    table: {
       type: Object,
       required: true,
     },
@@ -70,32 +60,8 @@ export default {
     },
   },
   methods: {
-    setLoading(view, value) {
-      this.$store.dispatch('view/setItemLoading', { view, value })
-    },
     enableRename() {
-      this.$refs.context.hide()
       this.$refs.rename.edit()
-    },
-    async renameView(view, event) {
-      this.setLoading(view, true)
-
-      try {
-        await this.$store.dispatch('view/update', {
-          view,
-          values: {
-            name: event.value,
-          },
-        })
-      } catch (error) {
-        notifyIf(error, 'view')
-      }
-
-      this.setLoading(view, false)
-    },
-    deleteView() {
-      this.$refs.context.hide()
-      this.$refs.deleteViewModal.show()
     },
   },
 }

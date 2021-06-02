@@ -184,7 +184,6 @@ export default {
           field,
           values: {
             field: field.id,
-            value: '',
           },
         })
         this.$emit('refresh')

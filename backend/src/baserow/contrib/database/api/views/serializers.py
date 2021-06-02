@@ -137,3 +137,9 @@ class UpdateViewSerializer(serializers.ModelSerializer):
             "filter_type": {"required": False},
             "filters_disabled": {"required": False},
         }
+
+
+class OrderViewsSerializer(serializers.Serializer):
+    view_ids = serializers.ListField(
+        child=serializers.IntegerField(), help_text="View ids in the desired order."
+    )

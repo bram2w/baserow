@@ -1,0 +1,616 @@
+{
+  "baserow_template_version": 1,
+  "name": "Book Catalog",
+  "icon": "book",
+  "keywords": [
+    "Books",
+    "Catalog"
+  ],
+  "categories": [
+    "Hobbies",
+    "Personal"
+  ],
+  "export": [
+    {
+      "id": 11,
+      "name": "Book Catalog",
+      "order": 1,
+      "type": "database",
+      "tables": [
+        {
+          "id": 35,
+          "name": "Books",
+          "order": 1,
+          "fields": [
+            {
+              "id": 224,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 225,
+              "type": "long_text",
+              "name": "Synopsis",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 233,
+              "type": "link_row",
+              "name": "Authors",
+              "order": 2,
+              "primary": false,
+              "link_row_table_id": 36,
+              "link_row_related_field_id": 234
+            },
+            {
+              "id": 235,
+              "type": "file",
+              "name": "Cover Photo",
+              "order": 3,
+              "primary": false
+            },
+            {
+              "id": 236,
+              "type": "boolean",
+              "name": "Bought?",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 237,
+              "type": "single_select",
+              "name": "Format",
+              "order": 5,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 96,
+                  "value": "Hardcover",
+                  "color": "light-green",
+                  "order": 0
+                },
+                {
+                  "id": 97,
+                  "value": "Paperback",
+                  "color": "dark-blue",
+                  "order": 1
+                },
+                {
+                  "id": 98,
+                  "value": "Ebook",
+                  "color": "light-green",
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 238,
+              "type": "boolean",
+              "name": "Read?",
+              "order": 6,
+              "primary": false
+            },
+            {
+              "id": 239,
+              "type": "link_row",
+              "name": "Publisher",
+              "order": 7,
+              "primary": false,
+              "link_row_table_id": 37,
+              "link_row_related_field_id": 240
+            },
+            {
+              "id": 241,
+              "type": "long_text",
+              "name": "Personal Notes",
+              "order": 8,
+              "primary": false
+            },
+            {
+              "id": 244,
+              "type": "single_select",
+              "name": "Language",
+              "order": 9,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 99,
+                  "value": "English",
+                  "color": "dark-red",
+                  "order": 0
+                },
+                {
+                  "id": 100,
+                  "value": "Spanish",
+                  "color": "dark-orange",
+                  "order": 1
+                },
+                {
+                  "id": 101,
+                  "value": "Portuguese",
+                  "color": "dark-green",
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 245,
+              "type": "number",
+              "name": "Pages",
+              "order": 10,
+              "primary": false,
+              "number_type": "INTEGER",
+              "number_decimal_places": 1,
+              "number_negative": false
+            }
+          ],
+          "views": [
+            {
+              "id": 43,
+              "type": "grid",
+              "name": "All Books",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 286,
+                  "field_id": 224,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 10
+                },
+                {
+                  "id": 284,
+                  "field_id": 225,
+                  "width": 268,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 293,
+                  "field_id": 233,
+                  "width": 159,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 294,
+                  "field_id": 235,
+                  "width": 144,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 295,
+                  "field_id": 236,
+                  "width": 114,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 296,
+                  "field_id": 237,
+                  "width": 112,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 297,
+                  "field_id": 238,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 8
+                },
+                {
+                  "id": 298,
+                  "field_id": 239,
+                  "width": 190,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 302,
+                  "field_id": 241,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 9
+                },
+                {
+                  "id": 304,
+                  "field_id": 244,
+                  "width": 137,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 305,
+                  "field_id": 245,
+                  "width": 104,
+                  "hidden": false,
+                  "order": 5
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_224": "The Premonition: A Pandemic Story",
+              "field_225": "For those who could read between the lines, the censored news out of China was terrifying. But the president insisted there was nothing to worry about.\n\nFortunately, we are still a nation of skeptics. Fortunately, there are those among us who study pandemics and are willing to look unflinchingly at worst-case scenarios. Michael Lewis’s taut and brilliant nonfiction thriller pits a band of medical visionaries against the wall of ignorance that was the official response of the Trump administration to the outbreak of COVID-19.\n\nThe characters you will meet in these pages are as fascinating as they are unexpected. A thirteen-year-old girl’s science project on transmission of an airborne pathogen develops into a very grown-up model of disease control. A local public-health officer uses her worm’s-eye view to see what the CDC misses, and reveals great truths about American society. A secret team of dissenting doctors, nicknamed the Wolverines, has everything necessary to fight the pandemic: brilliant backgrounds, world-class labs, prior experience with the pandemic scares of bird flu and swine flu…everything, that is, except official permission to implement their work.\n\nMichael Lewis is not shy about calling these people heroes for their refusal to follow directives that they know to be based on misinformation and bad science. Even the internet, as crucial as it is to their exchange of ideas, poses a risk to them. They never know for sure who else might be listening in.",
+              "field_233": [
+                1
+              ],
+              "field_235": [
+                {
+                  "name": "oHLENrpd6rtMmOnP3OnsZcu648s7LLRP_c5fc2d141ece54939dc822c544dee336bfdb81efef48fbd6247ff9b5f28c1cff.jpg",
+                  "visible_name": "41+2DiWeWAS._SX345_BO1,204,203,200_.jpg",
+                  "original_name": "41+2DiWeWAS._SX345_BO1,204,203,200_.jpg"
+                }
+              ],
+              "field_236": "true",
+              "field_237": 96,
+              "field_238": "false",
+              "field_239": [
+                1
+              ],
+              "field_241": null,
+              "field_244": 99,
+              "field_245": "320"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_224": "The Good Sister: A Novel",
+              "field_225": "Fern Castle works in her local library. She has dinner with her twin sister Rose three nights a week. And she avoids crowds, bright lights and loud noises as much as possible. Fern has a carefully structured life and disrupting her routine can be...dangerous.\n\nWhen Rose discovers that she cannot get pregnant, Fern sees her chance to pay her sister back for everything Rose has done for her. Fern can have a baby for Rose. She just needs to find a father. Simple.\n\nFern's mission will shake the foundations of the life she has carefully built for herself and stir up dark secrets from the past, in this quirky, rich and shocking story of what families keep hidden.",
+              "field_233": [
+                2
+              ],
+              "field_235": [
+                {
+                  "name": "lfHke3Hu53KNeTWkJkPeI2qqEkFAVBIR_3378d73e705610b09416d3da53b9fd0b03fb9b35d9f5ed7cc3db5a1489f3bede.jpg",
+                  "visible_name": "51XlJUUQOgS._SX324_BO1,204,203,200_.jpg",
+                  "original_name": "51XlJUUQOgS._SX324_BO1,204,203,200_.jpg"
+                }
+              ],
+              "field_236": "true",
+              "field_237": 97,
+              "field_238": "true",
+              "field_239": [
+                2
+              ],
+              "field_241": "A stunningly clever thriller made doubly suspenseful by not one, but two unreliable narrators",
+              "field_244": 99,
+              "field_245": "336"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_224": "Second Place: A Novel",
+              "field_225": "A woman invites a famous artist to use her guesthouse in the remote coastal landscape where she lives with her family. Powerfully drawn to his paintings, she believes his vision might penetrate the mystery at the center of her life. But as a long, dry summer sets in, his provocative presence itself becomes an enigma—and disrupts the calm of her secluded household.",
+              "field_233": [
+                3
+              ],
+              "field_235": [
+                {
+                  "name": "0gkCzZQHnBvLPyHCInHhdTYztld3AiJ2_3d75e57895d96c677da2d69583eedf3a8a9f4fc3d4db4d78a20d0d6cd4ec6254.jpg",
+                  "visible_name": "51yc2ocU8SS.jpg",
+                  "original_name": "51yc2ocU8SS.jpg"
+                }
+              ],
+              "field_236": "true",
+              "field_237": 98,
+              "field_238": "false",
+              "field_239": [
+                3
+              ],
+              "field_241": "",
+              "field_244": 99,
+              "field_245": null
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_224": "Mujeres del alma mía: Sobre el amor impaciente, la vida larga y las brujas buenas",
+              "field_225": "En Mujeres del alma mía la gran autora chilena nos invita a acompañarla en este viaje personal y emocional donde repasa su vinculación con el feminismo desde la infancia hasta hoy. Recuerda a algunas mujeres imprescindibles en su vida, como sus añoradas Panchita, Paula o la agente Carmen Balcells; a escritoras relevantes como Virginia Woolf o Margaret Atwood; a jóvenes artistas que aglutinan la rebeldía de su generación o, entre otras muchas, a esas mujeres anónimas que han sufrido la violencia y que llenas de dignidad y coraje se levantan y avanzan... Ellas son las que tanto le inspiran y tanto le han acompañado a lo largo de su vida: sus mujeres del alma. Finalmente, re- flexiona también sobre el movimiento #MeToo —que apoya y celebra—, sobre las recientes revueltas sociales en su país de origen y, cómo no, sobre la nueva situación que globalmente estamos viviendo con la pandemia. Todo ello sin perder esa inconfundible pasión por la vida y por insistir en que, más allá́ de la edad, siempre hay tiempo para el amor.",
+              "field_233": [
+                4
+              ],
+              "field_235": [
+                {
+                  "name": "UxyxwTbA2CPv6FkKidXkJIJ3hOOZ4uIM_f57373bb7738efbfbcc4b0ee16b5787b1f849cf80247d7d0b325f81b5bcf52f3.jpg",
+                  "visible_name": "41gc4w9-tHL._SX329_BO1,204,203,200_.jpg",
+                  "original_name": "41gc4w9-tHL._SX329_BO1,204,203,200_.jpg"
+                }
+              ],
+              "field_236": "false",
+              "field_237": 96,
+              "field_238": "false",
+              "field_239": [
+                4
+              ],
+              "field_241": "",
+              "field_244": 100,
+              "field_245": "192"
+            }
+          ]
+        },
+        {
+          "id": 36,
+          "name": "Authors",
+          "order": 2,
+          "fields": [
+            {
+              "id": 227,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 228,
+              "type": "file",
+              "name": "Photos",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 234,
+              "type": "link_row",
+              "name": "Books",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 35,
+              "link_row_related_field_id": 233
+            },
+            {
+              "id": 242,
+              "type": "long_text",
+              "name": "Bio",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 243,
+              "type": "long_text",
+              "name": "Personal Notes",
+              "order": 5,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 44,
+              "type": "grid",
+              "name": "All Authors",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 289,
+                  "field_id": 227,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 287,
+                  "field_id": 228,
+                  "width": 142,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 299,
+                  "field_id": 234,
+                  "width": 426,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 300,
+                  "field_id": 242,
+                  "width": 313,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 303,
+                  "field_id": 243,
+                  "width": 292,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_227": "Michael Lewis",
+              "field_228": [
+                {
+                  "name": "RL5X77f0z0aWPEjs2yjDV4SeUmFjGZ05_2fd17f51f8392edc3f37a6b3e1ba0ff43b9b788a84b1a4eae147b22844fcad98.jpg",
+                  "visible_name": "michael lewis.jpg",
+                  "original_name": "michael lewis.jpg"
+                }
+              ],
+              "field_234": [
+                1
+              ],
+              "field_242": "Michael Lewis, the best-selling author of The Undoing Project, Liar's Poker, Flash Boys, Moneyball, The Blind Side, Home Game and The Big Short, among other works, lives in Berkeley, California, with his wife, Tabitha Soren, and their three children.",
+              "field_243": null
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_227": "Sally Hepworth",
+              "field_228": [
+                {
+                  "name": "ZX9WtOSENbYCBhSua2lUQZe73t5rt3sw_7c004169e2eb348665764e9a7657b093508a7a2280e8b71783936df0edd0716f.jpg",
+                  "visible_name": "sally hepworth.jpg",
+                  "original_name": "sally hepworth.jpg"
+                }
+              ],
+              "field_234": [
+                2
+              ],
+              "field_242": "Sally Hepworth is the bestselling author of The Secrets of Midwives (2015), The Things We Keep (2016) The Mother's Promise (2017), The Family Next Door (2018) and The Mother In Law (April 2019). Sally's books have been labelled \"enchanting\" by The Herald Sun, \"smart and engaging\" by Publisher's Weekly, and New York Times bestselling authors Liane Moriarty and Emily Giffin have praised Sally's novels as \"women's fiction at its finest\" and \"totally absorbing\".\n\nSally's novels are available worldwide in English and have been translated into 10+ languages.\n​\nSally lives in Melbourne, Australia with her husband and three children.",
+              "field_243": null
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_227": "Rachel Cusk",
+              "field_228": [
+                {
+                  "name": "lJSvHXUHNujKqWN4SjBPU0gu8emK15ys_1c7a2f79805297e69563ee0ee4b5920648d8e7fd9291d3ee9c34a0f9c31672a7.jpg",
+                  "visible_name": "rachel cusk.jpg",
+                  "original_name": "rachel cusk.jpg"
+                }
+              ],
+              "field_234": [
+                3
+              ],
+              "field_242": "Rachel Cusk is the author of nine novels, three non-fiction works, a play, and numerous shorter essays and memoirs. Her first novel, Saving Agnes, was published in 1993. Her most recent novel, Kudos, the final part of the Outline trilogy, will be published in the US and the UK in May 2018.\n\nSaving Agnes won the Whitbread First Novel Award, The Country Life won the Somerset Maugham Award and subsequent books have been shortlisted for the Orange Prize, Whitbread Prize, Goldsmiths Prize, Bailey's Prize, and the Giller Prize and Governor General's Award in Canada. She was named one of Granta's Best of Young British Novelists in 2003. Her version of Euripides' Medea was directed by Rupert Goold and was shortlisted for the Susan Blackburn Smith Award.\n\nRachel was born in Canada in 1967 and spent her early childhood in Los Angeles before moving to the UK in 1974. She studied English at Oxford and published her first novel Saving Agnes when she was twenty six, and its themes of femininity and social satire remained central to her work over the next decade. In responding to the formal problems of the novel representing female experience she began to work additionally in non-fiction. Her autobiographical accounts of motherhood and divorce (A Life's Work and Aftermath) were groundbreaking and controversial.\n\nMost recently, after a long period of consideration, she attempted to evolve a new form, one that could represent personal experience while avoiding the politics of subjectivity and literalism and remaining free from narrative convention. That project became a trilogy (Outline, Transit and Kudos). Outline was one of The New York Times' top 5 novels in 2015. Judith Thurman's 2017 profile of Rachel in The New Yorker comments \"Many experimental writers have rejected the mechanics of storytelling, but Cusk has found a way to do so without sacrificing its tension. Where the action meanders, language takes up the slack. Her sentences hum with intelligence, like a neural pathway.\"",
+              "field_243": ""
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_227": "Isabel Allende",
+              "field_228": [
+                {
+                  "name": "CohVkmZH4k4DcOZENkaC3uV98rcnQhsc_7baa5d83257012a298d636659abee30fe78d344ca6c8f423b7b53c3df0f4724d.jpg",
+                  "visible_name": "1e2bc3mepm7g78u3mvmuihr46p._US230_.jpg",
+                  "original_name": "1e2bc3mepm7g78u3mvmuihr46p._US230_.jpg"
+                }
+              ],
+              "field_234": [
+                4
+              ],
+              "field_242": "Born in Peru and raised in Chile, Isabel Allende is the author of The House of the Spirits, Daughter of Fortune, Paula, My Invented Country and The Japanese Lover. Her books have been translated into more than 35 languages and have sold over 65 million copies worldwide. The Japanese Lover was an international and New York Times bestseller. She lives in California.",
+              "field_243": ""
+            }
+          ]
+        },
+        {
+          "id": 37,
+          "name": "Publishers",
+          "order": 3,
+          "fields": [
+            {
+              "id": 230,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 240,
+              "type": "link_row",
+              "name": "Books",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 35,
+              "link_row_related_field_id": 239
+            },
+            {
+              "id": 246,
+              "type": "url",
+              "name": "Website",
+              "order": 4,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 45,
+              "type": "grid",
+              "name": "All Publishers",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 292,
+                  "field_id": 230,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 301,
+                  "field_id": 240,
+                  "width": 220,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 306,
+                  "field_id": 246,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 0
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_230": "W. W. Norton & Company",
+              "field_240": [
+                1
+              ],
+              "field_246": "https://wwnorton.com/"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_230": "St. Martin's Griffin",
+              "field_240": [
+                2
+              ],
+              "field_246": "https://us.macmillan.com/smp"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_230": "Farrar, Straus and Giroux",
+              "field_240": [
+                3
+              ],
+              "field_246": "https://us.macmillan.com/fsg/"
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_230": "Vintage Espanol",
+              "field_240": [
+                4
+              ],
+              "field_246": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

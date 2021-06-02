@@ -51,6 +51,7 @@ def test_can_convert_between_all_fields(data_fixture):
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database, user=user)
     link_table = data_fixture.create_database_table(database=database, user=user)
+    data_fixture.create_text_field(table=link_table, name="text_field", primary=True)
     handler = FieldHandler()
     row_handler = RowHandler()
     fake = Faker()
@@ -73,12 +74,10 @@ def test_can_convert_between_all_fields(data_fixture):
             for inner_field_type_name in field_type_registry.get_types():
                 for inner_kwargs in all_possible_kwargs_per_type[inner_field_type_name]:
                     field_type = field_type_registry.get(field_type_name)
-                    field_name = f"field_{i}"
                     from_field = handler.create_field(
                         user=user,
                         table=table,
                         type_name=field_type_name,
-                        name=field_name,
                         **kwargs,
                     )
                     random_value = field_type.random_value(from_field, fake, cache)

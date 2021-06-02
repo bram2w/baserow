@@ -39,7 +39,7 @@ class FilterBuilder:
     """
     Combines together multiple Q or AnnotatedQ filters into a single filter which
     will AND or OR the provided filters together based on the filter_type
-    parameter. When applied to a queryset it will also annotate he queryset
+    parameter. When applied to a queryset it will also annotate the queryset
     prior to filtering with the merged annotations from AnnotatedQ filters.
     """
 

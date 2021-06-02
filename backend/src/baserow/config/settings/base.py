@@ -79,6 +79,33 @@ REDIS_URL = (
 )
 
 CELERY_BROKER_URL = REDIS_URL
+CELERY_TASK_ROUTES = {
+    "baserow.contrib.database.export.tasks.run_export_job": {"queue": "export"},
+    "baserow.contrib.database.export.tasks.clean_up_old_jobs": {"queue": "export"},
+}
+CELERY_SOFT_TIME_LIMIT = 60 * 5
+CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60
+
+CELERY_REDBEAT_REDIS_URL = REDIS_URL
+# Explicitly set the same value as the default loop interval here so we can use it
+# later. CELERY_BEAT_MAX_LOOP_INTERVAL < CELERY_REDBEAT_LOCK_TIMEOUT must be kept true
+# as otherwise a beat instance will acquire the lock, do scheduling, go to sleep for
+# CELERY_BEAT_MAX_LOOP_INTERVAL before waking up where it assumes it still owns the lock
+# however if the lock timeout is less than the interval the lock will have been released
+# and the beat instance will crash as it attempts to extend the lock which it no longer
+# owns.
+CELERY_BEAT_MAX_LOOP_INTERVAL = 300
+# By default CELERY_REDBEAT_LOCK_TIMEOUT = 5 * CELERY_BEAT_MAX_LOOP_INTERVAL
+# Only one beat instance can hold this lock and schedule tasks at any one time.
+# This means if one celery-beat instance crashes any other replicas waiting to take over
+# will by default wait 25 minutes until the lock times out and they can acquire
+# the lock to start scheduling tasks again.
+# Instead we just set it to be slightly longer than the loop interval that beat uses.
+# This means beat wakes up, checks the schedule and extends the lock every
+# CELERY_BEAT_MAX_LOOP_INTERVAL seconds. If it crashes or fails to wake up
+# then 6 minutes after the lock was last extended it will be released and a new
+# scheduler will acquire the lock and take over.
+CELERY_REDBEAT_LOCK_TIMEOUT = CELERY_BEAT_MAX_LOOP_INTERVAL + 60
 
 CHANNEL_LAYERS = {
     "default": {
@@ -127,6 +154,12 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+# We need the `AllowAllUsersModelBackend` in order to respond with a proper error
+# message when the user is not active. The only thing it does, is allowing non active
+# users to authenticate, but the user still can't obtain or use a JWT token or database
+# token because the user needs to be active to use that.
+AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.AllowAllUsersModelBackend"]
 
 
 # Internationalization
@@ -179,7 +212,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.2.0",
+    "VERSION": "1.3.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -196,7 +229,9 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table view sortings"},
         {"name": "Database table grid view"},
         {"name": "Database table rows"},
+        {"name": "Database table export"},
         {"name": "Database tokens"},
+        {"name": "Admin"},
     ],
 }
 
@@ -241,18 +276,25 @@ USER_FILES_DIRECTORY = "user_files"
 USER_THUMBNAILS_DIRECTORY = "thumbnails"
 USER_FILE_SIZE_LIMIT = 1024 * 1024 * 20  # 20MB
 
+EXPORT_FILES_DIRECTORY = "export_files"
+EXPORT_CLEANUP_INTERVAL_MINUTES = 5
+EXPORT_FILE_EXPIRE_MINUTES = 60
+
 EMAIL_BACKEND = "djcelery_email.backends.CeleryEmailBackend"
 
 if os.getenv("EMAIL_SMTP", ""):
     CELERY_EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_USE_TLS = bool(os.getenv("EMAIL_SMPT_USE_TLS", ""))
+    # EMAIL_SMTP_USE_TLS OR EMAIL_SMTP_USE_TLS for backwards compatibility after
+    # fixing #448.
+    EMAIL_USE_TLS = bool(os.getenv("EMAIL_SMTP_USE_TLS", "")) or bool(
+        os.getenv("EMAIL_SMPT_USE_TLS", "")
+    )
     EMAIL_HOST = os.getenv("EMAIL_SMTP_HOST", "localhost")
     EMAIL_PORT = os.getenv("EMAIL_SMTP_PORT", "25")
     EMAIL_HOST_USER = os.getenv("EMAIL_SMTP_USER", "")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_SMTP_PASSWORD", "")
 else:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
+    CELERY_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.

@@ -23,6 +23,14 @@ export default {
   mounted() {
     Object.assign(this.values, this.values, this.getDefaultValues())
   },
+  watch: {
+    values: {
+      deep: true,
+      handler(newValues) {
+        this.$emit('values-changed', newValues)
+      },
+    },
+  },
   methods: {
     /**
      * Returns all the provided default values, but if the allowedValues are set
@@ -72,7 +80,10 @@ export default {
      * Returns true is everything is valid.
      */
     isFormValid() {
-      return !this.$v.$invalid && this.areChildFormsValid()
+      // Some forms might not do any validation themselves. If they don't, then they
+      // are by definition valid if their children are valid.
+      const thisFormInvalid = '$v' in this && this.$v.$invalid
+      return !thisFormInvalid && this.areChildFormsValid()
     },
     /**
      * Returns true if all the child form components are valid.

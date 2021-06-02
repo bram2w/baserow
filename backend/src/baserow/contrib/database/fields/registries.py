@@ -210,7 +210,7 @@ class FieldType(
         """
         Should return a random value that can be used as value for the field. This is
         used by the fill_table management command which will add an N amount of rows
-        to the a table with random data.
+        to the table with random data.
 
         :param instance: The field instance for which to get the random value for.
         :type instance: Field
@@ -603,6 +603,19 @@ class FieldType(
         """
 
         setattr(row, field_name, value)
+
+    def get_export_value(self, row, field_object):
+        """
+        Gets this fields value from the provided row in a form suitable for exporting
+        to a standalone file.
+
+        :param row: The row instance where the value be set on.
+        :type row: Object
+        :param field_object: The field object for the field to extract
+        :type field_object: FieldObject
+        """
+
+        return getattr(row, field_object["name"])
 
 
 class FieldTypeRegistry(

@@ -208,9 +208,8 @@ export default {
           field: this.primary,
           values: {
             field: this.primary.id,
-            value: '',
-            emitEvent: false,
           },
+          emitEvent: false,
         })
         this.$emit('changed')
 

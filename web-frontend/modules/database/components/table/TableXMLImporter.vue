@@ -113,7 +113,6 @@ export default {
         this.values.data = ''
         this.error = 'The maximum file size is 15MB.'
         this.preview = {}
-        this.$emit('input', this.value)
       } else {
         this.filename = file.name
         const reader = new FileReader()
@@ -126,38 +125,38 @@ export default {
     },
     reload() {
       const [header, xmlData, errors] = parseXML(this.rawData)
+
       if (errors.length > 0) {
         this.values.data = ''
         this.error = `Error occured while processing XML: ${errors.join('\n')}`
         this.preview = {}
-      } else if (xmlData.length > 0) {
-        let hasHeader = false
-        if (header.length > 0) {
-          xmlData.unshift(header)
-          hasHeader = true
-        }
+        return
+      }
 
-        const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
-        if (limit !== null) {
-          const count = xmlData.length
-          if (count > limit) {
-            this.values.data = ''
-            this.error = `It is not possible to import more than ${limit} rows.`
-            this.preview = {}
-            this.$emit('input', this.value)
-            return
-          }
-        }
-
-        this.values.data = JSON.stringify(xmlData)
-        this.error = ''
-        this.preview = this.getPreview(xmlData, hasHeader)
-      } else {
+      if (xmlData.length === 0) {
         this.values.data = ''
         this.error = 'This XML file is empty.'
         this.preview = {}
+        return
       }
-      this.$emit('input', this.value)
+
+      let hasHeader = false
+      if (header.length > 0) {
+        xmlData.unshift(header)
+        hasHeader = true
+      }
+
+      const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
+      if (limit !== null && xmlData.length > limit) {
+        this.values.data = ''
+        this.error = `It is not possible to import more than ${limit} rows.`
+        this.preview = {}
+        return
+      }
+
+      this.values.data = JSON.stringify(xmlData)
+      this.error = ''
+      this.preview = this.getPreview(xmlData, hasHeader)
     },
   },
 }

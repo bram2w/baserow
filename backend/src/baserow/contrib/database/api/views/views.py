@@ -29,6 +29,7 @@ from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.exceptions import (
     ViewDoesNotExist,
+    ViewNotInTable,
     ViewFilterDoesNotExist,
     ViewFilterNotSupported,
     ViewFilterTypeNotAllowedForField,
@@ -42,6 +43,7 @@ from .serializers import (
     ViewSerializer,
     CreateViewSerializer,
     UpdateViewSerializer,
+    OrderViewsSerializer,
     ViewFilterSerializer,
     CreateViewFilterSerializer,
     UpdateViewFilterSerializer,
@@ -51,6 +53,7 @@ from .serializers import (
 )
 from .errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
+    ERROR_VIEW_NOT_IN_TABLE,
     ERROR_VIEW_FILTER_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_NOT_SUPPORTED,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
@@ -377,6 +380,53 @@ class ViewView(APIView):
         return Response(status=204)
 
 
+class OrderViewsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Updates the order of the views in the table related to "
+                "the provided value.",
+            ),
+        ],
+        tags=["Database table views"],
+        operation_id="order_database_table_views",
+        description=(
+            "Changes the order of the provided view ids to the matching position that "
+            "the id has in the list. If the authorized user does not belong to the "
+            "group it will be ignored. The order of the not provided views will be "
+            "set to `0`."
+        ),
+        request=OrderViewsSerializer,
+        responses={
+            204: None,
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_VIEW_NOT_IN_TABLE"]
+            ),
+            404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
+        },
+    )
+    @validate_body(OrderViewsSerializer)
+    @transaction.atomic
+    @map_exceptions(
+        {
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewNotInTable: ERROR_VIEW_NOT_IN_TABLE,
+        }
+    )
+    def post(self, request, data, table_id):
+        """Updates to order of the views in a table."""
+
+        table = TableHandler().get_table(table_id)
+        ViewHandler().order_views(request.user, table, data["view_ids"])
+        return Response(status=204)
+
+
 class ViewFiltersView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -439,7 +489,7 @@ class ViewFiltersView(APIView):
             "parameter if the authorized user has access to the related database's "
             "group. When the rows of a view are requested, for example via the "
             "`list_database_table_grid_view_rows` endpoint, then only the rows that "
-            "apply to all the filters are going to be returned. A filters compares the "
+            "apply to all the filters are going to be returned. A filter compares the "
             "value of a field to the value of a filter. It depends on the type how "
             "values are going to be compared."
         ),

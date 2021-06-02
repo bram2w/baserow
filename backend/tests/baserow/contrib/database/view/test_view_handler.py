@@ -12,6 +12,7 @@ from baserow.contrib.database.views.registries import (
 from baserow.contrib.database.views.exceptions import (
     ViewTypeDoesNotExist,
     ViewDoesNotExist,
+    ViewNotInTable,
     UnrelatedFieldError,
     ViewFilterDoesNotExist,
     ViewFilterNotSupported,
@@ -164,6 +165,54 @@ def test_update_view(send_mock, data_fixture):
     grid.refresh_from_db()
     assert grid.filter_type == "OR"
     assert grid.filters_disabled
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.views_reordered.send")
+def test_order_views(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_1 = data_fixture.create_grid_view(table=table, order=1)
+    grid_2 = data_fixture.create_grid_view(table=table, order=2)
+    grid_3 = data_fixture.create_grid_view(table=table, order=3)
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInGroup):
+        handler.order_views(user=user_2, table=table, order=[])
+
+    with pytest.raises(ViewNotInTable):
+        handler.order_views(user=user, table=table, order=[0])
+
+    handler.order_views(user=user, table=table, order=[grid_3.id, grid_2.id, grid_1.id])
+    grid_1.refresh_from_db()
+    grid_2.refresh_from_db()
+    grid_3.refresh_from_db()
+    assert grid_1.order == 3
+    assert grid_2.order == 2
+    assert grid_3.order == 1
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["table"].id == table.id
+    assert send_mock.call_args[1]["user"].id == user.id
+    assert send_mock.call_args[1]["order"] == [grid_3.id, grid_2.id, grid_1.id]
+
+    handler.order_views(user=user, table=table, order=[grid_1.id, grid_3.id, grid_2.id])
+    grid_1.refresh_from_db()
+    grid_2.refresh_from_db()
+    grid_3.refresh_from_db()
+    assert grid_1.order == 1
+    assert grid_2.order == 3
+    assert grid_3.order == 2
+
+    handler.order_views(user=user, table=table, order=[grid_1.id])
+    grid_1.refresh_from_db()
+    grid_2.refresh_from_db()
+    grid_3.refresh_from_db()
+    assert grid_1.order == 1
+    assert grid_2.order == 0
+    assert grid_3.order == 0
 
 
 @pytest.mark.django_db

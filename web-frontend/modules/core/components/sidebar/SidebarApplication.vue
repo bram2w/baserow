@@ -6,7 +6,7 @@
       'tree__item--loading': application._.loading,
     }"
   >
-    <div class="tree__action tree__action--has-options">
+    <div class="tree__action tree__action--has-options" data-sortable-handle>
       <a class="tree__link" @click="$emit('selected', application)">
         <i
           class="tree__icon tree__icon--type fas"
@@ -22,6 +22,7 @@
         ref="contextLink"
         class="tree__options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
+        @mousedown.stop
       >
         <i class="fas fa-ellipsis-v"></i>
       </a>

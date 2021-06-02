@@ -18,7 +18,7 @@ RUN service supervisor stop && service nginx stop
 RUN rm -f /etc/nginx/sites-enabled/*
 
 ADD start.sh /app/code
-RUN git clone https://gitlab.com/bramw/baserow.git
+RUN git clone --branch master https://gitlab.com/bramw/baserow.git
 RUN virtualenv -p python3 env
 RUN env/bin/pip install --no-cache -r baserow/backend/requirements/base.txt
 RUN (cd baserow/web-frontend && yarn install && yarn build)

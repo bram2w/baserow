@@ -10,7 +10,7 @@ building your own production Baserow setup.
 If you are familiar with git and docker-compose run these commands to launch baserow 
 locally, otherwise please start from the Installing Requirements section below.
 ```bash
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 $ cd baserow
 $ docker-compose up
 ```
@@ -21,6 +21,9 @@ If you haven't already installed docker and docker-compose on your computer you 
 so by following the instructions on https://docs.docker.com/desktop/ and 
 https://docs.docker.com/compose/install/.
 
+> Docker version 20.10.0 is the minimum required to build Baserow. Please ensure your
+> your docker is up to date by running `docker -v`.
+
 You will also need git installed which you can do by following the instructions on 
 https://www.linode.com/docs/development/version-control/how-to-install-git-on-linux-mac-and-windows/.
 
@@ -29,9 +32,9 @@ following commands in your terminal.
 
 ```
 $ docker -v
-Docker version 19.03.8, build afacb8b
+Docker version 20.10.6, build 370c289
 $ docker-compose -v
-docker-compose version 1.25.5, build 8a1c60f6
+docker-compose version 1.26.2, build eefe0d31
 $ git --version
 git version 2.24.3 (Apple Git-128)
 ```
@@ -55,7 +58,7 @@ Baserow's code to your computer.
 
 ```
 $ cd ~/baserow
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 Cloning into 'baserow'...
 ...
 $ cd baserow

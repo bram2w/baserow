@@ -46,7 +46,7 @@
     </div>
     <div v-if="groups.length > 0" class="dashboard">
       <DashboardGroup
-        v-for="group in groups"
+        v-for="group in sortedGroups"
         :key="group.id"
         :group="group"
       ></DashboardGroup>
@@ -62,7 +62,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapGetters } from 'vuex'
 
 import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
 import DashboardGroup from '@baserow/modules/core/components/group/DashboardGroup'
@@ -90,6 +90,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      sortedGroups: 'group/getAllSorted',
+    }),
     ...mapState({
       user: (state) => state.auth.user,
       groups: (state) => state.group.items,

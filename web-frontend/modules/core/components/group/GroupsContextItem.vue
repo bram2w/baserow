@@ -21,6 +21,7 @@
       ref="contextLink"
       class="select__item-options"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
+      @mousedown.stop
     >
       <i class="fas fa-ellipsis-v"></i>
     </a>

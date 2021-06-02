@@ -17,6 +17,11 @@ export default (client) => {
     update(tableId, values) {
       return client.patch(`/database/tables/${tableId}/`, values)
     },
+    order(databaseId, order) {
+      return client.post(`/database/tables/database/${databaseId}/order/`, {
+        table_ids: order,
+      })
+    },
     delete(tableId) {
       return client.delete(`/database/tables/${tableId}/`)
     },

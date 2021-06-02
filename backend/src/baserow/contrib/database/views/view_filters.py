@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from math import floor, ceil
 
@@ -6,7 +7,7 @@ from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.db.models import Q, IntegerField, BooleanField
 from django.db.models.fields.related import ManyToManyField, ForeignKey
-from pytz import timezone
+from pytz import timezone, all_timezones
 
 from baserow.contrib.database.fields.field_filters import (
     filename_contains_filter,
@@ -26,6 +27,7 @@ from baserow.contrib.database.fields.field_types import (
     PhoneNumberFieldType,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
+
 from .registries import ViewFilterType
 
 
@@ -219,6 +221,49 @@ class DateEqualViewFilterType(ViewFilterType):
             )
         else:
             return Q(**{field_name: datetime})
+
+
+class DateEqualsTodayViewFilterType(ViewFilterType):
+    """
+    The today filter checks if the field value matches with today's date.
+    """
+
+    type = "date_equals_today"
+    compatible_field_types = [DateFieldType.type]
+    query_for = ["year", "month", "day"]
+
+    def get_filter(self, field_name, value, model_field, field):
+        timezone_string = value if value in all_timezones else "UTC"
+        timezone_object = timezone(timezone_string)
+        now = datetime.utcnow().astimezone(timezone_object)
+        query_dict = dict()
+        if "year" in self.query_for:
+            query_dict[f"{field_name}__year"] = now.year
+        if "month" in self.query_for:
+            query_dict[f"{field_name}__month"] = now.month
+        if "day" in self.query_for:
+            query_dict[f"{field_name}__day"] = now.day
+        return Q(**query_dict)
+
+
+class DateEqualsCurrentMonthViewFilterType(DateEqualsTodayViewFilterType):
+    """
+    The current month filter works as a subset of today filter and checks if the
+    field value falls into current month.
+    """
+
+    type = "date_equals_month"
+    query_for = ["year", "month"]
+
+
+class DateEqualsCurrentYearViewFilterType(DateEqualsTodayViewFilterType):
+    """
+    The current month filter works as a subset of today filter and checks if the
+    field value falls into current year.
+    """
+
+    type = "date_equals_year"
+    query_for = ["year"]
 
 
 class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType):

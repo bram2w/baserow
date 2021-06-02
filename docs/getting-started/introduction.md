@@ -122,8 +122,14 @@ are accepted.
 * `EMAIL_SMTP` (default ``): Providing anything other than an empty string will enable
   SMTP email.
 * `EMAIL_SMTP_HOST` (default `localhost`): The hostname of the SMTP server.
-* `EMAIL_SMPT_USE_TLS` (default ``): Providing anything other than an empty string will
+* `EMAIL_SMTP_USE_TLS` (default ``): Providing anything other than an empty string will
   enable connecting to the SMTP server via TLS.
+* `EMAIL_SMPT_USE_TLS` (default ``): `EMAIL_SMTP_USE_TLS` from above was initially
+  wrongly spelled as `EMAIL_SMPT_USE_TLS`. This issue has since been addressed in 
+  [#247](https://gitlab.com/bramw/baserow/-/merge_requests/247). However, 
+  `EMAIL_SMPT_USE_TLS` is still supported for those who might still be using it in
+  their environment. It's highly recommended you use the correct var name if working
+  with the latest version as this support might be removed in the future.
 * `EMAIL_SMTP_PORT` (default `25`): The port of the SMTP server.
 * `EMAIL_SMTP_USER` (default ``): The username for the SMTP server.
 * `EMAIL_SMTP_PASSWORD` (default ``): The password of the SMTP server.

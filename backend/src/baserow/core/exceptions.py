@@ -51,6 +51,18 @@ class ApplicationDoesNotExist(Exception):
     """Raised when trying to get an application that does not exist."""
 
 
+class ApplicationNotInGroup(Exception):
+    """Raised when a provided application does not belong to a group."""
+
+    def __init__(self, application_id=None, *args, **kwargs):
+        self.application_id = application_id
+        super().__init__(
+            f"The application {application_id} does not belong to the group.",
+            *args,
+            **kwargs,
+        )
+
+
 class InstanceTypeAlreadyRegistered(Exception):
     """
     Raised when the instance model instance is already registered in the registry.

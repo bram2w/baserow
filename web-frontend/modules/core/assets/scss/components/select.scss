@@ -28,11 +28,14 @@
 }
 
 .select__items {
+  position: relative;
   list-style: none;
   padding: 0;
   margin: 0;
   max-height: (4 * 36px) + 20px; // we show max 8 items
-  overflow: auto;
+  // note that the value is `scroll` and not `auto` because it depends on the
+  // v-auto-overflow-scroll directive.
+  overflow-y: scroll;
 
   &::before,
   &::after {

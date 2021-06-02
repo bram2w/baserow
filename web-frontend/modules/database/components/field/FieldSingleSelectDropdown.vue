@@ -33,7 +33,12 @@
           @keyup="search(query)"
         />
       </div>
-      <ul ref="items" v-prevent-parent-scroll class="select__items">
+      <ul
+        ref="items"
+        v-prevent-parent-scroll
+        v-auto-overflow-scroll
+        class="select__items"
+      >
         <FieldSingleSelectDropdownItem
           :name="''"
           :value="null"

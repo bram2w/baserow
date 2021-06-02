@@ -7,7 +7,8 @@
     @keydown="keydown"
     @focusout="change"
     @paste="paste"
-  ></span>
+    >{{ value }}</span
+  >
 </template>
 
 <script>
@@ -26,6 +27,7 @@ export default {
       editing: false,
       oldValue: '',
       newValue: '',
+      oldTextOverflow: '',
     }
   },
   watch: {
@@ -46,6 +48,14 @@ export default {
       this.$emit('editing', true)
       this.$nextTick(() => {
         focusEnd(this.$refs.editable)
+        // In almost all use cases, the parent has overflow hidden and in that case we
+        // need to see if the scrollLeft must be changed so that we can see the cursor
+        // which has been placed at the end.
+        const parent = this.$el.parentElement
+        if (parent.scrollWidth > parent.clientWidth) {
+          parent.scrollLeft = parent.scrollWidth - parent.clientWidth
+          parent.classList.add('forced-text-overflow-initial')
+        }
       })
     },
     /**
@@ -56,6 +66,16 @@ export default {
     change() {
       this.editing = false
       this.$emit('editing', false)
+      this.$nextTick(() => {
+        // In almost all use cases, the parent has overflow hidden and it could be that
+        // because of the cursor, the scrollLeft value has changed. Here we change it
+        // back to what is was before.
+        const parent = this.$el.parentElement
+        parent.classList.remove('forced-text-overflow-initial')
+        if (parent.scrollWidth > parent.clientWidth) {
+          parent.scrollLeft = 0
+        }
+      })
 
       if (this.oldValue === this.newValue) {
         return

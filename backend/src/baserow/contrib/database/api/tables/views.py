@@ -20,13 +20,20 @@ from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import (
     TableDoesNotExist,
+    TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
 )
 
-from .serializers import TableSerializer, TableCreateSerializer, TableUpdateSerializer
+from .serializers import (
+    TableSerializer,
+    TableCreateSerializer,
+    TableUpdateSerializer,
+    OrderTablesSerializer,
+)
 from .errors import (
     ERROR_TABLE_DOES_NOT_EXIST,
+    ERROR_TABLE_NOT_IN_DATABASE,
     ERROR_INVALID_INITIAL_TABLE_DATA,
     ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
 )
@@ -247,4 +254,53 @@ class TableView(APIView):
         """Deletes an existing table."""
 
         TableHandler().delete_table(request.user, TableHandler().get_table(table_id))
+        return Response(status=204)
+
+
+class OrderTablesView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="database_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Updates the order of the tables in the database related "
+                "to the provided value.",
+            ),
+        ],
+        tags=["Database tables"],
+        operation_id="order_database_tables",
+        description=(
+            "Changes the order of the provided table ids to the matching position that "
+            "the id has in the list. If the authorized user does not belong to the "
+            "group it will be ignored. The order of the not provided tables will be "
+            "set to `0`."
+        ),
+        request=OrderTablesSerializer,
+        responses={
+            204: None,
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_TABLE_NOT_IN_DATABASE"]
+            ),
+            404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
+        },
+    )
+    @validate_body(OrderTablesSerializer)
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            TableNotInDatabase: ERROR_TABLE_NOT_IN_DATABASE,
+        }
+    )
+    def post(self, request, data, database_id):
+        """Updates to order of the tables in a table."""
+
+        database = CoreHandler().get_application(
+            database_id, base_queryset=Database.objects
+        )
+        TableHandler().order_tables(request.user, database, data["table_ids"])
         return Response(status=204)

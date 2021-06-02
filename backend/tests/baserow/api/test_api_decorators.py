@@ -1,5 +1,6 @@
 import pytest
 import json
+import pytz
 
 from unittest.mock import MagicMock
 
@@ -16,6 +17,7 @@ from baserow.api.decorators import (
     validate_body,
     validate_body_custom_fields,
     allowed_includes,
+    accept_timezone,
 )
 from baserow.core.models import Group
 from baserow.core.registry import (
@@ -322,3 +324,44 @@ def test_allowed_includes():
         assert not test_3
 
     test_3(None, request)
+
+
+def test_accept_timezone():
+    factory = APIRequestFactory()
+
+    request = Request(
+        factory.get(
+            "/some-page/",
+            data={"timezone": "NOT_EXISTING"},
+        )
+    )
+
+    @accept_timezone()
+    def test_1(self, request, now):
+        pass
+
+    with pytest.raises(APIException) as api_exception:
+        test_1(None, request)
+
+    assert api_exception.value.detail["error"] == "UNKNOWN_TIME_ZONE_ERROR"
+
+    request = Request(factory.get("/some-page/"))
+
+    @accept_timezone()
+    def test_1(self, request, now):
+        assert now.tzinfo == pytz.utc
+
+    test_1(None, request)
+
+    request = Request(
+        factory.get(
+            "/some-page/",
+            data={"timezone": "Etc/GMT+2"},
+        )
+    )
+
+    @accept_timezone()
+    def test_1(self, request, now):
+        assert now.tzinfo == pytz.timezone("Etc/GMT+2")
+
+    test_1(None, request)

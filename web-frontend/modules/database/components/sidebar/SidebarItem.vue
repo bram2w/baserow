@@ -1,6 +1,6 @@
 <template>
   <li class="tree__sub" :class="{ active: table._.selected }">
-    <a class="tree__sub-link" @click.prevent="selectTable(database, table)">
+    <a class="tree__sub-link" @click="selectTable(database, table)">
       <Editable
         ref="rename"
         :value="table.name"
@@ -11,12 +11,19 @@
       v-show="!database._.loading"
       class="tree__options"
       @click="$refs.context.toggle($event.currentTarget, 'bottom', 'right', 0)"
+      @mousedown.stop
     >
       <i class="fas fa-ellipsis-v"></i>
     </a>
     <Context ref="context">
       <div class="context__menu-title">{{ table.name }}</div>
       <ul class="context__menu">
+        <li>
+          <a @click="exportTable()">
+            <i class="context__menu-icon fas fa-fw fa-file-export"></i>
+            Export table
+          </a>
+        </li>
         <li>
           <a @click="enableRename()">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
@@ -35,6 +42,7 @@
         :database="database"
         :table="table"
       />
+      <ExportTableModal ref="exportTableModal" :table="table" />
     </Context>
   </li>
 </template>
@@ -42,10 +50,11 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import DeleteTableModal from '@baserow/modules/database/components/table/DeleteTableModal'
+import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 
 export default {
   name: 'SidebarItem',
-  components: { DeleteTableModal },
+  components: { ExportTableModal, DeleteTableModal },
   props: {
     database: {
       type: Object,
@@ -85,6 +94,10 @@ export default {
     deleteTable() {
       this.$refs.context.hide()
       this.$refs.deleteTableModal.show()
+    },
+    exportTable() {
+      this.$refs.context.hide()
+      this.$refs.exportTableModal.show()
     },
     enableRename() {
       this.$refs.context.hide()

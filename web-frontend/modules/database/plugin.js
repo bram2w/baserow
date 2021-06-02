@@ -28,11 +28,15 @@ import {
   BooleanViewFilterType,
   EmptyViewFilterType,
   NotEmptyViewFilterType,
+  DateEqualsTodayViewFilterType,
+  DateEqualsCurrentMonthViewFilterType,
+  DateEqualsCurrentYearViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
   PasteImporterType,
   XMLImporterType,
+  JSONImporterType,
 } from '@baserow/modules/database/importerTypes'
 import { APITokenSettingsType } from '@baserow/modules/database/settingsTypes'
 
@@ -42,6 +46,7 @@ import fieldStore from '@baserow/modules/database/store/field'
 import gridStore from '@baserow/modules/database/store/view/grid'
 
 import { registerRealtimeEvents } from '@baserow/modules/database/realtime'
+import { CSVTableExporterType } from '@baserow/modules/database/exporterTypes'
 
 export default ({ store, app }) => {
   store.registerModule('table', tableStore)
@@ -56,6 +61,15 @@ export default ({ store, app }) => {
   app.$registry.register('viewFilter', new NotEqualViewFilterType())
   app.$registry.register('viewFilter', new DateEqualViewFilterType())
   app.$registry.register('viewFilter', new DateNotEqualViewFilterType())
+  app.$registry.register('viewFilter', new DateEqualsTodayViewFilterType())
+  app.$registry.register(
+    'viewFilter',
+    new DateEqualsCurrentMonthViewFilterType()
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateEqualsCurrentYearViewFilterType()
+  )
   app.$registry.register('viewFilter', new ContainsViewFilterType())
   app.$registry.register('viewFilter', new FilenameContainsViewFilterType())
   app.$registry.register('viewFilter', new ContainsNotViewFilterType())
@@ -80,7 +94,9 @@ export default ({ store, app }) => {
   app.$registry.register('importer', new CSVImporterType())
   app.$registry.register('importer', new PasteImporterType())
   app.$registry.register('importer', new XMLImporterType())
+  app.$registry.register('importer', new JSONImporterType())
   app.$registry.register('settings', new APITokenSettingsType())
+  app.$registry.register('exporter', new CSVTableExporterType())
 
   registerRealtimeEvents(app.$realtime)
 }

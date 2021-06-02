@@ -1,7 +1,6 @@
 #!/bin/bash
 # Bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
-IFS=$'\n\t'
 
 # Used by docker-entrypoint.sh to start the dev server
 # If not configured you'll receive this: CommandError: "0.0.0.0:" is not a valid port number or address:port pair.
@@ -104,7 +103,7 @@ case "$1" in
         exec make lint-python
     ;;
     celery)
-        exec celery -A baserow worker -l INFO
+        exec celery -A baserow "${@:2}"
     ;;
     celery-dev)
         # Ensure we watch all possible python source code locations for changes.
@@ -114,7 +113,7 @@ case "$1" in
           directory_args="$directory_args -d=$i"
         done
 
-        CMD="watchmedo auto-restart $directory_args --pattern=*.py --recursive -- celery -A baserow worker -l INFO"
+        CMD="watchmedo auto-restart $directory_args --pattern=*.py --recursive -- celery -A baserow ${*:2}"
         echo "$CMD"
         # The below command lets devs attach to this container, press ctrl-c and only
         # the server will stop. Additionally they will be able to use bash history to

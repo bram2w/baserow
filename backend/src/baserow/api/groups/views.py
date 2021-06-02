@@ -185,6 +185,7 @@ class GroupOrderView(APIView):
         },
     )
     @validate_body(OrderGroupsSerializer)
+    @transaction.atomic
     def post(self, request, data):
         """Updates to order of some groups for a user."""
 

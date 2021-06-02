@@ -62,8 +62,10 @@
           >
             <div class="tree__action sidebar__action">
               <nuxt-link :to="{ name: 'dashboard' }" class="tree__link">
-                <i class="tree__icon fas fa-tachometer-alt"></i>
-                <span class="sidebar__item-name">Dashboard</span>
+                <div>
+                  <i class="tree__icon fas fa-tachometer-alt"></i>
+                  <span class="sidebar__item-name">Dashboard</span>
+                </div>
               </nuxt-link>
             </div>
           </li>
@@ -139,6 +141,11 @@
                 :is="getApplicationComponent(application)"
                 v-for="application in applications"
                 :key="application.id"
+                v-sortable="{
+                  id: application.id,
+                  update: orderApplications,
+                  handle: '[data-sortable-handle]',
+                }"
                 :application="application"
               ></component>
             </ul>
@@ -218,6 +225,7 @@
 <script>
 import { mapGetters, mapState } from 'vuex'
 
+import { notifyIf } from '@baserow/modules/core/utils/error'
 import SettingsModal from '@baserow/modules/core/components/settings/SettingsModal'
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
 import CreateApplicationContext from '@baserow/modules/core/components/application/CreateApplicationContext'
@@ -243,7 +251,7 @@ export default {
     applications() {
       return this.$store.getters['application/getAllOfGroup'](
         this.selectedGroup
-      )
+      ).sort((a, b) => a.order - b.order)
     },
     adminTypes() {
       return this.$registry.getAll('admin')
@@ -251,7 +259,7 @@ export default {
     sortedAdminTypes() {
       return Object.values(this.adminTypes)
         .slice()
-        .sort((x) => x.getOrder())
+        .sort((a, b) => a.getOrder() - b.getOrder())
     },
     /**
      * Indicates whether the current user is visiting an admin page.
@@ -300,6 +308,17 @@ export default {
 
       if (this.sortedAdminTypes.length > 0) {
         this.$nuxt.$router.push({ name: this.sortedAdminTypes[0].routeName })
+      }
+    },
+    async orderApplications(order, oldOrder) {
+      try {
+        await this.$store.dispatch('application/order', {
+          group: this.selectedGroup,
+          order,
+          oldOrder,
+        })
+      } catch (error) {
+        notifyIf(error, 'application')
       }
     },
   },

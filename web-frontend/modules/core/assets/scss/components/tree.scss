@@ -1,4 +1,5 @@
 .tree {
+  position: relative;
   list-style: none;
   padding: 0;
   margin: 0 0 12px;
@@ -57,9 +58,9 @@
   @extend %tree__size;
   @extend %ellipsis;
 
-  display: block;
   color: $color-primary-900;
   font-size: 14px;
+  display: block;
 
   &:hover {
     text-decoration: none;
@@ -94,6 +95,7 @@
 }
 
 .tree__subs {
+  position: relative;
   list-style: none;
   padding: 0 0 2px 0;
   margin: 0;
@@ -137,6 +139,7 @@
   display: block;
 
   &:hover {
+    cursor: pointer;
     text-decoration: none;
     color: $color-primary-500;
   }

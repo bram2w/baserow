@@ -15,7 +15,7 @@
         ></i>
         {{ selectedName }}
       </template>
-      <template v-if="!hasValue()"> Make a choice </template>
+      <template v-else>Make a choice</template>
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <div class="dropdown__items" :class="{ hidden: !open }">
@@ -30,7 +30,7 @@
           @keyup="search(query)"
         />
       </div>
-      <ul ref="items" class="select__items">
+      <ul ref="items" v-auto-overflow-scroll class="select__items">
         <slot></slot>
       </ul>
     </div>

@@ -1,10 +1,10 @@
-import EditUserContext from '@baserow_premium/components/admin/user/contexts/EditUserContext'
+import EditUserContext from '@baserow_premium/components/admin/users/contexts/EditUserContext'
 import Error from '@baserow/modules/core/components/Error'
-import ChangeUserPasswordModal from '@baserow_premium/components/admin/user/modals/ChangeUserPasswordModal'
-import EditUserModal from '@baserow_premium/components/admin/user/modals/EditUserModal'
+import ChangeUserPasswordModal from '@baserow_premium/components/admin/users/modals/ChangeUserPasswordModal'
+import EditUserModal from '@baserow_premium/components/admin/users/modals/EditUserModal'
 import CrudTableSearchContext from '@baserow_premium/components/crud_table/CrudTableSearchContext'
 import CrudTableSearch from '@baserow_premium/components/crud_table/CrudTableSearch'
-import DeleteUserModal from '@baserow_premium/components/admin/user/modals/DeleteUserModal'
+import DeleteUserModal from '@baserow_premium/components/admin/users/modals/DeleteUserModal'
 
 export default class UserAdminUserHelpers {
   constructor(userAdminComponent) {

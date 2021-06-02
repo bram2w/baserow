@@ -13,6 +13,11 @@ export default (client) => {
     update(applicationId, values) {
       return client.patch(`/applications/${applicationId}/`, values)
     },
+    order(groupId, order) {
+      return client.post(`/applications/group/${groupId}/order/`, {
+        application_ids: order,
+      })
+    },
     delete(applicationId) {
       return client.delete(`/applications/${applicationId}/`)
     },

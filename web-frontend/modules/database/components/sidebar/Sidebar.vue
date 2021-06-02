@@ -18,8 +18,14 @@
     <template v-if="application._.selected" #body>
       <ul class="tree__subs">
         <SidebarItem
-          v-for="table in application.tables"
+          v-for="table in orderedTables"
           :key="table.id"
+          v-sortable="{
+            id: table.id,
+            update: orderTables,
+            marginLeft: 34,
+            marginRight: 10,
+          }"
           :database="application"
           :table="table"
         ></SidebarItem>
@@ -51,12 +57,30 @@ export default {
       required: true,
     },
   },
+  computed: {
+    orderedTables() {
+      return this.application.tables
+        .map((table) => table)
+        .sort((a, b) => a.order - b.order)
+    },
+  },
   methods: {
     async selected(application) {
       try {
         await this.$store.dispatch('application/select', application)
       } catch (error) {
         notifyIf(error, 'group')
+      }
+    },
+    async orderTables(order, oldOrder) {
+      try {
+        await this.$store.dispatch('table/order', {
+          database: this.application,
+          order,
+          oldOrder,
+        })
+      } catch (error) {
+        notifyIf(error, 'table')
       }
     },
   },

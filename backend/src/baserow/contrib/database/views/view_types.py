@@ -1,7 +1,8 @@
 from django.urls import path, include
 
-from .registries import ViewType
+from .handler import ViewHandler
 from .models import GridView, GridViewFieldOptions
+from .registries import ViewType
 
 
 class GridViewType(ViewType):
@@ -63,3 +64,23 @@ class GridViewType(ViewType):
             ] = field_option_object.id
 
         return grid_view
+
+    def get_fields_and_model(self, view):
+        """
+        Returns the model and the field options in the correct order for exporting
+        this view type.
+        """
+
+        grid_view = ViewHandler().get_view(view.id, view_model=GridView)
+
+        ordered_field_objects = []
+        ordered_visible_fields = (
+            grid_view.get_field_options()
+            .filter(hidden=False)
+            .order_by("-field__primary", "order", "id")
+            .values_list("field__id", flat=True)
+        )
+        model = view.table.get_model(field_ids=ordered_visible_fields)
+        for field_id in ordered_visible_fields:
+            ordered_field_objects.append(model._field_objects[field_id])
+        return ordered_field_objects, model

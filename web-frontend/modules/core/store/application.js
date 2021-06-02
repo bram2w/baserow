@@ -40,6 +40,14 @@ export const mutations = {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
   },
+  ORDER_ITEMS(state, { group, order }) {
+    state.items
+      .filter((item) => item.group.id === group.id)
+      .forEach((item) => {
+        const index = order.findIndex((value) => value === item.id)
+        item.order = index === -1 ? 0 : index + 1
+      })
+  },
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
@@ -171,6 +179,20 @@ export const actions = {
     data = type.prepareForStoreUpdate(application, data)
     commit('UPDATE_ITEM', { id: application.id, values: data })
   },
+  /**
+   * Updates the order of all the applications in a group.
+   */
+  async order({ commit, getters }, { group, order, oldOrder }) {
+    commit('ORDER_ITEMS', { group, order })
+
+    try {
+      await ApplicationService(this.$client).order(group.id, order)
+    } catch (error) {
+      commit('ORDER_ITEMS', { group, order: oldOrder })
+      throw error
+    }
+  },
+
   /**
    * Deletes an existing application.
    */

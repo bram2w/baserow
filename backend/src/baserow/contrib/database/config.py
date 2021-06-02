@@ -46,6 +46,7 @@ class DatabaseConfig(AppConfig):
 
         from .views.registries import view_type_registry, view_filter_type_registry
         from .fields.registries import field_type_registry, field_converter_registry
+        from .export.registries import table_exporter_registry
 
         from .plugins import DatabasePlugin
 
@@ -93,6 +94,9 @@ class DatabaseConfig(AppConfig):
             NotEmptyViewFilterType,
             DateEqualViewFilterType,
             DateNotEqualViewFilterType,
+            DateEqualsTodayViewFilterType,
+            DateEqualsCurrentMonthViewFilterType,
+            DateEqualsCurrentYearViewFilterType,
             HigherThanViewFilterType,
             LowerThanViewFilterType,
             ContainsViewFilterType,
@@ -112,6 +116,9 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
+        view_filter_type_registry.register(DateEqualsTodayViewFilterType())
+        view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())
+        view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
         view_filter_type_registry.register(BooleanViewFilterType())
@@ -125,6 +132,10 @@ class DatabaseConfig(AppConfig):
         from .ws.pages import TablePageType
 
         page_registry.register(TablePageType())
+
+        from .export.table_exporters.csv_table_exporter import CsvTableExporter
+
+        table_exporter_registry.register(CsvTableExporter())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

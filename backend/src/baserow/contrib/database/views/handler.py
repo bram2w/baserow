@@ -1,11 +1,13 @@
 from django.db.models import F
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     ViewDoesNotExist,
+    ViewNotInTable,
     UnrelatedFieldError,
     ViewFilterDoesNotExist,
     ViewFilterNotSupported,
@@ -21,6 +23,7 @@ from .signals import (
     view_created,
     view_updated,
     view_deleted,
+    views_reordered,
     view_filter_created,
     view_filter_updated,
     view_filter_deleted,
@@ -29,7 +32,6 @@ from .signals import (
     view_sort_deleted,
     grid_view_field_options_updated,
 )
-from baserow.contrib.database.fields.field_filters import FilterBuilder
 
 
 class ViewHandler:
@@ -43,7 +45,7 @@ class ViewHandler:
         :param view_model: If provided that models objects are used to select the
             view. This can for example be useful when you want to select a GridView or
             other child of the View model.
-        :type view_model: View
+        :type view_model: Type[View]
         :param base_queryset: The base queryset from where to select the view
             object. This can for example be used to do a `select_related`. Note that
             if this is used the `view_model` parameter doesn't work anymore.
@@ -139,6 +141,34 @@ class ViewHandler:
         view_updated.send(self, view=view, user=user)
 
         return view
+
+    def order_views(self, user, table, order):
+        """
+        Updates the order of the views in the given table. The order of the views
+        that are not in the `order` parameter set set to `0`.
+
+        :param user: The user on whose behalf the views are ordered.
+        :type user: User
+        :param table: The table of which the views must be updated.
+        :type table: Table
+        :param order: A list containing the view ids in the desired order.
+        :type order: list
+        :raises ViewNotInTable: If one of the view ids in the order does not belong
+            to the table.
+        """
+
+        group = table.database.group
+        group.has_user(user, raise_error=True)
+
+        queryset = View.objects.filter(table_id=table.id)
+        view_ids = queryset.values_list("id", flat=True)
+
+        for view_id in order:
+            if view_id not in view_ids:
+                raise ViewNotInTable(view_id)
+
+        View.order_objects(queryset, order)
+        views_reordered.send(self, table=table, order=order, user=user)
 
     def delete_view(self, user, view):
         """
@@ -666,3 +696,30 @@ class ViewHandler:
         view_sort_deleted.send(
             self, view_sort_id=view_sort_id, view_sort=view_sort, user=user
         )
+
+    def get_queryset(self, view, search=None, model=None):
+        """
+        Returns a queryset for the provided view which is appropriately sorted,
+        filtered and searched according to the view type and its settings.
+
+        :param search: A search term to apply to the resulting queryset.
+        :param model: The model for this views table to generate the queryset from, if
+            not specified then the model will be generated automatically.
+        :param view: The view to get the export queryset and fields for.
+        :type view: View
+        :return: The export queryset.
+        :rtype: QuerySet
+        """
+
+        if model is None:
+            model = view.table.get_model()
+        queryset = model.objects.all().enhance_by_fields()
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        if view_type.can_filter:
+            queryset = self.apply_filters(view, queryset)
+        if view_type.can_sort:
+            queryset = self.apply_sorting(view, queryset)
+        if search is not None:
+            queryset = queryset.search_all_fields(search)
+        return queryset

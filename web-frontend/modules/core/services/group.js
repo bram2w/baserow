@@ -3,6 +3,11 @@ export default (client) => {
     fetchAll() {
       return client.get('/groups/')
     },
+    order(order) {
+      return client.post('/groups/order/', {
+        groups: order,
+      })
+    },
     create(values) {
       return client.post('/groups/', values)
     },
