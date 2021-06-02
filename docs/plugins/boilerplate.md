@@ -15,7 +15,7 @@ python and pip.
 ```
 $ cd ~/baserow
 $ pip install cookiecutter
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 Cloning into 'baserow'...
 ```
 

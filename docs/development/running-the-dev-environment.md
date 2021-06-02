@@ -11,7 +11,7 @@ dev environment locally, otherwise please start from the Installing Requirements
 below.
 
 ```bash
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 $ cd baserow
 $ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 $ # OR use our ./dev.sh script which also ensures your dev containers run as your user
@@ -67,7 +67,7 @@ Baserow's code to your computer.
 
 ```
 $ cd ~/baserow
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 Cloning into 'baserow'...
 ...
 $ cd baserow
