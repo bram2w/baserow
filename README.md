@@ -45,7 +45,7 @@ environment via `docker-compose`. Just clone the repository, run the following c
 and visit http://localhost:3000 in your browser.
 
 ```
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 $ cd baserow
 $ docker-compose up 
 ```
@@ -61,7 +61,7 @@ Execute the following commands to start a development version of the baserow env
 which has debug and hot re-loading features enabled.
 
 ```
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 $ cd baserow
 $ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 $ # OR use our ./dev.sh script which also ensures your dev containers run as your user
@@ -96,7 +96,7 @@ Created by Bram Wiepjes (Baserow) - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 1.2.0
+Version: 1.3.0
 
 The official repository can be found at https://gitlab.com/bramw/baserow.
 

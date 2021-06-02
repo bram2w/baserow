@@ -35,14 +35,14 @@ to your machine. This contains the Cloudron manifest file that you need when ins
 the app.
 
 ```
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 $ cd baserow/deploy/cloudron
 ```
 
 After that you can install the Baserow Cloudron app by executing the following commands.
 
 ```
-$ cloudron install -l baserow.{YOUR_DOMAIN} --image registry.gitlab.com/bramw/baserow/cloudron:1.2.0
+$ cloudron install -l baserow.{YOUR_DOMAIN} --image registry.gitlab.com/bramw/baserow/cloudron:1.3.0
 App is being installed.
 ...
 App is installed.
@@ -67,7 +67,7 @@ First you need to figure out what your app id is. You can do so by executing the
 the latest version.
 
 ```
-cloudron update --app {YOUR_APP_ID} --image registry.gitlab.com/bramw/baserow/cloudron:1.2.0
+cloudron update --app {YOUR_APP_ID} --image registry.gitlab.com/bramw/baserow/cloudron:1.3.0
 ```
 
 > Note that you must replace the image with the most recent image of Baserow. The
