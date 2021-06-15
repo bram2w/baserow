@@ -54,6 +54,9 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
 
     objects = GroupQuerySet.as_manager()
 
+    def has_template(self):
+        return self.template_set.all().exists()
+
     def has_user(
         self, user, permissions=None, raise_error=False, allow_if_template=False
     ):
@@ -81,7 +84,7 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
         if permissions and not isinstance(permissions, list):
             permissions = [permissions]
 
-        if allow_if_template and self.template_set.all().exists():
+        if allow_if_template and self.has_template():
             return True
         elif not bool(user and user.is_authenticated):
             if raise_error:

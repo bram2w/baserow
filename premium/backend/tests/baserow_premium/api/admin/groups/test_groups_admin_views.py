@@ -7,6 +7,7 @@ from rest_framework.status import (
     HTTP_200_OK,
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
+    HTTP_400_BAD_REQUEST,
 )
 
 from baserow.core.models import Group
@@ -29,6 +30,8 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
     group_2 = data_fixture.create_group(name="B", created_on=created)
     group_2.created_on = created
     group_2.save()
+    template_group = data_fixture.create_group(name="Template", created_on=created)
+    data_fixture.create_template(group=template_group)
     data_fixture.create_user_group(
         group=group_1, user=normal_user, permissions="MEMBER"
     )
@@ -175,3 +178,16 @@ def test_delete_group(api_client, data_fixture):
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {staff_token}")
     assert response.status_code == 204
     assert Group.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_delete_template_group(api_client, data_fixture):
+    staff_user, staff_token = data_fixture.create_user_and_token(is_staff=True)
+    group = data_fixture.create_group()
+    data_fixture.create_template(group=group)
+
+    url = reverse("api:premium:admin:groups:edit", kwargs={"group_id": group.id})
+    response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {staff_token}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_DELETE_A_TEMPLATE_GROUP"
+    assert Group.objects.all().count() == 1
