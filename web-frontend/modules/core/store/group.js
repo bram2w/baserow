@@ -232,6 +232,9 @@ export const getters = {
   getAll(state) {
     return state.items
   },
+  getAllSorted(state) {
+    return state.items.map((g) => g).sort((a, b) => a.order - b.order)
+  },
   hasSelected(state) {
     return Object.prototype.hasOwnProperty.call(state.selected, 'id')
   },

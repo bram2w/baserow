@@ -10,7 +10,7 @@ building your own production Baserow setup.
 If you are familiar with git and docker-compose run these commands to launch baserow 
 locally, otherwise please start from the Installing Requirements section below.
 ```bash
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 $ cd baserow
 $ docker-compose up
 ```
@@ -58,7 +58,7 @@ Baserow's code to your computer.
 
 ```
 $ cd ~/baserow
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
 Cloning into 'baserow'...
 ...
 $ cd baserow

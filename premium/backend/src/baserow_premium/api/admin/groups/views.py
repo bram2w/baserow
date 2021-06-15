@@ -13,8 +13,10 @@ from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST
 from baserow.core.models import Group
 from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import GroupDoesNotExist
+from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
 from baserow_premium.api.admin.views import AdminListingView
 from baserow_premium.admin.groups.handler import GroupsAdminHandler
+from .errors import ERROR_CANNOT_DELETE_A_TEMPLATE_GROUP
 
 from .serializers import GroupsAdminResponseSerializer
 
@@ -30,9 +32,13 @@ class GroupsAdminView(AdminListingView):
     }
 
     def get_queryset(self, request):
-        return Group.objects.prefetch_related(
-            "groupuser_set", "groupuser_set__user"
-        ).annotate(application_count=Count("application"))
+        return (
+            Group.objects.prefetch_related("groupuser_set", "groupuser_set__user")
+            .annotate(
+                application_count=Count("application"), template_count=Count("template")
+            )
+            .exclude(template_count__gt=0)
+        )
 
     @extend_schema(
         tags=["Admin"],
@@ -72,6 +78,7 @@ class GroupAdminView(APIView):
     @map_exceptions(
         {
             GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            CannotDeleteATemplateGroupError: ERROR_CANNOT_DELETE_A_TEMPLATE_GROUP,
         }
     )
     @transaction.atomic
