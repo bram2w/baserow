@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Added one click deploy to Heroku.
+
 ## Released (2021-06-02)
 
 * Fixed bug where the grid view would fail hard if a cell is selected and the component

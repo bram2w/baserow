@@ -28,6 +28,11 @@
       "description": "@TODO",
       "value": "",
       "required": false
+    },
+    "BASEROW_AMOUNT_OF_WORKERS": {
+      "description": "@TODO",
+      "value": "1",
+      "required": true
     }
   }
 }
