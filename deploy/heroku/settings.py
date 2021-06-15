@@ -11,6 +11,12 @@ MJML_BACKEND_MODE = "cmd"
 MJML_EXEC_CMD = "mjml"
 
 CELERY_REDIS_MAX_CONNECTIONS = 5
+BROKER_TRANSPORT_OPTIONS = {
+    "max_connections": 5,
+}
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "max_connections": 5,
+}
 
 FROM_EMAIL = f"no-reply@{PRIVATE_BACKEND_HOSTNAME}"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
