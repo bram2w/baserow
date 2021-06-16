@@ -13,7 +13,7 @@ MEDIA_ROOT = "/baserow/media"
 MJML_BACKEND_MODE = "cmd"
 MJML_EXEC_CMD = "mjml"
 
-FROM_EMAIL = f"no-reply@{PRIVATE_BACKEND_HOSTNAME}"
+FROM_EMAIL = f"no-reply@{PUBLIC_BACKEND_HOSTNAME}"
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = False
 EMAIL_HOST = os.environ["MAILGUN_SMTP_SERVER"]
