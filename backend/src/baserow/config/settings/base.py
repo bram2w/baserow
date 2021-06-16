@@ -79,9 +79,6 @@ REDIS_URL = os.getenv(
     f"{REDIS_PROTOCOL}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0",
 )
 
-if os.getenv("STACKHERO_REDIS_URL_TLS", "") != "":
-    REDIS_URL = os.getenv("STACKHERO_REDIS_URL_TLS")
-
 CELERY_BROKER_URL = REDIS_URL
 CELERY_TASK_ROUTES = {
     "baserow.contrib.database.export.tasks.run_export_job": {"queue": "export"},
