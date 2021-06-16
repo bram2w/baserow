@@ -3,6 +3,9 @@ import os
 import dj_database_url
 
 
+DEBUG = True
+
+
 INSTALLED_APPS = INSTALLED_APPS + ["storages"]
 
 MEDIA_ROOT = "/baserow/media"
