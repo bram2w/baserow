@@ -8,5 +8,5 @@ release:
 run:
   web: sed -i 's/PORT/'"$PORT"'/g' /baserow/nginx.conf && \
        export BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-https://$HEROKU_APP_NAME.herokuapp.com} && \
-       export REDIS_URL=${STACKHERO_REDIS_URL_TLS:-$REDIS_URL} \
+       export REDIS_URL=${STACKHERO_REDIS_URL_TLS:-$REDIS_URL} && \
        /usr/bin/supervisord --configuration /etc/supervisor/conf.d/supervisor.conf
