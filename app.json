@@ -7,6 +7,7 @@
   "addons": [
     "heroku-postgresql:hobby-dev",
     "heroku-redis:hobby-dev",
+    "stackhero-redis:test",
     "mailgun:starter"
   ],
   "formation": {
