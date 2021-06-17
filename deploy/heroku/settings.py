@@ -28,6 +28,9 @@ ssl_context.verify_mode = ssl.CERT_NONE
 CHANNELS_REDIS_HOST = {"address": REDIS_URL, "ssl": ssl_context}
 CHANNEL_LAYERS["default"]["CONFIG"]["hosts"] = [CHANNELS_REDIS_HOST]
 
+# Decrease the amount of connections.
+CELERY_BROKER_POOL_LIMIT = 5
+
 DATABASES = {
     "default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=600)
 }

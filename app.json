@@ -6,7 +6,7 @@
   "success_url": "/",
   "addons": [
     "heroku-postgresql:hobby-dev",
-    "stackhero-redis:test",
+    "heroku-redis:hobby-dev",
     "mailgun:starter"
   ],
   "formation": {

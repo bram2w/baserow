@@ -50,6 +50,8 @@ scaled up to fit your needs. We recommend scaling up if you are going to use Bas
 with more than one user simultaneously. You can scale up by changing the dyno type
 and increase the amount of dyno's.
 
+### Workers per dyno
+
 To spare resources, by default every dyno has only one worker. If you are upgrading to
 a standard 2x dyno, you can increase the amount of workers to 2. This can be done  via
 the Config Vars in the Settings. On the settings page, click on "Reveal Config Vars",
@@ -59,19 +61,17 @@ You can roughly calculate the amount of workers based on the available RAM of yo
 dyno's. Every worker needs around 512MB ram, so a standard x1 dyno should have one
 worker, a standard x2 can have 2 workers and a performance M can have 4.
 
-## Redis
+### Postgres
 
-By default, we are using the `stackhero-redis:test` addon because that addon supports
-100 connections for free. The other free official Heroku Redis `heroku-redis:hobby`
-addon only supports 20 which is not enough. In order to figure out how many connections
-you would need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 25.
+By default, we are using the `heroku-postgresql:hobby-dev` addon because that supports
+10k rows for free. If you need more rows, you need to upgrade that addon.
 
-It is possible to switch to the `heroku-redis:hobby` addon. In order to do so, you must
-install that addon and then remove the `stackhero-redis:test`. Baserow automatically
-recognizes the Config Vars and will connect to the right Redis server.
+### Redis
 
-> The `heroku-redis:hobby` does not allow enough connection. You would need at least
-> `heroku-redis:premium-0` if you have one dyno with one worker.
+By default, we are using the `heroku-redis:hobby` addon because that addon supports
+20 connections for free. If you are scaling up, you need more connections which means
+you need to upgrade that plan. In order to  figure out how many connections you would
+need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 20.
 
 ## Custom Domain
 
