@@ -197,12 +197,12 @@ class QuerysetSerializer(abc.ABC):
         """
 
         def serializer_func(row):
-            attr = getattr(row, field_object["name"])
+            value = getattr(row, field_object["name"])
 
-            if attr is None:
+            if value is None:
                 result = ""
             else:
-                result = field_object["type"].get_export_value(row, field_object)
+                result = field_object["type"].get_export_value(value, field_object)
 
             return (
                 field_object["name"],

@@ -1,4 +1,3 @@
-from decimal import Decimal
 from io import BytesIO
 from typing import Type, List
 from unittest.mock import patch
@@ -35,14 +34,11 @@ from baserow.contrib.database.export.registries import (
     table_exporter_registry,
     TableExporter,
 )
-from baserow.contrib.database.fields.field_helpers import (
-    construct_all_possible_field_kwargs,
-)
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.views.models import GridView
 from baserow.contrib.database.views.exceptions import ViewNotInTable
+from baserow.contrib.database.views.models import GridView
+from tests.test_utils import setup_interesting_test_table
 
 
 def _parse_datetime(datetime):
@@ -214,110 +210,32 @@ def test_columns_are_exported_by_order_then_id(storage_mock, data_fixture):
 def test_can_export_every_interesting_different_field_to_csv(
     storage_mock, data_fixture
 ):
-    datetime = _parse_datetime("2020-02-01 01:23")
-    date = _parse_date("2020-02-01")
-    upload_url_prefix = "http://localhost:8000/media/user_files/"
-    expected = {
-        "text": "text",
-        "long_text": "long_text",
-        "url": "http://www.google.com",
-        "email": "test@example.com",
-        "negative_int": (-1, "-1"),
-        "positive_int": (1, "1"),
-        "negative_decimal": (Decimal("-1.2"), "-1.2"),
-        "positive_decimal": (Decimal("1.2"), "1.2"),
-        "boolean": (True, "True"),
-        "datetime_us": (datetime, "02/01/2020 01:23"),
-        "date_us": (date, "02/01/2020"),
-        "datetime_eu": (datetime, "01/02/2020 01:23"),
-        "date_eu": (date, "01/02/2020"),
-        "link_row": (None, '"linked_row_1,linked_row_2,unnamed row 3"'),
-        "file": (
-            [
-                {"name": "hashed_name.txt", "visible_name": "a.txt"},
-                {"name": "other_name.txt", "visible_name": "b.txt"},
-            ],
-            f'"visible_name=a.txt url={upload_url_prefix}hashed_name.txt,'
-            f'visible_name=b.txt url={upload_url_prefix}other_name.txt"',
-        ),
-        "single_select": (lambda: SelectOption.objects.get(value="A"), "A"),
-        "phone_number": "+4412345678",
-    }
-    contents = wide_test(data_fixture, storage_mock, expected, {"exporter_type": "csv"})
-    expected_header = ",".join(expected.keys())
-    expected_values = ",".join(
-        [v[1] if isinstance(v, tuple) else v for v in expected.values()]
+    contents = run_export_job_over_interesting_table(
+        data_fixture, storage_mock, {"exporter_type": "csv"}
     )
+    # noinspection HttpUrlsUsage
     expected = (
-        "\ufeff"
-        f"id,{expected_header}\r\n"
-        f"1,,,,,,,,,False,,,,,,,,\r\n"
-        f"2,{expected_values}\r\n"
+        "\ufeffid,text,long_text,url,email,negative_int,positive_int,"
+        "negative_decimal,positive_decimal,boolean,datetime_us,date_us,datetime_eu,"
+        "date_eu,link_row,decimal_link_row,file_link_row,file,single_select,"
+        "phone_number\r\n"
+        "1,,,,,,,,,False,,,,,,,,,,\r\n"
+        "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,True,"
+        "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,"
+        '"linked_row_1,linked_row_2,unnamed row 3","1.234,-123.456,unnamed row 3",'
+        '"visible_name=name.txt url=http://localhost:8000/media/user_files/test_hash'
+        '.txt,unnamed row 2",'
+        '"visible_name=a.txt url=http://localhost:8000/media/user_files/hashed_name.txt'
+        ',visible_name=b.txt url=http://localhost:8000/media/user_files/other_name.txt"'
+        ",A,+4412345678\r\n"
     )
+
     assert expected == contents
 
 
-def wide_test(data_fixture, storage_mock, expected, options):
-    user = data_fixture.create_user()
-    database = data_fixture.create_database_application(user=user)
-    table = data_fixture.create_database_table(database=database, user=user)
-    link_table = data_fixture.create_database_table(database=database, user=user)
-    handler = FieldHandler()
-    row_handler = RowHandler()
-    all_possible_kwargs_per_type = construct_all_possible_field_kwargs(link_table)
-    name_to_field_id = {}
-    i = 0
-    for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
-        for kwargs in all_possible_kwargs:
-            field = handler.create_field(
-                user=user,
-                table=table,
-                type_name=field_type_name,
-                order=i,
-                **kwargs,
-            )
-            i += 1
-            name_to_field_id[kwargs["name"]] = field.id
+def run_export_job_over_interesting_table(data_fixture, storage_mock, options):
+    table, user = setup_interesting_test_table(data_fixture)
     grid_view = data_fixture.create_grid_view(table=table)
-    row_handler = RowHandler()
-    other_table_primary_text_field = data_fixture.create_text_field(
-        table=link_table, name="text_field", primary=True
-    )
-
-    def add_linked_row(text):
-        return row_handler.create_row(
-            user=user,
-            table=link_table,
-            values={
-                other_table_primary_text_field.id: text,
-            },
-        )
-
-    model = table.get_model()
-
-    # A dictionary of field names to a tuple of (value to create the row model with,
-    # the expected value of this value after being exported to csv)
-    assert expected.keys() == name_to_field_id.keys(), (
-        "Please update the dictionary above with what your new field type should look "
-        "like when serialized to csv. "
-    )
-    row_values = {}
-    for field_type, val in expected.items():
-        if isinstance(val, tuple):
-            val = val[0]
-        if callable(val):
-            val = val()
-        if val is not None:
-            row_values[f"field_{name_to_field_id[field_type]}"] = val
-    # Make a blank row to test empty field conversion also.
-    model.objects.create(**{})
-    row = model.objects.create(**row_values)
-    linked_row_1 = add_linked_row("linked_row_1")
-    linked_row_2 = add_linked_row("linked_row_2")
-    linked_row_3 = add_linked_row(None)
-    getattr(row, f"field_{name_to_field_id['link_row']}").add(
-        linked_row_1.id, linked_row_2.id, linked_row_3.id
-    )
     job, contents = run_export_job_with_mock_storage(
         table, grid_view, storage_mock, user, options
     )

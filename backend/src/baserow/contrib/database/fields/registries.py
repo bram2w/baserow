@@ -12,7 +12,6 @@ from baserow.core.registry import (
     APIUrlsInstanceMixin,
     ImportExportMixin,
 )
-
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 from .models import SelectOption
 
@@ -604,18 +603,18 @@ class FieldType(
 
         setattr(row, field_name, value)
 
-    def get_export_value(self, row, field_object):
+    def get_export_value(self, value, field_object):
         """
-        Gets this fields value from the provided row in a form suitable for exporting
-        to a standalone file.
+        Should convert this field type's internal baserow value to a form suitable
+        for exporting to a standalone file.
 
-        :param row: The row instance where the value be set on.
-        :type row: Object
+        :param value: The internal value to convert to a suitable export format
+        :type value: Object
         :param field_object: The field object for the field to extract
         :type field_object: FieldObject
         """
 
-        return getattr(row, field_object["name"])
+        return value
 
 
 class FieldTypeRegistry(
