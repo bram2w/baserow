@@ -18,7 +18,7 @@ $ heroku addons:create -a baserow-test-app mailgun:starter
 # The `stackhero-redis:test` can optionally be replaced by `heroku-redis:hobby-dev`,
 # but their free plan doesn't support enough simultanious connections. So it is
 # recommended to at least get the `heroku-redis:premium-0`. Note that the 
-# `stackhero-redis:test` must be removed first.
+# `stackhero-redis:test` must be removed first because that URL has priority.
 # $ heroku addons:destroy -a baserow-test-app stackhero-redis:test
 # $ heroku addons:create -a baserow-test-app heroku-redis:premium-0
 
