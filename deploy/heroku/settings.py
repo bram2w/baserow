@@ -28,9 +28,12 @@ ssl_context.verify_mode = ssl.CERT_NONE
 CHANNELS_REDIS_HOST = {"address": REDIS_URL, "ssl": ssl_context}
 CHANNEL_LAYERS["default"]["CONFIG"]["hosts"] = [CHANNELS_REDIS_HOST]
 
-# Set the limit of connection pool based on the amount of workers that must be started
-# with a limit of 10, which is the default value.
+# Set the limit of the connection pool based on the amount of workers that must be
+# started with a limit of 10, which is the default value.
 CELERY_BROKER_POOL_LIMIT = min(4 * int(os.getenv("BASEROW_AMOUNT_OF_WORKERS", "1")), 10)
+CELERY_REDIS_MAX_CONNECTIONS = min(
+    4 * int(os.getenv("BASEROW_AMOUNT_OF_WORKERS", "1")), 10
+)
 
 DATABASES = {
     "default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=600)

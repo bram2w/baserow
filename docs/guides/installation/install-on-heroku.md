@@ -70,8 +70,8 @@ By default, we are using the `heroku-postgresql:hobby-dev` addon because that su
 
 By default, we are using the `heroku-redis:hobby` addon because that addon supports
 20 connections for free. If you are scaling up, you need more connections which means
-you need to upgrade that plan. In order to  figure out how many connections you would
-need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 20.
+you need to upgrade that plan. In order to roughly esimate out how many connections
+you would need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 15.
 
 ## Custom Domain
 
