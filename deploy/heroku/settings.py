@@ -1,7 +1,7 @@
 from baserow.config.settings.base import *
 import os
-import dj_database_url
 import ssl
+import dj_database_url
 
 
 INSTALLED_APPS = INSTALLED_APPS + ["storages"]
@@ -19,19 +19,7 @@ EMAIL_PORT = os.environ["MAILGUN_SMTP_PORT"]
 EMAIL_HOST_USER = os.environ["MAILGUN_SMTP_LOGIN"]
 EMAIL_HOST_PASSWORD = os.environ["MAILGUN_SMTP_PASSWORD"]
 
-# BROKER_USE_SSL = True
-# CELERY_BROKER_USE_SSL = True
-# CELERY_REDIS_BACKEND_USE_SSL = True
-# CELERY_REDBEAT_BROKER_USE_SSL = True
-# CELERY_REDBEAT_REDIS_USE_SSL = True
-
-CELERY_REDIS_USE_SSL = {
-    'ssl_cert_reqs': ssl.CERT_NONE
-}
 CELERY_REDBEAT_REDIS_USE_SSL = {
-    'ssl_cert_reqs': ssl.CERT_NONE
-}
-CELERY_BROKER_USE_SSL = {
     'ssl_cert_reqs': ssl.CERT_NONE
 }
 
