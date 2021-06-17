@@ -26,13 +26,13 @@ EMAIL_HOST_PASSWORD = os.environ["MAILGUN_SMTP_PASSWORD"]
 # CELERY_REDBEAT_REDIS_USE_SSL = True
 
 CELERY_REDIS_USE_SSL = {
-    'ssl_cert_reqs': ssl.CERT_OPTIONAL
+    'ssl_cert_reqs': ssl.CERT_NONE
 }
 CELERY_REDBEAT_REDIS_USE_SSL = {
-    'ssl_cert_reqs': ssl.CERT_OPTIONAL
+    'ssl_cert_reqs': ssl.CERT_NONE
 }
 CELERY_BROKER_USE_SSL = {
-    'ssl_cert_reqs': ssl.CERT_OPTIONAL
+    'ssl_cert_reqs': ssl.CERT_NONE
 }
 
 DATABASES = {
