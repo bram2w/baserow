@@ -18,6 +18,8 @@ EMAIL_PORT = os.environ["MAILGUN_SMTP_PORT"]
 EMAIL_HOST_USER = os.environ["MAILGUN_SMTP_LOGIN"]
 EMAIL_HOST_PASSWORD = os.environ["MAILGUN_SMTP_PASSWORD"]
 
+CELERY_REDIS_BACKEND_USE_SSL = True
+
 DATABASES = {
     "default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=600)
 }
