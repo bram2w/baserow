@@ -1,6 +1,9 @@
 # Baserow
 
-Open source no-code database tool and Airtable alternative.
+Open source no-code database tool and Airtable alternative. Questions? Join our 
+community on Gitter https://gitter.im/bramw-baserow/community.
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy/?template=https://heroku.com/deploy?template=https://gitlab.com/bramw/baserow)
 
 **We're hiring** remote developers! More information at 
 https://baserow.io/jobs/experienced-full-stack-developer.
@@ -26,13 +29,11 @@ you the powers of a developer without leaving your browser.
 * Runs in your browser.
 * Alternative to Airtable.
 
-## Become a sponsor
+## Self host
 
-If you would like to get new features faster then you might want to consider becoming
-a sponsor. By becoming a sponsor we can spend more time on Baserow which means faster
-development.
-
-[Become a GitHub Sponsor](https://github.com/sponsors/bram2w)
+* **Heroku**: Easily install and scale up on Heroku by using our template.
+* **Cloudron**: @TODO
+* **Ubuntu**: @TODO
 
 ## Try out Baserow on your machine 
 
@@ -89,6 +90,14 @@ The official documentation can be found on the website at https://baserow.io/doc
 or [here](./docs/index.md) inside the repository. The API docs can be found here at 
 https://api.baserow.io/api/redoc/ or if you are looking for the OpenAPI schema here
 https://api.baserow.io/api/schema.json.
+
+## Become a sponsor
+
+If you would like to get new features faster then you might want to consider becoming
+a sponsor. By becoming a sponsor we can spend more time on Baserow which means faster
+development.
+
+[Become a GitHub Sponsor](https://github.com/sponsors/bram2w)
 
 ## Meta
 

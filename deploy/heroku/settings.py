@@ -3,6 +3,7 @@ import os
 import ssl
 import dj_database_url
 
+DEBUG = True
 
 INSTALLED_APPS = INSTALLED_APPS + ["storages"]
 
