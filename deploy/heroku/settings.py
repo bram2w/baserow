@@ -3,8 +3,6 @@ import os
 import ssl
 import dj_database_url
 
-DEBUG = True
-
 INSTALLED_APPS = INSTALLED_APPS + ["storages"]
 
 MEDIA_ROOT = "/baserow/media"
@@ -12,8 +10,8 @@ MEDIA_ROOT = "/baserow/media"
 MJML_BACKEND_MODE = "cmd"
 MJML_EXEC_CMD = "mjml"
 
-FROM_EMAIL = f"no-reply@{PUBLIC_BACKEND_HOSTNAME}"
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+FROM_EMAIL = f"no-reply@{os.environ['sandboxacc70f852798436fbf45445822cf7ee6']}"
+CELERY_EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = False
 EMAIL_HOST = os.environ["MAILGUN_SMTP_SERVER"]
 EMAIL_PORT = os.environ["MAILGUN_SMTP_PORT"]

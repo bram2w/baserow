@@ -31,9 +31,9 @@ you the powers of a developer without leaving your browser.
 
 ## Self host
 
-* **Heroku**: Easily install and scale up on Heroku by using our template.
-* **Cloudron**: @TODO
-* **Ubuntu**: @TODO
+* [**Heroku**: Easily install and scale up on Heroku by using our template.](./docs/guides/installation/install-on-heroku.md)
+* [**Cloudron**: Install and update Baserow on your own Cloudron server.](./docs/guides/installation/install-on-cloudron.md)
+* [**Ubuntu**: Manually install Baserow step by step on a clean Ubuntu server. **not recommended**](./docs/guides/installation/install-on-ubuntu.md)
 
 ## Try out Baserow on your machine 
 
@@ -101,7 +101,7 @@ development.
 
 ## Meta
 
-Created by Bram Wiepjes (Baserow) - bram@baserow.io.
+Created by Baserow B.V. - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
