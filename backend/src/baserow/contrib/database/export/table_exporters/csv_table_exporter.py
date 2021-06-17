@@ -109,4 +109,4 @@ class CsvQuerysetSerializer(QuerysetSerializer):
                     for key, inner_val in val.items()
                 ]
             )
-        return val
+        return str(val)

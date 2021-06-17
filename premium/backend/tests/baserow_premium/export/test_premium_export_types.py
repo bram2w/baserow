@@ -1,4 +1,3 @@
-from decimal import Decimal
 from io import BytesIO
 from unittest.mock import patch
 
@@ -7,12 +6,8 @@ from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.timezone import utc, make_aware
 
 from baserow.contrib.database.export.handler import ExportHandler
-from baserow.contrib.database.fields.field_helpers import (
-    construct_all_possible_field_kwargs,
-)
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.rows.handler import RowHandler
+from tests.test_utils import setup_interesting_test_table
 
 
 def _parse_datetime(datetime):
@@ -28,29 +23,8 @@ def _parse_date(date):
 def test_can_export_every_interesting_different_field_to_json(
     storage_mock, data_fixture
 ):
-    datetime = _parse_datetime("2020-02-01 01:23")
-    date = _parse_date("2020-02-01")
-    expected = {
-        "text": "text",
-        "long_text": "long_text",
-        "url": "http://www.google.com",
-        "email": "test@example.com",
-        "negative_int": -1,
-        "positive_int": 1,
-        "negative_decimal": Decimal("-1.2"),
-        "positive_decimal": Decimal("1.2"),
-        "boolean": True,
-        "datetime_us": datetime,
-        "date_us": date,
-        "datetime_eu": datetime,
-        "date_eu": date,
-        "link_row": None,
-        "file": ([{"name": "hashed_name.txt", "visible_name": "a.txt"}],),
-        "single_select": lambda: SelectOption.objects.get(value="A"),
-        "phone_number": "+4412345678",
-    }
-    contents = wide_test(
-        data_fixture, storage_mock, expected, {"exporter_type": "json"}
+    contents = run_export_over_interesting_test_table(
+        data_fixture, storage_mock, {"exporter_type": "json"}
     )
     assert (
         contents
@@ -71,6 +45,8 @@ def test_can_export_every_interesting_different_field_to_json(
     "datetime_eu": "",
     "date_eu": "",
     "link_row": [],
+    "decimal_link_row": [],
+    "file_link_row": [],
     "file": [],
     "single_select": "",
     "phone_number": ""
@@ -79,7 +55,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "id": 2,
     "text": "text",
     "long_text": "long_text",
-    "url": "http://www.google.com",
+    "url": "https://www.google.com",
     "email": "test@example.com",
     "negative_int": -1,
     "positive_int": 1,
@@ -95,10 +71,28 @@ def test_can_export_every_interesting_different_field_to_json(
         "linked_row_2",
         "unnamed row 3"
     ],
+    "decimal_link_row": [
+        "1.234",
+        "-123.456",
+        "unnamed row 3"
+    ],
+    "file_link_row": [
+        [
+            {
+                "visible_name": "name.txt",
+                "url": "http://localhost:8000/media/user_files/test_hash.txt"
+            }
+        ],
+        "unnamed row 2"
+    ],
     "file": [
         {
             "visible_name": "a.txt",
             "url": "http://localhost:8000/media/user_files/hashed_name.txt"
+        },
+        {
+            "visible_name": "b.txt",
+            "url": "http://localhost:8000/media/user_files/other_name.txt"
         }
     ],
     "single_select": "A",
@@ -146,28 +140,9 @@ def test_if_duplicate_field_names_json_export(storage_mock, data_fixture):
 def test_can_export_every_interesting_different_field_to_xml(
     storage_mock, data_fixture
 ):
-    datetime = _parse_datetime("2020-02-01 01:23")
-    date = _parse_date("2020-02-01")
-    expected = {
-        "text": "text",
-        "long_text": "long_text",
-        "url": "http://www.google.com",
-        "email": "test@example.com",
-        "negative_int": -1,
-        "positive_int": 1,
-        "negative_decimal": Decimal("-1.2"),
-        "positive_decimal": Decimal("1.2"),
-        "boolean": True,
-        "datetime_us": datetime,
-        "date_us": date,
-        "datetime_eu": datetime,
-        "date_eu": date,
-        "link_row": None,
-        "file": ([{"name": "hashed_name.txt", "visible_name": "a.txt"}],),
-        "single_select": lambda: SelectOption.objects.get(value="A"),
-        "phone_number": "+4412345678",
-    }
-    xml = wide_test(data_fixture, storage_mock, expected, {"exporter_type": "xml"})
+    xml = run_export_over_interesting_test_table(
+        data_fixture, storage_mock, {"exporter_type": "xml"}
+    )
     expected_xml = f"""<?xml version="1.0" encoding="utf-8" ?>
 <rows>
 <row>
@@ -186,6 +161,8 @@ def test_can_export_every_interesting_different_field_to_xml(
     <datetime-eu/>
     <date-eu/>
     <link-row/>
+    <decimal-link-row/>
+    <file-link-row/>
     <file/>
     <single-select/>
     <phone-number/>
@@ -194,7 +171,7 @@ def test_can_export_every_interesting_different_field_to_xml(
     <id>2</id>
     <text>text</text>
     <long-text>long_text</long-text>
-    <url>http://www.google.com</url>
+    <url>https://www.google.com</url>
     <email>test@example.com</email>
     <negative-int>-1</negative-int>
     <positive-int>1</positive-int>
@@ -210,10 +187,30 @@ def test_can_export_every_interesting_different_field_to_xml(
         <item>linked_row_2</item>
         <item>unnamed row 3</item>
     </link-row>
+    <decimal-link-row>
+        <item>1.234</item>
+        <item>-123.456</item>
+        <item>unnamed row 3</item>
+    </decimal-link-row>
+    <file-link-row>
+        <item>
+            <item>
+                <visible_name>name.txt</visible_name>
+                <url>http://localhost:8000/media/user_files/test_hash.txt</url>
+            </item>
+        </item>
+        <item>
+            unnamed row 2
+        </item>
+    </file-link-row>
     <file>
         <item>
             <visible_name>a.txt</visible_name>
             <url>http://localhost:8000/media/user_files/hashed_name.txt</url>
+        </item>
+        <item>
+            <visible_name>b.txt</visible_name>
+            <url>http://localhost:8000/media/user_files/other_name.txt</url>
         </item>
     </file>
     <single-select>A</single-select>
@@ -269,67 +266,9 @@ def strip_indents_and_newlines(xml):
     return "".join([line.strip() for line in xml.split("\n")])
 
 
-def wide_test(data_fixture, storage_mock, expected, options):
-    user = data_fixture.create_user()
-    database = data_fixture.create_database_application(user=user)
-    table = data_fixture.create_database_table(database=database, user=user)
-    link_table = data_fixture.create_database_table(database=database, user=user)
-    handler = FieldHandler()
-    row_handler = RowHandler()
-    all_possible_kwargs_per_type = construct_all_possible_field_kwargs(link_table)
-    name_to_field_id = {}
-    i = 0
-    for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
-        for kwargs in all_possible_kwargs:
-            field = handler.create_field(
-                user=user,
-                table=table,
-                type_name=field_type_name,
-                order=i,
-                **kwargs,
-            )
-            i += 1
-            name_to_field_id[kwargs["name"]] = field.id
+def run_export_over_interesting_test_table(data_fixture, storage_mock, options):
+    table, user = setup_interesting_test_table(data_fixture)
     grid_view = data_fixture.create_grid_view(table=table)
-    row_handler = RowHandler()
-    other_table_primary_text_field = data_fixture.create_text_field(
-        table=link_table, name="text_field", primary=True
-    )
-
-    def add_linked_row(text):
-        return row_handler.create_row(
-            user=user,
-            table=link_table,
-            values={
-                other_table_primary_text_field.id: text,
-            },
-        )
-
-    model = table.get_model()
-
-    # A dictionary of field names to a tuple of (value to create the row model with,
-    # the expected value of this value after being exported to csv)
-    assert expected.keys() == name_to_field_id.keys(), (
-        "Please update the dictionary above with what your new field type should look "
-        "like when serialized to csv. "
-    )
-    row_values = {}
-    for field_type, val in expected.items():
-        if isinstance(val, tuple):
-            val = val[0]
-        if callable(val):
-            val = val()
-        if val is not None:
-            row_values[f"field_{name_to_field_id[field_type]}"] = val
-    # Make a blank row to test empty field conversion also.
-    model.objects.create(**{})
-    row = model.objects.create(**row_values)
-    linked_row_1 = add_linked_row("linked_row_1")
-    linked_row_2 = add_linked_row("linked_row_2")
-    linked_row_3 = add_linked_row(None)
-    getattr(row, f"field_{name_to_field_id['link_row']}").add(
-        linked_row_1.id, linked_row_2.id, linked_row_3.id
-    )
     job, contents = run_export_job_with_mock_storage(
         table, grid_view, storage_mock, user, options
     )

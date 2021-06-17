@@ -50,8 +50,27 @@ def test_can_convert_between_all_fields(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database, user=user)
+    # Link tables
     link_table = data_fixture.create_database_table(database=database, user=user)
     data_fixture.create_text_field(table=link_table, name="text_field", primary=True)
+    decimal_link_table = data_fixture.create_database_table(
+        database=database, user=user
+    )
+    data_fixture.create_number_field(
+        table=decimal_link_table,
+        name="text_field",
+        primary=True,
+        number_type="DECIMAL",
+        number_decimal_places=3,
+        number_negative=True,
+    )
+    file_link_table = data_fixture.create_database_table(database=database, user=user)
+    data_fixture.create_file_field(
+        table=file_link_table,
+        name="file_field",
+        primary=True,
+    )
+
     handler = FieldHandler()
     row_handler = RowHandler()
     fake = Faker()
@@ -66,7 +85,9 @@ def test_can_convert_between_all_fields(data_fixture):
     # different conversion behaviour or entirely different database columns being
     # created. Here the kwargs which control these modes are enumerated so we can then
     # generate every possible type of conversion.
-    all_possible_kwargs_per_type = construct_all_possible_field_kwargs(link_table)
+    all_possible_kwargs_per_type = construct_all_possible_field_kwargs(
+        link_table, decimal_link_table, file_link_table
+    )
 
     i = 1
     for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():

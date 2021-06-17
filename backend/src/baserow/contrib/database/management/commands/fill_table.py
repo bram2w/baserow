@@ -85,7 +85,7 @@ class Command(BaseCommand):
     @staticmethod
     def create_a_column_for_every_type(table):
         field_handler = FieldHandler()
-        all_kwargs_per_type = construct_all_possible_field_kwargs(None)
+        all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None)
         for field_type_name, all_possible_kwargs in all_kwargs_per_type.items():
             if field_type_name == "link_row":
                 continue

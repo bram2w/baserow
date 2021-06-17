@@ -180,12 +180,11 @@ class NumberFieldType(FieldType):
             **kwargs,
         )
 
-    def get_export_value(self, row, field_object):
+    def get_export_value(self, value, field_object):
         # If the number is an integer we want it to be a literal json number and so
         # don't convert it to a string. However if a decimal to preserve any precision
         # we keep it as a string.
         instance = field_object["field"]
-        value = getattr(row, field_object["name"])
         if instance.number_type == NUMBER_TYPE_INTEGER:
             return int(value)
 
@@ -320,8 +319,7 @@ class DateFieldType(FieldType):
             "The value should be a date/time string, date object or " "datetime object."
         )
 
-    def get_export_value(self, row, field_object):
-        value = getattr(row, field_object["name"])
+    def get_export_value(self, value, field_object):
         if value is None:
             return value
         python_format = field_object["field"].get_python_format()
@@ -498,7 +496,7 @@ class LinkRowFieldType(FieldType):
             models.Prefetch(name, queryset=related_queryset)
         )
 
-    def get_export_value(self, row, field_object):
+    def get_export_value(self, value, field_object):
         instance = field_object["field"]
 
         if hasattr(instance, "_related_model"):
@@ -510,15 +508,36 @@ class LinkRowFieldType(FieldType):
             )
             if primary_field:
                 primary_field_name = primary_field["name"]
-                value = getattr(row, field_object["name"])
+                primary_field_type = primary_field["type"]
                 primary_field_values = []
                 for sub in value.all():
-                    linked_row_primary_name = getattr(sub, primary_field_name)
-                    if linked_row_primary_name is None:
-                        linked_row_primary_name = f"unnamed row {sub.id}"
-                    primary_field_values.append(linked_row_primary_name)
+                    # Ensure we also convert the value from the other table to it's
+                    # export form as it could be an odd field type!
+                    linked_value = getattr(sub, primary_field_name)
+                    if self._is_unnamed_primary_field_value(linked_value):
+                        export_linked_value = f"unnamed row {sub.id}"
+                    else:
+                        export_linked_value = primary_field_type.get_export_value(
+                            getattr(sub, primary_field_name), primary_field
+                        )
+                    primary_field_values.append(export_linked_value)
                 return primary_field_values
         return []
+
+    @staticmethod
+    def _is_unnamed_primary_field_value(primary_field_value):
+        """
+        Checks if the value for a linked primary field is considered "empty".
+        :param primary_field_value: The value of a primary field row in a linked table.
+        :return: If this value is considered an empty primary field value.
+        """
+
+        if isinstance(primary_field_value, list):
+            return len(primary_field_value) == 0
+        elif isinstance(primary_field_value, dict):
+            return len(primary_field_value.keys()) == 0
+        else:
+            return primary_field_value is None
 
     def get_serializer_field(self, instance, **kwargs):
         """
@@ -968,9 +987,8 @@ class FileFieldType(FieldType):
             **kwargs,
         )
 
-    def get_export_value(self, row, field_object):
+    def get_export_value(self, value, field_object):
         files = []
-        value = getattr(row, field_object["name"])
         for file in value:
             if "name" in file:
                 path = UserFileHandler().user_file_path(file["name"])
@@ -1132,8 +1150,7 @@ class SingleSelectFieldType(FieldType):
             "color is exposed."
         )
 
-    def get_export_value(self, row, field_object):
-        value = getattr(row, field_object["name"])
+    def get_export_value(self, value, field_object):
         return value.value
 
     def get_model_field(self, instance, **kwargs):
