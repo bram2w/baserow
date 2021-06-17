@@ -16,7 +16,7 @@ on URL provided by Heroku.
 ## Persistent S3 file storage
 
 By default, the uploaded files are stored inside the dyno for demo purposes. This means
-that everytime your dyno restarts, you will loose your uploaded files.
+that everytime your dyno restarts, you will lose all your uploaded files.
 
 ## Scaling
 

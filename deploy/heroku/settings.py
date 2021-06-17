@@ -10,7 +10,7 @@ MEDIA_ROOT = "/baserow/media"
 MJML_BACKEND_MODE = "cmd"
 MJML_EXEC_CMD = "mjml"
 
-FROM_EMAIL = f"no-reply@{os.environ['sandboxacc70f852798436fbf45445822cf7ee6']}"
+FROM_EMAIL = f"no-reply@{os.environ['MAILGUN_DOMAIN']}"
 CELERY_EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS = False
 EMAIL_HOST = os.environ["MAILGUN_SMTP_SERVER"]
