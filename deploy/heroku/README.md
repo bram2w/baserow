@@ -1,6 +1,6 @@
 ## Testing
 
-In order to test your, changes you need to have to Heroku command line installed on
+In order to test your changes, you need to have the Heroku command line installed on
 your local machine. Next, you can use the Heroku command line to create an app,
 manually install the `addons` and `labs` listed in the app.json file at the root of
 this repo. In the example below we assume you are at the root of the Baserow repo and

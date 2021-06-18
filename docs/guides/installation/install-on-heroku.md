@@ -9,10 +9,10 @@ some settings
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 
-The button above can be used install Baserow on Heroku with one click. Click on it and
-follow the steps on heroku.com to proceed. After the installation you can reach Baserow
-on the URL provided by Heroku. Everything installed in via the template runs on the
-free plan of Heroku by default.
+The button above can be used to install Baserow on Heroku with one click. Click on it
+and follow the steps on heroku.com to proceed. After the installation, you can reach
+Baserow on the URL provided by Heroku. Everything installed via the template runs on
+the free plan of Heroku by default.
 
 ## Persistent S3 file storage
 
@@ -52,7 +52,7 @@ and increase the amount of dyno's.
 
 ### Workers per dyno
 
-To spare resources, by default every dyno has only one worker. If you are upgrading to
+To spare resources, every dyno has only one worker by default. If you are upgrading to
 a standard 2x dyno, you can increase the amount of workers to 2. This can be done  via
 the Config Vars in the Settings. On the settings page, click on "Reveal Config Vars",
 find the "BASEROW_AMOUNT_OF_WORKERS" var and set the value to 2.
@@ -70,8 +70,8 @@ By default, we are using the `heroku-postgresql:hobby-dev` addon because that su
 
 By default, we are using the `heroku-redis:hobby` addon because that addon supports
 20 connections for free. If you are scaling up, you need more connections which means
-you need to upgrade that addon. In order to roughly estimate out how many connections
-you would need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 15.
+you need to upgrade that addon. In order to roughly estimate how many connections you
+would need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 15.
 
 ## Custom Domain
 
@@ -80,7 +80,7 @@ app name is `baserow-test-app`, then Baserow will assume your URL is
 `https://baserow-test-app.herokuapp.com`. If you added a custom domain, then you need
 to change a Config Var on the settings page. Go to the Settings page and click on
 "Reveal Config Vars". Here you need to set the `BASEROW_PUBLIC_URL` value and add your
-own URL. If your domain is `baserow-test.com` then the value should be 
+own URL. If your domain is `baserow-test.com` ,then the value should be 
 `https://baserow-test.com`. If you don't have a custom domain then this value can be
 empty.
 
