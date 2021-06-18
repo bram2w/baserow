@@ -1,6 +1,6 @@
 {
   "name": "Baserow",
-  "description": "Open source online no-code database and Airtable alternative. More information about persistent files on S3, scaling and installing a custom domain can be found on https://baserow.io/docs/guides/installation/install-on-heroku.",
+  "description": "Open source online no-code database and Airtable alternative. More information about persistent files on S3, scaling and installing a custom domain can be found on https://baserow.io/docs/guides/installation/install-on-heroku. Note that it might take a couple of minutes to deploy the app, so please be patient.",
   "repository": "https://gitlab.com/bramw/baserow",
   "keywords": ["baserow", "no-code", "database", "airtable"],
   "success_url": "/",
