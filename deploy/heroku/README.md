@@ -1,16 +1,17 @@
 ## Testing
 
-In order to test your changes you need to have to Heroku command line installed on your
-local machine. Next, you can use the Heroku command line to create an app, manually
-install the `addons` and `labs` listed in the app.json file at the root of this repo.
-In the example below we assume we are at the roow of the Baserow repo and we are going
-install a heroku app named `baserow-test-app`, this can of course be named differently.
+In order to test your, changes you need to have to Heroku command line installed on
+your local machine. Next, you can use the Heroku command line to create an app,
+manually install the `addons` and `labs` listed in the app.json file at the root of
+this repo. In the example below we assume you are at the root of the Baserow repo and
+we are going install a heroku app named `baserow-test-app`, this can of course be named
+differently.
 
 ```
 $ heroku apps:create baserow-test-app
 $ heroku stack:set -a baserow-test-app container
 
-# We need to add all the addons listed in the app.json file
+# We need to add all the addons listed in the app.json file.
 $ heroku addons:create -a baserow-test-app heroku-postgresql:hobby-dev
 $ heroku addons:create -a baserow-test-app heroku-redis:hobby-dev
 $ heroku addons:create -a baserow-test-app mailgun:starter
@@ -27,7 +28,9 @@ $ heroku config:set -a baserow-test-app BASEROW_AMOUNT_OF_WORKERS=1
 Now that we have replicated the setup of the app.json, we can deploy the application
 by pushing to the heroku remote repository.
 
-> Make sure that you have commited all your changes before pushing to Heroku.
+> Make sure that you have committed all your changes and temporarily replaced the
+> `master` branch with your own branch in the deploy/heroku/Dockerfile before
+> pushing to Heroku.
 
 ```
 $ git push heroku YOUR_CURRENT_BRANCH:master

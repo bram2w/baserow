@@ -21,16 +21,16 @@
   "stack": "container",
   "env": {
     "SECRET_KEY": {
-      "description": "@TODO",
+      "description": "A unique string that is used to generate secrets.",
       "generator": "secret"
     },
     "BASEROW_PUBLIC_URL": {
-      "description": "@TODO",
+      "description": "The public URL of your Heroku Baserow app. If empty, the default Heroku app URL is used, but if it differs then it must be changed. (eg. https://baserow-test.com).",
       "value": "",
       "required": false
     },
     "BASEROW_AMOUNT_OF_WORKERS": {
-      "description": "@TODO",
+      "description": "The amount of workers per dyno.",
       "value": "1",
       "required": true
     }

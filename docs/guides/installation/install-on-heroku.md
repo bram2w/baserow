@@ -11,8 +11,8 @@ some settings
 
 The button above can be used install Baserow on Heroku with one click. Click on it and
 follow the steps on heroku.com to proceed. After the installation you can reach Baserow
-on the URL provided by Heroku. Everything installed in via the template runs in the
-free plan of Heroku.
+on the URL provided by Heroku. Everything installed in via the template runs on the
+free plan of Heroku by default.
 
 ## Persistent S3 file storage
 
@@ -34,7 +34,7 @@ Here you need to add the following vars:
 ### Non AWS S3 providers
 
 It is also possible to use non AWS, S3 providers like for example Digital Ocean. Below
-you will find an example of settings if you want to connect Digital Ocean Spaces.
+you will find example settings if you want to connect to Digital Ocean Spaces.
 
 * AWS_ACCESS_KEY_ID: The spaces API key.
 * AWS_SECRET_ACCESS_KEY: The spaces API secret key.
@@ -57,8 +57,8 @@ a standard 2x dyno, you can increase the amount of workers to 2. This can be don
 the Config Vars in the Settings. On the settings page, click on "Reveal Config Vars",
 find the "BASEROW_AMOUNT_OF_WORKERS" var and set the value to 2.
 
-You can roughly calculate the amount of workers based on the available RAM of your
-dyno's. Every worker needs around 512MB ram, so a standard x1 dyno should have one
+You can roughly estimate the amount of workers based on the available RAM of your
+dyno type. Every worker needs around 512MB ram, so a standard x1 dyno should have one
 worker, a standard x2 can have 2 workers and a performance M can have 4.
 
 ### Postgres
@@ -70,7 +70,7 @@ By default, we are using the `heroku-postgresql:hobby-dev` addon because that su
 
 By default, we are using the `heroku-redis:hobby` addon because that addon supports
 20 connections for free. If you are scaling up, you need more connections which means
-you need to upgrade that plan. In order to roughly esimate out how many connections
+you need to upgrade that addon. In order to roughly estimate out how many connections
 you would need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 15.
 
 ## Custom Domain
@@ -87,13 +87,13 @@ empty.
 ## Environment variables
 
 * SECRET_KEY: A unique string that is used to generate secrets.
-* BASEROW_PUBLIC_URL: The public URL of your Heroku Baserow app. If empty, then the
-  default Heroku app is used, but if it differs then it must be changed.
+* BASEROW_PUBLIC_URL: The public URL of your Heroku Baserow app. If empty, the default
+  Heroku app URL is used, but if it differs it must be changed.
   (eg. https://baserow-test.com).
 * BASEROW_AMOUNT_OF_WORKERS: The amount of workers per dyno.
 * AWS_ACCESS_KEY_ID: The spaces API key.
 * AWS_SECRET_ACCESS_KEY: The spaces API secret key.
 * AWS_STORAGE_BUCKET_NAME: The name of your space.
 * AWS_S3_REGION_NAME: Name of the Digital Ocean spaces region (eg. ams3)
-* AWS_S3_ENDPOINT_URL: (eg. https://ams3.digitaloceanspaces.com)
-* AWS_S3_CUSTOM_DOMAIN: (eg. name-of-your-space.ams3.digitaloceanspaces.com)
+* AWS_S3_ENDPOINT_URL: Custom S3 URL to use when connecting to S3, including scheme.
+* AWS_S3_CUSTOM_DOMAIN: Your custom domain where the files can be downloaded from.

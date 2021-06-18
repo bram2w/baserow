@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Added one click deploy to Heroku.
+* Added a one Heroku template and one click deploy button.
 
 ## Released (2021-06-02)
 

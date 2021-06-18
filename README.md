@@ -31,7 +31,7 @@ you the powers of a developer without leaving your browser.
 
 ## Self host
 
-* [**Heroku**: Easily install and scale up on Heroku by using our template.](./docs/guides/installation/install-on-heroku.md)
+* [**Heroku**: Easily install and scale up on Heroku by using the template.](./docs/guides/installation/install-on-heroku.md)
 * [**Cloudron**: Install and update Baserow on your own Cloudron server.](./docs/guides/installation/install-on-cloudron.md)
 * [**Ubuntu**: Manually install Baserow step by step on a clean Ubuntu server. **not recommended**](./docs/guides/installation/install-on-ubuntu.md)
 
@@ -93,7 +93,7 @@ https://api.baserow.io/api/schema.json.
 
 ## Become a sponsor
 
-If you would like to get new features faster then you might want to consider becoming
+If you would like to get new features faster, then you might want to consider becoming
 a sponsor. By becoming a sponsor we can spend more time on Baserow which means faster
 development.
 
