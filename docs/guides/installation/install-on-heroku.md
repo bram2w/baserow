@@ -7,7 +7,7 @@ some settings
 
 ## The template
 
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy/?template=https://heroku.com/deploy?template=https://gitlab.com/bramw/baserow)
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 
 The button above can be used install Baserow on Heroku with one click. Click on it and
 follow the steps on heroku.com to proceed. After the installation you can reach Baserow

@@ -1,6 +1,6 @@
 {
   "name": "Baserow",
-  "description": "Open source online no-code database and Airtable alternative.",
+  "description": "Open source online no-code database and Airtable alternative. More information about persistent files on S3, scaling and installing a custom domain can be found on https://baserow.io/docs/guides/installation/install-on-heroku.",
   "repository": "https://gitlab.com/bramw/baserow",
   "keywords": ["baserow", "no-code", "database", "airtable"],
   "success_url": "/",
@@ -30,7 +30,7 @@
       "required": false
     },
     "BASEROW_AMOUNT_OF_WORKERS": {
-      "description": "The amount of workers per dyno.",
+      "description": "The amount of workers per dyno. This value must be `1` if you want to run the free plan.",
       "value": "1",
       "required": true
     }

@@ -3,7 +3,7 @@
 Open source no-code database tool and Airtable alternative. Questions? Join our 
 community on Gitter https://gitter.im/bramw-baserow/community.
 
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy/?template=https://heroku.com/deploy?template=https://gitlab.com/bramw/baserow)
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 
 **We're hiring** remote developers! More information at 
 https://baserow.io/jobs/experienced-full-stack-developer.
