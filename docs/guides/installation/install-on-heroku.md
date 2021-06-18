@@ -97,3 +97,30 @@ empty.
 * AWS_S3_REGION_NAME: Name of the Digital Ocean spaces region (eg. ams3)
 * AWS_S3_ENDPOINT_URL: Custom S3 URL to use when connecting to S3, including scheme.
 * AWS_S3_CUSTOM_DOMAIN: Your custom domain where the files can be downloaded from.
+
+## Update
+
+When a new version of Baserow has been released, you probably want to update.
+Unfortunately, it is not possible to update from a public repository via the web
+interface, so you need to do that via the command line. If don't have the
+heroku-cli installed, you can follow the instructions here 
+https://devcenter.heroku.com/articles/heroku-cli. After the cli is installed, you
+probably need to run `heroku login` to authenticate with your account.
+
+Make sure that you navigate to an empty directory and then run the commands below.
+Don't forgot to replace `YOUR_APP_NAME` with the name of your Heroku app.
+
+```
+$ git clone --branch master https://gitlab.com/bramw/baserow.git
+$ cd baserow
+$ git remote add heroku https://git.heroku.com/YOUR_APP_NAME.git
+$ git push -f heroku master
+```
+
+The latest version is deployed after the command finishes. You can optionally cleanup
+the created directory by executing the following commands.
+
+```
+$ cd ../
+$ rm -rf baserow
+```
