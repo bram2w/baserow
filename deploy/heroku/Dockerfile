@@ -26,7 +26,7 @@ WORKDIR /baserow
 RUN service supervisor stop && service nginx stop
 RUN rm -f /etc/nginx/sites-enabled/*
 
-RUN git clone --branch master https://gitlab.com/bramw/baserow.git
+RUN git clone --branch 170-add-a-guide-to-deploy-on-heroku https://gitlab.com/bramw/baserow.git
 RUN virtualenv -p python3 env
 RUN env/bin/pip install --no-cache -r baserow/backend/requirements/base.txt
 RUN env/bin/pip install dj-database-url boto3==1.16.25 django-storages==1.10.1
