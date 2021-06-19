@@ -15,9 +15,6 @@
       "size": "hobby"
     }
   },
-  "labs": [
-    "runtime-dyno-metadata"
-  ],
   "stack": "container",
   "env": {
     "SECRET_KEY": {
@@ -25,9 +22,9 @@
       "generator": "secret"
     },
     "BASEROW_PUBLIC_URL": {
-      "description": "The public URL of your Heroku Baserow app. If empty, the default Heroku app URL is used, but if it differs then it must be changed. (eg. https://baserow-test.com).",
-      "value": "",
-      "required": false
+      "description": "The public URL of your Heroku Baserow app. Don't forget to replace YOUR_APP_NAME with the name of your app.",
+      "value": "https://YOUR_APP_NAME.herokuapp.com",
+      "required": true
     },
     "BASEROW_AMOUNT_OF_WORKERS": {
       "description": "The amount of workers per dyno. This value must be `1` if you want to run the free plan.",

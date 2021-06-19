@@ -14,6 +14,15 @@ and follow the steps on heroku.com to proceed. After the installation, you can r
 Baserow on the URL provided by Heroku. Everything installed via the template runs on
 the free plan of Heroku by default.
 
+## Could not connect to the API server error
+
+If you are getting a "Could not connect to the API server." error when logging in or
+creating an account, then you most likely need to update the `BASEROW_PUBLIC_URL`
+config var. You can do so by going to the settings page in your Heroku app dashboard,
+click on "Reveal Config Vars", find the `BASEROW_PUBLIC_URL` and change the value to 
+`https://YOUR_APP_NAME.herokuapp.com`. Don't forget to replace `YOUR_APP_NAME` with the
+name of your app.
+
 ## Persistent S3 file storage
 
 By default, the uploaded files are stored inside the dyno for demo purposes. This means
@@ -75,14 +84,11 @@ would need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 15.
 
 ## Custom Domain
 
-By default, Baserow uses the standard Heroku app URL based on the app name. So if your
-app name is `baserow-test-app`, then Baserow will assume your URL is
-`https://baserow-test-app.herokuapp.com`. If you added a custom domain, then you need
-to change a Config Var on the settings page. Go to the Settings page and click on
-"Reveal Config Vars". Here you need to set the `BASEROW_PUBLIC_URL` value and add your
-own URL. If your domain is `baserow-test.com` ,then the value should be 
-`https://baserow-test.com`. If you don't have a custom domain then this value can be
-empty.
+If you added a custom domain, then you need to change a Config Var on the settings
+page. Go to the Settings page and click on "Reveal Config Vars". Here you need to set
+the `BASEROW_PUBLIC_URL` value and add your own URL. If your domain is 
+`baserow-test.com` ,then the value should be `https://baserow-test.com`. If you don't 
+have a custom domain then this value can be empty.
 
 ## Environment variables
 
