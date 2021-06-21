@@ -11,11 +11,12 @@ from django.shortcuts import reverse
 from django.conf import settings
 
 from baserow.contrib.database.fields.models import Field, TextField, NumberField
+from baserow.contrib.database.tokens.handler import TokenHandler
 
 
 @pytest.mark.django_db
 def test_list_fields(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token(
+    user, jwt_token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
     table_1 = data_fixture.create_database_table(user=user)
@@ -25,9 +26,16 @@ def test_list_fields(api_client, data_fixture):
     field_3 = data_fixture.create_number_field(table=table_1, order=2)
     data_fixture.create_boolean_field(table=table_2, order=1)
 
+    token = TokenHandler().create_token(user, table_1.database.group, "Good")
+    wrong_token = TokenHandler().create_token(user, table_1.database.group, "Wrong")
+    TokenHandler().update_token_permissions(
+        user, wrong_token, False, False, False, True
+    )
+
+    # Test access with JWT token
     response = api_client.get(
         reverse("api:database:fields:list", kwargs={"table_id": table_1.id}),
-        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+        **{"HTTP_AUTHORIZATION": f"JWT {jwt_token}"},
     )
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
@@ -53,18 +61,19 @@ def test_list_fields(api_client, data_fixture):
 
     response = api_client.get(
         reverse("api:database:fields:list", kwargs={"table_id": table_2.id}),
-        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+        **{"HTTP_AUTHORIZATION": f"JWT {jwt_token}"},
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
 
     response = api_client.get(
         reverse("api:database:fields:list", kwargs={"table_id": 999999}),
-        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+        **{"HTTP_AUTHORIZATION": f"JWT {jwt_token}"},
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
 
+    # Without any token
     url = reverse("api:database:fields:list", kwargs={"table_id": table_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -74,18 +83,47 @@ def test_list_fields(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
 
+    # Test authentication with token
+    response = api_client.get(
+        reverse("api:database:fields:list", kwargs={"table_id": table_1.id}),
+        format="json",
+        HTTP_AUTHORIZATION="Token abc123",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_TOKEN_DOES_NOT_EXIST"
+
+    response = api_client.get(
+        reverse("api:database:fields:list", kwargs={"table_id": table_1.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {wrong_token.key}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
+
+    response = api_client.get(
+        reverse("api:database:fields:list", kwargs={"table_id": table_1.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    assert response.status_code == HTTP_200_OK
+
 
 @pytest.mark.django_db
 def test_create_field(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
+    user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table()
 
+    token = TokenHandler().create_token(user, table.database.group, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    TokenHandler().update_token_permissions(user, wrong_token, True, True, True, True)
+
+    # Test operation with JWT token
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
         {"name": "Test 1", "type": "NOT_EXISTING"},
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -96,7 +134,7 @@ def test_create_field(api_client, data_fixture):
         reverse("api:database:fields:list", kwargs={"table_id": 99999}),
         {"name": "Test 1", "type": "text"},
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
@@ -105,7 +143,7 @@ def test_create_field(api_client, data_fixture):
         reverse("api:database:fields:list", kwargs={"table_id": table_2.id}),
         {"name": "Test 1", "type": "text"},
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
@@ -116,7 +154,7 @@ def test_create_field(api_client, data_fixture):
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
         {"name": "Test 1", "type": "text"},
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_MAX_FIELD_COUNT_EXCEEDED"
@@ -130,7 +168,7 @@ def test_create_field(api_client, data_fixture):
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
         {"name": "Test 1", "type": "text", "text_default": "default!"},
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
@@ -141,6 +179,36 @@ def test_create_field(api_client, data_fixture):
     assert response_json["name"] == text.name
     assert response_json["order"] == text.order
     assert response_json["text_default"] == "default!"
+
+    # Test authentication with token
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "Test 1", "type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION="Token abc123",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_TOKEN_DOES_NOT_EXIST"
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "Test 1", "type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {wrong_token.key}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
+
+    # Even with a token that have all permissions, the call should be rejected
+    # for now.
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "Test 1", "type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
 
 
 @pytest.mark.django_db

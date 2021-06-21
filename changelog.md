@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Made it possible to list table field meta-data with a token.
+
 ## Released (2021-06-02)
 
 * Fixed bug where the grid view would fail hard if a cell is selected and the component

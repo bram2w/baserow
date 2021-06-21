@@ -286,6 +286,28 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Generate a field sample for the given field that is displayed in auto-doc.
+   * @returns a sample for this field.
+   */
+  getDocsFieldResponseExample({
+    id,
+    table_id: tableId,
+    name,
+    order,
+    type,
+    primary,
+  }) {
+    return {
+      id,
+      table_id: tableId,
+      name,
+      order,
+      type,
+      primary,
+    }
+  }
+
+  /**
    * Should return a contains filter function unique for this field type.
    */
   getContainsFilterFunction() {
