@@ -50,3 +50,5 @@ RUN ln -sf /dev/stdout /var/log/supervisor/supervisord.log
 ADD nginx.conf /baserow/nginx.conf
 RUN ln -sf /dev/stdout /var/log/nginx/access.log
 RUN ln -sf /dev/stderr /var/log/nginx/error.log
+
+ADD entry.sh /baserow/entry.sh
