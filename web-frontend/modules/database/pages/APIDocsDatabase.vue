@@ -63,6 +63,7 @@
               open:
                 navActive === 'section-table-' + table.id ||
                 navActive === 'section-table-' + table.id + '-fields' ||
+                navActive === 'section-table-' + table.id + '-field-list' ||
                 navActive === 'section-table-' + table.id + '-list' ||
                 navActive === 'section-table-' + table.id + '-get' ||
                 navActive === 'section-table-' + table.id + '-create' ||
@@ -81,6 +82,19 @@
                   navigate('section-table-' + table.id + '-fields')
                 "
                 >Fields</a
+              >
+            </li>
+            <li>
+              <a
+                class="api-docs__nav-link"
+                :class="{
+                  active:
+                    navActive === 'section-table-' + table.id + '-field-list',
+                }"
+                @click.prevent="
+                  navigate('section-table-' + table.id + '-field-list')
+                "
+                >List fields</a
               >
             </li>
             <li>
@@ -292,6 +306,63 @@
         <div class="api-docs__item">
           <div class="api-docs__left">
             <h3
+              :id="'section-table-' + table.id + '-field-list'"
+              class="api-docs__heading-3"
+            >
+              List fields
+            </h3>
+            <p class="api-docs__content">
+              To list fields of the {{ table.name }} table a
+              <code class="api-docs__code">GET</code> request has to be made to
+              the {{ table.name }} fields endpoint. It's only possible to list
+              the fields if the token has read, create or update permissions.
+            </p>
+            <h4 class="api-docs__heading-4">Result field properties</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter name="id" :optional="false" type="integer">
+                Field primary key. Can be used to generate the database column
+                name by adding
+                <code class="api-docs__code">field_</code> prefix.
+              </APIDocsParameter>
+              <APIDocsParameter name="name" :optional="false" type="string">
+                Field name.
+              </APIDocsParameter>
+              <APIDocsParameter
+                name="table_id"
+                :optional="false"
+                type="integer"
+              >
+                Related table id.
+              </APIDocsParameter>
+              <APIDocsParameter name="order" :optional="false" type="integer">
+                Field order in table. 0 for the first field.
+              </APIDocsParameter>
+              <APIDocsParameter name="primary" :optional="false" type="boolean">
+                Indicates if the field is a primary field. If
+                <code class="api-docs__code">true</code> the field cannot be
+                deleted and the value should represent the whole row.
+              </APIDocsParameter>
+              <APIDocsParameter name="type" :optional="false" type="string">
+                Type defined for this field.
+              </APIDocsParameter>
+            </ul>
+            <p class="api-docs__content">
+              Some extra properties are not described here because they are type
+              specific.
+            </p>
+          </div>
+          <div class="api-docs__right">
+            <APIDocsExample
+              v-model="exampleType"
+              type="GET"
+              :url="getFieldsURL(table)"
+              :response="getResponseFields(table)"
+            ></APIDocsExample>
+          </div>
+        </div>
+        <div class="api-docs__item">
+          <div class="api-docs__left">
+            <h3
               :id="'section-table-' + table.id + '-list'"
               class="api-docs__heading-3"
             >
@@ -299,7 +370,7 @@
             </h3>
             <p class="api-docs__content">
               To list rows in the {{ table.name }} table a
-              <code class="api-docs__code">GET</code> request as to be made to
+              <code class="api-docs__code">GET</code> request has to be made to
               the {{ table.name }} endpoint. The response is paginated and by
               default the first page is returned. The correct page can be
               fetched by providing the
@@ -735,6 +806,7 @@ export default {
         description: fieldType.getDocsDescription(field),
         requestExample: fieldType.getDocsRequestExample(field),
         responseExample: fieldType.getDocsResponseExample(field),
+        fieldResponseExample: fieldType.getDocsFieldResponseExample(field),
       }
       return field
     }
@@ -841,6 +913,14 @@ export default {
       return item
     },
     /**
+     * Generates a sample field list response based on the available fields of the table.
+     */
+    getResponseFields(table) {
+      return this.fields[table.id]
+        .slice(0, 3)
+        .map(({ _: { fieldResponseExample } }) => fieldResponseExample)
+    },
+    /**
      * Returns the mapping of the field id as key and the field name as value.
      */
     getFieldMapping(table) {
@@ -849,6 +929,9 @@ export default {
         mapping[`field_${field.id}`] = field.name
       })
       return mapping
+    },
+    getFieldsURL(table) {
+      return `${this.$env.PUBLIC_BACKEND_URL}/api/database/fields/table/${table.id}/`
     },
     getListURL(table) {
       return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${table.id}/`

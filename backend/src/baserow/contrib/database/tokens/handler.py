@@ -317,8 +317,9 @@ class TokenHandler:
         :param token: The token instance.
         :type token: Token
         :param type_name: The CRUD operation, create, read, update or delete to check
-            the permissions for.
-        :type type_name: str
+            the permissions for. Can be a list if you want to check at least one of the
+            listed operation.
+        :type type_name: str | list
         :param table: The table object to check the permissions for.
         :type table: Table
         :return: Indicates if the token has permissions to perform the operation on
@@ -332,12 +333,17 @@ class TokenHandler:
         if not table.database.group.has_user(token.user):
             return False
 
+        if isinstance(type_name, str):
+            type_names = [type_name]
+        else:
+            type_names = type_name
+
         return TokenPermission.objects.filter(
             Q(database__table=table)
             | Q(table_id=table.id)
             | Q(table__isnull=True, database__isnull=True),
             token=token,
-            type=type_name,
+            type__in=type_names,
         ).exists()
 
     def check_table_permissions(
@@ -351,8 +357,9 @@ class TokenHandler:
             extracted from the request. Otherwise a token object is expected.
         :type request_or_token: Request or Token
         :param type_name: The CRUD operation, create, read, update or delete to check
-            the permissions for.
-        :type type_name: str
+            the permissions for. Can be a list if you want to check at least one of the
+            listed operation.
+        :type type_name: str | list
         :param table: The table object to check the permissions for.
         :type table: Table
         :param force_check: Indicates if a NoPermissionToTable exception must be raised
