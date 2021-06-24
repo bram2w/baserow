@@ -92,6 +92,7 @@ export default {
     el.sortableId = binding.value.id
     el.sortableMarginLeft = binding.value.marginLeft
     el.sortableMarginRight = binding.value.marginRight
+    el.sortableMarginTop = binding.value.marginTop
   },
   /**
    * Called when the user moves the mouse when the dragging of the element has
@@ -163,7 +164,8 @@ export default {
         ? beforeRect.top - indicator.clientHeight
         : afterRect.top + afterRect.height) -
       parentRect.top +
-      parent.scrollTop
+      parent.scrollTop +
+      (el.sortableMarginTop || 0)
     const left = elementRect.left - parentRect.left
     indicator.style.left = left + (el.sortableMarginLeft || 0) + 'px'
     indicator.style.width =
