@@ -1,5 +1,5 @@
 .select-options {
-  // Nothing
+  position: relative;
 }
 
 .select-options__item {
@@ -33,4 +33,13 @@
   &:hover {
     color: $color-neutral-400;
   }
+}
+
+.select-options__drag-handle {
+  width: 12px;
+  margin: 4px 8px 4px 0;
+  cursor: grab;
+  background-image: radial-gradient($color-neutral-200 40%, transparent 40%);
+  background-size: 4px 4px;
+  background-repeat: repeat;
 }
