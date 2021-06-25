@@ -407,7 +407,7 @@ class CoreHandler:
         return group_invitation
 
     def create_group_invitation(
-        self, user, group, email, permissions, message, base_url
+        self, user, group, email, permissions, base_url, message=""
     ):
         """
         Creates a new group invitation for the given email address and sends out an
@@ -423,12 +423,12 @@ class CoreHandler:
         :param permissions: The group permissions that the user will get once he has
             accepted the invitation.
         :type permissions: str
-        :param message: A custom message that will be included in the invitation email.
-        :type message: str
         :param base_url: The base url of the frontend, where the user can accept his
             invitation. The signed invitation id is appended to the URL (base_url +
             '/TOKEN'). Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
         :type base_url: str
+        :param message: A custom message that will be included in the invitation email.
+        :type message: Optional[str]
         :raises ValueError: If the provided permissions are not allowed.
         :raises UserInvalidGroupPermissionsError: If the user does not belong to the
             group or doesn't have right permissions in the group.

@@ -197,6 +197,35 @@ def test_create_group_invitation(api_client, data_fixture):
     assert response_json["message"] == "Test"
     assert "created_on" in response_json
 
+    response = api_client.post(
+        reverse("api:groups:invitations:list", kwargs={"group_id": group_1.id}),
+        {
+            "email": "test2@test.nl",
+            "permissions": "ADMIN",
+            "message": "",
+            "base_url": "http://localhost:3000/invite",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["message"] == ""
+
+    response = api_client.post(
+        reverse("api:groups:invitations:list", kwargs={"group_id": group_1.id}),
+        {
+            "email": "test2@test.nl",
+            "permissions": "ADMIN",
+            "base_url": "http://localhost:3000/invite",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["message"] == ""
+
 
 @pytest.mark.django_db
 def test_get_group_invitation(api_client, data_fixture):
