@@ -499,6 +499,20 @@ def test_create_group_invitation(mock_send_email, data_fixture):
     assert invitation.message == ""
     assert GroupInvitation.objects.all().count() == 2
 
+    invitation = handler.create_group_invitation(
+        user=user,
+        group=group,
+        email="test3@test.nl",
+        permissions="ADMIN",
+        base_url="http://localhost:3000/invite",
+    )
+    assert invitation.invited_by_id == user.id
+    assert invitation.group_id == group.id
+    assert invitation.email == "test3@test.nl"
+    assert invitation.permissions == "ADMIN"
+    assert invitation.message == ""
+    assert GroupInvitation.objects.all().count() == 3
+
 
 @pytest.mark.django_db
 def test_update_group_invitation(data_fixture):
