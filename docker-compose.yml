@@ -71,6 +71,15 @@ services:
   celery:
     container_name: celery
     image: baserow_backend:latest
+    environment:
+      - ADDITIONAL_APPS
+      - EMAIL_SMTP
+      - EMAIL_SMTP_HOST
+      - EMAIL_SMTP_PORT
+      - EMAIL_SMTP_USE_TLS
+      - EMAIL_SMTP_USER
+      - EMAIL_SMTP_PASSWORD
+      - FROM_EMAIL
     build:
       dockerfile: ./backend/Dockerfile
       context: .

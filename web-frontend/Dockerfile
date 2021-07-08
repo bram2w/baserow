@@ -27,16 +27,16 @@ RUN usermod -u ${UID} -g ${GID} node || exit 0
 
 USER $UID:$GID
 
-# Create and install the dependencies in separate ADD commands
-ADD --chown=$UID:$GID ./web-frontend/package.json ./web-frontend/yarn.lock /baserow/web-frontend/
+# Create and install the dependencies in separate COPY commands
+COPY --chown=$UID:$GID ./web-frontend/package.json ./web-frontend/yarn.lock /baserow/web-frontend/
 
 WORKDIR /baserow/web-frontend
 
 # We still need dev-dependencies as we will be running a nuxt build below
 RUN yarn install
 
-ADD --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
-ADD --chown=$UID:$GID ./premium/web-frontend /baserow/web-frontend/plugins/premium
+COPY --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
+COPY --chown=$UID:$GID ./premium/web-frontend /baserow/web-frontend/plugins/premium
 
 RUN yarn run build-local
 
