@@ -24,8 +24,9 @@ If you haven't already installed docker and docker-compose on your computer you 
 so by following the instructions on https://docs.docker.com/desktop/ and
 https://docs.docker.com/compose/install/.
 
-> Docker version 20.10.0 is the minimum required to build Baserow. Please check that 
-> your docker is up to date by running `docker -v`.
+> Docker version 19.03 is the minimum required to build Baserow. It is strongly
+> advised however that you install the latest version of Docker available: 20.10.
+> Please check that your docker is up to date by running `docker -v`.
 
 You will also need git installed which you can do by following the instructions on
 https://www.linode.com/docs/development/version-control/how-to-install-git-on-linux-mac-and-windows/
