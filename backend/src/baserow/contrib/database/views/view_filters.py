@@ -5,7 +5,7 @@ from math import floor, ceil
 from dateutil import parser
 from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
-from django.db.models import Q, IntegerField, BooleanField
+from django.db.models import Q, IntegerField, BooleanField, DateTimeField
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
 
@@ -221,6 +221,83 @@ class DateEqualViewFilterType(ViewFilterType):
             )
         else:
             return Q(**{field_name: datetime})
+
+
+class BaseDateFieldLookupFilterType(ViewFilterType):
+    """
+    The base date field lookup filter serves as a base class for DateViewFilters.
+    With it a valid ISO date can be parsed into a date object which subsequently can
+    be used to filter a model.DateField or model.DateTimeField.
+    If the model field in question is a DateTimeField then the get_filter function
+    makes sure to only use the date part of the datetime in order to filter. This means
+    that the time part of a DateTimeField gets completely ignored.
+
+    The 'query_field_lookup' needs to be set on the deriving classes to something like
+    '__lt'
+    '__lte'
+    '__gt'
+    '__gte'
+    """
+
+    type = "base_date_field_lookup_type"
+    query_field_lookup = ""
+    compatible_field_types = [DateFieldType.type]
+
+    @staticmethod
+    def parse_date(value: str) -> datetime.date:
+        """
+        Parses the provided value string and converts it to a date object.
+        Raises an error if the provided value is an empty string or cannot be parsed
+        to a date object
+        """
+        value = value.strip()
+
+        if value == "":
+            raise ValueError
+
+        try:
+            parsed_date = parser.isoparse(value).date()
+            return parsed_date
+        except ValueError as e:
+            raise e
+
+    def get_filter(self, field_name, value, model_field, field):
+        # in order to only compare the date part of a datetime field
+        # we need to verify that we are in fact dealing with a datetime field
+        # if so the django query lookup '__date' gets appended to the field_name
+        # otherwise (i.e. it is a date field) nothing gets appended
+        query_date_lookup = ""
+        if isinstance(model_field, DateTimeField):
+            query_date_lookup = "__date"
+        try:
+            parsed_date = self.parse_date(value)
+            field_key = f"{field_name}{query_date_lookup}{self.query_field_lookup}"
+            return Q(**{field_key: parsed_date})
+        except (ParserError, ValueError):
+            return Q()
+
+
+class DateBeforeViewFilterType(BaseDateFieldLookupFilterType):
+    """
+    The date before filter parses the provided filter value as date and checks if the
+    field value is before this date (lower than).
+    It is an extension of the BaseDateFieldLookupFilter
+    """
+
+    type = "date_before"
+    query_field_lookup = "__lt"
+    compatible_field_types = [DateFieldType.type]
+
+
+class DateAfterViewFilterType(BaseDateFieldLookupFilterType):
+    """
+    The after date filter parses the provided filter value as date and checks if
+    the field value is after this date (greater than).
+    It is an extension of the BaseDateFieldLookupFilter
+    """
+
+    type = "date_after"
+    query_field_lookup = "__gt"
 
 
 class DateEqualsTodayViewFilterType(ViewFilterType):
