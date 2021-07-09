@@ -122,7 +122,9 @@ export default {
       this.$emit('update', context)
     },
     getFields(fields, primary) {
-      return primary !== undefined ? [primary].concat(fields) : fields
+      return (primary !== undefined ? [primary].concat(fields) : fields)
+        .slice()
+        .sort((a, b) => a.order - b.order)
     },
     getHeading(primary, row) {
       const name = `field_${primary.id}`

@@ -114,6 +114,12 @@ export class ViewType extends Registerable {
   fieldCreated(context, table, field, fieldType, storePrefix) {}
 
   /**
+   * Method that is called when a field has been restored . This can be useful to
+   * maintain data integrity for example to add the field to the grid view store.
+   */
+  fieldRestored(context, table, selectedView, field, fieldType, storePrefix) {}
+
+  /**
    * Method that is called when a field has been deleted. This can be useful to
    * maintain data integrity.
    */
@@ -193,11 +199,33 @@ export class GridViewType extends ViewType {
     })
   }
 
-  async refresh({ store }, view, fields, primary, storePrefix = '') {
+  async refresh(
+    { store },
+    view,
+    fields,
+    primary,
+    storePrefix = '',
+    includeFieldOptions = false
+  ) {
     await store.dispatch(storePrefix + 'view/grid/refresh', {
       fields,
       primary,
+      includeFieldOptions,
     })
+  }
+
+  async fieldRestored(
+    { dispatch },
+    table,
+    selectedView,
+    field,
+    fieldType,
+    storePrefix = ''
+  ) {
+    // There might be new filters and sorts associated with the restored field,
+    // ensure we fetch them. For now we have to fetch all filters/sorts however in the
+    // future we should instead just fetch them for this particular restored field.
+    await dispatch('view/refreshView', { view: selectedView }, { root: true })
   }
 
   async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {

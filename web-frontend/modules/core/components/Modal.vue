@@ -8,14 +8,13 @@
     <div
       class="modal__box"
       :class="{
+        'modal__box--full-height': fullHeight,
         'modal__box--with-sidebar': sidebar,
         'modal__box--full-screen': fullScreen,
         'modal__box--small': small,
+        'modal__box--tiny': tiny,
       }"
     >
-      <a v-if="closeButton" class="modal__close" @click="hide()">
-        <i class="fas fa-times"></i>
-      </a>
       <template v-if="sidebar">
         <div class="modal__box-sidebar">
           <slot name="sidebar"></slot>
@@ -27,6 +26,9 @@
       <template v-if="!sidebar">
         <slot></slot>
       </template>
+      <a v-if="closeButton" class="modal__close" @click="hide()">
+        <i class="fas fa-times"></i>
+      </a>
     </div>
   </div>
 </template>
@@ -53,9 +55,19 @@ export default {
       default: false,
       required: false,
     },
+    tiny: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
     closeButton: {
       type: Boolean,
       default: true,
+      required: false,
+    },
+    fullHeight: {
+      type: Boolean,
+      default: false,
       required: false,
     },
   },

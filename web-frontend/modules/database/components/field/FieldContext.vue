@@ -27,31 +27,27 @@
       </li>
       <slot></slot>
       <li v-if="!field.primary">
-        <a @click="deleteField()">
+        <a
+          :class="{ 'context__menu-item--loading': deleteLoading }"
+          @click="deleteField()"
+        >
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
           Delete field
         </a>
       </li>
     </ul>
-    <DeleteFieldModal
-      v-if="!field.primary"
-      ref="deleteFieldModal"
-      :field="field"
-      @delete="$emit('delete')"
-    />
   </Context>
 </template>
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
 import UpdateFieldContext from '@baserow/modules/database/components/field/UpdateFieldContext'
-import DeleteFieldModal from './DeleteFieldModal'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'FieldContext',
   components: {
     UpdateFieldContext,
-    DeleteFieldModal,
   },
   mixins: [context],
   props: {
@@ -64,13 +60,34 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      deleteLoading: false,
+    }
+  },
   methods: {
-    setLoading(field, value) {
-      this.$store.dispatch('field/setItemLoading', { field, value })
-    },
-    deleteField() {
-      this.$refs.context.hide()
-      this.$refs.deleteFieldModal.show()
+    async deleteField() {
+      this.deleteLoading = true
+      const { field } = this
+
+      try {
+        await this.$store.dispatch('field/deleteCall', field)
+        this.$emit('delete')
+        await this.$store.dispatch('field/forceDelete', field)
+        await this.$store.dispatch('notification/restore', {
+          trash_item_type: 'field',
+          trash_item_id: field.id,
+        })
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          this.$emit('delete')
+          await this.$store.dispatch('field/forceDelete', field)
+        } else {
+          notifyIf(error, 'field')
+        }
+      }
+      this.hide()
+      this.deleteLoading = false
     },
   },
 }

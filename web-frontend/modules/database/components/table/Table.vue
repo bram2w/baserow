@@ -283,6 +283,9 @@ export default {
         return
       }
 
+      const includeFieldOptions =
+        typeof event === 'object' ? event.includeFieldOptions : false
+
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
       try {
@@ -291,7 +294,8 @@ export default {
           this.view,
           this.fields,
           this.primary,
-          this.storePrefix
+          this.storePrefix,
+          includeFieldOptions
         )
       } catch (error) {
         if (error instanceof RefreshCancelledError) {

@@ -117,3 +117,9 @@ class TemplateFileDoesNotExist(Exception):
     Raised when the JSON template file does not exist in the
     APPLICATION_TEMPLATE_DIRS directory.
     """
+
+
+class TrashItemDoesNotExist(Exception):
+    """
+    Raised when the trash item does not exist in the database.
+    """

@@ -196,6 +196,11 @@ export class RealTimeHandler {
       store.dispatch('group/forceCreate', data.group)
     })
 
+    this.registerEvent('group_restored', ({ store }, data) => {
+      store.dispatch('group/forceCreate', data.group)
+      store.dispatch('application/forceCreateAll', data.applications)
+    })
+
     this.registerEvent('group_updated', ({ store }, data) => {
       const group = store.getters['group/get'](data.group_id)
       if (group !== undefined) {

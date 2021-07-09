@@ -17,6 +17,7 @@ from baserow.contrib.database.fields.exceptions import (
     LinkRowTableNotProvided,
 )
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -194,10 +195,6 @@ def test_link_row_field_type(data_fixture):
     # Delete the existing field. Alter that the related field should be deleted and
     # no table named _relation_ should exist.
     field_handler.delete_field(user, link_field_1)
-    assert LinkRowField.objects.all().count() == 0
-    for t in connection.introspection.table_names():
-        if "_relation_" in t:
-            assert False
 
     # Change a the text field back into a link row field.
     link_field_2 = field_handler.update_field(
@@ -356,7 +353,9 @@ def test_link_row_field_type_rows(data_fixture):
     # Just check if the field can be deleted can be deleted.
     field_handler.delete_field(user=user, field=link_row_field)
     # We expect only the primary field to be left.
-    assert Field.objects.all().count() == 1
+    objects_all = Field.objects.all()
+    print(objects_all.query)
+    assert objects_all.count() == 1
 
 
 @pytest.mark.django_db
@@ -662,6 +661,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+
     response_json = response.json()
     row_id = response_json["id"]
     assert response.status_code == HTTP_200_OK
@@ -802,3 +802,104 @@ def test_import_export_link_row_field(data_fixture, user_tables_in_separate_db):
     assert [
         r.id for r in getattr(imported_row, f"field_{imported_link_row_field.id}").all()
     ] == [imported_c_row.id, imported_c_row_2.id]
+
+
+@pytest.mark.django_db
+def test_creating_a_linked_row_pointing_at_trashed_row_works_but_does_not_display(
+    data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table_with_trashed_row = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    table_linking_to_trashed_row = data_fixture.create_database_table(
+        name="Cars", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user,
+        table=table_with_trashed_row,
+        type_name="text",
+        name="Name",
+        primary=True,
+    )
+    trashed_row = row_handler.create_row(
+        user=user,
+        table=table_with_trashed_row,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table_linking_to_trashed_row,
+        type_name="link_row",
+        name="customer",
+        link_row_table=table_with_trashed_row,
+    )
+    # Create a primary field and some example data for the cars table.
+    field_handler.create_field(
+        user=user,
+        table=table_linking_to_trashed_row,
+        type_name="text",
+        name="Name",
+        primary=True,
+    )
+    TrashHandler.trash(
+        user,
+        database.group,
+        database,
+        trashed_row,
+        parent_id=table_with_trashed_row.id,
+    )
+
+    response = api_client.post(
+        reverse(
+            "api:database:rows:list",
+            kwargs={"table_id": table_linking_to_trashed_row.id},
+        ),
+        {
+            f"field_{link_field_1.id}": [trashed_row.id],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    # Even though the call succeeded, the linked row is not returned
+    assert response_json[f"field_{link_field_1.id}"] == []
+
+    row_id = response_json["id"]
+
+    url = reverse(
+        "api:database:rows:item",
+        kwargs={"table_id": table_linking_to_trashed_row.id, "row_id": row_id},
+    )
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_200_OK
+    # Other endpoints also don't return this connection made whilst trashed
+    assert response.json()[f"field_{link_field_1.id}"] == []
+
+    TrashHandler.restore_item(
+        user,
+        "row",
+        row_id,
+        parent_trash_item_id=table_with_trashed_row.id,
+    )
+
+    url = reverse(
+        "api:database:rows:item",
+        kwargs={"table_id": table_linking_to_trashed_row.id, "row_id": row_id},
+    )
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_200_OK
+    # Now that the row was un-trashed, it appears.
+    linked_field_values = response.json()[f"field_{link_field_1.id}"]
+    assert len(linked_field_values) == 1
+    assert linked_field_values[0]["id"] == trashed_row.id

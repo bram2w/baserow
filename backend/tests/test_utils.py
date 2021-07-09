@@ -185,4 +185,4 @@ def setup_interesting_test_table(data_fixture):
     getattr(row, f"field_{name_to_field_id['file_link_row']}").add(
         linked_row_7.id, linked_row_8.id
     )
-    return table, user
+    return table, user, row

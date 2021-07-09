@@ -68,6 +68,11 @@ class ErrorHandler {
         "Couldn't create field.",
         "The action couldn't be completed because the field count exceeds the limit"
       ),
+      ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD: new ResponseErrorMessage(
+        'Please restore the parent first.',
+        'You cannot restore this because as within something which is already' +
+          ' trashed. Please restore the parent item first.'
+      ),
     }
 
     // A temporary notFoundMap containing the error messages for when the

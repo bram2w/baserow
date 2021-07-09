@@ -6,16 +6,28 @@ from rest_framework.exceptions import NotAuthenticated
 
 from baserow.core.user_files.models import UserFile
 
-from .managers import GroupQuerySet
 from .mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
+    TrashableModelMixin,
+    ParentGroupTrashableModelMixin,
 )
 from .exceptions import UserNotInGroup, UserInvalidGroupPermissionsError
 
 
-__all__ = ["UserFile"]
+__all__ = [
+    "Settings",
+    "Group",
+    "GroupUser",
+    "GroupInvitation",
+    "Application",
+    "TemplateCategory",
+    "Template",
+    "UserLogEntry",
+    "TrashEntry",
+    "UserFile",
+]
 
 
 User = get_user_model()
@@ -48,17 +60,26 @@ class Settings(models.Model):
     )
 
 
-class Group(CreatedAndUpdatedOnMixin, models.Model):
+class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
     name = models.CharField(max_length=100)
     users = models.ManyToManyField(User, through="GroupUser")
 
-    objects = GroupQuerySet.as_manager()
+    def application_set_including_trash(self):
+        """
+        :return: The applications for this group including any trashed applications.
+        """
+        return self.application_set(manager="objects_and_trash")
 
     def has_template(self):
         return self.template_set.all().exists()
 
     def has_user(
-        self, user, permissions=None, raise_error=False, allow_if_template=False
+        self,
+        user,
+        permissions=None,
+        raise_error=False,
+        allow_if_template=False,
+        include_trash=False,
     ):
         """
         Checks if the provided user belongs to the group.
@@ -74,6 +95,9 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
         :param allow_if_template: If true and if the group is related to a template,
             then True is always returned and no exception will be raised.
         :type allow_if_template: bool
+        :param include_trash: If true then also checks if the group has been trashed
+            instead of raising a DoesNotExist exception.
+        :type include_trash: bool
         :raises UserNotInGroup: If the user does not belong to the group.
         :raises UserInvalidGroupPermissionsError: If the user does belong to the group,
             but doesn't have the right permissions.
@@ -92,7 +116,12 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
             else:
                 return False
 
-        queryset = GroupUser.objects.filter(user_id=user.id, group_id=self.id)
+        if include_trash:
+            manager = GroupUser.objects_and_trash
+        else:
+            manager = GroupUser.objects
+
+        queryset = manager.filter(user_id=user.id, group_id=self.id)
 
         if raise_error:
             try:
@@ -112,7 +141,12 @@ class Group(CreatedAndUpdatedOnMixin, models.Model):
         return f"<Group id={self.id}, name={self.name}>"
 
 
-class GroupUser(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
+class GroupUser(
+    ParentGroupTrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    models.Model,
+):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -143,7 +177,9 @@ class GroupUser(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         return cls.get_highest_order_of_queryset(queryset) + 1
 
 
-class GroupInvitation(CreatedAndUpdatedOnMixin, models.Model):
+class GroupInvitation(
+    ParentGroupTrashableModelMixin, CreatedAndUpdatedOnMixin, models.Model
+):
     group = models.ForeignKey(
         Group,
         on_delete=models.CASCADE,
@@ -178,7 +214,11 @@ class GroupInvitation(CreatedAndUpdatedOnMixin, models.Model):
 
 
 class Application(
-    CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixin, models.Model
+    TrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    PolymorphicContentTypeMixin,
+    models.Model,
 ):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
@@ -250,3 +290,63 @@ class UserLogEntry(models.Model):
     class Meta:
         get_latest_by = "timestamp"
         ordering = ["-timestamp"]
+
+
+class TrashEntry(models.Model):
+    """
+    A TrashEntry is a record indicating that another model in Baserow has a trashed
+    row. When a user deletes certain things in Baserow they are not actually deleted
+    from the database, but instead marked as trashed. Trashed rows can be restored
+    or permanently deleted.
+
+    The other model must mixin the TrashableModelMixin and also have a corresponding
+    TrashableItemType registered specifying exactly how to delete and restore that
+    model.
+    """
+
+    # The TrashableItemType.type of the item that is trashed.
+    trash_item_type = models.TextField()
+    # We need to also store the parent id as for some trashable items the
+    # trash_item_type and the trash_item_id is not unique as the items of that type
+    # could be spread over multiple tables with the same id.
+    parent_trash_item_id = models.PositiveIntegerField(null=True, blank=True)
+    # The actual id of the item that is trashed
+    trash_item_id = models.PositiveIntegerField()
+
+    # If the user who trashed something gets deleted we still wish to preserve this
+    # trash record as it is independent of if the user exists or not.
+    user_who_trashed = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True
+    )
+
+    # The group and application fields are used to group trash into separate "bins"
+    # which can be viewed and emptied independently of each other.
+
+    # The group the item that is trashed is found in, if the trashed item is the
+    # group itself then this should also be set to that trashed group.
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    # The application the item that is trashed is found in, if the trashed item is the
+    # application itself then this should also be set to that trashed application.
+    application = models.ForeignKey(
+        Application, on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    # When set to true this trash entry will be picked up by a periodic job and the
+    # underlying item will be actually permanently deleted along with the entry.
+    should_be_permanently_deleted = models.BooleanField(default=False)
+    trashed_at = models.DateTimeField(auto_now_add=True)
+
+    # The name, name of the parent and any extra description are cached so lookups
+    # of trashed items are simple and do not require joining to many different tables
+    # to simply get these details.
+    name = models.TextField()
+    parent_name = models.TextField(null=True, blank=True)
+    extra_description = models.TextField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("trash_item_type", "parent_trash_item_id", "trash_item_id")
+        indexes = [
+            models.Index(
+                fields=["-trashed_at", "trash_item_type", "group", "application"]
+            )
+        ]

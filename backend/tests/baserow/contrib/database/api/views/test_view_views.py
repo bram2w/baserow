@@ -78,6 +78,17 @@ def test_list_views(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
 
+    response = api_client.delete(
+        reverse("api:groups:item", kwargs={"group_id": table_1.database.group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    url = reverse("api:database:views:list", kwargs={"table_id": table_1.id})
+    response = api_client.get(url)
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
 
 @pytest.mark.django_db
 def test_list_views_including_filters(api_client, data_fixture):
@@ -326,6 +337,20 @@ def test_get_view(api_client, data_fixture):
     assert response_json["filters"][0]["value"] == filter.value
     assert response_json["sortings"] == []
 
+    response = api_client.delete(
+        reverse("api:groups:item", kwargs={"group_id": view.table.database.group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    url = reverse("api:database:views:item", kwargs={"view_id": view.id})
+    response = api_client.get(
+        url,
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
 
 @pytest.mark.django_db
 def test_update_view(api_client, data_fixture):
@@ -548,6 +573,18 @@ def test_list_view_filters(api_client, data_fixture):
     assert response_json[0]["value"] == filter_1.value
     assert response_json[1]["id"] == filter_2.id
 
+    response = api_client.delete(
+        reverse("api:groups:item", kwargs={"group_id": table_1.database.group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+    response = api_client.get(
+        reverse("api:database:views:list_filters", kwargs={"view_id": view_1.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
 
 @pytest.mark.django_db
 def test_create_view_filter(api_client, data_fixture):
@@ -700,6 +737,24 @@ def test_get_view_filter(api_client, data_fixture):
     assert response_json["field"] == first.field_id
     assert response_json["type"] == "equal"
     assert response_json["value"] == "test"
+
+    response = api_client.delete(
+        reverse(
+            "api:groups:item",
+            kwargs={"group_id": filter_1.view.table.database.group.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:filter_item", kwargs={"view_filter_id": filter_1.id}
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_FILTER_DOES_NOT_EXIST"
 
 
 @pytest.mark.django_db
@@ -926,6 +981,22 @@ def test_list_view_sortings(api_client, data_fixture):
     assert response_json[0]["order"] == sort_1.order
     assert response_json[1]["id"] == sort_2.id
 
+    response = api_client.delete(
+        reverse(
+            "api:groups:item",
+            kwargs={"group_id": view_1.table.database.group.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    response = api_client.get(
+        reverse("api:database:views:list_sortings", kwargs={"view_id": view_1.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
 
 @pytest.mark.django_db
 def test_create_view_sort(api_client, data_fixture):
@@ -1091,6 +1162,22 @@ def test_get_view_sort(api_client, data_fixture):
     assert response_json["view"] == first.view_id
     assert response_json["field"] == first.field_id
     assert response_json["order"] == "DESC"
+
+    response = api_client.delete(
+        reverse(
+            "api:groups:item",
+            kwargs={"group_id": sort_1.view.table.database.group.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    response = api_client.get(
+        reverse("api:database:views:sort_item", kwargs={"view_sort_id": sort_1.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_SORT_DOES_NOT_EXIST"
 
 
 @pytest.mark.django_db

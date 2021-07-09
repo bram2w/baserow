@@ -15,7 +15,16 @@
         </a>
       </li>
       <li>
-        <a @click="$refs.deleteGroupModal.show()">
+        <a @click="showGroupTrashModal">
+          <i class="context__menu-icon fas fa-fw fa-recycle"></i>
+          View trash
+        </a>
+      </li>
+      <li>
+        <a
+          :class="{ 'context__menu-item--loading': loading }"
+          @click="deleteGroup"
+        >
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
           Delete group
         </a>
@@ -25,18 +34,19 @@
       ref="groupMembersModal"
       :group="group"
     ></GroupMembersModal>
-    <DeleteGroupModal ref="deleteGroupModal" :group="group" />
+    <TrashModal ref="groupTrashModal" :initial-group="group"> </TrashModal>
   </Context>
 </template>
 
 <script>
-import DeleteGroupModal from '@baserow/modules/core/components/group/DeleteGroupModal'
 import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import context from '@baserow/modules/core/mixins/context'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 
 export default {
   name: 'GroupContext',
-  components: { DeleteGroupModal, GroupMembersModal },
+  components: { TrashModal, GroupMembersModal },
   mixins: [context],
   props: {
     group: {
@@ -44,9 +54,34 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      loading: false,
+    }
+  },
   methods: {
     showGroupMembersModal() {
       this.$refs.groupMembersModal.show()
+    },
+    showGroupTrashModal() {
+      this.$refs.context.hide()
+      this.$refs.groupTrashModal.show()
+    },
+    async deleteGroup() {
+      this.loading = true
+
+      try {
+        await this.$store.dispatch('group/delete', this.group)
+        await this.$store.dispatch('notification/restore', {
+          trash_item_type: 'group',
+          trash_item_id: this.group.id,
+        })
+        this.hide()
+      } catch (error) {
+        notifyIf(error, 'application')
+      }
+
+      this.loading = false
     },
   },
 }

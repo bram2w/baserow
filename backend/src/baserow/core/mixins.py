@@ -1,8 +1,14 @@
-from django.db import models
-from django.db.models import Case, When, Value
-from django.db.models.fields import NOT_PROVIDED
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
+from django.db.models import Case, When, Value, Manager
+from django.db.models.fields import NOT_PROVIDED
 from django.utils.functional import cached_property
+
+from baserow.core.managers import (
+    make_trash_manager,
+    NoTrashManager,
+    TrashOnlyManager,
+)
 
 
 class OrderableMixin:
@@ -159,6 +165,49 @@ class CreatedAndUpdatedOnMixin(models.Model):
 
     created_on = models.DateTimeField(auto_now_add=True, blank=True, editable=False)
     updated_on = models.DateTimeField(auto_now=True, blank=True, editable=False)
+
+    class Meta:
+        abstract = True
+
+
+def make_trashable_mixin(parent):
+    """
+    Constructs a mixin class which overrides a models managers to ensure trashed entries
+    are not available via objects, but instead via the new trash manager.
+
+    :param parent: If specified will use the trashed column in a related model where
+        parent is the name of the FK to the related model.
+    :return: A mixin with overridden managers which correctly filter out trashed rows.
+    """
+
+    no_trash_manager = make_trash_manager(trashed=False, parent=parent)
+    trash_only_manager = make_trash_manager(trashed=True, parent=parent)
+
+    class TrashableMixin(models.Model):
+        objects = no_trash_manager()
+        trash = trash_only_manager()
+        objects_and_trash = Manager()
+
+        class Meta:
+            abstract = True
+
+    return TrashableMixin
+
+
+ParentGroupTrashableModelMixin = make_trashable_mixin("group")
+
+
+class TrashableModelMixin(models.Model):
+    """
+    This mixin allows this model to be trashed and restored from the trash by adding
+    new columns recording it's trash status.
+    """
+
+    trashed = models.BooleanField(default=False)
+
+    objects = NoTrashManager()
+    trash = TrashOnlyManager()
+    objects_and_trash = Manager()
 
     class Meta:
         abstract = True

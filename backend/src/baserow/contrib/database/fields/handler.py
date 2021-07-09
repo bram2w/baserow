@@ -7,6 +7,7 @@ from django.db.utils import ProgrammingError, DataError
 
 from baserow.contrib.database.db.schema import lenient_schema_editor
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     PrimaryFieldAlreadyExists,
@@ -54,6 +55,9 @@ class FieldHandler:
                 id=field_id
             )
         except Field.DoesNotExist:
+            raise FieldDoesNotExist(f"The field with id {field_id} does not exist.")
+
+        if TrashHandler.item_has_a_trashed_parent(field.table, check_item_also=True):
             raise FieldDoesNotExist(f"The field with id {field_id} does not exist.")
 
         return field
@@ -326,22 +330,8 @@ class FieldHandler:
             )
 
         field = field.specific
-        field_type = field_type_registry.get_by_model(field)
-
-        # Remove the field from the table schema.
-        connection = connections[settings.USER_TABLE_DATABASE]
-        with connection.schema_editor() as schema_editor:
-            from_model = field.table.get_model(field_ids=[], fields=[field])
-            model_field = from_model._meta.get_field(field.db_column)
-            schema_editor.remove_field(from_model, model_field)
-
+        TrashHandler.trash(user, group, field.table.database, field)
         field_id = field.id
-        field.delete()
-
-        # After the field is deleted we are going to to call the after_delete method of
-        # the field type because some instance cleanup might need to happen.
-        field_type.after_delete(field, from_model, user, connection)
-
         field_deleted.send(self, field_id=field_id, field=field, user=user)
 
     def update_field_select_options(self, user, field, select_options):

@@ -754,16 +754,13 @@ def test_delete_field(send_mock, data_fixture):
     field_id = text_field.id
     handler.delete_field(user=user, field=text_field)
     assert Field.objects.all().count() == 0
+    assert Field.trash.all().count() == 1
     assert TextField.objects.all().count() == 0
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["field_id"] == field_id
     assert send_mock.call_args[1]["field"].id == field_id
     assert send_mock.call_args[1]["user"].id == user.id
-
-    table_model = table.get_model()
-    field_name = f"field_{text_field.id}"
-    assert field_name not in [field.name for field in table_model._meta.get_fields()]
 
     primary = data_fixture.create_text_field(table=table, primary=True)
     with pytest.raises(CannotDeletePrimaryField):

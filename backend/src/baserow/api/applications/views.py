@@ -71,7 +71,7 @@ class AllApplicationsView(APIView):
 
         applications = Application.objects.select_related(
             "content_type", "group"
-        ).filter(group__users__in=[request.user])
+        ).filter(group__users__in=[request.user], group__trashed=False)
 
         data = [
             get_application_serializer(application).data for application in applications

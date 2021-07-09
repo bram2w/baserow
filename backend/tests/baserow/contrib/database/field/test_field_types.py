@@ -15,6 +15,7 @@ from baserow.contrib.database.fields.models import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from tests.test_utils import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -435,3 +436,37 @@ def test_phone_number_field_type(data_fixture):
 
     field_handler.delete_field(user=user, field=phone_number_field)
     assert len(PhoneNumberField.objects.all()) == 3
+
+
+@pytest.mark.django_db
+def test_human_readable_values(data_fixture):
+    table, user, row = setup_interesting_test_table(data_fixture)
+    model = table.get_model()
+    results = {}
+    for field in model._field_objects.values():
+        value = field["type"].get_human_readable_value(
+            getattr(row, field["name"]), field
+        )
+        results[field["field"].name] = value
+
+    assert results == {
+        "boolean": "True",
+        "date_eu": "01/02/2020",
+        "date_us": "02/01/2020",
+        "datetime_eu": "01/02/2020 01:23",
+        "datetime_us": "02/01/2020 01:23",
+        "decimal_link_row": "1.234,-123.456,unnamed row 3",
+        "email": "test@example.com",
+        "file": "a.txt,b.txt",
+        "file_link_row": "name.txt,unnamed row 2",
+        "link_row": "linked_row_1,linked_row_2,unnamed row 3",
+        "long_text": "long_text",
+        "negative_decimal": "-1.2",
+        "negative_int": "-1",
+        "phone_number": "+4412345678",
+        "positive_decimal": "1.2",
+        "positive_int": "1",
+        "single_select": "A",
+        "text": "text",
+        "url": "https://www.google.com",
+    }

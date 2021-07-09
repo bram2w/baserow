@@ -12,6 +12,7 @@ from django.shortcuts import reverse
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupUser, GroupInvitation
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -585,3 +586,79 @@ def test_get_group_invitation_by_token(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["id"] == invitation_2.id
     assert response_json["email_exists"] is True
+
+
+@pytest.mark.django_db
+def test_when_group_is_trashed_so_is_invitation(data_fixture, api_client):
+    user_1, token_1 = data_fixture.create_user_and_token(email="test1@test.nl")
+    visible_group = data_fixture.create_group(user=user_1)
+    trashed_group = data_fixture.create_group(user=user_1)
+    visible_invitation = data_fixture.create_group_invitation(
+        group=visible_group,
+        invited_by=user_1,
+        email="test4@test.nl",
+        permissions="ADMIN",
+        message="Test bericht 2",
+    )
+    trashed_invitation = data_fixture.create_group_invitation(
+        group=trashed_group,
+        invited_by=user_1,
+        email="test4@test.nl",
+        permissions="ADMIN",
+        message="Test bericht 2",
+    )
+    # Put the trashed_group in the trash
+    CoreHandler().delete_group(user=user_1, group=trashed_group)
+
+    # The trashed group 404's when asking for invitations
+    response = api_client.get(
+        reverse("api:groups:invitations:list", kwargs={"group_id": trashed_group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
+
+    # The untrashed group still works like normal
+    response = api_client.get(
+        reverse("api:groups:invitations:list", kwargs={"group_id": visible_group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == visible_invitation.id
+
+    # can't view the invitation for the trashed group
+    response = api_client.get(
+        reverse(
+            "api:groups:invitations:item",
+            kwargs={"group_invitation_id": trashed_invitation.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GROUP_INVITATION_DOES_NOT_EXIST"
+
+    TrashHandler.restore_item(user_1, "group", trashed_group.id)
+
+    # after restoring the group is visible again
+    response = api_client.get(
+        reverse("api:groups:invitations:list", kwargs={"group_id": trashed_group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == trashed_invitation.id
+
+    # after restoring the invitation is visible again
+    response = api_client.get(
+        reverse(
+            "api:groups:invitations:item",
+            kwargs={"group_invitation_id": trashed_invitation.id},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["id"] == trashed_invitation.id
