@@ -36,6 +36,9 @@ export const mutations = {
   ADD_ITEM(state, item) {
     state.items.push(item)
   },
+  APPEND_ITEMS(state, items) {
+    state.items = state.items.concat(items)
+  },
   UPDATE_ITEM(state, { id, values }) {
     const index = state.items.findIndex((item) => item.id === id)
     Object.assign(state.items[index], state.items[index], values)
@@ -51,6 +54,9 @@ export const mutations = {
   DELETE_ITEM(state, id) {
     const index = state.items.findIndex((item) => item.id === id)
     state.items.splice(index, 1)
+  },
+  DELETE_ITEMS_FOR_GROUP(state, groupId) {
+    state.items = state.items.filter((app) => app.group.id !== groupId)
   },
   SET_SELECTED(state, application) {
     Object.values(state.items).forEach((item) => {
@@ -78,7 +84,15 @@ export const actions = {
     commit('SET_ITEM_LOADING', { application, value })
   },
   /**
-   * Fetches all the application of the authenticated user.
+   * Force creates a list of applications.
+   */
+  forceCreateAll({ dispatch }, applications) {
+    applications.forEach((app) => {
+      dispatch('forceCreate', app)
+    })
+  },
+  /**
+   * Fetches all the applications for the authenticated user.
    */
   async fetchAll({ commit }) {
     commit('SET_LOADING', true)
@@ -102,8 +116,8 @@ export const actions = {
    * Clears all the currently selected applications, this could be called when
    * the group is deleted of when the user logs off.
    */
-  clearAll({ commit }) {
-    commit('SET_ITEMS', [])
+  clearAll({ commit }, group) {
+    commit('DELETE_ITEMS_FOR_GROUP', group)
     commit('UNSELECT')
     commit('SET_LOADED', false)
   },

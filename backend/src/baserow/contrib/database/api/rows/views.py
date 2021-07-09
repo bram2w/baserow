@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
@@ -8,6 +9,7 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.exceptions import RequestBodyValidationException
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 from baserow.api.user_files.errors import ERROR_USER_FILE_DOES_NOT_EXIST
@@ -315,7 +317,13 @@ class RowsView(APIView):
             else None
         )
 
-        row = RowHandler().create_row(request.user, table, data, model, before=before)
+        try:
+            row = RowHandler().create_row(
+                request.user, table, data, model, before=before
+            )
+        except ValidationError as e:
+            raise RequestBodyValidationException(detail=e.message)
+
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True
         )
@@ -458,7 +466,10 @@ class RowView(APIView):
         validation_serializer = get_row_serializer_class(model, field_ids=field_ids)
         data = validate_data(validation_serializer, request.data)
 
-        row = RowHandler().update_row(request.user, table, row_id, data, model)
+        try:
+            row = RowHandler().update_row(request.user, table, row_id, data, model)
+        except ValidationError as e:
+            raise RequestBodyValidationException(detail=e.message)
 
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True

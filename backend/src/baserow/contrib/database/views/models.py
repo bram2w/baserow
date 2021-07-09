@@ -6,6 +6,10 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
 )
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.mixins import (
+    ParentTableTrashableModelMixin,
+    ParentFieldTrashableModelMixin,
+)
 from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
@@ -24,7 +28,11 @@ def get_default_view_content_type():
 
 
 class View(
-    CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixin, models.Model
+    ParentTableTrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    PolymorphicContentTypeMixin,
+    models.Model,
 ):
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
@@ -57,7 +65,7 @@ class View(
         return cls.get_highest_order_of_queryset(queryset) + 1
 
 
-class ViewFilter(models.Model):
+class ViewFilter(ParentFieldTrashableModelMixin, models.Model):
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -85,7 +93,7 @@ class ViewFilter(models.Model):
         ordering = ("id",)
 
 
-class ViewSort(models.Model):
+class ViewSort(ParentFieldTrashableModelMixin, models.Model):
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -149,7 +157,7 @@ class GridView(View):
         return field_options
 
 
-class GridViewFieldOptions(models.Model):
+class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
     grid_view = models.ForeignKey(GridView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     # The defaults should be the same as in the `fieldCreated` of the `GridViewType`

@@ -1,13 +1,14 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
+from baserow.core.mixins import ParentGroupTrashableModelMixin
 from baserow.core.models import Group
 
 
 User = get_user_model()
 
 
-class Token(models.Model):
+class Token(ParentGroupTrashableModelMixin, models.Model):
     """
     A token can be used to authenticate a user with the row create, read, update and
     delete endpoints.

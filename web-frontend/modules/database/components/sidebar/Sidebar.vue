@@ -1,5 +1,9 @@
 <template>
-  <SidebarApplication :application="application" @selected="selected">
+  <SidebarApplication
+    :group="group"
+    :application="application"
+    @selected="selected"
+  >
     <template #context>
       <li>
         <nuxt-link
@@ -53,6 +57,10 @@ export default {
   components: { SidebarApplication, SidebarItem, CreateTableModal },
   props: {
     application: {
+      type: Object,
+      required: true,
+    },
+    group: {
       type: Object,
       required: true,
     },

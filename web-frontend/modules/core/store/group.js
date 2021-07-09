@@ -182,8 +182,7 @@ export const actions = {
   forceDelete({ commit, dispatch, rootGetters }, group) {
     const applications = rootGetters['application/getAllOfGroup'](group)
     applications.forEach((application) => {
-      const type = this.$registry.get('application', application.type)
-      type.delete(application, this)
+      return dispatch('application/forceDelete', application, { root: true })
     })
 
     if (group._.selected) {

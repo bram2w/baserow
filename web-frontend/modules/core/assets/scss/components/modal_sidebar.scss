@@ -6,6 +6,11 @@
 
 .modal-sidebar__head-icon {
   flex: 0 0 32px;
+  margin-right: 16px;
+}
+
+.modal-sidebar__head-initials-icon {
+  flex: 0 0 32px;
   border-radius: 100%;
   margin-right: 16px;
   background-color: $color-primary-500;
@@ -19,6 +24,17 @@
   font-weight: 600;
 }
 
+.modal-sidebar__head-icon-and-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 140%;
+}
+
+.modal-sidebar__head-icon-and-name-icon {
+  margin-right: 10px;
+  font-size: 12px;
+}
+
 .modal-sidebar__nav {
   list-style: none;
   margin: 0;
@@ -30,6 +46,7 @@
 
   position: relative;
   display: block;
+  height: 42px;
   line-height: 42px;
   padding: 0 20px 0 50px;
   border-left: solid 4px transparent;

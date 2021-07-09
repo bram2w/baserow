@@ -37,17 +37,28 @@
             </a>
           </li>
           <li>
-            <a @click="deleteApplication()">
+            <a @click="showApplicationTrashModal">
+              <i class="context__menu-icon fas fa-fw fa-recycle"></i>
+              View trash
+            </a>
+          </li>
+          <li>
+            <a
+              :class="{ 'context__menu-item--loading': deleteLoading }"
+              @click="deleteApplication()"
+            >
               <i class="context__menu-icon fas fa-fw fa-trash"></i>
               Delete {{ application._.type.name | lowercase }}
             </a>
           </li>
         </ul>
-        <DeleteApplicationModal
-          ref="deleteApplicationModal"
-          :application="application"
-        />
       </Context>
+      <TrashModal
+        ref="applicationTrashModal"
+        :initial-group="group"
+        :initial-application="application"
+      >
+      </TrashModal>
     </div>
     <slot name="body"></slot>
   </li>
@@ -55,16 +66,25 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import DeleteApplicationModal from './DeleteApplicationModal'
+import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 
 export default {
   name: 'SidebarApplication',
-  components: { DeleteApplicationModal },
+  components: { TrashModal },
   props: {
     application: {
       type: Object,
       required: true,
     },
+    group: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      deleteLoading: false,
+    }
   },
   methods: {
     setLoading(application, value) {
@@ -94,9 +114,24 @@ export default {
 
       this.setLoading(application, false)
     },
-    deleteApplication() {
+    async deleteApplication() {
+      this.deleteLoading = true
+
+      try {
+        await this.$store.dispatch('application/delete', this.application)
+        await this.$store.dispatch('notification/restore', {
+          trash_item_type: 'application',
+          trash_item_id: this.application.id,
+        })
+      } catch (error) {
+        notifyIf(error, 'application')
+      }
+
+      this.deleteLoading = false
+    },
+    showApplicationTrashModal() {
       this.$refs.context.hide()
-      this.$refs.deleteApplicationModal.show()
+      this.$refs.applicationTrashModal.show()
     },
   },
 }

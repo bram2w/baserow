@@ -26,6 +26,7 @@ from baserow.contrib.database.views.exceptions import (
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -60,6 +61,16 @@ def test_get_view(data_fixture):
         handler.get_view(
             view_id=grid.id, base_queryset=View.objects.prefetch_related("UNKNOWN")
         )
+
+    # If the table is trashed the view should not be available.
+    TrashHandler.trash(user, grid.table.database.group, grid.table.database, grid.table)
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_view(view_id=grid.id, view_model=GridView)
+
+    # Restoring the table should restore the view
+    TrashHandler.restore_item(user, "table", grid.table.id)
+    view = handler.get_view(view_id=grid.id, view_model=GridView)
+    assert view.id == grid.id
 
 
 @pytest.mark.django_db
@@ -241,6 +252,37 @@ def test_delete_view(send_mock, data_fixture):
     assert send_mock.call_args[1]["view_id"] == view_id
     assert send_mock.call_args[1]["view"].id == view_id
     assert send_mock.call_args[1]["user"].id == user.id
+
+
+@pytest.mark.django_db
+def test_trashed_fields_are_not_included_in_grid_view_field_options(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field_1 = data_fixture.create_text_field(table=table)
+    field_2 = data_fixture.create_text_field(table=table)
+
+    ViewHandler().update_grid_view_field_options(
+        user=user,
+        grid_view=grid_view,
+        field_options={str(field_1.id): {"width": 150}, field_2.id: {"width": 250}},
+    )
+    options = grid_view.get_field_options()
+    assert options.count() == 2
+
+    TrashHandler.trash(user, table.database.group, table.database, field_1)
+
+    options = grid_view.get_field_options()
+    assert options.count() == 1
+
+    with pytest.raises(UnrelatedFieldError):
+        ViewHandler().update_grid_view_field_options(
+            user=user,
+            grid_view=grid_view,
+            field_options={
+                field_1.id: {"width": 150},
+            },
+        )
 
 
 @pytest.mark.django_db

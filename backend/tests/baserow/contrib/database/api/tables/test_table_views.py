@@ -42,6 +42,17 @@ def test_list_tables(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
 
+    response = api_client.delete(
+        reverse("api:groups:item", kwargs={"group_id": database.group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
+
 
 @pytest.mark.django_db
 def test_create_table(api_client, data_fixture):

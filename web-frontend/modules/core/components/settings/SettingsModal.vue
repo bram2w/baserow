@@ -2,7 +2,7 @@
   <Modal :sidebar="true">
     <template #sidebar>
       <div class="modal-sidebar__head">
-        <div class="modal-sidebar__head-icon">
+        <div class="modal-sidebar__head-initials-icon">
           {{ name | nameAbbreviation }}
         </div>
         <div class="modal-sidebar__head-name">Settings</div>

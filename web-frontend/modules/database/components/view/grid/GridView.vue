@@ -460,6 +460,11 @@ export default {
             getScrollTop,
           }
         )
+        await this.$store.dispatch('notification/restore', {
+          trash_item_type: 'row',
+          parent_trash_item_id: this.table.id,
+          trash_item_id: row.id,
+        })
       } catch (error) {
         notifyIf(error, 'row')
       }

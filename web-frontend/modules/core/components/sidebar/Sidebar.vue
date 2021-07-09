@@ -69,6 +69,17 @@
               </nuxt-link>
             </div>
           </li>
+          <li class="tree__item">
+            <div class="tree__action sidebar__action">
+              <a class="tree__link" @click="$refs.trashModal.show()">
+                <div>
+                  <i class="tree__icon fas fa-trash"></i>
+                  <span class="sidebar__item-name">Trash</span>
+                </div>
+              </a>
+              <TrashModal ref="trashModal"></TrashModal>
+            </div>
+          </li>
           <li v-if="isStaff" class="tree__item">
             <div
               class="tree__action sidebar__action"
@@ -147,6 +158,7 @@
                   handle: '[data-sortable-handle]',
                 }"
                 :application="application"
+                :group="selectedGroup"
               ></component>
             </ul>
             <li class="sidebar__new-wrapper">
@@ -232,6 +244,7 @@ import CreateApplicationContext from '@baserow/modules/core/components/applicati
 import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
 import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
 import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
+import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 
 export default {
   name: 'Sidebar',
@@ -242,6 +255,7 @@ export default {
     GroupsContext,
     CreateGroupModal,
     GroupMembersModal,
+    TrashModal,
   },
   computed: {
     /**

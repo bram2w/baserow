@@ -1,16 +1,14 @@
 import os
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from io import BytesIO
-
 import pytest
 from django.conf import settings
-from django.db import connection
 from django.core.files.storage import FileSystemStorage
 from itsdangerous.exc import BadSignature
 
-from baserow.contrib.database.models import Database, Table
+from baserow.contrib.database.models import Database
 from baserow.core.exceptions import (
     UserNotInGroup,
     ApplicationTypeDoesNotExist,
@@ -38,6 +36,7 @@ from baserow.core.models import (
     TemplateCategory,
     GROUP_USER_PERMISSION_ADMIN,
 )
+from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.models import UserFile
 
 
@@ -200,6 +199,36 @@ def test_create_group(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
+@patch("baserow.core.signals.group_restored.send")
+def test_restore_group(group_restored_mock, data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(name="Test group", user=user)
+
+    handler = CoreHandler()
+
+    handler.delete_group(user, group)
+
+    assert Group.objects.count() == 0
+
+    TrashHandler.restore_item(user, "group", group.id)
+
+    group_restored_mock.assert_called_once()
+    assert group_restored_mock.call_args[1]["user"] is None
+    assert (
+        group_restored_mock.call_args[1]["group_user"].id
+        == group.groupuser_set.get(user=user).id
+    )
+
+    group = Group.objects.all().first()
+    user_group = GroupUser.objects.all().first()
+
+    assert group.name == "Test group"
+    assert user_group.user == user
+    assert user_group.group == group
+    assert user_group.permissions == GROUP_USER_PERMISSION_ADMIN
+
+
+@pytest.mark.django_db
 @patch("baserow.core.signals.group_updated.send")
 def test_update_group(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
@@ -230,7 +259,7 @@ def test_delete_group(send_mock, data_fixture):
     user = data_fixture.create_user()
     group_1 = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(group=group_1)
-    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_database_table(database=database)
     data_fixture.create_group(user=user)
     user_2 = data_fixture.create_user()
     group_3 = data_fixture.create_group(user=user_2)
@@ -238,25 +267,28 @@ def test_delete_group(send_mock, data_fixture):
     handler = CoreHandler()
     handler.delete_group(user, group_1)
 
+    assert group_1.trashed
+
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["group"].id == group_1.id
     assert send_mock.call_args[1]["user"].id == user.id
     assert len(send_mock.call_args[1]["group_users"]) == 1
     assert send_mock.call_args[1]["group_users"][0].id == user.id
 
-    assert Database.objects.all().count() == 0
-    assert Table.objects.all().count() == 0
-    assert f"database_table_{table.id}" not in connection.introspection.table_names()
-    assert Group.objects.all().count() == 2
-    assert GroupUser.objects.all().count() == 2
+    assert Group.objects.count() == 2
+    assert GroupUser.objects.count() == 2
+    assert Group.trash.count() == 1
+    assert GroupUser.trash.count() == 1
 
     with pytest.raises(UserNotInGroup):
         handler.delete_group(user, group_3)
 
     handler.delete_group(user_2, group_3)
 
-    assert Group.objects.all().count() == 1
-    assert GroupUser.objects.all().count() == 1
+    assert Group.objects.count() == 1
+    assert GroupUser.objects.count() == 1
+    assert Group.trash.count() == 2
+    assert GroupUser.trash.count() == 2
 
     with pytest.raises(ValueError):
         handler.delete_group(user=user_2, group=object())
@@ -671,7 +703,6 @@ def test_create_database_application(send_mock, data_fixture):
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["application"].id == database.id
     assert send_mock.call_args[1]["user"].id == user.id
-    assert send_mock.call_args[1]["type_name"] == "database"
 
     with pytest.raises(UserNotInGroup):
         handler.create_application(
@@ -776,7 +807,7 @@ def test_delete_database_application(send_mock, data_fixture):
     user_2 = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(group=group)
-    table = data_fixture.create_database_table(database=database)
+    data_fixture.create_database_table(database=database)
 
     handler = CoreHandler()
 
@@ -788,9 +819,11 @@ def test_delete_database_application(send_mock, data_fixture):
 
     handler.delete_application(user=user, application=database)
 
+    database.refresh_from_db()
+    assert database.trashed
+
     assert Database.objects.all().count() == 0
-    assert Table.objects.all().count() == 0
-    assert f"database_table_{table.id}" not in connection.introspection.table_names()
+    assert Database.trash.all().count() == 1
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["application_id"] == database.id
@@ -970,7 +1003,6 @@ def test_install_template(send_mock, tmpdir, data_fixture):
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["application"].id == applications[0].id
     assert send_mock.call_args[1]["user"].id == user.id
-    assert send_mock.call_args[1]["type_name"] == "database"
 
     # Because the `example-template.json` has a file field that contains the hello
     # world file, we expect it to exist after syncing the templates.
@@ -982,3 +1014,28 @@ def test_install_template(send_mock, tmpdir, data_fixture):
     assert file_path.open().read() == "Hello World"
 
     settings.APPLICATION_TEMPLATES_DIR = old_templates
+
+
+@pytest.mark.django_db
+@patch("baserow.core.signals.application_created.send")
+def test_restore_application(application_created_mock, data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(name="Test group", user=user)
+    database = data_fixture.create_database_application(user=user, group=group)
+
+    handler = CoreHandler()
+
+    handler.delete_application(user, application=database)
+
+    assert Application.objects.count() == 0
+
+    TrashHandler.restore_item(user, "application", database.id)
+
+    application_created_mock.assert_called_once()
+    assert application_created_mock.call_args[1]["application"].id == database.id
+    assert application_created_mock.call_args[1]["user"] is None
+
+    restored_app = Application.objects.all().first()
+
+    assert restored_app.name == database.name
+    assert restored_app.id == database.id
