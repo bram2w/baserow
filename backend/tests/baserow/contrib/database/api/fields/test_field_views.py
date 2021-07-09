@@ -226,6 +226,24 @@ def test_create_field(api_client, data_fixture):
     assert response.status_code == HTTP_401_UNAUTHORIZED
     assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
 
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": text.name, "type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS"
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "id", "type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_RESERVED_BASEROW_FIELD_NAME"
+
 
 @pytest.mark.django_db
 def test_get_field(api_client, data_fixture):
@@ -282,6 +300,7 @@ def test_update_field(api_client, data_fixture):
     table_2 = data_fixture.create_database_table(user=user_2)
     text = data_fixture.create_text_field(table=table, primary=True)
     text_2 = data_fixture.create_text_field(table=table_2)
+    existing_field = data_fixture.create_text_field(table=table, name="existing_field")
 
     url = reverse("api:database:fields:item", kwargs={"field_id": text_2.id})
     response = api_client.patch(
@@ -397,6 +416,23 @@ def test_update_field(api_client, data_fixture):
     assert "number_type" not in response_json
     assert "number_decimal_places" not in response_json
     assert "number_negative" not in response_json
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
+    response = api_client.patch(
+        url, {"name": "id"}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_RESERVED_BASEROW_FIELD_NAME"
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
+    response = api_client.patch(
+        url,
+        {"name": existing_field.name},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS"
 
 
 @pytest.mark.django_db

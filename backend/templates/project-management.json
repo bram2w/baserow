@@ -1025,7 +1025,7 @@
             {
               "id": 60,
               "type": "link_row",
-              "name": "Projects",
+              "name": "Projects - Project lead",
               "order": 1,
               "primary": false,
               "link_row_table_id": 11,
@@ -1034,7 +1034,7 @@
             {
               "id": 62,
               "type": "link_row",
-              "name": "Projects",
+              "name": "Projects - Project team",
               "order": 2,
               "primary": false,
               "link_row_table_id": 11,

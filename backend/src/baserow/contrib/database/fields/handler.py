@@ -1,5 +1,7 @@
 import logging
+import re
 from copy import deepcopy
+from typing import Dict, Any, Optional, List
 
 from django.conf import settings
 from django.db import connections
@@ -16,12 +18,64 @@ from .exceptions import (
     FieldDoesNotExist,
     IncompatiblePrimaryFieldTypeError,
     MaxFieldLimitExceeded,
+    FieldWithSameNameAlreadyExists,
+    ReservedBaserowFieldNameException,
+    InvalidBaserowFieldName,
 )
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
 from .signals import field_created, field_updated, field_deleted
+from ..table.models import Table
 
 logger = logging.getLogger(__name__)
+
+# Please keep in sync with the web-frontend version of this constant found in
+# web-frontend/modules/database/utils/constants.js
+RESERVED_BASEROW_FIELD_NAMES = {"id", "order"}
+
+
+def _validate_field_name(
+    field_values: Dict[str, Any],
+    table: Table,
+    existing_field: Optional[Field] = None,
+    raise_if_name_missing: bool = True,
+):
+    """
+    Raises various exceptions if the provided field name is invalid.
+
+    :param field_values: The dictionary which should contain a name key.
+    :param table: The table to check that this field name is valid for.
+    :param existing_field: If this is name change for an existing field then the
+        existing field instance must be provided here.
+    :param raise_if_name_missing: When True raises a InvalidBaserowFieldName if the
+        name key is not in field_values. When False does not return and immediately
+        returns if the key is missing.
+    :raises InvalidBaserowFieldName: If "name" is
+    :return:
+    """
+    if "name" not in field_values:
+        if raise_if_name_missing:
+            raise InvalidBaserowFieldName()
+        else:
+            return
+
+    name = field_values["name"]
+    if existing_field is not None and existing_field.name == name:
+        return
+
+    if name.strip() == "":
+        raise InvalidBaserowFieldName()
+
+    if Field.objects.filter(table=table, name=name).exists():
+        raise FieldWithSameNameAlreadyExists(
+            f"A field already exists for table '{table.name}' with the name '{name}'."
+        )
+
+    if name in RESERVED_BASEROW_FIELD_NAMES:
+        raise ReservedBaserowFieldNameException(
+            f"A field named {name} cannot be created as it already exists as a "
+            f"reserved Baserow field name."
+        )
 
 
 class FieldHandler:
@@ -115,6 +169,8 @@ class FieldHandler:
                 f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
             )
 
+        _validate_field_name(field_values, table)
+
         field_values = field_type.prepare_values(field_values, user)
         before = field_type.before_create(
             table, primary, field_values, last_order, user
@@ -192,6 +248,10 @@ class FieldHandler:
 
         allowed_fields = ["name"] + field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
+
+        _validate_field_name(
+            field_values, field.table, field, raise_if_name_missing=False
+        )
 
         field_values = field_type.prepare_values(field_values, user)
         before = field_type.before_update(old_field, field_values, user)
@@ -403,3 +463,65 @@ class FieldHandler:
 
         if len(to_create) > 0:
             SelectOption.objects.bulk_create(to_create)
+
+    # noinspection PyMethodMayBeStatic
+    def find_next_unused_field_name(
+        self,
+        table,
+        field_names_to_try: List[str],
+        field_ids_to_ignore: Optional[List[int]] = None,
+    ):
+        """
+        Finds a unused field name in the provided table. If no names in the provided
+        field_names_to_try list are available then the last field name in that list will
+        have a number appended which ensures it is an available unique field name.
+
+        :param table: The table whose fields to search.
+        :param field_names_to_try: The field_names to try in order before starting to
+            append a number.
+        :param field_ids_to_ignore: A list of field id's to exclude from checking to see
+            if the field name clashes with.
+        :return: An available field name
+        """
+
+        if field_ids_to_ignore is None:
+            field_ids_to_ignore = []
+
+        # Check if any of the names to try are available by finding any existing field
+        # names with the same name.
+        taken_field_names = set(
+            Field.objects.exclude(id__in=field_ids_to_ignore)
+            .filter(table=table, name__in=field_names_to_try)
+            .values("name")
+            .distinct()
+            .values_list("name", flat=True)
+        )
+        # If there are more names to try than the ones used in the table then there must
+        # be one which isn't used.
+        if len(set(field_names_to_try)) > len(taken_field_names):
+            # Loop over to ensure we maintain the ordering provided by
+            # field_names_to_try, so we always return the first available name and
+            # not any.
+            for field_name in field_names_to_try:
+                if field_name not in taken_field_names:
+                    return field_name
+
+        # None of the names in the param list are available, now using the last one lets
+        # append a number to the name until we find a free one.
+        original_field_name = field_names_to_try[-1]
+        # Lookup any existing fields which could potentially collide with our new
+        # field name. This way we can skip these and ensure our new field has a
+        # unique name.
+        existing_field_name_collisions = set(
+            Field.objects.exclude(id__in=field_ids_to_ignore)
+            .filter(table=table, name__regex=fr"^{re.escape(original_field_name)} \d+$")
+            .order_by("name")
+            .distinct()
+            .values_list("name", flat=True)
+        )
+        i = 2
+        while True:
+            field_name = f"{original_field_name} {i}"
+            i += 1
+            if field_name not in existing_field_name_collisions:
+                return field_name

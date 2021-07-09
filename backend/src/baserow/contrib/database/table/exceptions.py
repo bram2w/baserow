@@ -27,3 +27,9 @@ class InitialTableDataLimitExceeded(Exception):
     Raised when the initial table data limit has been exceeded when creating a new
     table.
     """
+
+
+class InitialTableDataDuplicateName(Exception):
+    """
+    Raised when the initial table data contains duplicate field names.
+    """

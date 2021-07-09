@@ -1610,7 +1610,11 @@ def test_empty_filter_type(data_fixture):
     tmp_table = data_fixture.create_database_table(database=table.database)
     tmp_field = data_fixture.create_text_field(table=tmp_table, primary=True)
     link_row_field = FieldHandler().create_field(
-        user=user, table=table, type_name="link_row", link_row_table=tmp_table
+        user=user,
+        table=table,
+        name="Link row",
+        type_name="link_row",
+        link_row_table=tmp_table,
     )
     tmp_row = tmp_table.get_model().objects.create(**{f"field_{tmp_field.id}": "Test"})
 
@@ -1732,7 +1736,11 @@ def test_not_empty_filter_type(data_fixture):
     tmp_table = data_fixture.create_database_table(database=table.database)
     tmp_field = data_fixture.create_text_field(table=tmp_table, primary=True)
     link_row_field = FieldHandler().create_field(
-        user=user, table=table, type_name="link_row", link_row_table=tmp_table
+        user=user,
+        table=table,
+        name="Link row",
+        type_name="link_row",
+        link_row_table=tmp_table,
     )
     tmp_row = tmp_table.get_model().objects.create(**{f"field_{tmp_field.id}": "Test"})
 
