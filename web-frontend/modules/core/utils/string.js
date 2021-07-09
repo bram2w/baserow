@@ -49,7 +49,28 @@ export const isValidURL = (str) => {
 }
 
 export const isValidEmail = (str) => {
-  const pattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
+  // Please keep these regex in sync with the backend
+  // See baserow.contrib.database.fields.field_types.EmailFieldType
+  // Javascript does not support using \w to match unicode letters like python.
+  // Instead we match all unicode letters including ones with modifiers by using the
+  // regex \p{L}\p{M}* taken from https://www.regular-expressions.info/unicode.html
+  // Unicode Categories section.
+  const lookahead = /(?=^.{3,254}$)/
+  // The regex property escapes below are supported as of ES 2018.
+  const localAndDomain = /([-.[\]!#$&*+/=?^_`{|}~0-9]|\p{L}\p{M}*)+/
+  const start = /^/
+  const at = /@/
+  const end = /$/
+  const pattern = new RegExp(
+    lookahead.source +
+      start.source +
+      localAndDomain.source +
+      at.source +
+      localAndDomain.source +
+      end.source,
+    'iu'
+  )
+
   return !!pattern.test(str)
 }
 

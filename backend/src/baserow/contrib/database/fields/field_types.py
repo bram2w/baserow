@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime, date
 from decimal import Decimal
@@ -9,7 +10,7 @@ from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
-from django.core.validators import URLValidator, EmailValidator, RegexValidator
+from django.core.validators import URLValidator
 from django.db import models
 from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
@@ -57,6 +58,81 @@ from .models import (
     PhoneNumberField,
 )
 from .registries import FieldType, field_type_registry
+from baserow.contrib.database.validators import UnicodeRegexValidator
+
+
+class CharFieldMatchingRegexFieldType(FieldType, ABC):
+    """
+    This is an abstract FieldType you can extend to create a field which is a CharField
+    but restricted to only allow values passing a regex. Please implement the regex,
+    max_length and random_value properties.
+
+    This abstract class will then handle all the various places that this regex needs to
+    be used:
+        - by setting the char field's validator
+        - by setting the serializer field's validator
+        - checking values passed to prepare_value_for_db pass the regex
+        - by checking and only converting column values which match the regex when
+          altering a column to being an email type.
+    """
+
+    @property
+    @abstractmethod
+    def regex(self):
+        pass
+
+    @property
+    @abstractmethod
+    def max_length(self):
+        return None
+
+    @property
+    def validator(self):
+        return UnicodeRegexValidator(regex_value=self.regex)
+
+    def prepare_value_for_db(self, instance, value):
+        if value == "" or value is None:
+            return ""
+        self.validator(value)
+
+        return value
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.CharField(
+            required=False,
+            allow_null=True,
+            allow_blank=True,
+            validators=[self.validator],
+            max_length=self.max_length,
+            **kwargs,
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return models.CharField(
+            default="",
+            blank=True,
+            null=True,
+            max_length=self.max_length,
+            validators=[self.validator],
+            **kwargs,
+        )
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        if connection.vendor == "postgresql":
+            return f"""p_in = (
+            case
+                when p_in::text ~* '{self.regex}'
+                then p_in::text
+                else ''
+                end
+            );"""
+
+        return super().get_alter_column_prepare_new_value(
+            connection, from_field, to_field
+        )
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
 
 
 class TextFieldType(FieldType):
@@ -926,45 +1002,32 @@ class LinkRowFieldType(FieldType):
         return [field.link_row_related_field]
 
 
-class EmailFieldType(FieldType):
+class EmailFieldType(CharFieldMatchingRegexFieldType):
     type = "email"
     model_class = EmailField
 
-    def prepare_value_for_db(self, instance, value):
-        if value == "" or value is None:
-            return ""
+    @property
+    def regex(self):
+        """
+        Returns a highly permissive regex which allows non-valid emails in order to keep
+        the regex as simple as possible and also the same behind the frontend, database
+        and python code.
+        """
+        # Use a lookahead to validate entire string length does exceed max length
+        # as we are matching multiple different tokens in the following regex.
+        lookahead = rf"(?=^.{{3,{self.max_length}}}$)"
+        # See wikipedia for allowed punctuation etc:
+        # https://en.wikipedia.org/wiki/Email_address#Local-part
+        local_and_domain = r"[-\.\[\]!#$&*+/=?^_`{|}~\w]+"
+        return rf"(?i){lookahead}^{local_and_domain}@{local_and_domain}$"
 
-        validator = EmailValidator()
-        validator(value)
-        return value
-
-    def get_serializer_field(self, instance, **kwargs):
-        return serializers.EmailField(
-            required=False, allow_null=True, allow_blank=True, **kwargs
-        )
-
-    def get_model_field(self, instance, **kwargs):
-        return models.EmailField(default="", blank=True, null=True, **kwargs)
+    @property
+    def max_length(self):
+        # max_length=254 to be compliant with RFCs 3696 and 5321
+        return 254
 
     def random_value(self, instance, fake, cache):
         return fake.email()
-
-    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-        if connection.vendor == "postgresql":
-            return r"""p_in = (
-            case
-                when p_in::text ~* '[A-Z0-9._+-]+@[A-Z0-9.-]+\.[A-Z]{2,}'
-                then p_in::text
-                else ''
-                end
-            );"""
-
-        return super().get_alter_column_prepare_new_value(
-            connection, from_field, to_field
-        )
-
-    def contains_query(self, *args):
-        return contains_filter(*args)
 
 
 class FileFieldType(FieldType):
@@ -1399,7 +1462,7 @@ class SingleSelectFieldType(FieldType):
         )
 
 
-class PhoneNumberFieldType(FieldType):
+class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
     """
     A simple wrapper around a TextField which ensures any entered data is a
     simple phone number.
@@ -1412,70 +1475,32 @@ class PhoneNumberFieldType(FieldType):
     model_class = PhoneNumberField
 
     MAX_PHONE_NUMBER_LENGTH = 100
-    """
-    According to the E.164 (https://en.wikipedia.org/wiki/E.164) standard for
-    international numbers the max length of an E.164 number without formatting is 15
-    characters. However we allow users to store formatting characters, spaces and
-    expect them to be entering numbers not in the E.164 standard but instead a
-    wide range of local standards which might support longer numbers.
-    This is why we have picked a very generous 100 character length to support heavily
-    formatted local numbers.
-    """
 
-    PHONE_NUMBER_REGEX = rf"^[0-9NnXx,+._*()#=;/ -]{{1,{MAX_PHONE_NUMBER_LENGTH}}}$"
-    """
-    Allow common punctuation used in phone numbers and spaces to allow formatting,
-    but otherwise don't allow text as the phone number should work as a link on mobile
-    devices.
-    Duplicated in the frontend code at, please keep in sync:
-    web-frontend/modules/core/utils/string.js#isSimplePhoneNumber
-    """
+    @property
+    def regex(self):
+        """
+        Allow common punctuation used in phone numbers and spaces to allow formatting,
+        but otherwise don't allow text as the phone number should work as a link on
+        mobile devices.
+        Duplicated in the frontend code at, please keep in sync:
+        web-frontend/modules/core/utils/string.js#isSimplePhoneNumber
+        """
 
-    simple_phone_number_validator = RegexValidator(regex=PHONE_NUMBER_REGEX)
+        return rf"^[0-9NnXx,+._*()#=;/ -]{{1,{self.max_length}}}$"
 
-    def prepare_value_for_db(self, instance, value):
-        if value == "" or value is None:
-            return ""
-        self.simple_phone_number_validator(value)
+    @property
+    def max_length(self):
+        """
+        According to the E.164 (https://en.wikipedia.org/wiki/E.164) standard for
+        international numbers the max length of an E.164 number without formatting is 15
+        characters. However we allow users to store formatting characters, spaces and
+        expect them to be entering numbers not in the E.164 standard but instead a
+        wide range of local standards which might support longer numbers.
+        This is why we have picked a very generous 100 character length to support
+        heavily formatted local numbers.
+        """
 
-        return value
-
-    def get_serializer_field(self, instance, **kwargs):
-        return serializers.CharField(
-            required=False,
-            allow_null=True,
-            allow_blank=True,
-            validators=[self.simple_phone_number_validator],
-            max_length=self.MAX_PHONE_NUMBER_LENGTH,
-            **kwargs,
-        )
-
-    def get_model_field(self, instance, **kwargs):
-        return models.CharField(
-            default="",
-            blank=True,
-            null=True,
-            max_length=self.MAX_PHONE_NUMBER_LENGTH,
-            validators=[self.simple_phone_number_validator],
-            **kwargs,
-        )
+        return self.MAX_PHONE_NUMBER_LENGTH
 
     def random_value(self, instance, fake, cache):
         return fake.phone_number()
-
-    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-        if connection.vendor == "postgresql":
-            return f"""p_in = (
-            case
-                when p_in::text ~* '{self.PHONE_NUMBER_REGEX}'
-                then p_in::text
-                else ''
-                end
-            );"""
-
-        return super().get_alter_column_prepare_new_value(
-            connection, from_field, to_field
-        )
-
-    def contains_query(self, *args):
-        return contains_filter(*args)
