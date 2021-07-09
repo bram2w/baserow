@@ -80,3 +80,18 @@ class IncompatiblePrimaryFieldTypeError(Exception):
     def __init__(self, field_type=None, *args, **kwargs):
         self.field_type = field_type
         super().__init__(*args, **kwargs)
+
+
+class FieldWithSameNameAlreadyExists(Exception):
+    """Raised when a field is created or updated with a name that matches an
+    existing fields name in the same table."""
+
+
+class ReservedBaserowFieldNameException(Exception):
+    """Raised when a field is created or updated with a name that matches a reserved
+    Baserow field name."""
+
+
+class InvalidBaserowFieldName(Exception):
+    """Raised when a field name is not provided or an invalid blank field name is
+    provided."""

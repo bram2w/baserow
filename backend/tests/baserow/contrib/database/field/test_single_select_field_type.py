@@ -75,7 +75,11 @@ def test_single_select_field_type(data_fixture):
     assert SelectOption.objects.all().count() == 0
 
     field = field_handler.create_field(
-        user=user, table=table, type_name="single_select", select_options=[]
+        user=user,
+        table=table,
+        type_name="single_select",
+        select_options=[],
+        name="Another Single Select",
     )
     field_handler.update_field(user=user, field=field, new_type_name="text")
 
@@ -93,6 +97,7 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
     field = field_handler.create_field(
         user=user,
         table=table,
+        name="name",
         type_name="single_select",
         select_options=[
             {"value": "Option 1", "color": "red"},
@@ -246,7 +251,7 @@ def test_single_select_field_type_api_views(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
         {
-            "name": "Select 1",
+            "name": "Select 2",
             "type": "single_select",
             "select_options": [{"value": "Option 1", "color": "red"}],
         },
@@ -262,7 +267,7 @@ def test_single_select_field_type_api_views(api_client, data_fixture):
     assert select_options[0].value == "Option 1"
     assert select_options[0].color == "red"
     assert select_options[0].order == 0
-    assert response_json["name"] == "Select 1"
+    assert response_json["name"] == "Select 2"
     assert response_json["type"] == "single_select"
     assert response_json["select_options"] == [
         {"id": select_options[0].id, "value": "Option 1", "color": "red"}
@@ -354,6 +359,7 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
         user=user,
         table=table,
         type_name="single_select",
+        name="Single select",
         select_options=[
             {"value": "Option 1", "color": "red"},
             {"value": "Option 2", "color": "blue"},
@@ -531,6 +537,7 @@ def test_primary_single_select_field_with_link_row_field(
     customers_primary = field_handler.create_field(
         user=user,
         table=customers_table,
+        name="Single Select",
         type_name="single_select",
         select_options=[
             {"value": "Option 1", "color": "red"},
@@ -542,6 +549,7 @@ def test_primary_single_select_field_with_link_row_field(
     link_row_field = field_handler.create_field(
         user=user,
         table=example_table,
+        name="Link row",
         type_name="link_row",
         link_row_table=customers_table,
     )

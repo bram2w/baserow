@@ -1,25 +1,32 @@
-from django.db import connections
 from django.conf import settings
+from django.db import connections
 
-from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import extract_allowed, set_allowed_attrs
-from baserow.contrib.database.fields.models import TextField
-from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.view_types import GridViewType
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
+from baserow.contrib.database.fields.exceptions import (
+    MaxFieldLimitExceeded,
+    ReservedBaserowFieldNameException,
+    InvalidBaserowFieldName,
+)
 from baserow.contrib.database.fields.field_types import (
     LongTextFieldType,
     BooleanFieldType,
 )
-
-from .models import Table
+from baserow.contrib.database.fields.handler import (
+    FieldHandler,
+    RESERVED_BASEROW_FIELD_NAMES,
+)
+from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
+    InitialTableDataDuplicateName,
 )
+from .models import Table
 from .signals import table_created, table_updated, table_deleted, tables_reordered
 
 
@@ -163,6 +170,20 @@ class TableHandler:
 
         for i in range(len(fields), largest_column_count):
             fields.append(f"Field {i + 1}")
+
+        # Stripping whitespace from field names is already done by
+        # TableCreateSerializer  however we repeat to ensure that non API usages of
+        # this method is consistent with api usage.
+        field_name_set = {name.strip() for name in fields}
+
+        if len(field_name_set) != len(fields):
+            raise InitialTableDataDuplicateName()
+
+        if len(field_name_set.intersection(RESERVED_BASEROW_FIELD_NAMES)) > 0:
+            raise ReservedBaserowFieldNameException()
+
+        if "" in field_name_set:
+            raise InvalidBaserowFieldName()
 
         for row in data:
             for i in range(len(row), largest_column_count):

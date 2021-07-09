@@ -11,8 +11,28 @@
           placeholder="Name"
           @blur="$v.values.name.$touch()"
         />
-        <div v-if="$v.values.name.$error" class="error">
+        <div
+          v-if="$v.values.name.$dirty && !$v.values.name.required"
+          class="error"
+        >
           This field is required.
+        </div>
+        <div
+          v-else-if="
+            $v.values.name.$dirty && !$v.values.name.mustHaveUniqueFieldName
+          "
+          class="error"
+        >
+          A field with this name already exists.
+        </div>
+        <div
+          v-else-if="
+            $v.values.name.$dirty &&
+            !$v.values.name.mustNotClashWithReservedName
+          "
+          class="error"
+        >
+          This field name is not allowed.
         </div>
       </div>
     </div>
@@ -53,6 +73,8 @@
 import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
+import { mapGetters } from 'vuex'
+import { RESERVED_BASEROW_FIELD_NAMES } from '@baserow/modules/database/utils/constants'
 
 // @TODO focus form on open
 export default {
@@ -85,14 +107,36 @@ export default {
     hasFormComponent() {
       return !!this.values.type && this.getFormComponent(this.values.type)
     },
-  },
-  validations: {
-    values: {
-      name: { required },
-      type: { required },
+    existingFieldId() {
+      return this.defaultValues ? this.defaultValues.id : null
     },
+    ...mapGetters({
+      fields: 'field/getAllWithPrimary',
+    }),
+  },
+  validations() {
+    return {
+      values: {
+        name: {
+          required,
+          mustHaveUniqueFieldName: this.mustHaveUniqueFieldName,
+          mustNotClashWithReservedName: this.mustNotClashWithReservedName,
+        },
+        type: { required },
+      },
+    }
   },
   methods: {
+    mustHaveUniqueFieldName(param) {
+      let fields = this.fields
+      if (this.existingFieldId !== null) {
+        fields = fields.filter((f) => f.id !== this.existingFieldId)
+      }
+      return !fields.map((f) => f.name).includes(param.trim())
+    },
+    mustNotClashWithReservedName(param) {
+      return !RESERVED_BASEROW_FIELD_NAMES.includes(param.trim())
+    },
     getFormComponent(type) {
       return this.$registry.get('field', type).getFormComponent()
     },

@@ -746,3 +746,87 @@ def test_can_perm_delete_tables_in_another_user_db(
         f"database_table_{table.id}"
         not in user_tables_in_separate_db.introspection.table_names()
     )
+
+
+@pytest.mark.django_db
+def test_a_restored_field_will_have_its_name_changed_to_ensure_it_is_unique(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(database=database, name="Table")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Jane"},
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=customers_table,
+    )
+    TrashHandler.trash(user, database.group, database, link_field_1)
+    TrashHandler.trash(user, database.group, database, customers_primary_field)
+
+    assert LinkRowField.trash.count() == 2
+
+    clashing_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name"
+    )
+    another_clashing_field = field_handler.create_field(
+        user=user,
+        table=customers_table,
+        type_name="text",
+        name="Name (Restored)",
+    )
+    link_field_2 = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=customers_table,
+    )
+
+    TrashHandler.restore_item(user, "field", link_field_1.id)
+    link_field_1.refresh_from_db()
+
+    assert LinkRowField.objects.count() == 4
+    assert link_field_2.name == "Customer"
+    assert link_field_1.name == "Customer (Restored)"
+    assert link_field_2.link_row_related_field.name == "Table"
+    assert link_field_1.link_row_related_field.name == "Table (Restored)"
+
+    TrashHandler.restore_item(user, "field", customers_primary_field.id)
+    customers_primary_field.refresh_from_db()
+
+    assert TextField.objects.count() == 3
+    assert clashing_field.name == "Name"
+    assert another_clashing_field.name == "Name (Restored)"
+    assert customers_primary_field.name == "Name (Restored) 2"
+
+    # Check that a normal trash and restore when there aren't any naming conflicts will
+    # return the old names.
+    TrashHandler.trash(user, database.group, database, link_field_1)
+    TrashHandler.restore_item(user, "field", link_field_1.id)
+    link_field_1.refresh_from_db()
+    assert link_field_2.name == "Customer"
+    assert link_field_1.name == "Customer (Restored)"

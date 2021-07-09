@@ -26,12 +26,18 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_CANNOT_CHANGE_FIELD_TYPE,
     ERROR_FIELD_DOES_NOT_EXIST,
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
+    ERROR_RESERVED_BASEROW_FIELD_NAME,
+    ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
+    ERROR_INVALID_BASEROW_FIELD_NAME,
 )
 from baserow.contrib.database.fields.exceptions import (
     CannotDeletePrimaryField,
     CannotChangeFieldType,
     FieldDoesNotExist,
     MaxFieldLimitExceeded,
+    ReservedBaserowFieldNameException,
+    FieldWithSameNameAlreadyExists,
+    InvalidBaserowFieldName,
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -140,6 +146,9 @@ class FieldsView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_MAX_FIELD_COUNT_EXCEEDED",
+                    "ERROR_RESERVED_BASEROW_FIELD_NAME",
+                    "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS",
+                    "ERROR_INVALID_BASEROW_FIELD_NAME",
                 ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
@@ -156,6 +165,9 @@ class FieldsView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             MaxFieldLimitExceeded: ERROR_MAX_FIELD_COUNT_EXCEEDED,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+            FieldWithSameNameAlreadyExists: ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
+            ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
+            InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
         }
     )
     def post(self, request, data, table_id):
@@ -253,6 +265,9 @@ class FieldView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_CANNOT_CHANGE_FIELD_TYPE",
                     "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_RESERVED_BASEROW_FIELD_NAME",
+                    "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS",
+                    "ERROR_INVALID_BASEROW_FIELD_NAME",
                 ]
             ),
             404: get_error_schema(["ERROR_FIELD_DOES_NOT_EXIST"]),
@@ -264,6 +279,9 @@ class FieldView(APIView):
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             CannotChangeFieldType: ERROR_CANNOT_CHANGE_FIELD_TYPE,
+            FieldWithSameNameAlreadyExists: ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
+            ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
+            InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
         }
     )
     def patch(self, request, field_id):

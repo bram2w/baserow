@@ -2,7 +2,6 @@ from django.conf import settings
 
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-
 ERROR_TABLE_DOES_NOT_EXIST = (
     "ERROR_TABLE_DOES_NOT_EXIST",
     HTTP_404_NOT_FOUND,
@@ -28,4 +27,10 @@ ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED = (
     HTTP_400_BAD_REQUEST,
     f"The initial table data limit has been exceeded. You can provide a maximum of "
     f"{settings.INITIAL_TABLE_DATA_LIMIT} rows.",
+)
+ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES = (
+    "ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES",
+    HTTP_400_BAD_REQUEST,
+    "Field names must be unique in Baserow per table however the initial table data "
+    "provided contains duplicate field names, please make them unique and try again.",
 )

@@ -3,6 +3,7 @@ from typing import Optional, Any, List
 from django.conf import settings
 from django.db import connections
 
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.signals import field_restored
@@ -85,6 +86,16 @@ class FieldTrashableItemType(TrashableItemType):
         return trashed_item.name
 
     def trashed_item_restored(self, trashed_item: Field, trash_entry: TrashEntry):
+        trashed_item.name = FieldHandler().find_next_unused_field_name(
+            trashed_item.table,
+            [trashed_item.name, f"{trashed_item.name} (Restored)"],
+            [trashed_item.id],  # Ignore the field itself from the check.
+        )
+        # We need to set the specific field's name also so when the field_restored
+        # serializer switches to serializing the specific instance it picks up and uses
+        # the new name set here rather than the name currently in the DB.
+        trashed_item.specific.name = trashed_item.name
+        trashed_item.save()
         field_restored.send(
             self,
             field=trashed_item,

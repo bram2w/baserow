@@ -12,6 +12,8 @@
 * Added before and after date filters.
 * Support building Baserow out of the box on Ubuntu by lowering the required docker
   version to build Baserow down to 19.03.
+* Disallow duplicate field names in the same table, blank field names or field names
+  called 'order' and 'id'. Existing invalid field names will be fixed automatically. 
 
 ## Released (2021-06-02)
 

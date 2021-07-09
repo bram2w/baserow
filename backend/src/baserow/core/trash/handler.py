@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, Dict, Any
 
 from django.conf import settings
@@ -20,6 +21,7 @@ from baserow.core.trash.exceptions import (
 )
 from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
 
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
@@ -165,11 +167,14 @@ class TrashHandler:
         """
 
         now = timezone.now()
-        cutoff = now - timezone.timedelta(
-            hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
-        )
-        TrashEntry.objects.filter(trashed_at__lte=cutoff).update(
+        hours = settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
+        cutoff = now - timezone.timedelta(hours=hours)
+        updated_count = TrashEntry.objects.filter(trashed_at__lte=cutoff).update(
             should_be_permanently_deleted=True
+        )
+        logger.info(
+            f"Successfully marked {updated_count} old trash items for deletion as they "
+            f"were older than {hours} hours."
         )
 
     @staticmethod
@@ -193,6 +198,7 @@ class TrashHandler:
         """
 
         trash_item_lookup_cache = {}
+        deleted_count = 0
         for trash_entry in TrashEntry.objects.filter(
             should_be_permanently_deleted=True
         ):
@@ -213,6 +219,11 @@ class TrashHandler:
                     # to delete the entry as the item itself has been correctly deleted.
                     pass
                 trash_entry.delete()
+                deleted_count += 1
+        logger.info(
+            f"Successfully deleted {deleted_count} trash entries and their associated "
+            "trashed items."
+        )
 
     @staticmethod
     def permanently_delete(trashable_item):

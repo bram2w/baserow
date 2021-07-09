@@ -275,6 +275,13 @@ export const getters = {
   getAll(state) {
     return state.items
   },
+  getAllWithPrimary(state) {
+    if (state.primary !== null) {
+      return [state.primary, ...state.items]
+    } else {
+      return state.items
+    }
+  },
 }
 
 export default {
