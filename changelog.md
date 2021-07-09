@@ -3,6 +3,8 @@
 ## Unreleased
 
 * Made it possible to list table field meta-data with a token.
+* The email field's validation is now consistent and much more permissive allowing most 
+  values which look like email addresses.
 * Add trash where deleted apps, groups, tables, fields and rows can be restored 
   deletion.
 * Fix the create group invite endpoint failing when no message provided.
