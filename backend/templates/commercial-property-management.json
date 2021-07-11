@@ -1,0 +1,4157 @@
+{
+  "baserow_template_version": 1,
+  "name": "Commercial Property Management",
+  "icon": "building",
+  "keywords": [
+    "property",
+    "management",
+    "rental",
+    "tenant",
+    "tracker",
+    "tenants"
+  ],
+  "categories": [
+    "Real Estate"
+  ],
+  "export": [
+    {
+      "id": 11091,
+      "name": "Commercial Property Management",
+      "order": 3,
+      "type": "database",
+      "tables": [
+        {
+          "id": 21114,
+          "name": "Buildings",
+          "order": 1,
+          "fields": [
+            {
+              "id": 110822,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 110894,
+              "type": "text",
+              "name": "Address",
+              "order": 1,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 110895,
+              "type": "text",
+              "name": "City",
+              "order": 2,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 110896,
+              "type": "text",
+              "name": "State",
+              "order": 3,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 110897,
+              "type": "number",
+              "name": "Zip Code",
+              "order": 4,
+              "primary": false,
+              "number_type": "INTEGER",
+              "number_decimal_places": 1,
+              "number_negative": false
+            },
+            {
+              "id": 110899,
+              "type": "link_row",
+              "name": "Units",
+              "order": 5,
+              "primary": false,
+              "link_row_table_id": 21115,
+              "link_row_related_field_id": 110898
+            },
+            {
+              "id": 110903,
+              "type": "link_row",
+              "name": "Tenants",
+              "order": 6,
+              "primary": false,
+              "link_row_table_id": 21121,
+              "link_row_related_field_id": 110902
+            },
+            {
+              "id": 118883,
+              "type": "file",
+              "name": "Image",
+              "order": 7,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 22656,
+              "type": "grid",
+              "name": "All Buildings",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1513,
+                  "field_id": 110822,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 106173,
+                  "field_id": 110822,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 106261,
+                  "field_id": 110894,
+                  "width": 150,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 106262,
+                  "field_id": 110895,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 106263,
+                  "field_id": 110896,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 106264,
+                  "field_id": 110897,
+                  "width": 118,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 106265,
+                  "field_id": 110899,
+                  "width": 376,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 115609,
+                  "field_id": 110903,
+                  "width": 510,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 115837,
+                  "field_id": 118883,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 0
+                }
+              ]
+            },
+            {
+              "id": 24745,
+              "type": "grid",
+              "name": "Chicago",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3571,
+                  "field_id": 110895,
+                  "type": "equal",
+                  "value": "Chicago"
+                }
+              ],
+              "sortings": [
+                {
+                  "id": 1546,
+                  "field_id": 110822,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 118182,
+                  "field_id": 110822,
+                  "width": 159,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118183,
+                  "field_id": 110894,
+                  "width": 170,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118184,
+                  "field_id": 110895,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118185,
+                  "field_id": 110896,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118186,
+                  "field_id": 110897,
+                  "width": 115,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118187,
+                  "field_id": 110899,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118188,
+                  "field_id": 110903,
+                  "width": 295,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118189,
+                  "field_id": 118883,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            },
+            {
+              "id": 24746,
+              "type": "grid",
+              "name": "New York City",
+              "order": 3,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3572,
+                  "field_id": 110895,
+                  "type": "equal",
+                  "value": "New York"
+                }
+              ],
+              "sortings": [
+                {
+                  "id": 1547,
+                  "field_id": 110822,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 118190,
+                  "field_id": 110822,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118191,
+                  "field_id": 110894,
+                  "width": 142,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118192,
+                  "field_id": 110895,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118193,
+                  "field_id": 110896,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118194,
+                  "field_id": 110897,
+                  "width": 116,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118195,
+                  "field_id": 110899,
+                  "width": 218,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118196,
+                  "field_id": 110903,
+                  "width": 346,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118197,
+                  "field_id": 118883,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            },
+            {
+              "id": 24747,
+              "type": "grid",
+              "name": "Los Angeles",
+              "order": 4,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3573,
+                  "field_id": 110895,
+                  "type": "equal",
+                  "value": "Los Angeles"
+                }
+              ],
+              "sortings": [
+                {
+                  "id": 1548,
+                  "field_id": 110822,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 118198,
+                  "field_id": 110822,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118199,
+                  "field_id": 110894,
+                  "width": 142,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118200,
+                  "field_id": 110895,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118201,
+                  "field_id": 110896,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118202,
+                  "field_id": 110897,
+                  "width": 124,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118203,
+                  "field_id": 110899,
+                  "width": 172,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118204,
+                  "field_id": 110903,
+                  "width": 267,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118205,
+                  "field_id": 118883,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_110822": "John Hancock Center",
+              "field_110894": "875 N Michigan Ave",
+              "field_110895": "Chicago",
+              "field_110896": "IL",
+              "field_110897": "60611",
+              "field_110899": [
+                1,
+                2,
+                3,
+                5,
+                4
+              ],
+              "field_110903": [
+                17,
+                20,
+                21,
+                25,
+                34
+              ],
+              "field_118883": [
+                {
+                  "name": "YUHLKj1DMtmxMdJToTPNGftRPtFzOgPq_cec12636da32613bd3b6cec785c8e2b47eb4ad70d049919da692c4d2335622b7.jpg",
+                  "visible_name": "john hancock center.jpg",
+                  "original_name": "john hancock center.jpg"
+                }
+              ]
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_110822": "Staples Center",
+              "field_110894": "1111 S Figueroa St",
+              "field_110895": "Los Angeles",
+              "field_110896": "CA",
+              "field_110897": "90015",
+              "field_110899": [
+                6,
+                7,
+                8
+              ],
+              "field_110903": [
+                2,
+                1,
+                14
+              ],
+              "field_118883": [
+                {
+                  "name": "T7UwiCqsoZYjmgBFcK2ig4bNA5fcRlIe_876e2fe708e4cbc37cc5cf776c5e0a962c9cddcc84080e3c4ba3efafe119f323.jpg",
+                  "visible_name": "staples center.jpg",
+                  "original_name": "staples center.jpg"
+                }
+              ]
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_110822": "Navy Pier",
+              "field_110894": "600 E Grand Ave",
+              "field_110895": "Chicago",
+              "field_110896": "IL",
+              "field_110897": "60611",
+              "field_110899": [
+                9,
+                10,
+                11,
+                12,
+                13
+              ],
+              "field_110903": [
+                4,
+                11,
+                16,
+                28,
+                29
+              ],
+              "field_118883": [
+                {
+                  "name": "nZVmi5QYA77M0aiamMHdRIoRQapEWaSN_05cbdb3c661d3d9aa3b8136ec27bded37e47d8511a423815aedac11ab0583f13.jpg",
+                  "visible_name": "navy pier.jpg",
+                  "original_name": "navy pier.jpg"
+                }
+              ]
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_110822": "Wrigley Building",
+              "field_110894": "400 N Michigan Ave",
+              "field_110895": "Chicago",
+              "field_110896": "IL",
+              "field_110897": "60611",
+              "field_110899": [
+                14,
+                15,
+                16
+              ],
+              "field_110903": [
+                3,
+                18
+              ],
+              "field_118883": [
+                {
+                  "name": "NLogb50dfnnoCsljnjOmtwnqsYtPk4KS_722156e3132cac6069ab2152448fac82d89972acbf3431fc99d09c301d5dbdf1.jpg",
+                  "visible_name": "wrigley building.jpg",
+                  "original_name": "wrigley building.jpg"
+                }
+              ]
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_110822": "Chrysler Building",
+              "field_110894": "405 Lexington Ave",
+              "field_110895": "New York",
+              "field_110896": "NY",
+              "field_110897": "10174",
+              "field_110899": [
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26
+              ],
+              "field_110903": [
+                15,
+                19,
+                23,
+                24,
+                26,
+                30,
+                31,
+                37,
+                38,
+                39,
+                40
+              ],
+              "field_118883": [
+                {
+                  "name": "yqZuACJUFp4jBoShEzRjXiNO5NthnoxW_1922f5ac6b97f765602681a0c4cfdb10511c09a84ceb47db89a685fe10f477e4.jpg",
+                  "visible_name": "chrysler building.jpg",
+                  "original_name": "chrysler building.jpg"
+                }
+              ]
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_110822": "Empire State Building",
+              "field_110894": "350 Fifth Ave",
+              "field_110895": "New York",
+              "field_110896": "NY",
+              "field_110897": "10118",
+              "field_110899": [
+                30,
+                31,
+                32
+              ],
+              "field_110903": [
+                22,
+                32,
+                36
+              ],
+              "field_118883": [
+                {
+                  "name": "Gsn6BfD0IZzfVwlOE2OIu07KDHFLMbQx_f10477143e62eb4985fb96ff21d71381f948fc239973a05540f038c893b28dc3.jpg",
+                  "visible_name": "empire state building.jpg",
+                  "original_name": "empire state building.jpg"
+                }
+              ]
+            },
+            {
+              "id": 12,
+              "order": "12.00000000000000000000",
+              "field_110822": "United Center",
+              "field_110894": "1901 W Madison St",
+              "field_110895": "Chicago",
+              "field_110896": "IL",
+              "field_110897": "60612",
+              "field_110899": [
+                27,
+                28,
+                29
+              ],
+              "field_110903": [
+                6,
+                10,
+                33
+              ],
+              "field_118883": [
+                {
+                  "name": "CtkTQxzgqOQY4z9zhv1utJW6BnfPGmLt_3f5be1a069a5a7f0c2f246b4e36eedcbbdd6b4c11ff14bd27461993acf33ddef.jpg",
+                  "visible_name": "united center.jpg",
+                  "original_name": "united center.jpg"
+                }
+              ]
+            },
+            {
+              "id": 13,
+              "order": "13.00000000000000000000",
+              "field_110822": "Willis Tower",
+              "field_110894": "233 S Wacker Dr",
+              "field_110895": "Chicago",
+              "field_110896": "IL",
+              "field_110897": "60606",
+              "field_110899": [
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                46,
+                45,
+                47,
+                48,
+                49,
+                50
+              ],
+              "field_110903": [
+                7,
+                8,
+                9,
+                12,
+                13,
+                27,
+                35
+              ],
+              "field_118883": [
+                {
+                  "name": "slhKUj5VvjC9iCxpiM76fKUAgWSPCjwI_426e41e14aae30646890e900e3b8161811acf1931893913a20b08e691c2901c0.jpg",
+                  "visible_name": "willis tower.jpg",
+                  "original_name": "willis tower.jpg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": 21115,
+          "name": "Units",
+          "order": 2,
+          "fields": [
+            {
+              "id": 110825,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 110898,
+              "type": "link_row",
+              "name": "Building",
+              "order": 1,
+              "primary": false,
+              "link_row_table_id": 21114,
+              "link_row_related_field_id": 110899
+            },
+            {
+              "id": 110900,
+              "type": "number",
+              "name": "Floor",
+              "order": 2,
+              "primary": false,
+              "number_type": "INTEGER",
+              "number_decimal_places": 1,
+              "number_negative": false
+            },
+            {
+              "id": 118885,
+              "type": "link_row",
+              "name": "Tenants",
+              "order": 4,
+              "primary": false,
+              "link_row_table_id": 21121,
+              "link_row_related_field_id": 118884
+            },
+            {
+              "id": 120797,
+              "type": "link_row",
+              "name": "Service Requests",
+              "order": 5,
+              "primary": false,
+              "link_row_table_id": 21119,
+              "link_row_related_field_id": 120796
+            }
+          ],
+          "views": [
+            {
+              "id": 22657,
+              "type": "grid",
+              "name": "All Units",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1550,
+                  "field_id": 110825,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 106176,
+                  "field_id": 110825,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 106266,
+                  "field_id": 110898,
+                  "width": 151,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 106267,
+                  "field_id": 110900,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 115949,
+                  "field_id": 118885,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118206,
+                  "field_id": 120797,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_110825": "JHC-111",
+              "field_110898": [
+                1
+              ],
+              "field_110900": "11",
+              "field_118885": [
+                17
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_110825": "JHC-112",
+              "field_110898": [
+                1
+              ],
+              "field_110900": "12",
+              "field_118885": [
+                20
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_110825": "JHC-113",
+              "field_110898": [
+                1
+              ],
+              "field_110900": "13",
+              "field_118885": [
+                21
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_110825": "JHC-114",
+              "field_110898": [
+                1
+              ],
+              "field_110900": "14",
+              "field_118885": [
+                25
+              ],
+              "field_120797": [
+                1
+              ]
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_110825": "JHC-115",
+              "field_110898": [
+                1
+              ],
+              "field_110900": "15",
+              "field_118885": [
+                34
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_110825": "SC-01",
+              "field_110898": [
+                3
+              ],
+              "field_110900": "1",
+              "field_118885": [
+                1
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_110825": "SC-02",
+              "field_110898": [
+                3
+              ],
+              "field_110900": "1",
+              "field_118885": [
+                2
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_110825": "SC-21",
+              "field_110898": [
+                3
+              ],
+              "field_110900": "2",
+              "field_118885": [
+                14
+              ],
+              "field_120797": [
+                11
+              ]
+            },
+            {
+              "id": 9,
+              "order": "9.00000000000000000000",
+              "field_110825": "NP-001",
+              "field_110898": [
+                5
+              ],
+              "field_110900": "1",
+              "field_118885": [
+                11
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_110825": "NP-020",
+              "field_110898": [
+                5
+              ],
+              "field_110900": "2",
+              "field_118885": [
+                16
+              ],
+              "field_120797": [
+                2
+              ]
+            },
+            {
+              "id": 11,
+              "order": "11.00000000000000000000",
+              "field_110825": "NP-021",
+              "field_110898": [
+                5
+              ],
+              "field_110900": "2",
+              "field_118885": [
+                4
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 12,
+              "order": "12.00000000000000000000",
+              "field_110825": "NP-022",
+              "field_110898": [
+                5
+              ],
+              "field_110900": "2",
+              "field_118885": [
+                29
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 13,
+              "order": "13.00000000000000000000",
+              "field_110825": "NP-023",
+              "field_110898": [
+                5
+              ],
+              "field_110900": "2",
+              "field_118885": [
+                28
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 14,
+              "order": "14.00000000000000000000",
+              "field_110825": "WB-305",
+              "field_110898": [
+                6
+              ],
+              "field_110900": "30",
+              "field_118885": [
+                3
+              ],
+              "field_120797": [
+                8
+              ]
+            },
+            {
+              "id": 15,
+              "order": "15.00000000000000000000",
+              "field_110825": "WB-306",
+              "field_110898": [
+                6
+              ],
+              "field_110900": "30",
+              "field_118885": [
+                18
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 16,
+              "order": "16.00000000000000000000",
+              "field_110825": "WB-307",
+              "field_110898": [
+                6
+              ],
+              "field_110900": "30",
+              "field_118885": [
+                13
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 17,
+              "order": "17.00000000000000000000",
+              "field_110825": "CHR-491",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "49",
+              "field_118885": [
+                30,
+                31
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 18,
+              "order": "18.00000000000000000000",
+              "field_110825": "CHR-492",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "49",
+              "field_118885": [
+                19
+              ],
+              "field_120797": [
+                3
+              ]
+            },
+            {
+              "id": 19,
+              "order": "19.00000000000000000000",
+              "field_110825": "CHR-493",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "49",
+              "field_118885": [
+                15
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 20,
+              "order": "20.00000000000000000000",
+              "field_110825": "CHR-494",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "49",
+              "field_118885": [
+                26
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 21,
+              "order": "21.00000000000000000000",
+              "field_110825": "CHR-500",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "50",
+              "field_118885": [
+                37
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 22,
+              "order": "22.00000000000000000000",
+              "field_110825": "CHR-501",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "50",
+              "field_118885": [
+                23
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 23,
+              "order": "23.00000000000000000000",
+              "field_110825": "CHR-511",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "51",
+              "field_118885": [
+                24
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 24,
+              "order": "24.00000000000000000000",
+              "field_110825": "CHR-521",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "52",
+              "field_118885": [
+                38
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 25,
+              "order": "25.00000000000000000000",
+              "field_110825": "CHR-522",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "52",
+              "field_118885": [
+                39
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 26,
+              "order": "26.00000000000000000000",
+              "field_110825": "CHR-523",
+              "field_110898": [
+                7
+              ],
+              "field_110900": "52",
+              "field_118885": [
+                40
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 27,
+              "order": "27.00000000000000000000",
+              "field_110825": "UC-20",
+              "field_110898": [
+                12
+              ],
+              "field_110900": "3",
+              "field_118885": [
+                6
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 28,
+              "order": "28.00000000000000000000",
+              "field_110825": "UC-21",
+              "field_110898": [
+                12
+              ],
+              "field_110900": "3",
+              "field_118885": [
+                10
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 29,
+              "order": "29.00000000000000000000",
+              "field_110825": "UC-22",
+              "field_110898": [
+                12
+              ],
+              "field_110900": "3",
+              "field_118885": [
+                33
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 30,
+              "order": "30.00000000000000000000",
+              "field_110825": "ESB-701",
+              "field_110898": [
+                10
+              ],
+              "field_110900": "70",
+              "field_118885": [
+                36
+              ],
+              "field_120797": [
+                9
+              ]
+            },
+            {
+              "id": 31,
+              "order": "31.00000000000000000000",
+              "field_110825": "ESB-701",
+              "field_110898": [
+                10
+              ],
+              "field_110900": "70",
+              "field_118885": [
+                22
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 32,
+              "order": "32.00000000000000000000",
+              "field_110825": "ESB-701",
+              "field_110898": [
+                10
+              ],
+              "field_110900": "70",
+              "field_118885": [
+                32
+              ],
+              "field_120797": [
+                6
+              ]
+            },
+            {
+              "id": 33,
+              "order": "33.00000000000000000000",
+              "field_110825": "WT-891",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "89",
+              "field_118885": [
+                8
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 34,
+              "order": "34.00000000000000000000",
+              "field_110825": "WT-892",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "89",
+              "field_118885": [
+                9
+              ],
+              "field_120797": [
+                4
+              ]
+            },
+            {
+              "id": 35,
+              "order": "35.00000000000000000000",
+              "field_110825": "WT-893",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "89",
+              "field_118885": [
+                7
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 36,
+              "order": "36.00000000000000000000",
+              "field_110825": "WT-894",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "89",
+              "field_118885": [
+                12
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 37,
+              "order": "37.00000000000000000000",
+              "field_110825": "WT-901",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [
+                27
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 38,
+              "order": "38.00000000000000000000",
+              "field_110825": "WT-902",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [
+                35
+              ],
+              "field_120797": []
+            },
+            {
+              "id": 39,
+              "order": "39.00000000000000000000",
+              "field_110825": "WT-903",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 40,
+              "order": "40.00000000000000000000",
+              "field_110825": "WT-904",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 41,
+              "order": "41.00000000000000000000",
+              "field_110825": "WT-905",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 42,
+              "order": "42.00000000000000000000",
+              "field_110825": "WT-906",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 43,
+              "order": "43.00000000000000000000",
+              "field_110825": "WT-907",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 44,
+              "order": "44.00000000000000000000",
+              "field_110825": "WT-908",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 45,
+              "order": "45.00000000000000000000",
+              "field_110825": "WT-909",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 46,
+              "order": "46.00000000000000000000",
+              "field_110825": "WT-910",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "90",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 47,
+              "order": "47.00000000000000000000",
+              "field_110825": "WT-911",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "91",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 48,
+              "order": "48.00000000000000000000",
+              "field_110825": "WT-912",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "91",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 49,
+              "order": "49.00000000000000000000",
+              "field_110825": "WT-913",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "91",
+              "field_118885": [],
+              "field_120797": []
+            },
+            {
+              "id": 50,
+              "order": "50.00000000000000000000",
+              "field_110825": "WT-914",
+              "field_110898": [
+                13
+              ],
+              "field_110900": "91",
+              "field_118885": [],
+              "field_120797": [
+                10
+              ]
+            }
+          ]
+        },
+        {
+          "id": 21121,
+          "name": "Tenants",
+          "order": 3,
+          "fields": [
+            {
+              "id": 110845,
+              "type": "text",
+              "name": "Brand",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 110902,
+              "type": "link_row",
+              "name": "Building",
+              "order": 2,
+              "primary": false,
+              "link_row_table_id": 21114,
+              "link_row_related_field_id": 110903
+            },
+            {
+              "id": 118884,
+              "type": "link_row",
+              "name": "Unit",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 21115,
+              "link_row_related_field_id": 118885
+            },
+            {
+              "id": 118886,
+              "type": "link_row",
+              "name": "Lease",
+              "order": 4,
+              "primary": false,
+              "link_row_table_id": 22561,
+              "link_row_related_field_id": 118887
+            },
+            {
+              "id": 120804,
+              "type": "boolean",
+              "name": "Interested in Renewal",
+              "order": 5,
+              "primary": false
+            },
+            {
+              "id": 120826,
+              "type": "single_select",
+              "name": "Industry",
+              "order": 6,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 7341,
+                  "value": "Manufacturing",
+                  "color": "light-orange",
+                  "order": 0
+                },
+                {
+                  "id": 7342,
+                  "value": "Retail",
+                  "color": "dark-gray",
+                  "order": 1
+                },
+                {
+                  "id": 7343,
+                  "value": "Banking",
+                  "color": "red",
+                  "order": 2
+                },
+                {
+                  "id": 7344,
+                  "value": "Food",
+                  "color": "light-gray",
+                  "order": 3
+                },
+                {
+                  "id": 7345,
+                  "value": "Logistics",
+                  "color": "orange",
+                  "order": 4
+                },
+                {
+                  "id": 7346,
+                  "value": "Sports",
+                  "color": "dark-green",
+                  "order": 5
+                },
+                {
+                  "id": 7347,
+                  "value": "Software/Hardware",
+                  "color": "light-green",
+                  "order": 6
+                },
+                {
+                  "id": 7348,
+                  "value": "Transportation",
+                  "color": "blue",
+                  "order": 7
+                },
+                {
+                  "id": 7349,
+                  "value": "Media",
+                  "color": "gray",
+                  "order": 8
+                }
+              ]
+            }
+          ],
+          "views": [
+            {
+              "id": 22663,
+              "type": "grid",
+              "name": "All Tenants",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1549,
+                  "field_id": 110845,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 106197,
+                  "field_id": 110845,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 115608,
+                  "field_id": 110902,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 115953,
+                  "field_id": 118884,
+                  "width": 116,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 115954,
+                  "field_id": 118886,
+                  "width": 115,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 118208,
+                  "field_id": 120804,
+                  "width": 194,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 118254,
+                  "field_id": 120826,
+                  "width": 158,
+                  "hidden": false,
+                  "order": 0
+                }
+              ]
+            },
+            {
+              "id": 24972,
+              "type": "grid",
+              "name": "Renewals",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3625,
+                  "field_id": 120804,
+                  "type": "boolean",
+                  "value": "1"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 119300,
+                  "field_id": 110845,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 119301,
+                  "field_id": 110902,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 119302,
+                  "field_id": 118884,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 119303,
+                  "field_id": 118886,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 119304,
+                  "field_id": 120804,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 119305,
+                  "field_id": 120826,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 0
+                }
+              ]
+            },
+            {
+              "id": 24971,
+              "type": "grid",
+              "name": "Retail",
+              "order": 3,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3626,
+                  "field_id": 120826,
+                  "type": "single_select_equal",
+                  "value": "7342"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 119306,
+                  "field_id": 110845,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 119307,
+                  "field_id": 110902,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 119308,
+                  "field_id": 118884,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 119309,
+                  "field_id": 118886,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 119310,
+                  "field_id": 120804,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 119311,
+                  "field_id": 120826,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 0
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_110845": "Auntie's Pretzels",
+              "field_110902": [
+                3
+              ],
+              "field_118884": [
+                6
+              ],
+              "field_118886": [
+                1
+              ],
+              "field_120804": "false",
+              "field_120826": 7344
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_110845": "Lakers",
+              "field_110902": [
+                3
+              ],
+              "field_118884": [
+                7
+              ],
+              "field_118886": [
+                21
+              ],
+              "field_120804": "false",
+              "field_120826": 7346
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_110845": "Draftbit",
+              "field_110902": [
+                6
+              ],
+              "field_118884": [
+                14
+              ],
+              "field_118886": [
+                15
+              ],
+              "field_120804": "true",
+              "field_120826": 7347
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_110845": "Fender",
+              "field_110902": [
+                5
+              ],
+              "field_118884": [
+                11
+              ],
+              "field_118886": [
+                20
+              ],
+              "field_120804": "false",
+              "field_120826": 7342
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_110845": "Chicago Bulls",
+              "field_110902": [
+                12
+              ],
+              "field_118884": [
+                27
+              ],
+              "field_118886": [
+                11
+              ],
+              "field_120804": "false",
+              "field_120826": 7346
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_110845": "Apple",
+              "field_110902": [
+                13
+              ],
+              "field_118884": [
+                35
+              ],
+              "field_118886": [
+                3
+              ],
+              "field_120804": "false",
+              "field_120826": 7347
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_110845": "Sony",
+              "field_110902": [
+                13
+              ],
+              "field_118884": [
+                33
+              ],
+              "field_118886": [
+                26
+              ],
+              "field_120804": "false",
+              "field_120826": 7347
+            },
+            {
+              "id": 9,
+              "order": "9.00000000000000000000",
+              "field_110845": "Patagonia",
+              "field_110902": [
+                13
+              ],
+              "field_118884": [
+                34
+              ],
+              "field_118886": [
+                34
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_110845": "Dippin' Dots",
+              "field_110902": [
+                12
+              ],
+              "field_118884": [
+                28
+              ],
+              "field_118886": [
+                14
+              ],
+              "field_120804": "false",
+              "field_120826": 7344
+            },
+            {
+              "id": 11,
+              "order": "11.00000000000000000000",
+              "field_110845": "Millie's Hot Dogs",
+              "field_110902": [
+                5
+              ],
+              "field_118884": [
+                9
+              ],
+              "field_118886": [
+                27
+              ],
+              "field_120804": "true",
+              "field_120826": 7344
+            },
+            {
+              "id": 12,
+              "order": "12.00000000000000000000",
+              "field_110845": "Nachos Nachos",
+              "field_110902": [
+                13
+              ],
+              "field_118884": [
+                36
+              ],
+              "field_118886": [
+                29
+              ],
+              "field_120804": "false",
+              "field_120826": 7344
+            },
+            {
+              "id": 13,
+              "order": "13.00000000000000000000",
+              "field_110845": "Gretch",
+              "field_110902": [
+                13
+              ],
+              "field_118884": [
+                16
+              ],
+              "field_118886": [
+                18
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 14,
+              "order": "14.00000000000000000000",
+              "field_110845": "Valley Arts",
+              "field_110902": [
+                3
+              ],
+              "field_118884": [
+                8
+              ],
+              "field_118886": [
+                32
+              ],
+              "field_120804": "false",
+              "field_120826": 7342
+            },
+            {
+              "id": 15,
+              "order": "15.00000000000000000000",
+              "field_110845": "Les Paul",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                19
+              ],
+              "field_118886": [
+                22
+              ],
+              "field_120804": "false",
+              "field_120826": 7342
+            },
+            {
+              "id": 16,
+              "order": "16.00000000000000000000",
+              "field_110845": "Moon Gifts",
+              "field_110902": [
+                5
+              ],
+              "field_118884": [
+                10
+              ],
+              "field_118886": [
+                28
+              ],
+              "field_120804": "false",
+              "field_120826": 7344
+            },
+            {
+              "id": 17,
+              "order": "17.00000000000000000000",
+              "field_110845": "Best Buy",
+              "field_110902": [
+                1
+              ],
+              "field_118884": [
+                1
+              ],
+              "field_118886": [
+                7
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 18,
+              "order": "18.00000000000000000000",
+              "field_110845": "CVS",
+              "field_110902": [
+                6
+              ],
+              "field_118884": [
+                15
+              ],
+              "field_118886": [
+                13
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 19,
+              "order": "19.00000000000000000000",
+              "field_110845": "Walgreens",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                18
+              ],
+              "field_118886": [
+                35
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 20,
+              "order": "20.00000000000000000000",
+              "field_110845": "Groupon",
+              "field_110902": [
+                1
+              ],
+              "field_118884": [
+                2
+              ],
+              "field_118886": [
+                23
+              ],
+              "field_120804": "false",
+              "field_120826": 7342
+            },
+            {
+              "id": 21,
+              "order": "21.00000000000000000000",
+              "field_110845": "Ford",
+              "field_110902": [
+                1
+              ],
+              "field_118884": [
+                3
+              ],
+              "field_118886": [
+                16
+              ],
+              "field_120804": "false",
+              "field_120826": 7341
+            },
+            {
+              "id": 22,
+              "order": "22.00000000000000000000",
+              "field_110845": "Target",
+              "field_110902": [
+                10
+              ],
+              "field_118884": [
+                31
+              ],
+              "field_118886": [
+                37
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 23,
+              "order": "23.00000000000000000000",
+              "field_110845": "Bank of America",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                22
+              ],
+              "field_118886": [
+                5
+              ],
+              "field_120804": "false",
+              "field_120826": 7343
+            },
+            {
+              "id": 24,
+              "order": "24.00000000000000000000",
+              "field_110845": "Citigroup",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                23
+              ],
+              "field_118886": [
+                12
+              ],
+              "field_120804": "false",
+              "field_120826": 7343
+            },
+            {
+              "id": 25,
+              "order": "25.00000000000000000000",
+              "field_110845": "Intel",
+              "field_110902": [
+                1
+              ],
+              "field_118884": [
+                4
+              ],
+              "field_118886": [
+                24
+              ],
+              "field_120804": "false",
+              "field_120826": 7347
+            },
+            {
+              "id": 26,
+              "order": "26.00000000000000000000",
+              "field_110845": "FedEx",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                20
+              ],
+              "field_118886": [
+                19
+              ],
+              "field_120804": "false",
+              "field_120826": 7345
+            },
+            {
+              "id": 27,
+              "order": "27.00000000000000000000",
+              "field_110845": "McDonald's",
+              "field_110902": [
+                13
+              ],
+              "field_118884": [
+                37
+              ],
+              "field_118886": [
+                36
+              ],
+              "field_120804": "true",
+              "field_120826": 7344
+            },
+            {
+              "id": 28,
+              "order": "28.00000000000000000000",
+              "field_110845": "Burger King",
+              "field_110902": [
+                5
+              ],
+              "field_118884": [
+                13
+              ],
+              "field_118886": [
+                9
+              ],
+              "field_120804": "false",
+              "field_120826": 7344
+            },
+            {
+              "id": 29,
+              "order": "29.00000000000000000000",
+              "field_110845": "Wendy's",
+              "field_110902": [
+                5
+              ],
+              "field_118884": [
+                12
+              ],
+              "field_118886": [
+                31
+              ],
+              "field_120804": "true",
+              "field_120826": 7344
+            },
+            {
+              "id": 30,
+              "order": "30.00000000000000000000",
+              "field_110845": "Disney",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                17
+              ],
+              "field_118886": [
+                10
+              ],
+              "field_120804": "true",
+              "field_120826": 7349
+            },
+            {
+              "id": 31,
+              "order": "31.00000000000000000000",
+              "field_110845": "ESPN",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                17
+              ],
+              "field_118886": [
+                10
+              ],
+              "field_120804": "true",
+              "field_120826": 7349
+            },
+            {
+              "id": 32,
+              "order": "32.00000000000000000000",
+              "field_110845": "Nike",
+              "field_110902": [
+                10
+              ],
+              "field_118884": [
+                32
+              ],
+              "field_118886": [
+                30
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 33,
+              "order": "33.00000000000000000000",
+              "field_110845": "Adidas",
+              "field_110902": [
+                12
+              ],
+              "field_118884": [
+                29
+              ],
+              "field_118886": [
+                8
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 34,
+              "order": "34.00000000000000000000",
+              "field_110845": "3M",
+              "field_110902": [
+                1
+              ],
+              "field_118884": [
+                5
+              ],
+              "field_118886": [
+                4
+              ],
+              "field_120804": "false",
+              "field_120826": 7341
+            },
+            {
+              "id": 35,
+              "order": "35.00000000000000000000",
+              "field_110845": "WD",
+              "field_110902": [
+                13
+              ],
+              "field_118884": [
+                38
+              ],
+              "field_118886": [
+                33
+              ],
+              "field_120804": "true",
+              "field_120826": 7347
+            },
+            {
+              "id": 36,
+              "order": "36.00000000000000000000",
+              "field_110845": "American Airlines",
+              "field_110902": [
+                10
+              ],
+              "field_118884": [
+                30
+              ],
+              "field_118886": [
+                38
+              ],
+              "field_120804": "false",
+              "field_120826": 7348
+            },
+            {
+              "id": 37,
+              "order": "37.00000000000000000000",
+              "field_110845": "Kohl's",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                21
+              ],
+              "field_118886": [
+                25
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 38,
+              "order": "38.00000000000000000000",
+              "field_110845": "Ally",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                24
+              ],
+              "field_118886": [
+                2
+              ],
+              "field_120804": "true",
+              "field_120826": 7343
+            },
+            {
+              "id": 39,
+              "order": "39.00000000000000000000",
+              "field_110845": "eBay",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                25
+              ],
+              "field_118886": [
+                17
+              ],
+              "field_120804": "true",
+              "field_120826": 7342
+            },
+            {
+              "id": 40,
+              "order": "40.00000000000000000000",
+              "field_110845": "Affinity",
+              "field_110902": [
+                7
+              ],
+              "field_118884": [
+                26
+              ],
+              "field_118886": [
+                6
+              ],
+              "field_120804": "false",
+              "field_120826": 7347
+            }
+          ]
+        },
+        {
+          "id": 21119,
+          "name": "Service Requests",
+          "order": 4,
+          "fields": [
+            {
+              "id": 110839,
+              "type": "text",
+              "name": "Issue",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 110840,
+              "type": "long_text",
+              "name": "Issue Detail",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 110841,
+              "type": "boolean",
+              "name": "Fixed",
+              "order": 2,
+              "primary": false
+            },
+            {
+              "id": 118827,
+              "type": "date",
+              "name": "Est. Date of Completion",
+              "order": 3,
+              "primary": false,
+              "date_format": "ISO",
+              "date_include_time": false,
+              "date_time_format": "12"
+            },
+            {
+              "id": 118888,
+              "type": "single_select",
+              "name": "Priority",
+              "order": 4,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 7076,
+                  "value": "Urgent",
+                  "color": "dark-red",
+                  "order": 0
+                },
+                {
+                  "id": 7077,
+                  "value": "Moderate",
+                  "color": "orange",
+                  "order": 1
+                },
+                {
+                  "id": 7078,
+                  "value": "Not Urgent",
+                  "color": "blue",
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 118889,
+              "type": "date",
+              "name": "Date Submitted",
+              "order": 5,
+              "primary": false,
+              "date_format": "ISO",
+              "date_include_time": false,
+              "date_time_format": "24"
+            },
+            {
+              "id": 120422,
+              "type": "link_row",
+              "name": "Vendor Responsible",
+              "order": 6,
+              "primary": false,
+              "link_row_table_id": 21116,
+              "link_row_related_field_id": 120423
+            },
+            {
+              "id": 120796,
+              "type": "link_row",
+              "name": "Unit",
+              "order": 7,
+              "primary": false,
+              "link_row_table_id": 21115,
+              "link_row_related_field_id": 120797
+            },
+            {
+              "id": 120827,
+              "type": "boolean",
+              "name": "After Hours Access",
+              "order": 8,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 22661,
+              "type": "grid",
+              "name": "All Service Requests",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1570,
+                  "field_id": 118889,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 106191,
+                  "field_id": 110839,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 8
+                },
+                {
+                  "id": 106189,
+                  "field_id": 110840,
+                  "width": 385,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 106190,
+                  "field_id": 110841,
+                  "width": 101,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 115789,
+                  "field_id": 118827,
+                  "width": 205,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 115838,
+                  "field_id": 118888,
+                  "width": 108,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 115839,
+                  "field_id": 118889,
+                  "width": 157,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 117759,
+                  "field_id": 120422,
+                  "width": 183,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 118170,
+                  "field_id": 120796,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 118255,
+                  "field_id": 120827,
+                  "width": 177,
+                  "hidden": false,
+                  "order": 5
+                }
+              ]
+            },
+            {
+              "id": 24744,
+              "type": "grid",
+              "name": "Urgent",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3570,
+                  "field_id": 118888,
+                  "type": "single_select_equal",
+                  "value": "7076"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 118173,
+                  "field_id": 110839,
+                  "width": 156,
+                  "hidden": false,
+                  "order": 8
+                },
+                {
+                  "id": 118174,
+                  "field_id": 110840,
+                  "width": 298,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 118175,
+                  "field_id": 110841,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 118176,
+                  "field_id": 118827,
+                  "width": 207,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 118177,
+                  "field_id": 118888,
+                  "width": 109,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 118178,
+                  "field_id": 118889,
+                  "width": 159,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 118179,
+                  "field_id": 120422,
+                  "width": 182,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 118180,
+                  "field_id": 120796,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 119319,
+                  "field_id": 120827,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_110839": "Water leak (sink)",
+              "field_110840": "There's a small leak below the sink in the bathroom.",
+              "field_110841": "true",
+              "field_118827": "2021-03-04",
+              "field_118888": 7076,
+              "field_118889": "2021-03-03",
+              "field_120422": [
+                1
+              ],
+              "field_120796": [
+                4
+              ],
+              "field_120827": "true"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_110839": "Missing lightbulbs",
+              "field_110840": "There are 3 missing lightbulbs along the south wall of the unit.",
+              "field_110841": "true",
+              "field_118827": "2021-01-15",
+              "field_118888": 7078,
+              "field_118889": "2021-01-11",
+              "field_120422": [
+                3
+              ],
+              "field_120796": [
+                10
+              ],
+              "field_120827": "false"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_110839": "Broken handle",
+              "field_110840": "The cabinet below the island has a broken handle. The cabinet still opens, but it's very tricky to do so.",
+              "field_110841": "false",
+              "field_118827": "2021-04-29",
+              "field_118888": 7078,
+              "field_118889": "2021-04-15",
+              "field_120422": [
+                3
+              ],
+              "field_120796": [
+                18
+              ],
+              "field_120827": "false"
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_110839": "Rusted pipe",
+              "field_110840": "We have a rusted pipe in the bathroom. It's not super urgent yet, but something to look into and start preparing for. We don't want it to break and cause a massive leak!",
+              "field_110841": "false",
+              "field_118827": "2021-04-13",
+              "field_118888": 7077,
+              "field_118889": "2021-03-25",
+              "field_120422": [
+                1
+              ],
+              "field_120796": [
+                34
+              ],
+              "field_120827": "true"
+            },
+            {
+              "id": 6,
+              "order": "5.00000000000000000000",
+              "field_110839": "A/C issues",
+              "field_110840": "The A/C doesn't seem to cool past 35 degrees Celsius. It will also randomly turn off at times.",
+              "field_110841": "true",
+              "field_118827": "2021-04-27",
+              "field_118888": 7077,
+              "field_118889": "2021-04-25",
+              "field_120422": [
+                5
+              ],
+              "field_120796": [
+                32
+              ],
+              "field_120827": "true"
+            },
+            {
+              "id": 8,
+              "order": "6.00000000000000000000",
+              "field_110839": "Freezer not freezing",
+              "field_110840": "The freezer does not seem to be freezing anymore. Most of the ice has melted and is acting a bit more like a refrigerator instead of a freezer now. We have ice pops melting!",
+              "field_110841": "false",
+              "field_118827": "2021-06-02",
+              "field_118888": 7076,
+              "field_118889": "2021-06-01",
+              "field_120422": [
+                4
+              ],
+              "field_120796": [
+                14
+              ],
+              "field_120827": "true"
+            },
+            {
+              "id": 9,
+              "order": "7.00000000000000000000",
+              "field_110839": "Lights flickering",
+              "field_110840": "Some of the lights in our office are flickering. It seems to happen mostly between 2pm-4pm.",
+              "field_110841": "false",
+              "field_118827": "2021-06-15",
+              "field_118888": 7078,
+              "field_118889": "2021-06-07",
+              "field_120422": [
+                2
+              ],
+              "field_120796": [
+                30
+              ],
+              "field_120827": "true"
+            },
+            {
+              "id": 10,
+              "order": "8.00000000000000000000",
+              "field_110839": "Broken key",
+              "field_110840": "The key broke inside of the lock when trying to unlock unit.",
+              "field_110841": "true",
+              "field_118827": "2021-06-16",
+              "field_118888": 7076,
+              "field_118889": "2021-06-17",
+              "field_120422": [
+                6
+              ],
+              "field_120796": [
+                50
+              ],
+              "field_120827": "true"
+            },
+            {
+              "id": 11,
+              "order": "9.00000000000000000000",
+              "field_110839": "RFID key fob not working",
+              "field_110840": "Unclear if it's an issue with the key fob or the reader.",
+              "field_110841": "false",
+              "field_118827": "2021-06-26",
+              "field_118888": 7076,
+              "field_118889": "2021-06-23",
+              "field_120422": [
+                7
+              ],
+              "field_120796": [
+                8
+              ],
+              "field_120827": "true"
+            }
+          ]
+        },
+        {
+          "id": 21116,
+          "name": "Vendors",
+          "order": 5,
+          "fields": [
+            {
+              "id": 110828,
+              "type": "text",
+              "name": "Vendor Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 110829,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 118980,
+              "type": "text",
+              "name": "Point of Contact",
+              "order": 3,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 118981,
+              "type": "email",
+              "name": "Email",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 118982,
+              "type": "phone_number",
+              "name": "Phone",
+              "order": 5,
+              "primary": false
+            },
+            {
+              "id": 120423,
+              "type": "link_row",
+              "name": "Service Requests",
+              "order": 6,
+              "primary": false,
+              "link_row_table_id": 21119,
+              "link_row_related_field_id": 120422
+            },
+            {
+              "id": 120424,
+              "type": "file",
+              "name": "Business Card",
+              "order": 7,
+              "primary": false
+            },
+            {
+              "id": 120426,
+              "type": "url",
+              "name": "Service Request Link",
+              "order": 8,
+              "primary": false
+            },
+            {
+              "id": 120803,
+              "type": "single_select",
+              "name": "Specialty",
+              "order": 9,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 7334,
+                  "value": "Air Conditioning/Heat",
+                  "color": "dark-green",
+                  "order": 0
+                },
+                {
+                  "id": 7335,
+                  "value": "Electric",
+                  "color": "light-orange",
+                  "order": 1
+                },
+                {
+                  "id": 7336,
+                  "value": "Plumbing",
+                  "color": "light-gray",
+                  "order": 2
+                },
+                {
+                  "id": 7337,
+                  "value": "Various",
+                  "color": "light-blue",
+                  "order": 3
+                },
+                {
+                  "id": 7338,
+                  "value": "Refrigeration",
+                  "color": "light-green",
+                  "order": 4
+                },
+                {
+                  "id": 7339,
+                  "value": "Gating",
+                  "color": "red",
+                  "order": 5
+                },
+                {
+                  "id": 7340,
+                  "value": "Locksmith",
+                  "color": "dark-blue",
+                  "order": 6
+                }
+              ]
+            }
+          ],
+          "views": [
+            {
+              "id": 22658,
+              "type": "grid",
+              "name": "All Vendors",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1572,
+                  "field_id": 120803,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 106179,
+                  "field_id": 110828,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 8
+                },
+                {
+                  "id": 106177,
+                  "field_id": 110829,
+                  "width": 400,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 115946,
+                  "field_id": 118980,
+                  "width": 160,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 115947,
+                  "field_id": 118981,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 115948,
+                  "field_id": 118982,
+                  "width": 113,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 117760,
+                  "field_id": 120423,
+                  "width": 242,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 117761,
+                  "field_id": 120424,
+                  "width": 147,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 117763,
+                  "field_id": 120426,
+                  "width": 252,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 118207,
+                  "field_id": 120803,
+                  "width": 163,
+                  "hidden": false,
+                  "order": 0
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_110828": "J&J Plumbing",
+              "field_110829": "His brother (business partner) will be unavailable all of July.",
+              "field_118980": "James Jordan",
+              "field_118981": "info@jjplumbing.com",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [
+                1,
+                4
+              ],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://www.jjplumbing.com/submit-a-ticket",
+              "field_120803": 7336
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_110828": "Eric's Electric",
+              "field_110829": null,
+              "field_118980": "Eric Martinez",
+              "field_118981": "hello@ericselectric.com",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [
+                9
+              ],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://www.ericselectric.com/submit",
+              "field_120803": 7335
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_110828": "Kamil the Handyman",
+              "field_110829": "",
+              "field_118980": "Kamil Weston",
+              "field_118981": "kamil@ifixeverything.com",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [
+                2,
+                3
+              ],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://kamilthehandiman.com/submit",
+              "field_120803": 7337
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_110828": "Vance Refrigeration",
+              "field_110829": "",
+              "field_118980": "Bob Vance",
+              "field_118981": "bob@vancerefrigeration.com",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [
+                8
+              ],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://vancerefrigeration.com/fix",
+              "field_120803": 7338
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_110828": "WB Cooling and Air",
+              "field_110829": "Referred to us by Bob Vance of Vance Refrigeration.",
+              "field_118980": "WB Jones",
+              "field_118981": "hello@wbjones.com",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [
+                6
+              ],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://www.wbcoolingair.net/submit-request",
+              "field_120803": 7334
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_110828": "Rick's Locks",
+              "field_110829": "",
+              "field_118980": "Christian Downsend",
+              "field_118981": "cd@rickslocks.net",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [
+                10
+              ],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://www.rickslocks.net/ticket",
+              "field_120803": 7340
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_110828": "24/7 Access",
+              "field_110829": "Great response time for urgent requests!",
+              "field_118980": "Susan Weiss",
+              "field_118981": "susie@247access.com",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [
+                11
+              ],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://www.247access.com/letmein",
+              "field_120803": 7340
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_110828": "Zapp Inc.",
+              "field_110829": "",
+              "field_118980": "Erika Williamson",
+              "field_118981": "erika@zapp.inc",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://www.zapp.inc/flicker",
+              "field_120803": 7335
+            },
+            {
+              "id": 9,
+              "order": "9.00000000000000000000",
+              "field_110828": "House Heaters",
+              "field_110829": "",
+              "field_118980": "Hailie Malone",
+              "field_118981": "hailie@househeaters.com",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://www.househeaters.com",
+              "field_120803": 7334
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_110828": "Drayno Pro",
+              "field_110829": "",
+              "field_118980": "Jess Britanol",
+              "field_118981": "jb@draynopro.co",
+              "field_118982": "(123) 123-1234",
+              "field_120423": [],
+              "field_120424": [
+                {
+                  "name": "iPaOzO3nuLyG3UcHTuCpyhJ7Gx49CjQX_1e0d6c69e090c7fc12a2f68ad74aade871cefe4105bff2a093d50e1bf3205ba3.jpg",
+                  "visible_name": "business card.jpg",
+                  "original_name": "business card.jpg"
+                }
+              ],
+              "field_120426": "https://www.draynopro.co/help",
+              "field_120803": 7336
+            }
+          ]
+        },
+        {
+          "id": 22561,
+          "name": "Lease",
+          "order": 6,
+          "fields": [
+            {
+              "id": 118824,
+              "type": "text",
+              "name": "Lease Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 118825,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 118887,
+              "type": "link_row",
+              "name": "Tenant(s)",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 21121,
+              "link_row_related_field_id": 118886
+            },
+            {
+              "id": 118983,
+              "type": "date",
+              "name": "Start Date",
+              "order": 4,
+              "primary": false,
+              "date_format": "US",
+              "date_include_time": false,
+              "date_time_format": "24"
+            },
+            {
+              "id": 118984,
+              "type": "date",
+              "name": "End Date",
+              "order": 5,
+              "primary": false,
+              "date_format": "US",
+              "date_include_time": false,
+              "date_time_format": "24"
+            },
+            {
+              "id": 121727,
+              "type": "file",
+              "name": "Scan/PDF",
+              "order": 6,
+              "primary": false
+            },
+            {
+              "id": 121742,
+              "type": "boolean",
+              "name": "Pets Allowed",
+              "order": 7,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 24310,
+              "type": "grid",
+              "name": "All Leases",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1552,
+                  "field_id": 118983,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 115788,
+                  "field_id": 118824,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 115786,
+                  "field_id": 118825,
+                  "width": 400,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 115950,
+                  "field_id": 118887,
+                  "width": 175,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 115951,
+                  "field_id": 118983,
+                  "width": 147,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 115952,
+                  "field_id": 118984,
+                  "width": 148,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 119266,
+                  "field_id": 121727,
+                  "width": 125,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 119289,
+                  "field_id": 121742,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            },
+            {
+              "id": 24753,
+              "type": "grid",
+              "name": "Expiring This Year",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3575,
+                  "field_id": 118984,
+                  "type": "date_equals_year",
+                  "value": "America/Chicago"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 118227,
+                  "field_id": 118824,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 118228,
+                  "field_id": 118825,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 118229,
+                  "field_id": 118887,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 118230,
+                  "field_id": 118983,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 118231,
+                  "field_id": 118984,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 24754,
+              "type": "grid",
+              "name": "Office Pets",
+              "order": 3,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3621,
+                  "field_id": 121742,
+                  "type": "boolean",
+                  "value": "1"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 118232,
+                  "field_id": 118824,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 118233,
+                  "field_id": 118825,
+                  "width": 257,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 118234,
+                  "field_id": 118887,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 118235,
+                  "field_id": 118983,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 118236,
+                  "field_id": 118984,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 119281,
+                  "field_id": 121727,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 119285,
+                  "field_id": 121742,
+                  "width": 141,
+                  "hidden": false,
+                  "order": 4
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_118824": "CLA 5192",
+              "field_118825": "If renewed, lease would stay at the same rate.",
+              "field_118887": [
+                1
+              ],
+              "field_118983": "2021-05-01",
+              "field_118984": "2025-04-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_118824": "CLA 4812",
+              "field_118825": null,
+              "field_118887": [
+                38
+              ],
+              "field_118983": "2018-03-01",
+              "field_118984": "2022-04-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_118824": "CLA 3890",
+              "field_118825": "Pets were negotiated into the contract.",
+              "field_118887": [
+                7
+              ],
+              "field_118983": "2019-04-01",
+              "field_118984": "2030-09-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "true"
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_118824": "CLA 2819",
+              "field_118825": "",
+              "field_118887": [
+                34
+              ],
+              "field_118983": "2017-06-01",
+              "field_118984": "2027-05-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_118824": "CLA 8923",
+              "field_118825": "Month-to-month after expiration.",
+              "field_118887": [
+                23
+              ],
+              "field_118983": "2020-06-15",
+              "field_118984": "2028-07-31",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_118824": "CLA 0219",
+              "field_118825": "",
+              "field_118887": [
+                40
+              ],
+              "field_118983": "2019-04-01",
+              "field_118984": "2030-09-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_118824": "CLA 1289",
+              "field_118825": "",
+              "field_118887": [
+                17
+              ],
+              "field_118983": "2016-03-15",
+              "field_118984": "2021-10-31",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_118824": "CLA 8941",
+              "field_118825": "",
+              "field_118887": [
+                33
+              ],
+              "field_118983": "2017-06-01",
+              "field_118984": "2022-04-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 9,
+              "order": "9.00000000000000000000",
+              "field_118824": "CLA 4839",
+              "field_118825": "",
+              "field_118887": [
+                28
+              ],
+              "field_118983": "2013-04-15",
+              "field_118984": "2028-07-31",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_118824": "CLA 9494",
+              "field_118825": "Disney owns ESPN, so they share this space.",
+              "field_118887": [
+                30,
+                31
+              ],
+              "field_118983": "2016-03-15",
+              "field_118984": "2030-09-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 11,
+              "order": "11.00000000000000000000",
+              "field_118824": "CLA 2982",
+              "field_118825": "",
+              "field_118887": [
+                6
+              ],
+              "field_118983": "2019-04-01",
+              "field_118984": "2027-05-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 12,
+              "order": "12.00000000000000000000",
+              "field_118824": "CLA 3012",
+              "field_118825": "",
+              "field_118887": [
+                24
+              ],
+              "field_118983": "2020-06-15",
+              "field_118984": "2023-06-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 13,
+              "order": "13.00000000000000000000",
+              "field_118824": "CLA 2919",
+              "field_118825": "Renewal would be subject to a 10% increase in rent.",
+              "field_118887": [
+                18
+              ],
+              "field_118983": "2013-04-15",
+              "field_118984": "2022-04-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 14,
+              "order": "14.00000000000000000000",
+              "field_118824": "CLA 7620",
+              "field_118825": "",
+              "field_118887": [
+                10
+              ],
+              "field_118983": "2017-06-01",
+              "field_118984": "2023-06-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 15,
+              "order": "15.00000000000000000000",
+              "field_118824": "CLA 1028",
+              "field_118825": "",
+              "field_118887": [
+                3
+              ],
+              "field_118983": "2013-04-15",
+              "field_118984": "2030-09-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 16,
+              "order": "16.00000000000000000000",
+              "field_118824": "CLA 3212",
+              "field_118825": "",
+              "field_118887": [
+                21
+              ],
+              "field_118983": "2019-04-01",
+              "field_118984": "2027-05-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 17,
+              "order": "17.00000000000000000000",
+              "field_118824": "CLA 5512",
+              "field_118825": "One of our earliest tenants!",
+              "field_118887": [
+                39
+              ],
+              "field_118983": "2012-01-01",
+              "field_118984": "2023-01-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 18,
+              "order": "18.00000000000000000000",
+              "field_118824": "CLA 0283",
+              "field_118825": "Month-to-month after expiration.",
+              "field_118887": [
+                13
+              ],
+              "field_118983": "2016-03-15",
+              "field_118984": "2023-06-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 19,
+              "order": "19.00000000000000000000",
+              "field_118824": "CLA 0018",
+              "field_118825": "",
+              "field_118887": [
+                26
+              ],
+              "field_118983": "2015-07-01",
+              "field_118984": "2023-06-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 20,
+              "order": "20.00000000000000000000",
+              "field_118824": "CLA 5757",
+              "field_118825": "",
+              "field_118887": [
+                4
+              ],
+              "field_118983": "2020-06-15",
+              "field_118984": "2022-04-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 21,
+              "order": "21.00000000000000000000",
+              "field_118824": "CLA 3993",
+              "field_118825": "",
+              "field_118887": [
+                2
+              ],
+              "field_118983": "2019-04-01",
+              "field_118984": "2027-05-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 22,
+              "order": "22.00000000000000000000",
+              "field_118824": "CLA 1101",
+              "field_118825": "Month-to-month after expiration.",
+              "field_118887": [
+                15
+              ],
+              "field_118983": "2016-03-15",
+              "field_118984": "2027-05-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 23,
+              "order": "23.00000000000000000000",
+              "field_118824": "CLA 1992",
+              "field_118825": "",
+              "field_118887": [
+                20
+              ],
+              "field_118983": "2012-01-01",
+              "field_118984": "2023-06-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 24,
+              "order": "24.00000000000000000000",
+              "field_118824": "CLA 1995",
+              "field_118825": "",
+              "field_118887": [
+                25
+              ],
+              "field_118983": "2015-07-01",
+              "field_118984": "2023-06-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 25,
+              "order": "25.00000000000000000000",
+              "field_118824": "CLA 2111",
+              "field_118825": "Short-term market fluctuations may impact lease.",
+              "field_118887": [
+                37
+              ],
+              "field_118983": "2017-06-01",
+              "field_118984": "2027-05-30",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 26,
+              "order": "26.00000000000000000000",
+              "field_118824": "CLA 1101",
+              "field_118825": "Month-to-month after expiration.",
+              "field_118887": [
+                8
+              ],
+              "field_118983": "2022-03-31",
+              "field_118984": "2023-02-28",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 27,
+              "order": "27.00000000000000000000",
+              "field_118824": "CLA 4848",
+              "field_118825": "",
+              "field_118887": [
+                11
+              ],
+              "field_118983": "2015-05-01",
+              "field_118984": "2026-04-20",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 28,
+              "order": "28.00000000000000000000",
+              "field_118824": "CLA 4481",
+              "field_118825": "",
+              "field_118887": [
+                16
+              ],
+              "field_118983": "2014-06-01",
+              "field_118984": "2029-05-31",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 29,
+              "order": "29.00000000000000000000",
+              "field_118824": "CLA 9920",
+              "field_118825": "We always get free nachos when we visit!",
+              "field_118887": [
+                12
+              ],
+              "field_118983": "2015-05-01",
+              "field_118984": "2029-05-31",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 30,
+              "order": "30.00000000000000000000",
+              "field_118824": "CLA 9238",
+              "field_118825": "",
+              "field_118887": [
+                32
+              ],
+              "field_118983": "2015-05-01",
+              "field_118984": "2026-04-20",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 31,
+              "order": "31.00000000000000000000",
+              "field_118824": "CLA 0021",
+              "field_118825": "Prime location for food.",
+              "field_118887": [
+                29
+              ],
+              "field_118983": "2015-05-01",
+              "field_118984": "2021-10-31",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 32,
+              "order": "32.00000000000000000000",
+              "field_118824": "CLA 3990",
+              "field_118825": "Tenant has mentioned expanding into the next door space.",
+              "field_118887": [
+                14
+              ],
+              "field_118983": "2014-06-01",
+              "field_118984": "2021-08-31",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 33,
+              "order": "33.00000000000000000000",
+              "field_118824": "CLA 9021",
+              "field_118825": "",
+              "field_118887": [
+                35
+              ],
+              "field_118983": "2015-05-01",
+              "field_118984": "2026-04-20",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 34,
+              "order": "34.00000000000000000000",
+              "field_118824": "CLA 9039",
+              "field_118825": "Lease allows all pets without restrictions on type or size.",
+              "field_118887": [
+                9
+              ],
+              "field_118983": "2015-05-01",
+              "field_118984": "2026-04-20",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "true"
+            },
+            {
+              "id": 35,
+              "order": "35.00000000000000000000",
+              "field_118824": "CLA 1015",
+              "field_118825": "There have been mentions of wanting to modify existing lease.",
+              "field_118887": [
+                19
+              ],
+              "field_118983": "2014-06-01",
+              "field_118984": "2029-05-31",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 36,
+              "order": "36.00000000000000000000",
+              "field_118824": "CLA 3030",
+              "field_118825": "",
+              "field_118887": [
+                27
+              ],
+              "field_118983": "2014-06-01",
+              "field_118984": "2029-05-31",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 37,
+              "order": "37.00000000000000000000",
+              "field_118824": "CLA 9932",
+              "field_118825": "",
+              "field_118887": [
+                22
+              ],
+              "field_118983": "2014-06-01",
+              "field_118984": "2026-04-20",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            },
+            {
+              "id": 38,
+              "order": "38.00000000000000000000",
+              "field_118824": "CLA 8878",
+              "field_118825": "Long-term lease.",
+              "field_118887": [
+                36
+              ],
+              "field_118983": "2012-01-01",
+              "field_118984": "2026-04-20",
+              "field_121727": [
+                {
+                  "name": "OSTFIZT1eCxjzI9qFYkK8aCLsIYoV5di_ddc3cbb15c57d8fb784e0fe425df21d443a4dbd82adc3c9ca9b34078d5ac4884.pdf",
+                  "visible_name": "Standard Lease Agreement.pdf",
+                  "original_name": "Standard Lease Agreement.pdf"
+                }
+              ],
+              "field_121742": "false"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
