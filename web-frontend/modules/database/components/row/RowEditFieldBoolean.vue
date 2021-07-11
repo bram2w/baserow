@@ -7,6 +7,9 @@
     >
       <i class="fas fa-check check"></i>
     </div>
+    <div v-show="touched && !valid" class="error">
+      {{ error }}
+    </div>
   </div>
 </template>
 
@@ -24,6 +27,7 @@ export default {
       const oldValue = !!value
       const newValue = !value
       this.$emit('update', newValue, oldValue)
+      this.touch()
     },
   },
 }

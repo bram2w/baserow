@@ -19,7 +19,9 @@ class RowSerializer(serializers.ModelSerializer):
         extra_kwargs = {"id": {"read_only": True}, "order": {"read_only": True}}
 
 
-def get_row_serializer_class(model, base_class=None, is_response=False, field_ids=None):
+def get_row_serializer_class(
+    model, base_class=None, is_response=False, field_ids=None, field_kwargs=None
+):
     """
     Generates a Django rest framework model serializer based on the available fields
     that belong to this model. For each table field, used to generate this serializer,
@@ -39,9 +41,15 @@ def get_row_serializer_class(model, base_class=None, is_response=False, field_id
         the serializer. By default all the fields of the model are going to be
         included. Note that the field id must exist in the model in order to work.
     :type field_ids: list or None
+    :param field_kwargs: A dict containing additional kwargs per field. The key must
+        be the field name and the value a dict containing the kwargs.
+    :type field_kwargs: dict
     :return: The generated serializer.
     :rtype: ModelSerializer
     """
+
+    if not field_kwargs:
+        field_kwargs = {}
 
     field_objects = model._field_objects
     field_names = [
@@ -50,9 +58,13 @@ def get_row_serializer_class(model, base_class=None, is_response=False, field_id
         if field_ids is None or field["field"].id in field_ids
     ]
     field_overrides = {
-        field["name"]: field["type"].get_response_serializer_field(field["field"])
+        field["name"]: field["type"].get_response_serializer_field(
+            field["field"], **field_kwargs.get(field["name"], {})
+        )
         if is_response
-        else field["type"].get_serializer_field(field["field"])
+        else field["type"].get_serializer_field(
+            field["field"], **field_kwargs.get(field["name"], {})
+        )
         for field in field_objects.values()
         if field_ids is None or field["field"].id in field_ids
     }
@@ -131,9 +143,4 @@ def get_example_row_serializer_class(add_id=False):
 
 example_pagination_row_serializer_class = get_example_pagination_serializer_class(
     get_example_row_serializer_class(True)
-)
-example_pagination_row_serializer_class_with_field_options = (
-    get_example_pagination_serializer_class(
-        get_example_row_serializer_class(True), add_field_options=True
-    )
 )

@@ -1,6 +1,6 @@
 from .extensions import (  # noqa: F401
-    PolymorphicMappingSerializerExtension,
-    PolymorphicCustomFieldRegistrySerializerExtension,
+    DiscriminatorMappingSerializerExtension,
+    DiscriminatorCustomFieldsMappingSerializerExtension,
 )
 
 

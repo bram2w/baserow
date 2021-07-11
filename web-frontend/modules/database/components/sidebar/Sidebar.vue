@@ -29,6 +29,7 @@
             update: orderTables,
             marginLeft: 34,
             marginRight: 10,
+            marginTop: -1.5,
           }"
           :database="application"
           :table="table"

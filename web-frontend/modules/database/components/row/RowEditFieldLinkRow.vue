@@ -24,6 +24,9 @@
       <i class="fas fa-plus add__icon"></i>
       Add another link
     </a>
+    <div v-show="touched && !valid" class="error">
+      {{ error }}
+    </div>
     <SelectRowModal
       v-if="!readOnly"
       ref="selectModal"
@@ -42,5 +45,15 @@ import SelectRowModal from '@baserow/modules/database/components/row/SelectRowMo
 export default {
   components: { SelectRowModal },
   mixins: [rowEditField, linkRowField],
+  methods: {
+    removeValue(...args) {
+      linkRowField.methods.removeValue.call(this, ...args)
+      this.touch()
+    },
+    addValue(...args) {
+      linkRowField.methods.addValue.call(this, ...args)
+      this.touch()
+    },
+  },
 }
 </script>

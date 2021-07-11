@@ -1,5 +1,6 @@
 import { isElement } from '@baserow/modules/core/utils/dom'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
+import baseField from '@baserow/modules/database/mixins/baseField'
 
 /**
  * A mixin that can be used by a field grid component. It introduces the props that
@@ -7,24 +8,8 @@ import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
  * going to be called.
  */
 export default {
+  mixins: [baseField],
   props: {
-    /**
-     * Contains the field type object. Because each field type can have different
-     * settings you need this in order to render the correct component or implement
-     * correct validation.
-     */
-    field: {
-      type: Object,
-      required: true,
-    },
-    /**
-     * The value of the grid field, this could for example for a number field 10,
-     * text field 'Random string' etc.
-     */
-    value: {
-      type: [String, Number, Object, Boolean, Array],
-      required: false,
-    },
     /**
      * Indicates if the grid field is in a selected state.
      */

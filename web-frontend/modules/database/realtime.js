@@ -289,16 +289,12 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
-  realtime.registerEvent(
-    'grid_view_field_options_updated',
-    ({ store }, data) => {
-      const view = store.getters['view/get'](data.grid_view_id)
-      if (view !== null && view.id === store.getters['view/getSelectedId']) {
-        store.dispatch(
-          'page/view/grid/forceUpdateAllFieldOptions',
-          data.grid_view_field_options
-        )
-      }
+  realtime.registerEvent('view_field_options_updated', (context, data) => {
+    const { store, app } = context
+    const view = store.getters['view/get'](data.view_id)
+    if (view !== null && view.id === store.getters['view/getSelectedId']) {
+      const viewType = app.$registry.get('view', view.type)
+      viewType.fieldOptionsUpdated(context, view, data.field_options, 'page/')
     }
-  )
+  })
 }

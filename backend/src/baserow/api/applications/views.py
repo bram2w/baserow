@@ -10,7 +10,7 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
 from baserow.api.schemas import get_error_schema
-from baserow.api.utils import PolymorphicMappingSerializer
+from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.api.applications.errors import (
     ERROR_APPLICATION_DOES_NOT_EXIST,
     ERROR_APPLICATION_NOT_IN_GROUP,
@@ -55,7 +55,7 @@ class AllApplicationsView(APIView):
             "groups that the user has access to are going to be listed here."
         ),
         responses={
-            200: PolymorphicMappingSerializer(
+            200: DiscriminatorMappingSerializer(
                 "Applications", application_type_serializers, many=True
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -108,7 +108,7 @@ class ApplicationsView(APIView):
             "type. An application always belongs to a single group."
         ),
         responses={
-            200: PolymorphicMappingSerializer(
+            200: DiscriminatorMappingSerializer(
                 "Applications", application_type_serializers, many=True
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -160,7 +160,7 @@ class ApplicationsView(APIView):
         ),
         request=ApplicationCreateSerializer,
         responses={
-            200: PolymorphicMappingSerializer(
+            200: DiscriminatorMappingSerializer(
                 "Applications", application_type_serializers
             ),
             400: get_error_schema(
@@ -209,7 +209,7 @@ class ApplicationView(APIView):
         ),
         request=ApplicationCreateSerializer,
         responses={
-            200: PolymorphicMappingSerializer(
+            200: DiscriminatorMappingSerializer(
                 "Applications", application_type_serializers
             ),
             400: get_error_schema(
@@ -250,7 +250,7 @@ class ApplicationView(APIView):
         ),
         request=ApplicationUpdateSerializer,
         responses={
-            200: PolymorphicMappingSerializer(
+            200: DiscriminatorMappingSerializer(
                 "Applications", application_type_serializers
             ),
             400: get_error_schema(

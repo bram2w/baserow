@@ -156,6 +156,7 @@
                   id: application.id,
                   update: orderApplications,
                   handle: '[data-sortable-handle]',
+                  marginTop: -1.5,
                 }"
                 :application="application"
                 :group="selectedGroup"

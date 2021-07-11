@@ -11,7 +11,7 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from baserow.api.decorators import validate_body_custom_fields, map_exceptions
 from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.utils import PolymorphicCustomFieldRegistrySerializer
+from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
@@ -77,7 +77,7 @@ class FieldsView(APIView):
             "table's column."
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 field_type_registry, FieldSerializer, many=True
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -134,11 +134,11 @@ class FieldsView(APIView):
             "group. Depending on the type, different properties can optionally be "
             "set."
         ),
-        request=PolymorphicCustomFieldRegistrySerializer(
+        request=DiscriminatorCustomFieldsMappingSerializer(
             field_type_registry, CreateFieldSerializer
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 field_type_registry, FieldSerializer
             ),
             400: get_error_schema(
@@ -212,7 +212,7 @@ class FieldView(APIView):
             "could be returned."
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 field_type_registry, FieldSerializer
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -253,11 +253,11 @@ class FieldView(APIView):
             "rarely happens. If a data value cannot be converted it is set to `null` "
             "so data might go lost."
         ),
-        request=PolymorphicCustomFieldRegistrySerializer(
+        request=DiscriminatorCustomFieldsMappingSerializer(
             field_type_registry, UpdateFieldSerializer
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 field_type_registry, FieldSerializer
             ),
             400: get_error_schema(

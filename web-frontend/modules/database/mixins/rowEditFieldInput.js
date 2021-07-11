@@ -43,6 +43,8 @@ export default {
      * we want to give the user a change to fix the value.
      */
     unselect() {
+      this.touch()
+
       if (!this.isValid() || !this.editing) {
         return
       }
@@ -82,11 +84,11 @@ export default {
      */
     afterSave() {},
     /**
-     * Should return a boolean if the copy that is going to be saved is valid. If it
-     * returns false unselecting is not possible.
+     * Show the error for the copy value if the user is editing. If we don't do this,
+     * then the error message is not showed in real time.
      */
-    isValid() {
-      return true
+    getError() {
+      return this.getValidationError(this.editing ? this.copy : this.value)
     },
   },
 }

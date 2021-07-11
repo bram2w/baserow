@@ -265,12 +265,28 @@ class Table(
             },
         )
 
+        def __str__(self):
+            """
+            When the model instance is rendered to a string, then we want to return the
+            primary field value in human readable format.
+            """
+
+            field = self._field_objects.get(self._primary_field_id, None)
+
+            if not field:
+                return f"unnamed row {self.id}"
+
+            return field["type"].get_human_readable_value(
+                getattr(self, field["name"]), field
+            )
+
         attrs = {
             "Meta": meta,
             "__module__": "database.models",
             # An indication that the model is a generated table model.
             "_generated_table_model": True,
             "_table_id": self.id,
+            "_primary_field_id": -1,
             # An object containing the table fields, field types and the chosen names
             # with the table field id as key.
             "_field_objects": {},
@@ -285,6 +301,7 @@ class Table(
                 db_index=True,
                 default=1,
             ),
+            "__str__": __str__,
         }
 
         # Construct a query to fetch all the fields of that table. We need to include
@@ -318,9 +335,9 @@ class Table(
             field = field.specific
             field_type = field_type_registry.get_by_model(field)
             field_name = field.db_column
+
             # If attribute_names is True we will not use 'field_{id}' as attribute name,
             # but we will rather use a name the user provided.
-
             if attribute_names:
                 field_name = field.model_attribute_name
                 if trashed:
@@ -343,6 +360,8 @@ class Table(
                     "type": field_type,
                     "name": field_name,
                 }
+                if field.primary:
+                    attrs["_primary_field_id"] = field.id
 
             # Add the field to the attribute dict that is used to generate the model.
             # All the kwargs that are passed to the `get_model_field` method are going

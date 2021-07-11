@@ -3,6 +3,8 @@ import pytest
 # noinspection PyPep8Naming
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
+from django.db import DEFAULT_DB_ALIAS
+from django.core.management import call_command
 
 migrate_from = [("database", "0032_trash")]
 migrate_to = [("database", "0033_unique_field_names")]
@@ -73,6 +75,9 @@ def test_migration_fixes_duplicate_field_names(
         MigratedField,
     )
 
+    # We need to apply the latest migration otherwise other tests might fail.
+    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
+
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
@@ -136,6 +141,9 @@ def test_migration_handles_existing_fields_with_underscore_number(
         MigratedField,
     )
 
+    # We need to apply the latest migration otherwise other tests might fail.
+    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
+
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
@@ -179,6 +187,9 @@ def test_backwards_migration_restores_field_names(
         table_1_fields,
         BackwardsMigratedField,
     )
+
+    # We need to apply the latest migration otherwise other tests might fail.
+    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
 
 # noinspection PyPep8Naming
@@ -247,6 +258,9 @@ def test_migration_fixes_duplicate_field_names_and_reserved_names(
         table_2_fields,
         MigratedField,
     )
+
+    # We need to apply the latest migration otherwise other tests might fail.
+    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
 
 def make_fields_with_names(field_names, table_id, content_type_id, Field):

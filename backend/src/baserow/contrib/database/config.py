@@ -87,9 +87,10 @@ class DatabaseConfig(AppConfig):
         field_converter_registry.register(LinkRowFieldConverter())
         field_converter_registry.register(FileFieldConverter())
 
-        from .views.view_types import GridViewType
+        from .views.view_types import GridViewType, FormViewType
 
         view_type_registry.register(GridViewType())
+        view_type_registry.register(FormViewType())
 
         from .views.view_filters import (
             EqualViewFilterType,

@@ -5,14 +5,14 @@
       v-model="copy"
       type="text"
       class="input input--large"
-      :class="{ 'input--error': !isValid() }"
+      :class="{ 'input--error': touched && !valid }"
       :disabled="readOnly"
       @keyup.enter="$refs.input.blur()"
       @focus="select()"
       @blur="unselect()"
     />
-    <div v-show="!isValid()" class="error">
-      {{ getError() }}
+    <div v-show="touched && !valid" class="error">
+      {{ error }}
     </div>
   </div>
 </template>
@@ -20,9 +20,8 @@
 <script>
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
 import rowEditFieldInput from '@baserow/modules/database/mixins/rowEditFieldInput'
-import URLField from '@baserow/modules/database/mixins/URLField'
 
 export default {
-  mixins: [rowEditField, rowEditFieldInput, URLField],
+  mixins: [rowEditField, rowEditFieldInput],
 }
 </script>

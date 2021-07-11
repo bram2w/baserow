@@ -2,6 +2,10 @@ import { Registerable } from '@baserow/modules/core/registry'
 import ViewForm from '@baserow/modules/database/components/view/ViewForm'
 import GridView from '@baserow/modules/database/components/view/grid/GridView'
 import GridViewHeader from '@baserow/modules/database/components/view/grid/GridViewHeader'
+import FormView from '@baserow/modules/database/components/view/form/FormView'
+import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
+
+export const maxPossibleOrderValue = 32767
 
 export class ViewType extends Registerable {
   /**
@@ -12,6 +16,13 @@ export class ViewType extends Registerable {
    */
   getIconClass() {
     return null
+  }
+
+  /**
+   * The color class that is added to the icon.
+   */
+  getColorClass() {
+    return 'color-primary'
   }
 
   /**
@@ -41,6 +52,7 @@ export class ViewType extends Registerable {
     super()
     this.type = this.getType()
     this.iconClass = this.getIconClass()
+    this.colorClass = this.getColorClass()
     this.name = this.getName()
     this.canFilter = this.canFilter()
     this.canSort = this.canSort()
@@ -132,6 +144,11 @@ export class ViewType extends Registerable {
   fieldUpdated(context, field, oldField, fieldType, storePrefix) {}
 
   /**
+   * Method that is called when the field options of a view are updated.
+   */
+  fieldOptionsUpdated(context, view, fieldOptions, storePrefix) {}
+
+  /**
    * Event that is called when a row is created from an outside source, so for example
    * via a real time event by another user. It can be used to check if data in an store
    * needs to be updated.
@@ -159,6 +176,7 @@ export class ViewType extends Registerable {
     return {
       type: this.type,
       iconClass: this.iconClass,
+      colorClass: this.colorClass,
       name: this.name,
       canFilter: this.canFilter,
       canSort: this.canSort,
@@ -167,10 +185,6 @@ export class ViewType extends Registerable {
 }
 
 export class GridViewType extends ViewType {
-  static getMaxPossibleOrderValue() {
-    return 32767
-  }
-
   static getType() {
     return 'grid'
   }
@@ -244,7 +258,7 @@ export class GridViewType extends ViewType {
         values: {
           width: 200,
           hidden: false,
-          order: GridViewType.getMaxPossibleOrderValue(),
+          order: maxPossibleOrderValue,
         },
       },
       { root: true }
@@ -278,6 +292,16 @@ export class GridViewType extends ViewType {
         fields: rootGetters['field/getAll'],
         primary: rootGetters['field/getPrimary'],
       },
+      {
+        root: true,
+      }
+    )
+  }
+
+  async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
+    await store.dispatch(
+      storePrefix + 'view/grid/forceUpdateAllFieldOptions',
+      fieldOptions,
       {
         root: true,
       }
@@ -356,5 +380,92 @@ export class GridViewType extends ViewType {
         primary,
       })
     }
+  }
+}
+
+export class FormViewType extends ViewType {
+  static getType() {
+    return 'form'
+  }
+
+  getIconClass() {
+    return 'edit'
+  }
+
+  getColorClass() {
+    return 'color-warning'
+  }
+
+  getName() {
+    return 'Form'
+  }
+
+  canFilter() {
+    return false
+  }
+
+  canSort() {
+    return false
+  }
+
+  getHeaderComponent() {
+    return FormViewHeader
+  }
+
+  getComponent() {
+    return FormView
+  }
+
+  async refresh(
+    { store },
+    view,
+    fields,
+    primary,
+    storePrefix = '',
+    includeFieldOptions = false
+  ) {
+    await store.dispatch(storePrefix + 'view/form/fetchInitial', {
+      formId: view.id,
+    })
+  }
+
+  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
+    await dispatch(
+      storePrefix + 'view/form/setFieldOptionsOfField',
+      {
+        field,
+        // The default values should be the same as in the `FormViewFieldOptions`
+        // model in the backend to stay consistent.
+        values: {
+          name: '',
+          description: '',
+          enabled: false,
+          required: true,
+          order: maxPossibleOrderValue,
+        },
+      },
+      { root: true }
+    )
+  }
+
+  async fieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
+    await dispatch(
+      storePrefix + 'view/form/forceDeleteFieldOptions',
+      field.id,
+      { root: true }
+    )
+  }
+
+  async fetch({ store }, view, fields, primary, storePrefix = '') {
+    await store.dispatch(storePrefix + 'view/form/fetchInitial', {
+      formId: view.id,
+    })
+  }
+
+  async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
+    await store.dispatch(
+      storePrefix + 'view/form/forceUpdateAllFieldOptions',
+      fieldOptions
+    )
   }
 }

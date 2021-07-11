@@ -3,7 +3,7 @@
     class="grid-view__cell active"
     :class="{
       editing: editing,
-      invalid: editing && !isValid(),
+      invalid: editing && !valid,
     }"
     @contextmenu="stopContextIfEditing($event)"
   >
@@ -15,8 +15,8 @@
         type="text"
         class="grid-field-number__input"
       />
-      <div v-show="!isValid()" class="grid-view__cell--error align-right">
-        {{ getError() }}
+      <div v-show="!valid" class="grid-view__cell--error align-right">
+        {{ error }}
       </div>
     </template>
   </div>

@@ -14,7 +14,7 @@ from baserow.api.errors import (
     ERROR_USER_NOT_IN_GROUP,
 )
 from baserow.api.schemas import get_error_schema
-from baserow.api.utils import validate_data, PolymorphicMappingSerializer
+from baserow.api.utils import validate_data, DiscriminatorMappingSerializer
 from baserow.contrib.database.api.export.errors import (
     ERROR_EXPORT_JOB_DOES_NOT_EXIST,
     ERROR_TABLE_ONLY_EXPORT_UNSUPPORTED,
@@ -44,7 +44,7 @@ from baserow.core.exceptions import UserNotInGroup
 User = get_user_model()
 
 # A placeholder serializer only used to generate correct api documentation.
-CreateExportJobSerializer = PolymorphicMappingSerializer(
+CreateExportJobSerializer = DiscriminatorMappingSerializer(
     "Export",
     lazy(table_exporter_registry.get_option_serializer_map, dict)(),
     type_field_name="exporter_type",

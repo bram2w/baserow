@@ -1,12 +1,8 @@
 from rest_framework import serializers
 
-from baserow.contrib.database.api.views.grid.serializers import (
-    GridViewFieldOptionsField,
-)
-
 
 def get_example_pagination_serializer_class(
-    results_serializer_class, add_field_options=False
+    results_serializer_class, additional_fields=None, serializer_name=None
 ):
     """
     Generates a pagination like response serializer that has the provided serializer
@@ -15,9 +11,14 @@ def get_example_pagination_serializer_class(
 
     :param results_serializer_class: The serializer class that needs to be added as
         results.
-    :param add_field_options: When true will include the field_options field on the
-    returned serializer.
     :type results_serializer_class: Serializer
+    :param additional_fields: A dict containing additional fields that must be added
+        to the serializer. The fields are going to be placed at the root of the
+        serializer.
+    :type additional_fields: dict
+    :param serializer_name: The class name of the serializer. Generated serializer
+        should be unique because serializer with the same class name are reused.
+    :type serializer_name: str
     :return: The generated pagination serializer.
     :rtype: Serializer
     """
@@ -33,10 +34,11 @@ def get_example_pagination_serializer_class(
         "results": results_serializer_class(many=True),
     }
 
-    serializer_name = "PaginationSerializer"
-    if add_field_options:
-        fields["field_options"] = GridViewFieldOptionsField(required=False)
-        serializer_name = serializer_name + "WithFieldOptions"
+    if additional_fields:
+        fields.update(**additional_fields)
+
+    if not serializer_name:
+        serializer_name = "PaginationSerializer"
 
     return type(
         serializer_name + results_serializer_class.__name__,

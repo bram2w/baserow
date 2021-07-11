@@ -3,7 +3,7 @@
     class="grid-view__cell active"
     :class="{
       editing: editing,
-      invalid: editing && !isValid(),
+      invalid: editing && !valid,
     }"
     @contextmenu="stopContextIfEditing($event)"
   >
@@ -17,8 +17,8 @@
         type="text"
         class="grid-field-text__input"
       />
-      <div v-show="!isValid()" class="grid-view__cell--error align-right">
-        {{ getError() }}
+      <div v-show="!valid" class="grid-view__cell--error align-right">
+        {{ error }}
       </div>
     </template>
   </div>
@@ -27,10 +27,9 @@
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
-import URLField from '@baserow/modules/database/mixins/URLField'
 
 export default {
-  mixins: [gridField, gridFieldInput, URLField],
+  mixins: [gridField, gridFieldInput],
   methods: {
     afterEdit() {
       this.$nextTick(() => {

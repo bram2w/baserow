@@ -60,6 +60,9 @@
       <i class="fas fa-plus add__icon"></i>
       Add a file
     </a>
+    <div v-show="touched && !valid" class="error">
+      {{ error }}
+    </div>
     <UserFilesModal
       v-if="!readOnly"
       ref="uploadModal"
@@ -94,6 +97,18 @@ export default {
     },
     getDate(value) {
       return moment.utc(value).format('MMM Do YYYY [at] H:mm')
+    },
+    removeFile(...args) {
+      fileField.methods.removeFile.call(this, ...args)
+      this.touch()
+    },
+    addFiles(...args) {
+      fileField.methods.addFiles.call(this, ...args)
+      this.touch()
+    },
+    renameFile(...args) {
+      fileField.methods.renameFile.call(this, ...args)
+      this.touch()
     },
   },
 }

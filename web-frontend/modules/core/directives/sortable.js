@@ -1,3 +1,5 @@
+import { findScrollableParent } from '@baserow/modules/core/utils/dom'
+
 /**
  * This directive can by used to enable vertical drag and drop sorting of an array of
  * items. When the dragging starts, it simply shows a target position and will call a
@@ -32,6 +34,7 @@
  * ```
  */
 let parent
+let scrollableParent
 let indicator
 
 export default {
@@ -49,6 +52,10 @@ export default {
       : el
 
     el.mousedownEvent = (event) => {
+      if (!el.sortableEnabled) {
+        return
+      }
+
       el.sortableMoved = false
       el.sortableStartClientX = event.clientX
       el.sortableStartClientY = event.clientY
@@ -68,6 +75,7 @@ export default {
       document.body.addEventListener('keydown', el.keydownEvent)
 
       parent = el.parentNode
+      scrollableParent = findScrollableParent(parent) || parent
       indicator = document.createElement('div')
       indicator.classList.add('sortable-position-indicator')
       parent.insertBefore(indicator, parent.firstChild)
@@ -90,6 +98,8 @@ export default {
   },
   update(el, binding) {
     el.sortableId = binding.value.id
+    el.sortableEnabled =
+      binding.value.enabled || binding.value.enabled === undefined
     el.sortableMarginLeft = binding.value.marginLeft
     el.sortableMarginRight = binding.value.marginRight
     el.sortableMarginTop = binding.value.marginTop
@@ -161,7 +171,7 @@ export default {
     const afterRect = all[all.length - 1].getBoundingClientRect()
     const top =
       (before
-        ? beforeRect.top - indicator.clientHeight
+        ? beforeRect.top - indicator.clientHeight / 2
         : afterRect.top + afterRect.height) -
       parentRect.top +
       parent.scrollTop +
@@ -179,12 +189,14 @@ export default {
     // moving the element close to the end of the view port at the top or bottom
     // side, we might need to initiate that process.
     if (
-      parent.scrollHeight > parent.clientHeight &&
+      scrollableParent.scrollHeight > scrollableParent.clientHeight &&
       (!el.sortableAutoScrolling || !startAutoScroll)
     ) {
-      const parentHeight = parentRect.bottom - parentRect.top
+      const scrollableParentRect = scrollableParent.getBoundingClientRect()
+      const parentHeight =
+        scrollableParentRect.bottom - scrollableParentRect.top
       const side = Math.ceil((parentHeight / 100) * 10)
-      const autoScrollMouseTop = event.clientY - parentRect.top
+      const autoScrollMouseTop = event.clientY - scrollableParentRect.top
       const autoScrollMouseBottom = parentHeight - autoScrollMouseTop
       let speed = 0
 
@@ -194,11 +206,11 @@ export default {
         speed = 3 - Math.ceil((Math.max(0, autoScrollMouseBottom) / side) * 3)
       }
 
-      // If the speed is either a position or negative, so not 0, we know that we
+      // If the speed is either a positive or negative, so not 0, we know that we
       // need to start auto scrolling.
       if (speed !== 0) {
         el.sortableAutoScrolling = true
-        parent.scrollTop += speed
+        scrollableParent.scrollTop += speed
         el.sortableScrollTimeout = setTimeout(() => {
           binding.def.move(el, binding, null, false)
         }, 10)
