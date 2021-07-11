@@ -38,8 +38,6 @@ from baserow.core.exceptions import UserNotInGroup
 
 # You must add --runslow to pytest to run this test, you can do this in intellij by
 # editing the run config for this test and adding --runslow to additional args.
-
-
 @pytest.mark.django_db
 @pytest.mark.slow
 def test_can_convert_between_all_fields(data_fixture):

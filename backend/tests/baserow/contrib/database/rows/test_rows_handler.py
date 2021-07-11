@@ -492,3 +492,61 @@ def test_restore_row(send_mock, data_fixture):
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["before"] is None
     assert send_mock.call_args[1]["model"]._generated_table_model
+
+
+@pytest.mark.django_db
+def test_get_include_exclude_fields_with_user_field_names(data_fixture):
+    table = data_fixture.create_database_table()
+    data_fixture.create_text_field(name="first", table=table, order=1)
+    data_fixture.create_text_field(name="Test", table=table, order=2)
+    data_fixture.create_text_field(name="Test_2", table=table, order=3)
+    data_fixture.create_text_field(name="With Space", table=table, order=4)
+
+    row_handler = RowHandler()
+
+    assert (
+        row_handler.get_include_exclude_fields(
+            table, include=None, exclude=None, user_field_names=True
+        )
+        is None
+    )
+
+    assert (
+        row_handler.get_include_exclude_fields(
+            table, include="", exclude="", user_field_names=True
+        )
+        is None
+    )
+
+    fields = row_handler.get_include_exclude_fields(
+        table, include="Test_2", user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == ["Test_2"]
+
+    fields = row_handler.get_include_exclude_fields(
+        table, "first,field_9999,Test", user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == ["first", "Test"]
+
+    fields = row_handler.get_include_exclude_fields(
+        table, None, "first,field_9999", user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == [
+        "Test",
+        "Test_2",
+        "With Space",
+    ]
+
+    fields = row_handler.get_include_exclude_fields(
+        table, "first,Test", "first", user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == ["Test"]
+
+    fields = row_handler.get_include_exclude_fields(
+        table, 'first,"With Space",Test', user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == [
+        "first",
+        "Test",
+        "With Space",
+    ]

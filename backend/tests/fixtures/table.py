@@ -23,3 +23,24 @@ class TableFixtures:
                 schema_editor.create_model(table.get_model())
 
         return table
+
+    def build_table(self, columns, rows, user=None, **kwargs):
+        table = self.create_database_table(user=user, create_table=True, **kwargs)
+        fields = []
+        for name, field_type in columns:
+            fields.append(
+                getattr(self, f"create_{field_type}_field")(name=name, table=table)
+            )
+
+        model = table.get_model()
+
+        created_rows = []
+        for row in rows:
+            kwargs = {}
+            i = 0
+            for field in fields:
+                kwargs[f"field_{field.id}"] = row[i]
+                i += 1
+            created_rows.append(model.objects.create(**kwargs))
+
+        return table, fields, created_rows

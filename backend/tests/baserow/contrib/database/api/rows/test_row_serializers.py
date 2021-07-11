@@ -1,12 +1,14 @@
 import pytest
-
 from rest_framework import serializers
 
-from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
     get_example_row_serializer_class,
+    RowSerializer,
 )
+from baserow.contrib.database.fields.models import SelectOption
+from baserow.contrib.database.fields.registries import field_type_registry
+from tests.test_utils import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -170,6 +172,13 @@ def test_get_table_serializer(data_fixture):
     assert serializer_instance.is_valid()
     assert serializer_instance.data == {"color": "white"}
 
+    serializer_class = get_row_serializer_class(
+        model=model, field_names_to_include=[text_field.name]
+    )
+    serializer_instance = serializer_class(data={})
+    assert serializer_instance.is_valid()
+    assert serializer_instance.data == {"color": "white"}
+
 
 @pytest.mark.django_db
 def test_get_example_row_serializer_class():
@@ -195,3 +204,77 @@ def test_get_example_row_serializer_class():
     assert isinstance(
         response_serializer._declared_fields["field_1"], serializers.CharField
     )
+
+
+@pytest.mark.django_db
+def test_get_row_serializer_with_user_field_names(data_fixture):
+    table, user, row = setup_interesting_test_table(data_fixture)
+    model = table.get_model()
+    queryset = model.objects.all().enhance_by_fields()
+    serializer_class = get_row_serializer_class(
+        model, RowSerializer, is_response=True, user_field_names=True
+    )
+    serializer_instance = serializer_class(queryset, many=True)
+    assert serializer_instance.data[1] == {
+        "boolean": True,
+        "date_eu": "2020-02-01",
+        "date_us": "2020-02-01",
+        "datetime_eu": "2020-02-01T01:23:00Z",
+        "datetime_us": "2020-02-01T01:23:00Z",
+        "decimal_link_row": [
+            {"id": 1, "value": "1.234"},
+            {"id": 2, "value": "-123.456"},
+            {"id": 3, "value": ""},
+        ],
+        "email": "test@example.com",
+        "file": [
+            {
+                "image_height": 0,
+                "image_width": 0,
+                "is_image": False,
+                "mime_type": "text/plain",
+                "name": "hashed_name.txt",
+                "size": 0,
+                "thumbnails": None,
+                "uploaded_at": "2020-02-01 01:23",
+                "url": "http://localhost:8000/media/user_files/hashed_name.txt",
+                "visible_name": "a.txt",
+            },
+            {
+                "image_height": 0,
+                "image_width": 0,
+                "is_image": False,
+                "mime_type": "text/plain",
+                "name": "other_name.txt",
+                "size": 0,
+                "thumbnails": None,
+                "uploaded_at": "2020-02-01 01:23",
+                "url": "http://localhost:8000/media/user_files/other_name.txt",
+                "visible_name": "b.txt",
+            },
+        ],
+        "file_link_row": [
+            {"id": 1, "value": "name.txt"},
+            {"id": 2, "value": ""},
+        ],
+        "id": 2,
+        "link_row": [
+            {"id": 1, "value": "linked_row_1"},
+            {"id": 2, "value": "linked_row_2"},
+            {"id": 3, "value": ""},
+        ],
+        "long_text": "long_text",
+        "negative_decimal": "-1.2",
+        "negative_int": "-1",
+        "order": "1.00000000000000000000",
+        "phone_number": "+4412345678",
+        "positive_decimal": "1.2",
+        "positive_int": "1",
+        "single_select": {
+            "color": "red",
+            "id": SelectOption.objects.get(value="A").id,
+            "value": "A",
+        },
+        "text": "text",
+        "url": "https://www.google.com",
+    }

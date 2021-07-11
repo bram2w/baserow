@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 import pytest
-
+from django.shortcuts import reverse
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -9,11 +9,10 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from django.shortcuts import reverse
-
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.tokens.handler import TokenHandler
 
 
 @pytest.mark.django_db
@@ -575,6 +574,52 @@ def test_create_row(api_client, data_fixture):
     assert getattr(row_4, f"field_{boolean_field.id}") is True
     assert getattr(row_4, f"field_{text_field_2.id}") == ""
 
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.post(
+        f"{url}?user_field_names=true",
+        {
+            f"Color": "Red",
+            f"Horsepower": 480,
+            f"For Sale": False,
+            f"Description": "",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "Color": "Red",
+        "Description": "",
+        "For sale": False,
+        "Horsepower": "480",
+        "id": 6,
+        "order": "5.00000000000000000000",
+    }
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.post(
+        f"{url}?user_field_names=true",
+        {
+            f"INVALID FIELD NAME": "Red",
+            f"Horsepower": 480,
+            f"For Sale": False,
+            f"Description": "",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {token.key}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "Color": "white",  # Has gone to the default value when not specified.
+        "Description": "",
+        "For sale": False,
+        "Horsepower": "480",
+        "id": 7,
+        "order": "6.00000000000000000000",
+    }
+
 
 @pytest.mark.django_db
 def test_get_row(api_client, data_fixture):
@@ -915,6 +960,26 @@ def test_update_row(api_client, data_fixture):
     assert getattr(row_2, f"field_{number_field.id}") is None
     assert getattr(row_2, f"field_{boolean_field.id}") is False
 
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": table_3.id, "row_id": row_3.id}
+    )
+    response = api_client.patch(
+        f"{url}?user_field_names=true",
+        {f"Price": 10.01},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[f"Price"] == "10.01"
+    assert "Horsepower" not in response_json
+    assert "For sale" not in response_json
+
+    row_3.refresh_from_db()
+    assert getattr(row_3, f"field_{decimal_field.id}") == Decimal("10.01")
+    assert getattr(row_2, f"field_{number_field.id}") is None
+    assert getattr(row_2, f"field_{boolean_field.id}") is False
+
 
 @pytest.mark.django_db
 def test_move_row(api_client, data_fixture):
@@ -1035,6 +1100,23 @@ def test_move_row(api_client, data_fixture):
     assert row_2.order == Decimal("2.00000000000000000000")
     assert row_3.order == Decimal("3.00000000000000000000")
 
+    data_fixture.create_text_field(user=user, table=table, name="New Field")
+    url = reverse(
+        "api:database:rows:move", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.patch(
+        f"{url}?user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json_row_1 = response.json()
+    assert response_json_row_1 == {
+        "New Field": None,
+        "id": row_1.id,
+        "order": "4.00000000000000000000",
+    }
+
 
 @pytest.mark.django_db
 def test_delete_row(api_client, data_fixture):
@@ -1111,3 +1193,181 @@ def test_delete_row(api_client, data_fixture):
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"Token {token.key}")
     assert response.status_code == 204
     assert model.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_list_rows_with_attribute_names(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    table_to_link_with = data_fixture.create_database_table(
+        user=user, database=table.database
+    )
+    data_fixture.create_text_field(
+        primary=True,
+        name="Primary",
+        table=table_to_link_with,
+    )
+    field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
+    field_2 = data_fixture.create_number_field(name="Price,", table=table)
+    field_3 = data_fixture.create_boolean_field(name='"Name, 2"', table=table)
+    link_field = FieldHandler().create_field(
+        user, table, "link_row", link_row_table=table_to_link_with, name="Link"
+    )
+
+    model = table.get_model()
+    row_1 = model.objects.create(
+        **{
+            f"field_{field_1.id}": "name 1",
+            f"field_{field_2.id}": 2,
+            f"field_{field_3.id}": False,
+        }
+    )
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f"{url}?user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["results"] == [
+        {
+            '"Name, 2"': False,
+            "Name": "name 1",
+            "Price,": "2",
+            "id": 1,
+            "order": "1.00000000000000000000",
+            "Link": [],
+        }
+    ]
+
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row_1.id}
+    )
+    response = api_client.get(
+        f"{url}?user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "id": 1,
+        "Name": "name 1",
+        '"Name, 2"': False,
+        "order": "1.00000000000000000000",
+        "Price,": "2",
+        "Link": [],
+    }
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f'{url}?user_field_names=true&include="\\"Name, 2\\""',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["results"] == [
+        {
+            '"Name, 2"': False,
+            "id": 1,
+            "order": "1.00000000000000000000",
+        }
+    ]
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f'{url}?user_field_names=true&exclude="\\"Name, 2\\""',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["results"] == [
+        {
+            "Name": "name 1",
+            "Price,": "2",
+            "id": 1,
+            "order": "1.00000000000000000000",
+            "Link": [],
+        }
+    ]
+
+    model.objects.create(
+        **{
+            f"field_{field_1.id}": "name 2",
+            f"field_{field_2.id}": 1,
+            f"field_{field_3.id}": True,
+        }
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f"{url}?user_field_names=true&order_by={link_field.name}",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert (
+        response_json["detail"]
+        == "It is not possible to order by Link because the field type "
+        "link_row does not support filtering."
+    )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f"{url}?user_field_names=true&order_by=Name",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["results"] == [
+        {
+            '"Name, 2"': False,
+            "Name": "name 1",
+            "Price,": "2",
+            "id": 1,
+            "order": "1.00000000000000000000",
+            "Link": [],
+        },
+        {
+            '"Name, 2"': True,
+            "Name": "name 2",
+            "Price,": "1",
+            "id": 2,
+            "order": "1.00000000000000000000",
+            "Link": [],
+        },
+    ]
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f'{url}?user_field_names=true&order_by="-\\"Name, 2\\""',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["results"] == [
+        {
+            '"Name, 2"': True,
+            "Name": "name 2",
+            "Price,": "1",
+            "id": 2,
+            "order": "1.00000000000000000000",
+            "Link": [],
+        },
+        {
+            '"Name, 2"': False,
+            "Name": "name 1",
+            "Price,": "2",
+            "id": 1,
+            "order": "1.00000000000000000000",
+            "Link": [],
+        },
+    ]
