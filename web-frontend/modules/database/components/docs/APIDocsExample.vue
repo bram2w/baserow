@@ -47,7 +47,16 @@
         <Copied ref="requestCopied"></Copied>
       </a>
       <div class="api-docs__example-type">
-        <Dropdown :value="value" @input="$emit('input', $event)">
+        <Dropdown
+          class="dropdown--floating"
+          :value="value.type"
+          @input="
+            $emit('input', {
+              userFieldNames: value.userFieldNames,
+              type: $event,
+            })
+          "
+        >
           <DropdownItem value="curl" name="cURL"></DropdownItem>
           <DropdownItem value="http" name="HTTP"></DropdownItem>
           <DropdownItem
@@ -56,6 +65,13 @@
           ></DropdownItem>
           <DropdownItem value="python" name="Python (requests)"></DropdownItem>
         </Dropdown>
+        <Checkbox
+          v-if="includeUserFieldsCheckbox"
+          :value="value.userFieldNames"
+          class="api-docs__example-type-item"
+          @input="$emit('input', { userFieldNames: $event, type: value.type })"
+          >User field names</Checkbox
+        >
       </div>
       <div class="api-docs__example-content-container">
         <div
@@ -132,7 +148,7 @@ export default {
   name: 'APIDocsExample',
   props: {
     value: {
-      type: String,
+      type: Object,
       required: true,
     },
     type: {
@@ -151,7 +167,7 @@ export default {
       default: false,
     },
     response: {
-      type: [Object, Boolean],
+      type: [Object, Boolean, Array],
       required: false,
       default: false,
     },
@@ -159,6 +175,11 @@ export default {
       type: Object,
       required: false,
       default: () => ({}),
+    },
+    includeUserFieldsCheckbox: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   computed: {
@@ -174,13 +195,13 @@ export default {
       return value !== false ? JSON.stringify(value, null, 4) : ''
     },
     getFormattedRequest() {
-      if (this.value === 'curl') {
+      if (this.value.type === 'curl') {
         return this.getCURLRequestExample()
-      } else if (this.value === 'http') {
+      } else if (this.value.type === 'http') {
         return this.getHTTPRequestExample()
-      } else if (this.value === 'javascript') {
+      } else if (this.value.type === 'javascript') {
         return this.getJavaScriptExample()
-      } else if (this.value === 'python') {
+      } else if (this.value.type === 'python') {
         return this.getPythonExample()
       }
       return ''

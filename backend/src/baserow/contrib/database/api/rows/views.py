@@ -96,9 +96,15 @@ class RowsView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
                 description="Optionally the rows can be ordered by provided field ids "
-                "separated by comma. By default a field is ordered in "
-                "ascending (A-Z) order, but by prepending the field with "
-                "a '-' it can be ordered descending (Z-A). ",
+                "separated by comma. By default a field is ordered in ascending (A-Z) "
+                "order, but by prepending the field with a '-' it can be ordered "
+                "descending (Z-A). "
+                "If the `user_field_names` parameter is provided then "
+                "instead order_by should be a comma separated list of the actual "
+                "field names. For field names with commas you should surround the "
+                'name with quotes like so: `order_by=My Field,"Field With , "`. '
+                "A backslash can be used to escape field names which contain "
+                'double quotes like so: `order_by=My Field,Field with \\"`.',
             ),
             OpenApiParameter(
                 name="filter__{field}__{filter}",
@@ -140,6 +146,12 @@ class RowsView(APIView):
                     "parameter `include=field_1,field_2` then only the fields with"
                     "id `1` and id `2` are going to be selected and included in the "
                     "response. "
+                    "If the `user_field_names` parameter is provided then "
+                    "instead include should be a comma separated list of the actual "
+                    "field names. For field names with commas you should surround the "
+                    'name with quotes like so: `include=My Field,"Field With , "`. '
+                    "A backslash can be used to escape field names which contain "
+                    'double quotes like so: `include=My Field,Field with \\"`.',
                 ),
             ),
             OpenApiParameter(
@@ -152,7 +164,23 @@ class RowsView(APIView):
                     "parameter. If you for example provide the following GET "
                     "parameter `exclude=field_1,field_2` then the fields with id `1` "
                     "and id `2` are going to be excluded from the selection and "
-                    "response."
+                    "response. "
+                    "If the `user_field_names` parameter is provided then "
+                    "instead exclude should be a comma separated list of the actual "
+                    "field names. For field names with commas you should surround the "
+                    'name with quotes like so: `exclude=My Field,"Field With , "`. '
+                    "A backslash can be used to escape field names which contain "
+                    'double quotes like so: `exclude=My Field,Field with \\"`.',
+                ),
+            ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "A flag query parameter which if provided the returned json "
+                    "will use the user specified field names instead of internal "
+                    "Baserow field names (field_123 etc). "
                 ),
             ),
         ],
@@ -167,8 +195,10 @@ class RowsView(APIView):
             "depends on which fields the table has. For a complete overview of fields "
             "use the **list_database_table_fields** endpoint to list them all. In the "
             "example all field types are listed, but normally the number in "
-            "field_{id} key is going to be the id of the field. The value is what the "
-            "user has provided and the format of it depends on the fields type."
+            "field_{id} key is going to be the id of the field. Or if the GET "
+            "parameter `user_field_names` is provided then the keys will be the name "
+            "of the field. The value is what the user has provided and the format of "
+            "it depends on the fields type."
         ),
         responses={
             200: example_pagination_row_serializer_class,
@@ -215,16 +245,22 @@ class RowsView(APIView):
         order_by = request.GET.get("order_by")
         include = request.GET.get("include")
         exclude = request.GET.get("exclude")
-        fields = RowHandler().get_include_exclude_fields(table, include, exclude)
+        user_field_names = "user_field_names" in request.GET
+        fields = RowHandler().get_include_exclude_fields(
+            table, include, exclude, user_field_names=user_field_names
+        )
 
-        model = table.get_model(fields=fields, field_ids=[] if fields else None)
+        model = table.get_model(
+            fields=fields,
+            field_ids=[] if fields else None,
+        )
         queryset = model.objects.all().enhance_by_fields()
 
         if search:
             queryset = queryset.search_all_fields(search)
 
         if order_by:
-            queryset = queryset.order_by_fields_string(order_by)
+            queryset = queryset.order_by_fields_string(order_by, user_field_names)
 
         filter_type = (
             FILTER_TYPE_OR
@@ -237,7 +273,7 @@ class RowsView(APIView):
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(page, many=True)
 
@@ -259,6 +295,16 @@ class RowsView(APIView):
                 description="If provided then the newly created row will be "
                 "positioned before the row with the provided id.",
             ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "A flag query parameter which if provided this endpoint will "
+                    "expect and return the user specified field names instead of "
+                    "internal Baserow field names (field_123 etc)."
+                ),
+            ),
         ],
         tags=["Database table rows"],
         operation_id="create_database_table_row",
@@ -269,11 +315,13 @@ class RowsView(APIView):
             "**list_database_table_fields** to list them all. None of the fields are "
             "required, if they are not provided the value is going to be `null` or "
             "`false` or some default value is that is set. If you want to add a value "
-            "for the field with for example id `10`, the key must be named "
-            "`field_10`. Of course multiple fields can be provided in one request. In "
-            "the examples below you will find all the different field types, the "
-            "numbers/ids in the example are just there for example purposes, the "
-            "field_ID must be replaced with the actual id of the field."
+            "for the field with for example id `10`, the key must be named `field_10`. "
+            "Or instead if the `user_field_names` GET param is provided the key must "
+            "be the name of the field. Of course multiple fields can be provided in "
+            "one request. In the examples below you will find all the different field "
+            "types, the numbers/ids in the example are just there for example "
+            "purposes, the field_ID must be replaced with the actual id of the field "
+            "or the name of the field if `user_field_names` is provided."
         ),
         request=get_example_row_serializer_class(False),
         responses={
@@ -305,9 +353,12 @@ class RowsView(APIView):
 
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "create", table, False)
+        user_field_names = "user_field_names" in request.GET
         model = table.get_model()
 
-        validation_serializer = get_row_serializer_class(model)
+        validation_serializer = get_row_serializer_class(
+            model, user_field_names=user_field_names
+        )
         data = validate_data(validation_serializer, request.data)
 
         before_id = request.GET.get("before")
@@ -319,13 +370,18 @@ class RowsView(APIView):
 
         try:
             row = RowHandler().create_row(
-                request.user, table, data, model, before=before
+                request.user,
+                table,
+                data,
+                model,
+                before=before,
+                user_field_names=user_field_names,
             )
         except ValidationError as e:
             raise RequestBodyValidationException(detail=e.message)
 
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
 
@@ -351,6 +407,16 @@ class RowView(APIView):
                 type=OpenApiTypes.INT,
                 description="Returns the row related the provided value.",
             ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "A flag query parameter which if provided the returned json "
+                    "will use the user specified field names instead of internal "
+                    "Baserow field names (field_123 etc). "
+                ),
+            ),
         ],
         tags=["Database table rows"],
         operation_id="get_database_table_row",
@@ -360,8 +426,10 @@ class RowView(APIView):
             "which fields the table has. For a complete overview of fields use the "
             "**list_database_table_fields** endpoint to list them all. In the example "
             "all field types are listed, but normally the number in field_{id} key is "
-            "going to be the id of the field. The value is what the user has provided "
-            "and the format of it depends on the fields type."
+            "going to be the id of the field of the field. Or if the GET parameter "
+            "`user_field_names` is provided then the keys will be the name of the "
+            "field. The value is what the user has provided and the format of it "
+            "depends on the fields type."
         ),
         responses={
             200: get_example_row_serializer_class(True),
@@ -390,11 +458,11 @@ class RowView(APIView):
 
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "read", table, False)
-
+        user_field_names = "user_field_names" in request.GET
         model = table.get_model()
         row = RowHandler().get_row(request.user, table, row_id, model)
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
 
@@ -414,6 +482,16 @@ class RowView(APIView):
                 type=OpenApiTypes.INT,
                 description="Updates the row related to the value.",
             ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "A flag query parameter which if provided this endpoint will "
+                    "expect and return the user specified field names instead of "
+                    "internal Baserow field names (field_123 etc)."
+                ),
+            ),
         ],
         tags=["Database table rows"],
         operation_id="update_database_table_row",
@@ -423,12 +501,15 @@ class RowView(APIView):
             "fields that the table has. For a complete overview of fields use the "
             "**list_database_table_fields** endpoint to list them all. None of the "
             "fields are required, if they are not provided the value is not going to "
-            "be updated. If you want to update a value for the field with for example "
-            "id `10`, the key must be named `field_10`. Of course multiple fields can "
-            "be provided in one request. In the examples below you will find all the "
-            "different field types, the numbers/ids in the example are just there for "
-            "example purposes, the field_ID must be replaced with the actual id of the "
-            "field."
+            "be updated. "
+            "When you want to update a value for the field with id `10`, the key must "
+            "be named `field_10`. Or if the GET parameter `user_field_names` is "
+            "provided the key of the field to update must be the name of the field. "
+            "Multiple different fields to update can be provided in one request. In "
+            "the examples below you will find all the different field types, the "
+            "numbers/ids in the example are just there for example purposes, "
+            "the field_ID must be replaced with the actual id of the field or the name "
+            "of the field if `user_field_names` is provided."
         ),
         request=get_example_row_serializer_class(False),
         responses={
@@ -460,19 +541,37 @@ class RowView(APIView):
 
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "update", table, False)
+        user_field_names = "user_field_names" in request.GET
 
-        field_ids = RowHandler().extract_field_ids_from_dict(request.data)
+        field_names = None
+        field_ids = None
+        if user_field_names:
+            field_names = request.data.keys()
+        else:
+            field_ids = RowHandler().extract_field_ids_from_dict(request.data)
         model = table.get_model()
-        validation_serializer = get_row_serializer_class(model, field_ids=field_ids)
+        validation_serializer = get_row_serializer_class(
+            model,
+            field_ids=field_ids,
+            field_names_to_include=field_names,
+            user_field_names=user_field_names,
+        )
         data = validate_data(validation_serializer, request.data)
 
         try:
-            row = RowHandler().update_row(request.user, table, row_id, data, model)
+            row = RowHandler().update_row(
+                request.user,
+                table,
+                row_id,
+                data,
+                model,
+                user_field_names=user_field_names,
+            )
         except ValidationError as e:
             raise RequestBodyValidationException(detail=e.message)
 
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
 
@@ -548,20 +647,30 @@ class RowMoveView(APIView):
                 description="Moves the row related to the value.",
             ),
             OpenApiParameter(
-                name="before_row_id",
+                name="before_id",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
                 description="Moves the row related to the given `row_id` before the "
                 "row related to the provided value. If not provided, "
                 "then the row will be moved to the end.",
             ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.NONE,
+                description=(
+                    "A flag query parameter which if provided the returned json "
+                    "will use the user specified field names instead of internal "
+                    "Baserow field names (field_123 etc). "
+                ),
+            ),
         ],
         tags=["Database table rows"],
         operation_id="move_database_table_row",
         description="Moves the row related to given `row_id` parameter to another "
         "position. It is only possible to move the row before another existing row or "
-        "to the end. If the `before_row_id` is provided then the row related to "
-        "the `row_id` parameter is moved before that row. If the `before_row_id` "
+        "to the end. If the `before_id` is provided then the row related to "
+        "the `row_id` parameter is moved before that row. If the `before_id` "
         "parameter is not provided, then the row will be moved to the end.",
         request=None,
         responses={
@@ -588,6 +697,8 @@ class RowMoveView(APIView):
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "update", table, False)
 
+        user_field_names = "user_field_names" in request.GET
+
         model = table.get_model()
         before_id = request.GET.get("before_id")
         before = (
@@ -600,7 +711,7 @@ class RowMoveView(APIView):
         )
 
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
         return Response(serializer.data)

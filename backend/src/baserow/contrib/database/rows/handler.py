@@ -1,15 +1,16 @@
 import re
-from math import floor, ceil
 from decimal import Decimal
+from math import floor, ceil
 
-from django.db import transaction
-from django.db.models import Max, F, Q
-from django.db.models.fields.related import ManyToManyField
 from django.conf import settings
+from django.db import transaction
+from django.db.models import Max, F
+from django.db.models.fields.related import ManyToManyField
 
 from baserow.contrib.database.fields.models import Field
 from baserow.core.trash.handler import TrashHandler
 
+from baserow.core.utils import split_comma_separated_string
 from .exceptions import RowDoesNotExist
 from .signals import (
     before_row_update,
@@ -84,9 +85,11 @@ class RowHandler:
             if any(c.isdigit() for c in v)
         ]
 
-    def get_include_exclude_fields(self, table, include=None, exclude=None):
+    def get_include_exclude_fields(
+        self, table, include=None, exclude=None, user_field_names=False
+    ):
         """
-        Returns a field queryset containing the requested fields based on the include
+        Returns a field queryset containing the requested fields based on the value
         and exclude parameter.
 
         :param table: The table where to select the fields from. Field id's that are
@@ -95,30 +98,55 @@ class RowHandler:
         :param include: The field ids that must be included. Only the provided ones
             are going to be in the returned queryset. Multiple can be provided
             separated by comma
-        :type include: str
+        :type include: Optional[str]
         :param exclude: The field ids that must be excluded. Only the ones that are not
             provided are going to be in the returned queryset. Multiple can be provided
             separated by comma.
-        :type exclude: str
+        :type exclude: Optional[str]
         :return: A Field's QuerySet containing the allowed fields based on the provided
             input.
+        :param user_field_names: If true then the value and exclude parameters are
+            retreated as a comma separated list of user field names instead of id's
+        :type user_field_names: bool
         :rtype: QuerySet
         """
 
         queryset = Field.objects.filter(table=table)
-        include_ids = self.extract_field_ids_from_string(include)
-        exclude_ids = self.extract_field_ids_from_string(exclude)
 
-        if len(include_ids) == 0 and len(exclude_ids) == 0:
+        if user_field_names:
+            includes = self.extract_field_names_from_string(include)
+            excludes = self.extract_field_names_from_string(exclude)
+            filter_type = "name__in"
+        else:
+            includes = self.extract_field_ids_from_string(include)
+            excludes = self.extract_field_ids_from_string(exclude)
+            filter_type = "id__in"
+
+        if len(includes) == 0 and len(excludes) == 0:
             return None
 
-        if len(include_ids) > 0:
-            queryset = queryset.filter(id__in=include_ids)
+        if len(includes) > 0:
+            queryset = queryset.filter(**{filter_type: includes})
 
-        if len(exclude_ids) > 0:
-            queryset = queryset.filter(~Q(id__in=exclude_ids))
+        if len(excludes) > 0:
+            queryset = queryset.exclude(**{filter_type: excludes})
 
         return queryset
+
+    # noinspection PyMethodMayBeStatic
+    def extract_field_names_from_string(self, value):
+        """
+        Given a comma separated string of field names this function will split the
+        string into a list of individual field names. For weird field names containing
+        commas etc the field should be escaped with quotes.
+        :param value: The string to split into a list of field names.
+        :return: A list of field names.
+        """
+
+        if not value:
+            return []
+
+        return split_comma_separated_string(value)
 
     def extract_manytomany_values(self, values, model):
         """
@@ -217,7 +245,9 @@ class RowHandler:
 
         return row
 
-    def create_row(self, user, table, values=None, model=None, before=None):
+    def create_row(
+        self, user, table, values=None, model=None, before=None, user_field_names=False
+    ):
         """
         Creates a new row for a given table with the provided values if the user
         belongs to the related group. It also calls the row_created signal.
@@ -235,6 +265,9 @@ class RowHandler:
         :param before: If provided the new row will be placed right before that row
             instance.
         :type before: Table
+        :param user_field_names: Whether or not the values are keyed by the internal
+            Baserow field name (field_1,field_2 etc) or by the user field names.
+        :type user_field_names: True
         :return: The created row instance.
         :rtype: Model
         """
@@ -245,7 +278,7 @@ class RowHandler:
         group = table.database.group
         group.has_user(user, raise_error=True)
 
-        instance = self.force_create_row(table, values, model, before)
+        instance = self.force_create_row(table, values, model, before, user_field_names)
 
         row_created.send(
             self, row=instance, before=before, user=user, table=table, model=model
@@ -253,7 +286,9 @@ class RowHandler:
 
         return instance
 
-    def force_create_row(self, table, values=None, model=None, before=None):
+    def force_create_row(
+        self, table, values=None, model=None, before=None, user_field_names=False
+    ):
         """
         Creates a new row for a given table with the provided values.
 
@@ -268,6 +303,9 @@ class RowHandler:
         :param before: If provided the new row will be placed right before that row
             instance.
         :type before: Table
+        :param user_field_names: Whether or not the values are keyed by the internal
+            Baserow field name (field_1,field_2 etc) or by the user field names.
+        :type user_field_names: True
         :return: The created row instance.
         :rtype: Model
         """
@@ -277,6 +315,11 @@ class RowHandler:
 
         if not model:
             model = table.get_model()
+
+        if user_field_names:
+            values = self.map_user_field_name_dict_to_internal(
+                model._field_objects, values
+            )
 
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
@@ -288,7 +331,38 @@ class RowHandler:
 
         return instance
 
-    def update_row(self, user, table, row_id, values, model=None):
+    # noinspection PyMethodMayBeStatic
+    def map_user_field_name_dict_to_internal(
+        self,
+        field_objects,
+        values,
+    ):
+        """
+        Takes the field objects for a model and a dictionary keyed by user specified
+        field names for that model. Then will convert the keys from the user names to
+        the internal Baserow field names which look like field_1, field_2 and
+        correspond to the actual database column names.
+
+        :param field_objects: The field objects for a model.
+        :param values: A dictionary keyed by user field names to values.
+        :return: A dictionary with the same values but the keys converted to the
+            corresponding internal baserow field name (field_1,field_2 etc)
+        """
+
+        to_internal_name = {}
+        for field_object in field_objects.values():
+            to_internal_name[field_object["field"].name] = field_object["name"]
+
+        mapped_back_to_internal_field_names = {}
+        for user_field_name, value in values.items():
+            internal_name = to_internal_name[user_field_name]
+            mapped_back_to_internal_field_names[internal_name] = value
+        values = mapped_back_to_internal_field_names
+        return values
+
+    def update_row(
+        self, user, table, row_id, values, model=None, user_field_names=False
+    ):
         """
         Updates one or more values of the provided row_id.
 
@@ -303,6 +377,9 @@ class RowHandler:
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
         :type model: Model
+        :param user_field_names: Whether or not the values are keyed by the internal
+            Baserow field name (field_1,field_2 etc) or by the user field names.
+        :type user_field_names: True
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The updated row instance.
         :rtype: Model
@@ -326,7 +403,10 @@ class RowHandler:
             before_return = before_row_update.send(
                 self, row=row, user=user, table=table, model=model
             )
-
+            if user_field_names:
+                values = self.map_user_field_name_dict_to_internal(
+                    model._field_objects, values
+                )
             values = self.prepare_values(model._field_objects, values)
             values, manytomany_values = self.extract_manytomany_values(values, model)
 

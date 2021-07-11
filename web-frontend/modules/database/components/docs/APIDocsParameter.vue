@@ -2,11 +2,11 @@
   <li class="api-docs__parameter">
     <div class="api-docs__parameter-name">
       <div>
-        {{ name }}
+        {{ userFieldNames ? visibleName : name }}
         <span
-          v-if="visibleName !== null"
+          v-if="userFieldNames || visibleName !== null"
           class="api-docs__parameter-visible-name"
-          >{{ visibleName }}</span
+          >{{ userFieldNames ? name : visibleName }}</span
         >
       </div>
       <div v-if="optional" class="api-docs__parameter-optional">optional</div>
@@ -49,6 +49,11 @@ export default {
       type: String,
       required: false,
       default: '',
+    },
+    userFieldNames: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 }

@@ -256,7 +256,7 @@ class NumberFieldType(FieldType):
 
         if value is not None and not instance.number_negative and value < 0:
             raise ValidationError(
-                f"The value for field {instance.id} cannot be " f"negative."
+                f"The value for field {instance.id} cannot be negative."
             )
         return value
 
@@ -282,6 +282,9 @@ class NumberFieldType(FieldType):
         )
 
     def get_export_value(self, value, field_object):
+        if value is None:
+            return value
+
         # If the number is an integer we want it to be a literal json number and so
         # don't convert it to a string. However if a decimal to preserve any precision
         # we keep it as a string.
@@ -707,7 +710,7 @@ class LinkRowFieldType(FieldType):
         """
 
         return serializers.ListSerializer(
-            child=LinkRowValueSerializer(**{"required": False, **kwargs})
+            child=LinkRowValueSerializer(), **{"required": False, **kwargs}
         )
 
     def get_serializer_help_text(self, instance):
@@ -845,13 +848,13 @@ class LinkRowFieldType(FieldType):
 
         handler = FieldHandler()
         # First just try the tables name, so if say the Client table is linking to the
-        # Address table, the new field in the Address table will just be called 'Client'
-        # . However say we then add another link from the Client to Address table with
+        # Address table, this field in the Address table will just be called 'Client'.
+        # However say we then add another link from the Client to Address table with
         # a field name of "Bank Address", the new field in the Address table will be
         # called 'Client - Bank Address'.
         related_field_name = handler.find_next_unused_field_name(
             field.link_row_table,
-            [f"{field.table.name}", f"{field.table.name} - " f"{field.name}"],
+            [f"{field.table.name}", f"{field.table.name} - {field.name}"],
         )
         field.link_row_related_field = handler.create_field(
             user=user,

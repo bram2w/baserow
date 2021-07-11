@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.utils.dateparse import parse_datetime, parse_date
 from django.utils.timezone import make_aware, utc
+from freezegun import freeze_time
 
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
@@ -95,8 +96,26 @@ def setup_interesting_test_table(data_fixture):
         "decimal_link_row": None,
         "file_link_row": None,
         "file": [
-            {"name": "hashed_name.txt", "visible_name": "a.txt"},
-            {"name": "other_name.txt", "visible_name": "b.txt"},
+            {
+                "name": "hashed_name.txt",
+                "visible_name": "a.txt",
+                "is_image": False,
+                "size": 0,
+                "mime_type": "text/plain",
+                "image_width": 0,
+                "image_height": 0,
+                "uploaded_at": "2020-02-01 01:23",
+            },
+            {
+                "name": "other_name.txt",
+                "visible_name": "b.txt",
+                "is_image": False,
+                "size": 0,
+                "mime_type": "text/plain",
+                "image_width": 0,
+                "image_height": 0,
+                "uploaded_at": "2020-02-01 01:23",
+            },
         ],
         "single_select": SelectOption.objects.get(value="A"),
         "phone_number": "+4412345678",
@@ -158,9 +177,12 @@ def setup_interesting_test_table(data_fixture):
             other_table_primary_decimal_field.id: None,
         },
     )
-    user_file_1 = data_fixture.create_user_file(
-        original_name="name.txt", unique="test", sha256_hash="hash"
-    )
+    with freeze_time("2020-01-01 12:00"):
+        user_file_1 = data_fixture.create_user_file(
+            original_name="name.txt",
+            unique="test",
+            sha256_hash="hash",
+        )
     linked_row_7 = row_handler.create_row(
         user=user,
         table=file_link_table,

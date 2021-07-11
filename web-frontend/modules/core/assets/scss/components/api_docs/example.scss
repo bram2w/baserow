@@ -72,9 +72,15 @@
 }
 
 .api-docs__example-type {
-  width: 200px;
+  width: 400px;
   margin-bottom: 20px;
   padding: 16px 16px 0 16px;
+  display: flex;
+  align-items: baseline;
+}
+
+.api-docs__example-type-item {
+  margin-left: 20px;
 }
 
 .api-docs__example-content-container {

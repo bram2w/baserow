@@ -234,8 +234,9 @@
         </div>
         <div class="api-docs__right">
           <APIDocsExample
-            v-model="exampleType"
+            v-model="exampleData"
             :url="$env.PUBLIC_BACKEND_URL"
+            :include-user-fields-checkbox="false"
             type=""
           ></APIDocsExample>
         </div>
@@ -353,10 +354,11 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="GET"
               :url="getFieldsURL(table)"
               :response="getResponseFields(table)"
+              :include-user-fields-checkbox="false"
             ></APIDocsExample>
           </div>
         </div>
@@ -396,6 +398,33 @@
                 Defines how many rows should be returned per page.
               </APIDocsParameter>
               <APIDocsParameter
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names returned by this endpoint will be the actual
+                names of the fields. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then all returned field names will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>. <br />
+                <br />
+                Additionally when
+                <code class="api-docs__code">user_field_names</code>
+                is set then the behaviour of the other GET parameters
+                <code class="api-docs__code">order_by</code>,
+                <code class="api-docs__code">include</code> and
+                <code class="api-docs__code">exclude</code> changes. They
+                instead expect comma separated lists of the actual field names
+                instead.
+              </APIDocsParameter>
+              <APIDocsParameter
                 name="search"
                 :optional="true"
                 type="string"
@@ -410,12 +439,49 @@
                 type="string"
                 standard="'id'"
               >
-                Optionally the rows can be ordered by provided field ids
-                separated by comma. By default a field is ordered in ascending
-                (A-Z) order, but by prepending the field with a '-' it can be
-                ordered descending (Z-A).
-                <br /><br />
-                For example if you provide the following GET parameter
+                Optionally the rows can be ordered by fields separated by comma.
+                By default or if prepended with a '+' a field is ordered in
+                ascending (A-Z) order, but by prepending the field with a '-' it
+                can be ordered descending (Z-A).
+                <h4>
+                  With <code class="api-docs__code">user_field_names</code>
+                  :
+                </h4>
+                <code class="api-docs__code">order_by</code> should be a comma
+                separated list of the field names to order by. For example if
+                you provide the following GET parameter
+                <code class="api-docs__code"
+                  >order_by=My Field,-My Field 2</code
+                >
+                the rows will ordered by the field called
+                <code class="api-docs__code">My Field</code>
+                in ascending order. If some fields have the same value, that
+                subset will be ordered by the field called
+                <code class="api-docs__code">My Field 2</code> in descending
+                order.
+                <br />
+                <br />
+                Ensure fields with names starting with a
+                <code class="api-docs__code">+</code> or
+                <code class="api-docs__code">-</code> are explicitly prepended
+                with another <code class="api-docs__code">+</code> or
+                <code class="api-docs__code">-</code>. E.g
+                <code class="api-docs__code">+-Name</code>.
+                <br />
+                <br />
+                Field names containing commas should be surrounded by quotes:
+                <code class="api-docs__code">"Name ,"</code>. Field names
+                including quotes should be escaped using a backslash:
+                <code class="api-docs__code">Name \"</code>.
+                <h4>
+                  Without <code class="api-docs__code">user_field_names</code>
+                  :
+                </h4>
+                <code class="api-docs__code">order_by</code> should be a comma
+                separated list of
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field to order by. For example if you provide the following
+                GET parameter
                 <code class="api-docs__code">order_by=field_1,-field_2</code>
                 the rows will ordered by
                 <code class="api-docs__code">field_1</code>
@@ -458,36 +524,81 @@
               </APIDocsParameter>
               <APIDocsParameter name="include" :optional="true" type="string">
                 All the fields are included in the response by default. You can
-                select a subset of fields by providing the include query
-                parameter. If you for example provide the following GET
-                parameter
-                <code class="api-docs__code">include=field_1,field_2</code>
-                then only the fields with id
-                <code class="api-docs__code">1</code> and id
-                <code class="api-docs__code">2</code> are going to be selected
-                and included in the response.
-              </APIDocsParameter>
-              <APIDocsParameter name="exclude" :optional="true" type="string">
-                All the fields are included in the response by default. You can
-                select a subset of fields by providing the exclude query
-                parameter. If you for example provide the following GET
-                parameter
+                select a subset of fields to include by providing the include
+                query parameter.
+                <h4>
+                  With <code class="api-docs__code">user_field_names</code>
+                  :
+                </h4>
+                <code class="api-docs__code">include</code> should be a comma
+                separated list of field names to be included in results. For
+                example if you provide the following GET param:
+                <code class="api-docs__code">include=My Field,-My Field 2</code>
+                then only those fields will be included (unless they are
+                explicitly excluded).
+                <br />
+                <br />
+                Field names containing commas should be surrounded by quotes:
+                <code class="api-docs__code">"Name ,"</code>. Field names
+                including quotes should be escaped using a backslash:
+                <code class="api-docs__code">Name \"</code>.
+                <h4>
+                  Without <code class="api-docs__code">user_field_names</code>:
+                </h4>
+                <code class="api-docs__code">include</code> should be a comma
+                separated list of
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field to include in the results. For example: If you provide
+                the following GET parameter
                 <code class="api-docs__code">exclude=field_1,field_2</code>
                 then the fields with id
                 <code class="api-docs__code">1</code> and id
-                <code class="api-docs__code">2</code> are going to be excluded
-                from the selection and response.
+                <code class="api-docs__code">2</code>
+                then only those fields will be included (unless they are
+                explicitly excluded).
+              </APIDocsParameter>
+              <APIDocsParameter name="exclude" :optional="true" type="string">
+                All the fields are included in the response by default. You can
+                select a subset of fields to exclude by providing the exclude
+                query parameter.
+                <h4>
+                  With <code class="api-docs__code">user_field_names</code>
+                  :
+                </h4>
+                <code class="api-docs__code">exclude</code> should be a comma
+                separated list of field names to be excluded from the results.
+                For example if you provide the following GET param:
+                <code class="api-docs__code">exclude=My Field,-My Field 2</code>
+                then those fields will be excluded.
+                <br />
+                <br />
+                Field names containing commas should be surrounded by quotes:
+                <code class="api-docs__code">"Name ,"</code>. Field names
+                including quotes should be escaped using a backslash:
+                <code class="api-docs__code">Name \"</code>.
+                <h4>
+                  Without <code class="api-docs__code">user_field_names</code>:
+                </h4>
+                <code class="api-docs__code">exclude</code> should be a comma
+                separated list of
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field to exclude from the results. For example: If you
+                provide the following GET parameter
+                <code class="api-docs__code">exclude=field_1,field_2</code>
+                then the fields with id
+                <code class="api-docs__code">1</code> and id
+                <code class="api-docs__code">2</code> will be excluded.
               </APIDocsParameter>
             </ul>
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="GET"
-              :url="getListURL(table)"
+              :url="getListURL(table, true)"
               :response="{
                 count: 1024,
-                next: getListURL(table) + '?page=2',
+                next: getListURL(table, false) + '?page=2',
                 previous: null,
                 results: [getResponseItem(table)],
               }"
@@ -512,12 +623,33 @@
                 The unique identifier of the row that is requested.
               </APIDocsParameter>
             </ul>
+            <h4 class="api-docs__heading-4">Query parameters</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names returned by this endpoint will be the actual
+                names of the fields. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then all returned field names will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>.
+              </APIDocsParameter>
+            </ul>
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="GET"
-              :url="getItemURL(table)"
+              :url="getItemURL(table, true)"
               :response="getResponseItem(table)"
               :mapping="getFieldMapping(table)"
             ></APIDocsExample>
@@ -532,6 +664,31 @@
               Create row
             </h3>
             <p class="api-docs__content">Create a new {{ table.name }} row.</p>
+            <h4 class="api-docs__heading-4">Query parameters</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names expected and returned by this endpoint will be
+                the actual field names. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then field names expected and returned will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>.
+              </APIDocsParameter>
+              <APIDocsParameter :optional="true" name="before" type="integer">
+                If provided then the newly created row will be positioned before
+                the row with the provided id.
+              </APIDocsParameter>
+            </ul>
             <h4 class="api-docs__heading-4">Request body schema</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter
@@ -541,6 +698,7 @@
                 :visible-name="field.name"
                 :optional="true"
                 :type="field._.type"
+                :user-field-names="exampleData.userFieldNames"
               >
                 <div v-html="field._.description"></div>
               </APIDocsParameter>
@@ -548,9 +706,9 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="POST"
-              :url="getListURL(table)"
+              :url="getListURL(table, true)"
               :request="getRequestExample(table)"
               :response="getResponseItem(table)"
               :mapping="getFieldMapping(table)"
@@ -574,6 +732,31 @@
                 The unique identifier of the row that needs to be updated.
               </APIDocsParameter>
             </ul>
+            <h4 class="api-docs__heading-4">Query parameters</h4>
+            <ul class="api-docs__parameters">
+              <APIDocsParameter
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names expected and returned by this endpoint will be
+                the actual field names. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then field names expected and returned will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>.
+              </APIDocsParameter>
+              <APIDocsParameter :optional="true" name="before" type="integer">
+                If provided then the newly created row will be positioned before
+                the row with the provided id.
+              </APIDocsParameter>
+            </ul>
             <h4 class="api-docs__heading-4">Request body schema</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter
@@ -583,6 +766,7 @@
                 :visible-name="field.name"
                 :optional="true"
                 :type="field._.type"
+                :user-field-names="exampleData.userFieldNames"
               >
                 <div v-html="field._.description"></div>
               </APIDocsParameter>
@@ -590,9 +774,9 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="PATCH"
-              :url="getItemURL(table)"
+              :url="getItemURL(table, true)"
               :request="getRequestExample(table)"
               :response="getResponseItem(table)"
               :mapping="getFieldMapping(table)"
@@ -609,8 +793,8 @@
             </h3>
             <p class="api-docs__content">
               Moves an existing {{ table.name }} row before another row. If no
-              `before_row_id` is provided, then the row will be moved to the end
-              of the table.
+              `before_id` is provided, then the row will be moved to the end of
+              the table.
             </p>
             <h4 class="api-docs__heading-4">Path parameters</h4>
             <ul class="api-docs__parameters">
@@ -621,7 +805,25 @@
             <h4 class="api-docs__heading-4">Query parameters</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter
-                name="before_row_id"
+                name="user_field_names"
+                :optional="true"
+                type="any"
+              >
+                When any value is provided for the
+                <code class="api-docs__code">user_field_names</code> GET param
+                then field names returned by this endpoint will be the actual
+                names of the fields. <br />
+                <br />
+                If the
+                <code class="api-docs__code">user_field_names</code> GET param
+                is not provided, then all returned field names will be
+                <code class="api-docs__code">field_</code> followed by the id of
+                the field. For example
+                <code class="api-docs__code">field_1</code> refers to the field
+                with an id of <code class="api-docs__code">1</code>.
+              </APIDocsParameter>
+              <APIDocsParameter
+                name="before_id"
                 type="integer"
                 :optional="true"
               >
@@ -633,9 +835,9 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="PATCH"
-              :url="getItemURL(table) + 'move/'"
+              :url="getItemURL(table, false) + 'move/' + userFieldNamesParam"
               :response="getResponseItem(table)"
               :mapping="getFieldMapping(table)"
             ></APIDocsExample>
@@ -661,9 +863,10 @@
           </div>
           <div class="api-docs__right">
             <APIDocsExample
-              v-model="exampleType"
+              v-model="exampleData"
               type="DELETE"
-              :url="getItemURL(table)"
+              :url="getItemURL(table, false)"
+              :include-user-fields-checkbox="false"
             ></APIDocsExample>
           </div>
         </div>
@@ -756,7 +959,7 @@
         </div>
         <div class="api-docs__right">
           <APIDocsExample
-            v-model="exampleType"
+            v-model="exampleData"
             :url="$env.PUBLIC_BACKEND_URL"
             type=""
             :response="{
@@ -821,8 +1024,11 @@ export default {
   },
   data() {
     return {
-      // Indicates which request example type is shown.
-      exampleType: 'curl',
+      exampleData: {
+        // Indicates which request example type is shown.
+        type: 'curl',
+        userFieldNames: true,
+      },
       // Indicates which navigation item is active.
       navActive: '',
       // Indicates if the databases sidebar is open.
@@ -835,6 +1041,9 @@ export default {
     }
   },
   computed: {
+    userFieldNamesParam() {
+      return this.exampleData.userFieldNames ? '?user_field_names=true' : ''
+    },
     viewFilterTypes() {
       return Object.values(this.$registry.getAll('viewFilter'))
     },
@@ -900,7 +1109,11 @@ export default {
         const example = response
           ? field._.responseExample
           : field._.requestExample
-        item[`field_${field.id}`] = example
+        if (this.exampleData.userFieldNames) {
+          item[field.name] = example
+        } else {
+          item[`field_${field.id}`] = example
+        }
       })
       return item
     },
@@ -926,18 +1139,28 @@ export default {
     getFieldMapping(table) {
       const mapping = {}
       this.fields[table.id].forEach((field) => {
-        mapping[`field_${field.id}`] = field.name
+        if (this.exampleData.userFieldNames) {
+          mapping[field.name] = `field_${field.id}`
+        } else {
+          mapping[`field_${field.id}`] = field.name
+        }
       })
       return mapping
     },
     getFieldsURL(table) {
       return `${this.$env.PUBLIC_BACKEND_URL}/api/database/fields/table/${table.id}/`
     },
-    getListURL(table) {
-      return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${table.id}/`
+    getListURL(table, addUserFieldParam) {
+      return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${
+        table.id
+      }/${addUserFieldParam ? this.userFieldNamesParam : ''}`
     },
-    getItemURL(table) {
-      return this.getListURL(table) + '{row_id}/'
+    getItemURL(table, addUserFieldParam) {
+      return (
+        this.getListURL(table) +
+        '{row_id}/' +
+        (addUserFieldParam ? this.userFieldNamesParam : '')
+      )
     },
     getCompatibleFilterTypes(fieldType) {
       return this.viewFilterTypes.filter((filter) =>

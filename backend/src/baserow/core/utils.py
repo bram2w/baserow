@@ -1,3 +1,4 @@
+import csv
 import os
 import re
 import random
@@ -6,6 +7,7 @@ import hashlib
 import math
 
 from collections import namedtuple
+from typing import List
 
 from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED
@@ -248,6 +250,25 @@ def truncate_middle(content, max_length, middle="..."):
     right = content[-end:] if end else ""
 
     return f"{left}{middle}{right}"
+
+
+def split_comma_separated_string(comma_separated_string: str) -> List[str]:
+    """
+    Correctly splits a comma separated string which can contain quoted values to include
+    commas in individual items like so: 'A,"B , C",D' -> ['A', 'B , C', 'D'] or using
+    backslashes to escape double quotes like so: 'A,\"B,C' -> ['A', '"B', 'C'].
+
+    :param comma_separated_string: The string to split
+    :return: A list of split items from the provided string.
+    """
+
+    # Use python's csv handler as it knows how to handle quoted csv values etc.
+    # csv.reader returns an iterator, we use next to get the first split row back.
+    return next(
+        csv.reader(
+            [comma_separated_string], delimiter=",", quotechar='"', escapechar="\\"
+        )
+    )
 
 
 def get_model_reference_field_name(lookup_model, target_model):

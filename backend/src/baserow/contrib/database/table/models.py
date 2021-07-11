@@ -22,6 +22,7 @@ from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     TrashableModelMixin,
 )
+from baserow.core.utils import split_comma_separated_string
 
 deconstruct_filter_key_regex = re.compile(r"filter__field_([0-9]+)__([a-zA-Z0-9_]*)$")
 
@@ -71,17 +72,24 @@ class TableModelQuerySet(models.QuerySet):
 
         return filter_builder.apply_to_queryset(self)
 
-    def order_by_fields_string(self, order_string):
+    def order_by_fields_string(self, order_string, user_field_names=False):
         """
-        Orders the query by the given field order string. This string is often directly
-        forwarded from a GET, POST or other user provided parameter. Multiple fields
-        can be provided by separating the values by a comma. The field id is extracted
-        from the string so it can either be provided as field_1, 1, id_1, etc.
+        Orders the query by the given field order string. This string is often
+        directly forwarded from a GET, POST or other user provided parameter.
+        Multiple fields can be provided by separating the values by a comma. When
+        user_field_names is False the order_string must contain a comma separated
+        list of field ids. The field id is extracted from the string so it can either
+        be provided as field_1, 1, id_1, etc. When user_field_names is True the
+        order_string is treated as a comma separated list of the actual field names,
+        use quotes to wrap field names containing commas.
 
         :param order_string: The field ids to order the queryset by separated by a
             comma. For example `field_1,2` which will order by field with id 1 first
             and then by field with id 2 second.
         :type order_string: str
+        :param user_field_names: If true then the order_string is instead treated as
+        a comma separated list of actual field names and not field ids.
+        :type user_field_names: bool
         :raises OrderByFieldNotFound: when the provided field id is not found in the
             model.
         :raises OrderByFieldNotPossible: when it is not possible to order by the
@@ -90,24 +98,42 @@ class TableModelQuerySet(models.QuerySet):
         :rtype: QuerySet
         """
 
-        order_by = order_string.split(",")
+        order_by = split_comma_separated_string(order_string)
 
         if len(order_by) == 0:
             raise ValueError("At least one field must be provided.")
 
+        if user_field_names:
+            field_object_dict = {
+                o["field"].name: o for o in self.model._field_objects.values()
+            }
+        else:
+            field_object_dict = self.model._field_objects
+
         for index, order in enumerate(order_by):
-            field_id = int(re.sub("[^0-9]", "", str(order)))
+            if user_field_names:
+                possible_prefix = order[:1]
+                if possible_prefix in {"-", "+"}:
+                    field_name_or_id = order[1:]
+                else:
+                    field_name_or_id = order
+            else:
+                field_name_or_id = int(re.sub("[^0-9]", "", str(order)))
 
-            if field_id not in self.model._field_objects:
-                raise OrderByFieldNotFound(order, f"Field {field_id} does not exist.")
+            if field_name_or_id not in field_object_dict:
+                raise OrderByFieldNotFound(
+                    order, f"Field {field_name_or_id} does not exist."
+                )
 
-            field_object = self.model._field_objects[field_id]
+            field_object = field_object_dict[field_name_or_id]
             field_type = field_object["type"]
             field_name = field_object["name"]
+            user_field_name = field_object["field"].name
+            error_display_name = user_field_name if user_field_names else field_name
 
             if not field_object["type"].can_order_by:
                 raise OrderByFieldNotPossible(
-                    field_name,
+                    error_display_name,
                     field_type.type,
                     f"It is not possible to order by field type {field_type.type}.",
                 )
@@ -222,7 +248,12 @@ class Table(
         return f"database_table_{self.id}"
 
     def get_model(
-        self, fields=None, field_ids=None, attribute_names=False, manytomany_models=None
+        self,
+        fields=None,
+        field_ids=None,
+        field_names=None,
+        attribute_names=False,
+        manytomany_models=None,
     ):
         """
         Generates a temporary Django model based on available fields that belong to
@@ -236,6 +267,10 @@ class Table(
             added to the model. This can be done to improve speed if for example only a
             single field needs to be mutated.
         :type field_ids: None or list
+        :param field_names: If provided only the fields with the names in the list
+            will be added to the model. This can be done to improve speed if for
+            example only a single field needs to be mutated.
+        :type field_names: None or list
         :param attribute_names: If True, the the model attributes will be based on the
             field name instead of the field id.
         :type attribute_names: bool
@@ -319,6 +354,14 @@ class Table(
                 fields_query = []
             else:
                 fields_query = fields_query.filter(pk__in=field_ids)
+
+        # If the field names are provided we must only fetch the fields of which the
+        # user defined name is in that list.
+        if isinstance(field_names, list):
+            if len(field_names) == 0:
+                fields_query = []
+            else:
+                fields_query = fields_query.filter(name__in=field_names)
 
         # Create a combined list of fields that must be added and belong to the this
         # table.
