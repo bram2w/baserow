@@ -5,6 +5,7 @@ import BigNumber from 'bignumber.js'
 
 import { uuid } from '@baserow/modules/core/utils/string'
 import { clone } from '@baserow/modules/core/utils/object'
+import ViewService from '@baserow/modules/database/services/view'
 import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 import {
@@ -705,7 +706,10 @@ export const actions = {
     updateValues.field_options[field.id] = values
 
     try {
-      await GridService(this.$client).update({ gridId, values: updateValues })
+      await ViewService(this.$client).updateFieldOptions({
+        viewId: gridId,
+        values: updateValues,
+      })
     } catch (error) {
       commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
         fieldId: field.id,
@@ -737,7 +741,10 @@ export const actions = {
     const updateValues = { field_options: newFieldOptions }
 
     try {
-      await GridService(this.$client).update({ gridId, values: updateValues })
+      await ViewService(this.$client).updateFieldOptions({
+        viewId: gridId,
+        values: updateValues,
+      })
     } catch (error) {
       dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
       throw error

@@ -105,7 +105,7 @@ export default {
       const text = (event.originalEvent || event).clipboardData.getData(
         'text/plain'
       )
-      document.execCommand('insertHTML', false, text)
+      document.execCommand('insertText', false, text)
     },
     /**
      * If a key is pressed and it is an enter or esc key the change event will be called

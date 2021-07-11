@@ -20,7 +20,7 @@
       <ViewsContextItem
         v-for="view in searchAndOrder(views)"
         :key="view.id"
-        v-sortable="{ id: view.id, update: order }"
+        v-sortable="{ id: view.id, update: order, marginTop: -1.5 }"
         :view="view"
         :table="table"
         :read-only="readOnly"

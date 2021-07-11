@@ -10,8 +10,8 @@
     <a class="select__item-link" @click="$emit('selected', view)">
       <div class="select__item-name">
         <i
-          class="select__item-icon fas fa-fw color-primary"
-          :class="'fa-' + view._.type.iconClass"
+          class="select__item-icon fas fa-fw"
+          :class="view._.type.colorClass + ' fa-' + view._.type.iconClass"
         ></i>
         <EditableViewName ref="rename" :view="view"></EditableViewName>
       </div>

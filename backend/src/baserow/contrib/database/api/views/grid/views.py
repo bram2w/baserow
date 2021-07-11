@@ -9,25 +9,24 @@ from baserow.api.decorators import map_exceptions, allowed_includes, validate_bo
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
+from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.contrib.database.api.rows.serializers import (
     get_example_row_serializer_class,
 )
 from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
     RowSerializer,
-    example_pagination_row_serializer_class_with_field_options,
 )
+from baserow.contrib.database.api.views.serializers import FieldOptionsField
 from baserow.contrib.database.api.views.grid.serializers import (
-    GridViewSerializer,
+    GridViewFieldOptionsSerializer,
 )
-from baserow.contrib.database.views.exceptions import (
-    ViewDoesNotExist,
-    UnrelatedFieldError,
-)
+from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GridView
 from baserow.core.exceptions import UserNotInGroup
-from .errors import ERROR_GRID_DOES_NOT_EXIST, ERROR_UNRELATED_FIELD
+from .errors import ERROR_GRID_DOES_NOT_EXIST
 from .serializers import GridViewFilterSerializer
 
 
@@ -122,7 +121,15 @@ class GridViewView(APIView):
             "`list_database_table_view_sortings` endpoints."
         ),
         responses={
-            200: example_pagination_row_serializer_class_with_field_options,
+            200: get_example_pagination_serializer_class(
+                get_example_row_serializer_class(True),
+                additional_fields={
+                    "field_options": FieldOptionsField(
+                        serializer_class=GridViewFieldOptionsSerializer, required=False
+                    )
+                },
+                serializer_name="PaginationSerializerWithGridViewFieldOptions",
+            ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(["ERROR_GRID_DOES_NOT_EXIST"]),
         },
@@ -148,6 +155,7 @@ class GridViewView(APIView):
 
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
+        view_type = view_type_registry.get_by_model(view)
 
         view.table.database.group.has_user(
             request.user, raise_error=True, allow_if_template=True
@@ -172,13 +180,9 @@ class GridViewView(APIView):
         response = paginator.get_paginated_response(serializer.data)
 
         if field_options:
-            # The serializer has the GridViewFieldOptionsField which fetches the
-            # field options from the database and creates them if they don't exist,
-            # but when added to the context the fields don't have to be fetched from
-            # the database again when checking if they exist.
             context = {"fields": [o["field"] for o in model._field_objects.values()]}
-            serialized_view = GridViewSerializer(view, context=context).data
-            response.data["field_options"] = serialized_view["field_options"]
+            serializer_class = view_type.get_field_options_serializer_class()
+            response.data.update(**serializer_class(view, context=context).data)
 
         return response
 
@@ -240,62 +244,3 @@ class GridViewView(APIView):
         )
         serializer = serializer_class(results, many=True)
         return Response(serializer.data)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="view_id",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                required=False,
-                description="Updates the field related to the provided `view_id` "
-                "parameter.",
-            )
-        ],
-        tags=["Database table grid view"],
-        operation_id="update_database_table_grid_view_field_options",
-        description=(
-            "Updates the field options of a `grid` view. The field options are unique "
-            "options per field for a view. This could for example be used to update "
-            "the field width if the user changes it."
-        ),
-        request=GridViewSerializer,
-        responses={
-            200: GridViewSerializer,
-            400: get_error_schema(
-                [
-                    "ERROR_USER_NOT_IN_GROUP",
-                    "ERROR_UNRELATED_FIELD",
-                    "ERROR_REQUEST_BODY_VALIDATION",
-                ]
-            ),
-            404: get_error_schema(["ERROR_GRID_DOES_NOT_EXIST"]),
-        },
-    )
-    @map_exceptions(
-        {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-            ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
-            UnrelatedFieldError: ERROR_UNRELATED_FIELD,
-        }
-    )
-    @validate_body(GridViewSerializer)
-    def patch(self, request, view_id, data):
-        """
-        Updates the field options for the provided grid view.
-
-        The following example body data will only update the width of the FIELD_ID
-        and leaves the others untouched.
-            {
-                FIELD_ID: {
-                    'width': 200
-                }
-            }
-        """
-
-        handler = ViewHandler()
-        view = handler.get_view(view_id, GridView)
-        handler.update_grid_view_field_options(
-            request.user, view, data["field_options"]
-        )
-        return Response(GridViewSerializer(view).data)

@@ -22,8 +22,8 @@
           >
             <template v-if="hasSelectedView">
               <i
-                class="header__filter-icon header-filter-icon--view fas"
-                :class="'fa-' + view._.type.iconClass"
+                class="header__filter-icon header-filter-icon--view fas fa-fw"
+                :class="view._.type.colorClass + ' fa-' + view._.type.iconClass"
               ></i>
               <span class="header__filter-name header__filter-name--forced">
                 <EditableViewName ref="rename" :view="view"></EditableViewName>

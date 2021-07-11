@@ -1,4 +1,5 @@
 from django.utils.functional import lazy
+from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.openapi import OpenApiTypes
@@ -11,6 +12,82 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
 )
 from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
+
+
+class FieldOptionsField(serializers.Field):
+    default_error_messages = {
+        "invalid_key": _("Field option key must be numeric."),
+        "invalid_value": _("Must be valid field options."),
+    }
+
+    def __init__(self, serializer_class, **kwargs):
+        self.serializer_class = serializer_class
+        self._spectacular_annotation = {
+            "field": serializers.DictField(
+                child=serializer_class(),
+                help_text="An object containing the field id as key and the properties "
+                "related to view as value.",
+            )
+        }
+        kwargs["source"] = "*"
+        kwargs["read_only"] = False
+        super().__init__(**kwargs)
+
+    def to_internal_value(self, data):
+        """
+        This method only passes the validation if the provided data dict is in the
+        correct format. Not if the field id actually exists.
+
+        Example format:
+        {
+            FIELD_ID: {
+                "value": 200
+            }
+        }
+
+        :param data: The data that needs to be validated.
+        :type data: dict
+        :return: The validated dict.
+        :rtype: dict
+        """
+
+        internal = {}
+        for key, value in data.items():
+            if not (isinstance(key, int) or (isinstance(key, str) and key.isnumeric())):
+                self.fail("invalid_key")
+            serializer = self.serializer_class(data=value)
+            if not serializer.is_valid():
+                self.fail("invalid_value")
+            internal[int(key)] = serializer.data
+        return internal
+
+    def to_representation(self, value):
+        """
+        If the provided value is a GridView instance we need to fetch the options from
+        the database. We can easily use the `get_field_options` of the GridView for
+        that and format the dict the way we want.
+
+        If the provided value is a dict it means the field options have already been
+        provided and validated once, so we can just return that value. The variant is
+        used when we want to validate the input.
+
+        :param value: The prepared value that needs to be serialized.
+        :type value: GridView or dict
+        :return: A dictionary containing the
+        :rtype: dict
+        """
+
+        if isinstance(value, View):
+            # If the fields are in the context we can pass them into the
+            # `get_field_options` call so that they don't have to be fetched from the
+            # database again.
+            fields = self.context.get("fields")
+            return {
+                field_options.field_id: self.serializer_class(field_options).data
+                for field_options in value.get_field_options(True, fields)
+            }
+        else:
+            return value
 
 
 class ViewFilterSerializer(serializers.ModelSerializer):
@@ -121,7 +198,9 @@ class ViewSerializer(serializers.ModelSerializer):
 
 
 class CreateViewSerializer(serializers.ModelSerializer):
-    type = serializers.ChoiceField(choices=lazy(view_type_registry.get_types, list)())
+    type = serializers.ChoiceField(
+        choices=lazy(view_type_registry.get_types, list)(), required=True
+    )
 
     class Meta:
         model = View
@@ -130,6 +209,7 @@ class CreateViewSerializer(serializers.ModelSerializer):
 
 class UpdateViewSerializer(serializers.ModelSerializer):
     class Meta:
+        ref_name = "view update"
         model = View
         fields = ("name", "filter_type", "filters_disabled")
         extra_kwargs = {

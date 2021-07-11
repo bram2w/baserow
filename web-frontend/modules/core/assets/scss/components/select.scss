@@ -46,6 +46,20 @@
   }
 }
 
+.select__items-loading {
+  position: relative;
+  height: 32px;
+
+  &::after {
+    content: '';
+    margin-top: -7px;
+    margin-left: -7px;
+
+    @include loading(14px);
+    @include absolute(50%, auto, 0, 50%);
+  }
+}
+
 %select__item-size {
   @include fixed-height(32px, 14px);
 }

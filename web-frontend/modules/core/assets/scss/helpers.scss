@@ -17,8 +17,16 @@
   text-align: right;
 }
 
+.background-white {
+  background-color: $white;
+}
+
 .color-primary {
   color: $color-primary-500 !important;
+}
+
+.color-warning {
+  color: $color-warning-500 !important;
 }
 
 .margin-top-0 {
@@ -57,7 +65,7 @@
   margin-bottom: 30px !important;
 }
 
-.margin-bottm-4 {
+.margin-bottom-4 {
   margin-bottom: 40px !important;
 }
 

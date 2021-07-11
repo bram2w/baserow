@@ -563,6 +563,7 @@ class RowMoveView(APIView):
         "to the end. If the `before_row_id` is provided then the row related to "
         "the `row_id` parameter is moved before that row. If the `before_row_id` "
         "parameter is not provided, then the row will be moved to the end.",
+        request=None,
         responses={
             200: get_example_row_serializer_class(True),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),

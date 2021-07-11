@@ -1,11 +1,18 @@
 from django.db.models import F
+from django.core.exceptions import FieldDoesNotExist, ValidationError
 
+from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import (
+    extract_allowed,
+    set_allowed_attrs,
+    get_model_reference_field_name,
+)
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import extract_allowed, set_allowed_attrs
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.signals import row_created
 from .exceptions import (
     ViewDoesNotExist,
     ViewNotInTable,
@@ -17,8 +24,10 @@ from .exceptions import (
     ViewSortNotSupported,
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
+    ViewDoesNotSupportFieldOptions,
 )
-from .models import View, GridViewFieldOptions, ViewFilter, ViewSort
+from .validators import EMPTY_VALUES
+from .models import View, ViewFilter, ViewSort, FormView
 from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
     view_created,
@@ -31,7 +40,7 @@ from .signals import (
     view_sort_created,
     view_sort_updated,
     view_sort_deleted,
-    grid_view_field_options_updated,
+    view_field_options_updated,
 )
 
 
@@ -196,17 +205,15 @@ class ViewHandler:
 
         view_deleted.send(self, view_id=view_id, view=view, user=user)
 
-    def update_grid_view_field_options(
-        self, user, grid_view, field_options, fields=None
-    ):
+    def update_field_options(self, user, view, field_options, fields=None):
         """
         Updates the field options with the provided values if the field id exists in
-        the table related to the grid view.
+        the table related to the view.
 
         :param user: The user on whose behalf the request is made.
         :type user: User
-        :param grid_view: The grid view for which the field options need to be updated.
-        :type grid_view: GridView
+        :param view: The view for which the field options need to be updated.
+        :type view: View
         :param field_options: A dict with the field ids as the key and a dict
             containing the values that need to be updated as value.
         :type field_options: dict
@@ -217,22 +224,42 @@ class ViewHandler:
             provided view.
         """
 
-        grid_view.table.database.group.has_user(user, raise_error=True)
+        view.table.database.group.has_user(user, raise_error=True)
 
         if not fields:
-            fields = Field.objects.filter(table=grid_view.table)
+            fields = Field.objects.filter(table=view.table)
+
+        try:
+            model = view._meta.get_field("field_options").remote_field.through
+        except FieldDoesNotExist:
+            raise ViewDoesNotSupportFieldOptions(
+                "This view does not support field options."
+            )
+
+        field_name = get_model_reference_field_name(model, View)
+
+        if not field_name:
+            raise ValueError(
+                "The model doesn't have a relationship with the View model or any "
+                "descendants."
+            )
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        field_options = view_type.before_field_options_update(
+            view, field_options, fields
+        )
 
         allowed_field_ids = [field.id for field in fields]
         for field_id, options in field_options.items():
             if int(field_id) not in allowed_field_ids:
                 raise UnrelatedFieldError(
-                    f"The field id {field_id} is not related to " f"the grid view."
+                    f"The field id {field_id} is not related to the view."
                 )
-            GridViewFieldOptions.objects.update_or_create(
-                grid_view=grid_view, field_id=field_id, defaults=options
+            model.objects.update_or_create(
+                field_id=field_id, defaults=options, **{field_name: view}
             )
 
-        grid_view_field_options_updated.send(self, grid_view=grid_view, user=user)
+        view_field_options_updated.send(self, view=view, user=user)
 
     def field_type_changed(self, field):
         """
@@ -741,3 +768,106 @@ class ViewHandler:
         if search is not None:
             queryset = queryset.search_all_fields(search)
         return queryset
+
+    def rotate_form_view_slug(self, user, form):
+        """
+        Rotates the slug of the provided form view.
+
+        :param user: The user on whose behalf the form view is updated.
+        :type user: User
+        :param form: The form view instance that needs to be updated.
+        :type form: View
+        :return: The updated view instance.
+        :rtype: View
+        """
+
+        if not isinstance(form, FormView):
+            raise ValueError("The provided form is not an instance of FormView.")
+
+        group = form.table.database.group
+        group.has_user(user, raise_error=True)
+
+        form.rotate_slug()
+        form.save()
+
+        view_updated.send(self, view=form, user=user)
+
+        return form
+
+    def get_public_form_view_by_slug(self, user, slug):
+        """
+        Returns the form view related to the provided slug if the form related to the
+        slug is public or if the user has access to the related group.
+
+        :param user: The user on whose behalf the form is requested.
+        :type user: User
+        :param slug: The slug of the form view.
+        :type slug: str
+        :return: The requested form view that belongs to the form with the slug.
+        :rtype: FormView
+        """
+
+        try:
+            form = FormView.objects.get(slug=slug)
+        except (FormView.DoesNotExist, ValidationError):
+            raise ViewDoesNotExist("The form does not exist.")
+
+        if not form.public and (
+            not user or not form.table.database.group.has_user(user)
+        ):
+            raise ViewDoesNotExist("The form does not exist.")
+
+        return form
+
+    def submit_form_view(self, form, values, model=None, enabled_field_options=None):
+        """
+        Handles when a form is submitted. It will validate the data by checking if
+        the required fields are provided and not empty and it will create a new row
+        based on those values.
+
+        :param form: The form view that is submitted.
+        :type form: FormView
+        :param values: The submitted values that need to be used when creating the row.
+        :type values: dict
+        :param model: If the model is already generated, it can be provided here.
+        :type model: Model | None
+        :param enabled_field_options: If the enabled field options have already been
+            fetched, they can be provided here.
+        :type enabled_field_options: QuerySet | list | None
+        :return: The newly created row.
+        :rtype: Model
+        """
+
+        table = form.table
+
+        if not model:
+            model = table.get_model()
+
+        if not enabled_field_options:
+            enabled_field_options = form.active_field_options
+
+        allowed_field_names = []
+        field_errors = {}
+
+        # Loop over all field options, find the name in the model and check if the
+        # required values are provided. If not, a validation error is raised.
+        for field in enabled_field_options:
+            field_name = model._field_objects[field.field_id]["name"]
+            allowed_field_names.append(field_name)
+
+            if field.required and (
+                field_name not in values or values[field_name] in EMPTY_VALUES
+            ):
+                field_errors[field_name] = ["This field is required."]
+
+        if len(field_errors) > 0:
+            raise ValidationError(field_errors)
+
+        allowed_values = extract_allowed(values, allowed_field_names)
+        instance = RowHandler().force_create_row(table, allowed_values, model)
+
+        row_created.send(
+            self, row=instance, before=None, user=None, table=table, model=model
+        )
+
+        return instance

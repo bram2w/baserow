@@ -27,10 +27,9 @@
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
 import gridFieldInput from '@baserow/modules/database/mixins/gridFieldInput'
-import phoneNumberField from '@baserow/modules/database/mixins/phoneNumberField'
 
 export default {
-  mixins: [gridField, gridFieldInput, phoneNumberField],
+  mixins: [gridField, gridFieldInput],
   methods: {
     afterEdit() {
       this.$nextTick(() => {

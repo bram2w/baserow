@@ -62,8 +62,5 @@ export default (client) => {
 
       return client.post(`/database/views/grid/${gridId}/`, data)
     },
-    update({ gridId, values }) {
-      return client.patch(`/database/views/grid/${gridId}/`, values)
-    },
   }
 }

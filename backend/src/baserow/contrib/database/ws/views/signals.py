@@ -10,7 +10,6 @@ from baserow.contrib.database.api.views.serializers import (
     ViewFilterSerializer,
     ViewSortSerializer,
 )
-from baserow.contrib.database.api.views.grid.serializers import GridViewSerializer
 
 
 @receiver(view_signals.view_created)
@@ -21,7 +20,10 @@ def view_created(sender, view, user, **kwargs):
             {
                 "type": "view_created",
                 "view": view_type_registry.get_serializer(
-                    view, ViewSerializer, filters=True, sortings=True
+                    view,
+                    ViewSerializer,
+                    filters=True,
+                    sortings=True,
                 ).data,
             },
             getattr(user, "web_socket_id", None),
@@ -172,19 +174,19 @@ def view_sort_deleted(sender, view_sort_id, view_sort, user, **kwargs):
     )
 
 
-@receiver(view_signals.grid_view_field_options_updated)
-def grid_view_field_options_updated(sender, grid_view, user, **kwargs):
+@receiver(view_signals.view_field_options_updated)
+def view_field_options_updated(sender, view, user, **kwargs):
     table_page_type = page_registry.get("table")
+    view_type = view_type_registry.get_by_model(view.specific_class)
+    serializer_class = view_type.get_field_options_serializer_class()
     transaction.on_commit(
         lambda: table_page_type.broadcast(
             {
-                "type": "grid_view_field_options_updated",
-                "grid_view_id": grid_view.id,
-                "grid_view_field_options": GridViewSerializer(grid_view).data[
-                    "field_options"
-                ],
+                "type": "view_field_options_updated",
+                "view_id": view.id,
+                "field_options": serializer_class(view).data["field_options"],
             },
             getattr(user, "web_socket_id", None),
-            table_id=grid_view.table_id,
+            table_id=view.table_id,
         )
     )

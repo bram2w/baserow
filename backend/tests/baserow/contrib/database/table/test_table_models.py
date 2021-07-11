@@ -149,6 +149,21 @@ def test_get_table_model(data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_table_model_to_str(data_fixture):
+    table = data_fixture.create_database_table()
+    table_without_primary = data_fixture.create_database_table()
+    text_field = data_fixture.create_text_field(table=table, primary=True)
+
+    model = table.get_model()
+    instance = model.objects.create(**{f"field_{text_field.id}": "Value"})
+    assert str(instance) == "Value"
+
+    model_without_primary = table_without_primary.get_model()
+    instance = model_without_primary.objects.create()
+    assert str(instance) == f"unnamed row {instance.id}"
+
+
+@pytest.mark.django_db
 def test_enhance_by_fields_queryset(data_fixture):
     table = data_fixture.create_database_table(name="Cars")
     field = data_fixture.create_text_field(table=table, order=0, name="Color")

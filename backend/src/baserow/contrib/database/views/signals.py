@@ -13,5 +13,4 @@ view_filter_deleted = Signal()
 view_sort_created = Signal()
 view_sort_updated = Signal()
 view_sort_deleted = Signal()
-
-grid_view_field_options_updated = Signal()
+view_field_options_updated = Signal()

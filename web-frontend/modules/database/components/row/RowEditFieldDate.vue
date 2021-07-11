@@ -7,6 +7,7 @@
           v-model="date"
           type="text"
           class="input input--large"
+          :class="{ 'input--error': touched && !valid }"
           :placeholder="getDatePlaceholder(field)"
           :disabled="readOnly"
           @keyup.enter="$refs.date.blur()"
@@ -42,6 +43,7 @@
           v-model="time"
           type="text"
           class="input input--large"
+          :class="{ 'input--error': touched && !valid }"
           :placeholder="getTimePlaceholder(field)"
           :disabled="readOnly"
           @keyup.enter="$refs.time.blur()"
@@ -59,6 +61,9 @@
           @input="chooseTime(field, $event)"
         ></TimeSelectContext>
       </div>
+    </div>
+    <div v-show="touched && !valid" class="error">
+      {{ error }}
     </div>
   </div>
 </template>

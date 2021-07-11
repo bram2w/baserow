@@ -20,7 +20,7 @@
       <GroupsContextItem
         v-for="group in searchAndSort(groups)"
         :key="group.id"
-        v-sortable="{ id: group.id, update: order }"
+        v-sortable="{ id: group.id, update: order, marginTop: -1.5 }"
         :group="group"
         @selected="hide"
       ></GroupsContextItem>

@@ -149,4 +149,4 @@ are subscribed to the page.
 * `view_sort_created`
 * `view_sort_updated`
 * `view_sort_deleted`
-* `grid_view_field_options_updated`
+* `view_field_options_updated`

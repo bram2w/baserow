@@ -5,10 +5,14 @@
       v-model="copy"
       type="text"
       class="input input--large field-long-text"
+      :class="{ 'input--error': touched && !valid }"
       :disabled="readOnly"
       @focus="select()"
       @blur="unselect()"
     />
+    <div v-show="touched && !valid" class="error">
+      {{ error }}
+    </div>
   </div>
 </template>
 

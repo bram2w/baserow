@@ -1,8 +1,8 @@
 from drf_spectacular.openapi import AutoSchema as RegularAutoSchema
 
 from .utils import (
-    PolymorphicMappingSerializer,
-    PolymorphicCustomFieldRegistrySerializer,
+    DiscriminatorMappingSerializer,
+    DiscriminatorCustomFieldsMappingSerializer,
 )
 
 
@@ -14,8 +14,8 @@ class AutoSchema(RegularAutoSchema):
         """
 
         if (
-            isinstance(serializer, PolymorphicMappingSerializer)
-            or isinstance(serializer, PolymorphicCustomFieldRegistrySerializer)
+            isinstance(serializer, DiscriminatorMappingSerializer)
+            or isinstance(serializer, DiscriminatorCustomFieldsMappingSerializer)
         ) and serializer.many:
             return True
 
