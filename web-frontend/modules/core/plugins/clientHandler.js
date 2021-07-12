@@ -70,8 +70,8 @@ class ErrorHandler {
       ),
       ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD: new ResponseErrorMessage(
         'Please restore the parent first.',
-        'You cannot restore this because as within something which is already' +
-          ' trashed. Please restore the parent item first.'
+        'You cannot restore this item because it depends on a deleted item.' +
+          ' Please restore the parent item first.'
       ),
     }
 
