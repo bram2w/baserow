@@ -122,7 +122,7 @@ class GridViewView(APIView):
         ),
         responses={
             200: get_example_pagination_serializer_class(
-                get_example_row_serializer_class(True),
+                get_example_row_serializer_class(add_id=True, user_field_names=False),
                 additional_fields={
                     "field_options": FieldOptionsField(
                         serializer_class=GridViewFieldOptionsSerializer, required=False
@@ -213,7 +213,9 @@ class GridViewView(APIView):
         ),
         request=GridViewFilterSerializer,
         responses={
-            200: get_example_row_serializer_class(True)(many=True),
+            200: get_example_row_serializer_class(add_id=True, user_field_names=False)(
+                many=True
+            ),
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),

@@ -99,7 +99,7 @@ def get_row_serializer_class(
     return get_serializer_class(model, field_names, field_overrides, base_class)
 
 
-def get_example_row_serializer_class(add_id=False):
+def get_example_row_serializer_class(add_id=False, user_field_names=False):
     """
     Generates a serializer containing a field for each field type. It is only used for
     example purposes in the openapi documentation.
@@ -107,6 +107,9 @@ def get_example_row_serializer_class(add_id=False):
     :param add_id: Indicates whether the id field should be added. This could for
         example differ for request or response documentation.
     :type add_id: bool
+    :param user_field_names: Whether this example serializer help text should indicate
+        the fields names can be switched using the `user_field_names` GET parameter.
+    :type user_field_names: bool
     :return: Generated serializer containing a field for each field type.
     :rtype: Serializer
     """
@@ -117,6 +120,9 @@ def get_example_row_serializer_class(add_id=False):
     class_name = (
         "ExampleRowResponseSerializer" if add_id else "ExampleRowRequestSerializer"
     )
+
+    if user_field_names:
+        class_name += "WithUserFieldNames"
 
     if class_name in get_example_row_serializer_class.cache:
         return get_example_row_serializer_class.cache[class_name]
@@ -143,6 +149,13 @@ def get_example_row_serializer_class(add_id=False):
             "imported before the fields have been registered."
         )
 
+    optional_user_field_names_info = ""
+    if user_field_names:
+        optional_user_field_names_info = (
+            " If the GET parameter `user_field_names` is provided then the key will "
+            "instead be the actual name of the field."
+        )
+
     for i, field_type in enumerate(field_types):
         # In order to generate a serializer we need a model instance. This method is
         # called before Django has been loaded so it will result in errors when
@@ -154,8 +167,7 @@ def get_example_row_serializer_class(add_id=False):
         kwargs = {
             "help_text": f"This field represents the `{field_type.type}` field. The "
             f"number in field_{i + 1} is in a normal request or response "
-            f"the id of the field. If the GET parameter `user_field_names` is "
-            f"provided then the key will instead be the actual name of the field."
+            f"the id of the field.{optional_user_field_names_info}"
             f"{field_type.get_serializer_help_text(instance)}"
         }
         get_field_method = (
@@ -171,5 +183,5 @@ def get_example_row_serializer_class(add_id=False):
 
 
 example_pagination_row_serializer_class = get_example_pagination_serializer_class(
-    get_example_row_serializer_class(True)
+    get_example_row_serializer_class(True, user_field_names=True)
 )
