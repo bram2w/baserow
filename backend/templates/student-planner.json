@@ -1,0 +1,3271 @@
+{
+  "baserow_template_version": 1,
+  "name": "Student Planner",
+  "icon": "user-graduate",
+  "keywords": [
+    "student",
+    "planner",
+    "university",
+    "college",
+    "uni",
+    "classes",
+    "courses"
+  ],
+  "categories": [
+    "Education"
+  ],
+  "export": [
+    {
+      "id": 12210,
+      "name": "Student Planner",
+      "order": 1,
+      "type": "database",
+      "tables": [
+        {
+          "id": 23627,
+          "name": "Assignments",
+          "order": 1,
+          "fields": [
+            {
+              "id": 124306,
+              "type": "text",
+              "name": "Title",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 124307,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 124308,
+              "type": "boolean",
+              "name": "Completed",
+              "order": 2,
+              "primary": false
+            },
+            {
+              "id": 124318,
+              "type": "single_select",
+              "name": "Type",
+              "order": 3,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 7907,
+                  "value": "Test",
+                  "color": "dark-red",
+                  "order": 0
+                },
+                {
+                  "id": 7908,
+                  "value": "Quiz",
+                  "color": "light-red",
+                  "order": 1
+                },
+                {
+                  "id": 7909,
+                  "value": "Presentation",
+                  "color": "dark-orange",
+                  "order": 2
+                },
+                {
+                  "id": 7910,
+                  "value": "Group Project",
+                  "color": "light-green",
+                  "order": 3
+                },
+                {
+                  "id": 7911,
+                  "value": "Solo Project",
+                  "color": "blue",
+                  "order": 4
+                },
+                {
+                  "id": 7912,
+                  "value": "Reading",
+                  "color": "gray",
+                  "order": 5
+                }
+              ]
+            },
+            {
+              "id": 124319,
+              "type": "date",
+              "name": "Due Date",
+              "order": 4,
+              "primary": false,
+              "date_format": "ISO",
+              "date_include_time": true,
+              "date_time_format": "12"
+            },
+            {
+              "id": 124320,
+              "type": "file",
+              "name": "Files",
+              "order": 5,
+              "primary": false
+            },
+            {
+              "id": 124321,
+              "type": "url",
+              "name": "Link",
+              "order": 6,
+              "primary": false
+            },
+            {
+              "id": 124354,
+              "type": "link_row",
+              "name": "Class",
+              "order": 7,
+              "primary": false,
+              "link_row_table_id": 23628,
+              "link_row_related_field_id": 124355
+            }
+          ],
+          "views": [
+            {
+              "id": 25519,
+              "type": "grid",
+              "name": "All Assignments",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1632,
+                  "field_id": 124319,
+                  "order": "ASC"
+                },
+                {
+                  "id": 1636,
+                  "field_id": 124318,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 122350,
+                  "field_id": 124306,
+                  "width": 235,
+                  "hidden": false,
+                  "order": 7
+                },
+                {
+                  "id": 122348,
+                  "field_id": 124307,
+                  "width": 267,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 122349,
+                  "field_id": 124308,
+                  "width": 130,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 122360,
+                  "field_id": 124318,
+                  "width": 186,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 122361,
+                  "field_id": 124319,
+                  "width": 179,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 122362,
+                  "field_id": 124320,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 122363,
+                  "field_id": 124321,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 122412,
+                  "field_id": 124354,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_124306": "Personal Budgeting Exercise",
+              "field_124307": null,
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-01-07T14:30:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                16
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_124306": "Textbook Chapter 1",
+              "field_124307": null,
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-11-15T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_124306": "Textbook Chapter 2",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-01T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "dk9oi0mu9jIPcQwElO9POzpjIqmvz9eZ_bbaff7b83a02ba075a07ea4310ea7a376018c27a80b57621888427bde99b106e.jpg",
+                  "visible_name": "page2.jpg",
+                  "original_name": "page2.jpg"
+                },
+                {
+                  "name": "1b5DIRZ7twT1DVHgQUeVzN6IdSikKcLA_5adba7cf5c4762365a60369f87ddf6b99c9253296f5af80c78b2e26504c080a3.jpg",
+                  "visible_name": "page3.jpg",
+                  "original_name": "page3.jpg"
+                },
+                {
+                  "name": "Nxk7jdA0QMLA4wkTZ2qjZV39Sw7Esigs_8f262f8930bd365206d38459f91f3aefa8e669f5efaf141ee0df8e2f559a1aad.jpg",
+                  "visible_name": "page4.jpg",
+                  "original_name": "page4.jpg"
+                }
+              ],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_124306": "Textbook Chapter 3",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-28T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_124306": "Textbook Chapter 4",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-27T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_124306": "Textbook Chapter 5",
+              "field_124307": "Take detailed notes on this chapter.",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-03T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "KSTERMskHpf6L0noNuautjHZSkEhBBN2_9a5047309f5ac0fcb2bb8382f4506efd5c03ff81675b98bfa08d36eef952aa8d.jpg",
+                  "visible_name": "page1.jpg",
+                  "original_name": "page1.jpg"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_124306": "Textbook Chapter 6",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-06T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "KSTERMskHpf6L0noNuautjHZSkEhBBN2_9a5047309f5ac0fcb2bb8382f4506efd5c03ff81675b98bfa08d36eef952aa8d.jpg",
+                  "visible_name": "page1.jpg",
+                  "original_name": "page1.jpg"
+                },
+                {
+                  "name": "dk9oi0mu9jIPcQwElO9POzpjIqmvz9eZ_bbaff7b83a02ba075a07ea4310ea7a376018c27a80b57621888427bde99b106e.jpg",
+                  "visible_name": "page2.jpg",
+                  "original_name": "page2.jpg"
+                },
+                {
+                  "name": "1b5DIRZ7twT1DVHgQUeVzN6IdSikKcLA_5adba7cf5c4762365a60369f87ddf6b99c9253296f5af80c78b2e26504c080a3.jpg",
+                  "visible_name": "page3.jpg",
+                  "original_name": "page3.jpg"
+                },
+                {
+                  "name": "Nxk7jdA0QMLA4wkTZ2qjZV39Sw7Esigs_8f262f8930bd365206d38459f91f3aefa8e669f5efaf141ee0df8e2f559a1aad.jpg",
+                  "visible_name": "page4.jpg",
+                  "original_name": "page4.jpg"
+                },
+                {
+                  "name": "W0c04Kf8GkdMltN5Rh7uot2n1GO1IERf_ef439a067f0da855b8267dc8919dce8d2e0d06c23ed07fad25d985f44befd87a.jpg",
+                  "visible_name": "page5.jpg",
+                  "original_name": "page5.jpg"
+                },
+                {
+                  "name": "ZJEDQnXwowIQlv9SMKMnQfSDY2ziANzx_db39f31e4ddc3c4d9b8e92f7a8a95e13f028a7fb5024d148ae0ea3ebe2773b73.jpg",
+                  "visible_name": "page6.jpg",
+                  "original_name": "page6.jpg"
+                },
+                {
+                  "name": "5HM1qweTFz5vmt5E2sLEogbZmy01Xs5b_f796d4f1ca1c69fc79bd3cd77b484256656905ecfb29b8918aa9cbebad70e55a.jpg",
+                  "visible_name": "page7.jpg",
+                  "original_name": "page7.jpg"
+                },
+                {
+                  "name": "5tEoRg2IsBQrYQi1aiSogwfEiK8GkBTH_be625f2ef7a3e7e1b74ad79fc8ed5bb29abcb7603be324d7c242d43ee7e15ed7.jpg",
+                  "visible_name": "page8.jpg",
+                  "original_name": "page8.jpg"
+                },
+                {
+                  "name": "nj9a8ecHjTvMhB4V3LdmQe61oRCJWtD6_56f3ff5b5462f12405cc11bcaa2705ad1c982ebcd43547b981337cf5e6d8b82c.jpg",
+                  "visible_name": "page9.jpg",
+                  "original_name": "page9.jpg"
+                },
+                {
+                  "name": "GIVLK4fpOCwsOgl6IazhyPhfWZdwwc3c_85dc6e5abb6c3a6534fb688ad3e8f6d63865ab6ee32dcdcf5d43e41216ad435d.jpg",
+                  "visible_name": "page10.jpg",
+                  "original_name": "page10.jpg"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_124306": "Textbook Chapter 7",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-10-26T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 9,
+              "order": "9.00000000000000000000",
+              "field_124306": "Textbook Chapter 8",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-09T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "5HM1qweTFz5vmt5E2sLEogbZmy01Xs5b_f796d4f1ca1c69fc79bd3cd77b484256656905ecfb29b8918aa9cbebad70e55a.jpg",
+                  "visible_name": "page7.jpg",
+                  "original_name": "page7.jpg"
+                },
+                {
+                  "name": "5tEoRg2IsBQrYQi1aiSogwfEiK8GkBTH_be625f2ef7a3e7e1b74ad79fc8ed5bb29abcb7603be324d7c242d43ee7e15ed7.jpg",
+                  "visible_name": "page8.jpg",
+                  "original_name": "page8.jpg"
+                },
+                {
+                  "name": "nj9a8ecHjTvMhB4V3LdmQe61oRCJWtD6_56f3ff5b5462f12405cc11bcaa2705ad1c982ebcd43547b981337cf5e6d8b82c.jpg",
+                  "visible_name": "page9.jpg",
+                  "original_name": "page9.jpg"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_124306": "Textbook Chapter 9",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-10T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "KSTERMskHpf6L0noNuautjHZSkEhBBN2_9a5047309f5ac0fcb2bb8382f4506efd5c03ff81675b98bfa08d36eef952aa8d.jpg",
+                  "visible_name": "page1.jpg",
+                  "original_name": "page1.jpg"
+                },
+                {
+                  "name": "dk9oi0mu9jIPcQwElO9POzpjIqmvz9eZ_bbaff7b83a02ba075a07ea4310ea7a376018c27a80b57621888427bde99b106e.jpg",
+                  "visible_name": "page2.jpg",
+                  "original_name": "page2.jpg"
+                },
+                {
+                  "name": "1b5DIRZ7twT1DVHgQUeVzN6IdSikKcLA_5adba7cf5c4762365a60369f87ddf6b99c9253296f5af80c78b2e26504c080a3.jpg",
+                  "visible_name": "page3.jpg",
+                  "original_name": "page3.jpg"
+                },
+                {
+                  "name": "Nxk7jdA0QMLA4wkTZ2qjZV39Sw7Esigs_8f262f8930bd365206d38459f91f3aefa8e669f5efaf141ee0df8e2f559a1aad.jpg",
+                  "visible_name": "page4.jpg",
+                  "original_name": "page4.jpg"
+                },
+                {
+                  "name": "W0c04Kf8GkdMltN5Rh7uot2n1GO1IERf_ef439a067f0da855b8267dc8919dce8d2e0d06c23ed07fad25d985f44befd87a.jpg",
+                  "visible_name": "page5.jpg",
+                  "original_name": "page5.jpg"
+                },
+                {
+                  "name": "ZJEDQnXwowIQlv9SMKMnQfSDY2ziANzx_db39f31e4ddc3c4d9b8e92f7a8a95e13f028a7fb5024d148ae0ea3ebe2773b73.jpg",
+                  "visible_name": "page6.jpg",
+                  "original_name": "page6.jpg"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 11,
+              "order": "11.00000000000000000000",
+              "field_124306": "Textbook Chapter 10",
+              "field_124307": "Go back and reread \ud83d\ude05",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-13T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "5HM1qweTFz5vmt5E2sLEogbZmy01Xs5b_f796d4f1ca1c69fc79bd3cd77b484256656905ecfb29b8918aa9cbebad70e55a.jpg",
+                  "visible_name": "page7.jpg",
+                  "original_name": "page7.jpg"
+                },
+                {
+                  "name": "5tEoRg2IsBQrYQi1aiSogwfEiK8GkBTH_be625f2ef7a3e7e1b74ad79fc8ed5bb29abcb7603be324d7c242d43ee7e15ed7.jpg",
+                  "visible_name": "page8.jpg",
+                  "original_name": "page8.jpg"
+                },
+                {
+                  "name": "nj9a8ecHjTvMhB4V3LdmQe61oRCJWtD6_56f3ff5b5462f12405cc11bcaa2705ad1c982ebcd43547b981337cf5e6d8b82c.jpg",
+                  "visible_name": "page9.jpg",
+                  "original_name": "page9.jpg"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 12,
+              "order": "12.00000000000000000000",
+              "field_124306": "Textbook Chapter 11",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-10-05T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 13,
+              "order": "13.00000000000000000000",
+              "field_124306": "Textbook Chapter 12",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-15T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "KSTERMskHpf6L0noNuautjHZSkEhBBN2_9a5047309f5ac0fcb2bb8382f4506efd5c03ff81675b98bfa08d36eef952aa8d.jpg",
+                  "visible_name": "page1.jpg",
+                  "original_name": "page1.jpg"
+                },
+                {
+                  "name": "dk9oi0mu9jIPcQwElO9POzpjIqmvz9eZ_bbaff7b83a02ba075a07ea4310ea7a376018c27a80b57621888427bde99b106e.jpg",
+                  "visible_name": "page2.jpg",
+                  "original_name": "page2.jpg"
+                },
+                {
+                  "name": "1b5DIRZ7twT1DVHgQUeVzN6IdSikKcLA_5adba7cf5c4762365a60369f87ddf6b99c9253296f5af80c78b2e26504c080a3.jpg",
+                  "visible_name": "page3.jpg",
+                  "original_name": "page3.jpg"
+                },
+                {
+                  "name": "Nxk7jdA0QMLA4wkTZ2qjZV39Sw7Esigs_8f262f8930bd365206d38459f91f3aefa8e669f5efaf141ee0df8e2f559a1aad.jpg",
+                  "visible_name": "page4.jpg",
+                  "original_name": "page4.jpg"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                12
+              ]
+            },
+            {
+              "id": 14,
+              "order": "14.00000000000000000000",
+              "field_124306": "Quiz 1",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7908,
+              "field_124319": "2021-12-01T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                4
+              ]
+            },
+            {
+              "id": 15,
+              "order": "15.00000000000000000000",
+              "field_124306": "Quiz 2",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7908,
+              "field_124319": "2021-12-02T15:15:11+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                4
+              ]
+            },
+            {
+              "id": 16,
+              "order": "16.00000000000000000000",
+              "field_124306": "Quiz 3",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7908,
+              "field_124319": "2021-12-08T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                4
+              ]
+            },
+            {
+              "id": 17,
+              "order": "17.00000000000000000000",
+              "field_124306": "Quiz 4",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7908,
+              "field_124319": "2021-12-10T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                4
+              ]
+            },
+            {
+              "id": 18,
+              "order": "18.00000000000000000000",
+              "field_124306": "Midterm",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7907,
+              "field_124319": "2024-10-01T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                4
+              ]
+            },
+            {
+              "id": 19,
+              "order": "19.00000000000000000000",
+              "field_124306": "Final",
+              "field_124307": "Topics from the Midterm will NOT be on the Final.",
+              "field_124308": "true",
+              "field_124318": 7907,
+              "field_124319": "2021-12-18T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                4
+              ]
+            },
+            {
+              "id": 20,
+              "order": "20.00000000000000000000",
+              "field_124306": "Research Analysis",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-01-13T20:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                5
+              ]
+            },
+            {
+              "id": 21,
+              "order": "21.00000000000000000000",
+              "field_124306": "Research Analysis Presentation",
+              "field_124307": "Team members will be randomly drawn from a hat.",
+              "field_124308": "true",
+              "field_124318": 7910,
+              "field_124319": "2021-09-01T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                5
+              ]
+            },
+            {
+              "id": 22,
+              "order": "22.00000000000000000000",
+              "field_124306": "Market Landscape Essay",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-01-21T22:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                6
+              ]
+            },
+            {
+              "id": 23,
+              "order": "23.00000000000000000000",
+              "field_124306": "FIFO/LIFO",
+              "field_124307": "These are two critical topics that we need to understand.",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-09-08T19:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                27
+              ]
+            },
+            {
+              "id": 24,
+              "order": "24.00000000000000000000",
+              "field_124306": "Global Markets 2-pager",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-09-14T18:30:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                8
+              ]
+            },
+            {
+              "id": 25,
+              "order": "25.00000000000000000000",
+              "field_124306": "Capital Management Worksheet",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-09-21T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                13
+              ]
+            },
+            {
+              "id": 26,
+              "order": "26.00000000000000000000",
+              "field_124306": "Risk Management Response Essay",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-10-03T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                17
+              ]
+            },
+            {
+              "id": 27,
+              "order": "27.00000000000000000000",
+              "field_124306": "Wealth & Asset Management Study",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-10-21T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                20
+              ]
+            },
+            {
+              "id": 28,
+              "order": "28.00000000000000000000",
+              "field_124306": "Acme Corporation Case Study",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-10-25T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                30
+              ]
+            },
+            {
+              "id": 29,
+              "order": "29.00000000000000000000",
+              "field_124306": "Derivatives Challenge #1",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-11-14T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                15
+              ]
+            },
+            {
+              "id": 30,
+              "order": "30.00000000000000000000",
+              "field_124306": "Derivatives Challenge #2",
+              "field_124307": "Can't be completed until Derivatives Challenge #1 is complete.",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2022-11-22T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                15
+              ]
+            },
+            {
+              "id": 31,
+              "order": "31.00000000000000000000",
+              "field_124306": "Business Model Canvas",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2023-09-12T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "hkfHomcxtEUt8ETcP78y8lZ6K1uc76CM_bd6f08faa4f075f3a6b8d775ef9d238944363810d331085b02832f068a0ee62e.png",
+                  "visible_name": "business model canvas.png",
+                  "original_name": "business model canvas.png"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                2
+              ]
+            },
+            {
+              "id": 32,
+              "order": "32.00000000000000000000",
+              "field_124306": "RFP Template",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2023-09-12T21:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                10
+              ]
+            },
+            {
+              "id": 33,
+              "order": "33.00000000000000000000",
+              "field_124306": "Financial Modeling",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7909,
+              "field_124319": "2021-09-28T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                21
+              ]
+            },
+            {
+              "id": 34,
+              "order": "34.00000000000000000000",
+              "field_124306": "Product-Founder Fit",
+              "field_124307": "Team: Maria, Wayne, Elliott, James.",
+              "field_124308": "true",
+              "field_124318": 7910,
+              "field_124319": "2021-09-09T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                2
+              ]
+            },
+            {
+              "id": 35,
+              "order": "35.00000000000000000000",
+              "field_124306": "Product-Market Fit",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7910,
+              "field_124319": "2021-09-14T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                2
+              ]
+            },
+            {
+              "id": 36,
+              "order": "36.00000000000000000000",
+              "field_124306": "The 4 Ps Exercise",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2023-12-05T17:30:00+00:00",
+              "field_124320": [
+                {
+                  "name": "fo8bIBUT75yvpSSGFKV7My7D4h8nbHQc_0e5dfe3e74927e48b3bb1ee2a79106203f02d6905c00833ca4ae77ab514f6bb5.png",
+                  "visible_name": "the 4 Ps.png",
+                  "original_name": "the 4 Ps.png"
+                }
+              ],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                38
+              ]
+            },
+            {
+              "id": 37,
+              "order": "37.00000000000000000000",
+              "field_124306": "Product Positioning",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7909,
+              "field_124319": "2021-09-30T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "FaQGhzey6UExhJDmKjrhoyXG6Tv00vzU_92698d8c96958db1abca29ee8dd89cbadf1b5a5e2df3a7b6db9af97d6b1e86d0.png",
+                  "visible_name": "project organization.png",
+                  "original_name": "project organization.png"
+                }
+              ],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                2
+              ]
+            },
+            {
+              "id": 38,
+              "order": "38.00000000000000000000",
+              "field_124306": "Market Distribution Channels",
+              "field_124307": "Remember to use vibrant visuals for this one.",
+              "field_124308": "true",
+              "field_124318": 7909,
+              "field_124319": "2021-10-29T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                38
+              ]
+            },
+            {
+              "id": 39,
+              "order": "39.00000000000000000000",
+              "field_124306": "SWOT Analysis #1",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2023-11-22T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                40
+              ]
+            },
+            {
+              "id": 40,
+              "order": "40.00000000000000000000",
+              "field_124306": "SWOT Analysis #2",
+              "field_124307": "Pick any company that's NOT in the Fortune 500.",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2023-11-29T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                40
+              ]
+            },
+            {
+              "id": 41,
+              "order": "41.00000000000000000000",
+              "field_124306": "Effective Verbiage Exercise",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2024-09-10T16:30:00+00:00",
+              "field_124320": [
+                {
+                  "name": "yW7Tb27PLjukubMBGSmYoWjReMINFxkA_5d486418e4a2e880334212818b97efcc86bc378f67914d6230b09e64565143a9.jpg",
+                  "visible_name": "presentation.jpg",
+                  "original_name": "presentation.jpg"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                9
+              ]
+            },
+            {
+              "id": 42,
+              "order": "42.00000000000000000000",
+              "field_124306": "Speech Patterns Exercise",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2024-09-17T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                9
+              ]
+            },
+            {
+              "id": 43,
+              "order": "43.00000000000000000000",
+              "field_124306": "Speech Midterm",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7907,
+              "field_124319": "2024-12-02T12:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                10
+              ]
+            },
+            {
+              "id": 44,
+              "order": "44.00000000000000000000",
+              "field_124306": "Speech Final",
+              "field_124307": "Will be measured for improvement over the Midterm.",
+              "field_124308": "false",
+              "field_124318": 7907,
+              "field_124319": "2024-12-03T13:30:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                10
+              ]
+            },
+            {
+              "id": 45,
+              "order": "45.00000000000000000000",
+              "field_124306": "Brainstorming Exercises",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2024-12-10T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                39
+              ]
+            },
+            {
+              "id": 46,
+              "order": "46.00000000000000000000",
+              "field_124306": "Types of Investing",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2024-11-20T21:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                22
+              ]
+            },
+            {
+              "id": 47,
+              "order": "47.00000000000000000000",
+              "field_124306": "Accounting Systems for Business",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7909,
+              "field_124319": "2021-11-18T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                33
+              ]
+            },
+            {
+              "id": 48,
+              "order": "48.00000000000000000000",
+              "field_124306": "IP Worksheet #1",
+              "field_124307": "Take-home quiz.",
+              "field_124308": "true",
+              "field_124318": 7908,
+              "field_124319": "2021-12-13T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                35
+              ]
+            },
+            {
+              "id": 49,
+              "order": "49.00000000000000000000",
+              "field_124306": "IP Worksheet #2",
+              "field_124307": "Take-home quiz.",
+              "field_124308": "true",
+              "field_124318": 7908,
+              "field_124319": "2021-11-10T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                35
+              ]
+            },
+            {
+              "id": 50,
+              "order": "50.00000000000000000000",
+              "field_124306": "Autonomous Technology Essay",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2024-12-04T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                37
+              ]
+            },
+            {
+              "id": 51,
+              "order": "51.00000000000000000000",
+              "field_124306": "Generating and Retaining Ideas Exercise",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2024-12-05T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                39
+              ]
+            },
+            {
+              "id": 52,
+              "order": "52.00000000000000000000",
+              "field_124306": "Driving Down Costs Chapter 1 + 2",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-20T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "EHdY2ZKumzXclgJ8hDSOFnCcXxwVzQ0U_57975c20a6b3c149aa7b6693536a0c26c6e2d79b4f8c779061c62ad19ea73765.png",
+                  "visible_name": "cost management 1.png",
+                  "original_name": "cost management 1.png"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                31
+              ]
+            },
+            {
+              "id": 53,
+              "order": "53.00000000000000000000",
+              "field_124306": "Driving Down Costs Chapter 3 + 4",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-09-22T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "GuLYl3LU6BBGFlsps12OIX4LZOC0zUow_8e94cce661c5e58085e796a9ddd2fb8b0eb47131e06f2516a70fa52662e719ab.jpg",
+                  "visible_name": "cost management 2.jpg",
+                  "original_name": "cost management 2.jpg"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                31
+              ]
+            },
+            {
+              "id": 54,
+              "order": "54.00000000000000000000",
+              "field_124306": "Breaks and Advantages",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7912,
+              "field_124319": "2021-10-19T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                32
+              ]
+            },
+            {
+              "id": 55,
+              "order": "55.00000000000000000000",
+              "field_124306": "Loopholes Excercise",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2024-12-08T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                32
+              ]
+            },
+            {
+              "id": 56,
+              "order": "56.00000000000000000000",
+              "field_124306": "Legal Precautions Worksheet",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2024-12-17T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                34
+              ]
+            },
+            {
+              "id": 57,
+              "order": "57.00000000000000000000",
+              "field_124306": "Video: Accounting Structure",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2025-01-06T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                33
+              ]
+            },
+            {
+              "id": 58,
+              "order": "58.00000000000000000000",
+              "field_124306": "Video: Managerial Accounting Intro",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2025-01-07T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                29
+              ]
+            },
+            {
+              "id": 59,
+              "order": "59.00000000000000000000",
+              "field_124306": "Syllabus Review",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2025-02-03T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                17
+              ]
+            },
+            {
+              "id": 60,
+              "order": "60.00000000000000000000",
+              "field_124306": "Secrets of Behavioral Finance",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2025-02-06T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                17
+              ]
+            },
+            {
+              "id": 61,
+              "order": "61.00000000000000000000",
+              "field_124306": "Video: Behavior Patterns",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2025-02-10T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                17
+              ]
+            },
+            {
+              "id": 62,
+              "order": "62.00000000000000000000",
+              "field_124306": "Movie: The Big Short",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2025-02-18T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "lvKMg61dapzttHfwOqhWtMIhWZyPhcpz_697c73767b7cf9981138d4e4be9840914c2c8167b5a3bbb1bac97cb99e4aa4e6.png",
+                  "visible_name": "the big short.png",
+                  "original_name": "the big short.png"
+                }
+              ],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                19
+              ]
+            },
+            {
+              "id": 63,
+              "order": "63.00000000000000000000",
+              "field_124306": "Midterm",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7907,
+              "field_124319": "2025-03-04T13:30:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                19
+              ]
+            },
+            {
+              "id": 64,
+              "order": "64.00000000000000000000",
+              "field_124306": "Final",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7907,
+              "field_124319": "2025-04-23T13:30:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                19
+              ]
+            },
+            {
+              "id": 65,
+              "order": "65.00000000000000000000",
+              "field_124306": "Organizational Thinking",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7909,
+              "field_124319": "2021-12-06T00:00:00+00:00",
+              "field_124320": [
+                {
+                  "name": "EF9xbkfCcL6iBiMoVPUqgAygnZp3LJgc_21403b67a610203c447b9e4bb522971fda962b00b9321c6d281470b783ac27f1.png",
+                  "visible_name": "model use cases.png",
+                  "original_name": "model use cases.png"
+                }
+              ],
+              "field_124321": "",
+              "field_124354": [
+                8
+              ]
+            },
+            {
+              "id": 66,
+              "order": "66.00000000000000000000",
+              "field_124306": "Midterm",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7907,
+              "field_124319": "2025-03-18T17:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                8
+              ]
+            },
+            {
+              "id": 67,
+              "order": "67.00000000000000000000",
+              "field_124306": "Final",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7907,
+              "field_124319": "2025-04-25T17:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                8
+              ]
+            },
+            {
+              "id": 68,
+              "order": "68.00000000000000000000",
+              "field_124306": "Business Justifications",
+              "field_124307": "",
+              "field_124308": "true",
+              "field_124318": 7910,
+              "field_124319": "2021-09-16T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                3
+              ]
+            },
+            {
+              "id": 69,
+              "order": "69.00000000000000000000",
+              "field_124306": "Use Cases",
+              "field_124307": "Exact use cases still TBD.",
+              "field_124308": "true",
+              "field_124318": 7910,
+              "field_124319": "2021-09-24T00:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": [
+                3
+              ]
+            },
+            {
+              "id": 70,
+              "order": "70.00000000000000000000",
+              "field_124306": "Video: The People",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2025-04-08T16:30:00+00:00",
+              "field_124320": [],
+              "field_124321": "https://assignmentlink.com",
+              "field_124354": [
+                3
+              ]
+            },
+            {
+              "id": 71,
+              "order": "71.00000000000000000000",
+              "field_124306": "Graduation \ud83e\udd73",
+              "field_124307": "",
+              "field_124308": "false",
+              "field_124318": 7911,
+              "field_124319": "2025-05-03T13:00:00+00:00",
+              "field_124320": [],
+              "field_124321": "",
+              "field_124354": []
+            }
+          ]
+        },
+        {
+          "id": 23629,
+          "name": "Semesters",
+          "order": 2,
+          "fields": [
+            {
+              "id": 124312,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 124322,
+              "type": "link_row",
+              "name": "Classes",
+              "order": 1,
+              "primary": false,
+              "link_row_table_id": 23628,
+              "link_row_related_field_id": 124323
+            },
+            {
+              "id": 124324,
+              "type": "date",
+              "name": "Start Date",
+              "order": 2,
+              "primary": false,
+              "date_format": "ISO",
+              "date_include_time": false,
+              "date_time_format": "24"
+            },
+            {
+              "id": 124325,
+              "type": "date",
+              "name": "End Date",
+              "order": 3,
+              "primary": false,
+              "date_format": "ISO",
+              "date_include_time": false,
+              "date_time_format": "24"
+            }
+          ],
+          "views": [
+            {
+              "id": 25521,
+              "type": "grid",
+              "name": "All Semesters",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1629,
+                  "field_id": 124324,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 122356,
+                  "field_id": 124312,
+                  "width": 107,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 122364,
+                  "field_id": 124322,
+                  "width": 807,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 122366,
+                  "field_id": 124324,
+                  "width": 124,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 122367,
+                  "field_id": 124325,
+                  "width": 118,
+                  "hidden": false,
+                  "order": 1
+                }
+              ]
+            },
+            {
+              "id": 25529,
+              "type": "grid",
+              "name": "Year One",
+              "order": 2,
+              "filter_type": "OR",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3725,
+                  "field_id": 124312,
+                  "type": "equal",
+                  "value": "Fall 2021"
+                },
+                {
+                  "id": 3726,
+                  "field_id": 124312,
+                  "type": "equal",
+                  "value": "Spring 2022"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 122395,
+                  "field_id": 124312,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 122396,
+                  "field_id": 124322,
+                  "width": 799,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 122397,
+                  "field_id": 124324,
+                  "width": 124,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 122398,
+                  "field_id": 124325,
+                  "width": 118,
+                  "hidden": false,
+                  "order": 1
+                }
+              ]
+            },
+            {
+              "id": 25530,
+              "type": "grid",
+              "name": "Year Two",
+              "order": 3,
+              "filter_type": "OR",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3727,
+                  "field_id": 124312,
+                  "type": "equal",
+                  "value": "Fall 2022"
+                },
+                {
+                  "id": 3728,
+                  "field_id": 124312,
+                  "type": "equal",
+                  "value": "Spring 2023"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 122399,
+                  "field_id": 124312,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 122400,
+                  "field_id": 124322,
+                  "width": 798,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 122401,
+                  "field_id": 124324,
+                  "width": 123,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 122402,
+                  "field_id": 124325,
+                  "width": 118,
+                  "hidden": false,
+                  "order": 1
+                }
+              ]
+            },
+            {
+              "id": 25531,
+              "type": "grid",
+              "name": "Year Three",
+              "order": 4,
+              "filter_type": "OR",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3729,
+                  "field_id": 124312,
+                  "type": "equal",
+                  "value": "Fall 2023"
+                },
+                {
+                  "id": 3730,
+                  "field_id": 124312,
+                  "type": "equal",
+                  "value": "Spring 2024"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 122403,
+                  "field_id": 124312,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 122404,
+                  "field_id": 124322,
+                  "width": 799,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 122405,
+                  "field_id": 124324,
+                  "width": 122,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 122406,
+                  "field_id": 124325,
+                  "width": 118,
+                  "hidden": false,
+                  "order": 1
+                }
+              ]
+            },
+            {
+              "id": 25532,
+              "type": "grid",
+              "name": "Year Four",
+              "order": 5,
+              "filter_type": "OR",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3731,
+                  "field_id": 124312,
+                  "type": "equal",
+                  "value": "Fall 2024"
+                },
+                {
+                  "id": 3732,
+                  "field_id": 124312,
+                  "type": "equal",
+                  "value": "Spring 2025"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 122407,
+                  "field_id": 124312,
+                  "width": 100,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 122408,
+                  "field_id": 124322,
+                  "width": 800,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 122409,
+                  "field_id": 124324,
+                  "width": 123,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 122410,
+                  "field_id": 124325,
+                  "width": 119,
+                  "hidden": false,
+                  "order": 1
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_124312": "Fall 2021",
+              "field_124322": [
+                1,
+                3,
+                2,
+                6,
+                7
+              ],
+              "field_124324": "2021-08-23",
+              "field_124325": "2021-12-18"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_124312": "Spring 2022",
+              "field_124322": [
+                4,
+                5,
+                8,
+                9,
+                10
+              ],
+              "field_124324": "2022-01-04",
+              "field_124325": "2022-05-06"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_124312": "Fall 2022",
+              "field_124322": [
+                11,
+                12,
+                13,
+                14,
+                17
+              ],
+              "field_124324": "2022-08-23",
+              "field_124325": "2022-12-17"
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_124312": "Spring 2023",
+              "field_124322": [
+                15,
+                16,
+                18,
+                19,
+                20
+              ],
+              "field_124324": "2023-01-03",
+              "field_124325": "2023-05-05"
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_124312": "Fall 2023",
+              "field_124322": [
+                21,
+                22,
+                23,
+                24,
+                25
+              ],
+              "field_124324": "2023-08-22",
+              "field_124325": "2023-12-22"
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_124312": "Spring 2024",
+              "field_124322": [
+                26,
+                27,
+                28,
+                29,
+                30
+              ],
+              "field_124324": "2024-01-08",
+              "field_124325": "2024-05-10"
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_124312": "Fall 2024",
+              "field_124322": [
+                31,
+                32,
+                33,
+                34,
+                35
+              ],
+              "field_124324": "2024-08-19",
+              "field_124325": "2024-12-20"
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_124312": "Spring 2025",
+              "field_124322": [
+                36,
+                38,
+                37,
+                39,
+                40
+              ],
+              "field_124324": "2025-01-07",
+              "field_124325": "2021-05-07"
+            }
+          ]
+        },
+        {
+          "id": 23628,
+          "name": "Classes",
+          "order": 3,
+          "fields": [
+            {
+              "id": 124309,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 124323,
+              "type": "link_row",
+              "name": "Semester",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 23629,
+              "link_row_related_field_id": 124322
+            },
+            {
+              "id": 124331,
+              "type": "text",
+              "name": "Course Code",
+              "order": 4,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 124352,
+              "type": "link_row",
+              "name": "Taught By",
+              "order": 5,
+              "primary": false,
+              "link_row_table_id": 23630,
+              "link_row_related_field_id": 124353
+            },
+            {
+              "id": 124355,
+              "type": "link_row",
+              "name": "Assignments",
+              "order": 6,
+              "primary": false,
+              "link_row_table_id": 23627,
+              "link_row_related_field_id": 124354
+            },
+            {
+              "id": 124436,
+              "type": "text",
+              "name": "Final Grade",
+              "order": 7,
+              "primary": false,
+              "text_default": ""
+            }
+          ],
+          "views": [
+            {
+              "id": 25520,
+              "type": "grid",
+              "name": "All Classes",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3743,
+                  "field_id": 124309,
+                  "type": "equal",
+                  "value": ""
+                }
+              ],
+              "sortings": [
+                {
+                  "id": 1630,
+                  "field_id": 124331,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 122353,
+                  "field_id": 124309,
+                  "width": 348,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 122365,
+                  "field_id": 124323,
+                  "width": 127,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 122373,
+                  "field_id": 124331,
+                  "width": 142,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 122411,
+                  "field_id": 124352,
+                  "width": 155,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 122504,
+                  "field_id": 124355,
+                  "width": 608,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 122525,
+                  "field_id": 124436,
+                  "width": 132,
+                  "hidden": false,
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 25553,
+              "type": "grid",
+              "name": "Accounting",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3737,
+                  "field_id": 124331,
+                  "type": "contains",
+                  "value": "A"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 122505,
+                  "field_id": 124309,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122506,
+                  "field_id": 124323,
+                  "width": 122,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122507,
+                  "field_id": 124331,
+                  "width": 139,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122508,
+                  "field_id": 124352,
+                  "width": 155,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122509,
+                  "field_id": 124355,
+                  "width": 347,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            },
+            {
+              "id": 25554,
+              "type": "grid",
+              "name": "Finance",
+              "order": 3,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3738,
+                  "field_id": 124331,
+                  "type": "contains",
+                  "value": "F"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 122510,
+                  "field_id": 124309,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122511,
+                  "field_id": 124323,
+                  "width": 125,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122512,
+                  "field_id": 124331,
+                  "width": 140,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122513,
+                  "field_id": 124352,
+                  "width": 132,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122514,
+                  "field_id": 124355,
+                  "width": 426,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            },
+            {
+              "id": 25555,
+              "type": "grid",
+              "name": "Entrepreneurship",
+              "order": 4,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3739,
+                  "field_id": 124331,
+                  "type": "contains",
+                  "value": "W"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 122515,
+                  "field_id": 124309,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122516,
+                  "field_id": 124323,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122517,
+                  "field_id": 124331,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122518,
+                  "field_id": 124352,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 122519,
+                  "field_id": 124355,
+                  "width": 437,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_124309": "Introduction to Business",
+              "field_124323": [
+                1
+              ],
+              "field_124331": "X100",
+              "field_124352": [
+                1
+              ],
+              "field_124355": [],
+              "field_124436": null
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_124309": "Exploring Entrepreneurship",
+              "field_124323": [
+                1
+              ],
+              "field_124331": "W212",
+              "field_124352": [
+                2
+              ],
+              "field_124355": [
+                31,
+                34,
+                35,
+                37
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_124309": "How Business Works",
+              "field_124323": [
+                1
+              ],
+              "field_124331": "X170",
+              "field_124352": [
+                3
+              ],
+              "field_124355": [
+                68,
+                69,
+                70
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_124309": "The Global Business Environment",
+              "field_124323": [
+                2
+              ],
+              "field_124331": "D270",
+              "field_124352": [
+                4
+              ],
+              "field_124355": [
+                14,
+                15,
+                16,
+                17,
+                18,
+                19
+              ],
+              "field_124436": "B+"
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_124309": "Strategic Management",
+              "field_124323": [
+                2
+              ],
+              "field_124331": "J375",
+              "field_124352": [
+                5
+              ],
+              "field_124355": [
+                20,
+                21
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_124309": "Venture Ideas",
+              "field_124323": [
+                1
+              ],
+              "field_124331": "W232",
+              "field_124352": [
+                6
+              ],
+              "field_124355": [
+                22
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_124309": "Venture Models",
+              "field_124323": [
+                1
+              ],
+              "field_124331": "W233",
+              "field_124352": [
+                7
+              ],
+              "field_124355": [],
+              "field_124436": null
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_124309": "Organizations and Organizational Change",
+              "field_124323": [
+                2
+              ],
+              "field_124331": "W430",
+              "field_124352": [
+                8
+              ],
+              "field_124355": [
+                24,
+                65,
+                66,
+                67
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 9,
+              "order": "9.00000000000000000000",
+              "field_124309": "Business Presentations",
+              "field_124323": [
+                2
+              ],
+              "field_124331": "C104",
+              "field_124352": [
+                9
+              ],
+              "field_124355": [
+                41,
+                42
+              ],
+              "field_124436": "B"
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_124309": "Business Communication",
+              "field_124323": [
+                2
+              ],
+              "field_124331": "C204",
+              "field_124352": [
+                10
+              ],
+              "field_124355": [
+                32,
+                43,
+                44
+              ],
+              "field_124436": "B"
+            },
+            {
+              "id": 11,
+              "order": "11.00000000000000000000",
+              "field_124309": "The Computer in Business",
+              "field_124323": [
+                3
+              ],
+              "field_124331": "K201",
+              "field_124352": [
+                11
+              ],
+              "field_124355": [],
+              "field_124436": null
+            },
+            {
+              "id": 12,
+              "order": "12.00000000000000000000",
+              "field_124309": "Financial Markets",
+              "field_124323": [
+                3
+              ],
+              "field_124331": "F262",
+              "field_124352": [
+                12
+              ],
+              "field_124355": [
+                2,
+                3,
+                4,
+                5,
+                7,
+                6,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ],
+              "field_124436": "A"
+            },
+            {
+              "id": 13,
+              "order": "13.00000000000000000000",
+              "field_124309": "Working Capital Management",
+              "field_124323": [
+                3
+              ],
+              "field_124331": "F307",
+              "field_124352": [
+                13
+              ],
+              "field_124355": [
+                25
+              ],
+              "field_124436": "A-"
+            },
+            {
+              "id": 14,
+              "order": "14.00000000000000000000",
+              "field_124309": "Venture Capital and Entrepreneurial Finance",
+              "field_124323": [
+                3
+              ],
+              "field_124331": "F317",
+              "field_124352": [
+                14
+              ],
+              "field_124355": [],
+              "field_124436": "A-"
+            },
+            {
+              "id": 15,
+              "order": "15.00000000000000000000",
+              "field_124309": "Security Trading and Market Making",
+              "field_124323": [
+                4
+              ],
+              "field_124331": "F335",
+              "field_124352": [
+                15
+              ],
+              "field_124355": [
+                29,
+                30
+              ],
+              "field_124436": "A"
+            },
+            {
+              "id": 16,
+              "order": "16.00000000000000000000",
+              "field_124309": "Personal Financial Planning",
+              "field_124323": [
+                4
+              ],
+              "field_124331": "F365",
+              "field_124352": [
+                16
+              ],
+              "field_124355": [
+                1
+              ],
+              "field_124436": "B"
+            },
+            {
+              "id": 17,
+              "order": "17.00000000000000000000",
+              "field_124309": "Behavioral Finance",
+              "field_124323": [
+                3
+              ],
+              "field_124331": "F419",
+              "field_124352": [
+                17
+              ],
+              "field_124355": [
+                26,
+                59,
+                60,
+                61
+              ],
+              "field_124436": "A"
+            },
+            {
+              "id": 18,
+              "order": "18.00000000000000000000",
+              "field_124309": "Equity and Fixed Income Investments",
+              "field_124323": [
+                4
+              ],
+              "field_124331": "F420",
+              "field_124352": [
+                18
+              ],
+              "field_124355": [],
+              "field_124436": null
+            },
+            {
+              "id": 19,
+              "order": "19.00000000000000000000",
+              "field_124309": "Derivative Securities and Corporate Risk Management",
+              "field_124323": [
+                4
+              ],
+              "field_124331": "F421",
+              "field_124352": [
+                19
+              ],
+              "field_124355": [
+                62,
+                63,
+                64
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 20,
+              "order": "20.00000000000000000000",
+              "field_124309": "Private Wealth Management",
+              "field_124323": [
+                4
+              ],
+              "field_124331": "F424",
+              "field_124352": [
+                20
+              ],
+              "field_124355": [
+                27
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 21,
+              "order": "21.00000000000000000000",
+              "field_124309": "International Finance",
+              "field_124323": [
+                5
+              ],
+              "field_124331": "F494",
+              "field_124352": [
+                21
+              ],
+              "field_124355": [
+                33
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 22,
+              "order": "22.00000000000000000000",
+              "field_124309": "Principles of Real Estate",
+              "field_124323": [
+                5
+              ],
+              "field_124331": "R300",
+              "field_124352": [
+                22
+              ],
+              "field_124355": [
+                46
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 23,
+              "order": "23.00000000000000000000",
+              "field_124309": "Introduction to Real Estate Analysis",
+              "field_124323": [
+                5
+              ],
+              "field_124331": "R305",
+              "field_124352": [
+                23
+              ],
+              "field_124355": [],
+              "field_124436": null
+            },
+            {
+              "id": 24,
+              "order": "24.00000000000000000000",
+              "field_124309": "Real Estate Appraisals",
+              "field_124323": [
+                5
+              ],
+              "field_124331": "R440",
+              "field_124352": [
+                24
+              ],
+              "field_124355": [],
+              "field_124436": null
+            },
+            {
+              "id": 25,
+              "order": "25.00000000000000000000",
+              "field_124309": "Real Estate Finance and Investment Analysis",
+              "field_124323": [
+                5
+              ],
+              "field_124331": "R443",
+              "field_124352": [
+                25
+              ],
+              "field_124355": [],
+              "field_124436": null
+            },
+            {
+              "id": 26,
+              "order": "26.00000000000000000000",
+              "field_124309": "Basic Accounting Skills",
+              "field_124323": [
+                6
+              ],
+              "field_124331": "A100",
+              "field_124352": [
+                26
+              ],
+              "field_124355": [],
+              "field_124436": "A"
+            },
+            {
+              "id": 27,
+              "order": "27.00000000000000000000",
+              "field_124309": "Foundations of Accounting",
+              "field_124323": [
+                6
+              ],
+              "field_124331": "A200",
+              "field_124352": [
+                27
+              ],
+              "field_124355": [
+                23
+              ],
+              "field_124436": "A-"
+            },
+            {
+              "id": 28,
+              "order": "28.00000000000000000000",
+              "field_124309": "Introduction to Financial Accounting",
+              "field_124323": [
+                6
+              ],
+              "field_124331": "A201",
+              "field_124352": [
+                31
+              ],
+              "field_124355": [],
+              "field_124436": "B"
+            },
+            {
+              "id": 29,
+              "order": "29.00000000000000000000",
+              "field_124309": "Introduction to Managerial Accounting",
+              "field_124323": [
+                6
+              ],
+              "field_124331": "A202",
+              "field_124352": [
+                28
+              ],
+              "field_124355": [
+                58
+              ],
+              "field_124436": "B"
+            },
+            {
+              "id": 30,
+              "order": "30.00000000000000000000",
+              "field_124309": "Global Business Analysis",
+              "field_124323": [
+                6
+              ],
+              "field_124331": "A271",
+              "field_124352": [
+                30
+              ],
+              "field_124355": [
+                28
+              ],
+              "field_124436": "C+"
+            },
+            {
+              "id": 31,
+              "order": "31.00000000000000000000",
+              "field_124309": "Cost Management",
+              "field_124323": [
+                7
+              ],
+              "field_124331": "A324",
+              "field_124352": [
+                29
+              ],
+              "field_124355": [
+                52,
+                53
+              ],
+              "field_124436": "A+"
+            },
+            {
+              "id": 32,
+              "order": "32.00000000000000000000",
+              "field_124309": "Tax Analysis",
+              "field_124323": [
+                7
+              ],
+              "field_124331": "A327",
+              "field_124352": [
+                32
+              ],
+              "field_124355": [
+                54,
+                55
+              ],
+              "field_124436": "A"
+            },
+            {
+              "id": 33,
+              "order": "33.00000000000000000000",
+              "field_124309": "Accounting Information Systems",
+              "field_124323": [
+                7
+              ],
+              "field_124331": "A337",
+              "field_124352": [
+                33
+              ],
+              "field_124355": [
+                47,
+                57
+              ],
+              "field_124436": "B"
+            },
+            {
+              "id": 34,
+              "order": "34.00000000000000000000",
+              "field_124309": "Legal Environment of Business",
+              "field_124323": [
+                7
+              ],
+              "field_124331": "L201",
+              "field_124352": [
+                34
+              ],
+              "field_124355": [
+                56
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 35,
+              "order": "35.00000000000000000000",
+              "field_124309": "Law for Entrepreneurs",
+              "field_124323": [
+                7
+              ],
+              "field_124331": "L311",
+              "field_124352": [
+                35
+              ],
+              "field_124355": [
+                48,
+                49
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 36,
+              "order": "36.00000000000000000000",
+              "field_124309": "The Business and Law of Entertainment and Sports",
+              "field_124323": [
+                8
+              ],
+              "field_124331": "L315",
+              "field_124352": [
+                36
+              ],
+              "field_124355": [],
+              "field_124436": null
+            },
+            {
+              "id": 37,
+              "order": "37.00000000000000000000",
+              "field_124309": "Topics in Business Ethics",
+              "field_124323": [
+                8
+              ],
+              "field_124331": "L360",
+              "field_124352": [
+                37
+              ],
+              "field_124355": [
+                50
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 38,
+              "order": "38.00000000000000000000",
+              "field_124309": "Introduction to Marketing",
+              "field_124323": [
+                8
+              ],
+              "field_124331": "M300",
+              "field_124352": [
+                38
+              ],
+              "field_124355": [
+                36,
+                38
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 39,
+              "order": "39.00000000000000000000",
+              "field_124309": "Creativity and Communication",
+              "field_124323": [
+                8
+              ],
+              "field_124331": "M344",
+              "field_124352": [
+                39
+              ],
+              "field_124355": [
+                45,
+                51
+              ],
+              "field_124436": null
+            },
+            {
+              "id": 40,
+              "order": "40.00000000000000000000",
+              "field_124309": "New Product Management",
+              "field_124323": [
+                8
+              ],
+              "field_124331": "M422",
+              "field_124352": [
+                40
+              ],
+              "field_124355": [
+                39,
+                40
+              ],
+              "field_124436": null
+            }
+          ]
+        },
+        {
+          "id": 23630,
+          "name": "Professors",
+          "order": 4,
+          "fields": [
+            {
+              "id": 124315,
+              "type": "text",
+              "name": "Full Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 124330,
+              "type": "email",
+              "name": "Email",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 124344,
+              "type": "text",
+              "name": "Goes By",
+              "order": 2,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 124353,
+              "type": "link_row",
+              "name": "Class Taught",
+              "order": 3,
+              "primary": false,
+              "link_row_table_id": 23628,
+              "link_row_related_field_id": 124352
+            }
+          ],
+          "views": [
+            {
+              "id": 25522,
+              "type": "grid",
+              "name": "All Professors",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1634,
+                  "field_id": 124315,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 122359,
+                  "field_id": 124315,
+                  "width": 201,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 122372,
+                  "field_id": 124330,
+                  "width": 204,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 122386,
+                  "field_id": 124344,
+                  "width": 158,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 122394,
+                  "field_id": 124353,
+                  "width": 198,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_124315": "Dennis Rodgers",
+              "field_124330": "dennisrodgers@uni.edu",
+              "field_124344": "Mr. Rogers",
+              "field_124353": [
+                1
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_124315": "Gerald Wiley",
+              "field_124330": "geraldwiley@uni.edu",
+              "field_124344": "Mr. Wiley",
+              "field_124353": [
+                2
+              ]
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_124315": "Vernon Myers",
+              "field_124330": "vernonmyers@uni.edu",
+              "field_124344": "Mr. Myers",
+              "field_124353": [
+                3
+              ]
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_124315": "Allison Ford",
+              "field_124330": "allisonford@uni.edu",
+              "field_124344": "Ally",
+              "field_124353": [
+                4
+              ]
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_124315": "Orville Burnett",
+              "field_124330": "orvilleburnett@uni.edu",
+              "field_124344": "Mr. B",
+              "field_124353": [
+                5
+              ]
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_124315": "Libby Waller",
+              "field_124330": "libbywaller@uni.edu",
+              "field_124344": "Ms. Waller",
+              "field_124353": [
+                6
+              ]
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_124315": "Roger Abbott",
+              "field_124330": "rogerabbott@uni.edu",
+              "field_124344": "Mr. Abbott",
+              "field_124353": [
+                7
+              ]
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_124315": "Sydney Lewis",
+              "field_124330": "sydneylewis@uni.edu",
+              "field_124344": "Syd",
+              "field_124353": [
+                8
+              ]
+            },
+            {
+              "id": 9,
+              "order": "9.00000000000000000000",
+              "field_124315": "Coley Dodson",
+              "field_124330": "coleydodson@uni.edu",
+              "field_124344": "Mr. Dodson",
+              "field_124353": [
+                9
+              ]
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_124315": "Tony Christensen",
+              "field_124330": "tonychristensen@uni.edu",
+              "field_124344": "Mr. Christensen",
+              "field_124353": [
+                10
+              ]
+            },
+            {
+              "id": 11,
+              "order": "11.00000000000000000000",
+              "field_124315": "Johnnie Carey",
+              "field_124330": "johnniecarey@uni.edu",
+              "field_124344": "Mr. Carey",
+              "field_124353": [
+                11
+              ]
+            },
+            {
+              "id": 12,
+              "order": "12.00000000000000000000",
+              "field_124315": "Linwood Kerr",
+              "field_124330": "linwoodkerr@uni.edu",
+              "field_124344": "Lin",
+              "field_124353": [
+                12
+              ]
+            },
+            {
+              "id": 13,
+              "order": "13.00000000000000000000",
+              "field_124315": "Merritt Conrad",
+              "field_124330": "merrittconrad@uni.edu",
+              "field_124344": "Mr. Conrad",
+              "field_124353": [
+                13
+              ]
+            },
+            {
+              "id": 14,
+              "order": "14.00000000000000000000",
+              "field_124315": "Chas Rogers",
+              "field_124330": "chasrogers@uni.edu",
+              "field_124344": "Chas",
+              "field_124353": [
+                14
+              ]
+            },
+            {
+              "id": 15,
+              "order": "15.00000000000000000000",
+              "field_124315": "Erwin Skinner",
+              "field_124330": "erwinskinner@uni.edu",
+              "field_124344": "Erwin",
+              "field_124353": [
+                15
+              ]
+            },
+            {
+              "id": 16,
+              "order": "16.00000000000000000000",
+              "field_124315": "George Rollins",
+              "field_124330": "georgerollins@uni.edu",
+              "field_124344": "Mr. Rollins",
+              "field_124353": [
+                16
+              ]
+            },
+            {
+              "id": 17,
+              "order": "17.00000000000000000000",
+              "field_124315": "Duke Fox",
+              "field_124330": "dukefox@uni.edu",
+              "field_124344": "Mr. Fox",
+              "field_124353": [
+                17
+              ]
+            },
+            {
+              "id": 18,
+              "order": "18.00000000000000000000",
+              "field_124315": "Jerry Hogan",
+              "field_124330": "jerryhogan@uni.edu",
+              "field_124344": "Mr. H",
+              "field_124353": [
+                18
+              ]
+            },
+            {
+              "id": 19,
+              "order": "19.00000000000000000000",
+              "field_124315": "Jerry Kelly",
+              "field_124330": "jerrykelly@uni.edu",
+              "field_124344": "Jerry",
+              "field_124353": [
+                19
+              ]
+            },
+            {
+              "id": 20,
+              "order": "20.00000000000000000000",
+              "field_124315": "Hugh Lawson",
+              "field_124330": "hughlawson@uni.edu",
+              "field_124344": "Mr. Lawson",
+              "field_124353": [
+                20
+              ]
+            },
+            {
+              "id": 21,
+              "order": "21.00000000000000000000",
+              "field_124315": "Bert Shields",
+              "field_124330": "bertshields@uni.edu",
+              "field_124344": "Dr. Shields",
+              "field_124353": [
+                21
+              ]
+            },
+            {
+              "id": 22,
+              "order": "22.00000000000000000000",
+              "field_124315": "Darrell Potter",
+              "field_124330": "darrelpotter@uni.edu",
+              "field_124344": "Dr. Potter",
+              "field_124353": [
+                22
+              ]
+            },
+            {
+              "id": 23,
+              "order": "23.00000000000000000000",
+              "field_124315": "Laura Hale",
+              "field_124330": "laurahale@uni.edu",
+              "field_124344": "Ms. Hale",
+              "field_124353": [
+                23
+              ]
+            },
+            {
+              "id": 24,
+              "order": "24.00000000000000000000",
+              "field_124315": "Rae Huff",
+              "field_124330": "raehuff@uni.edu",
+              "field_124344": "Mrs. Huff",
+              "field_124353": [
+                24
+              ]
+            },
+            {
+              "id": 25,
+              "order": "25.00000000000000000000",
+              "field_124315": "Shelby Curry",
+              "field_124330": "shelbycurry@uni.edu",
+              "field_124344": "Mrs. Curry",
+              "field_124353": [
+                25
+              ]
+            },
+            {
+              "id": 26,
+              "order": "26.00000000000000000000",
+              "field_124315": "Shelby Cooke",
+              "field_124330": "shelbycooke@uni.edu",
+              "field_124344": "Shelby",
+              "field_124353": [
+                26
+              ]
+            },
+            {
+              "id": 27,
+              "order": "27.00000000000000000000",
+              "field_124315": "Blaine Shea",
+              "field_124330": "blaineshea@uni.edu",
+              "field_124344": "Blaine",
+              "field_124353": [
+                27
+              ]
+            },
+            {
+              "id": 31,
+              "order": "27.99999999999999999999",
+              "field_124315": "Eveline Madden",
+              "field_124330": "evelinemadden@uni.edu",
+              "field_124344": "Mrs. Madden",
+              "field_124353": [
+                28
+              ]
+            },
+            {
+              "id": 28,
+              "order": "28.00000000000000000000",
+              "field_124315": "Maybelle Hendricks",
+              "field_124330": "maybellehendricks@uni.edu",
+              "field_124344": "Ms. Hendricks",
+              "field_124353": [
+                29
+              ]
+            },
+            {
+              "id": 30,
+              "order": "28.99999999999999999999",
+              "field_124315": "Indiana McPherson",
+              "field_124330": "indianamcpherson@uni.edu",
+              "field_124344": "Ms. McPherson",
+              "field_124353": [
+                30
+              ]
+            },
+            {
+              "id": 29,
+              "order": "29.00000000000000000000",
+              "field_124315": "Beryl Good",
+              "field_124330": "berylgood@uni.edu",
+              "field_124344": "Mrs. Good",
+              "field_124353": [
+                31
+              ]
+            },
+            {
+              "id": 32,
+              "order": "30.00000000000000000000",
+              "field_124315": "Addison Allison",
+              "field_124330": "addisonallison@uni.edu",
+              "field_124344": "Addi",
+              "field_124353": [
+                32
+              ]
+            },
+            {
+              "id": 33,
+              "order": "31.00000000000000000000",
+              "field_124315": "Sue Gould",
+              "field_124330": "suegould@uni.edu",
+              "field_124344": "Dr. Gould",
+              "field_124353": [
+                33
+              ]
+            },
+            {
+              "id": 34,
+              "order": "32.00000000000000000000",
+              "field_124315": "Frank Golden",
+              "field_124330": "frankgoulden@uni.edu",
+              "field_124344": "Mr. Golden",
+              "field_124353": [
+                34
+              ]
+            },
+            {
+              "id": 35,
+              "order": "33.00000000000000000000",
+              "field_124315": "Edwina Hicks",
+              "field_124330": "edwinahicks@uni.edu",
+              "field_124344": "Dr. Hicks",
+              "field_124353": [
+                35
+              ]
+            },
+            {
+              "id": 36,
+              "order": "34.00000000000000000000",
+              "field_124315": "Grace Patrick",
+              "field_124330": "gracepatrick@uni.edu",
+              "field_124344": "Grace",
+              "field_124353": [
+                36
+              ]
+            },
+            {
+              "id": 37,
+              "order": "35.00000000000000000000",
+              "field_124315": "Holly Greenwald",
+              "field_124330": "hollygreenwald@uni.edu",
+              "field_124344": "Holly",
+              "field_124353": [
+                37
+              ]
+            },
+            {
+              "id": 38,
+              "order": "36.00000000000000000000",
+              "field_124315": "Tracy Nielsen",
+              "field_124330": "tracynielsen@uni.edu",
+              "field_124344": "Ms. Nielsen",
+              "field_124353": [
+                38
+              ]
+            },
+            {
+              "id": 39,
+              "order": "37.00000000000000000000",
+              "field_124315": "Audie Vaughn",
+              "field_124330": "audievaughn@uni.edu",
+              "field_124344": "Audie",
+              "field_124353": [
+                39
+              ]
+            },
+            {
+              "id": 40,
+              "order": "38.00000000000000000000",
+              "field_124315": "Tessie Brock",
+              "field_124330": "tessiebrock@uni.edu",
+              "field_124344": "Ms. Brock",
+              "field_124353": [
+                40
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
