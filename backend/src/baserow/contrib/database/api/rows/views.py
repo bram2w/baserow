@@ -323,9 +323,9 @@ class RowsView(APIView):
             "purposes, the field_ID must be replaced with the actual id of the field "
             "or the name of the field if `user_field_names` is provided."
         ),
-        request=get_example_row_serializer_class(False),
+        request=get_example_row_serializer_class(False, user_field_names=True),
         responses={
-            200: get_example_row_serializer_class(True),
+            200: get_example_row_serializer_class(True, user_field_names=True),
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
@@ -432,7 +432,7 @@ class RowView(APIView):
             "depends on the fields type."
         ),
         responses={
-            200: get_example_row_serializer_class(True),
+            200: get_example_row_serializer_class(True, user_field_names=True),
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
@@ -511,9 +511,9 @@ class RowView(APIView):
             "the field_ID must be replaced with the actual id of the field or the name "
             "of the field if `user_field_names` is provided."
         ),
-        request=get_example_row_serializer_class(False),
+        request=get_example_row_serializer_class(False, user_field_names=True),
         responses={
-            200: get_example_row_serializer_class(True),
+            200: get_example_row_serializer_class(True, user_field_names=True),
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
@@ -674,7 +674,7 @@ class RowMoveView(APIView):
         "parameter is not provided, then the row will be moved to the end.",
         request=None,
         responses={
-            200: get_example_row_serializer_class(True),
+            200: get_example_row_serializer_class(True, user_field_names=True),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
             404: get_error_schema(
