@@ -176,10 +176,12 @@ class UserFileHandler:
         hash = sha256_hash(stream)
         file_name = truncate_middle(file_name, 64)
 
-        try:
-            return UserFile.objects.get(original_name=file_name, sha256_hash=hash)
-        except UserFile.DoesNotExist:
-            pass
+        existing_user_file = UserFile.objects.filter(
+            original_name=file_name, sha256_hash=hash
+        ).first()
+
+        if existing_user_file:
+            return existing_user_file
 
         extension = pathlib.Path(file_name).suffix[1:].lower()
         mime_type = mimetypes.guess_type(file_name)[0] or ""
