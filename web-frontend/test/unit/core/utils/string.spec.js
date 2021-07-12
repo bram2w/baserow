@@ -50,12 +50,41 @@ describe('test string utils', () => {
   })
 
   test('test isValidEmail', () => {
-    expect(isValidEmail('bram.test.nl')).toBe(false)
-    expect(isValidEmail('not-an-email')).toBe(false)
-    expect(isValidEmail('bram@localhost')).toBe(false)
-    expect(isValidEmail('bram@localhost.nl')).toBe(true)
-    expect(isValidEmail('bram.test.test@sub.domain.nl')).toBe(true)
-    expect(isValidEmail('BRAM.test.test@sub.DOMAIN.nl')).toBe(true)
+    const invalidEmails = [
+      'test@' + 'a'.repeat(246) + '.com',
+      '@a',
+      'a@',
+      'not-an-email',
+      'bram.test.nl',
+      'invalid_email',
+      'invalid@invalid@com',
+      '\nhello@gmail.com',
+      'asdds asdd@gmail.com',
+    ]
+
+    const validEmails = [
+      'test@' + 'a'.repeat(245) + '.com',
+      'a@a',
+      '用户@例子.广告',
+      'अजय@डाटा.भारत',
+      'квіточка@пошта.укр',
+      'χρήστης@παράδειγμα.ελ',
+      'Dörte@Sörensen.example.com',
+      'коля@пример.рф',
+      'bram@localhost',
+      'bram@localhost.nl',
+      'first_part_underscores_ok@hyphens-ok.com',
+      'wierd@[1.1.1.1]',
+      'bram.test.test@sub.domain.nl',
+      'BRAM.test.test@sub.DOMAIN.nl',
+    ]
+
+    for (const invalidEmail of invalidEmails) {
+      expect(isValidEmail(invalidEmail)).toBe(false)
+    }
+    for (const validEmail of validEmails) {
+      expect(isValidEmail(validEmail)).toBe(true)
+    }
   })
 
   test('test isSecureURL', () => {

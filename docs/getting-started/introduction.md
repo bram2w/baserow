@@ -133,3 +133,5 @@ are accepted.
 * `EMAIL_SMTP_PORT` (default `25`): The port of the SMTP server.
 * `EMAIL_SMTP_USER` (default ``): The username for the SMTP server.
 * `EMAIL_SMTP_PASSWORD` (default ``): The password of the SMTP server.
+* `HOURS_UNTIL_TRASH_PERMANENTLY_DELETED` (default 72): The number of hours to keep 
+  trashed items until they are permanently deleted.

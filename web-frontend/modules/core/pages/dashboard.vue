@@ -8,18 +8,71 @@
       </div>
       <div class="alert__title">We need your help!</div>
       <p class="alert__content">
-        Do you like Baserow and where the product is headed? Do you want to see
-        new features sooner? By becoming a sponsor you will allow us to spend
-        more time on the development of Baserow which means you will get new
-        features faster. Your help is much appreciated.
+        If you find Baserow useful then sponsoring, starring or sharing us is
+        greatly appreciated:
       </p>
       <a
         href="https://github.com/sponsors/bram2w"
         target="_blank"
+        rel="noopener noreferrer"
         class="button button--primary dashboard__alert-button"
       >
         Become a GitHub sponsor
         <i class="fa fa-heart"></i>
+      </a>
+      <a
+        href="https://gitlab.com/bramw/baserow"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="button button--primary dashboard__alert-button"
+      >
+        Star us on Gitlab
+        <i class="fab fa-gitlab"></i>
+      </a>
+      <a
+        v-tooltip="'Tweet about Baserow'"
+        :href="
+          'https://twitter.com/intent/tweet?url=https://baserow.io' +
+          '&hashtags=opensource,nocode,database,baserow&text=' +
+          encodeURI(
+            'Check out @baserow an open source no-code database tool and Airtable alternative!'
+          )
+        "
+        target="_blank"
+        rel="noopener noreferrer"
+        class="button button--primary dashboard__alert-button"
+      >
+        <i class="fab fa-twitter"></i>
+      </a>
+      <a
+        v-tooltip="'Share on Reddit'"
+        :href="
+          'https://www.reddit.com/submit?url=https://baserow.io&title=' +
+          encodeURI('Baserow - An open source no-code database')
+        "
+        target="_blank"
+        rel="noopener noreferrer"
+        class="button button--primary dashboard__alert-button"
+      >
+        <i class="fab fa-reddit"></i>
+      </a>
+      <a
+        v-tooltip="'Share on Facebook'"
+        href="https://www.facebook.com/sharer/sharer.php?u=https://baserow.io"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="button button--primary dashboard__alert-button"
+      >
+        <i class="fab fa-facebook"></i>
+      </a>
+      <a
+        v-tooltip="'Share on LinkedIn'"
+        href="https://www.linkedin.com/sharing/share-offsite/?url=https://baserow.io"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="button button--primary dashboard__alert-button"
+      >
+        <i class="fab fa-linkedin"></i>
       </a>
     </div>
     <GroupInvitation

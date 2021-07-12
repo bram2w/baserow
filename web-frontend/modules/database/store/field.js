@@ -125,6 +125,29 @@ export const actions = {
     dispatch('forceCreate', { table, values: data })
   },
   /**
+   * Restores a field into the field store and notifies the selected view that the
+   * field has been restored so it can update it's own state if the view type contains
+   * any field specific state.
+   */
+  async fieldRestored(context, { table, selectedView, values }) {
+    const { commit } = context
+    const fieldType = this.$registry.get('field', values.type)
+    const populatedField = populateField(values, this.$registry)
+    commit('ADD_ITEM', populatedField)
+
+    if (selectedView) {
+      const selectedViewType = this.$registry.get('view', selectedView.type)
+      await selectedViewType.fieldRestored(
+        context,
+        table,
+        selectedView,
+        populatedField,
+        fieldType,
+        'page/'
+      )
+    }
+  },
+  /**
    * Forcefully create a new field without making a call to the backend.
    */
   async forceCreate(context, { table, values }) {
@@ -251,6 +274,13 @@ export const getters = {
   },
   getAll(state) {
     return state.items
+  },
+  getAllWithPrimary(state) {
+    if (state.primary !== null) {
+      return [state.primary, ...state.items]
+    } else {
+      return state.items
+    }
   },
 }
 

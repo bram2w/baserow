@@ -22,8 +22,8 @@
           >
             <template v-if="hasSelectedView">
               <i
-                class="header__filter-icon header-filter-icon--view fas"
-                :class="'fa-' + view._.type.iconClass"
+                class="header__filter-icon header-filter-icon--view fas fa-fw"
+                :class="view._.type.colorClass + ' fa-' + view._.type.iconClass"
               ></i>
               <span class="header__filter-name header__filter-name--forced">
                 <EditableViewName ref="rename" :view="view"></EditableViewName>
@@ -283,6 +283,9 @@ export default {
         return
       }
 
+      const includeFieldOptions =
+        typeof event === 'object' ? event.includeFieldOptions : false
+
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
       try {
@@ -291,7 +294,8 @@ export default {
           this.view,
           this.fields,
           this.primary,
-          this.storePrefix
+          this.storePrefix,
+          includeFieldOptions
         )
       } catch (error) {
         if (error instanceof RefreshCancelledError) {

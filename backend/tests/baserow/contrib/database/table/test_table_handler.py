@@ -21,6 +21,7 @@ from baserow.contrib.database.fields.models import (
     BooleanField,
 )
 from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -41,6 +42,17 @@ def test_get_database_table(data_fixture):
 
     table_copy = handler.get_table(table_id=table.id)
     assert table_copy.id == table.id
+
+    TrashHandler.trash(user, table.database.group, table.database, table.database)
+
+    with pytest.raises(TableDoesNotExist):
+        handler.get_table(table_id=table.id)
+
+    TrashHandler.restore_item(user, "application", table.database.id)
+
+    TrashHandler.trash(user, table.database.group, None, table.database.group)
+    with pytest.raises(TableDoesNotExist):
+        handler.get_table(table_id=table.id)
 
 
 @pytest.mark.django_db
@@ -138,7 +150,10 @@ def test_fill_table_with_initial_data(data_fixture):
 
     with pytest.raises(MaxFieldLimitExceeded):
         table_handler.create_table(
-            user, database, name="Table 1", data=[["fields"] * 3, ["rows"] * 3]
+            user,
+            database,
+            name="Table 1",
+            data=[["field1", "field2", "field3"], ["rows"] * 3],
         )
 
     settings.MAX_FIELD_LIMIT = field_limit
@@ -326,7 +341,7 @@ def test_delete_database_table(send_mock, data_fixture):
         handler.delete_table(user=user_2, table=table)
 
     assert Table.objects.all().count() == 1
-    assert f"database_table_{table.id}" in connection.introspection.table_names()
+    assert Table.trash.all().count() == 0
 
     table_id = table.id
     handler.delete_table(user=user, table=table)
@@ -336,4 +351,5 @@ def test_delete_database_table(send_mock, data_fixture):
     assert send_mock.call_args[1]["user"].id == user.id
 
     assert Table.objects.all().count() == 0
-    assert f"database_table_{table.id}" not in connection.introspection.table_names()
+    assert Table.trash.all().count() == 1
+    assert f"database_table_{table.id}" in connection.introspection.table_names()

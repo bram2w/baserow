@@ -1,5 +1,9 @@
 <template>
-  <SidebarApplication :application="application" @selected="selected">
+  <SidebarApplication
+    :group="group"
+    :application="application"
+    @selected="selected"
+  >
     <template #context>
       <li>
         <nuxt-link
@@ -25,6 +29,7 @@
             update: orderTables,
             marginLeft: 34,
             marginRight: 10,
+            marginTop: -1.5,
           }"
           :database="application"
           :table="table"
@@ -53,6 +58,10 @@ export default {
   components: { SidebarApplication, SidebarItem, CreateTableModal },
   props: {
     application: {
+      type: Object,
+      required: true,
+    },
+    group: {
       type: Object,
       required: true,
     },

@@ -142,7 +142,7 @@ import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/
 import GridViewRowDragging from '@baserow/modules/database/components/view/grid/GridViewRowDragging'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
-import { GridViewType } from '@baserow/modules/database/viewTypes'
+import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 
 export default {
   name: 'GridView',
@@ -201,10 +201,10 @@ export default {
         .sort((a, b) => {
           const orderA = this.fieldOptions[a.id]
             ? this.fieldOptions[a.id].order
-            : GridViewType.getMaxPossibleOrderValue()
+            : maxPossibleOrderValue
           const orderB = this.fieldOptions[b.id]
             ? this.fieldOptions[b.id].order
-            : GridViewType.getMaxPossibleOrderValue()
+            : maxPossibleOrderValue
 
           // First by order.
           if (orderA > orderB) {
@@ -460,6 +460,11 @@ export default {
             getScrollTop,
           }
         )
+        await this.$store.dispatch('notification/restore', {
+          trash_item_type: 'row',
+          parent_trash_item_id: this.table.id,
+          trash_item_id: row.id,
+        })
       } catch (error) {
         notifyIf(error, 'row')
       }

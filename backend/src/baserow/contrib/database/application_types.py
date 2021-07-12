@@ -1,15 +1,14 @@
-from django.core.management.color import no_style
-from django.urls import path, include
-from django.db import connections
 from django.conf import settings
+from django.core.management.color import no_style
+from django.db import connections
+from django.urls import path, include
 
-from baserow.core.registries import ApplicationType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.registries import view_type_registry
-
-from .models import Database, Table
-from .table.handler import TableHandler
+from baserow.core.registries import ApplicationType
 from .api.serializers import DatabaseSerializer
+from .models import Database, Table
+from baserow.core.trash.handler import TrashHandler
 
 
 class DatabaseApplicationType(ApplicationType):
@@ -23,11 +22,14 @@ class DatabaseApplicationType(ApplicationType):
         handler.
         """
 
-        database_tables = database.table_set.all().select_related("database__group")
-        table_handler = TableHandler()
+        database_tables = (
+            database.table_set(manager="objects_and_trash")
+            .all()
+            .select_related("database__group")
+        )
 
         for table in database_tables:
-            table_handler._delete_table(table)
+            TrashHandler.permanently_delete(table)
 
     def get_api_urls(self):
         from .api import urls as api_urls

@@ -269,6 +269,92 @@ export class DateEqualViewFilterType extends ViewFilterType {
   }
 }
 
+export class DateBeforeViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_before'
+  }
+
+  getName() {
+    return 'before date'
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    // parse the provided string values as moment objects in order to make
+    // date comparisons
+    const filterDate = moment.utc(filterValue, 'YYYY-MM-DD')
+    const rowDate = moment.utc(rowValue, 'YYYY-MM-DD')
+
+    // if the filter date is not a valid date we can immediately return
+    // true because without a valid date the filter won't be applied
+    if (!filterDate.isValid()) {
+      return true
+    }
+
+    // if the row value is null or the rowDate is not valid we can immediately return
+    // false since it does not match the filter and the row won't be in the resultset
+    if (rowValue === null || !rowDate.isValid()) {
+      return false
+    }
+
+    return rowDate.isBefore(filterDate)
+  }
+}
+
+export class DateAfterViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_after'
+  }
+
+  getName() {
+    return 'after date'
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    // parse the provided string values as moment objects in order to make
+    // date comparisons
+    const filterDate = moment.utc(filterValue, 'YYYY-MM-DD')
+    const rowDate = moment.utc(rowValue, 'YYYY-MM-DD')
+
+    // if the filter date is not a valid date we can immediately return
+    // true because without a valid date the filter won't be applied
+    if (!filterDate.isValid()) {
+      return true
+    }
+
+    // if the row value is null or the rowDate is not valid we can immediately return
+    // false since it does not match the filter and the row won't be in the resultset
+    if (rowValue === null || !rowDate.isValid()) {
+      return false
+    }
+
+    return rowDate.isAfter(filterDate)
+  }
+}
+
 export class DateNotEqualViewFilterType extends ViewFilterType {
   static getType() {
     return 'date_not_equal'

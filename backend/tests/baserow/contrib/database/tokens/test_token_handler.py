@@ -552,6 +552,10 @@ def test_has_table_permission(data_fixture):
     assert not handler.has_table_permission(token, "update", table_5)
     assert not handler.has_table_permission(token, "delete", table_5)
 
+    # Test giving a list of permission
+    assert handler.has_table_permission(token, ["create", "read", "update"], table_1)
+    assert not handler.has_table_permission(token, ["create", "update"], table_1)
+
 
 @pytest.mark.django_db
 def test_check_table_permissions(data_fixture):

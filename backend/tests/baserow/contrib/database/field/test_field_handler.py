@@ -15,6 +15,8 @@ from baserow.contrib.database.fields.exceptions import (
     IncompatiblePrimaryFieldTypeError,
     CannotChangeFieldType,
     MaxFieldLimitExceeded,
+    FieldWithSameNameAlreadyExists,
+    ReservedBaserowFieldNameException,
 )
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
@@ -50,8 +52,27 @@ def test_can_convert_between_all_fields(data_fixture):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database, user=user)
+    # Link tables
     link_table = data_fixture.create_database_table(database=database, user=user)
     data_fixture.create_text_field(table=link_table, name="text_field", primary=True)
+    decimal_link_table = data_fixture.create_database_table(
+        database=database, user=user
+    )
+    data_fixture.create_number_field(
+        table=decimal_link_table,
+        name="text_field",
+        primary=True,
+        number_type="DECIMAL",
+        number_decimal_places=3,
+        number_negative=True,
+    )
+    file_link_table = data_fixture.create_database_table(database=database, user=user)
+    data_fixture.create_file_field(
+        table=file_link_table,
+        name="file_field",
+        primary=True,
+    )
+
     handler = FieldHandler()
     row_handler = RowHandler()
     fake = Faker()
@@ -66,7 +87,9 @@ def test_can_convert_between_all_fields(data_fixture):
     # different conversion behaviour or entirely different database columns being
     # created. Here the kwargs which control these modes are enumerated so we can then
     # generate every possible type of conversion.
-    all_possible_kwargs_per_type = construct_all_possible_field_kwargs(link_table)
+    all_possible_kwargs_per_type = construct_all_possible_field_kwargs(
+        link_table, decimal_link_table, file_link_table
+    )
 
     i = 1
     for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
@@ -225,6 +248,17 @@ def test_create_field(send_mock, data_fixture):
     assert NumberField.objects.all().count() == 1
     assert BooleanField.objects.all().count() == 1
 
+    with pytest.raises(FieldWithSameNameAlreadyExists):
+        handler.create_field(
+            user=user, table=table, type_name="boolean", name=boolean_field.name
+        )
+
+    with pytest.raises(ReservedBaserowFieldNameException):
+        handler.create_field(user=user, table=table, type_name="boolean", name="order")
+
+    with pytest.raises(ReservedBaserowFieldNameException):
+        handler.create_field(user=user, table=table, type_name="boolean", name="id")
+
     field_limit = settings.MAX_FIELD_LIMIT
     settings.MAX_FIELD_LIMIT = 2
 
@@ -255,20 +289,26 @@ def test_create_primary_field(data_fixture):
 
     with pytest.raises(PrimaryFieldAlreadyExists):
         handler = FieldHandler()
-        handler.create_field(user=user, table=table_1, type_name="text", primary=True)
+        handler.create_field(
+            user=user, table=table_1, type_name="text", primary=True, name="test"
+        )
 
     handler = FieldHandler()
     field = handler.create_field(
-        user=user, table=table_2, type_name="text", primary=True
+        user=user, table=table_2, type_name="text", primary=True, name="primary"
     )
 
     assert field.primary
 
     with pytest.raises(PrimaryFieldAlreadyExists):
-        handler.create_field(user=user, table=table_2, type_name="text", primary=True)
+        handler.create_field(
+            user=user, table=table_2, type_name="text", primary=True, name="new_primary"
+        )
 
     # Should be able to create a regular field when there is already a primary field.
-    handler.create_field(user=user, table=table_2, type_name="text", primary=False)
+    handler.create_field(
+        user=user, table=table_2, type_name="text", primary=False, name="non_primary"
+    )
 
 
 @pytest.mark.django_db
@@ -378,6 +418,16 @@ def test_update_field(send_mock, data_fixture):
     assert getattr(rows[0], f"field_{field.id}") is False
     assert getattr(rows[1], f"field_{field.id}") is False
     assert getattr(rows[2], f"field_{field.id}") is False
+
+    with pytest.raises(ReservedBaserowFieldNameException):
+        handler.update_field(user=user, field=field, name="order")
+
+    with pytest.raises(ReservedBaserowFieldNameException):
+        handler.update_field(user=user, field=field, name="id")
+
+    field_2 = data_fixture.create_text_field(table=table, order=1)
+    with pytest.raises(FieldWithSameNameAlreadyExists):
+        handler.update_field(user=user, field=field_2, name=field.name)
 
 
 @pytest.mark.django_db
@@ -733,16 +783,13 @@ def test_delete_field(send_mock, data_fixture):
     field_id = text_field.id
     handler.delete_field(user=user, field=text_field)
     assert Field.objects.all().count() == 0
+    assert Field.trash.all().count() == 1
     assert TextField.objects.all().count() == 0
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["field_id"] == field_id
     assert send_mock.call_args[1]["field"].id == field_id
     assert send_mock.call_args[1]["user"].id == user.id
-
-    table_model = table.get_model()
-    field_name = f"field_{text_field.id}"
-    assert field_name not in [field.name for field in table_model._meta.get_fields()]
 
     primary = data_fixture.create_text_field(table=table, primary=True)
     with pytest.raises(CannotDeletePrimaryField):
@@ -857,3 +904,32 @@ def test_update_select_options(data_fixture):
 
     assert SelectOption.objects.all().count() == 2
     assert field_2.select_options.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_find_next_free_field_name(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(table=table, order=0)
+
+    data_fixture.create_text_field(name="test", table=table, order=1)
+    field_1 = data_fixture.create_text_field(name="field", table=table, order=1)
+    data_fixture.create_text_field(name="field 2", table=table, order=1)
+    handler = FieldHandler()
+
+    assert handler.find_next_unused_field_name(table, ["test"]) == "test 2"
+    assert handler.find_next_unused_field_name(table, ["test", "other"]) == "other"
+    assert handler.find_next_unused_field_name(table, ["field"]) == "field 3"
+
+    assert (
+        handler.find_next_unused_field_name(table, ["field"], [field_1.id]) == "field"
+    )
+
+    data_fixture.create_text_field(name="regex like field [0-9]", table=table, order=1)
+    data_fixture.create_text_field(
+        name="regex like field [0-9] 2", table=table, order=1
+    )
+    assert (
+        handler.find_next_unused_field_name(table, ["regex like field [0-9]"])
+        == "regex like field [0-9] 3"
+    )

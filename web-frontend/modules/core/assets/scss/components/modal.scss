@@ -32,8 +32,17 @@
     padding: 0;
   }
 
+  &.modal__box--full-height {
+    height: calc(100% - 80px);
+  }
+
   &.modal__box--small {
     max-width: 520px;
+  }
+
+  &.modal__box--tiny {
+    max-width: 320px;
+    padding: 15px;
   }
 
   .box__title {
@@ -42,18 +51,28 @@
 }
 
 .modal__box-sidebar {
+  position: relative;
   flex: 0 0 200px;
   background-color: $color-neutral-50;
   border-right: 1px solid $color-neutral-200;
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
+
+  .modal__box--full-height & {
+    overflow-y: auto;
+  }
 }
 
 .modal__box-content {
+  position: relative;
   width: 100%;
   padding: 32px 40px;
   min-width: 0;
   flex: 1;
+
+  .modal__box--full-height & {
+    overflow-y: auto;
+  }
 }
 
 .modal__close {

@@ -9,6 +9,7 @@ from django.db import models
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
+from baserow.core.trash.handler import TrashHandler
 
 
 def test_get_field_ids_from_dict():
@@ -432,6 +433,9 @@ def test_delete_row(before_send_mock, send_mock, data_fixture):
     row_id = row.id
     handler.delete_row(user=user, table=table, row_id=row.id)
     assert model.objects.all().count() == 1
+    assert model.trash.all().count() == 1
+    row.refresh_from_db()
+    assert row.trashed
 
     before_send_mock.assert_called_once()
     assert before_send_mock.call_args[1]["row"]
@@ -446,3 +450,103 @@ def test_delete_row(before_send_mock, send_mock, data_fixture):
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["model"]._generated_table_model
     assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.row_created.send")
+def test_restore_row(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    speed_field = data_fixture.create_number_field(
+        table=table, name="Max speed", number_negative=True
+    )
+    price_field = data_fixture.create_number_field(
+        table=table,
+        name="Price",
+        number_type="DECIMAL",
+        number_decimal_places=2,
+        number_negative=False,
+    )
+
+    handler = RowHandler()
+
+    row_1 = handler.create_row(
+        user=user,
+        table=table,
+        values={
+            name_field.id: "Tesla",
+            speed_field.id: 240,
+            f"field_{price_field.id}": 59999.99,
+        },
+    )
+
+    handler.delete_row(user, table, row_1.id)
+    TrashHandler.restore_item(user, "row", row_1.id, parent_trash_item_id=table.id)
+
+    assert len(send_mock.call_args) == 2
+    assert send_mock.call_args[1]["row"].id == row_1.id
+    assert send_mock.call_args[1]["user"] is None
+    assert send_mock.call_args[1]["table"].id == table.id
+    assert send_mock.call_args[1]["before"] is None
+    assert send_mock.call_args[1]["model"]._generated_table_model
+
+
+@pytest.mark.django_db
+def test_get_include_exclude_fields_with_user_field_names(data_fixture):
+    table = data_fixture.create_database_table()
+    data_fixture.create_text_field(name="first", table=table, order=1)
+    data_fixture.create_text_field(name="Test", table=table, order=2)
+    data_fixture.create_text_field(name="Test_2", table=table, order=3)
+    data_fixture.create_text_field(name="With Space", table=table, order=4)
+
+    row_handler = RowHandler()
+
+    assert (
+        row_handler.get_include_exclude_fields(
+            table, include=None, exclude=None, user_field_names=True
+        )
+        is None
+    )
+
+    assert (
+        row_handler.get_include_exclude_fields(
+            table, include="", exclude="", user_field_names=True
+        )
+        is None
+    )
+
+    fields = row_handler.get_include_exclude_fields(
+        table, include="Test_2", user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == ["Test_2"]
+
+    fields = row_handler.get_include_exclude_fields(
+        table, "first,field_9999,Test", user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == ["first", "Test"]
+
+    fields = row_handler.get_include_exclude_fields(
+        table, None, "first,field_9999", user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == [
+        "Test",
+        "Test_2",
+        "With Space",
+    ]
+
+    fields = row_handler.get_include_exclude_fields(
+        table, "first,Test", "first", user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == ["Test"]
+
+    fields = row_handler.get_include_exclude_fields(
+        table, 'first,"With Space",Test', user_field_names=True
+    )
+    assert list(fields.values_list("name", flat=True)) == [
+        "first",
+        "Test",
+        "With Space",
+    ]

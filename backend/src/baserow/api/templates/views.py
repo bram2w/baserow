@@ -9,7 +9,7 @@ from baserow.api.templates.serializers import TemplateCategoriesSerializer
 from baserow.api.decorators import map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
 from baserow.api.schemas import get_error_schema
-from baserow.api.utils import PolymorphicMappingSerializer
+from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.api.applications.serializers import get_application_serializer
 from baserow.api.applications.views import application_type_serializers
 from baserow.core.models import TemplateCategory
@@ -74,7 +74,7 @@ class InstallTemplateView(APIView):
             "created applications."
         ),
         responses={
-            200: PolymorphicMappingSerializer(
+            200: DiscriminatorMappingSerializer(
                 "Applications", application_type_serializers, many=True
             ),
             400: get_error_schema(

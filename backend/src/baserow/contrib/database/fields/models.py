@@ -1,12 +1,14 @@
-from django.db import models
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
 
-from baserow.core.utils import to_snake_case, remove_special_characters
+from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
+    TrashableModelMixin,
 )
+from baserow.core.utils import to_snake_case, remove_special_characters
 
 NUMBER_TYPE_INTEGER = "INTEGER"
 NUMBER_TYPE_DECIMAL = "DECIMAL"
@@ -42,7 +44,11 @@ def get_default_field_content_type():
 
 
 class Field(
-    CreatedAndUpdatedOnMixin, OrderableMixin, PolymorphicContentTypeMixin, models.Model
+    TrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    OrderableMixin,
+    PolymorphicContentTypeMixin,
+    models.Model,
 ):
     """
     Because each field type can have custom settings, for example precision for a number
@@ -53,6 +59,7 @@ class Field(
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField(help_text="Lowest first.")
     name = models.CharField(max_length=255)
+    old_name = models.CharField(max_length=255, null=True, blank=True)
     primary = models.BooleanField(
         default=False,
         help_text="Indicates if the field is a primary field. If `true` the field "
@@ -98,7 +105,7 @@ class Field(
         return name
 
 
-class SelectOption(models.Model):
+class SelectOption(ParentFieldTrashableModelMixin, models.Model):
     value = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField()
@@ -279,7 +286,7 @@ class LinkRowField(Field):
     @staticmethod
     def get_new_relation_id():
         last_id = (
-            LinkRowField.objects.all().aggregate(
+            LinkRowField.objects_and_trash.all().aggregate(
                 largest=models.Max("link_row_relation_id")
             )["largest"]
             or 0

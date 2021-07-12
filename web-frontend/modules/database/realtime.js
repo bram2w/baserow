@@ -51,6 +51,25 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('field_restored', ({ store, app }, data) => {
+    const table = store.getters['table/getSelected']
+    if (table !== undefined && table.id === data.field.table_id) {
+      // Trigger a table refresh to get the row data for the field including field
+      // options to get those also.
+      app.$bus.$emit('table-refresh', {
+        tableId: store.getters['table/getSelectedId'],
+        includeFieldOptions: true,
+        async callback() {
+          await store.dispatch('field/fieldRestored', {
+            table,
+            selectedView: store.getters['view/getSelected'],
+            values: data.field,
+          })
+        },
+      })
+    }
+  })
+
   realtime.registerEvent('field_updated', ({ store, app }, data) => {
     const field = store.getters['field/get'](data.field.id)
     if (field !== undefined) {
@@ -270,16 +289,12 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
-  realtime.registerEvent(
-    'grid_view_field_options_updated',
-    ({ store }, data) => {
-      const view = store.getters['view/get'](data.grid_view_id)
-      if (view !== null && view.id === store.getters['view/getSelectedId']) {
-        store.dispatch(
-          'page/view/grid/forceUpdateAllFieldOptions',
-          data.grid_view_field_options
-        )
-      }
+  realtime.registerEvent('view_field_options_updated', (context, data) => {
+    const { store, app } = context
+    const view = store.getters['view/get'](data.view_id)
+    if (view !== null && view.id === store.getters['view/getSelectedId']) {
+      const viewType = app.$registry.get('view', view.type)
+      viewType.fieldOptionsUpdated(context, view, data.field_options, 'page/')
     }
-  )
+  })
 }

@@ -1,10 +1,11 @@
-from django.dispatch import receiver
 from django.db import transaction
+from django.dispatch import receiver
 
+from baserow.api.applications.serializers import (
+    get_application_serializer,
+)
 from baserow.api.groups.serializers import GroupSerializer, GroupUserGroupSerializer
-from baserow.api.applications.serializers import get_application_serializer
 from baserow.core import signals
-
 from .tasks import broadcast_to_group, broadcast_to_users
 
 
@@ -60,6 +61,27 @@ def group_user_updated(sender, group_user, user, **kwargs):
     )
 
 
+@receiver(signals.group_restored)
+def group_restored(sender, group_user, user, **kwargs):
+    transaction.on_commit(
+        lambda: broadcast_to_users.delay(
+            [group_user.user_id],
+            {
+                "type": "group_restored",
+                "group_id": group_user.group_id,
+                "group": GroupUserGroupSerializer(group_user).data,
+                "applications": [
+                    get_application_serializer(application).data
+                    for application in group_user.group.application_set.select_related(
+                        "content_type", "group"
+                    ).all()
+                ],
+            },
+            getattr(user, "web_socket_id", None),
+        )
+    )
+
+
 @receiver(signals.group_user_deleted)
 def group_user_deleted(sender, group_user, user, **kwargs):
     transaction.on_commit(
@@ -72,7 +94,7 @@ def group_user_deleted(sender, group_user, user, **kwargs):
 
 
 @receiver(signals.application_created)
-def application_created(sender, application, user, type_name, **kwargs):
+def application_created(sender, application, user, **kwargs):
     transaction.on_commit(
         lambda: broadcast_to_group.delay(
             application.group_id,

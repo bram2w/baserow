@@ -2,9 +2,17 @@ import pytest
 from unittest.mock import patch
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
+
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.models import View, GridView, ViewFilter, ViewSort
+from baserow.contrib.database.views.models import (
+    View,
+    GridView,
+    FormView,
+    ViewFilter,
+    ViewSort,
+)
 from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_filter_type_registry,
@@ -22,10 +30,13 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortNotSupported,
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
+    ViewDoesNotSupportFieldOptions,
+    FormViewFieldTypeIsNotSupported,
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -61,10 +72,20 @@ def test_get_view(data_fixture):
             view_id=grid.id, base_queryset=View.objects.prefetch_related("UNKNOWN")
         )
 
+    # If the table is trashed the view should not be available.
+    TrashHandler.trash(user, grid.table.database.group, grid.table.database, grid.table)
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_view(view_id=grid.id, view_model=GridView)
+
+    # Restoring the table should restore the view
+    TrashHandler.restore_item(user, "table", grid.table.id)
+    view = handler.get_view(view_id=grid.id, view_model=GridView)
+    assert view.id == grid.id
+
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.view_created.send")
-def test_create_view(send_mock, data_fixture):
+def test_create_grid_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -135,7 +156,7 @@ def test_create_view(send_mock, data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.view_updated.send")
-def test_update_view(send_mock, data_fixture):
+def test_update_grid_view(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -165,6 +186,189 @@ def test_update_view(send_mock, data_fixture):
     grid.refresh_from_db()
     assert grid.filter_type == "OR"
     assert grid.filters_disabled
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_deleted.send")
+def test_delete_grid_view(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid = data_fixture.create_grid_view(table=table)
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInGroup):
+        handler.delete_view(user=user_2, view=grid)
+
+    with pytest.raises(ValueError):
+        handler.delete_view(user=user_2, view=object())
+
+    view_id = grid.id
+
+    assert View.objects.all().count() == 1
+    handler.delete_view(user=user, view=grid)
+    assert View.objects.all().count() == 0
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view_id"] == view_id
+    assert send_mock.call_args[1]["view"].id == view_id
+    assert send_mock.call_args[1]["user"].id == user.id
+
+
+@pytest.mark.django_db
+def test_trashed_fields_are_not_included_in_grid_view_field_options(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field_1 = data_fixture.create_text_field(table=table)
+    field_2 = data_fixture.create_text_field(table=table)
+
+    ViewHandler().update_field_options(
+        user=user,
+        view=grid_view,
+        field_options={str(field_1.id): {"width": 150}, field_2.id: {"width": 250}},
+    )
+    options = grid_view.get_field_options()
+    assert options.count() == 2
+
+    TrashHandler.trash(user, table.database.group, table.database, field_1)
+
+    options = grid_view.get_field_options()
+    assert options.count() == 1
+
+    with pytest.raises(UnrelatedFieldError):
+        ViewHandler().update_field_options(
+            user=user,
+            view=grid_view,
+            field_options={
+                field_1.id: {"width": 150},
+            },
+        )
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_created.send")
+def test_create_form_view(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_file_1 = data_fixture.create_user_file()
+    user_file_2 = data_fixture.create_user_file()
+    table = data_fixture.create_database_table(user=user)
+
+    handler = ViewHandler()
+    view = handler.create_view(user=user, table=table, type_name="form", name="Form")
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view"].id == view.id
+    assert send_mock.call_args[1]["user"].id == user.id
+
+    assert View.objects.all().count() == 1
+    assert FormView.objects.all().count() == 1
+
+    form = FormView.objects.all().first()
+    assert len(str(form.slug)) == 43
+    assert form.name == "Form"
+    assert form.order == 1
+    assert form.table == table
+    assert form.title == ""
+    assert form.description == ""
+    assert form.cover_image is None
+    assert form.logo_image is None
+    assert form.submit_action == "MESSAGE"
+    assert form.submit_action_redirect_url == ""
+
+    form = handler.create_view(
+        user=user,
+        table=table,
+        type_name="form",
+        slug="test-slug",
+        name="Form 2",
+        public=True,
+        title="Test form",
+        description="Test form description",
+        cover_image=user_file_1,
+        logo_image=user_file_2,
+        submit_action="REDIRECT",
+        submit_action_redirect_url="https://localhost",
+    )
+
+    assert View.objects.all().count() == 2
+    assert FormView.objects.all().count() == 2
+    assert form.slug != "test-slug"
+    assert len(form.slug) == 43
+    assert form.name == "Form 2"
+    assert form.order == 2
+    assert form.table == table
+    assert form.public is True
+    assert form.title == "Test form"
+    assert form.description == "Test form description"
+    assert form.cover_image_id == user_file_1.id
+    assert form.logo_image_id == user_file_2.id
+    assert form.submit_action == "REDIRECT"
+    assert form.submit_action_redirect_url == "https://localhost"
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_updated.send")
+def test_update_form_view(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    form = data_fixture.create_form_view(table=table)
+    user_file_1 = data_fixture.create_user_file()
+    user_file_2 = data_fixture.create_user_file()
+
+    handler = ViewHandler()
+    view = handler.update_view(
+        user=user,
+        view=form,
+        slug="Test slug",
+        name="Form 2",
+        public=True,
+        title="Test form",
+        description="Test form description",
+        cover_image=user_file_1,
+        logo_image=user_file_2,
+        submit_action="REDIRECT",
+        submit_action_redirect_url="https://localhost",
+    )
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view"].id == view.id
+    assert send_mock.call_args[1]["user"].id == user.id
+
+    form.refresh_from_db()
+    assert form.slug != "test-slug"
+    assert len(str(form.slug)) == 43
+    assert form.name == "Form 2"
+    assert form.table == table
+    assert form.public is True
+    assert form.title == "Test form"
+    assert form.description == "Test form description"
+    assert form.cover_image_id == user_file_1.id
+    assert form.logo_image_id == user_file_2.id
+    assert form.submit_action == "REDIRECT"
+    assert form.submit_action_redirect_url == "https://localhost"
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_deleted.send")
+def test_delete_form_view(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(table=table)
+    form = data_fixture.create_form_view(table=table)
+
+    handler = ViewHandler()
+    view_id = form.id
+
+    assert View.objects.all().count() == 1
+    handler.delete_view(user=user, view=form)
+    assert View.objects.all().count() == 0
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view_id"] == view_id
+    assert send_mock.call_args[1]["view"].id == view_id
+    assert send_mock.call_args[1]["user"].id == user.id
 
 
 @pytest.mark.django_db
@@ -244,8 +448,8 @@ def test_delete_view(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.views.signals.grid_view_field_options_updated.send")
-def test_update_grid_view_field_options(send_mock, data_fixture):
+@patch("baserow.contrib.database.views.signals.view_field_options_updated.send")
+def test_update_field_options(send_mock, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     grid_view = data_fixture.create_grid_view(table=table)
@@ -254,50 +458,61 @@ def test_update_grid_view_field_options(send_mock, data_fixture):
     field_3 = data_fixture.create_text_field()
 
     with pytest.raises(ValueError):
-        ViewHandler().update_grid_view_field_options(
+        ViewHandler().update_field_options(
             user=user,
-            grid_view=grid_view,
+            view=grid_view,
             field_options={
                 "strange_format": {"height": 150},
             },
         )
 
     with pytest.raises(UserNotInGroup):
-        ViewHandler().update_grid_view_field_options(
+        ViewHandler().update_field_options(
             user=data_fixture.create_user(),
-            grid_view=grid_view,
+            view=grid_view,
             field_options={
                 "strange_format": {"height": 150},
             },
         )
 
     with pytest.raises(UnrelatedFieldError):
-        ViewHandler().update_grid_view_field_options(
+        ViewHandler().update_field_options(
             user=user,
-            grid_view=grid_view,
+            view=grid_view,
             field_options={
                 99999: {"width": 150},
             },
         )
 
     with pytest.raises(UnrelatedFieldError):
-        ViewHandler().update_grid_view_field_options(
+        ViewHandler().update_field_options(
             user=user,
-            grid_view=grid_view,
+            view=grid_view,
             field_options={
                 field_3.id: {"width": 150},
             },
         )
 
-    ViewHandler().update_grid_view_field_options(
+    with pytest.raises(ViewDoesNotSupportFieldOptions):
+        ViewHandler().update_field_options(
+            user=user,
+            # The View object does not have the `field_options` field, so we expect
+            # it to fail.
+            view=View.objects.get(pk=grid_view.id),
+            field_options={
+                field_1.id: {"width": 150},
+            },
+        )
+
+    ViewHandler().update_field_options(
         user=user,
-        grid_view=grid_view,
+        view=grid_view,
         field_options={str(field_1.id): {"width": 150}, field_2.id: {"width": 250}},
     )
     options_4 = grid_view.get_field_options()
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["grid_view"].id == grid_view.id
+    assert send_mock.call_args[1]["view"].id == grid_view.id
     assert send_mock.call_args[1]["user"].id == user.id
     assert len(options_4) == 2
     assert options_4[0].width == 150
@@ -306,9 +521,9 @@ def test_update_grid_view_field_options(send_mock, data_fixture):
     assert options_4[1].field_id == field_2.id
 
     field_4 = data_fixture.create_text_field(table=table)
-    ViewHandler().update_grid_view_field_options(
+    ViewHandler().update_field_options(
         user=user,
-        grid_view=grid_view,
+        view=grid_view,
         field_options={field_2.id: {"width": 300}, field_4.id: {"width": 50}},
     )
     options_4 = grid_view.get_field_options()
@@ -319,6 +534,31 @@ def test_update_grid_view_field_options(send_mock, data_fixture):
     assert options_4[1].field_id == field_2.id
     assert options_4[2].width == 50
     assert options_4[2].field_id == field_4.id
+
+
+@pytest.mark.django_db
+def test_enable_form_view_file_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    file_field = data_fixture.create_file_field(table=table)
+
+    with pytest.raises(FormViewFieldTypeIsNotSupported):
+        ViewHandler().update_field_options(
+            user=user,
+            view=form_view,
+            field_options={
+                file_field.id: {"enabled": True},
+            },
+        )
+
+    ViewHandler().update_field_options(
+        user=user,
+        view=form_view,
+        field_options={
+            file_field.id: {"enabled": False},
+        },
+    )
 
 
 @pytest.mark.django_db
@@ -1014,3 +1254,119 @@ def test_delete_sort(send_mock, data_fixture):
 
     assert ViewSort.objects.all().count() == 1
     assert ViewSort.objects.filter(pk=sort_1.pk).count() == 0
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.views.signals.view_updated.send")
+def test_rotate_form_view_slug(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    form = data_fixture.create_form_view(table=table)
+    old_slug = str(form.slug)
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInGroup):
+        handler.rotate_form_view_slug(user=user_2, form=form)
+
+    with pytest.raises(ValueError):
+        handler.rotate_form_view_slug(user=user, form=object())
+
+    handler.rotate_form_view_slug(user=user, form=form)
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["view"].id == form.id
+    assert send_mock.call_args[1]["user"].id == user.id
+
+    form.refresh_from_db()
+    assert str(form.slug) != old_slug
+    assert len(str(form.slug)) == 43
+
+
+@pytest.mark.django_db
+def test_get_public_form_view_by_slug(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    form = data_fixture.create_form_view(user=user)
+
+    handler = ViewHandler()
+
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_public_form_view_by_slug(user_2, "not_existing")
+
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_public_form_view_by_slug(
+            user_2, "a3f1493a-9229-4889-8531-6a65e745602e"
+        )
+
+    with pytest.raises(ViewDoesNotExist):
+        handler.get_public_form_view_by_slug(user_2, form.slug)
+
+    form2 = handler.get_public_form_view_by_slug(user, form.slug)
+    assert form.id == form2.id
+
+    form.public = True
+    form.save()
+
+    form2 = handler.get_public_form_view_by_slug(user_2, form.slug)
+    assert form.id == form2.id
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.row_created.send")
+def test_submit_form_view(send_mock, data_fixture):
+    table = data_fixture.create_database_table()
+    form = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    boolean_field = data_fixture.create_boolean_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form, text_field, required=True, enabled=True
+    )
+    data_fixture.create_form_view_field_option(
+        form, number_field, required=False, enabled=True
+    )
+    data_fixture.create_form_view_field_option(
+        form, boolean_field, required=True, enabled=False
+    )
+
+    handler = ViewHandler()
+
+    with pytest.raises(ValidationError) as e:
+        handler.submit_form_view(form=form, values={})
+
+    with pytest.raises(ValidationError) as e:
+        handler.submit_form_view(form=form, values={f"field_{number_field.id}": 0})
+
+    assert f"field_{text_field.id}" in e.value.error_dict
+
+    instance = handler.submit_form_view(
+        form=form, values={f"field_{text_field.id}": "Text value"}
+    )
+
+    send_mock.assert_called_once()
+    assert send_mock.call_args[1]["row"].id == instance.id
+    assert send_mock.call_args[1]["user"] is None
+    assert send_mock.call_args[1]["table"].id == table.id
+    assert send_mock.call_args[1]["before"] is None
+    assert send_mock.call_args[1]["model"]._generated_table_model
+
+    handler.submit_form_view(
+        form=form,
+        values={
+            f"field_{text_field.id}": "Another value",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": True,
+        },
+    )
+
+    model = table.get_model()
+    all = model.objects.all()
+    assert len(all) == 2
+    assert getattr(all[0], f"field_{text_field.id}") == "Text value"
+    assert getattr(all[0], f"field_{number_field.id}") is None
+    assert not getattr(all[0], f"field_{boolean_field.id}")
+    assert getattr(all[1], f"field_{text_field.id}") == "Another value"
+    assert getattr(all[1], f"field_{number_field.id}") == 10
+    assert not getattr(all[1], f"field_{boolean_field.id}")

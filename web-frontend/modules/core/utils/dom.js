@@ -40,3 +40,18 @@ export const focusEnd = (element) => {
   selection.addRange(range)
   element.focus()
 }
+
+/**
+ * Finds the closest scrollable parent element of the provided element.
+ */
+export const findScrollableParent = (element) => {
+  if (element == null) {
+    return null
+  }
+
+  if (element.scrollHeight > element.clientHeight) {
+    return element
+  } else {
+    return findScrollableParent(element.parentNode)
+  }
+}

@@ -3,7 +3,9 @@ from typing import Dict, Any, List
 from baserow.contrib.database.fields.registries import field_type_registry
 
 
-def construct_all_possible_field_kwargs(link_table) -> Dict[str, List[Dict[str, Any]]]:
+def construct_all_possible_field_kwargs(
+    link_table, decimal_link_table, file_link_table
+) -> Dict[str, List[Dict[str, Any]]]:
     """
     Some baserow field types have multiple different 'modes' which result in
     different different database columns and modes of operation being
@@ -40,7 +42,11 @@ def construct_all_possible_field_kwargs(link_table) -> Dict[str, List[Dict[str, 
             {"name": "datetime_eu", "date_include_time": True, "date_format": "EU"},
             {"name": "date_eu", "date_include_time": False, "date_format": "EU"},
         ],
-        "link_row": [{"name": "link_row", "link_row_table": link_table}],
+        "link_row": [
+            {"name": "link_row", "link_row_table": link_table},
+            {"name": "decimal_link_row", "link_row_table": decimal_link_table},
+            {"name": "file_link_row", "link_row_table": file_link_table},
+        ],
         "file": [{"name": "file"}],
         "single_select": [
             {

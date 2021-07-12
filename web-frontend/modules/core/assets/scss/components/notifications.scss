@@ -1,7 +1,40 @@
-.notifications {
+.top-right-notifications {
   position: fixed;
   top: 0;
   right: 30px;
   width: 320px;
   z-index: $z-index-notifications;
+}
+
+.bottom-right-notifications {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  position: fixed;
+  bottom: 10px;
+  right: 30px;
+  z-index: $z-index-notifications;
+}
+
+.undo-delete-notification {
+  margin: 5px;
+  box-shadow: $color-primary-200;
+
+  &.undo-delete-notification--pulsing {
+    animation: pulse 1s 2;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 $color-primary-400;
+  }
+
+  70% {
+    box-shadow: 0 0 0 5px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
 }

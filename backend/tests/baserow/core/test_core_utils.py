@@ -12,6 +12,7 @@ from baserow.core.utils import (
     sha256_hash,
     stream_size,
     truncate_middle,
+    split_comma_separated_string,
 )
 
 
@@ -94,3 +95,9 @@ def test_truncate_middle():
 
     with pytest.raises(ValueError):
         truncate_middle("testtesttest", 3) == "..."
+
+
+def test_split_comma_separated_string():
+    assert split_comma_separated_string('A,"B , C",D') == ["A", "B , C", "D"]
+    assert split_comma_separated_string('A,\\"B,C') == ["A", '"B', "C"]
+    assert split_comma_separated_string('A,\\"B,C\\,D') == ["A", '"B', "C,D"]

@@ -1,5 +1,5 @@
 import pytest
-
+from django.shortcuts import reverse
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -7,8 +7,6 @@ from rest_framework.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
 )
-
-from django.shortcuts import reverse
 
 from baserow.contrib.database.models import Database
 
@@ -79,6 +77,31 @@ def test_list_applications(api_client, data_fixture):
     url = reverse("api:applications:list", kwargs={"group_id": group_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
+
+    response = api_client.delete(
+        reverse("api:groups:item", kwargs={"group_id": group_1.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    url = reverse("api:applications:list", kwargs={"group_id": group_1.id})
+    response = api_client.get(
+        url,
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
+
+    url = reverse(
+        "api:applications:list",
+    )
+    response = api_client.get(
+        url,
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    for application in response.json():
+        assert application["group"]["id"] != group_1.id
 
 
 @pytest.mark.django_db
@@ -161,6 +184,20 @@ def test_get_application(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["id"] == application.id
     assert response_json["group"]["id"] == group.id
+
+    response = api_client.delete(
+        reverse("api:groups:item", kwargs={"group_id": application.group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    url = reverse("api:applications:item", kwargs={"application_id": application.id})
+    response = api_client.get(
+        url,
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
 
 
 @pytest.mark.django_db

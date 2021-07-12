@@ -1,5 +1,6 @@
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
+from baserow.contrib.database.fields.handler import RESERVED_BASEROW_FIELD_NAMES
 
 ERROR_FIELD_DOES_NOT_EXIST = (
     "ERROR_FIELD_DOES_NOT_EXIST",
@@ -40,5 +41,21 @@ ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE = (
     HTTP_400_BAD_REQUEST,
     "The field type {e.field_type} is not compatible with the primary field.",
 )
-
 ERROR_MAX_FIELD_COUNT_EXCEEDED = "ERROR_MAX_FIELD_COUNT_EXCEEDED"
+ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS = (
+    "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS",
+    HTTP_400_BAD_REQUEST,
+    "You cannot have two fields with the same name in the same table, please choose a "
+    "unique name for each field.",
+)
+ERROR_RESERVED_BASEROW_FIELD_NAME = (
+    "ERROR_RESERVED_BASEROW_FIELD_NAME",
+    HTTP_400_BAD_REQUEST,
+    f"The field names {','.join(RESERVED_BASEROW_FIELD_NAMES)} are reserved and cannot "
+    f"and cannot be used for a user created field, please choose different field name.",
+)
+ERROR_INVALID_BASEROW_FIELD_NAME = (
+    "ERROR_INVALID_BASEROW_FIELD_NAME",
+    HTTP_400_BAD_REQUEST,
+    "Fields must not be blank or only consist of whitespace.",
+)

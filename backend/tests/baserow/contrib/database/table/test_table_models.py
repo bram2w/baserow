@@ -1,19 +1,17 @@
 from datetime import datetime
-
-import pytest
 from decimal import Decimal
-
 from unittest.mock import MagicMock
 
+import pytest
 from django.db import models
 from django.utils.timezone import make_aware, utc
 
-from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotPossible,
     OrderByFieldNotFound,
     FilterFieldNotFound,
 )
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeNotAllowedForField,
     ViewFilterTypeDoesNotExist,
@@ -34,7 +32,7 @@ def test_group_user_get_next_order(data_fixture):
 
 @pytest.mark.django_db
 def test_get_table_model(data_fixture):
-    default_model_fields_count = 3
+    default_model_fields_count = 4
     table = data_fixture.create_database_table(name="Cars")
     text_field = data_fixture.create_text_field(
         table=table, order=0, name="Color", text_default="white"
@@ -146,6 +144,21 @@ def test_get_table_model(data_fixture):
     assert fields[text_field_2.id]["field"].id == text_field_2.id
     assert fields[text_field_2.id]["type"].type == "text"
     assert fields[text_field_2.id]["name"] == f"field_{text_field_2.id}"
+
+
+@pytest.mark.django_db
+def test_get_table_model_to_str(data_fixture):
+    table = data_fixture.create_database_table()
+    table_without_primary = data_fixture.create_database_table()
+    text_field = data_fixture.create_text_field(table=table, primary=True)
+
+    model = table.get_model()
+    instance = model.objects.create(**{f"field_{text_field.id}": "Value"})
+    assert str(instance) == "Value"
+
+    model_without_primary = table_without_primary.get_model()
+    instance = model_without_primary.objects.create()
+    assert str(instance) == f"unnamed row {instance.id}"
 
 
 @pytest.mark.django_db
@@ -359,12 +372,6 @@ def test_order_by_fields_string_queryset(data_fixture):
     assert results[2].id == row_3.id
     assert results[3].id == row_4.id
 
-    results = model.objects.all().order_by_fields_string(f"-field_{price_field.id}")
-    assert results[0].id == row_2.id
-    assert results[1].id == row_1.id
-    assert results[2].id == row_3.id
-    assert results[3].id == row_4.id
-
     results = model.objects.all().order_by_fields_string(
         f"{description_field.id},-field_{color_field.id}"
     )
@@ -388,6 +395,84 @@ def test_order_by_fields_string_queryset(data_fixture):
     assert results[2].id == row_1.id
     assert results[3].id == row_3.id
     assert results[4].id == row_4.id
+
+
+@pytest.mark.django_db
+def test_order_by_fields_string_queryset_with_user_field_names(data_fixture):
+    table, fields, rows = data_fixture.build_table(
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+            ("-Weird FieldName", "number"),
+            ("+Another Weird Field", "long_text"),
+        ],
+        rows=[
+            ["BMW", "Blue", 10000, "Sports car."],
+            ["Audi", "Orange", 20000, "This is the most expensive car we have."],
+            ["Volkswagen", "White", 5000, "A very old car."],
+            ["Volkswagen", "Green", 4000, "Strange color."],
+        ],
+    )
+    table_2 = data_fixture.create_database_table(database=table.database)
+    link_field = data_fixture.create_link_row_field(
+        table=table, link_row_table=table_2, name="Link Field"
+    )
+
+    model = table.get_model()
+
+    with pytest.raises(OrderByFieldNotFound):
+        model.objects.all().order_by_fields_string("id", user_field_names=True)
+
+    with pytest.raises(OrderByFieldNotFound):
+        model.objects.all().order_by_fields_string(
+            "Non Existent Field", user_field_names=True
+        )
+
+    with pytest.raises(OrderByFieldNotPossible):
+        model.objects.all().order_by_fields_string(
+            link_field.name, user_field_names=True
+        )
+
+    results = model.objects.all().order_by_fields_string(
+        f"--Weird FieldName", user_field_names=True
+    )
+    assert results[0].id == rows[1].id
+    assert results[1].id == rows[0].id
+    assert results[2].id == rows[2].id
+    assert results[3].id == rows[3].id
+
+    results = model.objects.all().order_by_fields_string(
+        f"Name,--Weird FieldName", user_field_names=True
+    )
+    assert results[0].id == rows[1].id
+    assert results[1].id == rows[0].id
+    assert results[2].id == rows[2].id
+    assert results[3].id == rows[3].id
+
+    results = model.objects.all().order_by_fields_string(
+        f"++Another Weird Field,My Color", user_field_names=True
+    )
+    assert results[0].id == rows[2].id
+    assert results[1].id == rows[0].id
+    assert results[2].id == rows[3].id
+    assert results[3].id == rows[1].id
+
+    row_5 = model.objects.create(
+        **{
+            f"field_{fields[0].id}": "Audi",
+            f"field_{fields[1].id}": 2000,
+            f"field_" f"{fields[3].id}": "Old times",
+            "order": Decimal("0.1"),
+        }
+    )
+
+    rows[1].order = Decimal("0.1")
+    results = model.objects.all().order_by_fields_string(f"Name", user_field_names=True)
+    assert results[0].id == row_5.id
+    assert results[1].id == rows[1].id
+    assert results[2].id == rows[0].id
+    assert results[3].id == rows[2].id
+    assert results[4].id == rows[3].id
 
 
 @pytest.mark.django_db

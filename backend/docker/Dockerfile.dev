@@ -26,15 +26,15 @@ RUN apt-get update && \
 
 USER $UID:$GID
 
-ADD --chown=$UID:$GID ./backend/requirements /baserow/requirements
+COPY --chown=$UID:$GID ./backend/requirements /baserow/requirements
 # Disable the path warn as we set the correct path in the entrypoint when it is easy
 # to know the users $HOME/.local/bin location. Changing path in the docker image does
 # not work as we do not know where $HOME when using an ENV command.
 RUN pip3 install --no-warn-script-location -r /baserow/requirements/base.txt -r /baserow/requirements/dev.txt
 
-ADD --chown=$UID:$GID ./docs /baserow/docs
-ADD --chown=$UID:$GID ./backend /baserow/backend
-ADD --chown=$UID:$GID ./premium/backend /baserow/backend/plugins/premium
+COPY --chown=$UID:$GID ./docs /baserow/docs
+COPY --chown=$UID:$GID ./backend /baserow/backend
+COPY --chown=$UID:$GID ./premium/backend /baserow/backend/plugins/premium
 
 WORKDIR /baserow/backend
 

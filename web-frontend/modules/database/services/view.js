@@ -23,8 +23,23 @@ export default (client) => {
     create(tableId, values) {
       return client.post(`/database/views/table/${tableId}/`, values)
     },
-    get(viewId) {
-      return client.get(`/database/views/${viewId}/`)
+    get(viewId, includeFilters = false, includeSortings = false) {
+      const config = {
+        params: {},
+      }
+      const include = []
+      if (includeFilters) {
+        include.push('filters')
+      }
+
+      if (includeSortings) {
+        include.push('sortings')
+      }
+
+      if (include.length > 0) {
+        config.params.include = include.join(',')
+      }
+      return client.get(`/database/views/${viewId}/`, config)
     },
     update(viewId, values) {
       return client.patch(`/database/views/${viewId}/`, values)
@@ -36,6 +51,12 @@ export default (client) => {
     },
     delete(viewId) {
       return client.delete(`/database/views/${viewId}/`)
+    },
+    fetchFieldOptions(viewId) {
+      return client.get(`/database/views/${viewId}/field-options/`)
+    },
+    updateFieldOptions({ viewId, values }) {
+      return client.patch(`/database/views/${viewId}/field-options/`, values)
     },
   }
 }

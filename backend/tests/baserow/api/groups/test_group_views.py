@@ -4,6 +4,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NO
 
 from django.shortcuts import reverse
 
+from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser
 
 
@@ -155,3 +156,22 @@ def test_reorder_groups(api_client, data_fixture):
     group_user_3.refresh_from_db()
 
     assert [1, 2, 3] == [group_user_2.order, group_user_1.order, group_user_3.order]
+
+
+@pytest.mark.django_db
+def test_trashed_group_not_returned_by_views(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    trashed_group = data_fixture.create_group(user=user)
+    visible_group = data_fixture.create_group(user=user)
+
+    CoreHandler().delete_group(user=user, group=trashed_group)
+
+    response = api_client.get(
+        reverse("api:groups:list"), **{"HTTP_AUTHORIZATION": f"JWT {token}"}
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert len(response_json) == 1
+    assert response_json[0]["id"] == visible_group.id

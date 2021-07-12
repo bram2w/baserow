@@ -1,3 +1,5 @@
+from rest_framework.serializers import Serializer
+
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 from baserow.core.registry import (
     Instance,
@@ -9,6 +11,7 @@ from baserow.core.registry import (
     APIUrlsRegistryMixin,
     APIUrlsInstanceMixin,
     ImportExportMixin,
+    MapAPIExceptionsInstanceMixin,
 )
 from .exceptions import (
     ViewTypeAlreadyRegistered,
@@ -19,6 +22,7 @@ from .exceptions import (
 
 
 class ViewType(
+    MapAPIExceptionsInstanceMixin,
     APIUrlsInstanceMixin,
     CustomFieldsInstanceMixin,
     ModelInstanceMixin,
@@ -69,6 +73,19 @@ class ViewType(
     """
     Indicates if the view support sortings. If not, it will not be possible to add a
     sort to the view.
+    """
+
+    field_options_model_class = None
+    """
+    The model class of the through table that contains the field options. The model
+    must have a foreign key to the field and to the view.
+    """
+
+    field_options_serializer_class = None
+    """
+    The serializer class to serialize the field options model. It will be used in the
+    API to update and list the field option, but it is also used to broadcast field
+    option changes.
     """
 
     def export_serialized(self, view):
@@ -193,6 +210,62 @@ class ViewType(
         model = view.table.get_model()
         return model._field_objects.values(), model
 
+    def get_field_options_serializer_class(self):
+        """
+        Generates a serializer that has the `field_options` property as a
+        `FieldOptionsField`. This serializer can be used by the API to validate or list
+        the field options.
+
+        :raises ValueError: When the related view type does not have a field options
+            serializer class.
+        :return: The generated serializer.
+        :rtype: Serializer
+        """
+
+        from baserow.contrib.database.api.views.serializers import FieldOptionsField
+
+        if not self.field_options_serializer_class:
+            raise ValueError(
+                f"The view type {self.type} does not have a field options serializer "
+                f"class."
+            )
+
+        meta = type(
+            "Meta",
+            (),
+            {"ref_name": self.type + " view field options"},
+        )
+
+        attrs = {
+            "Meta": meta,
+            "field_options": FieldOptionsField(
+                serializer_class=self.field_options_serializer_class
+            ),
+        }
+
+        return type(
+            str("Generated" + self.type.capitalize() + "ViewFieldOptionsSerializer"),
+            (Serializer,),
+            attrs,
+        )
+
+    def before_field_options_update(self, view, field_options, fields):
+        """
+        Called before the field options are updated related to the provided view.
+
+        :param view: The view for which the field options need to be updated.
+        :type view: View
+        :param field_options: A dict with the field ids as the key and a dict
+            containing the values that need to be updated as value.
+        :type field_options: dict
+        :param fields: Optionally a list of fields can be provided so that they don't
+            have to be fetched again.
+        :return: The updated field options.
+        :rtype: dict
+        """
+
+        return field_options
+
 
 class ViewTypeRegistry(
     APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
@@ -206,6 +279,12 @@ class ViewTypeRegistry(
     name = "view"
     does_not_exist_exception_class = ViewTypeDoesNotExist
     already_registered_exception_class = ViewTypeAlreadyRegistered
+
+    def get_field_options_serializer_map(self):
+        return {
+            view_type.type: view_type.get_field_options_serializer_class()
+            for view_type in self.registry.values()
+        }
 
 
 class ViewFilterType(Instance):

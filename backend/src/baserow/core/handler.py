@@ -38,6 +38,7 @@ from .exceptions import (
     TemplateFileDoesNotExist,
     TemplateDoesNotExist,
 )
+from .trash.handler import TrashHandler
 from .utils import extract_allowed, set_allowed_attrs
 from .registries import application_type_registry
 from .signals import (
@@ -174,7 +175,8 @@ class CoreHandler:
     def delete_group(self, user, group):
         """
         Deletes an existing group and related applications if the user has admin
-        permissions to the group.
+        permissions for the group. The group can be restored after deletion using the
+        trash handler.
 
         :param user: The user on whose behalf the delete is done.
         :type: user: User
@@ -193,22 +195,11 @@ class CoreHandler:
         group_id = group.id
         group_users = list(group.users.all())
 
-        self._delete_group(group)
+        TrashHandler.trash(user, group, None, group)
 
         group_deleted.send(
             self, group_id=group_id, group=group, group_users=group_users, user=user
         )
-
-    def _delete_group(self, group):
-        """Deletes the provided group."""
-
-        # Select all the applications so we can delete them via the handler which is
-        # needed in order to call the pre_delete method for each application.
-        applications = group.application_set.all().select_related("group")
-        for application in applications:
-            self._delete_application(application)
-
-        group.delete()
 
     def order_groups(self, user, group_ids):
         """
@@ -407,7 +398,7 @@ class CoreHandler:
         return group_invitation
 
     def create_group_invitation(
-        self, user, group, email, permissions, message, base_url
+        self, user, group, email, permissions, base_url, message=""
     ):
         """
         Creates a new group invitation for the given email address and sends out an
@@ -423,12 +414,12 @@ class CoreHandler:
         :param permissions: The group permissions that the user will get once he has
             accepted the invitation.
         :type permissions: str
-        :param message: A custom message that will be included in the invitation email.
-        :type message: str
         :param base_url: The base url of the frontend, where the user can accept his
             invitation. The signed invitation id is appended to the URL (base_url +
             '/TOKEN'). Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
         :type base_url: str
+        :param message: A custom message that will be included in the invitation email.
+        :type message: Optional[str]
         :raises ValueError: If the provided permissions are not allowed.
         :raises UserInvalidGroupPermissionsError: If the user does not belong to the
             group or doesn't have right permissions in the group.
@@ -594,6 +585,11 @@ class CoreHandler:
                 f"The application with id {application_id} does not exist."
             )
 
+        if TrashHandler.item_has_a_trashed_parent(application):
+            raise ApplicationDoesNotExist(
+                f"The application with id {application_id} does not exist."
+            )
+
         return application
 
     def create_application(self, user, group, type_name, **kwargs):
@@ -625,9 +621,7 @@ class CoreHandler:
             group=group, order=last_order, **application_values
         )
 
-        application_created.send(
-            self, application=instance, user=user, type_name=type_name
-        )
+        application_created.send(self, application=instance, user=user)
 
         return instance
 
@@ -703,20 +697,11 @@ class CoreHandler:
         application.group.has_user(user, raise_error=True)
 
         application_id = application.id
-        application = self._delete_application(application)
+        TrashHandler.trash(user, application.group, application, application)
 
         application_deleted.send(
             self, application_id=application_id, application=application, user=user
         )
-
-    def _delete_application(self, application):
-        """Deletes an application and the related relations in the correct way."""
-
-        application = application.specific
-        application_type = application_type_registry.get_by_model(application)
-        application_type.pre_delete(application)
-        application.delete()
-        return application
 
     def export_group_applications(self, group, files_buffer, storage=None):
         """
@@ -871,7 +856,7 @@ class CoreHandler:
                 and installed_template.group
                 and installed_template.export_hash != export_hash
             ):
-                self._delete_group(installed_template.group)
+                TrashHandler.permanently_delete(installed_template.group)
 
             # If the installed template does not yet exist or if there is a export
             # hash mismatch, which means the group has already been deleted, we can
@@ -944,7 +929,7 @@ class CoreHandler:
             for template_file_path in templates
         ]
         for template in Template.objects.filter(~Q(slug__in=slugs)):
-            self._delete_group(template.group)
+            TrashHandler.permanently_delete(template.group)
             template.delete()
 
         # Delete all the categories that don't have any templates anymore.

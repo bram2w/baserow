@@ -1,14 +1,16 @@
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime, date
 from decimal import Decimal
 from random import randrange, randint
+from typing import Any, Callable, Dict, List
 
 from dateutil import parser
 from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
-from django.core.validators import URLValidator, EmailValidator, RegexValidator
+from django.core.validators import URLValidator
 from django.db import models
 from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
@@ -56,6 +58,86 @@ from .models import (
     PhoneNumberField,
 )
 from .registries import FieldType, field_type_registry
+from baserow.contrib.database.validators import UnicodeRegexValidator
+
+
+class CharFieldMatchingRegexFieldType(FieldType, ABC):
+    """
+    This is an abstract FieldType you can extend to create a field which is a CharField
+    but restricted to only allow values passing a regex. Please implement the regex,
+    max_length and random_value properties.
+
+    This abstract class will then handle all the various places that this regex needs to
+    be used:
+        - by setting the char field's validator
+        - by setting the serializer field's validator
+        - checking values passed to prepare_value_for_db pass the regex
+        - by checking and only converting column values which match the regex when
+          altering a column to being an email type.
+    """
+
+    @property
+    @abstractmethod
+    def regex(self):
+        pass
+
+    @property
+    @abstractmethod
+    def max_length(self):
+        return None
+
+    @property
+    def validator(self):
+        return UnicodeRegexValidator(regex_value=self.regex)
+
+    def prepare_value_for_db(self, instance, value):
+        if value == "" or value is None:
+            return ""
+        self.validator(value)
+
+        return value
+
+    def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        validators = kwargs.pop("validators", None) or []
+        validators.append(self.validator)
+        return serializers.CharField(
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                "validators": validators,
+                "max_length": self.max_length,
+                **kwargs,
+            }
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return models.CharField(
+            default="",
+            blank=True,
+            null=True,
+            max_length=self.max_length,
+            validators=[self.validator],
+            **kwargs,
+        )
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        if connection.vendor == "postgresql":
+            return f"""p_in = (
+            case
+                when p_in::text ~* '{self.regex}'
+                then p_in::text
+                else ''
+                end
+            );"""
+
+        return super().get_alter_column_prepare_new_value(
+            connection, from_field, to_field
+        )
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
 
 
 class TextFieldType(FieldType):
@@ -65,12 +147,15 @@ class TextFieldType(FieldType):
     serializer_field_names = ["text_default"]
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.CharField(
-            required=False,
-            allow_null=True,
-            allow_blank=True,
-            default=instance.text_default or None,
-            **kwargs,
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                "default": instance.text_default or None,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -90,8 +175,14 @@ class LongTextFieldType(FieldType):
     model_class = LongTextField
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.CharField(
-            required=False, allow_null=True, allow_blank=True, **kwargs
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -117,8 +208,14 @@ class URLFieldType(FieldType):
         return value
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.URLField(
-            required=False, allow_null=True, allow_blank=True, **kwargs
+            **{
+                "required": required,
+                "allow_null": not required,
+                "allow_blank": not required,
+                **kwargs,
+            }
         )
 
     def get_model_field(self, instance, **kwargs):
@@ -159,11 +256,13 @@ class NumberFieldType(FieldType):
 
         if value is not None and not instance.number_negative and value < 0:
             raise ValidationError(
-                f"The value for field {instance.id} cannot be " f"negative."
+                f"The value for field {instance.id} cannot be negative."
             )
         return value
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+
         kwargs["decimal_places"] = (
             0
             if instance.number_type == NUMBER_TYPE_INTEGER
@@ -174,18 +273,22 @@ class NumberFieldType(FieldType):
             kwargs["min_value"] = 0
 
         return serializers.DecimalField(
-            max_digits=self.MAX_DIGITS + kwargs["decimal_places"],
-            required=False,
-            allow_null=True,
-            **kwargs,
+            **{
+                "max_digits": self.MAX_DIGITS + kwargs["decimal_places"],
+                "required": required,
+                "allow_null": not required,
+                **kwargs,
+            }
         )
 
-    def get_export_value(self, row, field_object):
+    def get_export_value(self, value, field_object):
+        if value is None:
+            return value
+
         # If the number is an integer we want it to be a literal json number and so
         # don't convert it to a string. However if a decimal to preserve any precision
         # we keep it as a string.
         instance = field_object["field"]
-        value = getattr(row, field_object["name"])
         if instance.number_type == NUMBER_TYPE_INTEGER:
             return int(value)
 
@@ -254,7 +357,9 @@ class BooleanFieldType(FieldType):
     model_class = BooleanField
 
     def get_serializer_field(self, instance, **kwargs):
-        return serializers.BooleanField(required=False, default=False, **kwargs)
+        return serializers.BooleanField(
+            **{"required": False, "default": False, **kwargs}
+        )
 
     def get_model_field(self, instance, **kwargs):
         return models.BooleanField(default=False, **kwargs)
@@ -320,20 +425,23 @@ class DateFieldType(FieldType):
             "The value should be a date/time string, date object or " "datetime object."
         )
 
-    def get_export_value(self, row, field_object):
-        value = getattr(row, field_object["name"])
+    def get_export_value(self, value, field_object):
         if value is None:
             return value
         python_format = field_object["field"].get_python_format()
         return value.strftime(python_format)
 
     def get_serializer_field(self, instance, **kwargs):
-        kwargs["required"] = False
-        kwargs["allow_null"] = True
+        required = kwargs.get("required", False)
+
         if instance.date_include_time:
-            return serializers.DateTimeField(**kwargs)
+            return serializers.DateTimeField(
+                **{"required": required, "allow_null": not required, **kwargs}
+            )
         else:
-            return serializers.DateField(**kwargs)
+            return serializers.DateField(
+                **{"required": required, "allow_null": not required, **kwargs}
+            )
 
     def get_model_field(self, instance, **kwargs):
         kwargs["null"] = True
@@ -498,9 +606,48 @@ class LinkRowFieldType(FieldType):
             models.Prefetch(name, queryset=related_queryset)
         )
 
-    def get_export_value(self, row, field_object):
-        instance = field_object["field"]
+    def get_export_value(self, value, field_object):
+        def map_to_export_value(inner_value, inner_field_object):
+            return inner_field_object["type"].get_export_value(
+                inner_value, inner_field_object
+            )
 
+        return self._get_and_map_pk_values(field_object, value, map_to_export_value)
+
+    def get_human_readable_value(self, value, field_object):
+        def map_to_human_readable_value(inner_value, inner_field_object):
+            return inner_field_object["type"].get_human_readable_value(
+                inner_value, inner_field_object
+            )
+
+        return ", ".join(
+            self._get_and_map_pk_values(
+                field_object, value, map_to_human_readable_value
+            )
+        )
+
+    def _get_and_map_pk_values(
+        self, field_object, value, map_func: Callable[[Any, Dict[str, Any]], Any]
+    ):
+        """
+        Helper function which given a linked row field pointing at another model,
+        constructs a list of the related row's primary key values which are mapped by
+        the provided map_func function.
+
+        For example, Table A has Field 1 which links to Table B. Table B has a text
+        primary key column. This function takes the value for a single row of of
+        Field 1, which is a number of related rows in Table B. It then gets
+        the primary key column values for those related rows in Table B and applies
+        map_func to each individual value. Finally it returns those mapped values as a
+        list.
+
+        :param value: The value of the link field in a specific row.
+        :param field_object: The field object for the link field.
+        :param map_func: A function to apply to each linked primary key value.
+        :return: A list of mapped linked primary key values.
+        """
+
+        instance = field_object["field"]
         if hasattr(instance, "_related_model"):
             related_model = instance._related_model
             primary_field = next(
@@ -510,15 +657,35 @@ class LinkRowFieldType(FieldType):
             )
             if primary_field:
                 primary_field_name = primary_field["name"]
-                value = getattr(row, field_object["name"])
                 primary_field_values = []
                 for sub in value.all():
-                    linked_row_primary_name = getattr(sub, primary_field_name)
-                    if linked_row_primary_name is None:
-                        linked_row_primary_name = f"unnamed row {sub.id}"
-                    primary_field_values.append(linked_row_primary_name)
+                    # Ensure we also convert the value from the other table to it's
+                    # appropriate form as it could be an odd field type!
+                    linked_value = getattr(sub, primary_field_name)
+                    if self._is_unnamed_primary_field_value(linked_value):
+                        linked_pk_value = f"unnamed row {sub.id}"
+                    else:
+                        linked_pk_value = map_func(
+                            getattr(sub, primary_field_name), primary_field
+                        )
+                    primary_field_values.append(linked_pk_value)
                 return primary_field_values
         return []
+
+    @staticmethod
+    def _is_unnamed_primary_field_value(primary_field_value):
+        """
+        Checks if the value for a linked primary field is considered "unnamed".
+        :param primary_field_value: The value of a primary field row in a linked table.
+        :return: If this value is considered an unnamed primary field value.
+        """
+
+        if isinstance(primary_field_value, list):
+            return len(primary_field_value) == 0
+        elif isinstance(primary_field_value, dict):
+            return len(primary_field_value.keys()) == 0
+        else:
+            return primary_field_value is None
 
     def get_serializer_field(self, instance, **kwargs):
         """
@@ -527,7 +694,11 @@ class LinkRowFieldType(FieldType):
         """
 
         return serializers.ListField(
-            child=serializers.IntegerField(min_value=0), required=False, **kwargs
+            **{
+                "child": serializers.IntegerField(min_value=0),
+                "required": False,
+                **kwargs,
+            }
         )
 
     def get_response_serializer_field(self, instance, **kwargs):
@@ -538,22 +709,8 @@ class LinkRowFieldType(FieldType):
         be used to include the primary field's value in the response as a string.
         """
 
-        primary_field_name = None
-
-        if hasattr(instance, "_related_model"):
-            related_model = instance._related_model
-            primary_field = next(
-                object
-                for object in related_model._field_objects.values()
-                if object["field"].primary
-            )
-            if primary_field:
-                primary_field_name = primary_field["name"]
-
         return serializers.ListSerializer(
-            child=LinkRowValueSerializer(
-                value_field_name=primary_field_name, required=False, **kwargs
-            )
+            child=LinkRowValueSerializer(), **{"required": False, **kwargs}
         )
 
     def get_serializer_help_text(self, instance):
@@ -689,12 +846,22 @@ class LinkRowFieldType(FieldType):
         if field.link_row_related_field:
             return
 
-        field.link_row_related_field = FieldHandler().create_field(
+        handler = FieldHandler()
+        # First just try the tables name, so if say the Client table is linking to the
+        # Address table, this field in the Address table will just be called 'Client'.
+        # However say we then add another link from the Client to Address table with
+        # a field name of "Bank Address", the new field in the Address table will be
+        # called 'Client - Bank Address'.
+        related_field_name = handler.find_next_unused_field_name(
+            field.link_row_table,
+            [f"{field.table.name}", f"{field.table.name} - {field.name}"],
+        )
+        field.link_row_related_field = handler.create_field(
             user=user,
             table=field.link_row_table,
             type_name=self.type,
             do_schema_change=False,
-            name=field.table.name,
+            name=related_field_name,
             link_row_table=field.table,
             link_row_related_field=field,
             link_row_relation_id=field.link_row_relation_id,
@@ -761,7 +928,7 @@ class LinkRowFieldType(FieldType):
             )
             to_field.save()
 
-    def after_delete(self, field, model, user, connection):
+    def after_delete(self, field, model, connection):
         """
         After the field has been deleted we also need to delete the related field.
         """
@@ -864,51 +1031,42 @@ class LinkRowFieldType(FieldType):
     ):
         getattr(row, field_name).set(value)
 
+    def get_related_items_to_trash(self, field) -> List[Any]:
+        return [field.link_row_related_field]
 
-class EmailFieldType(FieldType):
+
+class EmailFieldType(CharFieldMatchingRegexFieldType):
     type = "email"
     model_class = EmailField
 
-    def prepare_value_for_db(self, instance, value):
-        if value == "" or value is None:
-            return ""
+    @property
+    def regex(self):
+        """
+        Returns a highly permissive regex which allows non-valid emails in order to keep
+        the regex as simple as possible and also the same behind the frontend, database
+        and python code.
+        """
+        # Use a lookahead to validate entire string length does exceed max length
+        # as we are matching multiple different tokens in the following regex.
+        lookahead = rf"(?=^.{{3,{self.max_length}}}$)"
+        # See wikipedia for allowed punctuation etc:
+        # https://en.wikipedia.org/wiki/Email_address#Local-part
+        local_and_domain = r"[-\.\[\]!#$&*+/=?^_`{|}~\w]+"
+        return rf"(?i){lookahead}^{local_and_domain}@{local_and_domain}$"
 
-        validator = EmailValidator()
-        validator(value)
-        return value
-
-    def get_serializer_field(self, instance, **kwargs):
-        return serializers.EmailField(
-            required=False, allow_null=True, allow_blank=True, **kwargs
-        )
-
-    def get_model_field(self, instance, **kwargs):
-        return models.EmailField(default="", blank=True, null=True, **kwargs)
+    @property
+    def max_length(self):
+        # max_length=254 to be compliant with RFCs 3696 and 5321
+        return 254
 
     def random_value(self, instance, fake, cache):
         return fake.email()
-
-    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-        if connection.vendor == "postgresql":
-            return r"""p_in = (
-            case
-                when p_in::text ~* '[A-Z0-9._+-]+@[A-Z0-9.-]+\.[A-Z]{2,}'
-                then p_in::text
-                else ''
-                end
-            );"""
-
-        return super().get_alter_column_prepare_new_value(
-            connection, from_field, to_field
-        )
-
-    def contains_query(self, *args):
-        return contains_filter(*args)
 
 
 class FileFieldType(FieldType):
     type = "file"
     model_class = FileField
+    can_be_in_form_view = False
 
     def prepare_value_for_db(self, instance, value):
         if value is None:
@@ -961,16 +1119,23 @@ class FileFieldType(FieldType):
         return user_files
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.ListSerializer(
-            child=FileFieldRequestSerializer(),
-            required=False,
-            allow_null=True,
-            **kwargs,
+            **{
+                "child": FileFieldRequestSerializer(),
+                "required": required,
+                "allow_null": not required,
+                **kwargs,
+            }
         )
 
-    def get_export_value(self, row, field_object):
+    def get_response_serializer_field(self, instance, **kwargs):
+        return FileFieldResponseSerializer(
+            **{"many": True, "required": False, **kwargs}
+        )
+
+    def get_export_value(self, value, field_object):
         files = []
-        value = getattr(row, field_object["name"])
         for file in value:
             if "name" in file:
                 path = UserFileHandler().user_file_path(file["name"])
@@ -986,8 +1151,14 @@ class FileFieldType(FieldType):
 
         return files
 
-    def get_response_serializer_field(self, instance, **kwargs):
-        return FileFieldResponseSerializer(many=True, required=False, **kwargs)
+    def get_human_readable_value(self, value, field_object):
+        file_names = []
+        for file in value:
+            file_names.append(
+                file["visible_name"],
+            )
+
+        return ", ".join(file_names)
 
     def get_serializer_help_text(self, instance):
         return (
@@ -997,7 +1168,7 @@ class FileFieldType(FieldType):
         )
 
     def get_model_field(self, instance, **kwargs):
-        return JSONField(default=[], **kwargs)
+        return JSONField(default=list, **kwargs)
 
     def random_value(self, instance, fake, cache):
         """
@@ -1114,15 +1285,21 @@ class SingleSelectFieldType(FieldType):
         raise ValidationError(f"The provided value is not a valid option.")
 
     def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
         return serializers.PrimaryKeyRelatedField(
-            queryset=SelectOption.objects.filter(field=instance),
-            required=False,
-            allow_null=True,
-            **kwargs,
+            **{
+                "queryset": SelectOption.objects.filter(field=instance),
+                "required": required,
+                "allow_null": not required,
+                **kwargs,
+            }
         )
 
     def get_response_serializer_field(self, instance, **kwargs):
-        return SelectOptionSerializer(required=False, allow_null=True, **kwargs)
+        required = kwargs.get("required", False)
+        return SelectOptionSerializer(
+            **{"required": required, "allow_null": not required, **kwargs}
+        )
 
     def get_serializer_help_text(self, instance):
         return (
@@ -1132,8 +1309,7 @@ class SingleSelectFieldType(FieldType):
             "color is exposed."
         )
 
-    def get_export_value(self, row, field_object):
-        value = getattr(row, field_object["name"])
+    def get_export_value(self, value, field_object):
         return value.value
 
     def get_model_field(self, instance, **kwargs):
@@ -1331,7 +1507,7 @@ class SingleSelectFieldType(FieldType):
         )
 
 
-class PhoneNumberFieldType(FieldType):
+class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
     """
     A simple wrapper around a TextField which ensures any entered data is a
     simple phone number.
@@ -1344,70 +1520,32 @@ class PhoneNumberFieldType(FieldType):
     model_class = PhoneNumberField
 
     MAX_PHONE_NUMBER_LENGTH = 100
-    """
-    According to the E.164 (https://en.wikipedia.org/wiki/E.164) standard for
-    international numbers the max length of an E.164 number without formatting is 15
-    characters. However we allow users to store formatting characters, spaces and
-    expect them to be entering numbers not in the E.164 standard but instead a
-    wide range of local standards which might support longer numbers.
-    This is why we have picked a very generous 100 character length to support heavily
-    formatted local numbers.
-    """
 
-    PHONE_NUMBER_REGEX = rf"^[0-9NnXx,+._*()#=;/ -]{{1,{MAX_PHONE_NUMBER_LENGTH}}}$"
-    """
-    Allow common punctuation used in phone numbers and spaces to allow formatting,
-    but otherwise don't allow text as the phone number should work as a link on mobile
-    devices.
-    Duplicated in the frontend code at, please keep in sync:
-    web-frontend/modules/core/utils/string.js#isSimplePhoneNumber
-    """
+    @property
+    def regex(self):
+        """
+        Allow common punctuation used in phone numbers and spaces to allow formatting,
+        but otherwise don't allow text as the phone number should work as a link on
+        mobile devices.
+        Duplicated in the frontend code at, please keep in sync:
+        web-frontend/modules/core/utils/string.js#isSimplePhoneNumber
+        """
 
-    simple_phone_number_validator = RegexValidator(regex=PHONE_NUMBER_REGEX)
+        return rf"^[0-9NnXx,+._*()#=;/ -]{{1,{self.max_length}}}$"
 
-    def prepare_value_for_db(self, instance, value):
-        if value == "" or value is None:
-            return ""
-        self.simple_phone_number_validator(value)
+    @property
+    def max_length(self):
+        """
+        According to the E.164 (https://en.wikipedia.org/wiki/E.164) standard for
+        international numbers the max length of an E.164 number without formatting is 15
+        characters. However we allow users to store formatting characters, spaces and
+        expect them to be entering numbers not in the E.164 standard but instead a
+        wide range of local standards which might support longer numbers.
+        This is why we have picked a very generous 100 character length to support
+        heavily formatted local numbers.
+        """
 
-        return value
-
-    def get_serializer_field(self, instance, **kwargs):
-        return serializers.CharField(
-            required=False,
-            allow_null=True,
-            allow_blank=True,
-            validators=[self.simple_phone_number_validator],
-            max_length=self.MAX_PHONE_NUMBER_LENGTH,
-            **kwargs,
-        )
-
-    def get_model_field(self, instance, **kwargs):
-        return models.CharField(
-            default="",
-            blank=True,
-            null=True,
-            max_length=self.MAX_PHONE_NUMBER_LENGTH,
-            validators=[self.simple_phone_number_validator],
-            **kwargs,
-        )
+        return self.MAX_PHONE_NUMBER_LENGTH
 
     def random_value(self, instance, fake, cache):
         return fake.phone_number()
-
-    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-        if connection.vendor == "postgresql":
-            return f"""p_in = (
-            case
-                when p_in::text ~* '{self.PHONE_NUMBER_REGEX}'
-                then p_in::text
-                else ''
-                end
-            );"""
-
-        return super().get_alter_column_prepare_new_value(
-            connection, from_field, to_field
-        )
-
-    def contains_query(self, *args):
-        return contains_filter(*args)

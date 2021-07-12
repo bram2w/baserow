@@ -310,7 +310,7 @@ class ModelRegistryMixin:
                 return value
 
         raise self.does_not_exist_exception_class(
-            f"The {self.name} model instance " f"{model_instance} does not exist."
+            f"The {self.name} model instance {model_instance} does not exist."
         )
 
 

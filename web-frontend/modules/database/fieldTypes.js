@@ -48,6 +48,8 @@ import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFi
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 
+import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
+
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
   getDateMomentFormat,
@@ -123,10 +125,40 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * By default the row edit field component is used in the form. This can
+   * optionally be another component if needed. If null is returned, then the field
+   * is marked as not compatible with the form view.
+   */
+  getFormViewFieldComponent() {
+    return this.getRowEditFieldComponent()
+  }
+
+  /**
    * Because we want to show a new row immediately after creating we need to have an
    * empty value to show right away.
    */
   getEmptyValue(field) {
+    return null
+  }
+
+  /**
+   * Should return true if the provided value is empty.
+   */
+  isEmpty(field, value) {
+    if (Array.isArray(value) && value.length === 0) {
+      return true
+    }
+    if (typeof val === 'object' && Object.keys(value).length === 0) {
+      return true
+    }
+    return [null, '', false].includes(value)
+  }
+
+  /**
+   * Should return a string containing the error if the value is invalid. If the
+   * value is valid, then null must be returned.
+   */
+  getValidationError(field, value) {
     return null
   }
 
@@ -283,6 +315,28 @@ export class FieldType extends Registerable {
    */
   getDocsResponseExample(field) {
     return this.getDocsRequestExample(field)
+  }
+
+  /**
+   * Generate a field sample for the given field that is displayed in auto-doc.
+   * @returns a sample for this field.
+   */
+  getDocsFieldResponseExample({
+    id,
+    table_id: tableId,
+    name,
+    order,
+    type,
+    primary,
+  }) {
+    return {
+      id,
+      table_id: tableId,
+      name,
+      order,
+      type,
+      primary,
+    }
   }
 
   /**
@@ -470,6 +524,10 @@ export class LinkRowFieldType extends FieldType {
     return RowEditFieldLinkRow
   }
 
+  getFormViewFieldComponent() {
+    return FormViewFieldLinkRow
+  }
+
   getEmptyValue(field) {
     return []
   }
@@ -619,6 +677,22 @@ export class NumberFieldType extends FieldType {
         ? -1
         : 1
     }
+  }
+
+  getValidationError(field, value) {
+    if (value === null || value === '') {
+      return null
+    }
+    if (isNaN(parseFloat(value)) || !isFinite(value)) {
+      return 'Invalid number'
+    }
+    if (
+      value.split('.')[0].replace('-', '').length >
+      NumberFieldType.getMaxNumberLength()
+    ) {
+      return `Max ${NumberFieldType.getMaxNumberLength()} digits allowed.`
+    }
+    return null
   }
 
   /**
@@ -907,6 +981,20 @@ export class URLFieldType extends FieldType {
     }
   }
 
+  getEmptyValue(field) {
+    return ''
+  }
+
+  getValidationError(field, value) {
+    if (value === null || value === '') {
+      return null
+    }
+    if (!isValidURL(value)) {
+      return 'Invalid URL'
+    }
+    return null
+  }
+
   getDocsDataType(field) {
     return 'string'
   }
@@ -965,6 +1053,23 @@ export class EmailFieldType extends FieldType {
     }
   }
 
+  getEmptyValue(field) {
+    return ''
+  }
+
+  getValidationError(field, value) {
+    if (value === null || value === '') {
+      return null
+    }
+    if (value.length > 254) {
+      return 'Max 254 chars'
+    }
+    if (!isValidEmail(value)) {
+      return 'Invalid email'
+    }
+    return null
+  }
+
   getDocsDataType(field) {
     return 'string'
   }
@@ -1005,6 +1110,10 @@ export class FileFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldFile
+  }
+
+  getFormViewFieldComponent() {
+    return null
   }
 
   toHumanReadableString(field, value) {
@@ -1249,6 +1358,20 @@ export class PhoneNumberFieldType extends FieldType {
         ? stringA.localeCompare(stringB)
         : stringB.localeCompare(stringA)
     }
+  }
+
+  getEmptyValue(field) {
+    return ''
+  }
+
+  getValidationError(field, value) {
+    if (value === null || value === '') {
+      return null
+    }
+    if (!isSimplePhoneNumber(value)) {
+      return 'Invalid Phone Number'
+    }
+    return null
   }
 
   getSortIndicator() {

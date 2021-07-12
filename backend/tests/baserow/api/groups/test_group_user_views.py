@@ -9,7 +9,9 @@ from rest_framework.status import (
 
 from django.shortcuts import reverse
 
+from baserow.core.handler import CoreHandler
 from baserow.core.models import GroupUser
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -163,3 +165,30 @@ def test_delete_group_user(api_client, data_fixture):
     )
     assert response.status_code == HTTP_204_NO_CONTENT
     assert GroupUser.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_if_group_trashed_then_group_user_is_trashed(api_client, data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token(email="test1@test.nl")
+    trashed_group = data_fixture.create_group(user=user_1)
+    CoreHandler().delete_group(user=user_1, group=trashed_group)
+
+    response = api_client.get(
+        reverse("api:groups:users:list", kwargs={"group_id": trashed_group.id}),
+        {"permissions": "MEMBER"},
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
+
+    TrashHandler.restore_item(user_1, "group", trashed_group.id)
+
+    response = api_client.get(
+        reverse("api:groups:users:list", kwargs={"group_id": trashed_group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json) == 1
+    assert response_json[0]["email"] == user_1.email

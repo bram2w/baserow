@@ -10,6 +10,7 @@ from .views import (
     ViewFilterView,
     ViewSortingsView,
     ViewSortView,
+    ViewFieldOptionsView,
 )
 
 
@@ -32,5 +33,10 @@ urlpatterns = view_type_registry.api_urls + [
         r"(?P<view_id>[0-9]+)/sortings/$",
         ViewSortingsView.as_view(),
         name="list_sortings",
+    ),
+    url(
+        r"(?P<view_id>[0-9]+)/field-options/$",
+        ViewFieldOptionsView.as_view(),
+        name="field_options",
     ),
 ]

@@ -1,3 +1,5 @@
+from typing import Any, List
+
 from django.db.models import Q
 
 from baserow.core.registry import (
@@ -12,7 +14,6 @@ from baserow.core.registry import (
     APIUrlsInstanceMixin,
     ImportExportMixin,
 )
-
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 from .models import SelectOption
 
@@ -60,6 +61,9 @@ class FieldType(
 
     can_have_select_options = False
     """Indicates whether the field can have select options."""
+
+    can_be_in_form_view = True
+    """Indicates whether the field is compatible with the form view."""
 
     def prepare_value_for_db(self, instance, value):
         """
@@ -412,7 +416,7 @@ class FieldType(
         :type before: any
         """
 
-    def after_delete(self, field, model, user, connection):
+    def after_delete(self, field, model, connection):
         """
         This hook is called right after the field has been deleted and the schema
         change has been done.
@@ -421,8 +425,6 @@ class FieldType(
         :type field: Field
         :param model: The Django model that contains the deleted field.
         :type model: Model
-        :param user: The user on whose behalf the delete is done.
-        :type user: User
         :param connection: The connection used to make the database schema change.
         :type connection: DatabaseWrapper
         """
@@ -604,18 +606,55 @@ class FieldType(
 
         setattr(row, field_name, value)
 
-    def get_export_value(self, row, field_object):
+    def get_export_value(self, value, field_object):
         """
-        Gets this fields value from the provided row in a form suitable for exporting
-        to a standalone file.
+        Should convert this field type's internal baserow value to a form suitable
+        for exporting to a standalone file.
 
-        :param row: The row instance where the value be set on.
-        :type row: Object
+        :param value: The internal value to convert to a suitable export format
+        :type value: Object
         :param field_object: The field object for the field to extract
         :type field_object: FieldObject
         """
 
-        return getattr(row, field_object["name"])
+        return value
+
+    def get_human_readable_value(self, value: Any, field_object) -> str:
+        """
+        Should convert the value of the provided field to a human readable string for
+        display purposes.
+
+        :param value: The value of the field extracted from a row to convert to human
+            readable form.
+        :param field_object: The field object for the field to extract
+        :type field_object: FieldObject
+        :return A human readable string.
+        """
+
+        human_readable_value = self.get_export_value(value, field_object)
+        if human_readable_value is None:
+            return ""
+        else:
+            return str(human_readable_value)
+
+    # noinspection PyMethodMayBeStatic
+    def get_related_items_to_trash(self, field) -> List[Any]:
+        """
+        When a field of this type is trashed/restored, or the table it is in
+        trashed/restored, this method should return any other trashable items that
+        should be trashed or restored in tandem.
+
+        For example, a link field has an opposing link field in the other table that
+        should also be trashed when it is trashed. And so for link fields this method
+        is overridden to return the related field so it is trashed/restored correctly.
+
+        :param field: The specific instance of the field that is being trashed or whose
+            table is being trashed.
+        :return: A list of related trashable items that should be trashed or restored
+            in tandem with this field or it's table.
+        """
+
+        return []
 
 
 class FieldTypeRegistry(

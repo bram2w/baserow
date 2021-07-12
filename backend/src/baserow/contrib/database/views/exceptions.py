@@ -79,3 +79,19 @@ class ViewSortFieldAlreadyExist(Exception):
 
 class ViewSortFieldNotSupported(Exception):
     """Raised when a field does not supports sorting in a view."""
+
+
+class ViewDoesNotSupportFieldOptions(Exception):
+    """Raised when a view type does not support field options."""
+
+
+class FormViewFieldTypeIsNotSupported(Exception):
+    """Raised when someone tries to enable an unsupported form view field."""
+
+    def __init__(self, field_type, *args, **kwargs):
+        self.field_type = field_type
+        super().__init__(
+            f"The field type {field_type} is not compatible with the form view.",
+            *args,
+            **kwargs,
+        )

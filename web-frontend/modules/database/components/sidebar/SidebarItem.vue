@@ -31,17 +31,15 @@
           </a>
         </li>
         <li>
-          <a @click="deleteTable()">
+          <a
+            :class="{ 'context__menu-item--loading': deleteLoading }"
+            @click="deleteTable()"
+          >
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
             Delete
           </a>
         </li>
       </ul>
-      <DeleteTableModal
-        ref="deleteTableModal"
-        :database="database"
-        :table="table"
-      />
       <ExportTableModal ref="exportTableModal" :table="table" />
     </Context>
   </li>
@@ -49,12 +47,11 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import DeleteTableModal from '@baserow/modules/database/components/table/DeleteTableModal'
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 
 export default {
   name: 'SidebarItem',
-  components: { ExportTableModal, DeleteTableModal },
+  components: { ExportTableModal },
   props: {
     database: {
       type: Object,
@@ -64,6 +61,11 @@ export default {
       type: Object,
       required: true,
     },
+  },
+  data() {
+    return {
+      deleteLoading: false,
+    }
   },
   methods: {
     setLoading(database, value) {
@@ -91,10 +93,6 @@ export default {
         }
       )
     },
-    deleteTable() {
-      this.$refs.context.hide()
-      this.$refs.deleteTableModal.show()
-    },
     exportTable() {
       this.$refs.context.hide()
       this.$refs.exportTableModal.show()
@@ -120,6 +118,24 @@ export default {
       }
 
       this.setLoading(database, false)
+    },
+    async deleteTable() {
+      this.deleteLoading = true
+
+      try {
+        await this.$store.dispatch('table/delete', {
+          database: this.database,
+          table: this.table,
+        })
+        await this.$store.dispatch('notification/restore', {
+          trash_item_type: 'table',
+          trash_item_id: this.table.id,
+        })
+      } catch (error) {
+        notifyIf(error, 'table')
+      }
+
+      this.deleteLoading = false
     },
   },
 }

@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+## Released (2021-07-12)
+
+* Made it possible to list table field meta-data with a token.
+* Added form view.
+* The API endpoint to update the grid view field options has been moved to
+  `/api/database/views/{view_id}/field-options/`.
+* The email field's validation is now consistent and much more permissive allowing most 
+  values which look like email addresses.
+* Add trash where deleted apps, groups, tables, fields and rows can be restored 
+  deletion.
+* Fix the create group invite endpoint failing when no message provided.
+* Single select options can now be ordered by drag and drop. 
+* Added before and after date filters.
+* Support building Baserow out of the box on Ubuntu by lowering the required docker
+  version to build Baserow down to 19.03.
+* Disallow duplicate field names in the same table, blank field names or field names
+  called 'order' and 'id'. Existing invalid field names will be fixed automatically. 
+* Add user_field_names GET flag to various endpoints which switches the API to work
+  using actual field names and not the internal field_1,field_2 etc identifiers.
+* Added templates:
+  * Commercial Property Management
+  * Company Asset Tracker
+  * Student Planner
+
 ## Released (2021-06-02)
 
 * Fixed bug where the grid view would fail hard if a cell is selected and the component

@@ -24,4 +24,9 @@ export const routes = [
     path: '/api/docs/database/:databaseId',
     component: path.resolve(__dirname, 'pages/APIDocsDatabase.vue'),
   },
+  {
+    name: 'database-table-form',
+    path: '/form/:slug',
+    component: path.resolve(__dirname, 'pages/form.vue'),
+  },
 ]

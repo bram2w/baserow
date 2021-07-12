@@ -26,6 +26,7 @@ import preventParentScroll from '@baserow/modules/core/directives/preventParentS
 import tooltip from '@baserow/modules/core/directives/tooltip'
 import sortable from '@baserow/modules/core/directives/sortable'
 import autoOverflowScroll from '@baserow/modules/core/directives/autoOverflowScroll'
+import userFileUpload from '@baserow/modules/core/directives/userFileUpload'
 
 Vue.component('Context', Context)
 Vue.component('Modal', Modal)
@@ -48,3 +49,4 @@ Vue.directive('preventParentScroll', preventParentScroll)
 Vue.directive('tooltip', tooltip)
 Vue.directive('sortable', sortable)
 Vue.directive('autoOverflowScroll', autoOverflowScroll)
+Vue.directive('userFileUpload', userFileUpload)

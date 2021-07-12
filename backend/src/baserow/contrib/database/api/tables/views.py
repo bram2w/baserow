@@ -1,41 +1,48 @@
 from django.db import transaction
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
-from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
-from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
-from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
-from baserow.core.handler import CoreHandler
-from baserow.contrib.database.api.fields.errors import ERROR_MAX_FIELD_COUNT_EXCEEDED
-from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_MAX_FIELD_COUNT_EXCEEDED,
+    ERROR_RESERVED_BASEROW_FIELD_NAME,
+    ERROR_INVALID_BASEROW_FIELD_NAME,
+)
+from baserow.contrib.database.fields.exceptions import (
+    MaxFieldLimitExceeded,
+    ReservedBaserowFieldNameException,
+    InvalidBaserowFieldName,
+)
 from baserow.contrib.database.models import Database
-from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
     InvalidInitialTableData,
     InitialTableDataLimitExceeded,
+    InitialTableDataDuplicateName,
 )
-
-from .serializers import (
-    TableSerializer,
-    TableCreateSerializer,
-    TableUpdateSerializer,
-    OrderTablesSerializer,
-)
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.models import Table
+from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
+from baserow.core.handler import CoreHandler
 from .errors import (
     ERROR_TABLE_DOES_NOT_EXIST,
     ERROR_TABLE_NOT_IN_DATABASE,
     ERROR_INVALID_INITIAL_TABLE_DATA,
     ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
+    ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
+)
+from .serializers import (
+    TableSerializer,
+    TableCreateSerializer,
+    TableUpdateSerializer,
+    OrderTablesSerializer,
 )
 
 
@@ -111,6 +118,9 @@ class TablesView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_INVALID_INITIAL_TABLE_DATA",
                     "ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED",
+                    "ERROR_RESERVED_BASEROW_FIELD_NAME",
+                    "ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES",
+                    "ERROR_INVALID_BASEROW_FIELD_NAME",
                 ]
             ),
             404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
@@ -124,6 +134,9 @@ class TablesView(APIView):
             InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA,
             InitialTableDataLimitExceeded: ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
             MaxFieldLimitExceeded: ERROR_MAX_FIELD_COUNT_EXCEEDED,
+            InitialTableDataDuplicateName: ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
+            ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
+            InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
         }
     )
     @validate_body(TableCreateSerializer)

@@ -10,3 +10,4 @@ watchdog==1.0.2
 argh==0.26.2
 black==20.8b1
 django-capture-on-commit-callbacks==1.4.0
+pyinstrument==3.4.2

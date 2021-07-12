@@ -30,6 +30,7 @@
 @import 'views/grid/link_row';
 @import 'views/grid/file';
 @import 'views/grid/single_select';
+@import 'views/form';
 @import 'box_page';
 @import 'loading';
 @import 'notifications';
@@ -65,3 +66,6 @@
 @import 'paginator';
 @import 'sortable';
 @import 'export';
+@import 'trash';
+@import 'trash_entry';
+@import 'infinite_scroll';

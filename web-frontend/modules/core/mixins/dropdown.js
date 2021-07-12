@@ -149,7 +149,9 @@ export default {
       document.body.addEventListener('keydown', this.$el.keydownEvent)
     },
     /**
-     * Hides the list of choices
+     * Hides the list of choices. If something change in this method, you might need
+     * to update the hide method of the `PaginatedDropdown` component because it
+     * contains a partial copy of this code.
      */
     hide() {
       this.open = false

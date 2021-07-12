@@ -51,3 +51,13 @@ ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED = (
     HTTP_400_BAD_REQUEST,
     "The field does not support view sorting.",
 )
+ERROR_UNRELATED_FIELD = (
+    "ERROR_UNRELATED_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The field is not related to the provided view.",
+)
+ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS = (
+    "ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS",
+    HTTP_400_BAD_REQUEST,
+    "This view model does not support field options.",
+)

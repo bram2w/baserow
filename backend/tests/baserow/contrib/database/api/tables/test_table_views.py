@@ -42,6 +42,17 @@ def test_list_tables(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
 
+    response = api_client.delete(
+        reverse("api:groups:item", kwargs={"group_id": database.group.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
+
 
 @pytest.mark.django_db
 def test_create_table(api_client, data_fixture):
@@ -245,11 +256,7 @@ def test_create_table_with_data(api_client, data_fixture):
                     'Falsea"""',
                     'a"a"a"a"a,',
                     "a",
-                    "a",
-                    "",
                     "/w. r/awr",
-                    "",
-                    "",
                 ],
             ],
             "first_row_header": True,
@@ -267,15 +274,89 @@ def test_create_table_with_data(api_client, data_fixture):
     assert text_fields[2].name == 'Falsea"""'
     assert text_fields[3].name == 'a"a"a"a"a,'
     assert text_fields[4].name == "a"
-    assert text_fields[5].name == "a"
-    assert text_fields[6].name == ""
-    assert text_fields[7].name == "/w. r/awr"
-    assert text_fields[8].name == ""
-    assert text_fields[9].name == ""
+    assert text_fields[5].name == "/w. r/awr"
 
     model = table.get_model()
     results = model.objects.all()
     assert results.count() == 0
+
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "name": "Test 4",
+            "data": [
+                [
+                    "id",
+                ],
+            ],
+            "first_row_header": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_RESERVED_BASEROW_FIELD_NAME"
+
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "name": "Test 4",
+            "data": [
+                [
+                    "test",
+                    "test",
+                ],
+            ],
+            "first_row_header": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES"
+    assert "unique" in response_json["detail"]
+
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "name": "Test 4",
+            "data": [
+                [
+                    " ",
+                ],
+            ],
+            "first_row_header": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_BASEROW_FIELD_NAME"
+    assert "blank" in response_json["detail"]
+
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "name": "Test 4",
+            "data": [
+                [
+                    " test 1",
+                    "  test 2",
+                ],
+            ],
+            "first_row_header": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db

@@ -176,21 +176,21 @@ def test_view_sort_deleted(mock_broadcast_to_channel_group, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_grid_view_field_options_updated(mock_broadcast_to_channel_group, data_fixture):
+def test_view_field_options_updated(mock_broadcast_to_channel_group, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    ViewHandler().update_grid_view_field_options(
+    ViewHandler().update_field_options(
         user=user,
-        grid_view=grid_view,
+        view=grid_view,
         field_options={str(text_field.id): {"width": 150}},
     )
 
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{table.id}"
-    assert args[0][1]["type"] == "grid_view_field_options_updated"
-    assert args[0][1]["grid_view_id"] == grid_view.id
-    assert args[0][1]["grid_view_field_options"][text_field.id]["width"] == 150
+    assert args[0][1]["type"] == "view_field_options_updated"
+    assert args[0][1]["view_id"] == grid_view.id
+    assert args[0][1]["field_options"][text_field.id]["width"] == 150

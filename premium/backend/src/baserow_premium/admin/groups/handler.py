@@ -1,6 +1,7 @@
-from baserow.core.handler import CoreHandler
-from baserow.core.signals import group_deleted
 from baserow.core.exceptions import IsNotAdminError
+from baserow.core.signals import group_deleted
+from baserow.core.trash.handler import TrashHandler
+from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
 
 
 class GroupsAdminHandler:
@@ -18,12 +19,15 @@ class GroupsAdminHandler:
         if not user.is_staff:
             raise IsNotAdminError()
 
+        if group.has_template():
+            raise CannotDeleteATemplateGroupError()
+
         # Load the group users before the group is deleted so that we can pass those
         # along with the signal.
         group_id = group.id
         group_users = list(group.users.all())
 
-        CoreHandler()._delete_group(group)
+        TrashHandler.permanently_delete(group)
 
         group_deleted.send(
             self, group_id=group_id, group=group, group_users=group_users

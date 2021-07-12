@@ -1,3 +1,4 @@
+import csv
 import os
 import re
 import random
@@ -6,7 +7,9 @@ import hashlib
 import math
 
 from collections import namedtuple
+from typing import List
 
+from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED
 
 
@@ -247,3 +250,53 @@ def truncate_middle(content, max_length, middle="..."):
     right = content[-end:] if end else ""
 
     return f"{left}{middle}{right}"
+
+
+def split_comma_separated_string(comma_separated_string: str) -> List[str]:
+    """
+    Correctly splits a comma separated string which can contain quoted values to include
+    commas in individual items like so: 'A,"B , C",D' -> ['A', 'B , C', 'D'] or using
+    backslashes to escape double quotes like so: 'A,\"B,C' -> ['A', '"B', 'C'].
+
+    :param comma_separated_string: The string to split
+    :return: A list of split items from the provided string.
+    """
+
+    # Use python's csv handler as it knows how to handle quoted csv values etc.
+    # csv.reader returns an iterator, we use next to get the first split row back.
+    return next(
+        csv.reader(
+            [comma_separated_string], delimiter=",", quotechar='"', escapechar="\\"
+        )
+    )
+
+
+def get_model_reference_field_name(lookup_model, target_model):
+    """
+    Figures out what the name of the field related to the `target_model` is in the
+    `lookup_model`. So if the `lookup_model` has a ForeignKey pointing to the
+    `target_model`, then the name of that field will be returned.
+
+    :param lookup_model: The model that should contain the ForeignKey pointing at the
+        `target_model`.
+    :type lookup_model: Model
+    :param target_model: The model that the ForeignKey in the `lookup_model` must be
+        pointing to.
+    :type target_model: Model
+    :return: The name of the field.
+    :rtype: str | None
+    """
+
+    # We have to loop over all the fields, check if it is a ForeignKey and check if
+    # the related model is the `target_model`. We can't use isinstance to check if
+    # the model is a child of View because that doesn't work with models, so we need
+    # to create a tuple of parent classes and check if the `target_model` is in them.
+    for field in lookup_model._meta.get_fields():
+        if isinstance(field, ForeignKey) and field.related_model:
+            classes = tuple(field.related_model._meta.parents.keys()) + (
+                field.related_model,
+            )
+            if any([target_model == c for c in classes]):
+                return field.name
+
+    return None

@@ -1,27 +1,36 @@
 <template>
-  <div class="select-options">
-    <div
-      v-for="(item, index) in value"
-      :key="item.id"
-      class="select-options__item"
-    >
-      <a
-        :ref="'color-select-' + index"
-        :class="'select-options__color' + ' background-color--' + item.color"
-        @click="openColor(index)"
+  <div>
+    <div class="select-options">
+      <div
+        v-for="(item, index) in value"
+        :key="item.id"
+        v-sortable="{
+          id: item.id,
+          update: order,
+          handle: '[data-sortable-handle]',
+          marginTop: -3,
+        }"
+        class="select-options__item"
       >
-        <i class="fas fa-caret-down"></i>
-      </a>
-      <input
-        v-model="item.value"
-        class="input select-options__value"
-        :class="{ 'input--error': $v.value.$each[index].value.$error }"
-        @input="$emit('input', value)"
-        @blur="$v.value.$each[index].value.$touch()"
-      />
-      <a class="select-options__remove" @click.stop.prevent="remove(index)">
-        <i class="fas fa-times"></i>
-      </a>
+        <div class="select-options__drag-handle" data-sortable-handle></div>
+        <a
+          :ref="'color-select-' + index"
+          :class="'select-options__color' + ' background-color--' + item.color"
+          @click="openColor(index)"
+        >
+          <i class="fas fa-caret-down"></i>
+        </a>
+        <input
+          v-model="item.value"
+          class="input select-options__value"
+          :class="{ 'input--error': $v.value.$each[index].value.$error }"
+          @input="$emit('input', value)"
+          @blur="$v.value.$each[index].value.$touch()"
+        />
+        <a class="select-options__remove" @click.stop.prevent="remove(index)">
+          <i class="fas fa-times"></i>
+        </a>
+      </div>
     </div>
     <a class="add" @click="add()">
       <i class="fas fa-plus add__icon"></i>
@@ -80,6 +89,16 @@ export default {
     updateColor(index, color) {
       this.value[index].color = color
       this.$emit('input', this.value)
+    },
+    order(newOrder, oldOrder) {
+      const sortedValue = this.value
+        .slice()
+        .sort(
+          (a, b) =>
+            newOrder.findIndex((id) => id === a.id) -
+            newOrder.findIndex((id) => id === b.id)
+        )
+      this.$emit('input', sortedValue)
     },
   },
   validations: {

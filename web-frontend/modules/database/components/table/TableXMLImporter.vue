@@ -154,9 +154,13 @@ export default {
         return
       }
 
-      this.values.data = JSON.stringify(xmlData)
+      const dataWithHeader = this.ensureHeaderExistsAndIsValid(
+        xmlData,
+        hasHeader
+      )
+      this.values.data = JSON.stringify(dataWithHeader)
       this.error = ''
-      this.preview = this.getPreview(xmlData, hasHeader)
+      this.preview = this.getPreview(dataWithHeader)
     },
   },
 }

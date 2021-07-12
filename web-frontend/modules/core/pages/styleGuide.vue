@@ -907,7 +907,7 @@
             </a>
             <div class="modal__box-sidebar">
               <div class="modal-sidebar__head">
-                <div class="modal-sidebar__head-icon">B</div>
+                <div class="modal-sidebar__head-initials-icon">B</div>
                 <div class="modal-sidebar__head-name">Settings</div>
               </div>
               <ul class="modal-sidebar__nav">

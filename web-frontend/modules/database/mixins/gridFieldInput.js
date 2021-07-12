@@ -146,13 +146,6 @@ export default {
      */
     afterSave() {},
     /**
-     * Should return a boolean if the copy that is going to be saved is valid. If it
-     * returns false saving is not possible.
-     */
-    isValid() {
-      return true
-    },
-    /**
      * Small helper method that stops the propagation of the context menu when the
      * field is being edited. Can be used on the element like:
      * `@contextmenu="stopContextIfEditing($event)"`.
@@ -185,6 +178,9 @@ export default {
     },
     canEmpty() {
       return !this.editing
+    },
+    getError() {
+      return this.getValidationError(this.editing ? this.copy : this.value)
     },
   },
 }

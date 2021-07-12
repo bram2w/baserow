@@ -13,9 +13,16 @@ from baserow.api.decorators import (
     map_exceptions,
     allowed_includes,
 )
-from baserow.api.utils import validate_data_custom_fields
+from baserow.api.utils import (
+    validate_data_custom_fields,
+    validate_data,
+    MappingSerializer,
+)
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.utils import PolymorphicCustomFieldRegistrySerializer
+from baserow.api.utils import (
+    DiscriminatorCustomFieldsMappingSerializer,
+    CustomFieldRegistryMappingSerializer,
+)
 from baserow.api.schemas import get_error_schema
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
@@ -37,6 +44,8 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortNotSupported,
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
+    UnrelatedFieldError,
+    ViewDoesNotSupportFieldOptions,
 )
 
 from .serializers import (
@@ -61,6 +70,15 @@ from .errors import (
     ERROR_VIEW_SORT_NOT_SUPPORTED,
     ERROR_VIEW_SORT_FIELD_ALREADY_EXISTS,
     ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED,
+    ERROR_UNRELATED_FIELD,
+    ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
+)
+
+
+view_field_options_mapping_serializer = MappingSerializer(
+    "ViewFieldOptions",
+    view_type_registry.get_field_options_serializer_map(),
+    "view_type",
 )
 
 
@@ -108,7 +126,7 @@ class ViewsView(APIView):
             "are going to be added. Each type can have different properties."
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer, many=True
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -179,11 +197,11 @@ class ViewsView(APIView):
             "group. Depending on the type, different properties can optionally be "
             "set."
         ),
-        request=PolymorphicCustomFieldRegistrySerializer(
+        request=DiscriminatorCustomFieldsMappingSerializer(
             view_type_registry, CreateViewSerializer
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(
@@ -194,7 +212,7 @@ class ViewsView(APIView):
     )
     @transaction.atomic
     @validate_body_custom_fields(
-        view_type_registry, base_serializer_class=CreateViewSerializer
+        view_type_registry, base_serializer_class=CreateViewSerializer, partial=True
     )
     @map_exceptions(
         {
@@ -206,8 +224,12 @@ class ViewsView(APIView):
     def post(self, request, data, table_id, filters, sortings):
         """Creates a new view for a user."""
 
+        type_name = data.pop("type")
+        field_type = view_type_registry.get(type_name)
         table = TableHandler().get_table(table_id)
-        view = ViewHandler().create_view(request.user, table, data.pop("type"), **data)
+
+        with field_type.map_api_exceptions():
+            view = ViewHandler().create_view(request.user, table, type_name, **data)
 
         serializer = view_type_registry.get_serializer(
             view, ViewSerializer, filters=filters, sortings=sortings
@@ -248,7 +270,7 @@ class ViewView(APIView):
             "could be returned."
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -301,11 +323,11 @@ class ViewView(APIView):
             "related database's group. The type cannot be changed. It depends on the "
             "existing type which properties can be changed."
         ),
-        request=PolymorphicCustomFieldRegistrySerializer(
+        request=CustomFieldRegistryMappingSerializer(
             view_type_registry, UpdateViewSerializer
         ),
         responses={
-            200: PolymorphicCustomFieldRegistrySerializer(
+            200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(
@@ -332,9 +354,11 @@ class ViewView(APIView):
             view_type_registry,
             request.data,
             base_serializer_class=UpdateViewSerializer,
+            partial=True,
         )
 
-        view = ViewHandler().update_view(request.user, view, **data)
+        with view_type.map_api_exceptions():
+            view = ViewHandler().update_view(request.user, view, **data)
 
         serializer = view_type_registry.get_serializer(
             view, ViewSerializer, filters=filters, sortings=sortings
@@ -908,3 +932,107 @@ class ViewSortView(APIView):
         ViewHandler().delete_sort(request.user, view)
 
         return Response(status=204)
+
+
+class ViewFieldOptionsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Responds with field options related to the provided "
+                "value.",
+            )
+        ],
+        tags=["Database table views"],
+        operation_id="get_database_table_view_field_options",
+        description="Responds with the fields options of the provided view if the "
+        "authenticated user has access to the related group.",
+        responses={
+            200: view_field_options_mapping_serializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS",
+                ]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            ViewDoesNotSupportFieldOptions: ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
+        }
+    )
+    def get(self, request, view_id):
+        """Returns the field options of the view."""
+
+        view = ViewHandler().get_view(view_id).specific
+        view.table.database.group.has_user(
+            request.user, raise_error=True, allow_if_template=True
+        )
+        view_type = view_type_registry.get_by_model(view)
+
+        try:
+            serializer_class = view_type.get_field_options_serializer_class()
+        except ValueError:
+            raise ViewDoesNotSupportFieldOptions(
+                "The view type does not have a `field_options_serializer_class`"
+            )
+
+        return Response(serializer_class(view).data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Updates the field options related to the provided value.",
+            )
+        ],
+        tags=["Database table views"],
+        operation_id="update_database_table_view_field_options",
+        description="Updates the field options of a view. The field options differ "
+        "per field type  This could for example be used to update the field width of "
+        "a `grid` view if the user changes it.",
+        request=view_field_options_mapping_serializer,
+        responses={
+            200: view_field_options_mapping_serializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS",
+                ]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            UnrelatedFieldError: ERROR_UNRELATED_FIELD,
+            ViewDoesNotSupportFieldOptions: ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
+        }
+    )
+    def patch(self, request, view_id):
+        """Updates the field option of the view."""
+
+        handler = ViewHandler()
+        view = handler.get_view(view_id).specific
+        view_type = view_type_registry.get_by_model(view)
+        serializer_class = view_type.get_field_options_serializer_class()
+        data = validate_data(serializer_class, request.data)
+
+        with view_type.map_api_exceptions():
+            handler.update_field_options(request.user, view, data["field_options"])
+
+        serializer = serializer_class(view)
+        return Response(serializer.data)

@@ -17,7 +17,12 @@ from baserow.contrib.database.fields.field_filters import (
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
-from baserow.core.mixins import OrderableMixin, CreatedAndUpdatedOnMixin
+from baserow.core.mixins import (
+    OrderableMixin,
+    CreatedAndUpdatedOnMixin,
+    TrashableModelMixin,
+)
+from baserow.core.utils import split_comma_separated_string
 
 deconstruct_filter_key_regex = re.compile(r"filter__field_([0-9]+)__([a-zA-Z0-9_]*)$")
 
@@ -67,17 +72,24 @@ class TableModelQuerySet(models.QuerySet):
 
         return filter_builder.apply_to_queryset(self)
 
-    def order_by_fields_string(self, order_string):
+    def order_by_fields_string(self, order_string, user_field_names=False):
         """
-        Orders the query by the given field order string. This string is often directly
-        forwarded from a GET, POST or other user provided parameter. Multiple fields
-        can be provided by separating the values by a comma. The field id is extracted
-        from the string so it can either be provided as field_1, 1, id_1, etc.
+        Orders the query by the given field order string. This string is often
+        directly forwarded from a GET, POST or other user provided parameter.
+        Multiple fields can be provided by separating the values by a comma. When
+        user_field_names is False the order_string must contain a comma separated
+        list of field ids. The field id is extracted from the string so it can either
+        be provided as field_1, 1, id_1, etc. When user_field_names is True the
+        order_string is treated as a comma separated list of the actual field names,
+        use quotes to wrap field names containing commas.
 
         :param order_string: The field ids to order the queryset by separated by a
             comma. For example `field_1,2` which will order by field with id 1 first
             and then by field with id 2 second.
         :type order_string: str
+        :param user_field_names: If true then the order_string is instead treated as
+        a comma separated list of actual field names and not field ids.
+        :type user_field_names: bool
         :raises OrderByFieldNotFound: when the provided field id is not found in the
             model.
         :raises OrderByFieldNotPossible: when it is not possible to order by the
@@ -86,24 +98,42 @@ class TableModelQuerySet(models.QuerySet):
         :rtype: QuerySet
         """
 
-        order_by = order_string.split(",")
+        order_by = split_comma_separated_string(order_string)
 
         if len(order_by) == 0:
             raise ValueError("At least one field must be provided.")
 
+        if user_field_names:
+            field_object_dict = {
+                o["field"].name: o for o in self.model._field_objects.values()
+            }
+        else:
+            field_object_dict = self.model._field_objects
+
         for index, order in enumerate(order_by):
-            field_id = int(re.sub("[^0-9]", "", str(order)))
+            if user_field_names:
+                possible_prefix = order[:1]
+                if possible_prefix in {"-", "+"}:
+                    field_name_or_id = order[1:]
+                else:
+                    field_name_or_id = order
+            else:
+                field_name_or_id = int(re.sub("[^0-9]", "", str(order)))
 
-            if field_id not in self.model._field_objects:
-                raise OrderByFieldNotFound(order, f"Field {field_id} does not exist.")
+            if field_name_or_id not in field_object_dict:
+                raise OrderByFieldNotFound(
+                    order, f"Field {field_name_or_id} does not exist."
+                )
 
-            field_object = self.model._field_objects[field_id]
+            field_object = field_object_dict[field_name_or_id]
             field_type = field_object["type"]
             field_name = field_object["name"]
+            user_field_name = field_object["field"].name
+            error_display_name = user_field_name if user_field_names else field_name
 
             if not field_object["type"].can_order_by:
                 raise OrderByFieldNotPossible(
-                    field_name,
+                    error_display_name,
                     field_type.type,
                     f"It is not possible to order by field type {field_type.type}.",
                 )
@@ -184,13 +214,24 @@ class TableModelQuerySet(models.QuerySet):
 
 class TableModelManager(models.Manager):
     def get_queryset(self):
-        return TableModelQuerySet(self.model, using=self._db)
+        return TableModelQuerySet(self.model, using=self._db).filter(trashed=False)
 
 
 FieldObject = Dict[str, Any]
 
 
-class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
+class GeneratedTableModel:
+    """
+    This class is purely used to mark Model classes which have been generated by Baserow
+    for identification using instance(possible_baserow_model, GeneratedTableModel).
+    """
+
+    pass
+
+
+class Table(
+    TrashableModelMixin, CreatedAndUpdatedOnMixin, OrderableMixin, models.Model
+):
     database = models.ForeignKey("database.Database", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
@@ -203,8 +244,16 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         queryset = Table.objects.filter(database=database)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
+    def get_database_table_name(self):
+        return f"database_table_{self.id}"
+
     def get_model(
-        self, fields=None, field_ids=None, attribute_names=False, manytomany_models=None
+        self,
+        fields=None,
+        field_ids=None,
+        field_names=None,
+        attribute_names=False,
+        manytomany_models=None,
     ):
         """
         Generates a temporary Django model based on available fields that belong to
@@ -218,6 +267,10 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
             added to the model. This can be done to improve speed if for example only a
             single field needs to be mutated.
         :type field_ids: None or list
+        :param field_names: If provided only the fields with the names in the list
+            will be added to the model. This can be done to improve speed if for
+            example only a single field needs to be mutated.
+        :type field_names: None or list
         :param attribute_names: If True, the the model attributes will be based on the
             field name instead of the field id.
         :type attribute_names: bool
@@ -241,11 +294,26 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
             (),
             {
                 "managed": False,
-                "db_table": f"database_table_{self.id}",
+                "db_table": self.get_database_table_name(),
                 "app_label": app_label,
                 "ordering": ["order", "id"],
             },
         )
+
+        def __str__(self):
+            """
+            When the model instance is rendered to a string, then we want to return the
+            primary field value in human readable format.
+            """
+
+            field = self._field_objects.get(self._primary_field_id, None)
+
+            if not field:
+                return f"unnamed row {self.id}"
+
+            return field["type"].get_human_readable_value(
+                getattr(self, field["name"]), field
+            )
 
         attrs = {
             "Meta": meta,
@@ -253,6 +321,7 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
             # An indication that the model is a generated table model.
             "_generated_table_model": True,
             "_table_id": self.id,
+            "_primary_field_id": -1,
             # An object containing the table fields, field types and the chosen names
             # with the table field id as key.
             "_field_objects": {},
@@ -267,10 +336,16 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
                 db_index=True,
                 default=1,
             ),
+            "__str__": __str__,
         }
 
-        # Construct a query to fetch all the fields of that table.
-        fields_query = self.field_set.all()
+        # Construct a query to fetch all the fields of that table. We need to include
+        # any trashed fields so the created model still has them present as the column
+        # is still actually there. If the model did not have the trashed field
+        # attributes then model.objects.create will fail as the trashed columns will
+        # be given null values by django triggering not null constraints in the
+        # database.
+        fields_query = self.field_set(manager="objects_and_trash").all()
 
         # If the field ids are provided we must only fetch the fields of which the ids
         # are in that list.
@@ -279,6 +354,14 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
                 fields_query = []
             else:
                 fields_query = fields_query.filter(pk__in=field_ids)
+
+        # If the field names are provided we must only fetch the fields of which the
+        # user defined name is in that list.
+        if isinstance(field_names, list):
+            if len(field_names) == 0:
+                fields_query = []
+            else:
+                fields_query = fields_query.filter(name__in=field_names)
 
         # Create a combined list of fields that must be added and belong to the this
         # table.
@@ -291,13 +374,17 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         # We will have to add each field to with the correct field name and model field
         # to the attribute list in order for the model to work.
         for field in fields:
+            trashed = field.trashed
             field = field.specific
             field_type = field_type_registry.get_by_model(field)
             field_name = field.db_column
+
             # If attribute_names is True we will not use 'field_{id}' as attribute name,
             # but we will rather use a name the user provided.
             if attribute_names:
                 field_name = field.model_attribute_name
+                if trashed:
+                    field_name = f"trashed_{field_name}"
                 # If the field name already exists we will append '_field_{id}' to each
                 # entry that is a duplicate.
                 if field_name in attrs:
@@ -307,13 +394,17 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
                 if field_name in duplicate_field_names:
                     field_name = f"{field_name}_{field.db_column}"
 
-            # Add the generated objects and information to the dict that optionally can
-            # be returned.
-            attrs["_field_objects"][field.id] = {
-                "field": field,
-                "type": field_type,
-                "name": field_name,
-            }
+            if not trashed:
+                # Add the generated objects and information to the dict that
+                # optionally can be returned. We exclude trashed fields here so they
+                # are not displayed by baserow anywhere.
+                attrs["_field_objects"][field.id] = {
+                    "field": field,
+                    "type": field_type,
+                    "name": field_name,
+                }
+                if field.primary:
+                    attrs["_primary_field_id"] = field.id
 
             # Add the field to the attribute dict that is used to generate the model.
             # All the kwargs that are passed to the `get_model_field` method are going
@@ -326,6 +417,8 @@ class Table(CreatedAndUpdatedOnMixin, OrderableMixin, models.Model):
         model = type(
             str(f"Table{self.pk}Model"),
             (
+                GeneratedTableModel,
+                TrashableModelMixin,
                 CreatedAndUpdatedOnMixin,
                 models.Model,
             ),

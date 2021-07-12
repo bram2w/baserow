@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import patch
 
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db(transaction=True)
@@ -19,6 +20,20 @@ def test_field_created(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][0] == f"table-{table.id}"
     assert args[0][1]["type"] == "field_created"
     assert args[0][1]["field"]["id"] == field.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_field_restored(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    field = data_fixture.create_text_field(user=user)
+    FieldHandler().delete_field(user, field)
+    TrashHandler.restore_item(user, "field", field.id)
+
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{field.table.id}"
+    assert args[0][1]["type"] == "field_restored"
+    assert args[0][1]["field"]["id"] == field.id, args[0]
 
 
 @pytest.mark.django_db(transaction=True)
