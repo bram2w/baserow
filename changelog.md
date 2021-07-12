@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Released (2021-07-12)
+
 * Made it possible to list table field meta-data with a token.
 * Added form view.
 * The API endpoint to update the grid view field options has been moved to
