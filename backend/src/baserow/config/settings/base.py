@@ -74,8 +74,9 @@ REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 REDIS_USERNAME = os.getenv("REDIS_USER", "")
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 REDIS_PROTOCOL = os.getenv("REDIS_PROTOCOL", "redis")
-REDIS_URL = (
-    f"{REDIS_PROTOCOL}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
+REDIS_URL = os.getenv(
+    "REDIS_URL",
+    f"{REDIS_PROTOCOL}://{REDIS_USERNAME}:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0",
 )
 
 CELERY_BROKER_URL = REDIS_URL
@@ -216,7 +217,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.4.0",
+    "VERSION": "1.4.1",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
