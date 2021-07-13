@@ -932,3 +932,111 @@ def test_a_restored_field_will_have_its_name_changed_to_ensure_it_is_unique(
     link_field_1.refresh_from_db()
     assert link_field_2.name == "Customer"
     assert link_field_1.name == "Customer (Restored)"
+
+
+@pytest.mark.django_db
+def test_perm_delete_related_link_row_field(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Jane"},
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=customers_table,
+    )
+
+    TrashHandler.trash(
+        user, database.group, database, link_field_1.link_row_related_field
+    )
+    assert TrashEntry.objects.count() == 1
+    link_field_1.refresh_from_db()
+    assert link_field_1.trashed
+    assert link_field_1.link_row_related_field.trashed
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert TrashEntry.objects.count() == 0
+    assert LinkRowField.objects.all().count() == 0
+    for t in connection.introspection.table_names():
+        if "_relation_" in t:
+            assert False
+
+
+@pytest.mark.django_db
+def test_perm_delete_table_and_related_link_row_field(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Jane"},
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=customers_table,
+    )
+
+    TrashHandler.trash(user, database.group, database, table)
+    TrashHandler.trash(
+        user, database.group, database, link_field_1.link_row_related_field
+    )
+
+    assert TrashEntry.objects.count() == 2
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert LinkRowField.objects.all().count() == 0
+    for t in connection.introspection.table_names():
+        if "_relation_" in t:
+            assert False
+
+    assert TrashEntry.objects.count() == 0
+    assert LinkRowField.objects_and_trash.all().count() == 0
+    assert Table.objects_and_trash.all().count() == 1

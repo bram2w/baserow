@@ -11,7 +11,7 @@ from baserow.contrib.database.rows.signals import row_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
 from baserow.core.exceptions import TrashItemDoesNotExist
-from baserow.core.models import Application, TrashEntry
+from baserow.core.models import TrashEntry
 from baserow.core.trash.registries import TrashableItemType
 
 
@@ -104,7 +104,7 @@ class FieldTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, field: Application, trash_item_lookup_cache=None):
+    def permanently_delete_item(self, field: Field, trash_item_lookup_cache=None):
         """Deletes the table schema and instance."""
 
         if (

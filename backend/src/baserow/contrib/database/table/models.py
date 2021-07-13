@@ -325,6 +325,9 @@ class Table(
             # An object containing the table fields, field types and the chosen names
             # with the table field id as key.
             "_field_objects": {},
+            # An object containing the trashed table fields, field types and the chosen
+            # names with the table field id as key.
+            "_trashed_field_objects": {},
             # We are using our own table model manager to implement some queryset
             # helpers.
             "objects": TableModelManager(),
@@ -394,17 +397,19 @@ class Table(
                 if field_name in duplicate_field_names:
                     field_name = f"{field_name}_{field.db_column}"
 
-            if not trashed:
-                # Add the generated objects and information to the dict that
-                # optionally can be returned. We exclude trashed fields here so they
-                # are not displayed by baserow anywhere.
-                attrs["_field_objects"][field.id] = {
-                    "field": field,
-                    "type": field_type,
-                    "name": field_name,
-                }
-                if field.primary:
-                    attrs["_primary_field_id"] = field.id
+            field_objects_dict = (
+                "_trashed_field_objects" if trashed else "_field_objects"
+            )
+            # Add the generated objects and information to the dict that
+            # optionally can be returned. We exclude trashed fields here so they
+            # are not displayed by baserow anywhere.
+            attrs[field_objects_dict][field.id] = {
+                "field": field,
+                "type": field_type,
+                "name": field_name,
+            }
+            if field.primary:
+                attrs["_primary_field_id"] = field.id
 
             # Add the field to the attribute dict that is used to generate the model.
             # All the kwargs that are passed to the `get_model_field` method are going
@@ -430,7 +435,11 @@ class Table(
         # the generated model as argument in order to do this. This is for example used
         # by the link row field. It can also be used to make other changes to the
         # class.
-        for field_id, field_object in attrs["_field_objects"].items():
+        all_field_objects = {
+            **attrs["_field_objects"],
+            **attrs["_trashed_field_objects"],
+        }
+        for field_id, field_object in all_field_objects.items():
             field_object["type"].after_model_generation(
                 field_object["field"], model, field_object["name"], manytomany_models
             )
