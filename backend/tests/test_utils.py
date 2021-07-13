@@ -131,7 +131,7 @@ def setup_interesting_test_table(data_fixture):
         if val is not None:
             row_values[f"field_{name_to_field_id[field_type]}"] = val
     # Make a blank row to test empty field conversion also.
-    model.objects.create(**{})
+    blank_row = model.objects.create(**{})
     row = model.objects.create(**row_values)
 
     # Setup the link rows
@@ -207,4 +207,4 @@ def setup_interesting_test_table(data_fixture):
     getattr(row, f"field_{name_to_field_id['file_link_row']}").add(
         linked_row_7.id, linked_row_8.id
     )
-    return table, user, row
+    return table, user, row, blank_row

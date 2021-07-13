@@ -1,6 +1,10 @@
 # Baserow
 
-Open source no-code database tool and Airtable alternative.
+Open source no-code database tool and Airtable alternative. Join our community on 
+Gitter https://gitter.im/bramw-baserow/community.
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
+*Beta*
 
 **We're hiring** remote developers! More information at 
 https://baserow.io/jobs/experienced-full-stack-developer.
@@ -26,13 +30,11 @@ you the powers of a developer without leaving your browser.
 * Runs in your browser.
 * Alternative to Airtable.
 
-## Become a sponsor
+## Self host
 
-If you would like to get new features faster then you might want to consider becoming
-a sponsor. By becoming a sponsor we can spend more time on Baserow which means faster
-development.
-
-[Become a GitHub Sponsor](https://github.com/sponsors/bram2w)
+* [**Heroku**: Easily install and scale up on Heroku by using the template.](./docs/guides/installation/install-on-heroku.md)
+* [**Cloudron**: Install and update Baserow on your own Cloudron server.](./docs/guides/installation/install-on-cloudron.md)
+* [**Ubuntu**: Manually install Baserow step by step on a clean Ubuntu server. **not recommended**](./docs/guides/installation/install-on-ubuntu.md)
 
 ## Try out Baserow on your machine 
 
@@ -90,13 +92,21 @@ or [here](./docs/index.md) inside the repository. The API docs can be found here
 https://api.baserow.io/api/redoc/ or if you are looking for the OpenAPI schema here
 https://api.baserow.io/api/schema.json.
 
+## Become a sponsor
+
+If you would like to get new features faster, then you might want to consider becoming
+a sponsor. By becoming a sponsor we can spend more time on Baserow which means faster
+development.
+
+[Become a GitHub Sponsor](https://github.com/sponsors/bram2w)
+
 ## Meta
 
-Created by Bram Wiepjes (Baserow) - bram@baserow.io.
+Created by Baserow B.V. - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 1.4.0
+Version: 1.4.1
 
 The official repository can be found at https://gitlab.com/bramw/baserow.
 
