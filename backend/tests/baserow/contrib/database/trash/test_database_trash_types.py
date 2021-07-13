@@ -83,6 +83,108 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
 
 
 @pytest.mark.django_db
+def test_can_delete_fields_and_rows_in_the_same_perm_delete_batch(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+
+    handler = RowHandler()
+    model = table.get_model()
+    row_1 = handler.create_row(user=user, table=table)
+    row_2 = handler.create_row(user=user, table=table)
+
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_1, parent_id=table.id
+    )
+    TrashHandler.trash(user, table.database.group, table.database, field)
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_2, parent_id=table.id
+    )
+    assert model.objects.all().count() == 0
+    assert model.trash.all().count() == 2
+    assert TrashEntry.objects.count() == 3
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert model.objects.all().count() == 0
+    assert model.trash.all().count() == 0
+    assert TrashEntry.objects.count() == 0
+
+    field_2 = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    row_3 = handler.create_row(user=user, table=table)
+
+    TrashHandler.trash(user, table.database.group, table.database, field_2)
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_3, parent_id=table.id
+    )
+
+    assert model.objects.all().count() == 0
+    assert model.trash.all().count() == 1
+    assert TrashEntry.objects.count() == 2
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert model.objects.all().count() == 0
+    assert model.trash.all().count() == 0
+    assert TrashEntry.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_can_trash_row_with_blank_primary_single_select(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    option_field = data_fixture.create_single_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    data_fixture.create_select_option(field=option_field, value="A", color="blue")
+    data_fixture.create_select_option(field=option_field, value="B", color="red")
+
+    handler = RowHandler()
+    model = table.get_model()
+    row = handler.create_row(user=user, table=table)
+
+    TrashHandler.trash(
+        user, table.database.group, table.database, row, parent_id=table.id
+    )
+    assert TrashEntry.objects.count() == 1
+    assert model.objects.count() == 0
+    assert model.trash.count() == 1
+
+
+@pytest.mark.django_db
+def test_can_trash_row_with_blank_primary_file_field(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    data_fixture.create_file_field(
+        table=table, name="file_field", order=1, primary=True
+    )
+
+    handler = RowHandler()
+    model = table.get_model()
+    row = handler.create_row(user=user, table=table)
+
+    TrashHandler.trash(
+        user, table.database.group, table.database, row, parent_id=table.id
+    )
+    assert TrashEntry.objects.count() == 1
+    assert model.objects.count() == 0
+    assert model.trash.count() == 1
+
+
+@pytest.mark.django_db
 def test_delete_row_when_in_separate_user_db(data_fixture, user_tables_in_separate_db):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(name="Car", user=user)

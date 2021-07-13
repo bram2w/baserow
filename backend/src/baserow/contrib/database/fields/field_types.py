@@ -30,6 +30,7 @@ from baserow.contrib.database.api.fields.serializers import (
     SelectOptionSerializer,
     FileFieldResponseSerializer,
 )
+from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
@@ -58,7 +59,6 @@ from .models import (
     PhoneNumberField,
 )
 from .registries import FieldType, field_type_registry
-from baserow.contrib.database.validators import UnicodeRegexValidator
 
 
 class CharFieldMatchingRegexFieldType(FieldType, ABC):
@@ -1310,6 +1310,8 @@ class SingleSelectFieldType(FieldType):
         )
 
     def get_export_value(self, value, field_object):
+        if value is None:
+            return value
         return value.value
 
     def get_model_field(self, instance, **kwargs):

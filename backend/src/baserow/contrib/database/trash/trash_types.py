@@ -33,7 +33,9 @@ class TableTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, trashed_item: Table):
+    def permanently_delete_item(
+        self, trashed_item: Table, trash_item_lookup_cache=None
+    ):
         """Deletes the table schema and instance."""
 
         connection = connections[settings.USER_TABLE_DATABASE]
@@ -102,8 +104,17 @@ class FieldTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, field: Application):
+    def permanently_delete_item(self, field: Application, trash_item_lookup_cache=None):
         """Deletes the table schema and instance."""
+
+        if (
+            trash_item_lookup_cache is not None
+            and "row_table_model_cache" in trash_item_lookup_cache
+        ):
+            # Invalidate the cached model for this field's table as after this field is
+            # deleted usage of the old model will cause ProgrammingError's as the column
+            # for this field no longer exists.
+            trash_item_lookup_cache["row_table_model_cache"].pop(field.table.id, None)
 
         field = field.specific
         field_type = field_type_registry.get_by_model(field)
@@ -173,7 +184,7 @@ class RowTrashableItemType(TrashableItemType):
             user=None,
         )
 
-    def permanently_delete_item(self, row):
+    def permanently_delete_item(self, row, trash_item_lookup_cache=None):
         row.delete()
 
     def lookup_trashed_item(
