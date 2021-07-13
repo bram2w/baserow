@@ -2,10 +2,12 @@
 
 ## Unreleased
 
+## Released (2021-07-13)
+
 * Added a Heroku template and one click deploy button.
-* Fixed bug preventing the deletion of rows with a blank single select primary field
-* Fixed error in trash cleanup job when deleting multiple rows and a field from the same
-  table at once.
+* Fixed bug preventing the deletion of rows with a blank single select primary field.
+* Fixed error in trash cleanup job when deleting multiple rows and a field from the
+  same table at once.
 
 ## Released (2021-07-12)
 
