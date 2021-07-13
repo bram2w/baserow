@@ -267,7 +267,7 @@ def strip_indents_and_newlines(xml):
 
 
 def run_export_over_interesting_test_table(data_fixture, storage_mock, options):
-    table, user, _ = setup_interesting_test_table(data_fixture)
+    table, user, _, _ = setup_interesting_test_table(data_fixture)
     grid_view = data_fixture.create_grid_view(table=table)
     job, contents = run_export_job_with_mock_storage(
         table, grid_view, storage_mock, user, options

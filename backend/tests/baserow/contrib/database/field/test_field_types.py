@@ -219,7 +219,6 @@ def test_valid_email(data_fixture):
 
     for invalid_email in invalid_emails:
         with pytest.raises(ValidationError):
-            print(invalid_email)
             row_handler.create_row(
                 user=user, table=table, values={"email": invalid_email}, model=model
             )
@@ -504,15 +503,41 @@ def test_phone_number_field_type(data_fixture):
 
 @pytest.mark.django_db
 def test_human_readable_values(data_fixture):
-    table, user, row = setup_interesting_test_table(data_fixture)
+    table, user, row, blank_row = setup_interesting_test_table(data_fixture)
     model = table.get_model()
     results = {}
+    blank_results = {}
     for field in model._field_objects.values():
         value = field["type"].get_human_readable_value(
             getattr(row, field["name"]), field
         )
         results[field["field"].name] = value
+        blank_value = field["type"].get_human_readable_value(
+            getattr(blank_row, field["name"]), field
+        )
+        blank_results[field["field"].name] = blank_value
 
+    assert blank_results == {
+        "boolean": "False",
+        "date_eu": "",
+        "date_us": "",
+        "datetime_eu": "",
+        "datetime_us": "",
+        "decimal_link_row": "",
+        "email": "",
+        "file": "",
+        "file_link_row": "",
+        "link_row": "",
+        "long_text": "",
+        "negative_decimal": "",
+        "negative_int": "",
+        "phone_number": "",
+        "positive_decimal": "",
+        "positive_int": "",
+        "single_select": "",
+        "text": "",
+        "url": "",
+    }
     assert results == {
         "boolean": "True",
         "date_eu": "01/02/2020",

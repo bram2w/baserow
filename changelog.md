@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+* Fixed bug preventing the deletion of rows with a blank single select primary field
+* Fixed error in trash cleanup job when deleting multiple rows and a field from the same
+  table at once.
+
 ## Released (2021-07-12)
 
 * Made it possible to list table field meta-data with a token.

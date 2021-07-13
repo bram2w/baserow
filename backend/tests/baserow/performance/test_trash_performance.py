@@ -1,11 +1,10 @@
 import pytest
+from pyinstrument import Profiler
 
 from baserow.contrib.database.management.commands.fill_table import fill_table
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
 from tests.test_utils import setup_interesting_test_table
-
-from pyinstrument import Profiler
 
 
 @pytest.mark.django_db
@@ -14,7 +13,7 @@ from pyinstrument import Profiler
 # editing the run config for this test and adding --runslow -s to additional args.
 def test_deleting_many_of_rows_is_fast(data_fixture):
 
-    table, user, row = setup_interesting_test_table(data_fixture)
+    table, user, row, _ = setup_interesting_test_table(data_fixture)
     count = 1000
     fill_table(count, table)
 

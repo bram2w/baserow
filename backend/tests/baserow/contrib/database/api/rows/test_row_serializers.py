@@ -208,7 +208,7 @@ def test_get_example_row_serializer_class():
 
 @pytest.mark.django_db
 def test_get_row_serializer_with_user_field_names(data_fixture):
-    table, user, row = setup_interesting_test_table(data_fixture)
+    table, user, row, _ = setup_interesting_test_table(data_fixture)
     model = table.get_model()
     queryset = model.objects.all().enhance_by_fields()
     serializer_class = get_row_serializer_class(

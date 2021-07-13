@@ -211,7 +211,9 @@ class TrashHandler:
                     to_delete = trash_item_type.lookup_trashed_item(
                         trash_entry, trash_item_lookup_cache
                     )
-                    trash_item_type.permanently_delete_item(to_delete)
+                    trash_item_type.permanently_delete_item(
+                        to_delete, trash_item_lookup_cache
+                    )
                 except TrashItemDoesNotExist:
                     # When a parent item is deleted it should also delete all of it's
                     # children. Hence we expect that many of these TrashEntries to no

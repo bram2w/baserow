@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Dict
 
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.registry import (
@@ -15,7 +15,9 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
     A TrashableItemType specifies a baserow model which can be trashed.
     """
 
-    def lookup_trashed_item(self, trashed_entry, trash_item_lookup_cache=None):
+    def lookup_trashed_item(
+        self, trashed_entry, trash_item_lookup_cache: Dict[str, Any] = None
+    ):
         """
         Returns the actual instance of the trashed item. By default simply does a get
         on the model_class's trash manager.
@@ -33,12 +35,17 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
             raise TrashItemDoesNotExist()
 
     @abstractmethod
-    def permanently_delete_item(self, trashed_item: Any):
+    def permanently_delete_item(
+        self, trashed_item: Any, trash_item_lookup_cache: Dict[str, Any] = None
+    ):
         """
         Should be implemented to actually delete the specified trashed item from the
         database and do any other required clean-up.
 
         :param trashed_item: The item to delete permanently.
+        :param trash_item_lookup_cache: If a cache is being used to speed up trash
+            item lookups it should be provided here so trash items can invalidate the
+            cache if when they are deleted a potentially cache item becomes invalid.
         """
 
         pass
