@@ -3,6 +3,19 @@
 Open source no-code database tool and Airtable alternative. Join our community on 
 Gitter https://gitter.im/bramw-baserow/community.
 
+> Warning: From version 0.8.0 to 1.4.1 of Baserow the docker-compose.yml included in 
+> the root of this repository has exposed an unsecured redis instance by default on the 
+> ip:port 0.0.0.0:6379.
+> If you have been running a server which is accessible via the internet using this 
+> `docker-compose.yml` then it is possible this redis server has been exposed to the 
+> internet depending on your operating system, networking setup and firewall settings.
+> Please update to the latest version of Baserow, 1.4.2 which no longer exposes the 
+> redis, db and mjml containers. Additionally, 1.4.2 only exposes the backend, 
+> web-frontend and media containers on localhost and not on 0.0.0.0. If you were 
+> previously relying on `docker-compose.yml` publicly exposing Baserow then please 
+> follow the [Make Baserow publicly accessible](./docs/guides/running-baserow-locally.md)
+> guide.
+
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 *Beta*
 

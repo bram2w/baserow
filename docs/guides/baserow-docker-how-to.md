@@ -42,10 +42,14 @@ $ BACKEND_PORT=8001 ./dev.sh
 
 ### Make Baserow publicly accessible
 
+Please note, the Docker and compose files provided by Baserow are currently only
+intended for local use. Exposing these containers publicly on the internet is not 
+currently supported and is done at your own risk.
+
 By default when you run `docker-compose up` you can only access Baserow from the same
 machine by visiting `localhost:3000` or `127.0.0.1:3000`. If you are running the Baserow
 docker containers on a remote server which you want to access over a network or the
-public internet you need to set some environment variables to expose Baserow.
+public internet you need to set some environment variables to expose Baserow. 
 
 > Please be warned that there is a security flaw with docker and the ufw firewall.
 > By default docker when exposing ports on 0.0.0.0 will bypass any ufw firewall rules
