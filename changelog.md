@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+
+## Released (2021-07-15)
+
 * **Breaking Change**: Baserow's `docker-compose.yml` no longer exposes ports for 
   the `db`, `mjml` and `redis` containers for security reasons. 
 * **Breaking Change**: `docker-compose.yml` will by default only expose Baserow on 
