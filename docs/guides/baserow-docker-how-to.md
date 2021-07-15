@@ -21,30 +21,13 @@ $ docker-compose logs
 
 ### Run Baserow alongside existing services
 
-Baserow's docker-compose files will automatically bind to various ports on your
-machine's network. If you already have applications or services using those ports the
-Baserow service which uses that port will crash:
-
-```bash
-Creating network "baserow_local" with driver "bridge"
-Creating db ... 
-Creating db    ... error
-Creating redis ... 
-WARNING: Host is already in use by another container
-
-Creating mjml  ... done
-Creating redis ... done
-
-ERROR: for db  Cannot start service db: driver failed programming external connectivity on endpoint db (...): Error starting userland proxy: listen tcp4 0.0.0.0:5432: bind: address already in use
-ERROR: Encountered errors while bringing up the project.
-```
+Baserow's docker-compose files will automatically expose the `backend`, `web-frontend`
+and `media` containers to your machine's network. If you already have applications or
+services using those ports the Baserow service which uses that port will crash.
 
 To fix this you can change which ports Baserow will use by setting the corresponding
 environment variable:
 
-- For `postgres` set `POSTGRES_PORT` which defaults to `5432`
-- For `redis` set `REDIS_PORT` which defaults to `6379`
-- For `mjml` set `MJML_PORT` which defaults to `28101`
 - For `backend` set `BACKEND_PORT` which defaults to `8000`
 - For `web-frontend` set `WEB_FRONTEND_PORT` which defaults to `3000`
 - For `media` set `MEDIA_PORT` which defaults to `4000`
@@ -52,9 +35,42 @@ environment variable:
 This is how to set these variables in bash:
 
 ```bash
-$ POSTGRES_PORT=5555 REDIS_PORT=6666 MJML_PORT=7777 docker-compose up 
+$ BACKEND_PORT=8001 docker-compose up 
 $ # or using dev.sh
-$ POSTGRES_PORT=5555 REDIS_PORT=6666 MJML_PORT=7777 ./dev.sh
+$ BACKEND_PORT=8001 ./dev.sh
+```
+
+### Make Baserow publicly accessible
+
+By default when you run `docker-compose up` you can only access Baserow from the same
+machine by visiting `localhost:3000` or `127.0.0.1:3000`. If you are running the Baserow
+docker containers on a remote server which you want to access over a network or the
+public internet you need to set some environment variables to expose Baserow.
+
+> Please be warned that there is a security flaw with docker and the ufw firewall.
+> By default docker when exposing ports on 0.0.0.0 will bypass any ufw firewall rules
+> and expose the above containers publicly from your machine on the network. Please see
+> https://github.com/chaifeng/ufw-docker for more information and how to setup ufw to
+> work securely with docker.
+
+You will need to set the following three environment variables to successfully expose
+Baserow on your network.
+
+1. `HOST_PUBLISH_IP=0.0.0.0` - This will configure `docker-compose.yml` to expose
+   Baserow's containers on all IP addresses on the host machine, instead of just
+   localhost. Warning: if you are using UFW please see the warning above.
+2. `PUBLIC_BACKEND_URL={REPLACE_WITH_YOUR_DOMAIN_NAME_OR_HOST_IP}:8000` - This will
+   ensure that Baserow clients will be able to successfully connect to the backend,
+   if you can visit Baserow at port `3000` but you are getting API errors please ensure
+   this variable is set correctly.
+3. `PUBLIC_WEB_FRONTEND_URL={REPLACE_WITH_YOUR_DOMAIN_NAME_OR_HOST_IP}:3000` - The same
+   variable as above but the URL for the web-frontend container instead.
+   
+For example you could run the command below after replacing `REPLACE_ME` with the
+IP address or domain name of the server where Baserow is running:
+
+```bash
+$ HOST_PUBLISH_IP=0.0.0.0 PUBLIC_BACKEND_URL=REPLACE_ME:8000 PUBLIC_WEB_FRONTEND_URL=REPLACE_ME:3000 docker-compose up 
 ```
 
 ### Configure an external email server
@@ -133,10 +149,10 @@ $ ./dev.sh run backend manage sync_templates
 ### Build Error - Service 'backend' failed to build: unable to convert uid/gid chown
 
 This error occurs when attempting to build Baserow's docker images with a version of
-Docker earlier than 19.03. It can also occur when you are attempting to build 
-Baserow version 1.3 or earlier using a version of Docker less than 20.10. You can check 
-your local docker version by running `docker -v` and fix the error by installing the 
-latest version of Docker from https://docs.docker.com/get-docker/.
+Docker earlier than 19.03. It can also occur when you are attempting to build Baserow
+version 1.3 or earlier using a version of Docker less than 20.10. You can check your
+local docker version by running `docker -v` and fix the error by installing the latest
+version of Docker from https://docs.docker.com/get-docker/.
 
 ### Permission denied errors
 
