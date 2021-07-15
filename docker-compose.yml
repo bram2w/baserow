@@ -8,8 +8,6 @@ services:
       - POSTGRES_USER=${DATABASE_USER:-baserow}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-baserow}
       - POSTGRES_DB=${DATABASE_NAME:-baserow}
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     networks:
       local:
     volumes:
@@ -18,8 +16,6 @@ services:
   redis:
     container_name: redis
     image: redis:6.0
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
     networks:
       local:
 
@@ -28,8 +24,6 @@ services:
     image: liminspace/mjml-tcpserver:0.10
     # mjml is based off the node image which creates a non root node user we can run as
     user: "1000:1000"
-    ports:
-      - "${MJML_PORT:-28101}:28101"
     networks:
       local:
 
@@ -57,7 +51,7 @@ services:
       - EMAIL_SMTP_PASSWORD
       - FROM_EMAIL
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
     depends_on:
       - db
       - redis
@@ -148,7 +142,7 @@ services:
       - PUBLIC_WEB_FRONTEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:3000}
       - ADDITIONAL_MODULES
     ports:
-      - "${WEB_FRONTEND_PORT:-3000}:3000"
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${WEB_FRONTEND_PORT:-3000}:3000"
     depends_on:
       - backend
     networks:
@@ -159,7 +153,7 @@ services:
     container_name: media
     build: media
     ports:
-      - "${MEDIA_PORT:-4000}:80"
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${MEDIA_PORT:-4000}:80"
     depends_on:
       - media-volume-fixer
     volumes:

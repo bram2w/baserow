@@ -63,8 +63,8 @@ $ ./dev.sh run backend COMMAND
 
 ## Web Frontend CLI
 
-The `baserow_web-frontend` and `baserow_web-frontend_dev` images provide various commands
-used to change what process is started inside the container.
+The `baserow_web-frontend` and `baserow_web-frontend_dev` images provide various
+commands used to change what process is started inside the container.
 
 ```bash
 Usage: docker run <imagename> COMMAND
@@ -95,26 +95,25 @@ variables available for configuring baserow's docker setup.
 All of these variables can be set like so:
 
 ```bash
-$ POSTGRES_PORT=5555 REDIS_PORT=6666 MJML_PORT=7777 docker-compose up 
+$ BACKEND_PORT=8001 docker-compose up 
 $ # or using dev.sh
-$ POSTGRES_PORT=5555 MIGRATE_ON_STARTUP=false ./dev.sh
+$ BACKEND_PORT=8001 MIGRATE_ON_STARTUP=false ./dev.sh
 ```
 
 ### Local and Dev Variables
 
 Port configuration (these only work when used with the docker-compose files):
 
-- `POSTGRES_PORT` (default `5432`) : The port the `db` container will bind to on your
-  local network.
-- `REDIS_PORT` (default `6379`) : The port the `redis` container will bind to on your
-  local network.
-- `MJML_PORT` (default `28101`) : The port the `mjml` container will bind to on your
-  local network.
+- `HOST_PUBLISH_IP` (default `127.0.0.1`) : The IP address on the docker host Baserow's
+  containers will bind exposed ports to. By default Baserow only exposes it's containers
+  ports on localhost, please see
+  the [Baserow Docker How To](../guides/baserow-docker-how-to.md)
+  on how to expose Baserow over a network or the internet.
 - `BACKEND_PORT` (default `8000`) : The port the `backend` container will bind to on
   your local network.
-- `WEB_FRONTEND_PORT` (default `3000`) : The port the `web-frontend` container will bind
-  to on your local network.
-- `MEDIA_PORT` (default `4000`) : The port the `media` nginx container will bind to on 
+- `WEB_FRONTEND_PORT` (default `3000`) : The port the `web-frontend`
+  container will bind to on your local network.
+- `MEDIA_PORT` (default `4000`) : The port the `media` nginx container will bind to on
   your local network.
 
 Backend configuration:
@@ -124,11 +123,11 @@ Backend configuration:
 - `SYNC_TEMPLATES_ON_STARTUP` (default `true`) : When `true` on backend server startup
   it will run the baserow management command `sync_templates` which loads any templates
   found in `./backend/templates` into Baserow.
-  
+
 Pass through variables:
 
 These environment variables when provided to the docker-compose files are passed through
-to the correct containers. See [the introduction](../getting-started/introduction.md) 
+to the correct containers. See [the introduction](../getting-started/introduction.md)
 for what these variables do.
 
 - `PUBLIC_BACKEND_URL`
@@ -142,7 +141,6 @@ for what these variables do.
 - `EMAIL_SMTP_PASSWORD`
 - `FROM_EMAIL`
 
-
 ### Dev Only Variables
 
 - `UID` (default `1000` or your user id when using `./dev.sh`) : Sets which user id will
@@ -151,3 +149,5 @@ for what these variables do.
 - `GID` (default `1000` or your group id when using `./dev.sh`) : Sets which group id
   will be used to build Baserow's images with and the group id which will be used to run
   the processes inside Baserow containers.
+- `POSTGRES_PORT` (default `5432`) : The port the `db` container will bind to on your
+  local network.

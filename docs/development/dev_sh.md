@@ -58,7 +58,7 @@ $ ./dev.sh restart {EXTRA_COMMANDS_PASSED_TO_UP}
 $ ./dev.sh down # downs the env
 $ ./dev.sh kill # kills (the old stop_dev.sh)
 # Bind to different ports on the host manage incase you are already running them and they clash! (also works with just docker-compose up)
-$ POSTGRES_PORT=5555 REDIS_PORT=6666 MJML_PORT=7777 ./dev.sh
+$ POSTGRES_PORT=5555 ./dev.sh
 ```
 
 ### Why ./dev.sh ensures the containers run as you

@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+* **Breaking Change**: Baserow's `docker-compose.yml` no longer exposes ports for 
+  the `db`, `mjml` and `redis` containers for security reasons. 
+* **Breaking Change**: `docker-compose.yml` will by default only expose Baserow on 
+  `localhost` and not `0.0.0.0`, meaning it will not be accessible remotely unless 
+  manually configured.
 
 ## Released (2021-07-13)
 
