@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## Released (2021-07-16)
+
+* Fix bug preventing fields not being able to be converted to link row fields in some
+  situations.
+
 ## Released (2021-07-15)
 
 * **Breaking Change**: Baserow's `docker-compose.yml` no longer exposes ports for 
