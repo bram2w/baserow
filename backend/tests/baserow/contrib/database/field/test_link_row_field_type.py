@@ -911,3 +911,76 @@ def test_creating_a_linked_row_pointing_at_trashed_row_works_but_does_not_displa
     linked_field_values = response.json()[f"field_{link_field_1.id}"]
     assert len(linked_field_values) == 1
     assert linked_field_values[0]["id"] == trashed_row.id
+
+
+@pytest.mark.django_db
+def test_change_type_to_link_row_field_when_field_with_same_related_name_already_exists(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user, name="Table")
+    other_table = data_fixture.create_database_table(
+        database=table.database, user=user, name="OtherTable"
+    )
+    field = data_fixture.create_text_field(table=table, order=1, name="Text")
+
+    handler = FieldHandler()
+    existing_link_row = handler.create_field(
+        user, other_table, "link_row", link_row_table=table, name="Table"
+    )
+
+    model = table.get_model()
+    model.objects.create(**{f"field_{field.id}": "9223372036854775807"})
+    model.objects.create(**{f"field_{field.id}": "100"})
+
+    # Change the field type to a number and test if the values have been changed.
+    new_link_row_field = handler.update_field(
+        user=user,
+        field=field,
+        new_type_name="link_row",
+        link_row_table=other_table,
+    )
+
+    existing_link_row.refresh_from_db()
+
+    assert new_link_row_field.name == "Text"
+    assert new_link_row_field.link_row_related_field.name == "Table - Text"
+    assert existing_link_row.name == "Table"
+    assert existing_link_row.link_row_related_field.name == "OtherTable"
+
+
+@pytest.mark.django_db
+def test_change_link_row_related_table_when_field_with_related_name_exists(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user, name="Table")
+    first_related_table = data_fixture.create_database_table(
+        database=table.database, user=user, name="FirstRelatedTable"
+    )
+    second_related_table = data_fixture.create_database_table(
+        database=table.database, user=user, name="SecondRelatedTable"
+    )
+    # Make a field which will clash with the newly updated/created link row field later
+    data_fixture.create_text_field(table=second_related_table, order=1, name="Table")
+
+    handler = FieldHandler()
+    link_row = handler.create_field(
+        user, table, "link_row", link_row_table=first_related_table, name="Link"
+    )
+
+    # Change the field type to a number and test if the values have been changed.
+    handler.update_field(
+        user=user,
+        field=link_row,
+        new_type_name="link_row",
+        link_row_table=second_related_table,
+    )
+
+    link_row.refresh_from_db()
+
+    names = list(
+        Field.objects.filter(table=second_related_table).values_list("name", flat=True)
+    )
+    assert names == ["Table", "Table - Link"]
+    assert LinkRowField.objects.count() == 2
