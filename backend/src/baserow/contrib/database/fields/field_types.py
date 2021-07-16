@@ -846,17 +846,8 @@ class LinkRowFieldType(FieldType):
         if field.link_row_related_field:
             return
 
-        handler = FieldHandler()
-        # First just try the tables name, so if say the Client table is linking to the
-        # Address table, this field in the Address table will just be called 'Client'.
-        # However say we then add another link from the Client to Address table with
-        # a field name of "Bank Address", the new field in the Address table will be
-        # called 'Client - Bank Address'.
-        related_field_name = handler.find_next_unused_field_name(
-            field.link_row_table,
-            [f"{field.table.name}", f"{field.table.name} - {field.name}"],
-        )
-        field.link_row_related_field = handler.create_field(
+        related_field_name = self.find_next_unused_related_field_name(field)
+        field.link_row_related_field = FieldHandler().create_field(
             user=user,
             table=field.link_row_table,
             type_name=self.type,
@@ -867,6 +858,18 @@ class LinkRowFieldType(FieldType):
             link_row_relation_id=field.link_row_relation_id,
         )
         field.save()
+
+    # noinspection PyMethodMayBeStatic
+    def find_next_unused_related_field_name(self, field):
+        # First just try the tables name, so if say the Client table is linking to the
+        # Address table, this field in the Address table will just be called 'Client'.
+        # However say we then add another link from the Client to Address table with
+        # a field name of "Bank Address", the new field in the Address table will be
+        # called 'Client - Bank Address'.
+        return FieldHandler().find_next_unused_field_name(
+            field.link_row_table,
+            [f"{field.table.name}", f"{field.table.name} - {field.name}"],
+        )
 
     def before_schema_change(
         self,
@@ -889,7 +892,8 @@ class LinkRowFieldType(FieldType):
         ):
             # If the table has changed we have to change the following data in the
             # related field
-            from_field.link_row_related_field.name = to_field.table.name
+            related_field_name = self.find_next_unused_related_field_name(to_field)
+            from_field.link_row_related_field.name = related_field_name
             from_field.link_row_related_field.table = to_field.link_row_table
             from_field.link_row_related_field.link_row_table = to_field.table
             from_field.link_row_related_field.order = self.model_class.get_last_order(
@@ -916,12 +920,13 @@ class LinkRowFieldType(FieldType):
         if not isinstance(from_field, self.model_class) and isinstance(
             to_field, self.model_class
         ):
+            related_field_name = self.find_next_unused_related_field_name(to_field)
             to_field.link_row_related_field = FieldHandler().create_field(
                 user=user,
                 table=to_field.link_row_table,
                 type_name=self.type,
                 do_schema_change=False,
-                name=to_field.table.name,
+                name=related_field_name,
                 link_row_table=to_field.table,
                 link_row_related_field=to_field,
                 link_row_relation_id=to_field.link_row_relation_id,
