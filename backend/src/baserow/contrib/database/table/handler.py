@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import connections
+from django.db import connection
 
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
@@ -122,7 +122,6 @@ class TableHandler:
             TextField.objects.create(table=table, order=0, primary=True, name="Name")
 
         # Create the table schema in the database database.
-        connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
             model = table.get_model()
             schema_editor.create_model(model)

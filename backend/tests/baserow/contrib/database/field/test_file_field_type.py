@@ -21,7 +21,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 
 
 @pytest.mark.django_db
-def test_file_field_type(data_fixture, user_tables_in_separate_db):
+def test_file_field_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     user_file_1 = data_fixture.create_user_file()
@@ -191,7 +191,7 @@ def test_file_field_type(data_fixture, user_tables_in_separate_db):
 
 
 @pytest.mark.django_db
-def test_import_export_file_field(data_fixture, tmpdir, user_tables_in_separate_db):
+def test_import_export_file_field(data_fixture, tmpdir):
     user = data_fixture.create_user()
     imported_group = data_fixture.create_group(user=user)
     database = data_fixture.create_database_application(user=user)

@@ -4,7 +4,7 @@ from baserow.core.registries import application_type_registry
 
 
 @pytest.mark.django_db
-def test_import_export_database(data_fixture, user_tables_in_separate_db):
+def test_import_export_database(data_fixture):
     database = data_fixture.create_database_application()
     table = data_fixture.create_database_table(database=database)
     text_field = data_fixture.create_text_field(table=table)

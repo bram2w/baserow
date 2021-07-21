@@ -3,8 +3,7 @@
 
 import django.utils.timezone
 
-from django.conf import settings
-from django.db import migrations, models, connections
+from django.db import migrations, models, connection
 
 from baserow.contrib.database.table.models import Table as TableModel
 
@@ -31,7 +30,6 @@ def exists(cursor, table_id):
 def add_to_tables(apps, schema_editor):
     Table = apps.get_model('database', 'Table')
 
-    connection = connections[settings.USER_TABLE_DATABASE]
     cursor = connection.cursor()
     with connection.schema_editor() as tables_schema_editor:
         # We need to stop the transaction because we might need to lock a lot of tables
@@ -50,7 +48,6 @@ def add_to_tables(apps, schema_editor):
 def remove_from_tables(apps, schema_editor):
     Table = apps.get_model('database', 'Table')
 
-    connection = connections[settings.USER_TABLE_DATABASE]
     cursor = connection.cursor()
     with connection.schema_editor() as tables_schema_editor:
         tables_schema_editor.atomic.__exit__(None, None, None)
