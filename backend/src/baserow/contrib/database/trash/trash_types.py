@@ -1,7 +1,6 @@
 from typing import Optional, Any, List
 
-from django.conf import settings
-from django.db import connections
+from django.db import connection
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
@@ -38,28 +37,9 @@ class TableTrashableItemType(TrashableItemType):
     ):
         """Deletes the table schema and instance."""
 
-        connection = connections[settings.USER_TABLE_DATABASE]
-        # We are using a different connection, and hence any outer transactions
-        # calling this method using a different connection will not roll back
-        # changes made to the USER_TABLE_DATABASE. Hence it is possible that the
-        # table has already been deleted if this code previously ran, but then the
-        # wrapping transaction failed causing the trashed_item to be restored.
-        # So we check to see if the table still exists before attempting to
-        # delete it to avoid a ProgrammingError being thrown by the schema_editor.
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """SELECT EXISTS (
-SELECT FROM information_schema.tables
-WHERE  table_schema = 'public'
-AND    table_name   = %s
-);""",
-                [trashed_item.get_database_table_name()],
-            )
-            table_exists = cursor.fetchone()[0]
-            if table_exists:
-                with connection.schema_editor() as schema_editor:
-                    model = trashed_item.get_model()
-                    schema_editor.delete_model(model)
+        with connection.schema_editor() as schema_editor:
+            model = trashed_item.get_model()
+            schema_editor.delete_model(model)
 
         trashed_item.delete()
 
@@ -120,7 +100,6 @@ class FieldTrashableItemType(TrashableItemType):
         field_type = field_type_registry.get_by_model(field)
 
         # Remove the field from the table schema.
-        connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
             from_model = field.table.get_model(field_ids=[], fields=[field])
             model_field = from_model._meta.get_field(field.db_column)

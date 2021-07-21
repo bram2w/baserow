@@ -242,8 +242,6 @@ SPECTACULAR_SETTINGS = {
     ],
 }
 
-DATABASE_ROUTERS = ("baserow.contrib.database.database_routers.TablesDatabaseRouter",)
-
 # The storage must always overwrite existing files.
 DEFAULT_FILE_STORAGE = "baserow.core.storage.OverwriteFileSystemStorage"
 

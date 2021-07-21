@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.fields import empty
+from django.db import transaction
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 
@@ -69,6 +70,7 @@ class RotateFormViewSlugView(APIView):
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
         }
     )
+    @transaction.atomic
     def post(self, request, view_id):
         """Rotates the slug of a form view."""
 
@@ -142,6 +144,7 @@ class SubmitFormViewView(APIView):
             ViewDoesNotExist: ERROR_FORM_DOES_NOT_EXIST,
         }
     )
+    @transaction.atomic
     def post(self, request, slug):
         handler = ViewHandler()
         form = handler.get_public_form_view_by_slug(request.user, slug)

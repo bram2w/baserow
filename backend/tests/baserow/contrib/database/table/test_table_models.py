@@ -176,7 +176,7 @@ def test_enhance_by_fields_queryset(data_fixture):
 
 
 @pytest.mark.django_db
-def test_search_all_fields_queryset(data_fixture, user_tables_in_separate_db):
+def test_search_all_fields_queryset(data_fixture):
     table = data_fixture.create_database_table(name="Cars")
     data_fixture.create_text_field(table=table, order=0, name="Name")
     data_fixture.create_text_field(table=table, order=1, name="Color")

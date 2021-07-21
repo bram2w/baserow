@@ -1,9 +1,8 @@
+from django.db import transaction
 import re
 from decimal import Decimal
 from math import floor, ceil
 
-from django.conf import settings
-from django.db import transaction
 from django.db.models import Max, F
 from django.db.models.fields.related import ManyToManyField
 
@@ -391,10 +390,7 @@ class RowHandler:
         if not model:
             model = table.get_model()
 
-        # Because it is possible to have a different database for the user tables we
-        # need to start another transaction here, otherwise it is not possible to use
-        # the select_for_update function.
-        with transaction.atomic(settings.USER_TABLE_DATABASE):
+        with transaction.atomic():
             try:
                 row = model.objects.select_for_update().get(id=row_id)
             except model.DoesNotExist:
@@ -455,21 +451,17 @@ class RowHandler:
         if not model:
             model = table.get_model()
 
-        # Because it is possible to have a different database for the user tables we
-        # need to start another transaction here, otherwise it is not possible to use
-        # the select_for_update function.
-        with transaction.atomic(settings.USER_TABLE_DATABASE):
-            try:
-                row = model.objects.select_for_update().get(id=row_id)
-            except model.DoesNotExist:
-                raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+        try:
+            row = model.objects.select_for_update().get(id=row_id)
+        except model.DoesNotExist:
+            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
-            before_return = before_row_update.send(
-                self, row=row, user=user, table=table, model=model
-            )
+        before_return = before_row_update.send(
+            self, row=row, user=user, table=table, model=model
+        )
 
-            row.order = self.get_order_before_row(before, model)
-            row.save()
+        row.order = self.get_order_before_row(before, model)
+        row.save()
 
         row_updated.send(
             self,

@@ -1,5 +1,4 @@
-from django.conf import settings
-from django.db import connections
+from django.db import connection
 
 from baserow.contrib.database.table.models import Table
 
@@ -18,8 +17,7 @@ class TableFixtures:
         table = Table.objects.create(**kwargs)
 
         if create_table:
-            user_table_db = connections[settings.USER_TABLE_DATABASE]
-            with user_table_db.schema_editor() as schema_editor:
+            with connection.schema_editor() as schema_editor:
                 schema_editor.create_model(table.get_model())
 
         return table

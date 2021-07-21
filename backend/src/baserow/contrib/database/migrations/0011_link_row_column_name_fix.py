@@ -4,8 +4,7 @@
 # which makes it of course more robust. This migration checks all the through tables to
 # see if some names are incorrect and if so they will be corrected.
 
-from django.db import migrations, connections
-from django.conf import settings
+from django.db import migrations, connection
 
 
 def rename_sql(schema_editor, table, old_name, new_name):
@@ -20,7 +19,6 @@ def rename_sql(schema_editor, table, old_name, new_name):
 def forward(apps, schema_editor):
     LinkRowField = apps.get_model('database', 'LinkRowField')
 
-    connection = connections[settings.USER_TABLE_DATABASE]
     cursor = connection.cursor()
     with connection.schema_editor() as tables_schema_editor:
         for field in LinkRowField.objects.all():

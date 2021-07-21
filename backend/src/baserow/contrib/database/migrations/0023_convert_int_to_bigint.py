@@ -2,8 +2,7 @@
 # and NUMERIC(50, 0) in Postgres. This migration converts all the existing Integer data
 # types in fields to Decimal.
 from baserow.contrib.database.fields.models import NUMBER_TYPE_INTEGER
-from django.conf import settings
-from django.db import migrations, connections
+from django.db import migrations, connection
 from baserow.contrib.database.fields.models import Field as FieldModel
 
 
@@ -20,7 +19,6 @@ def alter_sql(schema_editor, table_name, column_name):
 
 def forward(apps, schema_editor):
     NumberField = apps.get_model('database', 'NumberField')
-    connection = connections[settings.USER_TABLE_DATABASE]
 
     with connection.schema_editor() as tables_schema_editor:
         # We need to stop the transaction because we might need to lock a lot of tables
