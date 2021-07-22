@@ -174,6 +174,18 @@
                     icon="times"
                     :disabled="true"
                   ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 5"
+                    value="choice-5"
+                    icon="edit"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 6"
+                    value="choice-6"
+                    icon="edit"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
                 </Dropdown>
               </div>
             </div>

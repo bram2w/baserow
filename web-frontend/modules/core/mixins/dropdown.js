@@ -230,8 +230,9 @@ export default {
         (child) => !child.disabled && child.isVisible(this.query)
       )
 
+      const isArrowUp = event.code === 'ArrowUp'
       let index = children.findIndex((item) => item.value === this.hover)
-      index = event.code === 'ArrowUp' ? index - 1 : index + 1
+      index = isArrowUp ? index - 1 : index + 1
 
       // Check if the new index is within the allowed range.
       if (index < 0 || index > children.length - 1) {
@@ -240,48 +241,110 @@ export default {
 
       const next = children[index]
       this.hover = next.value
-      this.$refs.items.scrollTop = this.getScrollTopAmountForNextChild(next)
+      this.$refs.items.scrollTop = this.getScrollTopAmountForNextChild(
+        next,
+        isArrowUp
+      )
     },
     /**
-     * When scrolling up and down between options with the keyboard, this
-     * method calculates the expected behavior to the user considering
-     * disabled items that need to be skipped and a limited dropdown
-     * window in which to scroll
+     * This method calculates the expected container scroll top offset if the next
+     * child is selected. This is for example used when navigating with the arrow keys.
+     * If the element to scroll to is below the current dropdown's bottom scroll
+     * position, then scroll so that the item to scroll to is the last visible item
+     * in the dropdown window. Conversely if the element to scroll to is above the
+     * current dropdown's top scroll position then scroll so that the item to scroll
+     * to is the first viewable item in the dropdown window.
      */
-    getScrollTopAmountForNextChild(itemToScrollTo) {
-      // If the element to scroll to is below the current dropdown's
-      // bottom scroll position, then scroll so that the item to scroll to
-      // is the last viewable item in the dropdown window.
-      if (
-        itemToScrollTo.$el.offsetTop >
-        this.$refs.items.scrollTop + this.$refs.items.clientHeight
-      ) {
+    getScrollTopAmountForNextChild(itemToScrollTo, isArrowUp) {
+      // Styles of the itemToScroll to. Needed in order to get margins and height
+      const itemToScrollToStyles =
+        itemToScrollTo.$el.currentStyle ||
+        window.getComputedStyle(itemToScrollTo.$el)
+
+      // Styles of the ref items (the dropdown window). Needed in order to get
+      // ::before height and ::after height
+      const dropdownWindowBeforeStyles =
+        this.$refs.items.currentStyle ||
+        window.getComputedStyle(this.$refs.items, ':before')
+
+      const dropdownWindowAfterStyles =
+        this.$refs.items.currentStyle ||
+        window.getComputedStyle(this.$refs.items, ':after')
+
+      const dropdownWindowBeforeHeight = parseInt(
+        dropdownWindowBeforeStyles.height
+      )
+      const dropdownWindowAfterHeight = parseInt(
+        dropdownWindowAfterStyles.height
+      )
+      const dropdownWindowHeight = this.$refs.items.clientHeight
+
+      const itemHeight = parseInt(itemToScrollToStyles.height)
+      const itemMarginTop = parseInt(itemToScrollToStyles.marginTop)
+      const itemMarginBottom = parseInt(itemToScrollToStyles.marginBottom)
+      const itemHeightWithMargins =
+        itemHeight + itemMarginTop + itemMarginBottom
+
+      // Based on the values set in the SCSS files. The height of a dropdowns select
+      // item is set to 32px and the height of the select_items window is set to 4 *
+      // 36 (select item height plus margins) plus 20 (heights of before and after
+      // pseudo elements) so that there is room for four elements
+      const itemsInView =
+        (dropdownWindowHeight -
+          dropdownWindowBeforeHeight -
+          dropdownWindowAfterHeight) /
+        itemHeightWithMargins
+
+      // Get the direction of the scrolling.
+      const movingDownwards = !isArrowUp
+      const movingUpwards = isArrowUp
+
+      // nextItemOutOfView can be used if one wants to check if the item to scroll
+      // to is out of view of the current dropdowns bottom scroll position.
+      // This happens when the difference between the element to scroll to's
+      // offsetTop and the current scrollTop of the dropdown is smaller than height
+      // of the dropdown minus the full height of the element
+      const nextItemOutOfView =
+        itemToScrollTo.$el.offsetTop - this.$refs.items.scrollTop >
+        dropdownWindowHeight - itemHeightWithMargins
+
+      // prevItemOutOfView can be used if one wants to check if the item to scroll
+      // to is out of view of the current dropdowns top scroll position.
+      // This happens when the element to scroll to's offsetTop is smaller than the
+      // current scrollTop of the dropdown
+      const prevItemOutOfView =
+        itemToScrollTo.$el.offsetTop < this.$refs.items.scrollTop
+
+      // When the user is scrolling downwards (i.e. pressing key down)
+      // and the itemToScrollTo is out of view we want to add the height of the
+      // elements preceding the itemToScrollTo plus the dropdownWindowBeforeHeight.
+      // This can be achieved by removing said heights from the itemToScrollTo's
+      // offsetTop
+      if (nextItemOutOfView && movingDownwards) {
+        const elementsHeightBeforeItemToScrollTo =
+          itemHeightWithMargins * (itemsInView - 1)
+
         return (
           itemToScrollTo.$el.offsetTop -
-          itemToScrollTo.$el.clientHeight -
-          (this.$refs.items.clientHeight - itemToScrollTo.$el.clientHeight)
+          elementsHeightBeforeItemToScrollTo -
+          dropdownWindowBeforeHeight
         )
       }
 
-      // If the element to scroll to is above our current scroll position
-      // in the window, we need to scroll to the item and position it as
-      // the top item in the scroll window.
-      if (
-        itemToScrollTo.$el.offsetTop <
-        this.$refs.items.scrollTop + this.$refs.items.offsetTop
-      ) {
-        // To figure out how much to scroll, we need the top and bottom
-        // margin of the element we're scrolling to
-        const style =
-          itemToScrollTo.$el.currentStyle ||
-          window.getComputedStyle(itemToScrollTo.$el)
+      // When the user is scrolling upwards (i.e. pressing key up) and the
+      // itemToScrollTo is out of view we want to set the scrollPosition to be the
+      // offsetTop of the element minus it's top margin and the height of the
+      // ::after pseudo element of the ref items element
+      if (prevItemOutOfView && movingUpwards) {
         return (
           itemToScrollTo.$el.offsetTop -
-          this.$refs.search.clientHeight -
-          (parseInt(style.marginTop) + parseInt(style.marginBottom))
+          itemMarginTop -
+          dropdownWindowAfterHeight
         )
       }
 
+      // In the case that the next item to scroll to is completely visible we simply
+      // return the current scroll position so that no scrolling happens
       return this.$refs.items.scrollTop
     },
   },
