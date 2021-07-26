@@ -56,12 +56,22 @@ install Redis with the following commands.
 $ sudo add-apt-repository ppa:chris-lea/redis-server
 $ sudo apt update
 $ sudo apt install redis-server -y
-$ sed -i 's/supervised no/supervised systemd/g' /etc/redis/redis.conf
+$ sudo sed -i 's/supervised no/supervised systemd/g' /etc/redis/redis.conf
 $ sudo systemctl enable --now redis-server
 $ sudo systemctl restart redis.service
 ```
 
 Redis is not publicly accessible by default, so there is no need to setup a password.
+
+## Install other utils 
+
+Git is required to download the source code of Baserow so you can install it in the 
+following section. Curl will be required later in the guide to install nodejs. 
+Install them both using the following command:
+
+```
+$ sudo apt install git curl -y 
+```
 
 ## Install Baserow
 
@@ -92,18 +102,28 @@ it for when you need it later.
 
 In order to use the Baserow application, we will need to create a media directory for
 the uploaded user files, a virtual environment and install some more dependencies
-like: NodeJS, Yarn, Python 3.
+like: NodeJS, Yarn, Python 3.7.
+
+First, if you are on Ubuntu version 20.04 or later you will need add the following 
+repository to then be able to install Python 3.7:
+
+```bash
+add-apt-repository ppa:deadsnakes/ppa
+apt-get update
+```
+
+Next follow these steps:
 
 ```bash
 # Create uploaded user files and media directory
 $ mkdir media
 $ chmod 0755 media
 
-# Install python3, pip & virtualenv
-$ apt install python3 python3-pip virtualenv libpq-dev libmysqlclient-dev -y
+# Install python3.7, pip & virtualenv
+$ apt install python3.7 python3.7-dev python3-pip virtualenv libpq-dev libmysqlclient-dev -y
 
 # Create virtual environment
-$ virtualenv -p python3 env
+$ virtualenv -p python3.7 env
 
 # Activate the virtual environment
 $ source env/bin/activate
