@@ -7,16 +7,10 @@
         <div class="control">
           <label class="control__label">New password</label>
           <div class="control__elements">
-            <input
+            <PasswordInput
               v-model="account.password"
-              :class="{ 'input--error': $v.account.password.$error }"
-              type="password"
-              class="input input--large"
-              @blur="$v.account.password.$touch()"
+              :validation-state="$v.account.password"
             />
-            <div v-if="$v.account.password.$error" class="error">
-              A new password is required.
-            </div>
           </div>
         </div>
         <div class="control">
@@ -68,13 +62,16 @@
 </template>
 
 <script>
-import { required, sameAs } from 'vuelidate/lib/validators'
+import { sameAs } from 'vuelidate/lib/validators'
 
+import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
+import { passwordValidation } from '@baserow/modules/core/validators'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
+  components: { PasswordInput },
   mixins: [error],
   layout: 'login',
   data() {
@@ -127,7 +124,7 @@ export default {
   },
   validations: {
     account: {
-      password: { required },
+      password: passwordValidation,
       passwordConfirm: {
         sameAsPassword: sameAs('password'),
       },

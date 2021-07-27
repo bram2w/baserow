@@ -7,6 +7,7 @@
 * Fixed bug where the currently selected dropdown item is out of view from the dropdown
   window when scrolling with the arrow keys.
 * Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
+* Added password validation to password reset page.
   
 ## Released (2021-07-16)
 
