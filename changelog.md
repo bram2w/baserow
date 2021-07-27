@@ -6,6 +6,7 @@
   database has been removed entirely to prevent data integrity issues.
 * Fixed bug where the currently selected dropdown item is out of view from the dropdown
   window when scrolling with the arrow keys.
+* Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
   
 ## Released (2021-07-16)
 
