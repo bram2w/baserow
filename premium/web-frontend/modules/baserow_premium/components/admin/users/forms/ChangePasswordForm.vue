@@ -1,37 +1,12 @@
 <template>
   <form @submit.prevent="submit">
     <div class="control">
-      <label class="control__label">New Password</label>
+      <label class="control__label">New password</label>
       <div class="control__elements">
-        <input
+        <PasswordInput
           v-model="values.password"
-          :class="{ 'input--error': $v.values.password.$error }"
-          type="password"
-          class="input input--large"
-          @blur="$v.values.password.$touch()"
+          :validation-state="$v.values.password"
         />
-        <div
-          v-if="$v.values.password.$error && !$v.values.password.required"
-          class="error"
-        >
-          A password is required.
-        </div>
-        <div
-          v-if="$v.values.password.$error && !$v.values.password.maxLength"
-          class="error"
-        >
-          A maximum of
-          {{ $v.values.password.$params.maxLength.max }} characters is allowed
-          here.
-        </div>
-        <div
-          v-if="$v.values.password.$error && !$v.values.password.minLength"
-          class="error"
-        >
-          A minimum of
-          {{ $v.values.password.$params.minLength.min }} characters is required
-          here.
-        </div>
       </div>
     </div>
     <div class="control">
@@ -64,17 +39,15 @@
 </template>
 
 <script>
-import {
-  maxLength,
-  minLength,
-  required,
-  sameAs,
-} from 'vuelidate/lib/validators'
+import { sameAs } from 'vuelidate/lib/validators'
+import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
+import { passwordValidation } from '@baserow/modules/core/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 
 export default {
   name: 'ChangePasswordForm',
+  components: { PasswordInput },
   mixins: [form],
   props: {
     loading: {
@@ -93,14 +66,10 @@ export default {
   },
   validations: {
     values: {
-      password: {
-        required,
-        maxLength: maxLength(256),
-        minLength: minLength(8),
-      },
       passwordConfirm: {
         sameAsPassword: sameAs('password'),
       },
+      password: passwordValidation,
     },
   },
 }

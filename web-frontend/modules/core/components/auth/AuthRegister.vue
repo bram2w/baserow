@@ -59,35 +59,10 @@
       <div class="control">
         <label class="control__label">Password</label>
         <div class="control__elements">
-          <input
+          <PasswordInput
             v-model="account.password"
-            :class="{ 'input--error': $v.account.password.$error }"
-            type="password"
-            class="input input--large"
-            @blur="$v.account.password.$touch()"
+            :validation-state="$v.account.password"
           />
-          <div
-            v-if="$v.account.password.$error && !$v.account.password.required"
-            class="error"
-          >
-            A password is required.
-          </div>
-          <div
-            v-if="$v.account.password.$error && !$v.account.password.maxLength"
-            class="error"
-          >
-            A maximum of
-            {{ $v.account.password.$params.maxLength.max }} characters is
-            allowed here.
-          </div>
-          <div
-            v-if="$v.account.password.$error && !$v.account.password.minLength"
-            class="error"
-          >
-            A minimum of
-            {{ $v.account.password.$params.minLength.min }} characters is
-            required here.
-          </div>
         </div>
       </div>
       <div class="control">
@@ -121,18 +96,15 @@
 </template>
 
 <script>
-import {
-  email,
-  maxLength,
-  minLength,
-  required,
-  sameAs,
-} from 'vuelidate/lib/validators'
+import { email, minLength, required, sameAs } from 'vuelidate/lib/validators'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
+import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
+import { passwordValidation } from '@baserow/modules/core/validators'
 
 export default {
   name: 'AuthRegister',
+  components: { PasswordInput },
   mixins: [error],
   props: {
     invitation: {
@@ -218,11 +190,7 @@ export default {
         required,
         minLength: minLength(2),
       },
-      password: {
-        required,
-        maxLength: maxLength(256),
-        minLength: minLength(8),
-      },
+      password: passwordValidation,
       passwordConfirm: {
         sameAsPassword: sameAs('password'),
       },

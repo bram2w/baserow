@@ -119,9 +119,9 @@ export default class UserAdminUserHelpers {
     const passwordInputs = changePasswordModal.findAll('input')
 
     passwordInputs.at(0).element.value = password
-    passwordInputs.at(0).trigger('input')
+    await passwordInputs.at(0).trigger('input')
     passwordInputs.at(1).element.value = repeatPassword
-    passwordInputs.at(1).trigger('input')
+    await passwordInputs.at(1).trigger('input')
 
     await changePasswordModal.find('button').trigger('click')
 
