@@ -18,11 +18,8 @@ describe('Table Component Tests', () => {
   afterEach(() => testApp.afterEach())
 
   test('Adding a row to a table increases the row count', async () => {
-    const {
-      application,
-      table,
-      gridView,
-    } = await givenASingleSimpleTableInTheServer()
+    const { application, table, gridView } =
+      await givenASingleSimpleTableInTheServer()
 
     const tableComponent = await testApp.mount(Table, {
       asyncDataParams: {
@@ -50,11 +47,8 @@ describe('Table Component Tests', () => {
   })
 
   test('Searching for a cells value highlights it', async () => {
-    const {
-      application,
-      table,
-      gridView,
-    } = await givenASingleSimpleTableInTheServer()
+    const { application, table, gridView } =
+      await givenASingleSimpleTableInTheServer()
 
     const tableComponent = await testApp.mount(Table, {
       asyncDataParams: {
@@ -86,11 +80,8 @@ describe('Table Component Tests', () => {
   })
 
   test('Editing a search highlighted cells value so it will no longer match warns', async () => {
-    const {
-      application,
-      table,
-      gridView,
-    } = await givenASingleSimpleTableInTheServer()
+    const { application, table, gridView } =
+      await givenASingleSimpleTableInTheServer()
 
     const tableComponent = await testApp.mount(Table, {
       asyncDataParams: {

@@ -1,4 +1,4 @@
-FROM node:10
+FROM node:12
 
 ADD ./baserow /baserow
 ADD ./{{ cookiecutter.project_slug }} /{{ cookiecutter.project_slug }}

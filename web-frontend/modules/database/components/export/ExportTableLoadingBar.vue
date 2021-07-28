@@ -16,7 +16,10 @@
     </div>
     <button
       v-if="job === null || job.status !== 'complete'"
-      class="button button--large button--primary export-table-modal__export-button"
+      class="
+        button button--large button--primary
+        export-table-modal__export-button
+      "
       :class="{ 'button--loading': loading }"
       :disabled="disabled"
     >
@@ -24,7 +27,10 @@
     </button>
     <a
       v-else
-      class="button button--large button--success export-table-modal__export-button"
+      class="
+        button button--large button--success
+        export-table-modal__export-button
+      "
       :href="job.url"
       target="_blank"
     >

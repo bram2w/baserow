@@ -8,7 +8,7 @@ stages:
 
 web-frontend-eslint:
   stage: lint
-  image: node:10
+  image: node:12
   script:
     - mkdir web-frontend/plugins && cp -r premium/web-frontend web-frontend/plugins/premium
     - cd web-frontend
@@ -17,7 +17,7 @@ web-frontend-eslint:
 
 web-frontend-stylelint:
   stage: lint
-  image: node:10
+  image: node:12
   script:
     - mkdir web-frontend/plugins && cp -r premium/web-frontend web-frontend/plugins/premium
     - cd web-frontend
@@ -26,7 +26,7 @@ web-frontend-stylelint:
 
 web-frontend-test:
   stage: test
-  image: node:10
+  image: node:12
   script:
     - mkdir web-frontend/plugins && cp -r premium/web-frontend web-frontend/plugins/premium
     - cd web-frontend

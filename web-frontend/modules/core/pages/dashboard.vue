@@ -1,7 +1,10 @@
 <template>
   <div class="layout__col-2-scroll">
     <div
-      class="alert alert--simple alert--warning alert--has-icon dashboard__alert"
+      class="
+        alert alert--simple alert--warning alert--has-icon
+        dashboard__alert
+      "
     >
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
