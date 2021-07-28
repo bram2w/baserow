@@ -1,5 +1,11 @@
 <!--
-This component can be used in a form which requires password validation.
+This helper component can only be used in a form which uses the password validation
+from modules/core/validators.js
+as ist expects the following vuelidate validation state params
+
+- required
+- maxLength
+- minLength
 
 In order to use this component in another component/form it needs a value
 prop which can be passed via the 'v-model' directive. That means the state for the 
