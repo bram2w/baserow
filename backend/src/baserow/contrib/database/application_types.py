@@ -62,7 +62,9 @@ class DatabaseApplicationType(ApplicationType):
             for v in table.view_set.all():
                 view = v.specific
                 view_type = view_type_registry.get_by_model(view)
-                serialized_views.append(view_type.export_serialized(view))
+                serialized_views.append(
+                    view_type.export_serialized(view, files_zip, storage)
+                )
 
             model = table.get_model(fields=fields)
             serialized_rows = []
@@ -136,7 +138,9 @@ class DatabaseApplicationType(ApplicationType):
         for table in tables:
             for view in table["views"]:
                 view_type = view_type_registry.get(view["type"])
-                view_type.import_serialized(table["_object"], view, id_mapping)
+                view_type.import_serialized(
+                    table["_object"], view, id_mapping, files_zip, storage
+                )
 
             # We don't need to create all the fields individually because the schema
             # editor can handle the creation of the table schema in one go.
