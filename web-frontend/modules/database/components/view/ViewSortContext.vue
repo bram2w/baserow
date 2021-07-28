@@ -190,8 +190,9 @@ export default {
      * Calculates the total amount of available fields.
      */
     availableFieldsLength() {
-      const fields = this.fields.filter((field) => field._.type.canSortInView)
-        .length
+      const fields = this.fields.filter(
+        (field) => field._.type.canSortInView
+      ).length
       const primary = this.primary._.type.canSortInView ? 1 : 0
       return fields + primary
     },

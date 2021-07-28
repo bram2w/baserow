@@ -285,7 +285,12 @@
                       <code
                         v-for="filter in getCompatibleFilterTypes(field.type)"
                         :key="filter.type"
-                        class="api-docs__code api-docs__code--small api-docs__code--clickable margin-bottom-1 margin-right-1"
+                        class="
+                          api-docs__code
+                          api-docs__code--small
+                          api-docs__code--clickable
+                          margin-bottom-1 margin-right-1
+                        "
                         @click.prevent="navigate('section-filters')"
                         >{{ filter.type }}</code
                       >

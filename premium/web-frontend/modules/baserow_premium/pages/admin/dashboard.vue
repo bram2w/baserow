@@ -50,9 +50,8 @@
                 <span
                   class="admin-dashboard__numbers-percentage-value"
                   :class="{
-                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
-                      percentages.new_users_last_24_hours
-                    ),
+                    'admin-dashboard__numbers-percentage-value--negative':
+                      isNegative(percentages.new_users_last_24_hours),
                   }"
                   >{{ percentages.new_users_last_24_hours }}</span
                 >
@@ -69,9 +68,8 @@
                 <span
                   class="admin-dashboard__numbers-percentage-value"
                   :class="{
-                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
-                      percentages.new_users_last_7_days
-                    ),
+                    'admin-dashboard__numbers-percentage-value--negative':
+                      isNegative(percentages.new_users_last_7_days),
                   }"
                   >{{ percentages.new_users_last_7_days }}</span
                 >
@@ -88,9 +86,8 @@
                 <span
                   class="admin-dashboard__numbers-percentage-value"
                   :class="{
-                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
-                      percentages.new_users_last_30_days
-                    ),
+                    'admin-dashboard__numbers-percentage-value--negative':
+                      isNegative(percentages.new_users_last_30_days),
                   }"
                   >{{ percentages.new_users_last_30_days }}</span
                 >
@@ -113,9 +110,8 @@
                 <span
                   class="admin-dashboard__numbers-percentage-value"
                   :class="{
-                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
-                      percentages.new_users_last_30_days
-                    ),
+                    'admin-dashboard__numbers-percentage-value--negative':
+                      isNegative(percentages.new_users_last_30_days),
                   }"
                   >{{ percentages.active_users_last_24_hours }}</span
                 >
@@ -132,9 +128,8 @@
                 <span
                   class="admin-dashboard__numbers-percentage-value"
                   :class="{
-                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
-                      percentages.active_users_last_7_days
-                    ),
+                    'admin-dashboard__numbers-percentage-value--negative':
+                      isNegative(percentages.active_users_last_7_days),
                   }"
                   >{{ percentages.active_users_last_7_days }}</span
                 >
@@ -151,9 +146,8 @@
                 <span
                   class="admin-dashboard__numbers-percentage-value"
                   :class="{
-                    'admin-dashboard__numbers-percentage-value--negative': isNegative(
-                      percentages.active_users_last_30_days
-                    ),
+                    'admin-dashboard__numbers-percentage-value--negative':
+                      isNegative(percentages.active_users_last_30_days),
                   }"
                   >{{ percentages.active_users_last_30_days }}</span
                 >

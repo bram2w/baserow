@@ -2,13 +2,14 @@
 
 ## Unreleased
 
+* Bumped the dependencies.
 * The internal setting allowing Baserow to run with the user tables in a separate 
   database has been removed entirely to prevent data integrity issues.
 * Fixed bug where the currently selected dropdown item is out of view from the dropdown
   window when scrolling with the arrow keys.
 * Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
 * Added password validation to password reset page.
-  
+
 ## Released (2021-07-16)
 
 * Fix bug preventing fields not being able to be converted to link row fields in some
