@@ -3,6 +3,7 @@ from django.urls import path, include
 from rest_framework.serializers import CharField
 
 from baserow.api.user_files.serializers import UserFileField
+from baserow.core.user_files.handler import UserFileHandler
 from baserow.contrib.database.api.views.form.errors import (
     ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
 )
@@ -33,12 +34,12 @@ class GridViewType(ViewType):
             path("grid/", include(api_urls, namespace=self.type)),
         ]
 
-    def export_serialized(self, grid):
+    def export_serialized(self, grid, files_zip, storage):
         """
         Adds the serialized grid view options to the exported dict.
         """
 
-        serialized = super().export_serialized(grid)
+        serialized = super().export_serialized(grid, files_zip, storage)
 
         serialized_field_options = []
         for field_option in grid.get_field_options():
@@ -55,14 +56,18 @@ class GridViewType(ViewType):
         serialized["field_options"] = serialized_field_options
         return serialized
 
-    def import_serialized(self, table, serialized_values, id_mapping):
+    def import_serialized(
+        self, table, serialized_values, id_mapping, files_zip, storage
+    ):
         """
         Imports the serialized grid view field options.
         """
 
         serialized_copy = serialized_values.copy()
         field_options = serialized_copy.pop("field_options")
-        grid_view = super().import_serialized(table, serialized_copy, id_mapping)
+        grid_view = super().import_serialized(
+            table, serialized_copy, id_mapping, files_zip, storage
+        )
 
         if "database_grid_view_field_options" not in id_mapping:
             id_mapping["database_grid_view_field_options"] = {}
@@ -171,3 +176,92 @@ class FormViewType(ViewType):
                     raise FormViewFieldTypeIsNotSupported(field_type.type)
 
         return field_options
+
+    def export_serialized(self, form, files_zip, storage):
+        """
+        Adds the serialized form view options to the exported dict.
+        """
+
+        serialized = super().export_serialized(form, files_zip, storage)
+
+        def add_user_file(user_file):
+            if not user_file:
+                return None
+
+            name = user_file.name
+
+            if name not in files_zip.namelist():
+                file_path = UserFileHandler().user_file_path(name)
+                with storage.open(file_path, mode="rb") as storage_file:
+                    files_zip.writestr(name, storage_file.read())
+
+            return {"name": name, "original_name": user_file.original_name}
+
+        serialized["public"] = form.public
+        serialized["title"] = form.title
+        serialized["description"] = form.description
+        serialized["cover_image"] = add_user_file(form.cover_image)
+        serialized["logo_image"] = add_user_file(form.logo_image)
+        serialized["submit_action"] = form.submit_action
+        serialized["submit_action_message"] = form.submit_action_message
+        serialized["submit_action_redirect_url"] = form.submit_action_redirect_url
+
+        serialized_field_options = []
+        for field_option in form.get_field_options():
+            serialized_field_options.append(
+                {
+                    "id": field_option.id,
+                    "field_id": field_option.field_id,
+                    "name": field_option.name,
+                    "description": field_option.description,
+                    "enabled": field_option.enabled,
+                    "required": field_option.required,
+                    "order": field_option.order,
+                }
+            )
+
+        serialized["field_options"] = serialized_field_options
+        return serialized
+
+    def import_serialized(
+        self, table, serialized_values, id_mapping, files_zip, storage
+    ):
+        """
+        Imports the serialized form view and field options.
+        """
+
+        def get_file(file):
+            if not file:
+                return None
+
+            with files_zip.open(file["name"]) as stream:
+                user_file = UserFileHandler().upload_user_file(
+                    None, file["original_name"], stream, storage=storage
+                )
+            return user_file
+
+        serialized_copy = serialized_values.copy()
+        serialized_copy["cover_image"] = get_file(serialized_copy.pop("cover_image"))
+        serialized_copy["logo_image"] = get_file(serialized_copy.pop("logo_image"))
+        field_options = serialized_copy.pop("field_options")
+        form_view = super().import_serialized(
+            table, serialized_copy, id_mapping, files_zip, storage
+        )
+
+        if "database_form_view_field_options" not in id_mapping:
+            id_mapping["database_form_view_field_options"] = {}
+
+        for field_option in field_options:
+            field_option_copy = field_option.copy()
+            field_option_id = field_option_copy.pop("id")
+            field_option_copy["field_id"] = id_mapping["database_fields"][
+                field_option["field_id"]
+            ]
+            field_option_object = FormViewFieldOptions.objects.create(
+                form_view=form_view, **field_option_copy
+            )
+            id_mapping["database_form_view_field_options"][
+                field_option_id
+            ] = field_option_object.id
+
+        return form_view

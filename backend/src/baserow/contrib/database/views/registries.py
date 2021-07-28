@@ -88,13 +88,18 @@ class ViewType(
     option changes.
     """
 
-    def export_serialized(self, view):
+    def export_serialized(self, view, files_zip, storage):
         """
         Exports the view to a serialized dict that can be imported by the
         `import_serialized` method. This dict is also JSON serializable.
 
         :param view: The view instance that must be exported.
         :type view: View
+        :param files_zip: A zip file buffer where the files related to the export
+            must be copied into.
+        :type files_zip: ZipFile
+        :param storage: The storage where the files can be loaded from.
+        :type storage: Storage or None
         :return: The exported view.
         :rtype: dict
         """
@@ -129,7 +134,9 @@ class ViewType(
 
         return serialized
 
-    def import_serialized(self, table, serialized_values, id_mapping):
+    def import_serialized(
+        self, table, serialized_values, id_mapping, files_zip, storage
+    ):
         """
         Imported an exported serialized view dict that was exported via the
         `export_serialized` method. Note that all the fields must be imported first
@@ -143,6 +150,11 @@ class ViewType(
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
         :type id_mapping: dict
+        :param files_zip: A zip file buffer where files related to the export can be
+            extracted from.
+        :type files_zip: ZipFile
+        :param storage: The storage where the files can be copied to.
+        :type storage: Storage or None
         :return: The newly created view instance.
         :rtype: View
         """
