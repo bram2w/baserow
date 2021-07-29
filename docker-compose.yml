@@ -3,6 +3,8 @@ version: "3"
 services:
   db:
     container_name: db
+    # Please ensure the postgres-client's major version in the backend image is kept in
+    # sync with this major version so pg_dump remains compatible.
     image: postgres:11.3
     environment:
       - POSTGRES_USER=${DATABASE_USER:-baserow}

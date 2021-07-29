@@ -232,6 +232,7 @@ class GeneratedTableModel:
 class Table(
     TrashableModelMixin, CreatedAndUpdatedOnMixin, OrderableMixin, models.Model
 ):
+    USER_TABLE_DATABASE_NAME_PREFIX = "database_table_"
     database = models.ForeignKey("database.Database", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
@@ -245,7 +246,7 @@ class Table(
         return cls.get_highest_order_of_queryset(queryset) + 1
 
     def get_database_table_name(self):
-        return f"database_table_{self.id}"
+        return f"{self.USER_TABLE_DATABASE_NAME_PREFIX}{self.id}"
 
     def get_model(
         self,

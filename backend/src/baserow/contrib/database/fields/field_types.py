@@ -313,13 +313,13 @@ class NumberFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         if instance.number_type == NUMBER_TYPE_INTEGER:
             return fake.pyint(
-                min_value=-10000 if instance.number_negative else 0,
+                min_value=-10000 if instance.number_negative else 1,
                 max_value=10000,
                 step=1,
             )
         elif instance.number_type == NUMBER_TYPE_DECIMAL:
             return fake.pydecimal(
-                min_value=-10000 if instance.number_negative else 0,
+                min_value=-10000 if instance.number_negative else 1,
                 max_value=10000,
                 positive=not instance.number_negative,
             )

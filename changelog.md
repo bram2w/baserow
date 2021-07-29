@@ -10,6 +10,7 @@
 * Made the form view compatible with importing and exporting.
 * Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
 * Added password validation to password reset page.
+* Add backup and restore database management commands.
 
 ## Released (2021-07-16)
 
