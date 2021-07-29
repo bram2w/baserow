@@ -20,6 +20,7 @@ from baserow.core.trash.exceptions import (
     ParentIdMustNotBeProvidedException,
 )
 from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
+from baserow.core.trash.signals import permanently_deleted
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -211,8 +212,11 @@ class TrashHandler:
                     to_delete = trash_item_type.lookup_trashed_item(
                         trash_entry, trash_item_lookup_cache
                     )
-                    trash_item_type.permanently_delete_item(
-                        to_delete, trash_item_lookup_cache
+                    TrashHandler._permanently_delete_and_signal(
+                        trash_item_type,
+                        to_delete,
+                        trash_entry.parent_trash_item_id,
+                        trash_item_lookup_cache,
                     )
                 except TrashItemDoesNotExist:
                     # When a parent item is deleted it should also delete all of it's
@@ -228,14 +232,50 @@ class TrashHandler:
         )
 
     @staticmethod
-    def permanently_delete(trashable_item):
+    def _permanently_delete_and_signal(
+        trash_item_type: Any,
+        to_delete: Any,
+        parent_id: Optional[int],
+        trash_item_lookup_cache: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        Internal method which actually permanently deletes the provided to_delete object
+        and also triggers the correct signal so plugins can do appropriate clean-up.
+
+        :param trash_item_type: The trashable item type of the item being deleted.
+        :param to_delete: The actual instance of the thing to delete.
+        :param parent_id: If required for the trashable item type then the id of the
+            parent of to_delete.
+        :param trash_item_lookup_cache: An optional dictionary used for caching during
+            many different invocations of permanently_delete.
+        """
+
+        _check_parent_id_valid(parent_id, trash_item_type)
+        trash_item_id = to_delete.id
+        trash_item_type.permanently_delete_item(
+            to_delete,
+            trash_item_lookup_cache,
+        )
+        permanently_deleted.send(
+            sender=trash_item_type.type,
+            trash_item_id=trash_item_id,
+            trash_item=to_delete,
+            parent_id=parent_id,
+        )
+
+    @staticmethod
+    def permanently_delete(trashable_item, parent_id=None):
         """
         Actually removes the provided trashable item from the database irreversibly.
         :param trashable_item: An instance of a TrashableItemType model_class to delete.
+        :param parent_id: If required to look-up the item to delete or related items
+            this should be set to the parent id of the item to delete.
         """
 
         trash_item_type = trash_item_type_registry.get_by_model(trashable_item)
-        trash_item_type.permanently_delete_item(trashable_item)
+        TrashHandler._permanently_delete_and_signal(
+            trash_item_type, trashable_item, parent_id
+        )
 
     @staticmethod
     def get_trash_contents(

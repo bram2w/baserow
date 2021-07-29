@@ -1,0 +1,2 @@
+class InvalidRowCommentException(Exception):
+    pass

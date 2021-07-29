@@ -11,6 +11,9 @@ class BaserowPremiumConfig(AppConfig):
         from .plugins import PremiumPlugin
         from .export.exporter_types import JSONTableExporter, XMLTableExporter
 
+        # noinspection PyUnresolvedReferences
+        import baserow_premium.row_comments.recievers  # noqa: F401
+
         plugin_registry.register(PremiumPlugin())
 
         table_exporter_registry.register(JSONTableExporter())
