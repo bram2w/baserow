@@ -48,8 +48,5 @@ ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.dev'
 RUN dos2unix /baserow/backend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/backend/docker/docker-entrypoint.sh
 
-# Ensure we don't pollute the devs actual repo when mounting in files by
-# putting these two folders into anonymous docker volumes.
-VOLUME ["/baserow/backend/plugins"]
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh"]
 CMD ["dev"]
