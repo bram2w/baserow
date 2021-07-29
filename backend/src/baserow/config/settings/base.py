@@ -267,6 +267,7 @@ FROM_EMAIL = os.getenv("FROM_EMAIL", "no-reply@localhost")
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
 ROW_PAGE_SIZE_LIMIT = 200  # How many rows can be requested at once.
 TRASH_PAGE_SIZE_LIMIT = 200  # How many trash entries can be requested at once.
+ROW_COMMENT_PAGE_SIZE_LIMIT = 200  # How many row comments can be requested at once.
 
 # The amount of rows that can be imported when creating a table.
 INITIAL_TABLE_DATA_LIMIT = None
@@ -322,3 +323,5 @@ HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = os.getenv(
     "HOURS_UNTIL_TRASH_PERMANENTLY_DELETED", 24 * 3
 )
 OLD_TRASH_CLEANUP_CHECK_INTERVAL_MINUTES = 5
+
+MAX_ROW_COMMENT_LENGTH = 10000

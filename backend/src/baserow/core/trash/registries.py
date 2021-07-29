@@ -36,7 +36,9 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
 
     @abstractmethod
     def permanently_delete_item(
-        self, trashed_item: Any, trash_item_lookup_cache: Dict[str, Any] = None
+        self,
+        trashed_item: Any,
+        trash_item_lookup_cache: Dict[str, Any] = None,
     ):
         """
         Should be implemented to actually delete the specified trashed item from the

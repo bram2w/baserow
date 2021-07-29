@@ -27,7 +27,7 @@ def test_delete_row(data_fixture):
     row = handler.create_row(user=user, table=table)
     handler.create_row(user=user, table=table)
 
-    TrashHandler.permanently_delete(row)
+    TrashHandler.permanently_delete(row, table.id)
     assert model.objects.all().count() == 1
 
 
@@ -52,7 +52,7 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
 
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
-    with django_assert_num_queries(9):
+    with django_assert_num_queries(10):
         TrashHandler.permanently_delete_marked_trash()
 
     row_2 = handler.create_row(user=user, table=table)
@@ -75,10 +75,11 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
     # 1. A query to lookup the extra row we are deleting
     # 2. A query to delete said row
     # 3. A query to delete it's trash entry.
-    # 4. Queries to open and close transactions for each deletion
+    # 4. A query to delete any related row comments.
+    # 5. Queries to open and close transactions for each deletion
     # If we weren't caching the table models an extra number of queries would be first
     # performed to lookup the table information which breaks this assertion.
-    with django_assert_num_queries(14):
+    with django_assert_num_queries(16):
         TrashHandler.permanently_delete_marked_trash()
 
 
@@ -201,9 +202,26 @@ def test_delete_row_perm(data_fixture):
     assert model.objects.all().count() == 1
     assert model.trash.all().count() == 1
 
-    TrashHandler.permanently_delete(row)
+    TrashHandler.permanently_delete(row, table.id)
     assert model.objects.all().count() == 1
     assert model.trash.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_cant_delete_row_perm_without_tableid(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    data_fixture.create_text_field(table=table, name="Name", text_default="Test")
+
+    handler = RowHandler()
+    row = handler.create_row(user=user, table=table)
+    handler.create_row(user=user, table=table)
+
+    TrashHandler.trash(
+        user, table.database.group, table.database, row, parent_id=table.id
+    )
+    with pytest.raises(ParentIdMustBeProvidedException):
+        TrashHandler.permanently_delete(row)
 
 
 @pytest.mark.django_db
