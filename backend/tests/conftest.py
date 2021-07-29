@@ -1,8 +1,8 @@
 from __future__ import print_function
 
-import psycopg2
+import os
+
 import pytest
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 
 @pytest.fixture
@@ -17,6 +17,14 @@ def api_client():
     from rest_framework.test import APIClient
 
     return APIClient()
+
+
+@pytest.fixture()
+def environ():
+    original_env = os.environ.copy()
+    yield os.environ
+    for key, value in original_env.items():
+        os.environ[key] = value
 
 
 # We reuse this file in the premium backend folder, if you run a pytest session over
@@ -45,18 +53,3 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "slow" in item.keywords:
             item.add_marker(skip_slow)
-
-
-def run_non_transactional_raw_sql(sqls, dbinfo):
-    conn = psycopg2.connect(
-        host=dbinfo["HOST"],
-        user=dbinfo["USER"],
-        password=dbinfo["PASSWORD"],
-        port=int(dbinfo["PORT"]),
-    )
-    conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-    cursor = conn.cursor()
-    for sql in sqls:
-        cursor.execute(sql)
-
-    conn.close()
