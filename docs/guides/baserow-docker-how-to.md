@@ -66,15 +66,27 @@ Baserow on your network.
 2. `PUBLIC_BACKEND_URL={REPLACE_WITH_YOUR_DOMAIN_NAME_OR_HOST_IP}:8000` - This will
    ensure that Baserow clients will be able to successfully connect to the backend,
    if you can visit Baserow at port `3000` but you are getting API errors please ensure
-   this variable is set correctly.
+   this variable is set correctly. If an IP address this must start with `http://` or 
+   `https://`.
 3. `PUBLIC_WEB_FRONTEND_URL={REPLACE_WITH_YOUR_DOMAIN_NAME_OR_HOST_IP}:3000` - The same
    variable as above but the URL for the web-frontend container instead.
    
-For example you could run the command below after replacing `REPLACE_ME` with the
-IP address or domain name of the server where Baserow is running:
+Then you will need to go to `src/baserow/config/settings/base.py:16` and modify the
+`ALLOWED_HOSTS` variable to include the hostname or IP address of the server that 
+Baserow will be running on (the hostname/ip you will be typing into the
+browser to access the site). For example adding a local network's IP would look like:
+```python
+ALLOWED_HOSTS = ["localhost", "192.168.0.194"]
+```
+   
+One way of setting the 3 environment variables is below. Please replease `REPLACE_ME` 
+with the IP address or domain name of the server where Baserow is running. Ensure that 
+you prepend IP addresses with `http://` as shown in the second command below.
 
 ```bash
-$ HOST_PUBLISH_IP=0.0.0.0 PUBLIC_BACKEND_URL=REPLACE_ME:8000 PUBLIC_WEB_FRONTEND_URL=REPLACE_ME:3000 docker-compose up 
+$ HOST_PUBLISH_IP=0.0.0.0 PUBLIC_BACKEND_URL=REPLACE_ME:8000 PUBLIC_WEB_FRONTEND_URL=REPLACE_ME:3000 docker-compose up --build
+# For example running Baserow on a local network would look something like:
+$ HOST_PUBLISH_IP=0.0.0.0 PUBLIC_BACKEND_URL=http://192.168.0.194:8000 PUBLIC_WEB_FRONTEND_URL=http://192.168.0.194:3000 docker-compose up --build
 ```
 
 ### Configure an external email server

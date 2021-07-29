@@ -13,8 +13,8 @@ Gitter https://gitter.im/bramw-baserow/community.
 > redis, db and mjml containers. Additionally, 1.4.2 only exposes the backend, 
 > web-frontend and media containers on localhost and not on 0.0.0.0. If you were 
 > previously relying on `docker-compose.yml` publicly exposing Baserow then please 
-> follow the [Make Baserow publicly accessible](./docs/guides/running-baserow-locally.md)
-> guide.
+> follow the [Make Baserow publicly accessible](./docs/guides/baserow-docker-how-to.md)
+> section in the docker how to guide.
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 *Beta*
