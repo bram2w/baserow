@@ -224,6 +224,28 @@ describe('test key press event helper', () => {
     expect(isPrintableUnicodeCharacterKeyPress(event)).toBeTruthy()
   })
 
+  test.each(allCharacters)(
+    'pressing ctrl plus any character should return false',
+    (value) => {
+      const event = {
+        key: value,
+        ctrlKey: true,
+      }
+      expect(isPrintableUnicodeCharacterKeyPress(event)).toBeFalsy()
+    }
+  )
+
+  test.each(allCharacters)(
+    'pressing meta key plus any character should return false',
+    (value) => {
+      const event = {
+        key: value,
+        metaKey: true,
+      }
+      expect(isPrintableUnicodeCharacterKeyPress(event)).toBeFalsy()
+    }
+  )
+
   test('passing string instead of event should return false', () => {
     const charWithoutEvent = 'a'
     expect(isPrintableUnicodeCharacterKeyPress(charWithoutEvent)).toBeFalsy()
