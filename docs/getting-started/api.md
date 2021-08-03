@@ -8,7 +8,7 @@ to expose your credentials or JWT token. They should only be used the make chang
 in your data. You can publicly expose your data in a safe way by creating a
 [database token](https://api.baserow.io/api/redoc/#operation/create_database_token)
 token, set the permissions and follow the automatically generated api docs at
-https://baserow.io/api/docs.
+https://baserow.io/api-docs.
 
 In the future there are going to be features that enable you to expose 
 your data publicly in a safe way.

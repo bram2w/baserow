@@ -1,5 +1,10 @@
 import path from 'path'
 
+// Note that routes can't start with `/api/`, `/ws/` or `/media/` because they are
+// reserved for the backend. In some cases, for example with the Heroku or Clouron
+// deployment, the Baserow installation will share a single domain and port and then
+// those URLS are forwarded to the backend or media files server. The rest is
+// // forwarded to the web-frontend.
 export const routes = [
   {
     name: 'database-table',
@@ -14,14 +19,25 @@ export const routes = [
       return p
     },
   },
+  // These redirect exist because the original api docs path was `/api/docs`, but
+  // they have been renamed.
+  {
+    path: '/api/docs',
+    redirect: '/api-docs',
+  },
+  {
+    path: '/api/docs/database/:databaseId',
+    redirect: '/api-docs/database/:databaseId',
+  },
   {
     name: 'database-api-docs',
-    path: '/api/docs',
+    path: '/api-docs',
+    alias: '/api/docs',
     component: path.resolve(__dirname, 'pages/APIDocs.vue'),
   },
   {
     name: 'database-api-docs-detail',
-    path: '/api/docs/database/:databaseId',
+    path: '/api-docs/database/:databaseId',
     component: path.resolve(__dirname, 'pages/APIDocsDatabase.vue'),
   },
   {
