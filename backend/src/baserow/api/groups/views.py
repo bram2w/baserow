@@ -21,11 +21,13 @@ from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import (
     UserNotInGroup,
     GroupDoesNotExist,
+    GroupUserIsLastAdmin,
     UserInvalidGroupPermissionsError,
 )
 
 from .serializers import GroupSerializer, OrderGroupsSerializer
 from .schemas import group_user_schema
+from .errors import ERROR_GROUP_USER_IS_LAST_ADMIN
 
 
 class GroupsView(APIView):
@@ -165,6 +167,54 @@ class GroupView(APIView):
             group_id, base_queryset=Group.objects.select_for_update()
         )
         CoreHandler().delete_group(request.user, group)
+        return Response(status=204)
+
+
+class GroupLeaveView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="group_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Leaves the group related to the value.",
+            )
+        ],
+        tags=["Groups"],
+        operation_id="leave_group",
+        description=(
+            "Makes the authenticated user leave the group related to the provided "
+            "`group_id` if the user is in that group. If the user is the last admin "
+            "in the group, he will not be able to leave it. There must always be one "
+            "admin in the group, otherwise it will be left without control. If that "
+            "is the case, he must either delete the group or give another member admin "
+            "permissions first."
+        ),
+        request=None,
+        responses={
+            204: None,
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_GROUP_USER_IS_LAST_ADMIN"]
+            ),
+            404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            GroupUserIsLastAdmin: ERROR_GROUP_USER_IS_LAST_ADMIN,
+        }
+    )
+    def post(self, request, group_id):
+        """Leaves the group if the user is a member of it."""
+
+        handler = CoreHandler()
+        group = handler.get_group(group_id)
+        handler.leave_group(request.user, group)
         return Response(status=204)
 
 

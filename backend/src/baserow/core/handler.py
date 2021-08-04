@@ -26,6 +26,7 @@ from .models import (
     GROUP_USER_PERMISSION_ADMIN,
 )
 from .exceptions import (
+    UserNotInGroup,
     GroupDoesNotExist,
     ApplicationDoesNotExist,
     ApplicationNotInGroup,
@@ -34,6 +35,7 @@ from .exceptions import (
     GroupInvitationDoesNotExist,
     GroupUserDoesNotExist,
     GroupUserAlreadyExists,
+    GroupUserIsLastAdmin,
     IsNotAdminError,
     TemplateFileDoesNotExist,
     TemplateDoesNotExist,
@@ -171,6 +173,47 @@ class CoreHandler:
         group_updated.send(self, group=group, user=user)
 
         return group
+
+    def leave_group(self, user, group):
+        """
+        Called when a user of group wants to leave a group.
+
+        :param user: The user that wants to leave the group.
+        :type user: User
+        :param group: The group that the user wants to leave.
+        :type group: Group
+        """
+
+        if not isinstance(group, Group):
+            raise ValueError("The group is not an instance of Group.")
+
+        try:
+            group_user = GroupUser.objects.get(user=user, group=group)
+        except GroupUser.DoesNotExist:
+            raise UserNotInGroup(user, self)
+
+        # If the current user is an admin and he is the last admin left, he is not
+        # allowed to leave the group otherwise no one will have control over it. He
+        # needs to give someone else admin permissions first or he must leave the group.
+        if (
+            group_user.permissions == GROUP_USER_PERMISSION_ADMIN
+            and GroupUser.objects.filter(
+                group=group, permissions=GROUP_USER_PERMISSION_ADMIN
+            ).count()
+            == 1
+        ):
+            raise GroupUserIsLastAdmin(
+                "The user is the last admin left in the group and can therefore not "
+                "leave it."
+            )
+
+        # If the user is not the last admin, we can safely delete the user from the
+        # group.
+        group_user_id = group_user.id
+        group_user.delete()
+        group_user_deleted.send(
+            self, group_user_id=group_user_id, group_user=group_user, user=user
+        )
 
     def delete_group(self, user, group):
         """
