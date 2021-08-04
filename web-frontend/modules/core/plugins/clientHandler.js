@@ -73,6 +73,11 @@ class ErrorHandler {
         'You cannot restore this item because it depends on a deleted item.' +
           ' Please restore the parent item first.'
       ),
+      ERROR_GROUP_USER_IS_LAST_ADMIN: new ResponseErrorMessage(
+        "Can't leave the group",
+        "It's not possible to leave the group because you're the last admin. Please" +
+          ' delete the group or give another user admin permissions.'
+      ),
     }
 
     // A temporary notFoundMap containing the error messages for when the

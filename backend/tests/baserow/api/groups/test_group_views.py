@@ -101,6 +101,38 @@ def test_update_group(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_leave_group(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(name="Old name")
+    data_fixture.create_user_group(user=user, group=group, permissions="MEMBER")
+    data_fixture.create_user_group(user=user_2, group=group, permissions="ADMIN")
+    group_2 = data_fixture.create_group()
+
+    url = reverse("api:groups:leave", kwargs={"group_id": 99999})
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
+
+    url = reverse("api:groups:leave", kwargs={"group_id": group_2.id})
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    url = reverse("api:groups:leave", kwargs={"group_id": group.id})
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token_2}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_GROUP_USER_IS_LAST_ADMIN"
+
+    url = reverse("api:groups:leave", kwargs={"group_id": group.id})
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == 204
+    assert GroupUser.objects.all().count() == 1
+    assert not GroupUser.objects.filter(user=user, group=group).exists()
+    assert GroupUser.objects.filter(user=user_2, group=group).exists()
+
+
+@pytest.mark.django_db
 def test_delete_group(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()

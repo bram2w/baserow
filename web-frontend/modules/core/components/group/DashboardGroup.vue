@@ -12,7 +12,6 @@
           @change="renameGroup(group, $event)"
         ></Editable>
         <a
-          v-if="group.permissions === 'ADMIN'"
           class="dashboard__group-title-options"
           @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 0)"
         >
