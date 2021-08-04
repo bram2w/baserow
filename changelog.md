@@ -13,6 +13,7 @@
 * Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
 * Added password validation to password reset page.
 * Add backup and restore database management commands.
+* Dropped the `old_name` column.
 * Hide view types that can't be exported in the export modal.
 * Relaxed the URL field validator and made it consistent between the backend and 
   web-frontend.
