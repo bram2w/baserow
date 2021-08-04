@@ -2,7 +2,9 @@ from rest_framework import serializers
 
 
 def get_example_pagination_serializer_class(
-    results_serializer_class, additional_fields=None, serializer_name=None
+    results_serializer_class,
+    additional_fields=None,
+    serializer_name=None,
 ):
     """
     Generates a pagination like response serializer that has the provided serializer

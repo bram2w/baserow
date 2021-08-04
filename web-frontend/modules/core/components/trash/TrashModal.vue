@@ -1,5 +1,10 @@
 <template>
-  <Modal :sidebar="true" :full-height="true">
+  <Modal
+    :full-height="true"
+    :left-sidebar="true"
+    :left-sidebar-scrollable="true"
+    :content-scrollable="true"
+  >
     <template #sidebar>
       <TrashSidebar
         v-if="!loading"

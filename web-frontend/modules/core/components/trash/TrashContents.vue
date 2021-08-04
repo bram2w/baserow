@@ -31,18 +31,19 @@
       <InfiniteScroll
         :max-count="totalServerSideTrashContentsCount"
         :current-count="trashContents.length"
+        :loading="loadingNextPage"
         @load-next-page="$emit('load-next-page', $event)"
       >
-        <TrashEntry
-          v-for="item in trashContents"
-          :key="'trash-item-' + item.id"
-          :trash-entry="item"
-          :disabled="loadingContents || shouldTrashEntryBeDisabled(item)"
-          @restore="$emit('restore', $event)"
-        ></TrashEntry>
-        <div v-if="loadingNextPage" class="trash__entries-loading-wrapper">
-          <div class="loading"></div>
-        </div>
+        <template #default>
+          <TrashEntry
+            v-for="item in trashContents"
+            :key="'trash-item-' + item.id"
+            :trash-entry="item"
+            :disabled="loadingContents || shouldTrashEntryBeDisabled(item)"
+            @restore="$emit('restore', $event)"
+          ></TrashEntry>
+        </template>
+        <template #end> <div class="trash__end-line"></div> </template>
       </InfiniteScroll>
     </div>
     <TrashEmptyModal
@@ -69,7 +70,7 @@
 
 import moment from 'moment'
 import TrashEntry from '@baserow/modules/core/components/trash/TrashEntry'
-import InfiniteScroll from '@baserow/modules/core/components/infinite_scroll/InfiniteScroll'
+import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
 import TrashEmptyModal from '@baserow/modules/core/components/trash/TrashEmptyModal'
 
 export default {

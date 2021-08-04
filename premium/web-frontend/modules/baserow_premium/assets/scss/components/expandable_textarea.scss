@@ -1,0 +1,38 @@
+.auto-expandable-textarea__container {
+  position: relative;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 1px solid #9fa4ab;
+  border-radius: 3px;
+  padding: 8px 12px 8px 12px;
+  outline: none;
+  background-color: white;
+}
+
+.auto-expandable-textarea {
+  font-size: 14px;
+  line-height: 22px;
+  resize: none;
+  padding: 0 0;
+  border: 0;
+  width: 100%;
+
+  &--loading {
+    margin-right: 7px;
+
+    @include loading(14px);
+  }
+
+  &--loading-overlay {
+    &::before {
+      content: '';
+      border-radius: 2px;
+      background-color: rgba(0, 0, 0, 0.16);
+      z-index: 2;
+
+      @include absolute(0, 0, 0, 0);
+    }
+  }
+}

@@ -11,6 +11,8 @@
 * Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
 * Added password validation to password reset page.
 * Add backup and restore database management commands.
+* **Premium**: You can now comment and discuss rows with others in your group, click the
+  expand row button at the start of the row to view and add comments.
 
 ## Released (2021-07-16)
 
