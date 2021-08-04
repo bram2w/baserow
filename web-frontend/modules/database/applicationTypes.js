@@ -5,8 +5,27 @@ import TableTemplate from '@baserow/modules/database/components/table/TableTempl
 import { populateTable } from '@baserow/modules/database/store/table'
 
 export class DatabaseApplicationType extends ApplicationType {
+  constructor() {
+    super()
+    this.componentPlugins = {
+      RowEditModal: false,
+    }
+  }
+
   static getType() {
     return 'database'
+  }
+
+  /**
+   * By default there is no right sidebar in the row edit modal. Override this method
+   * and provide a Sidebar component class if you wish there to be one. This component
+   * will be provided two props row and table.
+   *
+   * @return The component to use as the row edit modal's right sidebar or null to not
+   *    use one.
+   */
+  getRowEditModalRightSidebarComponent() {
+    return null
   }
 
   getIconClass() {

@@ -2,4 +2,24 @@
   @include absolute(0, 0, 0, 0);
 
   overflow-y: auto;
+
+  &--reversed {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  &__loading-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+  }
+
+  &__end-line {
+    width: 90%;
+    padding-top: 10px;
+    margin-right: 5%;
+    margin-left: 5%;
+    margin-bottom: 20px;
+    border-bottom: solid 1px #d9dbde;
+  }
 }
