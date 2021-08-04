@@ -7,7 +7,7 @@
           <div class="control__elements">
             <ExportTableDropdown
               v-model="values.view_id"
-              :views="views"
+              :views="viewsWithExporterTypes"
               :loading="loading"
               @input="values.exporter_type = firstExporterType"
             ></ExportTableDropdown>
@@ -72,6 +72,11 @@ export default {
     }
   },
   computed: {
+    viewsWithExporterTypes() {
+      return this.views.filter((view) =>
+        this.viewTypeHasExporterTypes(view.type)
+      )
+    },
     selectedView() {
       return this.views.find((view) => view.id === this.values.view_id) || null
     },
@@ -106,6 +111,17 @@ export default {
   validations: {
     values: {
       exporter_type: { required },
+    },
+  },
+  methods: {
+    viewTypeHasExporterTypes(viewType) {
+      const exporters = Object.values(this.$registry.getAll('exporter'))
+      for (let i = 0; i < exporters.length; i++) {
+        if (exporters[i].getSupportedViews().includes(viewType)) {
+          return true
+        }
+      }
+      return false
     },
   },
 }
