@@ -70,6 +70,7 @@ def test_token_auth(api_client, data_fixture):
             assert "user" in json
             assert json["user"]["username"] == "test@test.nl"
             assert json["user"]["first_name"] == "Test1"
+            assert json["user"]["id"] == user.id
             assert json["user"]["is_staff"] is False
             assert plugin_mock.called
 
@@ -94,6 +95,7 @@ def test_token_auth(api_client, data_fixture):
         assert "user" in json
         assert json["user"]["username"] == "test@test.nl"
         assert json["user"]["first_name"] == "Test1"
+        assert json["user"]["id"] == user.id
         assert json["user"]["is_staff"] is False
 
     user.refresh_from_db()
@@ -142,6 +144,7 @@ def test_token_refresh(api_client, data_fixture):
         assert "user" in json
         assert json["user"]["username"] == "test@test.nl"
         assert json["user"]["first_name"] == "Test1"
+        assert json["user"]["id"] == user.id
         assert json["user"]["is_staff"] is False
         assert not plugin_mock.called
 

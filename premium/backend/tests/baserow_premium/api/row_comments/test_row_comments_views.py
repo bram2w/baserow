@@ -51,8 +51,7 @@ def test_row_comments_api_view(data_fixture, api_client):
         "row_id": rows[0].id,
         "table": table.id,
         "updated_on": "2020-01-01T12:00:00Z",
-        "user": user.id,
-        "own_comment": True,
+        "user_id": user.id,
     }
     assert response.json() == expected_comment_json
 

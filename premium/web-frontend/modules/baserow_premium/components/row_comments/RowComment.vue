@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="{ 'row-comments__comment--right': comment.own_comment }"
+    :class="{ 'row-comments__comment--right': ownComment }"
     class="row-comments__comment"
   >
     <div class="row-comments__comment-head">
@@ -9,7 +9,7 @@
       </div>
       <div class="row-comments__comment-head-details">
         <div class="row-comments__comment-head-name">
-          {{ comment.own_comment ? 'You' : comment.first_name }}
+          {{ ownComment ? 'You' : comment.first_name }}
         </div>
         <div :title="localTimestamp" class="row-comments__comment-head-time">
           {{ timeAgo }}
@@ -22,6 +22,7 @@
 
 <script>
 import moment from 'moment'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'RowComment',
@@ -32,6 +33,12 @@ export default {
     },
   },
   computed: {
+    ...mapGetters({
+      userId: 'auth/getUserId',
+    }),
+    ownComment() {
+      return this.comment.user_id === this.userId
+    },
     timeAgo() {
       return moment.utc(this.comment.created_on).fromNow()
     },

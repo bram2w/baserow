@@ -29,7 +29,8 @@ export default {
       type: String,
     },
     loading: {
-      required: true,
+      required: false,
+      default: false,
       type: Boolean,
     },
     placeholder: {

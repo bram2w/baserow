@@ -5,6 +5,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow_premium.row_comments.exceptions import InvalidRowCommentException
 from baserow_premium.row_comments.models import RowComment
+from baserow_premium.row_comments.signals import row_comment_created
 
 User = get_user_model()
 
@@ -57,6 +58,12 @@ class RowCommentHandler:
 
         table = TableHandler().get_table(table_id)
         RowHandler().has_row(requesting_user, table, row_id, raise_error=True)
-        return RowComment.objects.create(
+        row_comment = RowComment.objects.create(
             user=requesting_user, table=table, row_id=row_id, comment=comment
         )
+        row_comment_created.send(
+            RowHandler,
+            row_comment=row_comment,
+            user=requesting_user,
+        )
+        return row_comment

@@ -35,7 +35,6 @@
             ref="AutoExpandableTextarea"
             v-model="comment"
             placeholder="Comment"
-            :loading="postingComment"
             @entered="postComment"
           >
           </AutoExpandableTextarea>
@@ -74,7 +73,6 @@ export default {
     ...mapGetters({
       comments: 'row_comments/getSortedRowComments',
       loading: 'row_comments/getLoading',
-      postingComment: 'row_comments/getPostingComment',
       loaded: 'row_comments/getLoaded',
       currentCount: 'row_comments/getCurrentCount',
       totalCount: 'row_comments/getTotalCount',
@@ -94,19 +92,19 @@ export default {
   },
   methods: {
     async postComment() {
-      if (!this.comment.trim() || this.postingComment) {
+      const comment = this.comment.trim()
+      if (!comment) {
         return
       }
       try {
         const tableId = this.table.id
         const rowId = this.row.id
-        const comment = this.comment.trim()
+        this.comment = ''
         await this.$store.dispatch('row_comments/postComment', {
           tableId,
           rowId,
           comment,
         })
-        this.comment = ''
         this.$refs.infiniteScroll.scrollToStart()
       } catch (e) {
         notifyIf(e, 'application')
