@@ -18,3 +18,7 @@ class BaserowPremiumConfig(AppConfig):
 
         table_exporter_registry.register(JSONTableExporter())
         table_exporter_registry.register(XMLTableExporter())
+
+        # The signals must always be imported last because they use the registries
+        # which need to be filled first.
+        import baserow_premium.ws.signals  # noqa: F403, F401

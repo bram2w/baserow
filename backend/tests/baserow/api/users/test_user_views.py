@@ -32,6 +32,7 @@ def test_create_user(client, data_fixture):
     assert response_json["user"]["username"] == "test@test.nl"
     assert response_json["user"]["first_name"] == "Test1"
     assert response_json["user"]["is_staff"] is True
+    assert response_json["user"]["id"] == user.id
 
     response_failed = client.post(
         reverse("api:user:index"),
