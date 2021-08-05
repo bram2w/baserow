@@ -6,6 +6,7 @@ import {
   isValidEmail,
   isSecureURL,
 } from '@/modules/core/utils/string'
+import { isNumeric } from '@baserow/modules/core/utils/string'
 
 describe('test string utils', () => {
   test('test uuid', () => {
@@ -125,5 +126,16 @@ describe('test string utils', () => {
     expect(isSecureURL('https://test.nl')).toBe(true)
     expect(isSecureURL('HTTPS://test.nl')).toBe(true)
     expect(isSecureURL('https://test.domain.nl?test=test')).toBe(true)
+  })
+
+  test('test isNumeric', () => {
+    expect(isNumeric('a')).toBe(false)
+    expect(isNumeric('1.2')).toBe(false)
+    expect(isNumeric('')).toBe(false)
+    expect(isNumeric('null')).toBe(false)
+    expect(isNumeric('12px')).toBe(false)
+    expect(isNumeric('1')).toBe(true)
+    expect(isNumeric('9999')).toBe(true)
+    expect(isNumeric('-100')).toBe(true)
   })
 })

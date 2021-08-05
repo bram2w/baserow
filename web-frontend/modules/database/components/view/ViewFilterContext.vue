@@ -98,8 +98,7 @@
         <component
           :is="getInputComponent(filter.type)"
           :ref="'filter-' + filter.id + '-value'"
-          :value="filter.value"
-          :field-id="filter.field"
+          :filter="filter"
           :fields="fields"
           :primary="primary"
           :read-only="readOnly"

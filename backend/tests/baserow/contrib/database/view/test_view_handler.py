@@ -767,13 +767,13 @@ def test_get_filter(data_fixture):
             base_queryset=ViewFilter.objects.prefetch_related("UNKNOWN"),
         )
 
-    filter = handler.get_filter(user=user, view_filter_id=equal_filter.id)
+    view_filter = handler.get_filter(user=user, view_filter_id=equal_filter.id)
 
-    assert filter.id == equal_filter.id
-    assert filter.view_id == equal_filter.view_id
-    assert filter.field_id == equal_filter.field_id
-    assert filter.type == equal_filter.type
-    assert filter.value == equal_filter.value
+    assert view_filter.id == equal_filter.id
+    assert view_filter.view_id == equal_filter.view_id
+    assert view_filter.field_id == equal_filter.field_id
+    assert view_filter.type == equal_filter.type
+    assert view_filter.value == equal_filter.value
 
 
 @pytest.mark.django_db

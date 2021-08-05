@@ -349,6 +349,20 @@ class ViewFilterType(Instance):
 
         raise NotImplementedError("Each must have his own get_filter method.")
 
+    def get_preload_values(self, view_filter) -> dict:
+        """
+        Optionally a view filter type can preload certain values for displaying
+        purposes. This is for example used by the `link_row_has` filter type to
+        preload the name of the chosen row.
+
+        :param view_filter: The view filter instance object where the values must be
+            preloaded for.
+        :type view_filter: ViewFilter
+        :return: The preloaded values as a dict.
+        """
+
+        return {}
+
     def get_export_serialized_value(self, value) -> str:
         """
         This method is called before the filter value is exported. Here it can

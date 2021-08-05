@@ -33,6 +33,8 @@ import {
   DateEqualsCurrentYearViewFilterType,
   DateBeforeViewFilterType,
   DateAfterViewFilterType,
+  LinkRowHasFilterType,
+  LinkRowHasNotFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -86,6 +88,8 @@ export default ({ store, app }) => {
   app.$registry.register('viewFilter', new SingleSelectEqualViewFilterType())
   app.$registry.register('viewFilter', new SingleSelectNotEqualViewFilterType())
   app.$registry.register('viewFilter', new BooleanViewFilterType())
+  app.$registry.register('viewFilter', new LinkRowHasFilterType())
+  app.$registry.register('viewFilter', new LinkRowHasNotFilterType())
   app.$registry.register('viewFilter', new EmptyViewFilterType())
   app.$registry.register('viewFilter', new NotEmptyViewFilterType())
   app.$registry.register('field', new TextFieldType())
