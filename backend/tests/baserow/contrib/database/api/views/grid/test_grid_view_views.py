@@ -145,7 +145,9 @@ def test_list_rows(api_client, data_fixture):
     assert response_json["results"][3]["id"] == row_2.id
     sort.delete()
 
-    filter = data_fixture.create_view_filter(view=grid, field=text_field, value="Green")
+    view_filter = data_fixture.create_view_filter(
+        view=grid, field=text_field, value="Green"
+    )
     url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
     response_json = response.json()
@@ -153,7 +155,7 @@ def test_list_rows(api_client, data_fixture):
     assert response_json["count"] == 1
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == row_1.id
-    filter.delete()
+    view_filter.delete()
 
     url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
     response = api_client.get(

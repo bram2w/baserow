@@ -90,3 +90,7 @@ export const isSecureURL = (str) => {
 export const escapeRegExp = (string) => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
+
+export const isNumeric = (value) => {
+  return /^-?\d+$/.test(value)
+}

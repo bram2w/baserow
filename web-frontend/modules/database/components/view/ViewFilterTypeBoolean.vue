@@ -6,22 +6,14 @@
 
 <script>
 import { trueString } from '@baserow/modules/database/utils/constants'
+import viewFilter from '@baserow/modules/database/mixins/viewFilter'
 
 export default {
   name: 'ViewFilterTypeBoolean',
-  props: {
-    value: {
-      type: String,
-      required: true,
-    },
-    readOnly: {
-      type: Boolean,
-      required: true,
-    },
-  },
+  mixins: [viewFilter],
   computed: {
     copy() {
-      const value = this.value.toLowerCase().trim()
+      const value = this.filter.value.toLowerCase().trim()
       return trueString.includes(value)
     },
   },

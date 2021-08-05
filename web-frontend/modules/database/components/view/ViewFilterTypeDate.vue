@@ -1,5 +1,5 @@
 <template>
-  <div class="filters__value-date">
+  <div>
     <input
       ref="date"
       v-model="dateString"
@@ -46,24 +46,6 @@ import filterTypeInput from '@baserow/modules/database/mixins/filterTypeInput'
 export default {
   name: 'ViewFilterTypeDate',
   mixins: [filterTypeInput],
-  props: {
-    value: {
-      type: String,
-      required: true,
-    },
-    fieldId: {
-      type: Number,
-      required: true,
-    },
-    primary: {
-      type: Object,
-      required: true,
-    },
-    fields: {
-      type: Array,
-      required: true,
-    },
-  },
   data() {
     return {
       copy: '',
@@ -71,20 +53,13 @@ export default {
       dateObject: '',
     }
   },
-  computed: {
-    field() {
-      return this.primary.id === this.fieldId
-        ? this.primary
-        : this.fields.find((f) => f.id === this.fieldId)
-    },
-  },
   watch: {
-    value(value) {
+    'filter.value'(value) {
       this.setCopy(value)
     },
   },
   created() {
-    this.setCopy(this.value)
+    this.setCopy(this.filter.value)
   },
   mounted() {
     this.$v.$touch()

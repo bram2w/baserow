@@ -416,6 +416,65 @@ class BooleanViewFilterType(ViewFilterType):
         return Q()
 
 
+class LinkRowHasViewFilterType(ViewFilterType):
+    """
+    The link row has filter accepts the row ID of the related table as value. It
+    filters the queryset so that only rows that have a relationship with the provided
+    row ID will remain. So if for example '10' is provided, then only rows where the
+    link row field has a relationship with the row '10' persists.
+    """
+
+    type = "link_row_has"
+    compatible_field_types = [LinkRowFieldType.type]
+
+    def get_filter(self, field_name, value, model_field, field):
+        value = value.strip()
+
+        try:
+            return Q(**{f"{field_name}__in": [int(value)]})
+        except ValueError:
+            return Q()
+
+    def get_preload_values(self, view_filter):
+        """
+        This method preloads the display name of the related value. This prevents a
+        lot of API requests if the view has a lot of `link_row_has` filters. It will
+        also make sure that the display name is visible for read only previews.
+        """
+
+        name = None
+        related_row_id = None
+
+        try:
+            related_row_id = int(view_filter.value)
+        except ValueError:
+            pass
+
+        if related_row_id:
+            field = view_filter.field.specific
+            table = field.link_row_table
+            primary_field = table.field_set.get(primary=True)
+            model = table.get_model(field_ids=[], fields=[primary_field])
+
+            try:
+                name = str(model.objects.get(pk=related_row_id))
+            except model.DoesNotExist:
+                pass
+
+        return {"display_name": name}
+
+
+class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterType):
+    """
+    The link row has filter accepts the row ID of the related table as value. It
+    filters the queryset so that only rows that don't have a relationship with the
+    provided row ID will remain. So if for example '10' is provided, then only rows
+    where the link row field does not have a relationship with the row '10' persists.
+    """
+
+    type = "link_row_has_not"
+
+
 class EmptyViewFilterType(ViewFilterType):
     """
     The empty filter checks if the field value is empty, this can be '', null,
