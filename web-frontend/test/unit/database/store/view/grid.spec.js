@@ -764,4 +764,51 @@ describe('Grid view store', () => {
     expect(store.getters['grid/getBufferLimit']).toBe(5)
     expect(store.getters['grid/getCount']).toBe(97)
   })
+  test('row metadata stored when provided on row create or update', async () => {
+    const state = Object.assign(gridStore.state(), {
+      bufferStartIndex: 0,
+      bufferLimit: 6,
+      rows: [{ id: 2, order: '2.00000000000000000000' }],
+      count: 1,
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    const view = {
+      id: 1,
+      filters: [],
+      sortings: [],
+    }
+    const fields = []
+    const primary = {}
+    const getScrollTop = () => 0
+
+    await store.dispatch('grid/createdNewRow', {
+      view,
+      fields,
+      primary,
+      values: { id: 1, order: '1.00000000000000000000' },
+      metadata: { test: 'test' },
+      getScrollTop,
+    })
+    expect(store.getters['grid/getAllRows'].length).toBe(2)
+    expect(store.getters['grid/getAllRows'][0].id).toBe(1)
+    expect(store.getters['grid/getAllRows'][0]._.metadata.test).toBe('test')
+
+    await store.dispatch('grid/updatedExistingRow', {
+      view,
+      fields,
+      primary,
+      row: { id: 1, order: '1.00000000000000000000' },
+      values: { field_1: 'Value updated' },
+      metadata: { test: 'test updated' },
+      getScrollTop,
+    })
+
+    expect(store.getters['grid/getAllRows'].length).toBe(2)
+    expect(store.getters['grid/getAllRows'][0].id).toBe(1)
+    expect(store.getters['grid/getAllRows'][0]._.metadata.test).toBe(
+      'test updated'
+    )
+  })
 })

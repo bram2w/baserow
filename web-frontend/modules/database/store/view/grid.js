@@ -15,8 +15,9 @@ import {
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 
-export function populateRow(row) {
+export function populateRow(row, metadata = {}) {
   row._ = {
+    metadata,
     loading: false,
     hover: false,
     selectedBy: [],
@@ -34,6 +35,12 @@ export function populateRow(row) {
     selectedFieldId: -1,
   }
   return row
+}
+
+function extractMetadataAndPopulateRow(data, rowIndex) {
+  const metadata = data.row_metadata || {}
+  const row = data.results[rowIndex]
+  populateRow(row, metadata[row.id])
 }
 
 export const state = () => ({
@@ -284,14 +291,22 @@ export const mutations = {
       state.rows.splice(index, 0, state.rows.splice(oldIndex, 1)[0])
     }
   },
-  UPDATE_ROW_IN_BUFFER(state, { row, values }) {
+  UPDATE_ROW_IN_BUFFER(state, { row, values, metadata = false }) {
     const index = state.rows.findIndex((item) => item.id === row.id)
     if (index !== -1) {
-      Object.assign(state.rows[index], values)
+      const existingRowState = state.rows[index]
+      Object.assign(existingRowState, values)
+      if (metadata) {
+        existingRowState._.metadata = metadata
+      }
     }
   },
   UPDATE_ROW_FIELD_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
+  },
+  UPDATE_ROW_METADATA(state, { row, rowMetadataType, updateFunction }) {
+    const currentValue = row._.metadata[rowMetadataType]
+    Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
   },
   FINALIZE_ROW_IN_BUFFER(state, { oldId, id, order }) {
     const index = state.rows.findIndex((item) => item.id === oldId)
@@ -453,7 +468,7 @@ export const actions = {
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
-            populateRow(data.results[index])
+            extractMetadataAndPopulateRow(data, index)
           })
           commit('ADD_ROWS', {
             rows: data.results,
@@ -591,7 +606,7 @@ export const actions = {
       search: getters.getServerSearchTerm,
     })
     data.results.forEach((part, index) => {
-      populateRow(data.results[index])
+      extractMetadataAndPopulateRow(data, index)
     })
     commit('CLEAR_ROWS')
     commit('ADD_ROWS', {
@@ -663,7 +678,7 @@ export const actions = {
         // If there are results we can replace the existing rows so that the user stays
         // at the same scroll offset.
         data.results.forEach((part, index) => {
-          populateRow(data.results[index])
+          extractMetadataAndPopulateRow(data, index)
         })
         commit('ADD_ROWS', {
           rows: data.results,
@@ -902,10 +917,10 @@ export const actions = {
    */
   createdNewRow(
     { commit, getters, dispatch },
-    { view, fields, primary, values }
+    { view, fields, primary, values, metadata }
   ) {
     const row = clone(values)
-    populateRow(row)
+    populateRow(row, metadata)
 
     // Check if the row belongs into the current view by checking if it matches the
     // filters and search.
@@ -1046,12 +1061,12 @@ export const actions = {
    */
   updatedExistingRow(
     { commit, getters, dispatch },
-    { view, fields, primary, row, values }
+    { view, fields, primary, row, values, metadata }
   ) {
     const oldRow = clone(row)
     const newRow = Object.assign(clone(row), values)
-    populateRow(oldRow)
-    populateRow(newRow)
+    populateRow(oldRow, metadata)
+    populateRow(newRow, metadata)
 
     dispatch('updateMatchFilters', { view, row: oldRow, fields, primary })
     dispatch('updateSearchMatchesForRow', { row: oldRow, fields, primary })
@@ -1065,7 +1080,13 @@ export const actions = {
     if (oldRowExists && !newRowExists) {
       dispatch('deletedExistingRow', { view, fields, primary, row })
     } else if (!oldRowExists && newRowExists) {
-      dispatch('createdNewRow', { view, fields, primary, values: newRow })
+      dispatch('createdNewRow', {
+        view,
+        fields,
+        primary,
+        values: newRow,
+        metadata,
+      })
     } else if (oldRowExists && newRowExists) {
       // If the new order already exists in the buffer and is not the row that has
       // been updated, we need to decrease all the other orders, otherwise we could
@@ -1096,7 +1117,7 @@ export const actions = {
 
       if (oldRowInBuffer) {
         // If the old row is inside the buffer at a known position.
-        commit('UPDATE_ROW_IN_BUFFER', { row, values })
+        commit('UPDATE_ROW_IN_BUFFER', { row, values, metadata })
         commit('SET_BUFFER_LIMIT', getters.getBufferLimit - 1)
       } else if (oldIsFirst) {
         // If the old row exists in the buffer, but is at the before position.
@@ -1374,6 +1395,15 @@ export const actions = {
       fields,
       primary,
     })
+  },
+  updateRowMetadata(
+    { commit, getters, dispatch },
+    { tableId, rowId, rowMetadataType, updateFunction }
+  ) {
+    const row = getters.getRow(rowId)
+    if (row) {
+      commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
+    }
   },
 }
 

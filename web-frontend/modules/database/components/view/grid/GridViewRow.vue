@@ -48,9 +48,11 @@
             class="grid-view__row-drag"
             @mousedown="startDragging($event, row)"
           ></div>
-          <a class="grid-view__row-more" @click="$emit('edit-modal', row)">
-            <i class="fas fa-expand"></i>
-          </a>
+          <component
+            :is="rowExpandButton"
+            :row="row"
+            @edit-modal="$emit('edit-modal', row)"
+          ></component>
         </div>
       </div>
     </template>
@@ -81,10 +83,11 @@
 <script>
 import GridViewCell from '@baserow/modules/database/components/view/grid/GridViewCell'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
+import GridViewRowExpandButton from '@baserow/modules/database/components/view/grid/GridViewRowExpandButton'
 
 export default {
   name: 'GridViewRow',
-  components: { GridViewCell },
+  components: { GridViewRowExpandButton, GridViewCell },
   mixins: [gridViewHelpers],
   props: {
     row: {
@@ -124,6 +127,9 @@ export default {
       // for example used by the file field to finish the uploading task if the user
       // has selected another cell while uploading.
       alive: [],
+      rowExpandButton: this.$registry
+        .get('application', 'database')
+        .getRowExpandButtonComponent(),
     }
   },
   methods: {

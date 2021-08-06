@@ -41,6 +41,7 @@
       <component
         :is="optionalRightSideBar"
         :row="row"
+        :read-only="readOnly"
         :table="table"
       ></component>
     </template>

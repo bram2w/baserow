@@ -15,7 +15,7 @@ class RowCommentSerializer(serializers.ModelSerializer):
         model = RowComment
         fields = (
             "id",
-            "table",
+            "table_id",
             "row_id",
             "comment",
             "first_name",

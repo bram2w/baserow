@@ -303,12 +303,12 @@
 
 .grid-view__row-more {
   @include absolute(50%, 4px, 0, auto);
-  @include center-text(16px, 11px);
+  @include center-text(18px, 11px);
 
   color: $color-neutral-400;
-  border-radius: 100%;
+  border-radius: 3px;
   display: none;
-  margin-top: -7.5px;
+  margin-top: -9.5px;
 
   .grid-view__row--hover &,
   .grid-view__row--selected & {

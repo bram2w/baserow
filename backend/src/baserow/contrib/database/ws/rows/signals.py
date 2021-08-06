@@ -1,6 +1,7 @@
 from django.dispatch import receiver
 from django.db import transaction
 
+from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.ws.registries import page_registry
 
 from baserow.contrib.database.rows import signals as row_signals
@@ -21,6 +22,9 @@ def row_created(sender, row, before, user, table, model, **kwargs):
                 "row": get_row_serializer_class(model, RowSerializer, is_response=True)(
                     row
                 ).data,
+                "metadata": row_metadata_registry.generate_and_merge_metadata_for_row(
+                    table, row.id
+                ),
                 "before_row_id": before.id if before else None,
             },
             getattr(user, "web_socket_id", None),
@@ -52,6 +56,9 @@ def row_updated(sender, row, user, table, model, before_return, **kwargs):
                 "row": get_row_serializer_class(model, RowSerializer, is_response=True)(
                     row
                 ).data,
+                "metadata": row_metadata_registry.generate_and_merge_metadata_for_row(
+                    table, row.id
+                ),
             },
             getattr(user, "web_socket_id", None),
             table_id=table.id,

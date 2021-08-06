@@ -125,7 +125,7 @@ export const actions = {
    * responds with it's id and other related comment data.
    */
   async postComment(
-    { commit, state, rootGetters },
+    { commit, state, rootGetters, dispatch },
     { tableId, rowId, comment }
   ) {
     const temporaryId = state.nextTemporaryCommentId
@@ -138,7 +138,7 @@ export const actions = {
         updated_on: moment().toISOString(),
         comment,
         row_id: rowId,
-        table: tableId,
+        table_id: tableId,
         user_id: rootGetters['auth/getUserId'],
         first_name: rootGetters['auth/getName'],
         id: temporaryId,
@@ -153,20 +153,33 @@ export const actions = {
         comment
       )
       commit('REMOVE_ROW_COMMENT', temporaryId)
-      commit('ADD_ROW_COMMENTS', { comments: [data], loading: false })
-      commit('SET_TOTAL_COUNT', state.totalCount + 1)
+      dispatch('forceCreate', { rowComment: data })
     } catch (e) {
       // Make sure we remove the temporary comment if the create call failed.
       commit('REMOVE_ROW_COMMENT', temporaryId)
       throw e
     }
   },
-  forceCreate({ commit, state }, comment) {
+  async forceCreate(context, { rowComment }) {
+    const { commit, state } = context
     if (
-      state.loadedTableId === comment.table &&
-      state.loadedRowId === comment.row_id
+      state.loadedTableId === rowComment.table_id &&
+      state.loadedRowId === rowComment.row_id
     ) {
-      commit('ADD_ROW_COMMENTS', { comments: [comment], loading: false })
+      commit('ADD_ROW_COMMENTS', { comments: [rowComment], loading: false })
+      commit('SET_TOTAL_COUNT', state.totalCount + 1)
+    }
+    // A new comment has been forcibly created so we need to let all views know that
+    // the row comment count metadata should be incremented atomically.
+    for (const viewType of Object.values(this.$registry.getAll('view'))) {
+      await viewType.rowMetadataUpdated(
+        { store: this },
+        rowComment.table_id,
+        rowComment.row_id,
+        'row_comment_count',
+        (count) => (count ? count + 1 : 1),
+        'page/'
+      )
     }
   },
 }

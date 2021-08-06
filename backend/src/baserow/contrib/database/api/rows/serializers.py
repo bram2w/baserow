@@ -5,6 +5,7 @@ from rest_framework import serializers
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.core.utils import model_default_values, dict_to_object
 
 logger = logging.getLogger(__name__)
@@ -180,6 +181,37 @@ def get_example_row_serializer_class(add_id=False, user_field_names=False):
     get_example_row_serializer_class.cache[class_name] = class_object
 
     return class_object
+
+
+def get_example_row_metadata_field_serializer():
+    """
+    Generates a serializer containing a field for each row metadata type which
+    represents the metadata for a single row.
+    It is only used for example purposes in the openapi documentation.
+
+    :return: Generated serializer for a single rows metadata
+    :rtype: Serializer
+    """
+
+    metadata_types = row_metadata_registry.get_all()
+
+    if len(metadata_types) == 0:
+        return None
+
+    fields = {}
+    for metadata_type in metadata_types:
+        fields[metadata_type.type] = metadata_type.get_example_serializer_field()
+
+    per_row_serializer = type(
+        "RowMetadataSerializer", (serializers.Serializer,), fields
+    )()
+    return serializers.DictField(
+        child=per_row_serializer,
+        required=False,
+        help_text="An object keyed by row id with a value being an object containing "
+        "additional metadata about that row. A row might not have metadata and will "
+        "not be present as a key if so.",
+    )
 
 
 example_pagination_row_serializer_class = get_example_pagination_serializer_class(

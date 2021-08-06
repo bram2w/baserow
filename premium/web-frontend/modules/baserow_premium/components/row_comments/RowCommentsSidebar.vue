@@ -6,7 +6,10 @@
         <div v-if="totalCount === 0" class="row-comments__empty">
           <i class="row-comments__empty-icon fas fa-comments"></i>
           <div class="row-comments__empty-text">
-            No comments for this row yet. Use the form below to add a comment.
+            <template v-if="readOnly">No comments for this row.</template>
+            <template v-else>
+              No comments for this row yet. Use the form below to add a comment.
+            </template>
           </div>
         </div>
         <div v-else class="row-comments__body">
@@ -30,7 +33,7 @@
             </template>
           </InfiniteScroll>
         </div>
-        <div class="row-comments__foot">
+        <div v-if="!readOnly" class="row-comments__foot">
           <AutoExpandableTextarea
             ref="AutoExpandableTextarea"
             v-model="comment"
@@ -53,7 +56,11 @@ import AutoExpandableTextarea from '@baserow_premium/components/helpers/AutoExpa
 
 export default {
   name: 'RowCommentsSidebar',
-  components: { AutoExpandableTextarea, InfiniteScroll, RowComment },
+  components: {
+    AutoExpandableTextarea,
+    InfiniteScroll,
+    RowComment,
+  },
   props: {
     table: {
       required: true,
@@ -62,6 +69,10 @@ export default {
     row: {
       required: true,
       type: Object,
+    },
+    readOnly: {
+      required: true,
+      type: Boolean,
     },
   },
   data() {
@@ -93,7 +104,7 @@ export default {
   methods: {
     async postComment() {
       const comment = this.comment.trim()
-      if (!comment) {
+      if (!comment || this.readOnly) {
         return
       }
       try {
