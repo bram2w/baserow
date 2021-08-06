@@ -298,7 +298,10 @@ class ChangePasswordView(APIView):
         responses={
             204: None,
             400: get_error_schema(
-                ["ERROR_INVALID_OLD_PASSWORD", "ERROR_REQUEST_BODY_VALIDATION"]
+                [
+                    "ERROR_INVALID_OLD_PASSWORD",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
             ),
         },
     )

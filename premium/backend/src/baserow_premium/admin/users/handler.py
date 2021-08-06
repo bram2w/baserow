@@ -1,8 +1,11 @@
 from typing import Optional
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 from baserow.core.exceptions import IsNotAdminError
+from baserow.core.user.exceptions import PasswordDoesNotMatchValidation
 from baserow_premium.admin.users.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
@@ -37,6 +40,8 @@ class UserAdminHandler:
         :param password: Optional new password to securely set for the user.
         :param name: Optional new name to set on the user.
         :param username: Optional new username/email to set for the user.
+        :raises PasswordDoesNotMatchValidation: When the provided password value is not
+            a valid password.
         """
 
         self._raise_if_not_permitted(requesting_user)
@@ -54,6 +59,10 @@ class UserAdminHandler:
         if is_active is not None:
             user.is_active = is_active
         if password is not None:
+            try:
+                validate_password(password, user)
+            except ValidationError as e:
+                raise PasswordDoesNotMatchValidation(e.messages)
             user.set_password(password)
         if name is not None:
             user.first_name = name
