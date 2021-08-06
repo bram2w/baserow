@@ -6,6 +6,7 @@ export default (client) => {
       offset = null,
       cancelToken = null,
       includeFieldOptions = false,
+      includeRowMetadata = true,
       search = false,
     }) {
       const config = {
@@ -25,6 +26,10 @@ export default (client) => {
 
       if (includeFieldOptions) {
         include.push('field_options')
+      }
+
+      if (includeRowMetadata) {
+        include.push('row_metadata')
       }
 
       if (include.length > 0) {

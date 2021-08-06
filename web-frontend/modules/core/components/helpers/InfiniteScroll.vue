@@ -42,6 +42,13 @@ export default {
       type: Number,
       required: true,
     },
+    pageSize: {
+      type: Number,
+      required: false,
+      // Please keep in sync with the default page size in
+      // backend/src/baserow/api/pagination.py
+      default: 100,
+    },
     loading: {
       type: Boolean,
       required: true,
@@ -104,7 +111,7 @@ export default {
      */
     loadNextPage() {
       if (this.currentCount < this.maxCount && !this.loading) {
-        const nextPage = Math.ceil(this.currentCount / 10)
+        const nextPage = Math.ceil(this.currentCount / this.pageSize) + 1
         this.$emit('load-next-page', nextPage)
       }
     },

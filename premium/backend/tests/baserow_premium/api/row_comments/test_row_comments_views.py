@@ -49,7 +49,7 @@ def test_row_comments_api_view(data_fixture, api_client):
         "first_name": "Test User",
         "id": 1,
         "row_id": rows[0].id,
-        "table": table.id,
+        "table_id": table.id,
         "updated_on": "2020-01-01T12:00:00Z",
         "user_id": user.id,
     }

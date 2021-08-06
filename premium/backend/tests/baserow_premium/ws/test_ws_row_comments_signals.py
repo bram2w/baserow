@@ -29,6 +29,6 @@ def test_row_comment_created(mock_broadcast_to_channel_group, data_fixture):
         "id": c.id,
         "user_id": user.id,
         "row_id": rows[0].id,
-        "table": table.id,
+        "table_id": table.id,
         "updated_on": "2020-01-02T12:00:00Z",
     }

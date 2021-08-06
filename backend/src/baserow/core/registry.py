@@ -234,6 +234,16 @@ class Registry(object):
 
         return self.registry[type_name]
 
+    def get_all(self):
+        """
+        Returns all registered instances
+
+        :return: A list of the registered instances.
+        :rtype: List[InstanceModelInstance]
+        """
+
+        return self.registry.values()
+
     def get_types(self):
         """
         Returns a list of available type names.

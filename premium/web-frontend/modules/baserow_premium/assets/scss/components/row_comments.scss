@@ -131,3 +131,25 @@
   padding: 20px;
   border-top: solid 1px $color-neutral-200;
 }
+
+.row-comments-expand-button {
+  @include absolute(50%, 4px, 0, auto);
+  @include center-text(18px, 11px);
+
+  white-space: nowrap;
+  color: $color-primary-900;
+  border-radius: 3px;
+  display: block;
+  margin-top: -9.5px;
+  background-color: $color-neutral-100;
+  text-decoration: none;
+
+  &:hover {
+    background-color: $color-primary-100;
+    text-decoration: none;
+  }
+
+  &__icon {
+    color: $color-neutral-500;
+  }
+}

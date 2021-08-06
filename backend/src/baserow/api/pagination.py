@@ -6,6 +6,8 @@ from rest_framework.pagination import (
 
 
 class PageNumberPagination(RestFrameworkPageNumberPagination):
+    # Please keep the default page size in sync with the default prop pageSize in
+    # web-frontend/modules/core/components/helpers/InfiniteScroll.vue
     page_size = 100
     page_size_query_param = "size"
 
