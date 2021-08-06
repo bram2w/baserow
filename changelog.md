@@ -21,6 +21,8 @@
 * Fixed nuxt not restarting correctly using the provided Baserow supervisor config file.
 * Added steps on how to configure Baserow to send emails in the install-on-ubuntu guide.
 * Enabled password validation in the backend.
+* **Premium**: You can now comment and discuss rows with others in your group, click the
+  expand row button at the start of the row to view and add comments.
 
 ## Released (2021-07-16)
 

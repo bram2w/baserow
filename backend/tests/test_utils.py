@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from decimal import Decimal
 
 from django.utils.dateparse import parse_datetime, parse_date
@@ -208,3 +209,18 @@ def setup_interesting_test_table(data_fixture):
         linked_row_7.id, linked_row_8.id
     )
     return table, user, row, blank_row
+
+
+@contextmanager
+def register_instance_temporarily(registry, instance):
+    """
+    A context manager to allow tests to register a new instance into a Baserow
+    registry which will then unregister the instance afterwards to ensure the global
+    registries are kept clean between tests.
+    """
+
+    registry.register(instance)
+    try:
+        yield instance
+    finally:
+        registry.unregister(instance)

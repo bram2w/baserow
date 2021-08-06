@@ -1,33 +1,50 @@
 <template>
-  <Modal ref="modal" @hidden="$emit('hidden', { row })">
-    <h2 v-if="primary !== undefined" class="box__title">
-      {{ getHeading(primary, row) }}
-    </h2>
-    <RowEditModalField
-      v-for="field in getFields(fields, primary)"
-      :ref="'field-' + field.id"
-      :key="'row-edit-field-' + field.id"
-      :table="table"
-      :field="field"
-      :row="row"
-      :read-only="readOnly"
-      @update="update"
-      @field-updated="$emit('field-updated', $event)"
-      @field-deleted="$emit('field-deleted')"
-    ></RowEditModalField>
-    <div v-if="!readOnly" class="actions">
-      <a
-        ref="createFieldContextLink"
-        @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
-      >
-        <i class="fas fa-plus"></i>
-        add field
-      </a>
-      <CreateFieldContext
-        ref="createFieldContext"
+  <Modal
+    ref="modal"
+    :full-height="!!optionalRightSideBar"
+    :right-sidebar="!!optionalRightSideBar"
+    :content-scrollable="!!optionalRightSideBar"
+    :right-sidebar-scrollable="false"
+    @hidden="$emit('hidden', { row })"
+  >
+    <template #content>
+      <h2 v-if="primary !== undefined" class="box__title">
+        {{ getHeading(primary, row) }}
+      </h2>
+      <RowEditModalField
+        v-for="field in getFields(fields, primary)"
+        :key="'row-edit-field-' + field.id"
+        :ref="'field-' + field.id"
+        :field="field"
+        :read-only="readOnly"
+        :row="row"
         :table="table"
-      ></CreateFieldContext>
-    </div>
+        @update="update"
+        @field-updated="$emit('field-updated', $event)"
+        @field-deleted="$emit('field-deleted')"
+      ></RowEditModalField>
+      <div v-if="!readOnly" class="actions">
+        <a
+          ref="createFieldContextLink"
+          @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
+        >
+          <i class="fas fa-plus"></i>
+          add field
+        </a>
+        <CreateFieldContext
+          ref="createFieldContext"
+          :table="table"
+        ></CreateFieldContext>
+      </div>
+    </template>
+    <template v-if="!!optionalRightSideBar" #sidebar>
+      <component
+        :is="optionalRightSideBar"
+        :row="row"
+        :read-only="readOnly"
+        :table="table"
+      ></component>
+    </template>
   </Modal>
 </template>
 
@@ -69,6 +86,9 @@ export default {
   data() {
     return {
       rowId: -1,
+      optionalRightSideBar: this.$registry
+        .get('application', 'database')
+        .getRowEditModalRightSidebarComponent(),
     }
   },
   computed: {
