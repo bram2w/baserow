@@ -157,6 +157,13 @@ export const actions = {
     }
   },
   /**
+   * Makes the current authenticated user leave the group.
+   */
+  async leave({ commit, dispatch }, group) {
+    await GroupService(this.$client).leave(group.id)
+    await dispatch('forceDelete', group)
+  },
+  /**
    * Deletes an existing group with the provided id.
    */
   async delete({ commit, dispatch }, group) {

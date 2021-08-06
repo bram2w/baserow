@@ -104,6 +104,40 @@
   width: 130px;
 }
 
+.filters__value-link-row {
+  @extend %ellipsis;
+
+  display: block;
+  position: relative;
+  width: 130px;
+  color: $color-primary-900;
+  line-height: 30px;
+  height: 30px;
+  border: solid 1px $color-neutral-400;
+  border-radius: 3px;
+  padding: 0 10px;
+
+  &:hover {
+    text-decoration: none;
+    border-color: $color-neutral-700;
+  }
+
+  &.filters__value-link-row--disabled {
+    color: $color-primary-900;
+    background-color: $color-neutral-50;
+
+    &:hover {
+      cursor: inherit;
+      border-color: $color-neutral-400;
+    }
+  }
+}
+
+.filters__value-link-row-choose {
+  font-weight: 700;
+  text-align: center;
+}
+
 .filters_footer {
   display: flex;
   flex-direction: row;

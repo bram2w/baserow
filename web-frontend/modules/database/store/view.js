@@ -402,6 +402,13 @@ export const actions = {
       values.value = viewFilterType.getDefaultValue()
     }
 
+    // Some filter input components expect the preload values to exist, that's why we
+    // need to add an empty object if it doesn't yet exist. They can all handle
+    // empty preload_values.
+    if (!Object.prototype.hasOwnProperty.call(values, 'preload_values')) {
+      values.preload_values = {}
+    }
+
     const filter = Object.assign({}, values)
     populateFilter(filter)
     filter.id = uuid()
@@ -446,6 +453,10 @@ export const actions = {
         newValues[name] = values[name]
       }
     })
+
+    // When updating a filter, the preload values must be cleared because they
+    // might not match the filter anymore.
+    newValues.preload_values = {}
 
     dispatch('forceUpdateFilter', { filter, values: newValues })
 

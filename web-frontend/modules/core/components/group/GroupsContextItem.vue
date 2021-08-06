@@ -4,7 +4,6 @@
     :class="{
       active: group._.selected,
       'select__item--loading': group._.loading,
-      'select__item--no-options': group.permissions !== 'ADMIN',
     }"
   >
     <a class="select__item-link" @click="selectGroup(group)">
@@ -17,7 +16,6 @@
       </div>
     </a>
     <a
-      v-if="group.permissions === 'ADMIN'"
       ref="contextLink"
       class="select__item-options"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"

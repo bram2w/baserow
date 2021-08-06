@@ -1,15 +1,12 @@
 <template>
-  <div class="filters__value-timezone">{{ value }}</div>
+  <div class="filters__value-timezone">{{ filter.value }}</div>
 </template>
 
 <script>
+import viewFilter from '@baserow/modules/database/mixins/viewFilter'
+
 export default {
   name: 'ViewFilterTypeText',
-  props: {
-    value: {
-      type: String,
-      required: true,
-    },
-  },
+  mixins: [viewFilter],
 }
 </script>

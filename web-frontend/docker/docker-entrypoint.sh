@@ -38,6 +38,11 @@ case "$1" in
       echo "$CMD"
       exec bash --init-file <(echo "history -s $CMD; $CMD")
     ;;
+    lint-watch)
+      CMD="yarn run esw -w --fix"
+      echo "$CMD"
+      exec bash --init-file <(echo "history -s $CMD; $CMD")
+    ;;
     bash)
       exec /bin/bash "${@:2}"
     ;;

@@ -2,15 +2,24 @@
 
 ## Unreleased
 
+* Made it possible to leave a group.
+* Changed web-frontend `/api/docs` route into `/api-docs`.
 * Bumped the dependencies.
 * The internal setting allowing Baserow to run with the user tables in a separate 
   database has been removed entirely to prevent data integrity issues.
 * Fixed bug where the currently selected dropdown item is out of view from the dropdown
   window when scrolling with the arrow keys.
+* Introduced link row field has row filter.
 * Made the form view compatible with importing and exporting.
 * Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
 * Added password validation to password reset page.
 * Add backup and restore database management commands.
+* Dropped the `old_name` column.
+* Hide view types that can't be exported in the export modal.
+* Relaxed the URL field validator and made it consistent between the backend and 
+  web-frontend.
+* Fixed nuxt not restarting correctly using the provided Baserow supervisor config file.
+* Added steps on how to configure Baserow to send emails in the install-on-ubuntu guide.
 * **Premium**: You can now comment and discuss rows with others in your group, click the
   expand row button at the start of the row to view and add comments.
 

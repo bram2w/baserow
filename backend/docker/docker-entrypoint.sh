@@ -120,6 +120,31 @@ case "$1" in
         # re-run the containers run server command after they have done what they want.
         exec bash --init-file <(echo "history -s $CMD; $CMD")
     ;;
+    ptw)
+        # Ensure we watch all possible python source code locations for changes.
+
+        CMD="pytest -n 11 --looponfail"
+        echo "$CMD"
+        # The below command lets devs attach to this container, press ctrl-c and only
+        # the server will stop. Additionally they will be able to use bash history to
+        # re-run the containers run server command after they have done what they want.
+        exec bash --init-file <(echo "history -s $CMD; $CMD")
+    ;;
+    lint-watch)
+        # Ensure we watch all possible python source code locations for changes.
+        directory_args='-d=/baserow/backend/tests -d=/baserow/backend/plugins/premium/tests'
+        for i in $(echo "$PYTHONPATH" | tr ":" "\n")
+        do
+          directory_args="$directory_args -d=$i"
+        done
+
+        CMD="watchmedo auto-restart $directory_args --pattern=*.py --recursive -- make lint"
+        echo "$CMD"
+        # The below command lets devs attach to this container, press ctrl-c and only
+        # the server will stop. Additionally they will be able to use bash history to
+        # re-run the containers run server command after they have done what they want.
+        exec bash --init-file <(echo "history -s $CMD; $CMD")
+    ;;
     *)
         show_help
         exit 1
