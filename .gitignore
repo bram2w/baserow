@@ -100,3 +100,5 @@ venv/
 
 web-frontend/plugins/
 backend/plugins/
+
+.vagrant/

@@ -18,6 +18,8 @@
 * Hide view types that can't be exported in the export modal.
 * Relaxed the URL field validator and made it consistent between the backend and 
   web-frontend.
+* Fixed nuxt not restarting correctly using the provided Baserow supervisor config file.
+* Added steps on how to configure Baserow to send emails in the install-on-ubuntu guide.
 
 ## Released (2021-07-16)
 
