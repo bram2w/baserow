@@ -23,7 +23,6 @@
     "chart.js": "2.9.4",
     "cookie-universal-nuxt": "^2.1.5",
     "cross-env": "^7.0.2",
-    "eslint-watch": "^7.0.0",
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.21",
     "moment": "^2.26.0",
