@@ -2,6 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from baserow.core.exceptions import IsNotAdminError
+from baserow.core.user.exceptions import PasswordDoesNotMatchValidation
 from baserow_premium.admin.users.exceptions import (
     CannotDeactivateYourselfException,
     CannotDeleteYourselfException,
@@ -12,6 +13,22 @@ from baserow_premium.admin.users.handler import (
 )
 
 User = get_user_model()
+invalid_passwords = [
+    "",
+    "a",
+    "ab",
+    "ask",
+    "oiue",
+    "dsj43",
+    "984kds",
+    "dsfkjh4",
+    (
+        "Bgvmt95en6HGJZ9Xz0F8xysQ6eYgo2Y54YzRPxxv10b5n16F4rZ6YH4ulonocwiFK6970KiAxoYhU"
+        "LYA3JFDPIQGj5gMZZl25M46sO810Zd3nyBg699a2TDMJdHG7hAAi0YeDnuHuabyBawnb4962OQ1OO"
+        "f1MxzFyNWG7NR2X6MZQL5G1V61x56lQTXbvK1AG1IPM87bQ3YAtIBtGT2vK3Wd83q3he5ezMtUfzK"
+        "2ibj0WWhf86DyQB4EHRUJjYcBiI78iEJv5hcu33X2I345YosO66cTBWK45SqJEDudrCOq"
+    ),
+]
 
 
 @pytest.mark.django_db
@@ -150,6 +167,38 @@ def test_updating_a_users_password_uses_djangos_built_in_smart_set_password(
     assert updated_user.password != "new_password"
     assert updated_user.password != old_password_hash
     assert set_password_spy.call_count == 1
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("invalid_password", invalid_passwords)
+def test_updating_a_users_password_with_invalid_password_raises_error(
+    data_fixture, invalid_password
+):
+    handler = UserAdminHandler()
+    valid_password = "thisIsAValidPassword"
+
+    admin_user = data_fixture.create_user(
+        email="test@test.nl",
+        password=valid_password,
+        first_name="Test1",
+        is_staff=True,
+    )
+    user_to_modify = data_fixture.create_user(
+        email="delete_me@test.nl",
+        password=valid_password,
+        first_name="Test1",
+        is_staff=False,
+        is_active=False,
+    )
+
+    with pytest.raises(PasswordDoesNotMatchValidation):
+        handler.update_user(
+            admin_user,
+            user_to_modify.id,
+            password=invalid_password,
+        )
+    user_to_modify.refresh_from_db()
+    assert user_to_modify.check_password(valid_password)
 
 
 @pytest.mark.django_db

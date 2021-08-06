@@ -17,6 +17,16 @@ from baserow.core.models import (
     GROUP_USER_PERMISSION_ADMIN,
 )
 
+invalid_passwords = [
+    "a",
+    "ab",
+    "ask",
+    "oiue",
+    "dsj43",
+    "984kds",
+    "dsfkjh4",
+]
+
 
 @pytest.mark.django_db
 def test_non_admin_cannot_see_admin_users_endpoint(api_client, data_fixture):
@@ -444,6 +454,38 @@ def test_admin_can_patch_user(api_client, data_fixture):
         "is_active": True,
         "last_login": None,
     }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("invalid_password", invalid_passwords)
+def test_invalid_password_returns_400(api_client, data_fixture, invalid_password):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+
+    user_to_edit = data_fixture.create_user(
+        email="second@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=False,
+    )
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": user_to_edit.id})
+
+    response = api_client.patch(
+        url,
+        {"username": user_to_edit.email, "password": invalid_password},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response.json()["detail"]["password"][0]["code"] == "password_validation_failed"
+    )
 
 
 @pytest.mark.django_db
