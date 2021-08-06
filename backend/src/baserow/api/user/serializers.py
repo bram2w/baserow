@@ -6,6 +6,7 @@ from django.contrib.auth.models import update_last_login
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.core.user.utils import normalize_email_address
+from baserow.api.user.validators import password_validation
 from baserow.core.models import Template, UserLogEntry
 
 User = get_user_model()
@@ -26,7 +27,7 @@ class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField(
         help_text="The email address is also going to be the username."
     )
-    password = serializers.CharField(max_length=256)
+    password = serializers.CharField(validators=[password_validation])
     authenticate = serializers.BooleanField(
         required=False,
         default=False,
@@ -61,12 +62,12 @@ class SendResetPasswordEmailBodyValidationSerializer(serializers.Serializer):
 
 class ResetPasswordBodyValidationSerializer(serializers.Serializer):
     token = serializers.CharField()
-    password = serializers.CharField()
+    password = serializers.CharField(validators=[password_validation])
 
 
 class ChangePasswordBodyValidationSerializer(serializers.Serializer):
     old_password = serializers.CharField()
-    new_password = serializers.CharField()
+    new_password = serializers.CharField(validators=[password_validation])
 
 
 class NormalizedEmailField(serializers.EmailField):

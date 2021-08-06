@@ -20,6 +20,7 @@
   web-frontend.
 * Fixed nuxt not restarting correctly using the provided Baserow supervisor config file.
 * Added steps on how to configure Baserow to send emails in the install-on-ubuntu guide.
+* Enabled password validation in the backend.
 
 ## Released (2021-07-16)
 
