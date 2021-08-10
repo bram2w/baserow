@@ -23,6 +23,14 @@
 * Enabled password validation in the backend.
 * **Premium**: You can now comment and discuss rows with others in your group, click the
   expand row button at the start of the row to view and add comments.
+* New templates:
+  * Blog Post Management
+* Updated templates:
+  * Personal Task Manager
+  * Wedding Planning
+  * Book Catalog
+  * Applicant Tracker
+  * Project Tracker
 
 ## Released (2021-07-16)
 
