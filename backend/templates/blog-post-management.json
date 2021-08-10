@@ -1,0 +1,1243 @@
+{
+  "baserow_template_version": 1,
+  "name": "Blog Post Management",
+  "icon": "th",
+  "keywords": ["blog", "post", "management", "planner", "posts", "tracker", "content"],
+  "categories": ["Content Marketing"],
+  "export": [
+    {
+      "id": 11073,
+      "name": "Blog Post Management",
+      "order": 1,
+      "type": "database",
+      "tables": [
+        {
+          "id": 22861,
+          "name": "Posts",
+          "order": 2,
+          "fields": [
+            {
+              "id": 120322,
+              "type": "text",
+              "name": "Post Title",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 120325,
+              "type": "file",
+              "name": "Featured Image",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 120326,
+              "type": "long_text",
+              "name": "Post Content",
+              "order": 2,
+              "primary": false
+            },
+            {
+              "id": 120327,
+              "type": "single_select",
+              "name": "Category",
+              "order": 3,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 7282,
+                  "value": "Open Source",
+                  "color": "green",
+                  "order": 0
+                },
+                {
+                  "id": 7283,
+                  "value": "Self-Hosting",
+                  "color": "light-gray",
+                  "order": 1
+                },
+                {
+                  "id": 7284,
+                  "value": "Automation",
+                  "color": "dark-red",
+                  "order": 2
+                },
+                {
+                  "id": 7285,
+                  "value": "Privacy",
+                  "color": "orange",
+                  "order": 3
+                },
+                {
+                  "id": 7286,
+                  "value": "Security",
+                  "color": "blue",
+                  "order": 4
+                }
+              ]
+            },
+            {
+              "id": 120328,
+              "type": "text",
+              "name": "SEO: Meta Description",
+              "order": 4,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 120329,
+              "type": "link_row",
+              "name": "Author(s)",
+              "order": 5,
+              "primary": false,
+              "link_row_table_id": 21078,
+              "link_row_related_field_id": 120330
+            },
+            {
+              "id": 120331,
+              "type": "boolean",
+              "name": "Approved",
+              "order": 6,
+              "primary": false
+            },
+            {
+              "id": 120332,
+              "type": "date",
+              "name": "Date Published",
+              "order": 7,
+              "primary": false,
+              "date_format": "ISO",
+              "date_include_time": false,
+              "date_time_format": "24"
+            },
+            {
+              "id": 120333,
+              "type": "date",
+              "name": "Last Updated",
+              "order": 8,
+              "primary": false,
+              "date_format": "ISO",
+              "date_include_time": true,
+              "date_time_format": "12"
+            },
+            {
+              "id": 120362,
+              "type": "single_select",
+              "name": "Status",
+              "order": 9,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 7291,
+                  "value": "Idea",
+                  "color": "light-gray",
+                  "order": 0
+                },
+                {
+                  "id": 7292,
+                  "value": "In Progress",
+                  "color": "orange",
+                  "order": 1
+                },
+                {
+                  "id": 7293,
+                  "value": "Live",
+                  "color": "dark-green",
+                  "order": 2
+                },
+                {
+                  "id": 7294,
+                  "value": "Needs Update",
+                  "color": "dark-red",
+                  "order": 3
+                }
+              ]
+            },
+            {
+              "id": 120405,
+              "type": "link_row",
+              "name": "Published Location",
+              "order": 10,
+              "primary": false,
+              "link_row_table_id": 21079,
+              "link_row_related_field_id": 120406
+            }
+          ],
+          "views": [
+            {
+              "id": 24644,
+              "type": "grid",
+              "name": "All Posts",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1541,
+                  "field_id": 120322,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 117594,
+                  "field_id": 120322,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 10
+                },
+                {
+                  "id": 117595,
+                  "field_id": 120325,
+                  "width": 161,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 117596,
+                  "field_id": 120326,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 117597,
+                  "field_id": 120327,
+                  "width": 125,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 117598,
+                  "field_id": 120328,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 117600,
+                  "field_id": 120329,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 117601,
+                  "field_id": 120331,
+                  "width": 123,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 117602,
+                  "field_id": 120332,
+                  "width": 159,
+                  "hidden": false,
+                  "order": 8
+                },
+                {
+                  "id": 117603,
+                  "field_id": 120333,
+                  "width": 171,
+                  "hidden": false,
+                  "order": 9
+                },
+                {
+                  "id": 117646,
+                  "field_id": 120362,
+                  "width": 129,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 117712,
+                  "field_id": 120405,
+                  "width": 177,
+                  "hidden": false,
+                  "order": 7
+                }
+              ]
+            },
+            {
+              "id": 24665,
+              "type": "grid",
+              "name": "Needs Update",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3561,
+                  "field_id": 120362,
+                  "type": "single_select_equal",
+                  "value": "7294"
+                }
+              ],
+              "sortings": [
+                {
+                  "id": 1542,
+                  "field_id": 120322,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 117718,
+                  "field_id": 120322,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 10
+                },
+                {
+                  "id": 117719,
+                  "field_id": 120325,
+                  "width": 158,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 117720,
+                  "field_id": 120326,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 117721,
+                  "field_id": 120327,
+                  "width": 121,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 117722,
+                  "field_id": 120328,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 117723,
+                  "field_id": 120329,
+                  "width": 140,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 117724,
+                  "field_id": 120331,
+                  "width": 123,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 117725,
+                  "field_id": 120332,
+                  "width": 153,
+                  "hidden": false,
+                  "order": 8
+                },
+                {
+                  "id": 117726,
+                  "field_id": 120333,
+                  "width": 169,
+                  "hidden": false,
+                  "order": 9
+                },
+                {
+                  "id": 117727,
+                  "field_id": 120362,
+                  "width": 127,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 117728,
+                  "field_id": 120405,
+                  "width": 179,
+                  "hidden": false,
+                  "order": 7
+                }
+              ]
+            },
+            {
+              "id": 24666,
+              "type": "grid",
+              "name": "Not Yet Approved",
+              "order": 3,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3562,
+                  "field_id": 120331,
+                  "type": "boolean",
+                  "value": "0"
+                }
+              ],
+              "sortings": [
+                {
+                  "id": 1540,
+                  "field_id": 120322,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 117729,
+                  "field_id": 120322,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 10
+                },
+                {
+                  "id": 117730,
+                  "field_id": 120325,
+                  "width": 157,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 117731,
+                  "field_id": 120326,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 117732,
+                  "field_id": 120327,
+                  "width": 118,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 117733,
+                  "field_id": 120328,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 117734,
+                  "field_id": 120329,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 117735,
+                  "field_id": 120331,
+                  "width": 123,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 117736,
+                  "field_id": 120332,
+                  "width": 153,
+                  "hidden": false,
+                  "order": 8
+                },
+                {
+                  "id": 117737,
+                  "field_id": 120333,
+                  "width": 170,
+                  "hidden": false,
+                  "order": 9
+                },
+                {
+                  "id": 117738,
+                  "field_id": 120362,
+                  "width": 110,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 117739,
+                  "field_id": 120405,
+                  "width": 181,
+                  "hidden": false,
+                  "order": 7
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_120322": "5 Open Source Alternatives to Popular Apps",
+              "field_120325": [
+                {
+                  "name": "XwPkmw8UtWZD0Jik8duEuH7evDvFxdcK_dbc4edc4b16ba7d1f2d7ed6bc6b16ff9aa73b79466151ad397771975e4d028f6.png",
+                  "visible_name": "baserow.png",
+                  "original_name": "baserow.png"
+                }
+              ],
+              "field_120326": "Lorem ipsum dolor sit amet consectetur adipiscing elit pretium, cubilia nunc suspendisse nam velit praesent tristique magnis at, imperdiet eleifend diam sociis porttitor facilisis erat. Nullam ut nam cursus est vitae posuere, justo nulla pellentesque neque molestie etiam vivamus, lacinia sed imperdiet facilisi quam. Tempor gravida magnis fringilla tellus class pharetra ligula dis, aptent taciti dictumst leo inceptos dictum aliquet rhoncus, netus ad nibh sit massa imperdiet scelerisque. Ultrices integer suspendisse pretium mauris dapibus eu ligula tellus, cubilia bibendum volutpat nulla mi pulvinar tempor habitant, ut ullamcorper convallis mollis odio elementum rutrum. Urna ante vestibulum habitant primis diam maecenas interdum, senectus proin ipsum suspendisse nam scelerisque odio morbi, ut etiam velit ad dolor sem.",
+              "field_120327": 7282,
+              "field_120328": "Sed ante sociosqu felis dictum eu adipiscing feugiat aliquam, gravida nam sollicitudin maecenas velit lectus est integer, posuere convallis consectetur conubia elit netus bibendum.",
+              "field_120329": [
+                1
+              ],
+              "field_120331": "true",
+              "field_120332": "2020-02-14",
+              "field_120333": "2021-03-03T22:00:00+00:00",
+              "field_120362": 7293,
+              "field_120405": [
+                1,
+                2,
+                13,
+                14
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_120322": "Crash Course: Self-Hosting 101",
+              "field_120325": [
+                {
+                  "name": "ILRuv9iEdoEfi16dRSuHXCFoFKBYqNqb_15d03f71d228465e5b69b6570490b9d0bea08245df3a25fdffce2477ee201d48.png",
+                  "visible_name": "self hosting.png",
+                  "original_name": "self hosting.png"
+                }
+              ],
+              "field_120326": "Aptent consequat mattis feugiat mus dapibus semper per dis laoreet, nullam platea magnis sagittis congue amet taciti gravida ornare, class cum posuere iaculis natoque nascetur magna cras. Porta per ac aliquam nostra dolor nulla morbi commodo congue, potenti suspendisse class quisque turpis dapibus eget accumsan, bibendum et montes est tincidunt laoreet elit purus. Eleifend dictum facilisi cubilia orci tristique egestas turpis habitasse, etiam duis tempor sociis aliquam placerat gravida aenean leo, lorem taciti nibh suspendisse tempus nostra nunc. Neque bibendum quisque semper maecenas est dolor rhoncus urna, natoque cursus malesuada lacus vivamus massa suscipit cubilia, diam adipiscing accumsan eleifend orci mattis ut.",
+              "field_120327": 7283,
+              "field_120328": "Cursus tortor justo neque aliquam varius lectus sollicitudin hendrerit",
+              "field_120329": [
+                2,
+                3
+              ],
+              "field_120331": "false",
+              "field_120332": null,
+              "field_120333": null,
+              "field_120362": 7291,
+              "field_120405": [
+                7,
+                12,
+                13,
+                14
+              ]
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_120322": "How Cloudron Makes Self-Hosting Easier",
+              "field_120325": [
+                {
+                  "name": "GDAcJq0guiYOiOy7z5XG3CGtHFdfOib6_d5b4a565d27054fcb8b5467af4a540090dc805943eed52c19b997c887b317999.png",
+                  "visible_name": "cloudron.png",
+                  "original_name": "cloudron.png"
+                }
+              ],
+              "field_120326": "Suscipit nibh ante ullamcorper justo pretium ornare neque non, ad nascetur velit eleifend sem magnis turpis, at natoque penatibus pharetra ridiculus condimentum rhoncus. Eleifend phasellus fringilla et facilisis leo, torquent laoreet vulputate ut, sed mauris purus orci. Lectus est iaculis cras potenti viverra duis feugiat, curabitur accumsan quis auctor torquent porttitor etiam integer, aenean aptent habitasse fringilla ad primis. Inceptos morbi a per sociis pulvinar magna et nisi curabitur, donec dictumst duis tincidunt senectus lectus habitasse malesuada neque, dis quis dapibus accumsan eleifend dolor arcu quisque. Elementum hendrerit quam tincidunt dictum lacinia torquent, nibh posuere tempus dolor senectus, conubia maecenas curae semper habitant.",
+              "field_120327": 7283,
+              "field_120328": "Faucibus interdum placerat auctor aliquam penatibus sociosqu, et habitasse nec ornare suspendisse, magnis ut pretium cum taciti.",
+              "field_120329": [
+                1,
+                6
+              ],
+              "field_120331": "true",
+              "field_120332": "2020-08-07",
+              "field_120333": "2021-04-15T11:30:00+00:00",
+              "field_120362": 7294,
+              "field_120405": [
+                9,
+                13
+              ]
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_120322": "Automate Your Life Using Baserow and n8n",
+              "field_120325": [
+                {
+                  "name": "JTETw5IdK1SDBpVMRNngq1qgZkimwhnF_ef6d3461a7dfc95c9ddfc5af138677e14537d7380b4be4862287d7338dfb4bb1.jpg",
+                  "visible_name": "n8n.jpg",
+                  "original_name": "n8n.jpg"
+                }
+              ],
+              "field_120326": "Iaculis litora vivamus aliquam congue pharetra metus lacus luctus bibendum, arcu conubia morbi sagittis sem sed nam neque vestibulum turpis, consectetur ultricies elementum tincidunt placerat lorem convallis nunc. Cum rhoncus tellus mi quisque per sit sem natoque, montes nam semper purus neque porttitor. Tempus dis vehicula ac at laoreet suscipit convallis porttitor parturient, velit eleifend odio pellentesque dolor tempor senectus conubia maecenas morbi, sem consequat elementum class elit integer auctor congue. Laoreet auctor libero quis semper mauris commodo risus, ante cum luctus habitant eros dapibus volutpat, pellentesque odio hendrerit cras proin tristique.",
+              "field_120327": 7284,
+              "field_120328": "Libero maecenas nostra parturient risus amet netus sociosqu luctus, elit convallis mus adipiscing facilisi eu ridiculus dictum",
+              "field_120329": [
+                1,
+                5
+              ],
+              "field_120331": "false",
+              "field_120332": null,
+              "field_120333": null,
+              "field_120362": 7291,
+              "field_120405": [
+                9,
+                8,
+                13,
+                16
+              ]
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_120322": "Top Open Source Password Managers",
+              "field_120325": [
+                {
+                  "name": "9u2Axe4Az9DHAuWLbfg6GKeN7zXaRT8m_2feb557599ea0bcb505a4d5cfc0b9d0e598a545fe6e9b59d68ce7cc9a0217656.png",
+                  "visible_name": "bitwarden.png",
+                  "original_name": "bitwarden.png"
+                }
+              ],
+              "field_120326": "Pharetra fermentum porttitor quam torquent enim ullamcorper quis netus suspendisse aliquet vitae semper lacinia, molestie praesent senectus curabitur neque justo inceptos class malesuada viverra elementum. Potenti eget a ut quam eros ac consectetur sagittis iaculis, vivamus ligula lacinia massa molestie torquent fermentum taciti scelerisque aenean, praesent cum vel nulla curae est porta morbi. Accumsan pretium hendrerit penatibus inceptos bibendum felis laoreet duis suspendisse odio lectus curae, natoque lorem integer tristique magna rutrum dolor aptent malesuada ut vel habitant, sociis nibh per mauris auctor habitasse sodales ultrices vivamus tempus magnis. Ante nisi varius semper maecenas scelerisque quis feugiat vivamus tortor facilisis, ultrices nascetur est non augue fermentum enim fames hac elit, per mi senectus sodales nunc consequat faucibus primis porttitor. Fermentum arcu quam odio praesent conubia et, phasellus parturient vel laoreet lacinia, in adipiscing commodo etiam convallis.",
+              "field_120327": 7286,
+              "field_120328": "Feugiat dui conubia primis porta tellus cursus suscipit ipsum.",
+              "field_120329": [
+                1,
+                4
+              ],
+              "field_120331": "false",
+              "field_120332": null,
+              "field_120333": null,
+              "field_120362": 7292,
+              "field_120405": [
+                1,
+                7,
+                2,
+                8,
+                12,
+                13
+              ]
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_120322": "Privacy-invading Apps You Should Delete Now",
+              "field_120325": [
+                {
+                  "name": "RBSQ0lhAvMGA4zLsSO4oJluDZGwDgYIB_1945a0e18710826b9a564a284915391e89a1815fba0beb72370fe40e0764a16a.jpg",
+                  "visible_name": "instagram.jpg",
+                  "original_name": "instagram.jpg"
+                }
+              ],
+              "field_120326": "Nunc in quis iaculis etiam morbi vulputate, lectus egestas fringilla aliquet facilisi consectetur, sit tempor penatibus dolor urna. Parturient cubilia urna aptent aenean quisque integer sodales hendrerit lectus cum, cursus auctor mauris etiam at ad mattis sociis. A lobortis morbi vivamus auctor cubilia fermentum cursus, litora curabitur hac vulputate ante molestie maecenas libero, nisl eu justo nisi orci metus. Ut ac habitant massa velit curabitur tempor elit, ridiculus maecenas arcu sapien vestibulum primis malesuada odio, auctor ornare elementum integer nibh aptent. Vivamus convallis lacus velit est nullam blandit tincidunt purus congue ad molestie neque, pellentesque morbi netus torquent mauris commodo vulputate nulla facilisis mi.",
+              "field_120327": 7285,
+              "field_120328": "Euismod auctor nullam pulvinar phasellus ligula ipsum integer, egestas lectus cubilia libero sit elit et.",
+              "field_120329": [
+                6
+              ],
+              "field_120331": "true",
+              "field_120332": "2021-02-13",
+              "field_120333": "2021-04-08T13:30:00+00:00",
+              "field_120362": 7293,
+              "field_120405": [
+                1,
+                9,
+                2,
+                7,
+                8,
+                10,
+                13,
+                15
+              ]
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_120322": "How Facial Recognition is Being Misused and Abused",
+              "field_120325": [
+                {
+                  "name": "J5Y4P93Hb5hdERql82G1dOt38wuNfSID_77ffa0b59066859eae6c2bed6ee4a7213545605f745b3b735f87d8127efcf59c.jpg",
+                  "visible_name": "facial recognition.jpg",
+                  "original_name": "facial recognition.jpg"
+                }
+              ],
+              "field_120326": "Sagittis rhoncus elit dignissim taciti vulputate dapibus malesuada lacus mi leo, lobortis quis vivamus etiam cras ac augue elementum lectus pretium, velit gravida tempus ridiculus nunc per magna eget convallis. Tincidunt enim metus ridiculus laoreet justo massa, velit ante pharetra scelerisque volutpat, eleifend adipiscing felis est gravida. Sociis luctus vivamus eros nunc lectus integer erat convallis, habitasse inceptos metus natoque ante nulla etiam malesuada, aptent ipsum venenatis dignissim congue mus mauris. Arcu ullamcorper nibh vulputate cubilia neque vel porttitor rhoncus aenean sagittis, posuere et facilisis lectus varius purus dolor nulla elementum justo mus, penatibus vivamus facilisi pharetra ad nam dapibus vitae morbi. Lorem ullamcorper nullam cras posuere elit odio inceptos eleifend praesent, aliquam egestas hendrerit eu curabitur mollis ultrices maecenas orci cum, pharetra leo montes libero lobortis sapien in semper.",
+              "field_120327": 7285,
+              "field_120328": "Purus habitant class fermentum habitasse tristique a ipsum potenti sapien per",
+              "field_120329": [
+                5
+              ],
+              "field_120331": "true",
+              "field_120332": "2020-12-25",
+              "field_120333": "2021-03-30T03:00:00+00:00",
+              "field_120362": 7293,
+              "field_120405": [
+                8,
+                7,
+                11,
+                13,
+                15,
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "id": 21078,
+          "name": "Team",
+          "order": 3,
+          "fields": [
+            {
+              "id": 110632,
+              "type": "text",
+              "name": "Team Member Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 110728,
+              "type": "single_select",
+              "name": "Title",
+              "order": 4,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 5919,
+                  "value": "Junior Copywriter",
+                  "color": "light-red",
+                  "order": 0
+                },
+                {
+                  "id": 5920,
+                  "value": "Senior Copywriter",
+                  "color": "red",
+                  "order": 1
+                },
+                {
+                  "id": 5921,
+                  "value": "Head of Content",
+                  "color": "dark-gray",
+                  "order": 2
+                },
+                {
+                  "id": 5922,
+                  "value": "Content Marketer",
+                  "color": "light-gray",
+                  "order": 3
+                },
+                {
+                  "id": 5923,
+                  "value": "Content Strategist",
+                  "color": "blue",
+                  "order": 4
+                }
+              ]
+            },
+            {
+              "id": 110729,
+              "type": "email",
+              "name": "Email",
+              "order": 5,
+              "primary": false
+            },
+            {
+              "id": 110730,
+              "type": "phone_number",
+              "name": "Phone",
+              "order": 6,
+              "primary": false
+            },
+            {
+              "id": 110731,
+              "type": "text",
+              "name": "Location",
+              "order": 7,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 110750,
+              "type": "file",
+              "name": "Picture",
+              "order": 8,
+              "primary": false
+            },
+            {
+              "id": 120330,
+              "type": "link_row",
+              "name": "Posts Authored/Contributions",
+              "order": 9,
+              "primary": false,
+              "link_row_table_id": 22861,
+              "link_row_related_field_id": 120329
+            }
+          ],
+          "views": [
+            {
+              "id": 22616,
+              "type": "grid",
+              "name": "All Team Members",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1543,
+                  "field_id": 110632,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 105959,
+                  "field_id": 110632,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 6
+                },
+                {
+                  "id": 106077,
+                  "field_id": 110728,
+                  "width": 153,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 106078,
+                  "field_id": 110729,
+                  "width": 158,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 106079,
+                  "field_id": 110730,
+                  "width": 123,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 106081,
+                  "field_id": 110731,
+                  "width": 116,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 106100,
+                  "field_id": 110750,
+                  "width": 113,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 117599,
+                  "field_id": 120330,
+                  "width": 324,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_110632": "Jane Appleseed",
+              "field_110728": 5920,
+              "field_110729": "jane@company.com",
+              "field_110730": "(123) 123-1234",
+              "field_110731": "Chicago",
+              "field_110750": [
+                {
+                  "name": "G1UmQaGS3c8NT40Pdl5urN6NdIphaV5H_28f0ea9fddc4b45191bfe6b4e6d7ff705e3798b5992596c780f58f615c21c6c9.jpg",
+                  "visible_name": "Jane Appleseed.jpg",
+                  "original_name": "Jane Appleseed.jpg"
+                }
+              ],
+              "field_120330": [
+                1,
+                3,
+                4,
+                5
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_110632": "Nora Williamson",
+              "field_110728": 5919,
+              "field_110729": "nora@company.com",
+              "field_110730": "(123) 123-1234",
+              "field_110731": "Dublin",
+              "field_110750": [
+                {
+                  "name": "Ic31wqC7FWdXwuK4mmq53ehp8oe5lo7B_5c4af64524a5aaac4a741b70a79693fb0d0046d934955a771d0461f1ba16296b.jpg",
+                  "visible_name": "Nora Williamson.jpg",
+                  "original_name": "Nora Williamson.jpg"
+                }
+              ],
+              "field_120330": [
+                2
+              ]
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_110632": "Mike Windsor",
+              "field_110728": 5922,
+              "field_110729": "mike@company.com",
+              "field_110730": "(123) 123-1234",
+              "field_110731": "Cambridge",
+              "field_110750": [
+                {
+                  "name": "TqgALOEwX0gtj6w4LMoapxMP0r1PqjDx_85e4976ce8e9980bf0591892349f7214f1ce8b707ddb8db688229af9c6487e9e.jpg",
+                  "visible_name": "Mike Windsor.jpg",
+                  "original_name": "Mike Windsor.jpg"
+                }
+              ],
+              "field_120330": [
+                2
+              ]
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_110632": "Eric West",
+              "field_110728": 5923,
+              "field_110729": "eric@company.com",
+              "field_110730": "(123) 123-1234",
+              "field_110731": "New York",
+              "field_110750": [
+                {
+                  "name": "DsWvD5ijiC25f6euyLjZlNjsjWicbB6z_d068e9d92128684ada2bb87635c870b90147be1cc35af6b13e0b83e166e45e40.jpg",
+                  "visible_name": "Eric West.jpg",
+                  "original_name": "Eric West.jpg"
+                }
+              ],
+              "field_120330": [
+                5
+              ]
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_110632": "Josie Reams",
+              "field_110728": 5921,
+              "field_110729": "josie@company.com",
+              "field_110730": "(123) 123-1234",
+              "field_110731": "Sydney",
+              "field_110750": [
+                {
+                  "name": "IlxPC1kivrJhxGWtTGz9wUopMO5ZFRCD_c008276d9715c007bbb5eb84a45c229e3651557d30a70e10955f5de80530af90.jpg",
+                  "visible_name": "Josie Reams.jpg",
+                  "original_name": "Josie Reams.jpg"
+                }
+              ],
+              "field_120330": [
+                4,
+                7
+              ]
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_110632": "Drew Murray",
+              "field_110728": 5919,
+              "field_110729": "drew@company.com",
+              "field_110730": "(123) 123-1234",
+              "field_110731": "CDMX",
+              "field_110750": [
+                {
+                  "name": "BIvjkWgbukl8nWRYf5OYUuXYXhS6P2xL_c1d0af20a6dda3a9e756701bf2b7e812cc815f1be721e26036bb9c70aeab50c0.jpg",
+                  "visible_name": "Drew Murray.jpg",
+                  "original_name": "Drew Murray.jpg"
+                }
+              ],
+              "field_120330": [
+                3,
+                6
+              ]
+            }
+          ]
+        },
+        {
+          "id": 21079,
+          "name": "Distribution Channels",
+          "order": 4,
+          "fields": [
+            {
+              "id": 110635,
+              "type": "text",
+              "name": "Channel Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 110737,
+              "type": "number",
+              "name": "Channel Rating (1-5)",
+              "order": 4,
+              "primary": false,
+              "number_type": "INTEGER",
+              "number_decimal_places": 1,
+              "number_negative": false
+            },
+            {
+              "id": 110741,
+              "type": "text",
+              "name": "Notes",
+              "order": 5,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 120406,
+              "type": "link_row",
+              "name": "Posts on Channel",
+              "order": 6,
+              "primary": false,
+              "link_row_table_id": 22861,
+              "link_row_related_field_id": 120405
+            }
+          ],
+          "views": [
+            {
+              "id": 22617,
+              "type": "grid",
+              "name": "All Channels",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 1368,
+                  "field_id": 110635,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 105962,
+                  "field_id": 110635,
+                  "width": 159,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 106086,
+                  "field_id": 110737,
+                  "width": 186,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 106098,
+                  "field_id": 110741,
+                  "width": 351,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 117713,
+                  "field_id": 120406,
+                  "width": 481,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            },
+            {
+              "id": 24748,
+              "type": "grid",
+              "name": "Top Channels",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 3574,
+                  "field_id": 110737,
+                  "type": "higher_than",
+                  "value": "3"
+                }
+              ],
+              "sortings": [],
+              "field_options": [
+                {
+                  "id": 118209,
+                  "field_id": 110635,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118210,
+                  "field_id": 110737,
+                  "width": 186,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118211,
+                  "field_id": 110741,
+                  "width": 373,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 118212,
+                  "field_id": 120406,
+                  "width": 485,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_110635": "Mastodon",
+              "field_110737": "4",
+              "field_110741": "Posts do well between 13:00 - 15:00 UTC.",
+              "field_120406": [
+                1,
+                5,
+                6
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_110635": "Pixelfed",
+              "field_110737": "3",
+              "field_110741": "Copy needs to be more concise.",
+              "field_120406": [
+                1,
+                5,
+                6
+              ]
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_110635": "Medium",
+              "field_110737": "2",
+              "field_110741": "Need to improve on 3 hashtags to maximize reach.",
+              "field_120406": [
+                2,
+                5,
+                6,
+                7
+              ]
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_110635": "Newsletter",
+              "field_110737": "5",
+              "field_110741": "Great channel because it provides more personal communication with our audience.",
+              "field_120406": [
+                4,
+                5,
+                6,
+                7
+              ]
+            },
+            {
+              "id": 9,
+              "order": "9.00000000000000000000",
+              "field_110635": "Twitter",
+              "field_110737": "2",
+              "field_110741": "Hard to predict what content will do well.",
+              "field_120406": [
+                3,
+                4,
+                6
+              ]
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_110635": "Polywork",
+              "field_110737": "4",
+              "field_110741": "Engagement is growing MoM.",
+              "field_120406": [
+                6
+              ]
+            },
+            {
+              "id": 11,
+              "order": "11.00000000000000000000",
+              "field_110635": "Facebook",
+              "field_110737": "1",
+              "field_110741": "Organic reach is virtually nonexistent.",
+              "field_120406": [
+                7
+              ]
+            },
+            {
+              "id": 12,
+              "order": "12.00000000000000000000",
+              "field_110635": "Instagram",
+              "field_110737": "3",
+              "field_110741": "Visual posts are a must.",
+              "field_120406": [
+                5,
+                2
+              ]
+            },
+            {
+              "id": 13,
+              "order": "13.00000000000000000000",
+              "field_110635": "Blog",
+              "field_110737": "5",
+              "field_110741": "Doing wonders for SEO.",
+              "field_120406": [
+                3,
+                5,
+                7,
+                6,
+                2,
+                1,
+                4
+              ]
+            },
+            {
+              "id": 14,
+              "order": "14.00000000000000000000",
+              "field_110635": "RetroShare",
+              "field_110737": "3",
+              "field_110741": "Need more connections.",
+              "field_120406": [
+                2,
+                1
+              ]
+            },
+            {
+              "id": 15,
+              "order": "15.00000000000000000000",
+              "field_110635": "MeWe",
+              "field_110737": "4",
+              "field_110741": "Engagement is much higher quality than Facebook!",
+              "field_120406": [
+                7,
+                6
+              ]
+            },
+            {
+              "id": 16,
+              "order": "16.00000000000000000000",
+              "field_110635": "Diaspora",
+              "field_110737": "2",
+              "field_110741": "Would be more effective if not for our server issues. Need to fix.",
+              "field_120406": [
+                4,
+                7
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
