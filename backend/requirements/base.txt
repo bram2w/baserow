@@ -25,3 +25,4 @@ django-celery-beat==2.2.1
 celery-redbeat==2.0.0
 service-identity==21.1.0
 regex==2021.4.4
+click==7.1.2
