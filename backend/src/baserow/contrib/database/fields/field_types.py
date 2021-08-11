@@ -1,3 +1,4 @@
+import pytz
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime, date
@@ -10,7 +11,6 @@ from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
-from django.core.validators import URLValidator
 from django.db import models
 from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
@@ -40,7 +40,7 @@ from .exceptions import (
     IncompatiblePrimaryFieldTypeError,
 )
 from .field_filters import contains_filter, AnnotatedQ, filename_contains_filter
-from .fields import SingleSelectForeignKey, URLTextField
+from .fields import SingleSelectForeignKey
 from .handler import FieldHandler
 from .models import (
     NUMBER_TYPE_INTEGER,
@@ -51,6 +51,8 @@ from .models import (
     NumberField,
     BooleanField,
     DateField,
+    LastModifiedField,
+    CreatedOnField,
     LinkRowField,
     EmailField,
     FileField,
@@ -61,15 +63,15 @@ from .models import (
 from .registries import FieldType, field_type_registry
 
 
-class CharFieldMatchingRegexFieldType(FieldType, ABC):
+class TextFieldMatchingRegexFieldType(FieldType, ABC):
     """
-    This is an abstract FieldType you can extend to create a field which is a CharField
-    but restricted to only allow values passing a regex. Please implement the regex,
-    max_length and random_value properties.
+    This is an abstract FieldType you can extend to create a field which is a TextField
+    but restricted to only allow values passing a regex. Please implement the
+    regex and random_value properties.
 
     This abstract class will then handle all the various places that this regex needs to
     be used:
-        - by setting the char field's validator
+        - by setting the text field's validator
         - by setting the serializer field's validator
         - checking values passed to prepare_value_for_db pass the regex
         - by checking and only converting column values which match the regex when
@@ -82,19 +84,14 @@ class CharFieldMatchingRegexFieldType(FieldType, ABC):
         pass
 
     @property
-    @abstractmethod
-    def max_length(self):
-        return None
-
-    @property
     def validator(self):
         return UnicodeRegexValidator(regex_value=self.regex)
 
     def prepare_value_for_db(self, instance, value):
         if value == "" or value is None:
             return ""
-        self.validator(value)
 
+        self.validator(value)
         return value
 
     def get_serializer_field(self, instance, **kwargs):
@@ -107,17 +104,15 @@ class CharFieldMatchingRegexFieldType(FieldType, ABC):
                 "allow_null": not required,
                 "allow_blank": not required,
                 "validators": validators,
-                "max_length": self.max_length,
                 **kwargs,
             }
         )
 
     def get_model_field(self, instance, **kwargs):
-        return models.CharField(
+        return models.TextField(
             default="",
             blank=True,
             null=True,
-            max_length=self.max_length,
             validators=[self.validator],
             **kwargs,
         )
@@ -138,6 +133,41 @@ class CharFieldMatchingRegexFieldType(FieldType, ABC):
 
     def contains_query(self, *args):
         return contains_filter(*args)
+
+
+class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
+    """
+    This is an abstract FieldType you can extend to create a field which is a CharField
+    with a specific max length, but restricted to only allow values passing a regex.
+    Please implement the regex, max_length and random_value properties.
+
+    This abstract class will then handle all the various places that this regex needs to
+    be used:
+        - by setting the char field's validator
+        - by setting the serializer field's validator
+        - checking values passed to prepare_value_for_db pass the regex
+        - by checking and only converting column values which match the regex when
+          altering a column to being an email type.
+    """
+
+    @property
+    @abstractmethod
+    def max_length(self):
+        return None
+
+    def get_serializer_field(self, instance, **kwargs):
+        kwargs = {"max_length": self.max_length, **kwargs}
+        return super().get_serializer_field(instance, **kwargs)
+
+    def get_model_field(self, instance, **kwargs):
+        return models.CharField(
+            default="",
+            blank=True,
+            null=True,
+            max_length=self.max_length,
+            validators=[self.validator],
+            **kwargs,
+        )
 
 
 class TextFieldType(FieldType):
@@ -195,51 +225,19 @@ class LongTextFieldType(FieldType):
         return contains_filter(*args)
 
 
-class URLFieldType(FieldType):
+class URLFieldType(TextFieldMatchingRegexFieldType):
     type = "url"
     model_class = URLField
 
-    def prepare_value_for_db(self, instance, value):
-        if value == "" or value is None:
-            return ""
-
-        validator = URLValidator()
-        validator(value)
-        return value
-
-    def get_serializer_field(self, instance, **kwargs):
-        required = kwargs.get("required", False)
-        return serializers.URLField(
-            **{
-                "required": required,
-                "allow_null": not required,
-                "allow_blank": not required,
-                **kwargs,
-            }
-        )
-
-    def get_model_field(self, instance, **kwargs):
-        return URLTextField(default="", blank=True, null=True, **kwargs)
+    @property
+    def regex(self):
+        # A very lenient URL validator that allows all types of URLs as long as it
+        # respects the maximal amount of characters before the dot at at least have
+        # one character after the dot.
+        return r"^[^\s]{0,255}(?:\.|//)[^\s]{1,}$"
 
     def random_value(self, instance, fake, cache):
         return fake.url()
-
-    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-        if connection.vendor == "postgresql":
-            return r"""p_in = (
-            case
-                when p_in::text ~* '(https?|ftps?)://(-\.)?([^\s/?\.#-]+\.?)+(/[^\s]*)?'
-                then p_in::text
-                else ''
-                end
-            );"""
-
-        return super().get_alter_column_prepare_new_value(
-            connection, from_field, to_field
-        )
-
-    def contains_query(self, *args):
-        return contains_filter(*args)
 
 
 class NumberFieldType(FieldType):
@@ -313,13 +311,13 @@ class NumberFieldType(FieldType):
     def random_value(self, instance, fake, cache):
         if instance.number_type == NUMBER_TYPE_INTEGER:
             return fake.pyint(
-                min_value=-10000 if instance.number_negative else 0,
+                min_value=-10000 if instance.number_negative else 1,
                 max_value=10000,
                 step=1,
             )
         elif instance.number_type == NUMBER_TYPE_DECIMAL:
             return fake.pydecimal(
-                min_value=-10000 if instance.number_negative else 0,
+                min_value=-10000 if instance.number_negative else 1,
                 max_value=10000,
                 positive=not instance.number_negative,
             )
@@ -547,6 +545,157 @@ class DateFieldType(FieldType):
             return value
 
         setattr(row, field_name, datetime.fromisoformat(value))
+
+
+class CreatedOnLastModifiedBaseFieldType(DateFieldType):
+    can_be_in_form_view = False
+    allowed_fields = DateFieldType.allowed_fields + ["timezone"]
+    serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
+    serializer_field_overrides = {
+        "timezone": serializers.ChoiceField(choices=pytz.all_timezones, required=True)
+    }
+    source_field_name = None
+    model_field_kwargs = {}
+
+    def prepare_value_for_db(self, instance, value):
+        """
+        Since the LastModified and CreatedOnFieldTypes are read only fields, we raise a
+        ValidationError when there is a value present.
+        """
+
+        if not value:
+            return value
+
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
+
+    def get_export_value(self, value, field_object):
+        if value is None:
+            return value
+        python_format = field_object["field"].get_python_format()
+        field = field_object["field"]
+        field_timezone = timezone(field.get_timezone())
+        return value.astimezone(field_timezone).strftime(python_format)
+
+    def get_serializer_field(self, instance, **kwargs):
+        if not instance.date_include_time:
+            kwargs["format"] = "%Y-%m-%d"
+            kwargs["default_timezone"] = timezone(instance.timezone)
+
+        return serializers.DateTimeField(
+            **{
+                "required": False,
+                **kwargs,
+            }
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        kwargs.update(self.model_field_kwargs)
+        return models.DateTimeField(**kwargs)
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        return AnnotatedQ(
+            annotation={
+                f"formatted_date_{field_name}": Coalesce(
+                    RawSQL(
+                        f"""TO_CHAR({field_name} at time zone %s,
+                        '{field.get_psql_format()}')""",
+                        [field.get_timezone()],
+                        output_field=CharField(),
+                    ),
+                    Value(""),
+                )
+            },
+            q={f"formatted_date_{field_name}__icontains": value},
+        )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        If the field type has changed then we want to convert the date or timestamp to
+        a human readable text following the old date format.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type:
+            sql_format = from_field.get_psql_format()
+            variables = {}
+            variable_name = f"{from_field.db_column}_timezone"
+            variables[variable_name] = from_field.get_timezone()
+            return (
+                f"""p_in = TO_CHAR(p_in::timestamptz at time zone %({variable_name})s,
+                '{sql_format}');""",
+                variables,
+            )
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
+        )
+
+    def after_create(self, field, model, user, connection, before):
+        """
+        Immediately after the field has been created, we need to populate the values
+        with the already existing source_field_name column.
+        """
+
+        model.objects.all().update(
+            **{f"{field.db_column}": models.F(self.source_field_name)}
+        )
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+    ):
+        """
+        If the field type has changed, we need to update the values from the from
+        the source_field_name column.
+        """
+
+        if not isinstance(from_field, self.model_class):
+            to_model.objects.all().update(
+                **{f"{to_field.db_column}": models.F(self.source_field_name)}
+            )
+
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+        return None
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
+        """
+        We don't want to do anything here because we don't have the right value yet
+        and it will automatically be set when the row is saved.
+        """
+
+    def random_value(self, instance, fake, cache):
+        return getattr(instance, self.source_field_name)
+
+
+class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
+    type = "last_modified"
+    model_class = LastModifiedField
+    source_field_name = "updated_on"
+    model_field_kwargs = {"auto_now": True}
+
+
+class CreatedOnFieldType(CreatedOnLastModifiedBaseFieldType):
+    type = "created_on"
+    model_class = CreatedOnField
+    source_field_name = "created_on"
+    model_field_kwargs = {"auto_now_add": True}
 
 
 class LinkRowFieldType(FieldType):

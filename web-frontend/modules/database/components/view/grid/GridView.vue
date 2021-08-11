@@ -125,6 +125,7 @@
       :fields="fields"
       :rows="allRows"
       :read-only="readOnly"
+      @refresh="$emit('refresh', $event)"
       @update="updateValue"
       @hidden="rowEditModalHidden"
       @field-updated="$emit('refresh', $event)"
@@ -431,9 +432,8 @@ export default {
      * next row is not found, we can safely assume it is the last row and add it last.
      */
     addRowAfter(row) {
-      const rows = this.$store.getters[
-        this.storePrefix + 'view/grid/getAllRows'
-      ]
+      const rows =
+        this.$store.getters[this.storePrefix + 'view/grid/getAllRows']
       const index = rows.findIndex((r) => r.id === row.id)
       let nextRow = null
 
@@ -540,7 +540,8 @@ export default {
       const verticalContainerRect = verticalContainer.getBoundingClientRect()
       const verticalContainerHeight = verticalContainer.clientHeight
 
-      const horizontalContainerRect = horizontalContainer.getBoundingClientRect()
+      const horizontalContainerRect =
+        horizontalContainer.getBoundingClientRect()
       const horizontalContainerWidth = horizontalContainer.clientWidth
 
       const elementRect = element.getBoundingClientRect()
@@ -661,9 +662,8 @@ export default {
 
       if (direction === 'below' || direction === 'above') {
         nextFieldId = field.id
-        const rows = this.$store.getters[
-          this.storePrefix + 'view/grid/getAllRows'
-        ]
+        const rows =
+          this.$store.getters[this.storePrefix + 'view/grid/getAllRows']
         const index = rows.findIndex((r) => r.id === row.id)
 
         if (index !== -1 && direction === 'below' && rows.length > index + 1) {

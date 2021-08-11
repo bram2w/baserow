@@ -35,16 +35,13 @@ export const slugify = (string) => {
     .replace(/-+$/, '') // Trim - from end of text
 }
 
+/**
+ * A very lenient URL validator that allows all types of URL as long as it respects
+ * the maximal amount of characters before the dot at at least have one character
+ * after the dot.
+ */
 export const isValidURL = (str) => {
-  const pattern = new RegExp(
-    '^((https?|ftps?):\\/\\/)?' + // protocol
-      '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-      '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-      '(\\:\\d+)?(\\/[-a-z\\d\\*%_.~+]*)*' + // port and path
-      '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-      '(\\#[-a-z\\d_]*)?$',
-    'i'
-  ) // fragment locator
+  const pattern = /^[^\s]{0,255}(?:\.|\/\/)[^\s]{1,}$/gi
   return !!pattern.test(str)
 }
 
@@ -89,4 +86,8 @@ export const isSecureURL = (str) => {
 
 export const escapeRegExp = (string) => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+export const isNumeric = (value) => {
+  return /^-?\d+$/.test(value)
 }

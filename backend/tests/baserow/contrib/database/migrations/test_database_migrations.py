@@ -12,9 +12,7 @@ migrate_to = [("database", "0033_unique_field_names")]
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
-def test_migration_fixes_duplicate_field_names(
-    data_fixture, transactional_db, user_tables_in_separate_db
-):
+def test_migration_fixes_duplicate_field_names(data_fixture, transactional_db):
     old_state = migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
@@ -82,7 +80,7 @@ def test_migration_fixes_duplicate_field_names(
 # noinspection PyPep8Naming
 @pytest.mark.django_db
 def test_migration_handles_existing_fields_with_underscore_number(
-    data_fixture, transactional_db, user_tables_in_separate_db
+    data_fixture, transactional_db
 ):
     old_state = migrate(migrate_from)
     # The models used by the data_fixture below are not touched by this migration so
@@ -147,9 +145,7 @@ def test_migration_handles_existing_fields_with_underscore_number(
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
-def test_backwards_migration_restores_field_names(
-    data_fixture, transactional_db, user_tables_in_separate_db
-):
+def test_backwards_migration_restores_field_names(data_fixture, transactional_db):
 
     old_state = migrate(migrate_to)
     # The models used by the data_fixture below are not touched by this migration so
@@ -195,7 +191,7 @@ def test_backwards_migration_restores_field_names(
 # noinspection PyPep8Naming
 @pytest.mark.django_db
 def test_migration_fixes_duplicate_field_names_and_reserved_names(
-    data_fixture, transactional_db, user_tables_in_separate_db
+    data_fixture, transactional_db
 ):
     old_state = migrate(migrate_from)
 

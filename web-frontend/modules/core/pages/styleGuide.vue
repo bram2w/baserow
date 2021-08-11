@@ -174,6 +174,18 @@
                     icon="times"
                     :disabled="true"
                   ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 5"
+                    value="choice-5"
+                    icon="edit"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 6"
+                    value="choice-6"
+                    icon="edit"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
                 </Dropdown>
               </div>
             </div>
@@ -224,22 +236,7 @@
                   ></DropdownItem>
                   <DropdownItem
                     v-for="i in [
-                      0,
-                      1,
-                      2,
-                      3,
-                      4,
-                      5,
-                      6,
-                      7,
-                      8,
-                      9,
-                      10,
-                      11,
-                      12,
-                      13,
-                      14,
-                      15,
+                      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     ]"
                     :key="i"
                     :name="'Choice ' + i"
@@ -417,7 +414,13 @@
             </p>
           </div>
           <div
-            class="alert alert--simple alert--with-shadow alert--warning alert--has-icon"
+            class="
+              alert
+              alert--simple
+              alert--with-shadow
+              alert--warning
+              alert--has-icon
+            "
           >
             <a href="#" class="alert__close">
               <i class="fas fa-times"></i>

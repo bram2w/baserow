@@ -9,9 +9,11 @@ import {
   NumberFieldType,
   BooleanFieldType,
   DateFieldType,
+  LastModifiedFieldType,
   FileFieldType,
   SingleSelectFieldType,
   PhoneNumberFieldType,
+  CreatedOnFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -33,6 +35,8 @@ import {
   DateEqualsCurrentYearViewFilterType,
   DateBeforeViewFilterType,
   DateAfterViewFilterType,
+  LinkRowHasFilterType,
+  LinkRowHasNotFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -86,6 +90,8 @@ export default ({ store, app }) => {
   app.$registry.register('viewFilter', new SingleSelectEqualViewFilterType())
   app.$registry.register('viewFilter', new SingleSelectNotEqualViewFilterType())
   app.$registry.register('viewFilter', new BooleanViewFilterType())
+  app.$registry.register('viewFilter', new LinkRowHasFilterType())
+  app.$registry.register('viewFilter', new LinkRowHasNotFilterType())
   app.$registry.register('viewFilter', new EmptyViewFilterType())
   app.$registry.register('viewFilter', new NotEmptyViewFilterType())
   app.$registry.register('field', new TextFieldType())
@@ -94,6 +100,8 @@ export default ({ store, app }) => {
   app.$registry.register('field', new NumberFieldType())
   app.$registry.register('field', new BooleanFieldType())
   app.$registry.register('field', new DateFieldType())
+  app.$registry.register('field', new LastModifiedFieldType())
+  app.$registry.register('field', new CreatedOnFieldType())
   app.$registry.register('field', new URLFieldType())
   app.$registry.register('field', new EmailFieldType())
   app.$registry.register('field', new FileFieldType())

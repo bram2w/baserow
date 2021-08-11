@@ -99,7 +99,7 @@ CELERY_REDBEAT_REDIS_URL = REDIS_URL
 # however if the lock timeout is less than the interval the lock will have been released
 # and the beat instance will crash as it attempts to extend the lock which it no longer
 # owns.
-CELERY_BEAT_MAX_LOOP_INTERVAL = 300
+CELERY_BEAT_MAX_LOOP_INTERVAL = os.getenv("CELERY_BEAT_MAX_LOOP_INTERVAL", 20)
 # By default CELERY_REDBEAT_LOCK_TIMEOUT = 5 * CELERY_BEAT_MAX_LOOP_INTERVAL
 # Only one beat instance can hold this lock and schedule tasks at any one time.
 # This means if one celery-beat instance crashes any other replicas waiting to take over
@@ -108,9 +108,11 @@ CELERY_BEAT_MAX_LOOP_INTERVAL = 300
 # Instead we just set it to be slightly longer than the loop interval that beat uses.
 # This means beat wakes up, checks the schedule and extends the lock every
 # CELERY_BEAT_MAX_LOOP_INTERVAL seconds. If it crashes or fails to wake up
-# then 6 minutes after the lock was last extended it will be released and a new
+# then 80 seconds after the lock was last extended it will be released and a new
 # scheduler will acquire the lock and take over.
-CELERY_REDBEAT_LOCK_TIMEOUT = CELERY_BEAT_MAX_LOOP_INTERVAL + 60
+CELERY_REDBEAT_LOCK_TIMEOUT = os.getenv(
+    "CELERY_REDBEAT_LOCK_TIMEOUT", CELERY_BEAT_MAX_LOOP_INTERVAL + 60
+)
 
 CHANNEL_LAYERS = {
     "default": {
@@ -146,17 +148,10 @@ USER_TABLE_DATABASE = "default"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation."
-        "UserAttributeSimilarityValidator",
-    },
-    {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "baserow.core.user.password_validation.MaximumLengthValidator",
     },
 ]
 
@@ -217,7 +212,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.4.3",
+    "VERSION": "1.5.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -241,8 +236,6 @@ SPECTACULAR_SETTINGS = {
         {"name": "Admin"},
     ],
 }
-
-DATABASE_ROUTERS = ("baserow.contrib.database.database_routers.TablesDatabaseRouter",)
 
 # The storage must always overwrite existing files.
 DEFAULT_FILE_STORAGE = "baserow.core.storage.OverwriteFileSystemStorage"
@@ -269,6 +262,7 @@ FROM_EMAIL = os.getenv("FROM_EMAIL", "no-reply@localhost")
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
 ROW_PAGE_SIZE_LIMIT = 200  # How many rows can be requested at once.
 TRASH_PAGE_SIZE_LIMIT = 200  # How many trash entries can be requested at once.
+ROW_COMMENT_PAGE_SIZE_LIMIT = 200  # How many row comments can be requested at once.
 
 # The amount of rows that can be imported when creating a table.
 INITIAL_TABLE_DATA_LIMIT = None
@@ -314,7 +308,7 @@ USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48]}
 APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 # The template that must be selected when the user first opens the templates select
 # modal.
-DEFAULT_APPLICATION_TEMPLATE = "project-management"
+DEFAULT_APPLICATION_TEMPLATE = "project-tracker"
 
 MAX_FIELD_LIMIT = 1500
 
@@ -324,3 +318,5 @@ HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = os.getenv(
     "HOURS_UNTIL_TRASH_PERMANENTLY_DELETED", 24 * 3
 )
 OLD_TRASH_CLEANUP_CHECK_INTERVAL_MINUTES = 5
+
+MAX_ROW_COMMENT_LENGTH = 10000

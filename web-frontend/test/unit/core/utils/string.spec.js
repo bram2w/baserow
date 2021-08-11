@@ -6,6 +6,7 @@ import {
   isValidEmail,
   isSecureURL,
 } from '@/modules/core/utils/string'
+import { isNumeric } from '@baserow/modules/core/utils/string'
 
 describe('test string utils', () => {
   test('test uuid', () => {
@@ -33,20 +34,52 @@ describe('test string utils', () => {
   })
 
   test('test isValidURL', () => {
-    expect(isValidURL('not-a-url')).toBe(false)
-    expect(isValidURL('')).toBe(false)
-    expect(isValidURL('htt://test.nl')).toBe(false)
-    expect(isValidURL('http:/test.nl')).toBe(false)
-    expect(isValidURL('http://test.nl')).toBe(true)
-    expect(isValidURL('https://test.nl')).toBe(true)
-    expect(isValidURL('ftp://test.nl')).toBe(true)
-    expect(isValidURL('random://test.nl')).toBe(false)
-    expect(isValidURL('https://test.nl?url=test')).toBe(true)
-    expect(isValidURL('http://test.nl:8000/test')).toBe(true)
-    expect(isValidURL('ftp://127.0.0.1')).toBe(true)
-    expect(isValidURL('ftp://sub.domain.nl')).toBe(true)
-    expect(isValidURL('https://sub.sub.domain.nl')).toBe(true)
-    expect(isValidURL('HTTPS://sub.SUB.domain.NL')).toBe(true)
+    const validURLs = [
+      'baserow.io',
+      'ftp://baserow.io',
+      'git://example.com/',
+      'ws://baserow.io',
+      'http://baserow.io',
+      'https://baserow.io',
+      'https://www.baserow.io',
+      'HTTP://BASEROW.IO',
+      'https://test.nl/test',
+      'https://test.nl/test',
+      'http://localhost',
+      '//localhost',
+      'https://test.nl/test?with=a-query&that=has-more',
+      'https://test.nl/test',
+      "http://-.~_!$&'()*+,;=%40:80%2f@example.com",
+      'http://उदाहरण.परीक्षा',
+      'http://foo.com/(something)?after=parens',
+      'http://142.42.1.1/',
+      'http://userid:password@example.com:65535/',
+      'http://su--b.valid-----hyphens.com/',
+      '//baserow.io/test',
+      '127.0.0.1',
+      'https://test.nl#test',
+      'http://baserow.io/hrscywv4p/image/upload/c_fill,g_faces:center,h_128,w_128/yflwk7vffgwyyenftkr7.png',
+      'https://gitlab.com/bramw/baserow/-/issues?row=nice/route',
+      'https://web.archive.org/web/20210313191012/https://baserow.io/',
+      'mailto:bram@baserow.io?test=test',
+    ]
+
+    const invalidURLs = [
+      'test',
+      'test.',
+      'localhost',
+      '\nwww.test.nl',
+      'www\n.test.nl',
+      'www .test.nl',
+      ' www.test.nl',
+    ]
+
+    for (const invalidUrl of invalidURLs) {
+      expect(isValidURL(invalidUrl)).toBe(false)
+    }
+    for (const validUrl of validURLs) {
+      expect(isValidURL(validUrl)).toBe(true)
+    }
   })
 
   test('test isValidEmail', () => {
@@ -93,5 +126,16 @@ describe('test string utils', () => {
     expect(isSecureURL('https://test.nl')).toBe(true)
     expect(isSecureURL('HTTPS://test.nl')).toBe(true)
     expect(isSecureURL('https://test.domain.nl?test=test')).toBe(true)
+  })
+
+  test('test isNumeric', () => {
+    expect(isNumeric('a')).toBe(false)
+    expect(isNumeric('1.2')).toBe(false)
+    expect(isNumeric('')).toBe(false)
+    expect(isNumeric('null')).toBe(false)
+    expect(isNumeric('12px')).toBe(false)
+    expect(isNumeric('1')).toBe(true)
+    expect(isNumeric('9999')).toBe(true)
+    expect(isNumeric('-100')).toBe(true)
   })
 })

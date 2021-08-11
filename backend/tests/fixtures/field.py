@@ -1,5 +1,4 @@
-from django.conf import settings
-from django.db import connections
+from django.db import connection
 
 from baserow.contrib.database.fields.models import (
     TextField,
@@ -14,12 +13,14 @@ from baserow.contrib.database.fields.models import (
     URLField,
     EmailField,
     PhoneNumberField,
+    LastModifiedField,
+    CreatedOnField,
 )
 
 
 class FieldFixtures:
     def create_model_field(self, table, field):
-        with connections[settings.USER_TABLE_DATABASE].schema_editor() as schema_editor:
+        with connection.schema_editor() as schema_editor:
             to_model = table.get_model(field_ids=[field.id])
             model_field = to_model._meta.get_field(field.db_column)
             schema_editor.add_field(to_model, model_field)
@@ -223,6 +224,52 @@ class FieldFixtures:
             kwargs["order"] = 0
 
         field = PhoneNumberField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_last_modified_field(self, user=None, create_field=True, **kwargs):
+        if "table" not in kwargs:
+            kwargs["table"] = self.create_database_table(user=user)
+
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        if "date_include_time" not in kwargs:
+            kwargs["date_include_time"] = False
+
+        if "timezone" not in kwargs:
+            kwargs["timezone"] = "Europe/Berlin"
+
+        field = LastModifiedField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_created_on_field(self, user=None, create_field=True, **kwargs):
+        if "table" not in kwargs:
+            kwargs["table"] = self.create_database_table(user=user)
+
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        if "date_include_time" not in kwargs:
+            kwargs["date_include_time"] = False
+
+        if "timezone" not in kwargs:
+            kwargs["timezone"] = "Europe/Berlin"
+
+        field = CreatedOnField.objects.create(**kwargs)
 
         if create_field:
             self.create_model_field(kwargs["table"], field)

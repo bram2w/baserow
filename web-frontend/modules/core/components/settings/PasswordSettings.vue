@@ -23,74 +23,18 @@
             class="input input--large"
             @blur="$v.account.oldPassword.$touch()"
           />
-          <div
-            v-if="
-              $v.account.oldPassword.$error && !$v.account.oldPassword.required
-            "
-            class="error"
-          >
-            An old password is required.
-          </div>
-          <div
-            v-if="
-              $v.account.oldPassword.$error && !$v.account.oldPassword.maxLength
-            "
-            class="error"
-          >
-            A maximum of
-            {{ $v.account.oldPassword.$params.maxLength.max }} characters is
-            allowed here.
-          </div>
-          <div
-            v-if="
-              $v.account.oldPassword.$error && !$v.account.oldPassword.minLength
-            "
-            class="error"
-          >
-            A minimum of
-            {{ $v.account.oldPassword.$params.minLength.min }} characters is
-            required here.
+          <div v-if="$v.account.oldPassword.$error" class="error">
+            Old password is required.
           </div>
         </div>
       </div>
       <div class="control">
         <label class="control__label">New password</label>
         <div class="control__elements">
-          <input
+          <PasswordInput
             v-model="account.newPassword"
-            :class="{ 'input--error': $v.account.newPassword.$error }"
-            type="password"
-            class="input input--large"
-            @blur="$v.account.newPassword.$touch()"
+            :validation-state="$v.account.newPassword"
           />
-          <div
-            v-if="
-              $v.account.newPassword.$error && !$v.account.newPassword.required
-            "
-            class="error"
-          >
-            A new password is required.
-          </div>
-          <div
-            v-if="
-              $v.account.newPassword.$error && !$v.account.newPassword.maxLength
-            "
-            class="error"
-          >
-            A maximum of
-            {{ $v.account.newPassword.$params.maxLength.max }} characters is
-            allowed here.
-          </div>
-          <div
-            v-if="
-              $v.account.newPassword.$error && !$v.account.newPassword.minLength
-            "
-            class="error"
-          >
-            A minimum of
-            {{ $v.account.newPassword.$params.minLength.min }} characters is
-            required here.
-          </div>
         </div>
       </div>
       <div class="control">
@@ -123,18 +67,16 @@
 </template>
 
 <script>
-import {
-  maxLength,
-  minLength,
-  required,
-  sameAs,
-} from 'vuelidate/lib/validators'
+import { sameAs, required } from 'vuelidate/lib/validators'
 
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
+import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
+import { passwordValidation } from '@baserow/modules/core/validators'
 
 export default {
+  components: { PasswordInput },
   mixins: [error],
   layout: 'login',
   data() {
@@ -151,6 +93,7 @@ export default {
   methods: {
     async changePassword() {
       this.$v.$touch()
+
       if (this.$v.$invalid) {
         return
       }
@@ -178,19 +121,11 @@ export default {
   },
   validations: {
     account: {
-      oldPassword: {
-        required,
-        maxLength: maxLength(256),
-        minLength: minLength(8),
-      },
-      newPassword: {
-        required,
-        maxLength: maxLength(256),
-        minLength: minLength(8),
-      },
       passwordConfirm: {
         sameAsPassword: sameAs('newPassword'),
       },
+      newPassword: passwordValidation,
+      oldPassword: { required },
     },
   },
 }

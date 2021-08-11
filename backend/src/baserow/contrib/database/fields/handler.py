@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Dict, Any, Optional, List
 
 from django.conf import settings
-from django.db import connections
+from django.db import connection
 from django.db.utils import ProgrammingError, DataError
 
 from baserow.contrib.database.db.schema import lenient_schema_editor
@@ -181,7 +181,6 @@ class FieldHandler:
         )
 
         # Add the field to the table schema.
-        connection = connections[settings.USER_TABLE_DATABASE]
         with connection.schema_editor() as schema_editor:
             to_model = table.get_model(field_ids=[], fields=[instance])
             model_field = to_model._meta.get_field(instance.db_column)
@@ -258,8 +257,6 @@ class FieldHandler:
 
         field = set_allowed_attrs(field_values, allowed_fields, field)
         field.save()
-
-        connection = connections[settings.USER_TABLE_DATABASE]
 
         # If no converter is found we are going to convert to field using the
         # lenient schema editor which will alter the field's type and set the data

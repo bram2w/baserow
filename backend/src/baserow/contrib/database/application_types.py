@@ -1,6 +1,5 @@
-from django.conf import settings
 from django.core.management.color import no_style
-from django.db import connections
+from django.db import connection
 from django.urls import path, include
 
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -63,7 +62,9 @@ class DatabaseApplicationType(ApplicationType):
             for v in table.view_set.all():
                 view = v.specific
                 view_type = view_type_registry.get_by_model(view)
-                serialized_views.append(view_type.export_serialized(view))
+                serialized_views.append(
+                    view_type.export_serialized(view, files_zip, storage)
+                )
 
             model = table.get_model(fields=fields)
             serialized_rows = []
@@ -107,7 +108,6 @@ class DatabaseApplicationType(ApplicationType):
         database = super().import_serialized(
             group, serialized_values, id_mapping, files_zip, storage
         )
-        connection = connections[settings.USER_TABLE_DATABASE]
 
         # First, we want to create all the table instances because it could be that
         # field or view properties depend on the existence of a table.
@@ -138,7 +138,9 @@ class DatabaseApplicationType(ApplicationType):
         for table in tables:
             for view in table["views"]:
                 view_type = view_type_registry.get(view["type"])
-                view_type.import_serialized(table["_object"], view, id_mapping)
+                view_type.import_serialized(
+                    table["_object"], view, id_mapping, files_zip, storage
+                )
 
             # We don't need to create all the fields individually because the schema
             # editor can handle the creation of the table schema in one go.
@@ -190,7 +192,6 @@ class DatabaseApplicationType(ApplicationType):
             # When the rows are inserted we keep the provide the old ids and because of
             # that the auto increment is still set at `1`. This needs to be set to the
             # maximum value because otherwise creating a new row could later fail.
-            connection = connections[settings.USER_TABLE_DATABASE]
             sequence_sql = connection.ops.sequence_reset_sql(no_style(), [model])
             with connection.cursor() as cursor:
                 cursor.execute(sequence_sql[0])

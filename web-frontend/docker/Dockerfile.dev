@@ -1,4 +1,4 @@
-FROM node:10-buster
+FROM node:12-buster
 
 ARG UID
 ENV UID=${UID:-1000}
@@ -40,11 +40,6 @@ COPY --chown=$UID:$GID ./premium/web-frontend /baserow/web-frontend/plugins/prem
 RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/web-frontend/docker/docker-entrypoint.sh
 
-# Ensure we don't overwrite the built node_modules with an empty mount from a fresh checkout.
-VOLUME ["/baserow/web-frontend/node_modules"]
-# Ensure we don't pollute the devs actual repo when mounting in files by
-# putting the plugins into an anonymous docker volumes.
-VOLUME ["/baserow/web-frontend/plugins"]
 # tini installed above protects us from zombie processes and ensures the default signal
 # handlers work, see https://github.com/krallin/tini.
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/web-frontend/docker/docker-entrypoint.sh"]

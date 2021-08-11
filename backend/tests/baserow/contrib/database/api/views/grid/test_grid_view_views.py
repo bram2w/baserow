@@ -1,5 +1,9 @@
-import pytest
+from typing import List, Dict, Any
 
+import pytest
+from django.shortcuts import reverse
+from rest_framework import serializers
+from rest_framework.fields import Field
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
@@ -7,9 +11,12 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from django.shortcuts import reverse
-
+from baserow.contrib.database.rows.registries import (
+    RowMetadataType,
+    row_metadata_registry,
+)
 from baserow.contrib.database.views.models import GridView
+from tests.test_utils import register_instance_temporarily
 
 
 @pytest.mark.django_db
@@ -145,7 +152,9 @@ def test_list_rows(api_client, data_fixture):
     assert response_json["results"][3]["id"] == row_2.id
     sort.delete()
 
-    filter = data_fixture.create_view_filter(view=grid, field=text_field, value="Green")
+    view_filter = data_fixture.create_view_filter(
+        view=grid, field=text_field, value="Green"
+    )
     url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
     response_json = response.json()
@@ -153,7 +162,7 @@ def test_list_rows(api_client, data_fixture):
     assert response_json["count"] == 1
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == row_1.id
-    filter.delete()
+    view_filter.delete()
 
     url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
     response = api_client.get(
@@ -225,6 +234,48 @@ def test_list_rows_include_field_options(api_client, data_fixture):
     assert response_json["field_options"][str(number_field.id)]["hidden"] is False
     assert response_json["field_options"][str(number_field.id)]["order"] == 32767
     assert "filters_disabled" not in response_json
+
+
+@pytest.mark.django_db
+def test_list_rows_include_row_metadata(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    data_fixture.create_text_field(
+        name="test", table=table, order=0, text_default="white"
+    )
+    grid = data_fixture.create_grid_view(table=table)
+    model = table.get_model(attribute_names=True)
+    row = model.objects.create(test="test")
+
+    class ExampleRowMetadata(RowMetadataType):
+        type = "test_example_row_metadata"
+
+        def generate_metadata_for_rows(
+            self, table, row_ids: List[int]
+        ) -> Dict[int, Any]:
+            return {row_id: row_id for row_id in row_ids}
+
+        def get_example_serializer_field(self) -> Field:
+            return serializers.CharField()
+
+    with register_instance_temporarily(row_metadata_registry, ExampleRowMetadata()):
+        url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+        response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK
+        assert "row_metadata" not in response_json
+
+        url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+        response = api_client.get(
+            url, {"include": "row_metadata"}, **{"HTTP_AUTHORIZATION": f"JWT {token}"}
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK
+        assert response_json["row_metadata"] == {
+            str(row.id): {"test_example_row_metadata": row.id}
+        }
 
 
 @pytest.mark.django_db

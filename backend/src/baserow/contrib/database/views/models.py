@@ -15,7 +15,10 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
 )
 from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.registries import (
+    view_type_registry,
+    view_filter_type_registry,
+)
 from baserow.contrib.database.mixins import (
     ParentTableTrashableModelMixin,
     ParentFieldTrashableModelMixin,
@@ -157,6 +160,10 @@ class ViewFilter(ParentFieldTrashableModelMixin, models.Model):
 
     class Meta:
         ordering = ("id",)
+
+    @property
+    def preload_values(self):
+        return view_filter_type_registry.get(self.type).get_preload_values(self)
 
 
 class ViewSort(ParentFieldTrashableModelMixin, models.Model):

@@ -52,14 +52,25 @@
 
 .modal__box-sidebar {
   position: relative;
-  flex: 0 0 200px;
   background-color: $color-neutral-50;
-  border-right: 1px solid $color-neutral-200;
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
+  flex: 0 0;
 
-  .modal__box--full-height & {
+  &.modal__box-sidebar--scrollable {
     overflow-y: auto;
+  }
+
+  &.modal__box-sidebar--left {
+    flex-basis: 200px;
+    border-right: 1px solid $color-neutral-200;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+  }
+
+  &.modal__box-sidebar--right {
+    flex-basis: 300px;
+    border-left: 1px solid $color-neutral-200;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
   }
 }
 
@@ -70,7 +81,7 @@
   min-width: 0;
   flex: 1;
 
-  .modal__box--full-height & {
+  &.modal__box-content--scrollable {
     overflow-y: auto;
   }
 }

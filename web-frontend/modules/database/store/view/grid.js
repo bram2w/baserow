@@ -15,8 +15,9 @@ import {
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 
-export function populateRow(row) {
+export function populateRow(row, metadata = {}) {
   row._ = {
+    metadata,
     loading: false,
     hover: false,
     selectedBy: [],
@@ -34,6 +35,12 @@ export function populateRow(row) {
     selectedFieldId: -1,
   }
   return row
+}
+
+function extractMetadataAndPopulateRow(data, rowIndex) {
+  const metadata = data.row_metadata || {}
+  const row = data.results[rowIndex]
+  populateRow(row, metadata[row.id])
 }
 
 export const state = () => ({
@@ -284,14 +291,22 @@ export const mutations = {
       state.rows.splice(index, 0, state.rows.splice(oldIndex, 1)[0])
     }
   },
-  UPDATE_ROW_IN_BUFFER(state, { row, values }) {
+  UPDATE_ROW_IN_BUFFER(state, { row, values, metadata = false }) {
     const index = state.rows.findIndex((item) => item.id === row.id)
     if (index !== -1) {
-      Object.assign(state.rows[index], values)
+      const existingRowState = state.rows[index]
+      Object.assign(existingRowState, values)
+      if (metadata) {
+        existingRowState._.metadata = metadata
+      }
     }
   },
   UPDATE_ROW_FIELD_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
+  },
+  UPDATE_ROW_METADATA(state, { row, rowMetadataType, updateFunction }) {
+    const currentValue = row._.metadata[rowMetadataType]
+    Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
   },
   FINALIZE_ROW_IN_BUFFER(state, { oldId, id, order }) {
     const index = state.rows.findIndex((item) => item.id === oldId)
@@ -453,7 +468,7 @@ export const actions = {
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
-            populateRow(data.results[index])
+            extractMetadataAndPopulateRow(data, index)
           })
           commit('ADD_ROWS', {
             rows: data.results,
@@ -591,7 +606,7 @@ export const actions = {
       search: getters.getServerSearchTerm,
     })
     data.results.forEach((part, index) => {
-      populateRow(data.results[index])
+      extractMetadataAndPopulateRow(data, index)
     })
     commit('CLEAR_ROWS')
     commit('ADD_ROWS', {
@@ -663,7 +678,7 @@ export const actions = {
         // If there are results we can replace the existing rows so that the user stays
         // at the same scroll offset.
         data.results.forEach((part, index) => {
-          populateRow(data.results[index])
+          extractMetadataAndPopulateRow(data, index)
         })
         commit('ADD_ROWS', {
           rows: data.results,
@@ -841,13 +856,21 @@ export const actions = {
   ) {
     // Fill the not provided values with the empty value of the field type so we can
     // immediately commit the created row to the state.
+    const valuesForApiRequest = {}
     const allFields = [primary].concat(fields)
     allFields.forEach((field) => {
       const name = `field_${field.id}`
       if (!(name in values)) {
         const fieldType = this.$registry.get('field', field._.type.type)
-        const empty = fieldType.getEmptyValue(field)
+        const empty = fieldType.getNewRowValue(field)
         values[name] = empty
+
+        // In case the fieldType is a read only field, we
+        // need to create a second values dictionary, which gets
+        // sent to the API without the fieldType.
+        if (!fieldType.isReadOnly) {
+          valuesForApiRequest[name] = empty
+        }
       }
     })
 
@@ -881,7 +904,7 @@ export const actions = {
     try {
       const { data } = await RowService(this.$client).create(
         table.id,
-        values,
+        valuesForApiRequest,
         before !== null ? before.id : null
       )
       commit('FINALIZE_ROW_IN_BUFFER', {
@@ -902,10 +925,10 @@ export const actions = {
    */
   createdNewRow(
     { commit, getters, dispatch },
-    { view, fields, primary, values }
+    { view, fields, primary, values, metadata }
   ) {
     const row = clone(values)
-    populateRow(row)
+    populateRow(row, metadata)
 
     // Check if the row belongs into the current view by checking if it matches the
     // filters and search.
@@ -978,12 +1001,35 @@ export const actions = {
       order = new BigNumber(before.order).minus(change).toString()
     }
 
+    // In order to make changes feel really fast, we optimistically
+    // updated all the field values that provide a onRowMove function
+    const fieldsToCallOnRowMove = [...fields, primary]
+    const optimisticFieldValues = {}
+    const valuesBeforeOptimisticUpdate = {}
+
+    fieldsToCallOnRowMove.forEach((field) => {
+      const fieldType = this.$registry.get('field', field._.type.type)
+      const fieldID = `field_${field.id}`
+      const currentFieldValue = row[fieldID]
+      const fieldValue = fieldType.onRowMove(
+        row,
+        order,
+        oldOrder,
+        field,
+        currentFieldValue
+      )
+      if (currentFieldValue !== fieldValue) {
+        optimisticFieldValues[fieldID] = fieldValue
+        valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue
+      }
+    })
+
     dispatch('updatedExistingRow', {
       view: grid,
       fields,
       primary,
       row,
-      values: { order },
+      values: { order, ...optimisticFieldValues },
     })
 
     try {
@@ -992,6 +1038,9 @@ export const actions = {
         row.id,
         before !== null ? before.id : null
       )
+      // Use the return value to update the moved row with values from
+      // the backend
+      commit('UPDATE_ROW_IN_BUFFER', { row, values: data })
       if (before === null) {
         // Not having a before means that the row was moved to the end and because
         // that order was just an estimation, we want to update it with the real
@@ -1009,7 +1058,7 @@ export const actions = {
         fields,
         primary,
         row,
-        values: { order: oldOrder },
+        values: { order: oldOrder, ...valuesBeforeOptimisticUpdate },
       })
       throw error
     }
@@ -1023,7 +1072,47 @@ export const actions = {
     { commit, dispatch },
     { table, view, row, field, fields, primary, value, oldValue }
   ) {
+    // Immediately updated the store with the updated row field
+    // value.
     commit('UPDATE_ROW_FIELD_VALUE', { row, field, value })
+
+    const optimisticFieldValues = {}
+    const valuesBeforeOptimisticUpdate = {}
+
+    // Store the before value of the field that gets updated
+    // in case we need to rollback changes
+    valuesBeforeOptimisticUpdate[field.id] = oldValue
+
+    let fieldsToCallOnRowChange = [...fields, primary]
+
+    // We already added the updated field values to the store
+    // so we can remove the field from our fieldsToCallOnRowChange
+    fieldsToCallOnRowChange = fieldsToCallOnRowChange.filter((el) => {
+      return el.id !== field.id
+    })
+
+    fieldsToCallOnRowChange.forEach((fieldToCall) => {
+      const fieldType = this.$registry.get('field', fieldToCall._.type.type)
+      const fieldID = `field_${fieldToCall.id}`
+      const currentFieldValue = row[fieldID]
+      const optimisticFieldValue = fieldType.onRowChange(
+        row,
+        field,
+        value,
+        oldValue,
+        fieldToCall,
+        currentFieldValue
+      )
+
+      if (currentFieldValue !== optimisticFieldValue) {
+        optimisticFieldValues[fieldID] = optimisticFieldValue
+        valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue
+      }
+    })
+    commit('UPDATE_ROW_IN_BUFFER', {
+      row,
+      values: { ...optimisticFieldValues },
+    })
     dispatch('onRowChange', { view, row, fields, primary })
 
     const fieldType = this.$registry.get('field', field._.type.type)
@@ -1032,9 +1121,18 @@ export const actions = {
     values[`field_${field.id}`] = newValue
 
     try {
-      await RowService(this.$client).update(table.id, row.id, values)
+      const updatedRow = await RowService(this.$client).update(
+        table.id,
+        row.id,
+        values
+      )
+      commit('UPDATE_ROW_IN_BUFFER', { row, values: updatedRow.data })
     } catch (error) {
-      commit('UPDATE_ROW_FIELD_VALUE', { row, field, value: oldValue })
+      commit('UPDATE_ROW_IN_BUFFER', {
+        row,
+        values: { ...valuesBeforeOptimisticUpdate },
+      })
+
       dispatch('onRowChange', { view, row, fields, primary })
       throw error
     }
@@ -1046,12 +1144,12 @@ export const actions = {
    */
   updatedExistingRow(
     { commit, getters, dispatch },
-    { view, fields, primary, row, values }
+    { view, fields, primary, row, values, metadata }
   ) {
     const oldRow = clone(row)
     const newRow = Object.assign(clone(row), values)
-    populateRow(oldRow)
-    populateRow(newRow)
+    populateRow(oldRow, metadata)
+    populateRow(newRow, metadata)
 
     dispatch('updateMatchFilters', { view, row: oldRow, fields, primary })
     dispatch('updateSearchMatchesForRow', { row: oldRow, fields, primary })
@@ -1065,7 +1163,13 @@ export const actions = {
     if (oldRowExists && !newRowExists) {
       dispatch('deletedExistingRow', { view, fields, primary, row })
     } else if (!oldRowExists && newRowExists) {
-      dispatch('createdNewRow', { view, fields, primary, values: newRow })
+      dispatch('createdNewRow', {
+        view,
+        fields,
+        primary,
+        values: newRow,
+        metadata,
+      })
     } else if (oldRowExists && newRowExists) {
       // If the new order already exists in the buffer and is not the row that has
       // been updated, we need to decrease all the other orders, otherwise we could
@@ -1096,7 +1200,7 @@ export const actions = {
 
       if (oldRowInBuffer) {
         // If the old row is inside the buffer at a known position.
-        commit('UPDATE_ROW_IN_BUFFER', { row, values })
+        commit('UPDATE_ROW_IN_BUFFER', { row, values, metadata })
         commit('SET_BUFFER_LIMIT', getters.getBufferLimit - 1)
       } else if (oldIsFirst) {
         // If the old row exists in the buffer, but is at the before position.
@@ -1374,6 +1478,15 @@ export const actions = {
       fields,
       primary,
     })
+  },
+  updateRowMetadata(
+    { commit, getters, dispatch },
+    { tableId, rowId, rowMetadataType, updateFunction }
+  ) {
+    const row = getters.getRow(rowId)
+    if (row) {
+      commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
+    }
   },
 }
 

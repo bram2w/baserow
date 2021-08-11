@@ -19,32 +19,20 @@
 </template>
 
 <script>
-import moment from 'moment'
-import {
-  getDateMomentFormat,
-  getTimeMomentFormat,
-} from '@baserow/modules/database/utils/date'
+import readOnlyDateField from '@baserow/modules/database/mixins/readOnlyDateField'
 
 export default {
   name: 'FunctionalGridViewFieldDate',
-  methods: {
-    getDate(field, value) {
-      if (value === null) {
-        return ''
-      }
-
-      const existing = moment.utc(value || undefined)
-      const dateFormat = getDateMomentFormat(field.date_format)
-      return existing.format(dateFormat)
+  mixins: [readOnlyDateField],
+  props: {
+    field: {
+      type: Object,
+      required: true,
     },
-    getTime(field, value) {
-      if (value === null) {
-        return ''
-      }
-
-      const existing = moment.utc(value || undefined)
-      const timeFormat = getTimeMomentFormat(field.date_time_format)
-      return existing.format(timeFormat)
+    value: {
+      type: String,
+      required: false,
+      default: '',
     },
   },
 }

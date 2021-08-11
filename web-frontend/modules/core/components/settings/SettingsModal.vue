@@ -1,5 +1,5 @@
 <template>
-  <Modal :sidebar="true">
+  <Modal :left-sidebar="true" :left-sidebar-scrollable="true">
     <template #sidebar>
       <div class="modal-sidebar__head">
         <div class="modal-sidebar__head-initials-icon">

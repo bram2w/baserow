@@ -1,6 +1,6 @@
-import moment from 'moment'
 import BigNumber from 'bignumber.js'
 
+import moment from '@baserow/modules/core/moment'
 import {
   isValidURL,
   isValidEmail,
@@ -11,6 +11,7 @@ import { Registerable } from '@baserow/modules/core/registry'
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
+import FieldCreatedOnLastModifiedSubForm from '@baserow/modules/database/components/field/FieldCreatedOnLastModifiedSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 import FieldSingleSelectSubForm from '@baserow/modules/database/components/field/FieldSingleSelectSubForm'
 
@@ -22,6 +23,7 @@ import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldNumber'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/GridViewFieldBoolean'
 import GridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDate'
+import GridViewFieldDateReadOnly from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDateReadOnly'
 import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFile'
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
@@ -44,6 +46,7 @@ import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEdi
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
+import RowEditFieldDateReadOnly from '@baserow/modules/database/components/row/RowEditFieldDateReadOnly'
 import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
@@ -184,6 +187,7 @@ export class FieldType extends Registerable {
     this.sortIndicator = this.getSortIndicator()
     this.canSortInView = this.getCanSortInView()
     this.canBePrimaryField = this.getCanBePrimaryField()
+    this.isReadOnly = this.getIsReadOnly()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -216,6 +220,7 @@ export class FieldType extends Registerable {
       name: this.name,
       sortIndicator: this.sortIndicator,
       canSortInView: this.canSortInView,
+      isReadOnly: this.isReadOnly,
     }
   }
 
@@ -374,6 +379,60 @@ export class FieldType extends Registerable {
         filterValue
       )
     )
+  }
+
+  /**
+   * Is called for each field in the row when another field value in the row has
+   * changed. Optionally, a different value can be returned here for that field. This
+   * is for example used by the last modified field type to update the last modified
+   * value in real time when a row has changed.
+   */
+  onRowChange(
+    row,
+    updatedField,
+    updatedFieldValue,
+    updatedFieldOldValue,
+    currentField,
+    currentFieldValue
+  ) {
+    return currentFieldValue
+  }
+
+  /**
+   * Is called for each field in the row when a row has moved to another position.
+   * Optionally, a different value can be returned here for that field. This is for
+   * example used by the last modified field type to update the last modified value
+   * in real time when a row has moved.
+   */
+  onRowMove(row, order, oldOrder, currentField, currentFieldValue) {
+    return currentFieldValue
+  }
+
+  /**
+   * Is called for each field in a row when a new row is being created. This can be
+   * used to set a default value. This value will be added to the row before the
+   * call submitted to the backend, so the user will immediately see it.
+   */
+  getNewRowValue(field) {
+    return this.getEmptyValue(field)
+  }
+
+  /**
+   * Determines whether a view refresh should be executed after the specific field
+   * has been added to a table. This is for example needed when a value depends on
+   * the backend and can't be guessed or calculated by the web-frontend.
+   */
+  shouldRefreshWhenAdded() {
+    return false
+  }
+
+  /**
+   * Determines whether the fieldType is a read only field. Read only fields will be
+   * excluded from update requests to the backend. It is also not possible to change
+   * the value by for example pasting.
+   */
+  getIsReadOnly() {
+    return false
   }
 }
 
@@ -828,37 +887,17 @@ export class BooleanFieldType extends FieldType {
   }
 }
 
-export class DateFieldType extends FieldType {
-  static getType() {
-    return 'date'
-  }
-
+class BaseDateFieldType extends FieldType {
   getIconClass() {
     return 'calendar-alt'
   }
 
-  getName() {
-    return 'Date'
+  getSortIndicator() {
+    return ['text', '1', '9']
   }
 
   getFormComponent() {
     return FieldDateSubForm
-  }
-
-  getGridViewFieldComponent() {
-    return GridViewFieldDate
-  }
-
-  getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldDate
-  }
-
-  getRowEditFieldComponent() {
-    return RowEditFieldDate
-  }
-
-  getSortIndicator() {
-    return ['text', '1', '9']
   }
 
   getSort(name, order) {
@@ -937,6 +976,168 @@ export class DateFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+}
+
+export class DateFieldType extends BaseDateFieldType {
+  static getType() {
+    return 'date'
+  }
+
+  getName() {
+    return 'Date'
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldDate
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldDate
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldDate
+  }
+}
+
+export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
+  getIsReadOnly() {
+    return true
+  }
+
+  getFormComponent() {
+    return FieldCreatedOnLastModifiedSubForm
+  }
+
+  getFormViewFieldComponent() {
+    return null
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldDateReadOnly
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldDateReadOnly
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldDate
+  }
+
+  /**
+   * The "new row" value for the new row in the case of LastModified or CreatedOn Fields
+   * is simply the current time.
+   */
+  getNewRowValue() {
+    return moment().utc().format()
+  }
+
+  shouldRefreshWhenAdded() {
+    return true
+  }
+
+  toHumanReadableString(field, value) {
+    const date = moment.tz(value, field.timezone)
+
+    if (date.isValid()) {
+      const dateFormat = getDateMomentFormat(field.date_format)
+      let dateString = date.format(dateFormat)
+
+      if (field.date_include_time) {
+        const timeFormat = getTimeMomentFormat(field.date_time_format)
+        dateString = `${dateString} ${date.format(timeFormat)}`
+      }
+
+      return dateString
+    } else {
+      return ''
+    }
+  }
+
+  prepareValueForCopy(field, value) {
+    return this.toHumanReadableString(field, value)
+  }
+
+  getDocsDataType(field) {
+    return null
+  }
+
+  getDocsDescription(field, firstPartOverwrite) {
+    const firstPart = firstPartOverwrite || 'This is a read only field.'
+    return field.date_include_time
+      ? `${firstPart} The response will be a datetime in ISO format.`
+      : `${firstPart} The response will be a date in ISO format.`
+  }
+
+  getDocsRequestExample(field) {
+    return field.date_include_time ? '2020-01-01T12:00:00Z' : '2020-01-01'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+}
+
+export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
+  static getType() {
+    return 'last_modified'
+  }
+
+  getIconClass() {
+    return 'edit'
+  }
+
+  getName() {
+    return 'Last Modified'
+  }
+
+  getDocsDescription(field) {
+    return super.getDocsDescription(
+      field,
+      'The last modified field is a read only field.'
+    )
+  }
+
+  _onRowChangeOrMove() {
+    return moment().utc().format()
+  }
+
+  onRowChange(
+    row,
+    updatedField,
+    updatedFieldValue,
+    updatedFieldOldValue,
+    currentField,
+    currentFieldValue
+  ) {
+    return this._onRowChangeOrMove()
+  }
+
+  onRowMove(row, order, oldOrder, currentField, currentFieldValue) {
+    return this._onRowChangeOrMove()
+  }
+}
+
+export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
+  static getType() {
+    return 'created_on'
+  }
+
+  getIconClass() {
+    return 'plus'
+  }
+
+  getDocsDescription(field) {
+    return super.getDocsDescription(
+      field,
+      'The created on field is a read only field.'
+    )
+  }
+
+  getName() {
+    return 'Created On'
   }
 }
 
@@ -1164,8 +1365,7 @@ export class FileFieldType extends FieldType {
   getDocsRequestExample() {
     return [
       {
-        name:
-          'VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+        name: 'VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
       },
     ]
   }
@@ -1173,24 +1373,20 @@ export class FileFieldType extends FieldType {
   getDocsResponseExample() {
     return [
       {
-        url:
-          'https://files.baserow.io/user_files/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+        url: 'https://files.baserow.io/user_files/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
         thumbnails: {
           tiny: {
-            url:
-              'https://files.baserow.io/media/thumbnails/tiny/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+            url: 'https://files.baserow.io/media/thumbnails/tiny/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
             width: 21,
             height: 21,
           },
           small: {
-            url:
-              'https://files.baserow.io/media/thumbnails/small/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+            url: 'https://files.baserow.io/media/thumbnails/small/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
             width: 48,
             height: 48,
           },
         },
-        name:
-          'VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+        name: 'VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
         size: 229940,
         mime_type: 'image/png',
         is_image: true,

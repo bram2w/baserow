@@ -36,7 +36,7 @@
 
 <script>
 import gridField from '@baserow/modules/database/mixins/gridField'
-import { isCharacterKeyPress } from '@baserow/modules/core/utils/events'
+import { isPrintableUnicodeCharacterKeyPress } from '@baserow/modules/core/utils/events'
 import singleSelectField from '@baserow/modules/database/mixins/singleSelectField'
 
 export default {
@@ -73,11 +73,13 @@ export default {
           return
         }
 
-        // When the enter key is pressed when not editing the value we want to show the
-        // dropdown.
+        // When the enter key, any printable character or F2 is pressed when not editing
+        // the value we want to show the dropdown.
         if (
           !this.editing &&
-          (event.keyCode === 13 || isCharacterKeyPress(event))
+          (event.keyCode === 13 ||
+            isPrintableUnicodeCharacterKeyPress(event) ||
+            event.key === 'F2')
         ) {
           this.toggleDropdown()
         }

@@ -47,6 +47,14 @@ class GroupUserAlreadyExists(Exception):
     """
 
 
+class GroupUserIsLastAdmin(Exception):
+    """
+    Raised when the last admin of the group tries to leave it. This will leave the
+    group in a state where no one has control over it. He either needs to delete the
+    group or make someone else admin.
+    """
+
+
 class ApplicationDoesNotExist(Exception):
     """Raised when trying to get an application that does not exist."""
 

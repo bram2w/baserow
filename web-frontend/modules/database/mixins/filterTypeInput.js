@@ -1,3 +1,5 @@
+import viewFilter from '@baserow/modules/database/mixins/viewFilter'
+
 let delayTimeout = null
 
 /**
@@ -7,29 +9,20 @@ let delayTimeout = null
  * passes.
  */
 export default {
-  props: {
-    value: {
-      type: String,
-      required: true,
-    },
-    readOnly: {
-      type: Boolean,
-      required: true,
-    },
-  },
+  mixins: [viewFilter],
   data() {
     return {
       copy: null,
     }
   },
   watch: {
-    value(value) {
+    'filter.value'(value) {
       this.copy = value
       clearTimeout(delayTimeout)
     },
   },
   created() {
-    this.copy = this.value
+    this.copy = this.filter.value
   },
   methods: {
     delayedUpdate(value, immediately = false) {

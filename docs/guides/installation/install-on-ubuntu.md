@@ -31,16 +31,15 @@ are new to firewalls.
 Baserow uses PostgreSQL in order to store its user data. You can install PostgreSQL
 with the following commands:
 
-```
+```bash
 $ sudo apt install postgresql postgresql-contrib -y
-$ sudo -u postgres psql
-postgres=# create database baserow;
-CREATE DATABASE
-postgres=# create user baserow with encrypted password 'yourpassword';
-CREATE ROLE
-postgres=# grant all privileges on database baserow to baserow;
-GRANT
-postgres=# \q
+# Make sure you replace 'yourpassword' below with a secure password for your database
+# user.
+$ sudo -u postgres psql << EOF
+create database baserow;
+create user baserow with encrypted password 'yourpassword';
+grant all privileges on database baserow to baserow;
+EOF
 ```
 
 Make sure that you use a secure password instead of `yourpassword`! Also take care that
@@ -52,16 +51,26 @@ baserow user password.
 Baserow uses Redis for asynchronous tasks and the real time collaboration. You can
 install Redis with the following commands.
 
-```
+```bash
 $ sudo add-apt-repository ppa:chris-lea/redis-server
 $ sudo apt update
 $ sudo apt install redis-server -y
-$ sed -i 's/supervised no/supervised systemd/g' /etc/redis/redis.conf
+$ sudo sed -i 's/supervised no/supervised systemd/g' /etc/redis/redis.conf
 $ sudo systemctl enable --now redis-server
 $ sudo systemctl restart redis.service
 ```
 
 Redis is not publicly accessible by default, so there is no need to setup a password.
+
+## Install other utils 
+
+Git is required to download the source code of Baserow so you can install it in the 
+following section. Curl will be required later in the guide to install nodejs. 
+Install them both using the following command:
+
+```bash
+$ sudo apt install git curl -y 
+```
 
 ## Install Baserow
 
@@ -72,8 +81,8 @@ In this section, we will install Baserow itself. We will need a new user called
 # Create baserow user
 $ sudo useradd baserow
 $ sudo passwd baserow
-Enter new UNIX password: yourpassword
-Retype new UNIX password: yourpassword
+# Enter new UNIX password: yourpassword
+# Retype new UNIX password: yourpassword
 
 # Change to root user
 $ sudo -i
@@ -92,18 +101,28 @@ it for when you need it later.
 
 In order to use the Baserow application, we will need to create a media directory for
 the uploaded user files, a virtual environment and install some more dependencies
-like: NodeJS, Yarn, Python 3.
+like: NodeJS, Yarn, Python 3.7.
+
+First, if you are on Ubuntu version 20.04 or later you will need add the following 
+repository to then be able to install Python 3.7:
+
+```bash
+add-apt-repository ppa:deadsnakes/ppa
+apt-get update
+```
+
+Next follow these steps:
 
 ```bash
 # Create uploaded user files and media directory
 $ mkdir media
 $ chmod 0755 media
 
-# Install python3, pip & virtualenv
-$ apt install python3 python3-pip virtualenv libpq-dev libmysqlclient-dev -y
+# Install python3.7, pip & virtualenv
+$ apt install python3.7 python3.7-dev python3-pip virtualenv libpq-dev libmysqlclient-dev -y
 
 # Create virtual environment
-$ virtualenv -p python3 env
+$ virtualenv -p python3.7 env
 
 # Activate the virtual environment
 $ source env/bin/activate
@@ -200,6 +219,23 @@ $ baserow sync_templates
 $ deactivate
 ```
 
+## Install MJML used to generate email bodies
+
+Baserow sends invite and password reset emails to users. To do this it uses a technology 
+called MJML which generates the email bodies from a template. For email sending to work 
+in Baserow you will need to install and set up an MJML server by following the steps 
+below:
+
+```bash
+$ mkdir mjml_install
+$ cd mjml_install
+$ npm init -y && npm install mjml
+$ cd /baserow
+```
+
+You will then later on need to set the environment variables discussed in the
+Email SMTP configuration section to get Baserow sending emails.
+
 ## Install & Configure Supervisor
 
 Supervisor is an application that starts and keeps track of processes and will restart
@@ -222,13 +258,21 @@ $ cp baserow/docs/guides/installation/configuration-files/supervisor.conf /etc/s
 You will need to edit the `baserow.conf` file (located now at 
 `/etc/supervisor/conf.d/`) in order to set the necessary environment
 variables. You will need to change at least the following variables which can be found
-in the `environment=` section.
+in the `environment=` section. Ensure these URL variables start with http:// or https://
+.
 
 - `PUBLIC_WEB_FRONTEND_URL`: The URL under which your frontend can be reached from the
   internet.
 - `PUBLIC_BACKEND_URL`: The URL under which your backend can be reached from the
   internet.
 - `MEDIA_URL`: The URL under which your media files can be reached from the internet.
+
+You can make the modifications using sed like so:
+```bash
+$ sed -i 's/\*YOUR_BACKEND_DOMAIN\*/https:\/\/api.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
+$ sed -i 's/\*YOUR_WEB_FRONTEND_DOMAIN\*/https:\/\/baserow.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
+$ sed -i 's/\*YOUR_MEDIA_DOMAIN\*/https:\/\/media.domain.com/g' /etc/supervisor/conf.d/baserow.conf 
+```
 
 **Backend**
 
@@ -240,6 +284,24 @@ in the `environment=` section.
 - `DATABASE_PASSWORD`: The password of the `baserow` database user
 - `DATABASE_HOST`: The host computer that runs the database (usually `localhost`)
 - `REDIS_HOST`: The host computer that runs the caching server (usually `localhost`)
+
+**Email SMTP configuration**
+
+If you want to configure Baserow to send emails you will have to add the following 
+environment variables to the `/etc/supervisor/conf.d/baserow.conf` environment block. 
+Otherwise, by default Baserow will not send emails and instead just log them in 
+`/var/log/baserow/worker.error`.
+
+* `EMAIL_SMTP` (default ``): Providing anything other than an empty string will enable
+  SMTP email.
+* `EMAIL_SMTP_HOST` (default `localhost`): The hostname of the SMTP server.
+* `EMAIL_SMTP_USE_TLS` (default ``): Providing anything other than an empty string will
+  enable connecting to the SMTP server via TLS.
+* `EMAIL_SMTP_PORT` (default `25`): The port of the SMTP server.
+* `EMAIL_SMTP_USER` (default ``): The username for the SMTP server.
+* `EMAIL_SMTP_PASSWORD` (default ``): The password of the SMTP server.
+* `FROM_EMAIL` (default `no-reply@localhost`): The 'from' email address of the emails
+  that the platform sends. Like when a user requests a password recovery.
 
 After modifying these files you need to make supervisor reread the files and apply the
 changes.
@@ -302,7 +364,7 @@ aren't any additional instructions in the previous release blog posts.
 
 Follow these steps if you installed after June first 2021:
 
-```
+```bash
 $ cd /baserow/baserow
 $ git pull
 $ cd /baserow
@@ -324,7 +386,7 @@ $ supervisorctl restart all
 
 Follow these steps if you installed before June first 2021.
 
-```
+```bash
 $ cd /baserow
 $ git pull
 $ source backend/env/bin/activate

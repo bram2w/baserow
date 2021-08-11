@@ -14,6 +14,9 @@ export default (client) => {
     update(id, values) {
       return client.patch(`/groups/${id}/`, values)
     },
+    leave(id) {
+      return client.post(`/groups/${id}/leave/`)
+    },
     delete(id) {
       return client.delete(`/groups/${id}/`)
     },

@@ -37,7 +37,9 @@
       </div>
       <div class="file-field-modal__body">
         <a
-          class="file-field-modal__body-nav file-field-modal__body-nav--previous"
+          class="
+            file-field-modal__body-nav file-field-modal__body-nav--previous
+          "
           @click="previous()"
         >
           <i class="fas fa-chevron-left"></i>

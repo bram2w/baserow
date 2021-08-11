@@ -21,7 +21,7 @@ def test_list_templates(api_client, data_fixture):
         icon="document",
         category=category_1,
         keywords="test1,test2",
-        slug="project-management",
+        slug="project-tracker",
     )
     template_2 = data_fixture.create_template(
         name="Template 2",

@@ -1,15 +1,13 @@
 import re
 from decimal import Decimal
-from math import floor, ceil
 
-from django.conf import settings
 from django.db import transaction
 from django.db.models import Max, F
 from django.db.models.fields.related import ManyToManyField
+from math import floor, ceil
 
 from baserow.contrib.database.fields.models import Field
 from baserow.core.trash.handler import TrashHandler
-
 from baserow.core.utils import split_comma_separated_string
 from .exceptions import RowDoesNotExist
 from .signals import (
@@ -245,6 +243,47 @@ class RowHandler:
 
         return row
 
+    # noinspection PyMethodMayBeStatic
+    def has_row(self, user, table, row_id, raise_error=False, model=None):
+        """
+        Checks if a row with the given id exists and is not trashed in the table.
+
+        This method is preferred over using get_row when you do not actually need to
+        access any values of the row as it will not construct a full model but instead
+        do a much more effecient query to check only if the row exists or not.
+
+        :param user: The user of whose behalf the row is being checked.
+        :type user: User
+        :param table: The table where the row must be checked in.
+        :type table: Table
+        :param row_id: The id of the row that must be checked.
+        :type row_id: int
+        :param raise_error: Whether or not to raise an Exception if the row does not
+            exist or just return a boolean instead.
+        :type raise_error: bool
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :type model: Model
+        :raises RowDoesNotExist: When the row with the provided id does not exist
+            and raise_error is set to True.
+        :raises UserNotInGroup: If the user does not belong to the group.
+        :return: If raise_error is False then a boolean indicating if the row does or
+            does not exist.
+        :rtype: bool
+        """
+
+        if not model:
+            model = table.get_model(field_ids=[])
+
+        group = table.database.group
+        group.has_user(user, raise_error=True)
+
+        row_exists = model.objects.filter(id=row_id).exists()
+        if not row_exists and raise_error:
+            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+        else:
+            return row_exists
+
     def create_row(
         self, user, table, values=None, model=None, before=None, user_field_names=False
     ):
@@ -391,10 +430,7 @@ class RowHandler:
         if not model:
             model = table.get_model()
 
-        # Because it is possible to have a different database for the user tables we
-        # need to start another transaction here, otherwise it is not possible to use
-        # the select_for_update function.
-        with transaction.atomic(settings.USER_TABLE_DATABASE):
+        with transaction.atomic():
             try:
                 row = model.objects.select_for_update().get(id=row_id)
             except model.DoesNotExist:
@@ -455,21 +491,17 @@ class RowHandler:
         if not model:
             model = table.get_model()
 
-        # Because it is possible to have a different database for the user tables we
-        # need to start another transaction here, otherwise it is not possible to use
-        # the select_for_update function.
-        with transaction.atomic(settings.USER_TABLE_DATABASE):
-            try:
-                row = model.objects.select_for_update().get(id=row_id)
-            except model.DoesNotExist:
-                raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+        try:
+            row = model.objects.select_for_update().get(id=row_id)
+        except model.DoesNotExist:
+            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
-            before_return = before_row_update.send(
-                self, row=row, user=user, table=table, model=model
-            )
+        before_return = before_row_update.send(
+            self, row=row, user=user, table=table, model=model
+        )
 
-            row.order = self.get_order_before_row(before, model)
-            row.save()
+        row.order = self.get_order_before_row(before, model)
+        row.save()
 
         row_updated.send(
             self,

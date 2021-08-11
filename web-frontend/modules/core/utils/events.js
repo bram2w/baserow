@@ -1,18 +1,20 @@
-export function isCharacterKeyPress(evt) {
-  if (typeof evt.which === 'undefined') {
-    // This is IE, which only fires keypress events for printable keys
+/*
+  This function is a helper which determines whether the pressed key
+  is 'not a Control Key Character'
+  thereby determining if the key is a 'printable character'.
+  Any key combination with a control or a meta key is NOT a
+  'printable character' thereby making it possible to use combinations
+  such as CTRL+C/CTRL+V.
+*/
+export function isPrintableUnicodeCharacterKeyPress(event) {
+  if (event == null || event.ctrlKey || event.metaKey) {
+    return false
+  }
+  const { key } = event
+
+  const nonControlCharacterRegex = /^\P{C}$/iu
+  if (nonControlCharacterRegex.test(key)) {
     return true
-  } else if (typeof evt.which === 'number' && evt.which > 0) {
-    // In other browsers except old versions of WebKit, evt.which is
-    // only greater than zero if the keypress is a printable key.
-    // We need to filter out backspace and ctrl/alt/meta key combinations
-    return (
-      !evt.ctrlKey &&
-      !evt.metaKey &&
-      !evt.altKey &&
-      evt.which !== 8 &&
-      evt.which !== 16
-    )
   }
   return false
 }

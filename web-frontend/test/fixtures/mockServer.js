@@ -55,7 +55,12 @@ export class MockServer {
 
     this.mock
       .onGet(`/database/views/grid/${gridView.id}/`, {
-        params: { limit: 120, offset: 0, search: searchTerm },
+        params: {
+          limit: 120,
+          offset: 0,
+          search: searchTerm,
+          include: 'row_metadata',
+        },
       })
       .reply(200, {
         count: results.length,

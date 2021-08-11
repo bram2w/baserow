@@ -11,8 +11,7 @@
 </template>
 
 <script>
-import moment from 'moment'
-
+import moment from '@baserow/modules/core/moment'
 import context from '@baserow/modules/core/mixins/context'
 
 export default {

@@ -228,9 +228,8 @@ export default {
         }
 
         // If the row needs to be placed after itself.
-        const allRows = this.$store.getters[
-          this.storePrefix + 'view/grid/getAllRows'
-        ]
+        const allRows =
+          this.$store.getters[this.storePrefix + 'view/grid/getAllRows']
         const index = allRows.findIndex((r) => r.id === this.targetRow.id)
         const after = allRows[index - 1]
         if (after && this.row.id === after.id) {

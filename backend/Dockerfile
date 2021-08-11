@@ -18,6 +18,7 @@ RUN apt-get update && \
     libpq-dev \
     dos2unix \
     tini \
+    postgresql-client \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \

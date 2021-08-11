@@ -66,15 +66,27 @@ Baserow on your network.
 2. `PUBLIC_BACKEND_URL={REPLACE_WITH_YOUR_DOMAIN_NAME_OR_HOST_IP}:8000` - This will
    ensure that Baserow clients will be able to successfully connect to the backend,
    if you can visit Baserow at port `3000` but you are getting API errors please ensure
-   this variable is set correctly.
+   this variable is set correctly. If an IP address this must start with `http://` or 
+   `https://`.
 3. `PUBLIC_WEB_FRONTEND_URL={REPLACE_WITH_YOUR_DOMAIN_NAME_OR_HOST_IP}:3000` - The same
    variable as above but the URL for the web-frontend container instead.
    
-For example you could run the command below after replacing `REPLACE_ME` with the
-IP address or domain name of the server where Baserow is running:
+Then you will need to go to `src/baserow/config/settings/base.py:16` and modify the
+`ALLOWED_HOSTS` variable to include the hostname or IP address of the server that 
+Baserow will be running on (the hostname/ip you will be typing into the
+browser to access the site). For example adding a local network's IP would look like:
+```python
+ALLOWED_HOSTS = ["localhost", "192.168.0.194"]
+```
+   
+One way of setting the 3 environment variables is below. Please replease `REPLACE_ME` 
+with the IP address or domain name of the server where Baserow is running. Ensure that 
+you prepend IP addresses with `http://` as shown in the second command below.
 
 ```bash
-$ HOST_PUBLISH_IP=0.0.0.0 PUBLIC_BACKEND_URL=REPLACE_ME:8000 PUBLIC_WEB_FRONTEND_URL=REPLACE_ME:3000 docker-compose up 
+$ HOST_PUBLISH_IP=0.0.0.0 PUBLIC_BACKEND_URL=REPLACE_ME:8000 PUBLIC_WEB_FRONTEND_URL=REPLACE_ME:3000 docker-compose up --build
+# For example running Baserow on a local network would look something like:
+$ HOST_PUBLISH_IP=0.0.0.0 PUBLIC_BACKEND_URL=http://192.168.0.194:8000 PUBLIC_WEB_FRONTEND_URL=http://192.168.0.194:3000 docker-compose up --build
 ```
 
 ### Configure an external email server
@@ -146,6 +158,34 @@ $ SYNC_TEMPLATES_ON_STARTUP=false ./dev.sh # or dev.sh it will pass through what
 $ docker-compose -f docker-compose.yml -f docker-compose.dev.yml run backend manage sync_templates 
 $ # Or instead using ./dev.sh 
 $ ./dev.sh run backend manage sync_templates 
+```
+
+### Back-up your Baserow DB
+
+Please read the output of `docker-compose run backend manage backup_baserow --help` and
+the runbook found here [runbooks/back-up-and-restore-baserow.md](https://gitlab.com/bramw/baserow/-/blob/develop/docs/runbooks/back-up-and-restore-baserow.md.md)
+before backing up your Baserow database. 
+
+```bash
+$ docker-compose build # Make sure you have built the latest images first
+$ mkdir ~/baserow_backups
+# The folder must be the same UID:GID as the user running inside the container, which
+# for the local env is 9999:9999, for the dev env it is 1000:1000 or your own UID:GID
+# when using ./dev.sh
+$ sudo chown 9999:9999 ~/baserow_backups/ 
+$ docker-compose run -e PGPASSWORD=baserow -v ~/baserow_backups:/baserow/backups backend manage backup_baserow -h db -d baserow -U baserow -f /baserow/backups/baserow_backup.tar.gz 
+# backups/ now contains your Baserow backup.
+```
+
+### Restore your Baserow DB from a back-up
+
+Please read the output of `docker-compose run backend manage restore_baserow --help` and
+the runbook found here [runbooks/back-up-and-restore-baserow.md](https://gitlab.com/bramw/baserow/-/blob/develop/docs/runbooks/back-up-and-restore-baserow.md.md)
+before restoring a Baserow database.
+
+```bash
+$ docker-compose build # Make sure you have built the latest images first
+$ docker-compose run -e PGPASSWORD=baserow -v ~/baserow_backups/:/baserow/backups/ backend manage restore_baserow -h db -d baserow -U baserow -f /baserow/backups/baserow_backup.tar.gz
 ```
 
 ## Common Problems

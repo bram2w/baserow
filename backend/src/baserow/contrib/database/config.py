@@ -63,6 +63,8 @@ class DatabaseConfig(AppConfig):
             NumberFieldType,
             BooleanFieldType,
             DateFieldType,
+            LastModifiedFieldType,
+            CreatedOnFieldType,
             LinkRowFieldType,
             EmailFieldType,
             FileFieldType,
@@ -77,6 +79,8 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(NumberFieldType())
         field_type_registry.register(BooleanFieldType())
         field_type_registry.register(DateFieldType())
+        field_type_registry.register(LastModifiedFieldType())
+        field_type_registry.register(CreatedOnFieldType())
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())
         field_type_registry.register(SingleSelectFieldType())
@@ -112,6 +116,8 @@ class DatabaseConfig(AppConfig):
             BooleanViewFilterType,
             SingleSelectEqualViewFilterType,
             SingleSelectNotEqualViewFilterType,
+            LinkRowHasViewFilterType,
+            LinkRowHasNotViewFilterType,
         )
 
         view_filter_type_registry.register(EqualViewFilterType())
@@ -130,6 +136,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
+        view_filter_type_registry.register(LinkRowHasViewFilterType())
+        view_filter_type_registry.register(LinkRowHasNotViewFilterType())
         view_filter_type_registry.register(BooleanViewFilterType())
         view_filter_type_registry.register(EmptyViewFilterType())
         view_filter_type_registry.register(NotEmptyViewFilterType())

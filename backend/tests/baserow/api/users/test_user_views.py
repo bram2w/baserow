@@ -17,9 +17,11 @@ User = get_user_model()
 
 @pytest.mark.django_db
 def test_create_user(client, data_fixture):
+    valid_password = "thisIsAValidPassword"
+    short_password = "short"
     response = client.post(
         reverse("api:user:index"),
-        {"name": "Test1", "email": "test@test.nl", "password": "test12"},
+        {"name": "Test1", "email": "test@test.nl", "password": valid_password},
         format="json",
     )
     response_json = response.json()
@@ -32,10 +34,11 @@ def test_create_user(client, data_fixture):
     assert response_json["user"]["username"] == "test@test.nl"
     assert response_json["user"]["first_name"] == "Test1"
     assert response_json["user"]["is_staff"] is True
+    assert response_json["user"]["id"] == user.id
 
     response_failed = client.post(
         reverse("api:user:index"),
-        {"name": "Test1", "email": "test@test.nl", "password": "test12"},
+        {"name": "Test1", "email": "test@test.nl", "password": valid_password},
         format="json",
     )
     assert response_failed.status_code == 400
@@ -43,7 +46,7 @@ def test_create_user(client, data_fixture):
 
     response_failed = client.post(
         reverse("api:user:index"),
-        {"name": "Test1", "email": " teSt@teST.nl ", "password": "test12"},
+        {"name": "Test1", "email": " teSt@teST.nl ", "password": valid_password},
         format="json",
     )
     assert response_failed.status_code == 400
@@ -52,7 +55,7 @@ def test_create_user(client, data_fixture):
     data_fixture.update_settings(allow_new_signups=False)
     response_failed = client.post(
         reverse("api:user:index"),
-        {"name": "Test1", "email": "test10@test.nl", "password": "test12"},
+        {"name": "Test1", "email": "test10@test.nl", "password": valid_password},
         format="json",
     )
     assert response_failed.status_code == 400
@@ -83,12 +86,35 @@ def test_create_user(client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"]["password"][0]["code"] == "max_length"
+    assert (
+        response_json["detail"]["password"][0]["code"] == "password_validation_failed"
+    )
+    assert (
+        response_json["detail"]["password"][0]["error"]
+        == "This password is too long. It must not exceed 256 characters."
+    )
+
+    response = client.post(
+        reverse("api:user:index"),
+        {"name": "Test2", "email": "random@test.nl", "password": short_password},
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]["password"][0]["code"] == "password_validation_failed"
+    )
+    assert (
+        response_json["detail"]["password"][0]["error"]
+        == "This password is too short. It must contain at least 8 characters."
+    )
 
 
 @pytest.mark.django_db
 def test_create_user_with_invitation(data_fixture, client):
     core_handler = CoreHandler()
+    valid_password = "thisIsAValidPassword"
     invitation = data_fixture.create_group_invitation(email="test0@test.nl")
     signer = core_handler.get_group_invitation_signer()
 
@@ -97,7 +123,7 @@ def test_create_user_with_invitation(data_fixture, client):
         {
             "name": "Test1",
             "email": "test@test.nl",
-            "password": "test12",
+            "password": valid_password,
             "group_invitation_token": "INVALID",
         },
         format="json",
@@ -110,7 +136,7 @@ def test_create_user_with_invitation(data_fixture, client):
         {
             "name": "Test1",
             "email": "test@test.nl",
-            "password": "test12",
+            "password": valid_password,
             "group_invitation_token": signer.dumps(99999),
         },
         format="json",
@@ -123,7 +149,7 @@ def test_create_user_with_invitation(data_fixture, client):
         {
             "name": "Test1",
             "email": "test@test.nl",
-            "password": "test12",
+            "password": valid_password,
             "group_invitation_token": signer.dumps(invitation.id),
         },
         format="json",
@@ -137,7 +163,7 @@ def test_create_user_with_invitation(data_fixture, client):
         {
             "name": "Test1",
             "email": "test0@test.nl",
-            "password": "test12",
+            "password": valid_password,
             "group_invitation_token": signer.dumps(invitation.id),
         },
         format="json",
@@ -154,6 +180,7 @@ def test_create_user_with_invitation(data_fixture, client):
 @pytest.mark.django_db
 def test_create_user_with_template(data_fixture, client):
     old_templates = settings.APPLICATION_TEMPLATES_DIR
+    valid_password = "thisIsAValidPassword"
     settings.APPLICATION_TEMPLATES_DIR = os.path.join(
         settings.BASE_DIR, "../../../tests/templates"
     )
@@ -164,7 +191,7 @@ def test_create_user_with_template(data_fixture, client):
         {
             "name": "Test1",
             "email": "test0@test.nl",
-            "password": "test12",
+            "password": valid_password,
             "template_id": -1,
         },
         format="json",
@@ -179,7 +206,7 @@ def test_create_user_with_template(data_fixture, client):
         {
             "name": "Test1",
             "email": "test0@test.nl",
-            "password": "test12",
+            "password": valid_password,
             "template_id": "random",
         },
         format="json",
@@ -194,7 +221,7 @@ def test_create_user_with_template(data_fixture, client):
         {
             "name": "Test1",
             "email": "test0@test.nl",
-            "password": "test12",
+            "password": valid_password,
             "template_id": template.id,
         },
         format="json",
@@ -264,6 +291,14 @@ def test_send_reset_password_email(data_fixture, client, mailoutbox):
 def test_password_reset(data_fixture, client):
     user = data_fixture.create_user(email="test@localhost")
     handler = UserHandler()
+    valid_password = "thisIsAValidPassword"
+    short_password = "short"
+    long_password = (
+        "Bgvmt95en6HGJZ9Xz0F8xysQ6eYgo2Y54YzRPxxv10b5n16F4rZ6YH4ulonocwiFK6970KiAxoYhU"
+        "LYA3JFDPIQGj5gMZZl25M46sO810Zd3nyBg699a2TDMJdHG7hAAi0YeDnuHuabyBawnb4962OQ1OO"
+        "f1MxzFyNWG7NR2X6MZQL5G1V61x56lQTXbvK1AG1IPM87bQ3YAtIBtGT2vK3Wd83q3he5ezMtUfzK"
+        "2ibj0WWhf86DyQB4EHRUJjYcBiI78iEJv5hcu33X2I345YosO66cTBWK45SqJEDudrCOq"
+    )
     signer = handler.get_reset_password_signer()
 
     response = client.post(reverse("api:user:reset_password"), {}, format="json")
@@ -273,7 +308,7 @@ def test_password_reset(data_fixture, client):
 
     response = client.post(
         reverse("api:user:reset_password"),
-        {"token": "test", "password": "test"},
+        {"token": "test", "password": valid_password},
         format="json",
     )
     response_json = response.json()
@@ -286,7 +321,7 @@ def test_password_reset(data_fixture, client):
     with freeze_time("2020-01-04 12:00"):
         response = client.post(
             reverse("api:user:reset_password"),
-            {"token": token, "password": "test"},
+            {"token": token, "password": valid_password},
             format="json",
         )
         response_json = response.json()
@@ -299,7 +334,7 @@ def test_password_reset(data_fixture, client):
     with freeze_time("2020-01-02 12:00"):
         response = client.post(
             reverse("api:user:reset_password"),
-            {"token": token, "password": "test"},
+            {"token": token, "password": valid_password},
             format="json",
         )
         response_json = response.json()
@@ -312,19 +347,73 @@ def test_password_reset(data_fixture, client):
     with freeze_time("2020-01-02 12:00"):
         response = client.post(
             reverse("api:user:reset_password"),
-            {"token": token, "password": "test"},
+            {"token": token, "password": valid_password},
             format="json",
         )
         assert response.status_code == 204
 
     user.refresh_from_db()
-    assert user.check_password("test")
+    assert user.check_password(valid_password)
+
+    with freeze_time("2020-01-02 12:00"):
+        token = signer.dumps(user.id)
+
+    with freeze_time("2020-01-02 12:00"):
+        response = client.post(
+            reverse("api:user:reset_password"),
+            {"token": token, "password": short_password},
+            format="json",
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+        assert (
+            response_json["detail"]["password"][0]["code"]
+            == "password_validation_failed"
+        )
+        assert (
+            response_json["detail"]["password"][0]["error"]
+            == "This password is too short. It must contain at least 8 characters."
+        )
+
+    user.refresh_from_db()
+    assert not user.check_password(short_password)
+
+    with freeze_time("2020-01-02 12:00"):
+        response = client.post(
+            reverse("api:user:reset_password"),
+            {"token": token, "password": long_password},
+            format="json",
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+        assert (
+            response_json["detail"]["password"][0]["code"]
+            == "password_validation_failed"
+        )
+        assert (
+            response_json["detail"]["password"][0]["error"]
+            == "This password is too long. It must not exceed 256 characters."
+        )
+
+    user.refresh_from_db()
+    assert not user.check_password(long_password)
 
 
 @pytest.mark.django_db
 def test_change_password(data_fixture, client):
+    valid_old_password = "thisIsAValidPassword"
+    valid_new_password = "thisIsAValidNewPassword"
+    short_password = "short"
+    long_password = (
+        "Bgvmt95en6HGJZ9Xz0F8xysQ6eYgo2Y54YzRPxxv10b5n16F4rZ6YH4ulonocwiFK6970KiAxoYhU"
+        "LYA3JFDPIQGj5gMZZl25M46sO810Zd3nyBg699a2TDMJdHG7hAAi0YeDnuHuabyBawnb4962OQ1OO"
+        "f1MxzFyNWG7NR2X6MZQL5G1V61x56lQTXbvK1AG1IPM87bQ3YAtIBtGT2vK3Wd83q3he5ezMtUfzK"
+        "2ibj0WWhf86DyQB4EHRUJjYcBiI78iEJv5hcu33X2I345YosO66cTBWK45SqJEDudrCOq"
+    )
     user, token = data_fixture.create_user_and_token(
-        email="test@localhost", password="test"
+        email="test@localhost", password=valid_old_password
     )
 
     response = client.post(
@@ -339,7 +428,7 @@ def test_change_password(data_fixture, client):
 
     response = client.post(
         reverse("api:user:change_password"),
-        {"old_password": "INCORRECT", "new_password": "new"},
+        {"old_password": "INCORRECT", "new_password": valid_new_password},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -348,18 +437,60 @@ def test_change_password(data_fixture, client):
     assert response_json["error"] == "ERROR_INVALID_OLD_PASSWORD"
 
     user.refresh_from_db()
-    assert user.check_password("test")
+    assert user.check_password(valid_old_password)
 
     response = client.post(
         reverse("api:user:change_password"),
-        {"old_password": "test", "new_password": "new"},
+        {"old_password": valid_old_password, "new_password": short_password},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]["new_password"][0]["code"]
+        == "password_validation_failed"
+    )
+    assert (
+        response_json["detail"]["new_password"][0]["error"]
+        == "This password is too short. It must contain at least 8 characters."
+    )
+
+    user.refresh_from_db()
+    assert user.check_password(valid_old_password)
+
+    response = client.post(
+        reverse("api:user:change_password"),
+        {"old_password": valid_old_password, "new_password": long_password},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]["new_password"][0]["code"]
+        == "password_validation_failed"
+    )
+    assert (
+        response_json["detail"]["new_password"][0]["error"]
+        == "This password is too long. It must not exceed 256 characters."
+    )
+
+    user.refresh_from_db()
+    assert user.check_password(valid_old_password)
+
+    response = client.post(
+        reverse("api:user:change_password"),
+        {"old_password": valid_old_password, "new_password": valid_new_password},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == 204
 
     user.refresh_from_db()
-    assert user.check_password("new")
+    assert user.check_password(valid_new_password)
 
 
 @pytest.mark.django_db

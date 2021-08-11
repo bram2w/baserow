@@ -211,7 +211,8 @@ echo "./dev.sh running docker-compose commands:
 "
 
 if [ "$down" = true ] ; then
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
+# Remove the containers and remove the anonymous volumes for cleanliness sake.
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml rm -s -v -f
 fi
 
 if [ "$kill" = true ] ; then

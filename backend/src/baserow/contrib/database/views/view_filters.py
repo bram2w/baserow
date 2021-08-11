@@ -9,16 +9,19 @@ from django.db.models import Q, IntegerField, BooleanField, DateTimeField
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
 
+from baserow.contrib.database.fields.field_filters import AnnotatedQ
 from baserow.contrib.database.fields.field_filters import (
     filename_contains_filter,
     OptionallyAnnotatedQ,
 )
 from baserow.contrib.database.fields.field_types import (
+    CreatedOnFieldType,
     TextFieldType,
     LongTextFieldType,
     URLFieldType,
     NumberFieldType,
     DateFieldType,
+    LastModifiedFieldType,
     LinkRowFieldType,
     BooleanFieldType,
     EmailFieldType,
@@ -27,6 +30,7 @@ from baserow.contrib.database.fields.field_types import (
     PhoneNumberFieldType,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.core.expressions import Timezone
 
 from .registries import ViewFilterType
 
@@ -104,6 +108,8 @@ class ContainsViewFilterType(ViewFilterType):
         EmailFieldType.type,
         PhoneNumberFieldType.type,
         DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
         SingleSelectFieldType.type,
         NumberFieldType.type,
     ]
@@ -187,7 +193,11 @@ class DateEqualViewFilterType(ViewFilterType):
     """
 
     type = "date_equal"
-    compatible_field_types = [DateFieldType.type]
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+    ]
 
     def get_filter(self, field_name, value, model_field, field):
         """
@@ -207,18 +217,34 @@ class DateEqualViewFilterType(ViewFilterType):
         except (ParserError, ValueError):
             return Q()
 
-        # If the length if string value is lower than 10 characters we know it is only
-        # a date so we can match only on year, month and day level. This way if a date
-        # is provided, but if it tries to compare with a models.DateTimeField it will
-        # still give back accurate results.
+        # If the length of the string value is lower than 10 characters we know it is
+        # only a date so we can match only on year, month and day level. This way if a
+        # date is provided, but if it tries to compare with a models.DateTimeField it
+        # will still give back accurate results.
+        # Since the LastModified and CreateOn fields are stored for a specific timezone
+        # we need to make sure to take this timezone into account when comparing to
+        # the "equals_date"
+        has_timezone = hasattr(field, "timezone")
         if len(value) <= 10:
-            return Q(
-                **{
-                    f"{field_name}__year": datetime.year,
-                    f"{field_name}__month": datetime.month,
-                    f"{field_name}__day": datetime.day,
+
+            def query_dict(query_field_name):
+                return {
+                    f"{query_field_name}__year": datetime.year,
+                    f"{query_field_name}__month": datetime.month,
+                    f"{query_field_name}__day": datetime.day,
                 }
-            )
+
+            if has_timezone:
+                timezone_string = field.get_timezone()
+                tmp_field_name = f"{field_name}_timezone_{timezone_string}"
+                return AnnotatedQ(
+                    annotation={
+                        f"{tmp_field_name}": Timezone(field_name, timezone_string)
+                    },
+                    q=query_dict(tmp_field_name),
+                )
+            else:
+                return Q(**query_dict(field_name))
         else:
             return Q(**{field_name: datetime})
 
@@ -241,7 +267,11 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
 
     type = "base_date_field_lookup_type"
     query_field_lookup = ""
-    compatible_field_types = [DateFieldType.type]
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+    ]
 
     @staticmethod
     def parse_date(value: str) -> datetime.date:
@@ -271,8 +301,24 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
             query_date_lookup = "__date"
         try:
             parsed_date = self.parse_date(value)
+            has_timezone = hasattr(field, "timezone")
             field_key = f"{field_name}{query_date_lookup}{self.query_field_lookup}"
-            return Q(**{field_key: parsed_date})
+
+            if has_timezone:
+                timezone_string = field.get_timezone()
+                tmp_field_name = f"{field_name}_timezone_{timezone_string}"
+                field_key = (
+                    f"{tmp_field_name}{query_date_lookup}{self.query_field_lookup}"
+                )
+
+                return AnnotatedQ(
+                    annotation={
+                        f"{tmp_field_name}": Timezone(field_name, timezone_string)
+                    },
+                    q={field_key: parsed_date},
+                )
+            else:
+                return Q(**{field_key: parsed_date})
         except (ParserError, ValueError):
             return Q()
 
@@ -286,7 +332,11 @@ class DateBeforeViewFilterType(BaseDateFieldLookupFilterType):
 
     type = "date_before"
     query_field_lookup = "__lt"
-    compatible_field_types = [DateFieldType.type]
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+    ]
 
 
 class DateAfterViewFilterType(BaseDateFieldLookupFilterType):
@@ -306,21 +356,38 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
     """
 
     type = "date_equals_today"
-    compatible_field_types = [DateFieldType.type]
+    compatible_field_types = [
+        DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
+    ]
     query_for = ["year", "month", "day"]
 
     def get_filter(self, field_name, value, model_field, field):
         timezone_string = value if value in all_timezones else "UTC"
         timezone_object = timezone(timezone_string)
+        field_has_timezone = hasattr(field, "timezone")
         now = datetime.utcnow().astimezone(timezone_object)
-        query_dict = dict()
-        if "year" in self.query_for:
-            query_dict[f"{field_name}__year"] = now.year
-        if "month" in self.query_for:
-            query_dict[f"{field_name}__month"] = now.month
-        if "day" in self.query_for:
-            query_dict[f"{field_name}__day"] = now.day
-        return Q(**query_dict)
+
+        def make_query_dict(query_field_name):
+            query_dict = dict()
+            if "year" in self.query_for:
+                query_dict[f"{query_field_name}__year"] = now.year
+            if "month" in self.query_for:
+                query_dict[f"{query_field_name}__month"] = now.month
+            if "day" in self.query_for:
+                query_dict[f"{query_field_name}__day"] = now.day
+
+            return query_dict
+
+        if field_has_timezone:
+            tmp_field_name = f"{field_name}_timezone_{timezone_string}"
+            return AnnotatedQ(
+                annotation={f"{tmp_field_name}": Timezone(field_name, timezone_string)},
+                q=make_query_dict(tmp_field_name),
+            )
+        else:
+            return Q(**make_query_dict(field_name))
 
 
 class DateEqualsCurrentMonthViewFilterType(DateEqualsTodayViewFilterType):
@@ -416,6 +483,65 @@ class BooleanViewFilterType(ViewFilterType):
         return Q()
 
 
+class LinkRowHasViewFilterType(ViewFilterType):
+    """
+    The link row has filter accepts the row ID of the related table as value. It
+    filters the queryset so that only rows that have a relationship with the provided
+    row ID will remain. So if for example '10' is provided, then only rows where the
+    link row field has a relationship with the row '10' persists.
+    """
+
+    type = "link_row_has"
+    compatible_field_types = [LinkRowFieldType.type]
+
+    def get_filter(self, field_name, value, model_field, field):
+        value = value.strip()
+
+        try:
+            return Q(**{f"{field_name}__in": [int(value)]})
+        except ValueError:
+            return Q()
+
+    def get_preload_values(self, view_filter):
+        """
+        This method preloads the display name of the related value. This prevents a
+        lot of API requests if the view has a lot of `link_row_has` filters. It will
+        also make sure that the display name is visible for read only previews.
+        """
+
+        name = None
+        related_row_id = None
+
+        try:
+            related_row_id = int(view_filter.value)
+        except ValueError:
+            pass
+
+        if related_row_id:
+            field = view_filter.field.specific
+            table = field.link_row_table
+            primary_field = table.field_set.get(primary=True)
+            model = table.get_model(field_ids=[], fields=[primary_field])
+
+            try:
+                name = str(model.objects.get(pk=related_row_id))
+            except model.DoesNotExist:
+                pass
+
+        return {"display_name": name}
+
+
+class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterType):
+    """
+    The link row has filter accepts the row ID of the related table as value. It
+    filters the queryset so that only rows that don't have a relationship with the
+    provided row ID will remain. So if for example '10' is provided, then only rows
+    where the link row field does not have a relationship with the row '10' persists.
+    """
+
+    type = "link_row_has_not"
+
+
 class EmptyViewFilterType(ViewFilterType):
     """
     The empty filter checks if the field value is empty, this can be '', null,
@@ -430,6 +556,8 @@ class EmptyViewFilterType(ViewFilterType):
         NumberFieldType.type,
         BooleanFieldType.type,
         DateFieldType.type,
+        LastModifiedFieldType.type,
+        CreatedOnFieldType.type,
         LinkRowFieldType.type,
         EmailFieldType.type,
         FileFieldType.type,

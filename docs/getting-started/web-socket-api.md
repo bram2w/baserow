@@ -125,21 +125,29 @@ are subscribed to the page.
 * `group_created`
 * `group_updated`
 * `group_deleted`
+* `group_restored`
+* `group_user_updated`
+* `group_user_deleted`
 * `application_created`
 * `application_updated`
 * `application_deleted`
+* `applications_reordered`
 
 ### Database message types
 
 * `table_created`
 * `table_updated`
 * `table_deleted`
+* `tables_re_ordered`
 * `field_created`
 * `field_updated`
 * `field_deleted`
+* `field_restored`
 * `row_created`
 * `row_updated`
 * `row_deleted`
+* `before_row_update`
+* `before_row_delete`
 * `view_created`
 * `view_updated`
 * `view_deleted`
@@ -150,3 +158,8 @@ are subscribed to the page.
 * `view_sort_updated`
 * `view_sort_deleted`
 * `view_field_options_updated`
+* `views_reordered`
+
+### Premium message types
+
+* `row_comment_created`

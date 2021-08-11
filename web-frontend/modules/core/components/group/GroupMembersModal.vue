@@ -49,8 +49,8 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import moment from 'moment'
 
+import moment from '@baserow/modules/core/moment'
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import { notifyIf } from '@baserow/modules/core/utils/error'

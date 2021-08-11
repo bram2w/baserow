@@ -110,9 +110,10 @@ export default {
     async changeIsActive(isActive) {
       try {
         this.loading = true
-        const { data: newUser } = await UserAdminService(
-          this.$client
-        ).update(this.user.id, { is_active: isActive })
+        const { data: newUser } = await UserAdminService(this.$client).update(
+          this.user.id,
+          { is_active: isActive }
+        )
 
         this.hide()
         this.$emit('update', newUser)
