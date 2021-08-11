@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Fixed bug where a user could not be edited in the admin interface without providing 
+  a password.
+
 ## Released (2021-08-11)
 
 * Made it possible to leave a group.
