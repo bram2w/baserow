@@ -217,11 +217,16 @@ def test_can_export_every_interesting_different_field_to_csv(
     expected = (
         "\ufeffid,text,long_text,url,email,negative_int,positive_int,"
         "negative_decimal,positive_decimal,boolean,datetime_us,date_us,datetime_eu,"
-        "date_eu,link_row,decimal_link_row,file_link_row,file,single_select,"
-        "phone_number\r\n"
-        "1,,,,,,,,,False,,,,,,,,,,\r\n"
+        "date_eu,last_modified_datetime_us,last_modified_date_us,"
+        "last_modified_datetime_eu,last_modified_date_eu,created_on_datetime_us,"
+        "created_on_date_us,created_on_datetime_eu,created_on_date_eu,link_row,"
+        "decimal_link_row,file_link_row,file,single_select,phone_number\r\n"
+        "1,,,,,,,,,False,,,,,01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
+        "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,,,,,,\r\n"
         "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,True,"
         "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,"
+        "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
+        "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
         '"linked_row_1,linked_row_2,unnamed row 3","1.234,-123.456,unnamed row 3",'
         '"visible_name=name.txt url=http://localhost:8000/media/user_files/test_hash'
         '.txt,unnamed row 2",'

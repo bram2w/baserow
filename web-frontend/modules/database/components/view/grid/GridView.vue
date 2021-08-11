@@ -125,6 +125,7 @@
       :fields="fields"
       :rows="allRows"
       :read-only="readOnly"
+      @refresh="$emit('refresh', $event)"
       @update="updateValue"
       @hidden="rowEditModalHidden"
       @field-updated="$emit('refresh', $event)"

@@ -1207,6 +1207,446 @@ def test_date_equal_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_last_modified_date_equal_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    last_modified_field_date = data_fixture.create_last_modified_field(
+        table=table, date_include_time=False, timezone="Europe/Berlin"
+    )
+    last_modified_field_datetime = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/Berlin"
+    )
+    model = table.get_model()
+
+    with freeze_time("2021-08-04 21:59", tz_offset=+2):
+        row = model.objects.create(**{})
+
+    with freeze_time("2021-08-04 22:01", tz_offset=+2):
+        row_1 = model.objects.create(**{})
+
+    with freeze_time("2021-08-04 23:01", tz_offset=+2):
+        row_2 = model.objects.create(**{})
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=last_modified_field_datetime,
+        type="date_equal",
+        value="2021-08-04",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
+    filter.field = last_modified_field_date
+    filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+    assert row_1.id not in ids
+    assert row_2.id not in ids
+
+
+@pytest.mark.django_db
+def test_last_modified_day_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    last_modified_field_datetime_berlin = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/Berlin"
+    )
+    last_modified_field_datetime_london = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/London"
+    )
+    handler = ViewHandler()
+    model = table.get_model()
+
+    def apply_filter():
+        return [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+
+    with freeze_time("2021-08-04 21:59"):
+        row = model.objects.create(**{})
+
+    with freeze_time("2021-08-04 22:01"):
+        row_1 = model.objects.create(**{})
+
+    with freeze_time("2021-08-04 23:01"):
+        row_2 = model.objects.create(**{})
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=last_modified_field_datetime_london,
+        type="date_equals_today",
+        value="Europe/London",
+    )
+
+    with freeze_time("2021-08-04 01:00"):
+
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+    with freeze_time("2021-08-04 22:59"):
+
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+    with freeze_time("2021-08-04 23:59"):
+
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id not in ids
+        assert row_1.id not in ids
+        assert row_2.id in ids
+
+    with freeze_time("2021-08-04"):
+
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+        # LastModified Column is based on London Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id in ids
+        assert row_1.id not in ids
+        assert row_2.id not in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on London Time
+        filter.field = last_modified_field_datetime_berlin
+        filter.value = "Europe/London"
+        filter.save()
+
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id in ids
+        assert row_1.id not in ids
+        assert row_2.id not in ids
+
+    with freeze_time("2021-08-05"):
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        filter.field = last_modified_field_datetime_london
+        filter.value = "Europe/London"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id not in ids
+        assert row_1.id not in ids
+        assert row_2.id in ids
+
+        # LastModified Column is based on London Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id not in ids
+        assert row_1.id in ids
+        assert row_2.id in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on London Time
+        filter.field = last_modified_field_datetime_berlin
+        filter.value = "Europe/London"
+        filter.save()
+
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id not in ids
+        assert row_1.id not in ids
+        assert row_2.id in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id not in ids
+        assert row_1.id in ids
+        assert row_2.id in ids
+
+
+@pytest.mark.django_db
+def test_last_modified_month_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    last_modified_field_datetime_berlin = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/Berlin"
+    )
+    last_modified_field_datetime_london = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/London"
+    )
+    handler = ViewHandler()
+    model = table.get_model()
+
+    def apply_filter():
+        return [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+
+    with freeze_time("2021-08-31 21:59"):
+        row = model.objects.create(**{})
+
+    with freeze_time("2021-08-31 22:01"):
+        row_1 = model.objects.create(**{})
+
+    with freeze_time("2021-08-31 23:01"):
+        row_2 = model.objects.create(**{})
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=last_modified_field_datetime_london,
+        type="date_equals_month",
+        value="Europe/London",
+    )
+
+    with freeze_time("2021-08-31"):
+
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+        # LastModified Column is based on London Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id in ids
+        assert row_1.id not in ids
+        assert row_2.id not in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on London Time
+        filter.field = last_modified_field_datetime_berlin
+        filter.value = "Europe/London"
+        filter.save()
+
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id in ids
+        assert row_1.id not in ids
+        assert row_2.id not in ids
+
+    with freeze_time("2021-09-01"):
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        filter.field = last_modified_field_datetime_london
+        filter.value = "Europe/London"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id not in ids
+        assert row_1.id not in ids
+        assert row_2.id in ids
+
+        # LastModified Column is based on London Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id not in ids
+        assert row_1.id in ids
+        assert row_2.id in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on London Time
+        filter.field = last_modified_field_datetime_berlin
+        filter.value = "Europe/London"
+        filter.save()
+
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id not in ids
+        assert row_1.id not in ids
+        assert row_2.id in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id not in ids
+        assert row_1.id in ids
+        assert row_2.id in ids
+
+
+@pytest.mark.django_db
+def test_last_modified_year_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    last_modified_field_datetime_berlin = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/Berlin"
+    )
+    last_modified_field_datetime_london = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/London"
+    )
+    handler = ViewHandler()
+    model = table.get_model()
+
+    def apply_filter():
+        return [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+
+    with freeze_time("2021-12-31 22:59"):
+        row = model.objects.create(**{})
+
+    with freeze_time("2021-12-31 23:01"):
+        row_1 = model.objects.create(**{})
+
+    with freeze_time("2022-01-01 00:01"):
+        row_2 = model.objects.create(**{})
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=last_modified_field_datetime_london,
+        type="date_equals_year",
+        value="Europe/London",
+    )
+
+    with freeze_time("2021-12-31"):
+
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+        # LastModified Column is based on London Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id in ids
+        assert row_1.id not in ids
+        assert row_2.id not in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on London Time
+        filter.field = last_modified_field_datetime_berlin
+        filter.value = "Europe/London"
+        filter.save()
+
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id in ids
+        assert row_1.id in ids
+        assert row_2.id not in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id in ids
+        assert row_1.id not in ids
+        assert row_2.id not in ids
+
+    with freeze_time("2022-01-01"):
+        # LastModified Column is based on London Time
+        # Filter value is based on London Time
+        filter.field = last_modified_field_datetime_london
+        filter.value = "Europe/London"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id not in ids
+        assert row_1.id not in ids
+        assert row_2.id in ids
+
+        # LastModified Column is based on London Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id not in ids
+        assert row_1.id in ids
+        assert row_2.id in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on London Time
+        filter.field = last_modified_field_datetime_berlin
+        filter.value = "Europe/London"
+        filter.save()
+
+        ids = apply_filter()
+        assert len(ids) == 1
+        assert row.id not in ids
+        assert row_1.id not in ids
+        assert row_2.id in ids
+
+        # LastModified Column is based on Berlin Time
+        # Filter value is based on Berlin Time
+        filter.value = "Europe/Berlin"
+        filter.save()
+        ids = apply_filter()
+        assert len(ids) == 2
+        assert row.id not in ids
+        assert row_1.id in ids
+        assert row_2.id in ids
+
+
+@pytest.mark.django_db
 def test_date_day_month_year_filter_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

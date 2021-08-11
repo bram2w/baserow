@@ -23,6 +23,7 @@
 * Enabled password validation in the backend.
 * **Premium**: You can now comment and discuss rows with others in your group, click the
   expand row button at the start of the row to view and add comments.
+* Added "Last Modified" and "Created On" field types.
 * New templates:
   * Blog Post Management
 * Updated templates:

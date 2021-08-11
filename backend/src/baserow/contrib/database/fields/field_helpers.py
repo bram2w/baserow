@@ -42,6 +42,58 @@ def construct_all_possible_field_kwargs(
             {"name": "datetime_eu", "date_include_time": True, "date_format": "EU"},
             {"name": "date_eu", "date_include_time": False, "date_format": "EU"},
         ],
+        "last_modified": [
+            {
+                "name": "last_modified_datetime_us",
+                "date_include_time": True,
+                "date_format": "US",
+                "timezone": "Europe/Berlin",
+            },
+            {
+                "name": "last_modified_date_us",
+                "date_include_time": False,
+                "date_format": "US",
+                "timezone": "Europe/Berlin",
+            },
+            {
+                "name": "last_modified_datetime_eu",
+                "date_include_time": True,
+                "date_format": "EU",
+                "timezone": "Europe/Berlin",
+            },
+            {
+                "name": "last_modified_date_eu",
+                "date_include_time": False,
+                "date_format": "EU",
+                "timezone": "Europe/Berlin",
+            },
+        ],
+        "created_on": [
+            {
+                "name": "created_on_datetime_us",
+                "date_include_time": True,
+                "date_format": "US",
+                "timezone": "Europe/Berlin",
+            },
+            {
+                "name": "created_on_date_us",
+                "date_include_time": False,
+                "date_format": "US",
+                "timezone": "Europe/Berlin",
+            },
+            {
+                "name": "created_on_datetime_eu",
+                "date_include_time": True,
+                "date_format": "EU",
+                "timezone": "Europe/Berlin",
+            },
+            {
+                "name": "created_on_date_eu",
+                "date_include_time": False,
+                "date_format": "EU",
+                "timezone": "Europe/Berlin",
+            },
+        ],
         "link_row": [
             {"name": "link_row", "link_row_table": link_table},
             {"name": "decimal_link_row", "link_row_table": decimal_link_table},

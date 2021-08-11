@@ -758,6 +758,7 @@ class ViewHandler:
 
         if model is None:
             model = view.table.get_model()
+
         queryset = model.objects.all().enhance_by_fields()
 
         view_type = view_type_registry.get_by_model(view.specific_class)

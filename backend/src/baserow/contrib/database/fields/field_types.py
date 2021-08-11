@@ -1,3 +1,4 @@
+import pytz
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime, date
@@ -50,6 +51,8 @@ from .models import (
     NumberField,
     BooleanField,
     DateField,
+    LastModifiedField,
+    CreatedOnField,
     LinkRowField,
     EmailField,
     FileField,
@@ -542,6 +545,157 @@ class DateFieldType(FieldType):
             return value
 
         setattr(row, field_name, datetime.fromisoformat(value))
+
+
+class CreatedOnLastModifiedBaseFieldType(DateFieldType):
+    can_be_in_form_view = False
+    allowed_fields = DateFieldType.allowed_fields + ["timezone"]
+    serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
+    serializer_field_overrides = {
+        "timezone": serializers.ChoiceField(choices=pytz.all_timezones, required=True)
+    }
+    source_field_name = None
+    model_field_kwargs = {}
+
+    def prepare_value_for_db(self, instance, value):
+        """
+        Since the LastModified and CreatedOnFieldTypes are read only fields, we raise a
+        ValidationError when there is a value present.
+        """
+
+        if not value:
+            return value
+
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
+
+    def get_export_value(self, value, field_object):
+        if value is None:
+            return value
+        python_format = field_object["field"].get_python_format()
+        field = field_object["field"]
+        field_timezone = timezone(field.get_timezone())
+        return value.astimezone(field_timezone).strftime(python_format)
+
+    def get_serializer_field(self, instance, **kwargs):
+        if not instance.date_include_time:
+            kwargs["format"] = "%Y-%m-%d"
+            kwargs["default_timezone"] = timezone(instance.timezone)
+
+        return serializers.DateTimeField(
+            **{
+                "required": False,
+                **kwargs,
+            }
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        kwargs.update(self.model_field_kwargs)
+        return models.DateTimeField(**kwargs)
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        return AnnotatedQ(
+            annotation={
+                f"formatted_date_{field_name}": Coalesce(
+                    RawSQL(
+                        f"""TO_CHAR({field_name} at time zone %s,
+                        '{field.get_psql_format()}')""",
+                        [field.get_timezone()],
+                        output_field=CharField(),
+                    ),
+                    Value(""),
+                )
+            },
+            q={f"formatted_date_{field_name}__icontains": value},
+        )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        If the field type has changed then we want to convert the date or timestamp to
+        a human readable text following the old date format.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type:
+            sql_format = from_field.get_psql_format()
+            variables = {}
+            variable_name = f"{from_field.db_column}_timezone"
+            variables[variable_name] = from_field.get_timezone()
+            return (
+                f"""p_in = TO_CHAR(p_in::timestamptz at time zone %({variable_name})s,
+                '{sql_format}');""",
+                variables,
+            )
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
+        )
+
+    def after_create(self, field, model, user, connection, before):
+        """
+        Immediately after the field has been created, we need to populate the values
+        with the already existing source_field_name column.
+        """
+
+        model.objects.all().update(
+            **{f"{field.db_column}": models.F(self.source_field_name)}
+        )
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+    ):
+        """
+        If the field type has changed, we need to update the values from the from
+        the source_field_name column.
+        """
+
+        if not isinstance(from_field, self.model_class):
+            to_model.objects.all().update(
+                **{f"{to_field.db_column}": models.F(self.source_field_name)}
+            )
+
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+        return None
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
+        """
+        We don't want to do anything here because we don't have the right value yet
+        and it will automatically be set when the row is saved.
+        """
+
+    def random_value(self, instance, fake, cache):
+        return getattr(instance, self.source_field_name)
+
+
+class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
+    type = "last_modified"
+    model_class = LastModifiedField
+    source_field_name = "updated_on"
+    model_field_kwargs = {"auto_now": True}
+
+
+class CreatedOnFieldType(CreatedOnLastModifiedBaseFieldType):
+    type = "created_on"
+    model_class = CreatedOnField
+    source_field_name = "created_on"
+    model_field_kwargs = {"auto_now_add": True}
 
 
 class LinkRowFieldType(FieldType):
