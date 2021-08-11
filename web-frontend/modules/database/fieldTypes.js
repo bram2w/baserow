@@ -1,6 +1,6 @@
-import moment from 'moment'
 import BigNumber from 'bignumber.js'
 
+import moment from '@baserow/modules/core/moment'
 import {
   isValidURL,
   isValidEmail,

@@ -1,5 +1,4 @@
-import moment from 'moment'
-
+import moment from '@baserow/modules/core/moment'
 import { Registerable } from '@baserow/modules/core/registry'
 import ViewFilterTypeText from '@baserow/modules/database/components/view/ViewFilterTypeText'
 import ViewFilterTypeNumber from '@baserow/modules/database/components/view/ViewFilterTypeNumber'

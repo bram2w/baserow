@@ -1,6 +1,6 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
 import UsersAdminTable from '@baserow_premium/components/admin/users/UsersAdminTable'
-import moment from 'moment'
+import moment from '@baserow/modules/core/moment'
 import flushPromises from 'flush-promises'
 import UserAdminUserHelpers from '../../../../fixtures/uiHelpers'
 import MockPremiumServer from '@baserow_premium/../../test/fixtures/mockPremiumServer'

@@ -1,6 +1,8 @@
-import RowCommentService from '@baserow_premium/services/row_comments/row_comments'
 import _ from 'lodash'
-import moment from 'moment'
+
+import moment from '@baserow/modules/core/moment'
+
+import RowCommentService from '@baserow_premium/services/row_comments/row_comments'
 
 export const state = () => ({
   comments: [],
