@@ -1,5 +1,5 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
-import moment from 'moment'
+import moment from '@baserow/modules/core/moment'
 import {
   DateBeforeViewFilterType,
   DateAfterViewFilterType,

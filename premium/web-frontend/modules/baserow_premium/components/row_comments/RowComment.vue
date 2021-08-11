@@ -21,8 +21,9 @@
 </template>
 
 <script>
-import moment from 'moment'
 import { mapGetters } from 'vuex'
+
+import moment from '@baserow/modules/core/moment'
 
 export default {
   name: 'RowComment',

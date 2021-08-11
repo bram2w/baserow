@@ -24,6 +24,7 @@
 * **Premium**: You can now comment and discuss rows with others in your group, click the
   expand row button at the start of the row to view and add comments.
 * Added "Last Modified" and "Created On" field types.
+* Fixed moment issue if core is installed as a dependency.
 * New templates:
   * Blog Post Management
 * Updated templates:

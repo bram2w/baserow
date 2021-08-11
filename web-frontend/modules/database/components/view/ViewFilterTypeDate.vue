@@ -35,8 +35,7 @@
 </template>
 
 <script>
-import moment from 'moment'
-
+import moment from '@baserow/modules/core/moment'
 import {
   getDateMomentFormat,
   getDateHumanReadableFormat,

@@ -41,7 +41,7 @@
  * trashed entry. Shows extra information about the entry like it's name, who trashed it
  * , how long ago it was trashed etc.
  */
-import moment from 'moment'
+import moment from '@baserow/modules/core/moment'
 
 export default {
   name: 'TrashEntry',

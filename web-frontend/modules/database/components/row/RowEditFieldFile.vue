@@ -80,8 +80,7 @@
 </template>
 
 <script>
-import moment from 'moment'
-
+import moment from '@baserow/modules/core/moment'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
 import UserFilesModal from '@baserow/modules/core/components/files/UserFilesModal'
 import FileFieldModal from '@baserow/modules/database/components/field/FileFieldModal'
