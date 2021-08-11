@@ -104,7 +104,7 @@ export const actions = {
   /**
    * Creates a new field with the provided type for the given table.
    */
-  async create(context, { type, table, values }) {
+  async create(context, { type, table, values, forceCreate = true }) {
     const { dispatch } = context
 
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
@@ -122,7 +122,11 @@ export const actions = {
     postData.type = type
 
     const { data } = await FieldService(this.$client).create(table.id, postData)
-    dispatch('forceCreate', { table, values: data })
+    const forceCreateCallback = async () => {
+      return await dispatch('forceCreate', { table, values: data })
+    }
+
+    return forceCreate ? await forceCreateCallback() : forceCreateCallback
   },
   /**
    * Restores a field into the field store and notifies the selected view that the

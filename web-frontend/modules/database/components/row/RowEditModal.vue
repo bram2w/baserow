@@ -34,6 +34,7 @@
         <CreateFieldContext
           ref="createFieldContext"
           :table="table"
+          @refresh="$emit('refresh', $event)"
         ></CreateFieldContext>
       </div>
     </template>

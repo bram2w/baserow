@@ -575,6 +575,7 @@ def test_create_row(api_client, data_fixture):
     assert getattr(row_4, f"field_{text_field_2.id}") == ""
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+
     response = api_client.post(
         f"{url}?user_field_names=true",
         {

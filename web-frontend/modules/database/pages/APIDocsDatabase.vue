@@ -697,7 +697,7 @@
             <h4 class="api-docs__heading-4">Request body schema</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter
-                v-for="field in fields[table.id]"
+                v-for="field in withoutReadOnly[table.id]"
                 :key="field.id"
                 :name="'field_' + field.id"
                 :visible-name="field.name"
@@ -765,7 +765,7 @@
             <h4 class="api-docs__heading-4">Request body schema</h4>
             <ul class="api-docs__parameters">
               <APIDocsParameter
-                v-for="field in fields[table.id]"
+                v-for="field in withoutReadOnly[table.id]"
                 :key="field.id"
                 :name="'field_' + field.id"
                 :visible-name="field.name"
@@ -1007,6 +1007,7 @@ export default {
     }
 
     const fields = {}
+    const withoutReadOnly = {}
     const populateField = (field) => {
       const fieldType = app.$registry.get('field', field.type)
       field._ = {
@@ -1015,6 +1016,7 @@ export default {
         requestExample: fieldType.getDocsRequestExample(field),
         responseExample: fieldType.getDocsResponseExample(field),
         fieldResponseExample: fieldType.getDocsFieldResponseExample(field),
+        isReadOnly: fieldType.isReadOnly,
       }
       return field
     }
@@ -1023,9 +1025,12 @@ export default {
       const table = database.tables[i]
       const { data } = await FieldService(app.$client).fetchAll(table.id)
       fields[table.id] = data.map((field) => populateField(field))
+      withoutReadOnly[table.id] = fields[table.id].filter(
+        (field) => !field._.isReadOnly
+      )
     }
 
-    return { database, fields }
+    return { database, fields, withoutReadOnly }
   },
   data() {
     return {
@@ -1110,7 +1115,19 @@ export default {
      */
     getRequestExample(table, response = false) {
       const item = {}
-      this.fields[table.id].forEach((field) => {
+
+      // In case we are creating a sample response
+      // read only fields need to be included.
+      // They should be left out in the case of
+      // creating a sample request.
+      let fieldsToLoopOver = this.fields[table.id]
+      if (!response) {
+        fieldsToLoopOver = fieldsToLoopOver.filter(
+          (field) => !field._.isReadOnly
+        )
+      }
+
+      fieldsToLoopOver.forEach((field) => {
         const example = response
           ? field._.responseExample
           : field._.requestExample

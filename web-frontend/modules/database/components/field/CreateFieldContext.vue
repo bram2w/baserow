@@ -39,17 +39,28 @@ export default {
       this.loading = true
 
       const type = values.type
+      const fieldType = this.$registry.get('field', type)
       delete values.type
 
       try {
-        await this.$store.dispatch('field/create', {
+        const forceCreateCallback = await this.$store.dispatch('field/create', {
           type,
           values,
           table: this.table,
+          forceCreate: false,
         })
-        this.loading = false
-        this.$refs.form.reset()
-        this.hide()
+        const callback = async () => {
+          await forceCreateCallback()
+          this.createdId = null
+          this.loading = false
+          this.$refs.form.reset()
+          this.hide()
+        }
+        if (fieldType.shouldRefreshWhenAdded()) {
+          this.$emit('refresh', { callback })
+        } else {
+          await callback()
+        }
       } catch (error) {
         this.loading = false
         notifyIf(error, 'field')

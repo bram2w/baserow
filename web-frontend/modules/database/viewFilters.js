@@ -197,6 +197,8 @@ export class ContainsViewFilterType extends ViewFilterType {
       'email',
       'phone_number',
       'date',
+      'last_modified',
+      'created_on',
       'single_select',
       'number',
     ]
@@ -228,6 +230,8 @@ export class ContainsNotViewFilterType extends ViewFilterType {
       'email',
       'phone_number',
       'date',
+      'last_modified',
+      'created_on',
       'single_select',
       'number',
     ]
@@ -256,7 +260,7 @@ export class DateEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified', 'created_on']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -264,8 +268,12 @@ export class DateEqualViewFilterType extends ViewFilterType {
       rowValue = ''
     }
 
-    rowValue = rowValue.toString().toLowerCase().trim()
-    rowValue = rowValue.slice(0, 10)
+    if (field.timezone) {
+      rowValue = moment.utc(rowValue).tz(field.timezone).format('YYYY-MM-DD')
+    } else {
+      rowValue = rowValue.toString().toLowerCase().trim()
+      rowValue = rowValue.slice(0, 10)
+    }
 
     return filterValue === '' || rowValue === filterValue
   }
@@ -289,14 +297,18 @@ export class DateBeforeViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified', 'created_on']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
     // parse the provided string values as moment objects in order to make
     // date comparisons
-    const filterDate = moment.utc(filterValue, 'YYYY-MM-DD')
-    const rowDate = moment.utc(rowValue, 'YYYY-MM-DD')
+    let rowDate = moment.utc(rowValue)
+    const filterDate = moment.utc(filterValue)
+
+    if (field.timezone) {
+      rowDate = rowDate.tz(field.timezone)
+    }
 
     // if the filter date is not a valid date we can immediately return
     // true because without a valid date the filter won't be applied
@@ -310,7 +322,7 @@ export class DateBeforeViewFilterType extends ViewFilterType {
       return false
     }
 
-    return rowDate.isBefore(filterDate)
+    return rowDate.isBefore(filterDate, 'day')
   }
 }
 
@@ -332,14 +344,18 @@ export class DateAfterViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified', 'created_on']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
     // parse the provided string values as moment objects in order to make
     // date comparisons
-    const filterDate = moment.utc(filterValue, 'YYYY-MM-DD')
-    const rowDate = moment.utc(rowValue, 'YYYY-MM-DD')
+    let rowDate = moment.utc(rowValue)
+    const filterDate = moment.utc(filterValue)
+
+    if (field.timezone) {
+      rowDate = rowDate.tz(field.timezone)
+    }
 
     // if the filter date is not a valid date we can immediately return
     // true because without a valid date the filter won't be applied
@@ -353,7 +369,7 @@ export class DateAfterViewFilterType extends ViewFilterType {
       return false
     }
 
-    return rowDate.isAfter(filterDate)
+    return rowDate.isAfter(filterDate, 'day')
   }
 }
 
@@ -375,7 +391,7 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified', 'created_on']
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -383,8 +399,12 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
       rowValue = ''
     }
 
-    rowValue = rowValue.toString().toLowerCase().trim()
-    rowValue = rowValue.slice(0, 10)
+    if (field.timezone) {
+      rowValue = moment.utc(rowValue).tz(field.timezone).format('YYYY-MM-DD')
+    } else {
+      rowValue = rowValue.toString().toLowerCase().trim()
+      rowValue = rowValue.slice(0, 10)
+    }
 
     return filterValue === '' || rowValue !== filterValue
   }
@@ -404,7 +424,7 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date']
+    return ['date', 'last_modified', 'created_on']
   }
 
   getDefaultValue() {
@@ -420,16 +440,21 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
     return 10
   }
 
-  matches(rowValue, filterValue) {
+  matches(rowValue, filterValue, field) {
     if (rowValue === null) {
       rowValue = ''
     }
 
     const sliceLength = this.getSliceLength()
-    rowValue = rowValue.toString().toLowerCase().trim()
-    rowValue = rowValue.slice(0, sliceLength)
     const format = 'YYYY-MM-DD'.slice(0, sliceLength)
     const today = moment().tz(filterValue).format(format)
+
+    if (field.timezone) {
+      rowValue = moment.utc(rowValue).tz(field.timezone).format(format)
+    } else {
+      rowValue = rowValue.toString().toLowerCase().trim()
+      rowValue = rowValue.slice(0, sliceLength)
+    }
 
     return rowValue === today
   }
@@ -703,6 +728,8 @@ export class EmptyViewFilterType extends ViewFilterType {
       'email',
       'number',
       'date',
+      'last_modified',
+      'created_on',
       'boolean',
       'link_row',
       'file',
@@ -746,6 +773,8 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'email',
       'number',
       'date',
+      'last_modified',
+      'created_on',
       'boolean',
       'link_row',
       'file',

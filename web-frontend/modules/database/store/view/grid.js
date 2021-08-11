@@ -856,13 +856,21 @@ export const actions = {
   ) {
     // Fill the not provided values with the empty value of the field type so we can
     // immediately commit the created row to the state.
+    const valuesForApiRequest = {}
     const allFields = [primary].concat(fields)
     allFields.forEach((field) => {
       const name = `field_${field.id}`
       if (!(name in values)) {
         const fieldType = this.$registry.get('field', field._.type.type)
-        const empty = fieldType.getEmptyValue(field)
+        const empty = fieldType.getNewRowValue(field)
         values[name] = empty
+
+        // In case the fieldType is a read only field, we
+        // need to create a second values dictionary, which gets
+        // sent to the API without the fieldType.
+        if (!fieldType.isReadOnly) {
+          valuesForApiRequest[name] = empty
+        }
       }
     })
 
@@ -896,7 +904,7 @@ export const actions = {
     try {
       const { data } = await RowService(this.$client).create(
         table.id,
-        values,
+        valuesForApiRequest,
         before !== null ? before.id : null
       )
       commit('FINALIZE_ROW_IN_BUFFER', {
@@ -993,12 +1001,35 @@ export const actions = {
       order = new BigNumber(before.order).minus(change).toString()
     }
 
+    // In order to make changes feel really fast, we optimistically
+    // updated all the field values that provide a onRowMove function
+    const fieldsToCallOnRowMove = [...fields, primary]
+    const optimisticFieldValues = {}
+    const valuesBeforeOptimisticUpdate = {}
+
+    fieldsToCallOnRowMove.forEach((field) => {
+      const fieldType = this.$registry.get('field', field._.type.type)
+      const fieldID = `field_${field.id}`
+      const currentFieldValue = row[fieldID]
+      const fieldValue = fieldType.onRowMove(
+        row,
+        order,
+        oldOrder,
+        field,
+        currentFieldValue
+      )
+      if (currentFieldValue !== fieldValue) {
+        optimisticFieldValues[fieldID] = fieldValue
+        valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue
+      }
+    })
+
     dispatch('updatedExistingRow', {
       view: grid,
       fields,
       primary,
       row,
-      values: { order },
+      values: { order, ...optimisticFieldValues },
     })
 
     try {
@@ -1007,6 +1038,9 @@ export const actions = {
         row.id,
         before !== null ? before.id : null
       )
+      // Use the return value to update the moved row with values from
+      // the backend
+      commit('UPDATE_ROW_IN_BUFFER', { row, values: data })
       if (before === null) {
         // Not having a before means that the row was moved to the end and because
         // that order was just an estimation, we want to update it with the real
@@ -1024,7 +1058,7 @@ export const actions = {
         fields,
         primary,
         row,
-        values: { order: oldOrder },
+        values: { order: oldOrder, ...valuesBeforeOptimisticUpdate },
       })
       throw error
     }
@@ -1038,7 +1072,47 @@ export const actions = {
     { commit, dispatch },
     { table, view, row, field, fields, primary, value, oldValue }
   ) {
+    // Immediately updated the store with the updated row field
+    // value.
     commit('UPDATE_ROW_FIELD_VALUE', { row, field, value })
+
+    const optimisticFieldValues = {}
+    const valuesBeforeOptimisticUpdate = {}
+
+    // Store the before value of the field that gets updated
+    // in case we need to rollback changes
+    valuesBeforeOptimisticUpdate[field.id] = oldValue
+
+    let fieldsToCallOnRowChange = [...fields, primary]
+
+    // We already added the updated field values to the store
+    // so we can remove the field from our fieldsToCallOnRowChange
+    fieldsToCallOnRowChange = fieldsToCallOnRowChange.filter((el) => {
+      return el.id !== field.id
+    })
+
+    fieldsToCallOnRowChange.forEach((fieldToCall) => {
+      const fieldType = this.$registry.get('field', fieldToCall._.type.type)
+      const fieldID = `field_${fieldToCall.id}`
+      const currentFieldValue = row[fieldID]
+      const optimisticFieldValue = fieldType.onRowChange(
+        row,
+        field,
+        value,
+        oldValue,
+        fieldToCall,
+        currentFieldValue
+      )
+
+      if (currentFieldValue !== optimisticFieldValue) {
+        optimisticFieldValues[fieldID] = optimisticFieldValue
+        valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue
+      }
+    })
+    commit('UPDATE_ROW_IN_BUFFER', {
+      row,
+      values: { ...optimisticFieldValues },
+    })
     dispatch('onRowChange', { view, row, fields, primary })
 
     const fieldType = this.$registry.get('field', field._.type.type)
@@ -1047,9 +1121,18 @@ export const actions = {
     values[`field_${field.id}`] = newValue
 
     try {
-      await RowService(this.$client).update(table.id, row.id, values)
+      const updatedRow = await RowService(this.$client).update(
+        table.id,
+        row.id,
+        values
+      )
+      commit('UPDATE_ROW_IN_BUFFER', { row, values: updatedRow.data })
     } catch (error) {
-      commit('UPDATE_ROW_FIELD_VALUE', { row, field, value: oldValue })
+      commit('UPDATE_ROW_IN_BUFFER', {
+        row,
+        values: { ...valuesBeforeOptimisticUpdate },
+      })
+
       dispatch('onRowChange', { view, row, fields, primary })
       throw error
     }
