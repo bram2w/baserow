@@ -457,6 +457,38 @@ def test_admin_can_patch_user(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_admin_can_patch_user_without_providing_password(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": user.id})
+    old_password = user.password
+    response = api_client.patch(
+        url,
+        {"username": "some_other_email@test.nl", "name": "Test2"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    user.refresh_from_db()
+    assert user.password == old_password
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "date_joined": "2021-04-01T01:00:00Z",
+        "name": "Test2",
+        "username": "some_other_email@test.nl",
+        "groups": [],
+        "id": user.id,
+        "is_staff": True,
+        "is_active": True,
+        "last_login": None,
+    }
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("invalid_password", invalid_passwords)
 def test_invalid_password_returns_400(api_client, data_fixture, invalid_password):
     user, token = data_fixture.create_user_and_token(
@@ -478,6 +510,19 @@ def test_invalid_password_returns_400(api_client, data_fixture, invalid_password
     response = api_client.patch(
         url,
         {"username": user_to_edit.email, "password": invalid_password},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response.json()["detail"]["password"][0]["code"] == "password_validation_failed"
+    )
+
+    # just sending the password will throw the same error
+    response = api_client.patch(
+        url,
+        {"password": invalid_password},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
