@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Released (2021-08-11)
+
 * Made it possible to leave a group.
 * Changed web-frontend `/api/docs` route into `/api-docs`.
 * Bumped the dependencies.
