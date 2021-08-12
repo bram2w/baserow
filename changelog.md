@@ -4,6 +4,8 @@
 
 * Fixed bug where a user could not be edited in the admin interface without providing 
   a password.
+* Fixed bug where sometimes fields would not be ordered correctly in view exports.
+* Fixed bug where brand-new fields weren't included in view exports.
 
 ## Released (2021-08-11)
 
