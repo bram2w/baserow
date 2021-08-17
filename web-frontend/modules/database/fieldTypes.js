@@ -5,6 +5,7 @@ import {
   isValidURL,
   isValidEmail,
   isSimplePhoneNumber,
+  isNumeric,
 } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
@@ -1456,15 +1457,28 @@ export class SingleSelectFieldType extends FieldType {
     return value.id
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    const value = parseInt(clipboardData.getData('text'))
-
-    for (let i = 0; i <= field.select_options.length; i++) {
-      const option = field.select_options[i]
-      if (option.id === value) {
-        return option
-      }
+  _findOptionWithMatchingId(field, rawTextValue) {
+    if (isNumeric(rawTextValue)) {
+      const pastedOptionId = parseInt(rawTextValue)
+      return field.select_options.find((option) => option.id === pastedOptionId)
     }
+    return undefined
+  }
+
+  _findOptionWithMatchingValue(field, rawTextValue) {
+    const trimmedPastedText = rawTextValue.trim()
+    return field.select_options.find(
+      (option) => option.value === trimmedPastedText
+    )
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const rawTextValue = clipboardData.getData('text')
+
+    return (
+      this._findOptionWithMatchingId(field, rawTextValue) ||
+      this._findOptionWithMatchingValue(field, rawTextValue)
+    )
   }
 
   toHumanReadableString(field, value) {

@@ -164,6 +164,7 @@ export default {
           .prepareValueForPaste(this.field, event.clipboardData)
         const oldValue = this.value
         if (
+          value !== undefined &&
           value !== oldValue &&
           !this.readOnly &&
           !this.field._.type.isReadOnly
