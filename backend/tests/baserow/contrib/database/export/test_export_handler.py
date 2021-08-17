@@ -37,7 +37,7 @@ from baserow.contrib.database.export.registries import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.exceptions import ViewNotInTable
-from baserow.contrib.database.views.models import GridView
+from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
 from tests.test_utils import setup_interesting_test_table
 
 
@@ -169,7 +169,7 @@ def test_exporting_table_ignores_view_filters_sorts_hides(storage_mock, data_fix
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.export.handler.default_storage")
-def test_columns_are_exported_by_order_then_id(storage_mock, data_fixture):
+def test_columns_are_exported_by_order_then_field_id(storage_mock, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field_a = data_fixture.create_text_field(table=table, name="field_a")
@@ -190,15 +190,19 @@ def test_columns_are_exported_by_order_then_id(storage_mock, data_fixture):
             f"field_{field_c.id}": "c",
         },
     )
+    # Create the option id's in the opposite order than the fields so their id's are
+    # ordered backwards to ensure the test doesn't coincidentally pass if the option
+    # ids were being used to sort.
     data_fixture.create_grid_view_field_option(
-        grid_view=grid_view, field=field_a, order=1
+        grid_view=grid_view, field=field_c, order=0
     )
     data_fixture.create_grid_view_field_option(
         grid_view=grid_view, field=field_b, order=1
     )
     data_fixture.create_grid_view_field_option(
-        grid_view=grid_view, field=field_c, order=0
+        grid_view=grid_view, field=field_a, order=1
     )
+    assert field_a.id < field_b.id
     _, contents = run_export_job_with_mock_storage(table, grid_view, storage_mock, user)
     bom = "\ufeff"
     expected = bom + "id,field_c,field_a,field_b\r\n" "1,c,a,b\r\n"
@@ -776,3 +780,38 @@ def setup_table_and_run_export_decoding_result(
     return run_export_job_with_mock_storage(
         table, grid_view, storage_mock, user, options=options
     )
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.export.handler.default_storage")
+def test_a_column_without_a_grid_view_option_has_an_option_made_and_is_exported(
+    storage_mock, data_fixture
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field_with_an_option = data_fixture.create_text_field(table=table, name="field_a")
+    field_without_an_option = data_fixture.create_text_field(
+        table=table,
+        name="field_b",
+    )
+    grid_view = GridView.objects.create(table=table, order=0, name="grid_view")
+    model = table.get_model()
+    model.objects.create(
+        **{
+            f"field_{field_with_an_option.id}": "a",
+            f"field_{field_without_an_option.id}": "b",
+        },
+    )
+    data_fixture.create_grid_view_field_option(
+        grid_view=grid_view, field=field_with_an_option, order=1
+    )
+
+    assert GridViewFieldOptions.objects.count() == 1
+
+    _, contents = run_export_job_with_mock_storage(table, grid_view, storage_mock, user)
+    bom = "\ufeff"
+    expected = bom + "id,field_a,field_b\r\n" "1,a,b\r\n"
+    assert contents == expected
+
+    assert GridViewFieldOptions.objects.count() == 2
+    assert GridViewFieldOptions.objects.filter(field=field_without_an_option).exists()

@@ -95,11 +95,15 @@ class GridViewType(ViewType):
 
         grid_view = ViewHandler().get_view(view.id, view_model=GridView)
 
+        # Ensure all fields have options created before we then query directly off the
+        # options table below.
+        grid_view.get_field_options(create_if_not_exists=True)
+
         ordered_field_objects = []
         ordered_visible_fields = (
             grid_view.get_field_options()
             .filter(hidden=False)
-            .order_by("-field__primary", "order", "id")
+            .order_by("-field__primary", "order", "field__id")
             .values_list("field__id", flat=True)
         )
         model = view.table.get_model(field_ids=ordered_visible_fields)
