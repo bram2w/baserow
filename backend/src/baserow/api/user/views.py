@@ -183,6 +183,7 @@ class UserView(APIView):
             name=data["name"],
             email=data["email"],
             password=data["password"],
+            language=data["language"],
             group_invitation_token=data.get("group_invitation_token"),
             template=template,
         )

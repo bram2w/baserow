@@ -17,6 +17,11 @@ create_user_response_schema = build_object_type(
                     "description": "The username of the related user. This is always "
                     "an email address.",
                 },
+                "language": {
+                    "type": "string",
+                    "description": "An ISO 639 language code (with optional variant) "
+                    "selected by the user. Ex: en-GB.",
+                },
             },
         },
         "token": {"type": "string"},
