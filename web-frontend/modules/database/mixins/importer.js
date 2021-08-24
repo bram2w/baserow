@@ -1,7 +1,10 @@
 /**
  * Mixin that introduces helper methods for the importer form component.
  */
-import { RESERVED_BASEROW_FIELD_NAMES } from '@baserow/modules/database/utils/constants'
+import {
+  RESERVED_BASEROW_FIELD_NAMES,
+  MAX_FIELD_NAME_LENGTH,
+} from '@baserow/modules/database/utils/constants'
 
 export default {
   methods: {
@@ -65,7 +68,8 @@ export default {
     /**
      * Find the next un-unused column not present or used yet in the nextFreeIndexMap.
      * Will append a number to the returned columnName if it is taken, where that
-     * number ensures the returned name is unique. Finally this function will update
+     * number ensures the returned name is unique. Will respect the maximum allowed
+     * field name length. Finally this function will update
      * the nextFreeIndexMap so future calls will not use any columns returned by
      * this function.
      * @param originalColumnName The column name to find the next free unique value for.
@@ -78,7 +82,24 @@ export default {
     findNextFreeName(originalColumnName, nextFreeIndexMap, startingIndex) {
       let i = nextFreeIndexMap.get(originalColumnName) || startingIndex
       while (true) {
-        const nextColumnNameToCheck = `${originalColumnName} ${i}`
+        const suffixToAppend = ` ${i}`
+        let nextColumnNameToCheck
+
+        // If appending a number to the columnName in order to make it
+        // unique will return a string that is longer than the maximum
+        // allowed field name length, we need to further slice the
+        // columnName as to not go above the maximum allowed length.
+        if (
+          originalColumnName.length + suffixToAppend.length >
+          MAX_FIELD_NAME_LENGTH
+        ) {
+          nextColumnNameToCheck = `${originalColumnName.slice(
+            0,
+            -suffixToAppend.length
+          )}${suffixToAppend}`
+        } else {
+          nextColumnNameToCheck = `${originalColumnName}${suffixToAppend}`
+        }
         if (!nextFreeIndexMap.has(nextColumnNameToCheck)) {
           nextFreeIndexMap.set(originalColumnName, i + 1)
           return nextColumnNameToCheck
@@ -112,22 +133,24 @@ export default {
       }
     },
     /**
-     * Ensures that the uploaded field names are unique, non blank and don't use any
-     * reserved Baserow field names.
+     * Ensures that the uploaded field names are unique, non blank, don't exceed
+     * the maximum field name length and don't use any reserved Baserow field names.
      * @param {*[]} head An array of field names to be checked.
      * @return A new array of field names which are guaranteed to be unique and valid.
      */
     makeHeaderUniqueAndValid(head) {
       const nextFreeIndexMap = new Map()
       for (let i = 0; i < head.length; i++) {
-        nextFreeIndexMap.set(head[i], 0)
+        const truncatedColumn = head[i].trim().slice(0, MAX_FIELD_NAME_LENGTH)
+        nextFreeIndexMap.set(truncatedColumn, 0)
       }
       const uniqueAndValidHeader = []
       for (let i = 0; i < head.length; i++) {
         const column = head[i]
         const trimmedColumn = column.trim()
+        const truncatedColumn = trimmedColumn.slice(0, MAX_FIELD_NAME_LENGTH)
         const uniqueValidName = this.makeColumnNameUniqueAndValidIfNotAlready(
-          trimmedColumn,
+          truncatedColumn,
           nextFreeIndexMap
         )
         uniqueAndValidHeader.push(uniqueValidName)

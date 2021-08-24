@@ -9,6 +9,7 @@ from faker import Faker
 
 from baserow.contrib.database.fields.exceptions import (
     FieldTypeDoesNotExist,
+    MaxFieldNameLengthExceeded,
     PrimaryFieldAlreadyExists,
     CannotDeletePrimaryField,
     FieldDoesNotExist,
@@ -279,6 +280,27 @@ def test_create_field(send_mock, data_fixture):
     with pytest.raises(FieldTypeDoesNotExist):
         handler.create_field(user=user, table=table, type_name="UNKNOWN")
 
+    too_long_field_name = "x" * 256
+    field_name_with_ok_length = "x" * 255
+
+    with pytest.raises(MaxFieldNameLengthExceeded):
+        handler.create_field(
+            user=user,
+            table=table,
+            type_name="text",
+            name=too_long_field_name,
+            text_default="Some default",
+        )
+
+    field_with_max_length_name = handler.create_field(
+        user=user,
+        table=table,
+        type_name="text",
+        name=field_name_with_ok_length,
+        text_default="Some default",
+    )
+    assert getattr(field_with_max_length_name, "name") == field_name_with_ok_length
+
 
 @pytest.mark.django_db
 def test_create_primary_field(data_fixture):
@@ -428,6 +450,24 @@ def test_update_field(send_mock, data_fixture):
     field_2 = data_fixture.create_text_field(table=table, order=1)
     with pytest.raises(FieldWithSameNameAlreadyExists):
         handler.update_field(user=user, field=field_2, name=field.name)
+
+    too_long_field_name = "x" * 256
+    field_name_with_ok_length = "x" * 255
+
+    field_3 = data_fixture.create_text_field(table=table)
+    with pytest.raises(MaxFieldNameLengthExceeded):
+        handler.update_field(
+            user=user,
+            field=field_3,
+            name=too_long_field_name,
+        )
+
+    field_with_max_length_name = handler.update_field(
+        user=user,
+        field=field_3,
+        name=field_name_with_ok_length,
+    )
+    assert getattr(field_with_max_length_name, "name") == field_name_with_ok_length
 
 
 @pytest.mark.django_db
@@ -933,3 +973,61 @@ def test_find_next_free_field_name(data_fixture):
         handler.find_next_unused_field_name(table, ["regex like field [0-9]"])
         == "regex like field [0-9] 3"
     )
+
+
+@pytest.mark.django_db
+def test_find_next_free_field_name_returns_strings_with_max_length(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    max_field_name_length = Field.get_max_name_length()
+    exactly_length_field_name = "x" * max_field_name_length
+    too_long_field_name = "x" * (max_field_name_length + 1)
+
+    data_fixture.create_text_field(name=exactly_length_field_name, table=table, order=1)
+    handler = FieldHandler()
+
+    # Make sure that the returned string does not exceed the max_field_name_length
+    assert (
+        len(handler.find_next_unused_field_name(table, [exactly_length_field_name]))
+        <= max_field_name_length
+    )
+    assert (
+        len(
+            handler.find_next_unused_field_name(
+                table, [f"{exactly_length_field_name} - test"]
+            )
+        )
+        <= max_field_name_length
+    )
+    assert (
+        len(handler.find_next_unused_field_name(table, [too_long_field_name]))
+        <= max_field_name_length
+    )
+
+    initial_name = (
+        "xIyV4w3J4J0Zzd5ZIz4eNPucQOa9tS25ULHw2SCr4RDZ9h2AvxYr5nlGRNQR2ir517B3SkZB"
+        "nw2eGnBJQAdX8A6QcSCmcbBAnG3BczFytJkHJK7cE6VsAS6tROTg7GOwSQsdImURRwEarrXo"
+        "lv9H4bylyJM0bDPkgB4H6apiugZ19X0C9Fw2ed125MJHoFgTZLbJRc6joNyJSOkGkmGhBuIq"
+        "RKipRYGzB4oiFKYPx5Xoc8KHTsLqVDQTWwwzhaR"
+    )
+    expected_name_1 = (
+        "xIyV4w3J4J0Zzd5ZIz4eNPucQOa9tS25ULHw2SCr4RDZ9h2AvxYr5nlGRNQR2ir517B3SkZB"
+        "nw2eGnBJQAdX8A6QcSCmcbBAnG3BczFytJkHJK7cE6VsAS6tROTg7GOwSQsdImURRwEarrXo"
+        "lv9H4bylyJM0bDPkgB4H6apiugZ19X0C9Fw2ed125MJHoFgTZLbJRc6joNyJSOkGkmGhBuIq"
+        "RKipRYGzB4oiFKYPx5Xoc8KHTsLqVDQTWwwzh 2"
+    )
+
+    expected_name_2 = (
+        "xIyV4w3J4J0Zzd5ZIz4eNPucQOa9tS25ULHw2SCr4RDZ9h2AvxYr5nlGRNQR2ir517B3SkZB"
+        "nw2eGnBJQAdX8A6QcSCmcbBAnG3BczFytJkHJK7cE6VsAS6tROTg7GOwSQsdImURRwEarrXo"
+        "lv9H4bylyJM0bDPkgB4H6apiugZ19X0C9Fw2ed125MJHoFgTZLbJRc6joNyJSOkGkmGhBuIq"
+        "RKipRYGzB4oiFKYPx5Xoc8KHTsLqVDQTWwwzh 3"
+    )
+
+    data_fixture.create_text_field(name=initial_name, table=table, order=1)
+
+    assert handler.find_next_unused_field_name(table, [initial_name]) == expected_name_1
+
+    data_fixture.create_text_field(name=expected_name_1, table=table, order=1)
+
+    assert handler.find_next_unused_field_name(table, [initial_name]) == expected_name_2

@@ -152,6 +152,57 @@ def test_create_table_with_data(api_client, data_fixture):
     assert response_json["error"] == "ERROR_MAX_FIELD_COUNT_EXCEEDED"
     settings.MAX_FIELD_LIMIT = field_limit
 
+    too_long_field_name = "x" * 256
+    field_name_with_ok_length = "x" * 255
+
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "name": "Test 1",
+            "data": [
+                [too_long_field_name, "B", "C", "D"],
+                ["1-1", "1-2", "1-3", "1-4", "1-5"],
+                ["2-1", "2-2", "2-3"],
+                ["3-1", "3-2"],
+            ],
+            "first_row_header": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED"
+
+    url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
+    response = api_client.post(
+        url,
+        {
+            "name": "Test 1",
+            "data": [
+                [field_name_with_ok_length, "B", "C", "D"],
+                ["1-1", "1-2", "1-3", "1-4", "1-5"],
+                ["2-1", "2-2", "2-3"],
+                ["3-1", "3-2"],
+            ],
+            "first_row_header": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    table = Table.objects.get(id=response_json["id"])
+
+    text_fields = TextField.objects.filter(table=table)
+    assert text_fields[0].name == field_name_with_ok_length
+    assert text_fields[1].name == "B"
+    assert text_fields[2].name == "C"
+    assert text_fields[3].name == "D"
+    assert text_fields[4].name == "Field 5"
+
     url = reverse("api:database:tables:list", kwargs={"database_id": database.id})
     response = api_client.post(
         url,

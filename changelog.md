@@ -9,6 +9,8 @@
 * Fixed error when pasting into a single select field.
 * Pasting the value of a single select option into a single select field now selects the
   first option with that value.
+* The API now returns appropriate errors when trying to create a field with a name which is too long.
+* Importing table data with a column name that is too long will now truncate that name.
 
 ## Released (2021-08-11)
 

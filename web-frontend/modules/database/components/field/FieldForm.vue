@@ -34,6 +34,12 @@
         >
           This field name is not allowed.
         </div>
+        <div
+          v-else-if="$v.values.name.$dirty && !$v.values.name.maxLength"
+          class="error"
+        >
+          This field name is too long.
+        </div>
       </div>
     </div>
     <div class="control">
@@ -70,11 +76,14 @@
 </template>
 
 <script>
-import { required } from 'vuelidate/lib/validators'
+import { required, maxLength } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import { mapGetters } from 'vuex'
-import { RESERVED_BASEROW_FIELD_NAMES } from '@baserow/modules/database/utils/constants'
+import {
+  RESERVED_BASEROW_FIELD_NAMES,
+  MAX_FIELD_NAME_LENGTH,
+} from '@baserow/modules/database/utils/constants'
 
 // @TODO focus form on open
 export default {
@@ -119,6 +128,7 @@ export default {
       values: {
         name: {
           required,
+          maxLength: maxLength(MAX_FIELD_NAME_LENGTH),
           mustHaveUniqueFieldName: this.mustHaveUniqueFieldName,
           mustNotClashWithReservedName: this.mustNotClashWithReservedName,
         },

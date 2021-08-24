@@ -1,5 +1,4 @@
 import logging
-import re
 from copy import deepcopy
 from typing import Dict, Any, Optional, List
 
@@ -21,6 +20,7 @@ from .exceptions import (
     FieldWithSameNameAlreadyExists,
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
+    MaxFieldNameLengthExceeded,
 )
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
@@ -51,6 +51,7 @@ def _validate_field_name(
         name key is not in field_values. When False does not return and immediately
         returns if the key is missing.
     :raises InvalidBaserowFieldName: If "name" is
+    :raises MaxFieldNameLengthExceeded: When a provided field name is too long.
     :return:
     """
     if "name" not in field_values:
@@ -62,6 +63,10 @@ def _validate_field_name(
     name = field_values["name"]
     if existing_field is not None and existing_field.name == name:
         return
+
+    max_field_name_length = Field.get_max_name_length()
+    if len(name) > max_field_name_length:
+        raise MaxFieldNameLengthExceeded()
 
     if name.strip() == "":
         raise InvalidBaserowFieldName()
@@ -472,6 +477,8 @@ class FieldHandler:
         Finds a unused field name in the provided table. If no names in the provided
         field_names_to_try list are available then the last field name in that list will
         have a number appended which ensures it is an available unique field name.
+        Respects the maximally allowed field name length. In case the field_names_to_try
+        are longer than that, they will get truncated to the maximally allowed length.
 
         :param table: The table whose fields to search.
         :param field_names_to_try: The field_names to try in order before starting to
@@ -484,6 +491,13 @@ class FieldHandler:
         if field_ids_to_ignore is None:
             field_ids_to_ignore = []
 
+        max_field_name_length = Field.get_max_name_length()
+
+        # If the field_name_to_try is longer than the maximally allowed
+        # field name length the name needs to be truncated.
+        field_names_to_try = [
+            item[0:max_field_name_length] for item in field_names_to_try
+        ]
         # Check if any of the names to try are available by finding any existing field
         # names with the same name.
         taken_field_names = set(
@@ -506,19 +520,34 @@ class FieldHandler:
         # None of the names in the param list are available, now using the last one lets
         # append a number to the name until we find a free one.
         original_field_name = field_names_to_try[-1]
-        # Lookup any existing fields which could potentially collide with our new
-        # field name. This way we can skip these and ensure our new field has a
-        # unique name.
+
+        # Lookup any existing field names. This way we can skip these and ensure our
+        # new field has a unique name.
         existing_field_name_collisions = set(
             Field.objects.exclude(id__in=field_ids_to_ignore)
-            .filter(table=table, name__regex=fr"^{re.escape(original_field_name)} \d+$")
+            .filter(table=table)
             .order_by("name")
             .distinct()
             .values_list("name", flat=True)
         )
         i = 2
         while True:
-            field_name = f"{original_field_name} {i}"
+            suffix_to_append = f" {i}"
+            suffix_length = len(suffix_to_append)
+            length_of_original_field_name_plus_suffix = (
+                len(original_field_name) + suffix_length
+            )
+
+            # At this point we know, that the original_field_name can only
+            # be maximally the length of max_field_name_length. Therefore
+            # if the length_of_original_field_name_plus_suffix is longer
+            # we can further truncate the field_name by the length of the
+            # suffix.
+            if length_of_original_field_name_plus_suffix > max_field_name_length:
+                field_name = f"{original_field_name[:-suffix_length]}{suffix_to_append}"
+            else:
+                field_name = f"{original_field_name}{suffix_to_append}"
+
             i += 1
             if field_name not in existing_field_name_collisions:
                 return field_name

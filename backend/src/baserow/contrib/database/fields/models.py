@@ -70,6 +70,10 @@ class Field(
         queryset = Field.objects.filter(table=table)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
+    @classmethod
+    def get_max_name_length(cls):
+        return cls._meta.get_field("name").max_length
+
     @property
     def db_column(self):
         return f"field_{self.id}"
