@@ -36,6 +36,23 @@ def test_create_user(client, data_fixture):
     assert response_json["user"]["is_staff"] is True
     assert response_json["user"]["id"] == user.id
 
+    # Test profile properties
+    response = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1Bis",
+            "email": "test1bis@test.nl",
+            "password": valid_password,
+            "language": "fr",
+        },
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    user = User.objects.get(email="test1bis@test.nl")
+    assert user.profile.language == "fr"
+    assert response_json["user"]["language"] == "fr"
+
     response_failed = client.post(
         reverse("api:user:index"),
         {"name": "Test1", "email": "test@test.nl", "password": valid_password},
@@ -108,6 +125,26 @@ def test_create_user(client, data_fixture):
     assert (
         response_json["detail"]["password"][0]["error"]
         == "This password is too short. It must contain at least 8 characters."
+    )
+
+    # Test profile attribute errors
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test20@test.nl",
+            "password": valid_password,
+            "language": "invalid",
+        },
+        format="json",
+    )
+    response_json = response_failed.json()
+    assert response_failed.status_code == 400
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["language"][0]["code"] == "invalid_language"
+    assert response_json["detail"]["language"][0]["error"] == (
+        "Only the following language keys are "
+        f"valid: {','.join([l[0] for l in settings.LANGUAGES])}"
     )
 
 

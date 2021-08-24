@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 
 from rest_framework_jwt.settings import api_settings
 
+from baserow.core.models import UserProfile
+
 
 User = get_user_model()
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
@@ -15,6 +17,8 @@ class UserFixtures:
         return token
 
     def create_user(self, **kwargs):
+        profile_data = {}
+
         if "email" not in kwargs:
             kwargs["email"] = self.fake.email()
 
@@ -27,9 +31,17 @@ class UserFixtures:
         if "password" not in kwargs:
             kwargs["password"] = "password"
 
+        profile_data["language"] = kwargs.pop(
+            "language", self.fake.word(ext_word_list=["en", "fr"])
+        )
+
         user = User(**kwargs)
         user.set_password(kwargs["password"])
         user.save()
+
+        # Profile creation
+        profile_data["user"] = user
+        UserProfile.objects.create(**profile_data)
 
         return user
 
