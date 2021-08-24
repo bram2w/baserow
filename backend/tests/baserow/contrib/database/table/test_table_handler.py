@@ -6,7 +6,10 @@ from django.conf import settings
 from decimal import Decimal
 
 from baserow.core.exceptions import UserNotInGroup
-from baserow.contrib.database.fields.exceptions import MaxFieldLimitExceeded
+from baserow.contrib.database.fields.exceptions import (
+    MaxFieldLimitExceeded,
+    MaxFieldNameLengthExceeded,
+)
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import (
@@ -247,6 +250,30 @@ def test_fill_table_with_initial_data(data_fixture):
     assert num_fields == settings.MAX_FIELD_LIMIT
 
     settings.MAX_FIELD_LIMIT = field_limit
+
+    too_long_field_name = "x" * 256
+    field_name_with_ok_length = "x" * 255
+
+    data = [
+        [too_long_field_name, "B", "C", "D", "E"],
+        ["1-1", "1-2", "1-3", "1-4", "1-5"],
+    ]
+
+    with pytest.raises(MaxFieldNameLengthExceeded):
+        table_handler.create_table(
+            user, database, name="Table 3", data=data, first_row_header=True
+        )
+
+    data = [
+        [field_name_with_ok_length, "B", "C", "D", "E"],
+        ["1-1", "1-2", "1-3", "1-4", "1-5"],
+    ]
+    table = table_handler.create_table(
+        user, database, name="Table 3", data=data, first_row_header=True
+    )
+    num_fields = table.field_set.count()
+
+    assert num_fields == 5
 
 
 @pytest.mark.django_db

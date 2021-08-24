@@ -42,6 +42,11 @@ ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE = (
     "The field type {e.field_type} is not compatible with the primary field.",
 )
 ERROR_MAX_FIELD_COUNT_EXCEEDED = "ERROR_MAX_FIELD_COUNT_EXCEEDED"
+ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED = (
+    "ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED",
+    HTTP_400_BAD_REQUEST,
+    "You cannot set a field name longer than {e.max_field_name_length} characters.",
+)
 ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS = (
     "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS",
     HTTP_400_BAD_REQUEST,
