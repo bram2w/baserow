@@ -5,10 +5,28 @@
   padding: 32px 40px;
 }
 
-.box__title {
+.box__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
   padding-bottom: 20px;
+  margin-bottom: 20px;
   border-bottom: 1px solid $color-neutral-200;
+}
+
+.box__head-title {
   word-break: break-word;
+  margin: 0;
+  padding: 0;
+}
+
+.box__title {
+  @extend .box__head-title;
+
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid $color-neutral-200;
 }
 
 .box__message {

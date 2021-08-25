@@ -199,7 +199,7 @@ describe('User Admin Component Tests', () => {
         tooShortPassword,
         tooShortPassword
       )
-    ).toContain('A minimum of 8 characters is required here.')
+    ).toContain('error.minLength')
   })
 
   test('users password cant be changed to more than 256 characters', async () => {
@@ -212,7 +212,7 @@ describe('User Admin Component Tests', () => {
         tooLongPassword,
         tooLongPassword
       )
-    ).toContain('A maximum of 256 characters is allowed here.')
+    ).toContain('error.maxLength')
   })
 
   test('users password can be changed to 256 characters', async () => {

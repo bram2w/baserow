@@ -65,7 +65,7 @@ describe('Password Input Tests', () => {
     const inputInvalid = wrapper.vm.$v.$invalid
     const errorDiv = getErrorDiv(wrapper)
     const errorText = getErrorText(errorDiv)
-    expect(errorText).toBe('A minimum of 8 characters is required here.')
+    expect(errorText).toBe('error.minLength')
     expect(inputInvalid).toBeTruthy()
   })
 
@@ -78,7 +78,7 @@ describe('Password Input Tests', () => {
     const inputInvalid = wrapper.vm.$v.$invalid
     const errorDiv = getErrorDiv(wrapper)
     const errorText = getErrorText(errorDiv)
-    expect(errorText).toBe('Input is required.')
+    expect(errorText).toBe('error.inputRequired')
     expect(inputInvalid).toBeTruthy()
   })
 
@@ -91,7 +91,7 @@ describe('Password Input Tests', () => {
     const inputInvalid = wrapper.vm.$v.$invalid
     const errorDiv = getErrorDiv(wrapper)
     const errorText = getErrorText(errorDiv)
-    expect(errorText).toBe('A maximum of 256 characters is allowed here.')
+    expect(errorText).toBe('error.maxLength')
     expect(inputInvalid).toBeTruthy()
   })
 
