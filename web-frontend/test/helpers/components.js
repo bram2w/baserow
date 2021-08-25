@@ -23,13 +23,17 @@ const addBus = (context) => {
   }
   context.vue.use(EventBusPlugin)
 }
+const addI18n = (context) => {
+  context.vueTestUtils.config.mocks.$t = (key) => key
+}
 const compositeConfiguration = (...configs) => {
   return (context) => configs.forEach((config) => config(context))
 }
 
 export const bootstrapVueContext = (configureContext) => {
   configureContext =
-    configureContext || compositeConfiguration(addVuex, addVuelidate, addBus)
+    configureContext ||
+    compositeConfiguration(addVuex, addVuelidate, addBus, addI18n)
 
   const context = {}
   const teardownVueContext = () => {

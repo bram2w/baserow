@@ -1,3 +1,6 @@
+// Allow to transform some ESM installed modules
+const esModules = ['@nuxtjs/i18n'].join('|')
+
 module.exports = {
   rootDir: '../../',
   testEnvironment: 'node',
@@ -14,6 +17,7 @@ module.exports = {
     '^.+\\.js$': 'babel-jest',
     '.*\\.(vue)$': 'vue-jest',
   },
+  transformIgnorePatterns: [`/node_modules/(?!${esModules})`],
   collectCoverage: true,
   collectCoverageFrom: [
     '<rootDir>/components/**/*.vue',

@@ -18,6 +18,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.3",
     "@nuxtjs/axios": "^5.13.6",
+    "@nuxtjs/i18n": "^7.0.1",
     "axios": "^0.21.0",
     "bignumber.js": "^9.0.1",
     "chart.js": "2.9.4",

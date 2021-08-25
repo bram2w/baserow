@@ -15,6 +15,7 @@ export default (client) => {
       email,
       name,
       password,
+      language,
       authenticate = true,
       groupInvitationToken = null,
       templateId = null
@@ -24,6 +25,7 @@ export default (client) => {
         email,
         password,
         authenticate,
+        language,
       }
 
       if (groupInvitationToken !== null) {
