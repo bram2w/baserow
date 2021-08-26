@@ -1,5 +1,5 @@
 from django.db import transaction
-from itsdangerous.exc import BadSignature, SignatureExpired
+from itsdangerous.exc import BadSignature, BadTimeSignature, SignatureExpired
 
 from django.conf import settings
 
@@ -271,6 +271,7 @@ class ResetPasswordView(APIView):
     @map_exceptions(
         {
             BadSignature: BAD_TOKEN_SIGNATURE,
+            BadTimeSignature: BAD_TOKEN_SIGNATURE,
             SignatureExpired: EXPIRED_TOKEN_SIGNATURE,
             UserNotFound: ERROR_USER_NOT_FOUND,
         }
