@@ -172,6 +172,20 @@ def test_create_user_with_invitation(data_fixture, client):
         reverse("api:user:index"),
         {
             "name": "Test1",
+            "email": "test0@test.nl",
+            "password": valid_password,
+            "group_invitation_token": f"{signer.dumps(invitation.id)}2",
+        },
+        format="json",
+    )
+    assert response_failed.status_code == HTTP_400_BAD_REQUEST
+    assert response_failed.json()["error"] == "BAD_TOKEN_SIGNATURE"
+    assert User.objects.all().count() == 1
+
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
             "email": "test@test.nl",
             "password": valid_password,
             "group_invitation_token": signer.dumps(99999),

@@ -191,7 +191,6 @@ export default {
       "incorrectCredentialMessage": "The provided e-mail address or password is incorrect."
     },
     "field":{
-      "emailAddress": "E-mail address",
       "password": "Password"
     },
     "invitationTitle": "Invitation",
@@ -207,7 +206,6 @@ export default {
       "incorrectCredentialMessage": "L'adresse éléctronique et/ou le mot de passe sont incorrects."
     },
     "field":{
-      "emailAddress": "Adresse électronique",
       "password": "Mot de passe"
     },
     "invitationTitle": "Invitation",

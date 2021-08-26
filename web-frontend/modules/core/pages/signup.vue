@@ -69,9 +69,6 @@ export default {
 <i18n>
 {
   "en":{
-    "action": {
-      "backToLogin": "Back to login"
-    },
     "signup": {
       "title": "Sign up",
       "disabled": "Sign up is disabled",
@@ -79,9 +76,6 @@ export default {
     }
   },
   "fr":{
-    "action": {
-      "backToLogin": "Retour à l'identification"
-    },
     "signup": {
       "title": "Création de compte",
       "disabled": "Création de compte desactivée",

@@ -1,11 +1,16 @@
 <template>
   <div>
     <div v-if="!success">
-      <h1 class="box__title">Reset password</h1>
+      <div class="box__head">
+        <h1 class="box__head-title">{{ $t('resetPassword.title') }}</h1>
+        <LangPicker />
+      </div>
       <Error :error="error"></Error>
       <form @submit.prevent="resetPassword">
         <div class="control">
-          <label class="control__label">New password</label>
+          <label class="control__label">{{
+            $t('resetPassword.newPassword')
+          }}</label>
           <div class="control__elements">
             <PasswordInput
               v-model="account.password"
@@ -14,7 +19,9 @@
           </div>
         </div>
         <div class="control">
-          <label class="control__label">Repeat new password</label>
+          <label class="control__label">{{
+            $t('resetPassword.repeatNewPassword')
+          }}</label>
           <div class="control__elements">
             <input
               v-model="account.passwordConfirm"
@@ -24,7 +31,7 @@
               @blur="$v.account.passwordConfirm.$touch()"
             />
             <div v-if="$v.account.passwordConfirm.$error" class="error">
-              This field must match your new password field.
+              {{ $t('error.notMatchingPassword') }}
             </div>
           </div>
         </div>
@@ -33,7 +40,7 @@
             <li>
               <nuxt-link :to="{ name: 'login' }">
                 <i class="fas fa-arrow-left"></i>
-                Back to login
+                {{ $t('action.backToLogin') }}
               </nuxt-link>
             </li>
           </ul>
@@ -42,7 +49,7 @@
             class="button button--large"
             :disabled="loading"
           >
-            Change password
+            {{ $t('resetPassword.submit') }}
             <i class="fas fa-pencil-alt"></i>
           </button>
         </div>
@@ -52,10 +59,10 @@
       <div class="box__message-icon">
         <i class="fas fa-check"></i>
       </div>
-      <h1 class="box__message-title">Password changed</h1>
+      <h1 class="box__message-title">{{ $t('resetPassword.changed') }}</h1>
       <nuxt-link :to="{ name: 'login' }" class="button button--large">
         <i class="fas fa-arrow-left"></i>
-        Back to login
+        {{ $t('action.backToLogin') }}
       </nuxt-link>
     </div>
   </div>
@@ -65,13 +72,14 @@
 import { sameAs } from 'vuelidate/lib/validators'
 
 import PasswordInput from '@baserow/modules/core/components/helpers/PasswordInput'
+import LangPicker from '@baserow/modules/core/components/LangPicker'
 import { passwordValidation } from '@baserow/modules/core/validators'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
-  components: { PasswordInput },
+  components: { LangPicker, PasswordInput },
   mixins: [error],
   layout: 'login',
   data() {
@@ -111,12 +119,12 @@ export default {
         this.loading = false
         this.handleError(error, 'resetPassword', {
           BAD_TOKEN_SIGNATURE: new ResponseErrorMessage(
-            'Invalid link.',
-            'Could not reset the password because the link is invalid.'
+            this.$t('resetPassword.errorInvalidLinkTitle'),
+            this.$t('resetPassword.errorInvalidLinkMessage')
           ),
           EXPIRED_TOKEN_SIGNATURE: new ResponseErrorMessage(
-            'Link expired',
-            'The password reset link has expired. Please request another one.'
+            this.$t('resetPassword.errorLinkExpiredTitle'),
+            this.$t('resetPassword.errorLinkExpiredMessage')
           ),
         })
       }
@@ -132,3 +140,34 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "resetPassword": {
+      "title": "Reset password",
+      "newPassword": "New password",
+      "repeatNewPassword": "Repeat new password",
+      "submit": "Change password",
+      "changed": "Password changed",
+      "errorInvalidLinkTitle": "Invalid link",
+      "errorInvalidLinkMessage": "Could not reset the password because the link is invalid.",
+      "errorLinkExpiredTitle": "Link expired",
+      "errorLinkExpiredMessage": "The password reset link has expired. Please request another one."
+    }
+  },
+  "fr": {
+    "resetPassword": {
+      "title": "Nouveau mot de passe",
+      "newPassword": "Nouveau mot de passe",
+      "repeatNewPassword": "Répetez le mot de passe",
+      "submit": "Mettre à jour",
+      "changed": "Mot de passe mis à jour",
+      "errorInvalidLinkTitle": "Lien invalid",
+      "errorInvalidLinkMessage": "Il n'est pas possible de réinitialiser le mot de passe car le lien est invalide.",
+      "errorLinkExpiredTitle": "Lien expiré",
+      "errorLinkExpiredMessage": "Le lien de réinitialisation de mot de passe a expiré, Veuillez en demander un nouveau."
+    }
+  }
+}
+</i18n>

@@ -207,8 +207,6 @@ export default {
 {
   "en":{
     "error":{
-      "invalidEmail": "Please enter a valid e-mail address.",
-      "notMatchingPassword": "This field must match your password field.",
       "alreadyExistsTitle": "User already exists",
       "alreadyExistsMessage": "A user with the provided e-mail address already exists."
     },
@@ -224,8 +222,6 @@ export default {
   },
   "fr": {
     "error":{
-      "invalidEmail": "Veuillez entrer une adresse électronique valide.",
-      "notMatchingPassword": "Les mots de passe ne correspondent pas.",
       "alreadyExistsTitle": "l'Utilisateur existe déjà",
       "alreadyExistsMessage": "Un utilisateur avec la même adresse électronique existe déjà."
     },

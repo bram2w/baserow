@@ -1,6 +1,7 @@
 .lang-picker__link {
   color: $color-primary-900;
   user-select: none;
+  white-space: nowrap;
 
   &:hover {
     text-decoration: none;
