@@ -11,6 +11,8 @@
   first option with that value.
 * The API now returns appropriate errors when trying to create a field with a name which is too long.
 * Importing table data with a column name that is too long will now truncate that name.
+* Fixed error when rapidly switching between template tables or views in the template 
+  preview.
 
 ## Released (2021-08-11)
 
