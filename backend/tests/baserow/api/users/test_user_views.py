@@ -149,6 +149,59 @@ def test_create_user(client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_user_account(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token(
+        email="test@localhost.nl", language="en", first_name="Nikolas"
+    )
+
+    response = api_client.get(
+        reverse("api:user:account"),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["first_name"] == "Nikolas"
+    assert response_json["language"] == "en"
+
+    response = api_client.patch(
+        reverse("api:user:account"),
+        {
+            "first_name": "NewOriginalName",
+            "language": "fr",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+
+    assert response.status_code == HTTP_200_OK
+    assert response_json["first_name"] == "NewOriginalName"
+    assert response_json["language"] == "fr"
+
+    user.refresh_from_db()
+    assert user.first_name == "NewOriginalName"
+    assert user.profile.language == "fr"
+
+    response = api_client.patch(
+        reverse("api:user:account"),
+        {
+            "language": "invalid",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["language"][0]["code"] == "invalid_language"
+    assert response_json["detail"]["language"][0]["error"] == (
+        "Only the following language keys are "
+        f"valid: {','.join([l[0] for l in settings.LANGUAGES])}"
+    )
+
+
+@pytest.mark.django_db
 def test_create_user_with_invitation(data_fixture, client):
     core_handler = CoreHandler()
     valid_password = "thisIsAValidPassword"

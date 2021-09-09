@@ -160,6 +160,28 @@ class UserHandler:
 
         return user
 
+    def update_user(self, user, first_name=None, language=None):
+        """
+        Update user modifiable properties
+
+        :param user: The user instance to update.
+        :type user: User
+        :param language: The language selected by the user.
+        :type language: str
+        :return: The user object.
+        :rtype: User
+        """
+
+        if first_name is not None:
+            user.first_name = first_name
+            user.save()
+
+        if language is not None:
+            user.profile.language = language
+            user.profile.save()
+
+        return user
+
     def get_reset_password_signer(self):
         """
         Instantiates the password reset serializer that can dump and load values.
