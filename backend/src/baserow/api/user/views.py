@@ -41,6 +41,7 @@ from baserow.core.user.exceptions import (
 )
 
 from .serializers import (
+    AccountSerializer,
     RegisterSerializer,
     UserSerializer,
     SendResetPasswordEmailBodyValidationSerializer,
@@ -323,6 +324,54 @@ class ChangePasswordView(APIView):
         )
 
         return Response("", status=204)
+
+
+class AccountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=["User"],
+        operation_id="get_account",
+        description=(
+            "Responds with account information of the authenticated user. "
+            "For example the chosen `language` and `name` are included "
+            "in the response."
+        ),
+        responses={
+            200: AccountSerializer,
+        },
+    )
+    @transaction.atomic
+    def get(self, request):
+        """Returns user account."""
+
+        account_serializer = AccountSerializer(request.user)
+        return Response(account_serializer.data)
+
+    @extend_schema(
+        tags=["User"],
+        request=AccountSerializer,
+        operation_id="update_account",
+        description=("Updates the account information of the authenticated user."),
+        responses={
+            200: AccountSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @validate_body(AccountSerializer)
+    def patch(self, request, data):
+        """Update editable user account information."""
+
+        user = UserHandler().update_user(
+            request.user,
+            **data,
+        )
+        return Response(AccountSerializer(user).data)
 
 
 class DashboardView(APIView):

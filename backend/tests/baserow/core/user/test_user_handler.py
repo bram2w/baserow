@@ -138,6 +138,26 @@ def test_create_user(data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_user(data_fixture):
+    user_handler = UserHandler()
+    user = data_fixture.create_user(first_name="Initial", language="fr")
+
+    user_handler.update_user(user, first_name="Updated")
+
+    user.refresh_from_db()
+    user.profile.refresh_from_db()
+    assert user.first_name == "Updated"
+    assert user.profile.language == "fr"
+
+    user_handler.update_user(user, language="en")
+
+    user.refresh_from_db()
+    user.profile.refresh_from_db()
+    assert user.first_name == "Updated"
+    assert user.profile.language == "en"
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("invalid_password", invalid_passwords)
 def test_create_user_invalid_password(data_fixture, invalid_password):
     user_handler = UserHandler()
