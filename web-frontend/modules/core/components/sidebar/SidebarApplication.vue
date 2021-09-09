@@ -33,13 +33,17 @@
           <li>
             <a @click="enableRename()">
               <i class="context__menu-icon fas fa-fw fa-pen"></i>
-              Rename {{ application._.type.name | lowercase }}
+              {{
+                $t('sidebarApplication.renameApplication', {
+                  type: application._.type.name.toLowerCase(),
+                })
+              }}
             </a>
           </li>
           <li>
             <a @click="showApplicationTrashModal">
               <i class="context__menu-icon fas fa-fw fa-recycle"></i>
-              View trash
+              {{ $t('sidebarApplication.viewTrash') }}
             </a>
           </li>
           <li>
@@ -48,7 +52,11 @@
               @click="deleteApplication()"
             >
               <i class="context__menu-icon fas fa-fw fa-trash"></i>
-              Delete {{ application._.type.name | lowercase }}
+              {{
+                $t('sidebarApplication.deleteApplication', {
+                  type: application._.type.name.toLowerCase(),
+                })
+              }}
             </a>
           </li>
         </ul>
@@ -136,3 +144,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "sidebarApplication": {
+      "renameApplication": "Rename {type}",
+      "viewTrash": "View trash",
+      "deleteApplication": "Delete {type}"
+    }
+  },
+  "fr":{
+    "sidebarApplication": {
+      "renameApplication": "Renommer {type}",
+      "viewTrash": "Voir la corbeille",
+      "deleteApplication": "Supprimer {type}"
+    }
+  }
+}
+</i18n>

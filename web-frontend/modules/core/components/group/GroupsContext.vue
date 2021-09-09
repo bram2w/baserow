@@ -6,7 +6,7 @@
         v-model="query"
         type="text"
         class="select__search-input"
-        placeholder="Search groups"
+        :placeholder="$t('groupsContext.search')"
       />
     </div>
     <div v-if="isLoading" class="context--loading">
@@ -29,12 +29,12 @@
       v-if="!isLoading && isLoaded && groups.length == 0"
       class="context__description"
     >
-      No results found
+      {{ $t('groupsContext.noResults') }}
     </div>
     <div class="select__footer">
       <a class="select__footer-button" @click="$refs.createGroupModal.show()">
         <i class="fas fa-plus"></i>
-        Create group
+        {{ $t('groupsContext.createGroup') }}
       </a>
     </div>
     <CreateGroupModal ref="createGroupModal"></CreateGroupModal>
@@ -104,3 +104,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "groupsContext": {
+      "search": "Search groups",
+      "noResults": "No results found",
+      "createGroup": "Create group"
+    }
+  },
+  "fr": {
+    "groupsContext": {
+      "search": "Rechercher",
+      "noResults": "Aucun résultat",
+      "createGroup": "Créer un groupe"
+    }
+  }
+}
+</i18n>

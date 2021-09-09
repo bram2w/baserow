@@ -64,7 +64,7 @@ export default ({ store, app }) => {
   store.registerModule('template/view/grid', gridStore)
   store.registerModule('template/view/form', formStore)
 
-  app.$registry.register('application', new DatabaseApplicationType())
+  app.$registry.register('application', new DatabaseApplicationType({ app }))
   app.$registry.register('view', new GridViewType())
   app.$registry.register('view', new FormViewType())
   app.$registry.register('viewFilter', new EqualViewFilterType())

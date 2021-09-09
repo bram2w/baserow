@@ -3,6 +3,10 @@
  * registry.
  */
 export class Registerable {
+  constructor({ app } = {}) {
+    this.app = app
+  }
+
   /**
    * Must return a string with the unique name, this must be the same as the
    * type used in the backend.

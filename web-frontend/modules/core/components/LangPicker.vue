@@ -1,16 +1,16 @@
 <template>
   <div v-if="$env.ENABLE_I18N" class="lang-picker">
     <a
-      class="lang-picker__link"
       ref="dropdownLink"
+      class="lang-picker__link"
       @click="$refs.dropdown.toggle($refs.dropdownLink)"
     >
       {{ visibleLanguageName }}
       <i class="fa fa-caret-down lang-picker__icon"></i>
     </a>
     <LanguageSwitcherDropdown
-      class="lang-picker__dropdown"
       ref="dropdown"
+      class="lang-picker__dropdown"
       :show-input="false"
     />
   </div>

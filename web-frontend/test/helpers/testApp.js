@@ -14,6 +14,7 @@ import flushPromises from 'flush-promises'
  */
 function _createBaserowStoreAndRegistry(app, vueContext) {
   const store = new vueContext.vuex.Store({})
+
   setupCore({ store, app }, (name, dep) => {
     app[`$${name}`] = dep
   })
@@ -75,6 +76,10 @@ export class TestApp {
       },
       $env: {
         PUBLIC_WEB_FRONTEND_URL: 'https://localhost/',
+      },
+      i18n: {
+        t: (key) => key,
+        tc: (key) => key,
       },
     }
     this._vueContext = bootstrapVueContext()

@@ -21,13 +21,13 @@
         <li>
           <a @click="exportTable()">
             <i class="context__menu-icon fas fa-fw fa-file-export"></i>
-            Export table
+            {{ $t('sidebarItem.exportTable') }}
           </a>
         </li>
         <li>
           <a @click="enableRename()">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
-            Rename
+            {{ $t('action.rename') }}
           </a>
         </li>
         <li>
@@ -36,7 +36,7 @@
             @click="deleteTable()"
           >
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
-            Delete
+            {{ $t('action.delete') }}
           </a>
         </li>
       </ul>
@@ -140,3 +140,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "sidebarItem":{
+      "exportTable": "Export table"
+    }
+  },
+  "fr":{
+    "sidebarItem":{
+      "exportTable": "Exporter la table"
+    }
+  }
+}
+</i18n>

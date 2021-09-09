@@ -4,6 +4,15 @@ export default {
     backToLogin: 'Back to login',
     signUp: 'Sign up',
     signIn: 'Sign in',
+    createNew: 'Create new',
+    delete: 'Delete',
+    rename: 'Rename',
+  },
+  adminType: {
+    settings: 'Settings',
+  },
+  applicationType: {
+    database: 'Database',
   },
   field: {
     emailAddress: 'E-mail address',

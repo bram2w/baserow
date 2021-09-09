@@ -5,7 +5,7 @@ import serveStatic from 'serve-static'
 import { routes } from './routes'
 import head from './head'
 
-export default function DatabaseModule(options) {
+export default function CoreModule(options) {
   /**
    * This function adds a plugin, but rather then prepending it to the list it will
    * be appended.
@@ -112,7 +112,10 @@ export default function DatabaseModule(options) {
     ssr: false,
   })
   this.addPlugin({ src: path.resolve(__dirname, 'middleware.js') })
-  this.addPlugin({ src: path.resolve(__dirname, 'plugin.js') })
+
+  // Some plugins depends on i18n instance so the plugin must be added
+  // after the nuxt-i18n module's plugin
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugin.js') })
 
   // The client handler depends on environment variables so the plugin must be added
   // after the nuxt-env module's plugin.
