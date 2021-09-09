@@ -40,14 +40,14 @@
               "
             >
               <i class="context__menu-icon fas fa-fw fa-cogs"></i>
-              Settings
+              {{ $t('sidebar.settings') }}
             </a>
             <SettingsModal ref="settingsModal"></SettingsModal>
           </li>
           <li>
             <a @click="logoff()">
               <i class="context__menu-icon fas fa-fw fa-sign-out-alt"></i>
-              Logoff
+              {{ $t('sidebar.logoff') }}
             </a>
           </li>
         </ul>
@@ -64,7 +64,9 @@
               <nuxt-link :to="{ name: 'dashboard' }" class="tree__link">
                 <div>
                   <i class="tree__icon fas fa-tachometer-alt"></i>
-                  <span class="sidebar__item-name">Dashboard</span>
+                  <span class="sidebar__item-name">{{
+                    $t('sidebar.dashboard')
+                  }}</span>
                 </div>
               </nuxt-link>
             </div>
@@ -74,7 +76,9 @@
               <a class="tree__link" @click="$refs.trashModal.show()">
                 <div>
                   <i class="tree__icon fas fa-trash"></i>
-                  <span class="sidebar__item-name">Trash</span>
+                  <span class="sidebar__item-name">{{
+                    $t('sidebar.trash')
+                  }}</span>
                 </div>
               </a>
               <TrashModal ref="trashModal"></TrashModal>
@@ -87,7 +91,9 @@
             >
               <a class="tree__link" @click.prevent="admin()">
                 <i class="tree__icon fas fa-users-cog"></i>
-                <span class="sidebar__item-name">Admin</span>
+                <span class="sidebar__item-name">{{
+                  $t('sidebar.admin')
+                }}</span>
               </a>
             </div>
             <ul v-show="isAdminPage" class="tree sidebar__tree">
@@ -110,7 +116,9 @@
                       class="tree__icon fas"
                       :class="'fa-' + adminType.iconClass"
                     ></i>
-                    <span class="sidebar__item-name">{{ adminType.name }}</span>
+                    <span class="sidebar__item-name">{{
+                      adminType.getName()
+                    }}</span>
                   </nuxt-link>
                 </div>
               </li>
@@ -139,7 +147,8 @@
               <div class="tree__action">
                 <a class="tree__link" @click="$refs.groupMembersModal.show()">
                   <i class="tree__icon tree__icon--type fas fa-users"></i>
-                  Invite others
+
+                  {{ $t('sidebar.inviteOthers') }}
                 </a>
                 <GroupMembersModal
                   ref="groupMembersModal"
@@ -173,7 +182,7 @@
                 "
               >
                 <i class="fas fa-plus"></i>
-                Create new
+                {{ $t('action.createNew') }}
               </a>
             </li>
             <CreateApplicationContext
@@ -183,7 +192,7 @@
           </template>
           <template v-else-if="!hasSelectedGroup && !isCollapsed">
             <li v-if="groups.length === 0" class="tree_item margin-top-2">
-              <p>You don’t have any groups.</p>
+              <p>{{ $t('sidebar.errorNoGroup') }}</p>
             </li>
             <li
               v-for="(group, index) in groups"
@@ -203,7 +212,7 @@
             <li class="sidebar__new-wrapper">
               <a class="sidebar__new" @click="$refs.createGroupModal.show()">
                 <i class="fas fa-plus"></i>
-                Create group
+                {{ $t('sidebar.createGroup') }}
               </a>
             </li>
             <CreateGroupModal ref="createGroupModal"></CreateGroupModal>
@@ -339,3 +348,32 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "sidebar":{
+      "createGroup": "Create group",
+      "inviteOthers": "Invite others",
+      "logoff": "Logoff",
+      "errorNoGroup": "You don’t have any groups.",
+      "admin": "Admin",
+      "dashboard": "Dashboard",
+      "trash": "Trash",
+      "settings": "Settings"
+    }
+  },
+  "fr":{
+    "sidebar":{
+      "createGroup": "Créer un groupe",
+      "inviteOthers": "Envoyer une invitation",
+      "logoff": "Se déconnecter",
+      "errorNoGroup": "Vous n'avez aucun groupe.",
+      "admin": "Administration",
+      "dashboard": "Accueil",
+      "trash": "Corbeille",
+      "settings": "Profil"
+    }
+  }
+}
+</i18n>

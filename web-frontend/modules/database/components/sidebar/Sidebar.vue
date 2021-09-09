@@ -15,7 +15,7 @@
           }"
         >
           <i class="context__menu-icon fas fa-fw fa-book"></i>
-          View API docs
+          {{ $t('sidebar.viewAPI') }}
         </nuxt-link>
       </li>
     </template>
@@ -37,7 +37,7 @@
       </ul>
       <a class="tree__sub-add" @click="$refs.createTableModal.show()">
         <i class="fas fa-plus"></i>
-        Create table
+        {{ $t('sidebar.createTable') }}
       </a>
       <CreateTableModal
         ref="createTableModal"
@@ -95,3 +95,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "sidebar": {
+      "viewAPI": "View API Docs",
+      "createTable": "Create table"
+    }
+  },
+  "fr":{
+    "sidebar": {
+      "viewAPI": "Documentation de l'API",
+      "createTable": "Ajouter une table"
+    }
+  }
+}
+</i18n>

@@ -29,7 +29,7 @@ export default ({ store, app }, inject) => {
   registry.register('settings', new PasswordSettingsType())
   registry.register('userFileUpload', new UploadFileUserFileUploadType())
   registry.register('userFileUpload', new UploadViaURLUserFileUploadType())
-  registry.register('admin', new SettingsAdminType())
+  registry.register('admin', new SettingsAdminType({ app }))
   inject('registry', registry)
 
   store.registerModule('settings', settingsStore)

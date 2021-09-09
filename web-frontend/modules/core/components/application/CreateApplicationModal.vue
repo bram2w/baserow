@@ -1,7 +1,7 @@
 <template>
   <Modal>
     <h2 class="box__title">
-      Create new {{ applicationType.name | lowercase }}
+      Create new {{ applicationType.getName() | lowercase }}
     </h2>
     <Error :error="error"></Error>
     <component
@@ -16,7 +16,7 @@
             :class="{ 'button--loading': loading }"
             :disabled="loading"
           >
-            Add {{ applicationType.name | lowercase }}
+            Add {{ applicationType.getName() | lowercase }}
           </button>
         </div>
       </div>

@@ -4,6 +4,15 @@ export default {
     backToLogin: "Retour à l'identification",
     signUp: 'Créer un compte',
     signIn: "S'identifier",
+    createNew: 'Nouveau',
+    delete: 'Supprimer',
+    rename: 'Renomer',
+  },
+  adminType: {
+    settings: 'Paramètres',
+  },
+  applicationType: {
+    database: 'Base de données',
   },
   field: {
     emailAddress: 'Adresse électronique',
