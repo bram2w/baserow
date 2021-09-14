@@ -22,5 +22,7 @@ export default {
     notMatchingPassword: 'This field must match your password field.',
     minLength: 'A minimum of {min} characters is required here.',
     maxLength: 'A maximum of {max} characters is allowed here.',
+    minMaxLength:
+      'A minimum of {min} and a maximum of {max} characters is allowed here.',
   },
 }

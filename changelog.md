@@ -14,6 +14,8 @@
 * Importing table data with a column name that is too long will now truncate that name.
 * Fixed error when rapidly switching between template tables or views in the template 
   preview.
+* Upgraded Django to version 3.2.6 and also upgraded all other backend libraries to 
+  their latest versions.
 
 ## Released (2021-08-11)
 

@@ -643,7 +643,10 @@ def test_when_field_type_forces_same_type_alter_fields_alter_sql_is_run(data_fix
         field_type_registry.registry, {"text": SameTypeAlwaysReverseOnUpdateField()}
     ):
         handler.update_field(
-            user=user, field=existing_text_field, new_type_name="text", name="new_name"
+            user=user,
+            field=existing_text_field,
+            new_type_name="text",
+            name="new_name",
         )
 
         row.refresh_from_db()

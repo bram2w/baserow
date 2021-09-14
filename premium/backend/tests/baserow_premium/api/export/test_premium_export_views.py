@@ -5,7 +5,6 @@ from django.core.files.storage import FileSystemStorage
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import utc, make_aware
-from django_capture_on_commit_callbacks import capture_on_commit_callbacks
 from freezegun import freeze_time
 from rest_framework.fields import DateTimeField
 
@@ -14,7 +13,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 
 @pytest.mark.django_db
 def test_exporting_json_writes_file_to_storage(
-    data_fixture, api_client, tmpdir, settings
+    data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -67,7 +66,7 @@ def test_exporting_json_writes_file_to_storage(
         run_time = make_aware(parse_datetime("2020-02-01 01:00"), timezone=utc)
         expected_created_at = DateTimeField().to_representation(run_time)
         with freeze_time(run_time):
-            with capture_on_commit_callbacks(execute=True):
+            with django_capture_on_commit_callbacks(execute=True):
                 response = api_client.post(
                     reverse(
                         "api:database:export:export_table",
@@ -139,7 +138,7 @@ def test_exporting_json_writes_file_to_storage(
 
 @pytest.mark.django_db
 def test_exporting_xml_writes_file_to_storage(
-    data_fixture, api_client, tmpdir, settings
+    data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -192,7 +191,7 @@ def test_exporting_xml_writes_file_to_storage(
         run_time = make_aware(parse_datetime("2020-02-01 01:00"), timezone=utc)
         with freeze_time(run_time):
             expected_created_at = DateTimeField().to_representation(run_time)
-            with capture_on_commit_callbacks(execute=True):
+            with django_capture_on_commit_callbacks(execute=True):
                 response = api_client.post(
                     reverse(
                         "api:database:export:export_table",

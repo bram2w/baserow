@@ -69,6 +69,27 @@ def test_create_user(client, data_fixture):
     assert response_failed.status_code == 400
     assert response_failed.json()["error"] == "ERROR_EMAIL_ALREADY_EXISTS"
 
+    too_long_name = "x" * 151
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": too_long_name,
+            "email": "new@example.com ",
+            "password": valid_password,
+        },
+        format="json",
+    )
+    assert response_failed.status_code == 400
+    assert response_failed.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_failed.json()["detail"] == {
+        "name": [
+            {
+                "code": "max_length",
+                "error": "Ensure this field has no more than 150 characters.",
+            }
+        ]
+    }
+
     data_fixture.update_settings(allow_new_signups=False)
     response_failed = client.post(
         reverse("api:user:index"),

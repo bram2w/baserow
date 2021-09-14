@@ -14,7 +14,7 @@
         />
         <div v-if="$v.values.name.$error" class="error">
           Please enter a valid full name, it must be longer than 2 letters and
-          less than 30.
+          less than 150.
         </div>
       </div>
     </div>
@@ -105,7 +105,7 @@ export default {
   },
   validations: {
     values: {
-      name: { required, minLength: minLength(2), maxLength: maxLength(30) },
+      name: { required, minLength: minLength(2), maxLength: maxLength(150) },
       username: { required, email },
     },
   },

@@ -22,5 +22,7 @@ export default {
     notMatchingPassword: 'Les mots de passe ne correspondent pas.',
     minLength: 'Un minimum de {min} caractères sont attendus ici.',
     maxLength: 'Un maximum de {max} caractères sont attendus ici.',
+    minMaxLength:
+      'Un minimum de {min} et un maximum def {max} caractères sont attendus ici.',
   },
 }

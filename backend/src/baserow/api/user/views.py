@@ -10,9 +10,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.views import (
-    ObtainJSONWebToken as RegularObtainJSONWebToken,
-    RefreshJSONWebToken as RegularRefreshJSONWebToken,
-    VerifyJSONWebToken as RegularVerifyJSONWebToken,
+    ObtainJSONWebTokenView as RegularObtainJSONWebToken,
+    RefreshJSONWebTokenView as RegularRefreshJSONWebToken,
+    VerifyJSONWebTokenView as RegularVerifyJSONWebToken,
 )
 
 from baserow.api.decorators import map_exceptions, validate_body

@@ -109,7 +109,7 @@ class APIUrlsInstanceMixin:
                 ]
 
             # api_urls.py
-            from django.conf.urls import url
+            from django.urls import re_path
 
             urlpatterns = [
                 url(r'some-view^$', SomeView.as_view(), name='some_view'),

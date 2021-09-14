@@ -47,11 +47,11 @@ class LinkRowTableNotInSameDatabase(Exception):
 
 
 class MaxFieldLimitExceeded(Exception):
-    """ Raised when the field count exceeds the limit"""
+    """Raised when the field count exceeds the limit"""
 
 
 class MaxFieldNameLengthExceeded(Exception):
-    """ Raised when the field name exceeds the max length."""
+    """Raised when the field name exceeds the max length."""
 
     def __init__(self, *args, **kwargs):
         self.max_field_name_length = Field.get_max_name_length()

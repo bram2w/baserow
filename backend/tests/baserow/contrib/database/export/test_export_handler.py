@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Type, List
+from typing import List
 from unittest.mock import patch
 
 import pytest
@@ -415,11 +415,11 @@ def test_attempting_to_export_a_table_for_a_type_which_doesnt_support_it_fails(
             return []
 
         @property
-        def option_serializer_class(self) -> Type["BaseExporterOptionsSerializer"]:
+        def option_serializer_class(self):
             return BaseExporterOptionsSerializer
 
         @property
-        def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+        def queryset_serializer_class(self):
             raise Exception("This should not even be run")
 
     table_exporter_registry.register(CantExportTableExporter())
@@ -456,11 +456,11 @@ def test_attempting_to_export_a_view_for_a_type_which_doesnt_support_it_fails(
             return ["not_grid_view"]
 
         @property
-        def option_serializer_class(self) -> Type["BaseExporterOptionsSerializer"]:
+        def option_serializer_class(self):
             return BaseExporterOptionsSerializer
 
         @property
-        def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+        def queryset_serializer_class(self):
             raise Exception("This should not even be run")
 
     table_exporter_registry.register(CantExportViewExporter())
@@ -498,18 +498,18 @@ def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
             return []
 
         @property
-        def option_serializer_class(self) -> Type["BaseExporterOptionsSerializer"]:
+        def option_serializer_class(self):
             return BaseExporterOptionsSerializer
 
         @property
-        def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+        def queryset_serializer_class(self):
             raise Exception("Failed")
 
     class CancelledTestFileExporter(BrokenTestFileExporter):
         type = "cancelled"
 
         @property
-        def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+        def queryset_serializer_class(self):
             raise ExportJobCanceledException()
 
     table_exporter_registry.register(BrokenTestFileExporter())

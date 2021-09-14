@@ -1,13 +1,12 @@
 from contextlib import contextmanager
 
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from rest_framework import status
 from rest_framework.exceptions import APIException
 from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer
 
 from baserow.core.exceptions import InstanceTypeDoesNotExist
-
 from .exceptions import RequestBodyValidationException
 
 
@@ -84,7 +83,7 @@ def validate_data(serializer_class, data, partial=False):
         elif isinstance(error, list):
             return [serialize_errors_recursive(errors) for errors in error]
         else:
-            return {"error": force_text(error), "code": error.code}
+            return {"error": force_str(error), "code": error.code}
 
     serializer = serializer_class(data=data, partial=partial)
     if not serializer.is_valid():

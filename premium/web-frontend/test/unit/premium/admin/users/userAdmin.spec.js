@@ -36,7 +36,7 @@ describe('User Admin Component Tests', () => {
           name: 'other_group',
         },
       ],
-      lastLogin: '2021-04-26T07:50:45.643059Z',
+      lastLogin: '2021-04-26T07:50:45.6415059Z',
       dateJoined: '2021-04-21T12:04:27.379781Z',
       isActive: true,
       isStaff: true,
@@ -300,20 +300,20 @@ describe('User Admin Component Tests', () => {
     const error = ui.getModalFieldErrorText(modal)
 
     expect(error).toContain(
-      'Please enter a valid full name, it must be longer than 2 letters and less than 30.'
+      'Please enter a valid full name, it must be longer than 2 letters and less than 150.'
     )
   })
 
-  test('a users full name cant be changed to more than 30 characters', async () => {
+  test('a users full name cant be changed to more than 150 characters', async () => {
     const { ui } = await whenThereIsAUserAndYouOpenUserAdmin()
 
-    const tooLongFullName = '1'.repeat(31)
+    const tooLongFullName = '1'.repeat(151)
 
     const modal = await ui.changeFullName(tooLongFullName)
     const error = ui.getModalFieldErrorText(modal)
 
     expect(error).toContain(
-      'Please enter a valid full name, it must be longer than 2 letters and less than 30.'
+      'Please enter a valid full name, it must be longer than 2 letters and less than 150.'
     )
   })
 

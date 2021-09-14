@@ -1,12 +1,15 @@
 import django
 
-from channels.http import AsgiHandler
 from channels.routing import ProtocolTypeRouter
 
 from baserow.ws.routers import websocket_router
+from django.core.asgi import get_asgi_application
 
 
 django.setup()
 
+django_asgi_app = get_asgi_application()
 
-application = ProtocolTypeRouter({"http": AsgiHandler(), "websocket": websocket_router})
+application = ProtocolTypeRouter(
+    {"http": django_asgi_app, "websocket": websocket_router}
+)

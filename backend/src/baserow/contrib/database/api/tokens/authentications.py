@@ -65,7 +65,7 @@ class TokenAuthentication(BaseAuthentication):
 
 class JSONWebTokenAuthenticationExtension(OpenApiAuthenticationExtension):
     target_class = (
-        "baserow.contrib.database.api.tokens.authentications." "TokenAuthentication"
+        "baserow.contrib.database.api.tokens.authentications.TokenAuthentication"
     )
     name = "Token"
     match_subclasses = True
