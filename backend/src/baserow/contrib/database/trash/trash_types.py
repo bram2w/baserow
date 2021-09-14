@@ -39,6 +39,15 @@ class TableTrashableItemType(TrashableItemType):
     ):
         """Deletes the table schema and instance."""
 
+        if (
+            trash_item_lookup_cache is not None
+            and "row_table_model_cache" in trash_item_lookup_cache
+        ):
+            # Invalidate the cached model for this table after it is deleted as
+            # otherwise a row being deleted after will use the cached model and assume
+            # it still exists.
+            trash_item_lookup_cache["row_table_model_cache"].pop(trashed_item.id, None)
+
         with connection.schema_editor() as schema_editor:
             model = trashed_item.get_model()
             schema_editor.delete_model(model)

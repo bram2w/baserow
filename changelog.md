@@ -16,6 +16,8 @@
   preview.
 * Upgraded Django to version 3.2.6 and also upgraded all other backend libraries to 
   their latest versions.
+* Fix minor error that could sometimes occur when a row and it's table/group/database
+  were deleted in rapid succession.
 
 ## Released (2021-08-11)
 
