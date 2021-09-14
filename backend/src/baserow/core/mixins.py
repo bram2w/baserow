@@ -2,6 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Case, When, Value, Manager
 from django.db.models.fields import NOT_PROVIDED
+from django.db.models.fields.mixins import FieldCacheMixin
 from django.utils.functional import cached_property
 
 from baserow.core.managers import (
@@ -143,9 +144,16 @@ class PolymorphicContentTypeMixin:
             if name in self.__dict__:
                 del self.__dict__[name]
 
+            if isinstance(field, FieldCacheMixin) and field.is_cached(self):
+                field.delete_cached_value(self)
+
         for field in field_names_to_add:
             name = get_field_name(field)
             field = new_model_class._meta.get_field(name)
+
+            if isinstance(field, FieldCacheMixin) and field.is_cached(self):
+                field.delete_cached_value(self)
+
             if hasattr(field, "default"):
                 self.__dict__[name] = (
                     field.default if field.default != NOT_PROVIDED else None

@@ -205,8 +205,8 @@ JWT_AUTH = {
     "JWT_EXPIRATION_DELTA": datetime.timedelta(seconds=60 * 60),
     "JWT_ALLOW_REFRESH": True,
     "JWT_REFRESH_EXPIRATION_DELTA": datetime.timedelta(days=7),
-    "JWT_RESPONSE_PAYLOAD_HANDLER": "baserow.api.user.jwt."
-    "jwt_response_payload_handler",
+    "JWT_AUTH_HEADER_PREFIX": "JWT",
+    "JWT_RESPONSE_PAYLOAD_HANDLER": "baserow.api.user.jwt.jwt_response_payload_handler",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -325,3 +325,10 @@ HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = os.getenv(
 OLD_TRASH_CLEANUP_CHECK_INTERVAL_MINUTES = 5
 
 MAX_ROW_COMMENT_LENGTH = 10000
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+# For now force the old os dependant behaviour of file uploads as users might be relying
+# on it. See
+# https://docs.djangoproject.com/en/3.2/releases/3.0/#new-default-value-for-the-file-upload-permissions-setting
+FILE_UPLOAD_PERMISSIONS = None

@@ -5,7 +5,6 @@ from django.core.files.storage import FileSystemStorage
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import utc, make_aware
-from django_capture_on_commit_callbacks import capture_on_commit_callbacks
 from freezegun import freeze_time
 from rest_framework.fields import DateTimeField
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_200_OK
@@ -179,7 +178,7 @@ def test_getting_other_users_export_job_returns_error(data_fixture, api_client, 
 
 @pytest.mark.django_db
 def test_exporting_csv_writes_file_to_storage(
-    data_fixture, api_client, tmpdir, settings
+    data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -234,7 +233,7 @@ def test_exporting_csv_writes_file_to_storage(
         # so the test doesn't break if we set a different default timezone format etc
         expected_created_at = DateTimeField().to_representation(run_time)
         with freeze_time(run_time):
-            with capture_on_commit_callbacks(execute=True):
+            with django_capture_on_commit_callbacks(execute=True):
                 response = api_client.post(
                     reverse(
                         "api:database:export:export_table",
@@ -296,7 +295,7 @@ def test_exporting_csv_writes_file_to_storage(
 
 @pytest.mark.django_db
 def test_exporting_csv_table_writes_file_to_storage(
-    data_fixture, api_client, tmpdir, settings
+    data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -351,7 +350,7 @@ def test_exporting_csv_table_writes_file_to_storage(
         # so the test doesn't break if we set a different default timezone format etc
         expected_created_at = DateTimeField().to_representation(run_time)
         with freeze_time(run_time):
-            with capture_on_commit_callbacks(execute=True):
+            with django_capture_on_commit_callbacks(execute=True):
                 response = api_client.post(
                     reverse(
                         "api:database:export:export_table",

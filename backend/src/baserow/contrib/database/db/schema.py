@@ -1,5 +1,8 @@
 import contextlib
 
+from django.db.backends.base.schema import BaseDatabaseSchemaEditor
+from django.db.backends.utils import strip_quotes
+
 
 class PostgresqlLenientDatabaseSchemaEditor:
     """
@@ -98,6 +101,104 @@ class PostgresqlLenientDatabaseSchemaEditor:
             old_db_params,
             new_db_params,
             strict,
+        )
+
+    def _alter_column_type_sql(self, model, old_field, new_field, new_type):
+        # Cast when data type changed.
+        # Make ALTER TYPE with SERIAL make sense.
+        table = strip_quotes(model._meta.db_table)
+        serial_fields_map = {
+            "bigserial": "bigint",
+            "serial": "integer",
+            "smallserial": "smallint",
+        }
+        if new_type.lower() in serial_fields_map:
+            column = strip_quotes(new_field.column)
+            sequence_name = "%s_%s_seq" % (table, column)
+            return (
+                (
+                    self.sql_alter_column_type
+                    % {
+                        "column": self.quote_name(column),
+                        "type": serial_fields_map[new_type.lower()],
+                    },
+                    [],
+                ),
+                [
+                    (
+                        self.sql_delete_sequence
+                        % {
+                            "sequence": self.quote_name(sequence_name),
+                        },
+                        [],
+                    ),
+                    (
+                        self.sql_create_sequence
+                        % {
+                            "sequence": self.quote_name(sequence_name),
+                        },
+                        [],
+                    ),
+                    (
+                        self.sql_alter_column
+                        % {
+                            "table": self.quote_name(table),
+                            "changes": self.sql_alter_column_default
+                            % {
+                                "column": self.quote_name(column),
+                                "default": "nextval('%s')"
+                                % self.quote_name(sequence_name),
+                            },
+                        },
+                        [],
+                    ),
+                    (
+                        self.sql_set_sequence_max
+                        % {
+                            "table": self.quote_name(table),
+                            "column": self.quote_name(column),
+                            "sequence": self.quote_name(sequence_name),
+                        },
+                        [],
+                    ),
+                    (
+                        self.sql_set_sequence_owner
+                        % {
+                            "table": self.quote_name(table),
+                            "column": self.quote_name(column),
+                            "sequence": self.quote_name(sequence_name),
+                        },
+                        [],
+                    ),
+                ],
+            )
+        elif (
+            old_field.db_parameters(connection=self.connection)["type"]
+            in serial_fields_map
+        ):
+            # Drop the sequence if migrating away from AutoField.
+            column = strip_quotes(new_field.column)
+            sequence_name = "%s_%s_seq" % (table, column)
+            fragment, _ = BaseDatabaseSchemaEditor._alter_column_type_sql(
+                self, model, old_field, new_field, new_type
+            )
+            return fragment, [
+                (
+                    self.sql_delete_sequence
+                    % {
+                        "sequence": self.quote_name(sequence_name),
+                    },
+                    [],
+                ),
+            ]
+        else:
+            return BaseDatabaseSchemaEditor._alter_column_type_sql(
+                self, model, old_field, new_field, new_type
+            )
+
+    def _field_should_be_altered(self, old_field, new_field):
+        return self.force_alter_column or super()._field_should_be_altered(
+            old_field, new_field
         )
 
 

@@ -53,7 +53,7 @@ class JSONTableExporter(TableExporter):
     type = "json"
 
     @property
-    def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+    def queryset_serializer_class(self):
         return JSONQuerysetSerializer
 
     @property
@@ -116,7 +116,7 @@ class XMLTableExporter(TableExporter):
     type = "xml"
 
     @property
-    def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+    def queryset_serializer_class(self):
         return XMLQuerysetSerializer
 
     @property

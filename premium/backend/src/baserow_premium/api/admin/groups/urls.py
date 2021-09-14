@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from baserow_premium.api.admin.groups.views import GroupsAdminView, GroupAdminView
 
@@ -6,6 +6,6 @@ from baserow_premium.api.admin.groups.views import GroupsAdminView, GroupAdminVi
 app_name = "baserow_premium.api.admin.groups"
 
 urlpatterns = [
-    url(r"^$", GroupsAdminView.as_view(), name="list"),
-    url(r"^(?P<group_id>[0-9]+)/$", GroupAdminView.as_view(), name="edit"),
+    re_path(r"^$", GroupsAdminView.as_view(), name="list"),
+    re_path(r"^(?P<group_id>[0-9]+)/$", GroupAdminView.as_view(), name="edit"),
 ]

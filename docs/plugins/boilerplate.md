@@ -134,14 +134,14 @@ class ExampleView(APIView):
 
 plugins/my_baserow_plugin/backend/src/my_baserow_plugin/api/urls.py
 ```python
-from django.conf.urls import url
+from django.urls import re_path
 
 from .views import ExampleView
 
 
 app_name = 'my_baserow_plugin.api'
 urlpatterns = [
-    url(r'example/$', ExampleView.as_view(), name='example'),
+    re_path(r'example/$', ExampleView.as_view(), name='example'),
 ]
 ```
 

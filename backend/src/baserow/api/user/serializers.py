@@ -4,6 +4,7 @@ from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
 from django.conf import settings
+from django.utils.translation import gettext as _
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.core.user.utils import normalize_email_address
@@ -35,7 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=32)
+    name = serializers.CharField(max_length=150)
     email = serializers.EmailField(
         help_text="The email address is also going to be the username."
     )
@@ -125,14 +126,20 @@ class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
         # In the future, when migrating away from the JWT implementation, we want to
         # respond with machine readable error codes when authentication fails.
         validated_data = super().validate(attrs)
-        update_last_login(None, validated_data["user"])
-        UserLogEntry.objects.create(actor=validated_data["user"], action="SIGNED_IN")
+
+        user = validated_data["user"]
+        if not user.is_active:
+            msg = _("User account is disabled.")
+            raise serializers.ValidationError(msg)
+
+        update_last_login(None, user)
+        UserLogEntry.objects.create(actor=user, action="SIGNED_IN")
         # Call the user_signed_in method for each plugin that is un the registry to
         # notify all plugins that a user has signed in.
         from baserow.core.registries import plugin_registry
 
         for plugin in plugin_registry.registry.values():
-            plugin.user_signed_in(validated_data["user"])
+            plugin.user_signed_in(user)
         return validated_data
 
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Any, Callable, Type
+from typing import List, Any, Callable
 
 from django.contrib.auth import get_user_model
 
@@ -43,7 +43,7 @@ class TableExporter(Instance, ABC):
 
     @property
     @abstractmethod
-    def option_serializer_class(self) -> Type["BaseExporterOptionsSerializer"]:
+    def option_serializer_class(self):
         """
         The serializer used for any exporter specific options this exporter might need.
         These will be passed after validation to the .write_to_file method of the
@@ -52,7 +52,7 @@ class TableExporter(Instance, ABC):
 
     @property
     @abstractmethod
-    def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+    def queryset_serializer_class(self):
         """
         A QuerysetSerializer class which implements this table exporter's specific
         type of export.

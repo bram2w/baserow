@@ -9,7 +9,7 @@ from django.db import connections
 from django.apps.registry import apps
 
 from baserow.core.handler import CoreHandler
-from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.models import Field, TextField
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.exceptions import (
@@ -183,6 +183,7 @@ def test_link_row_field_type(data_fixture):
     assert getattr(table_row_2, f"field_{link_field_2.id}").all().count() == 0
 
     link_field_2 = field_handler.update_field(user, link_field_2, new_type_name="text")
+    assert isinstance(link_field_2, TextField)
 
     model = table.get_model()
     table_row = model.objects.all().first()
@@ -199,7 +200,10 @@ def test_link_row_field_type(data_fixture):
 
     # Change a the text field back into a link row field.
     link_field_2 = field_handler.update_field(
-        user, link_field_2, new_type_name="link_row", link_row_table=customers_table
+        user,
+        link_field_2,
+        new_type_name="link_row",
+        link_row_table=customers_table,
     )
 
     assert link_field_2.link_row_related_field.name == "Example"

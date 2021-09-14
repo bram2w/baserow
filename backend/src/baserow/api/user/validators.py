@@ -25,7 +25,7 @@ def language_validation(value):
     Verifies that the provided language is known.
     """
 
-    valid_languages = [l[0] for l in settings.LANGUAGES]
+    valid_languages = [lang[0] for lang in settings.LANGUAGES]
     if value not in valid_languages:
         raise serializers.ValidationError(
             f"Only the following language keys are valid: {','.join(valid_languages)}",

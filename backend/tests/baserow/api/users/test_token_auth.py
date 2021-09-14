@@ -1,19 +1,16 @@
-import pytest
-from pytz import timezone
-from unittest.mock import patch
 from datetime import datetime
-from freezegun import freeze_time
+from unittest.mock import patch
 
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
-
-from django.shortcuts import reverse
+import pytest
 from django.contrib.auth import get_user_model
-
+from django.shortcuts import reverse
+from freezegun import freeze_time
+from pytz import timezone
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_201_CREATED
 from rest_framework_jwt.settings import api_settings
 
-from baserow.core.registries import plugin_registry, Plugin
 from baserow.core.models import UserLogEntry
-
+from baserow.core.registries import plugin_registry, Plugin
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -65,7 +62,7 @@ def test_token_auth(api_client, data_fixture):
                 format="json",
             )
             json = response.json()
-            assert response.status_code == HTTP_200_OK
+            assert response.status_code == HTTP_201_CREATED
             assert "token" in json
             assert "user" in json
             assert json["user"]["username"] == "test@test.nl"
@@ -90,7 +87,7 @@ def test_token_auth(api_client, data_fixture):
             format="json",
         )
         json = response.json()
-        assert response.status_code == HTTP_200_OK
+        assert response.status_code == HTTP_201_CREATED
         assert "token" in json
         assert "user" in json
         assert json["user"]["username"] == "test@test.nl"
@@ -138,7 +135,7 @@ def test_token_refresh(api_client, data_fixture):
         response = api_client.post(
             reverse("api:user:token_refresh"), {"token": token}, format="json"
         )
-        assert response.status_code == HTTP_200_OK
+        assert response.status_code == HTTP_201_CREATED
         json = response.json()
         assert "token" in json
         assert "user" in json

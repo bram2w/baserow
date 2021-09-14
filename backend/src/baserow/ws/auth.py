@@ -1,17 +1,14 @@
-import jwt
 import uuid
-
 from urllib.parse import parse_qs
 
-from django.contrib.auth import get_user_model
-
-from channels.middleware import BaseMiddleware
+import jwt
 from channels.db import database_sync_to_async
-
-from rest_framework_jwt.authentication import jwt_decode_handler
+from channels.middleware import BaseMiddleware
+from django.contrib.auth import get_user_model
 from rest_framework_jwt.settings import api_settings
 
 jwt_get_username_from_payload = api_settings.JWT_PAYLOAD_GET_USERNAME_HANDLER
+jwt_decode_token = api_settings.JWT_DECODE_HANDLER
 
 
 @database_sync_to_async
@@ -27,7 +24,7 @@ def get_user(token):
     """
 
     try:
-        payload = jwt_decode_handler(token)
+        payload = jwt_decode_token(token)
     except jwt.InvalidTokenError:
         return
 
