@@ -46,8 +46,8 @@ export class TableExporterType extends Registerable {
     )
   }
 
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()

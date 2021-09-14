@@ -35,8 +35,8 @@ export class AdminType extends Registerable {
     throw new Error('The route name of an admin type must be set.')
   }
 
-  constructor({ app }) {
-    super({ app })
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.routeName = this.getRouteName()

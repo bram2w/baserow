@@ -147,9 +147,10 @@ plugins/my_baserow_plugin/web-frontend/plugin.js
 import { PluginNamePlugin } from '@my-baserow-plugin/plugins'
 import { CalendarViewType } from '@my-baserow-plugin/viewTypes'
 
-export default ({ store, app }) => {
-  app.$registry.register('plugin', new PluginNamePlugin())
-  app.$registry.register('view', new CalendarViewType())
+export default (context) => {
+  const { app } = context
+  app.$registry.register('plugin', new PluginNamePlugin(context))
+  app.$registry.register('view', new CalendarViewType(context))
 }
 ```
 

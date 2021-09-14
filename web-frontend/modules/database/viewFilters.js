@@ -22,8 +22,8 @@ export class ViewFilterType extends Registerable {
     return 'string'
   }
 
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.name = this.getName()
     this.example = this.getExample()

@@ -163,9 +163,10 @@ plugins/my_baserow_plugin/web-frontend/plugin.js
 import { PluginNamePlugin } from '@my-baserow-plugin/plugins'
 import { EqualViewFilterType } from '@my-baserow-plugin/viewFilters'
 
-export default ({ store, app }) => {
-  app.$registry.register('plugin', new PluginNamePlugin())
-  app.$registry.register('viewFilter', new EqualViewFilterType())
+export default (context) => {
+  const { app } = context
+  app.$registry.register('plugin', new PluginNamePlugin(context))
+  app.$registry.register('viewFilter', new EqualViewFilterType(context))
 }
 ```
 
