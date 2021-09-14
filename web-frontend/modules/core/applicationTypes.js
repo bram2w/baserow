@@ -92,8 +92,8 @@ export class ApplicationType extends Registerable {
     return []
   }
 
-  constructor({ app }) {
-    super({ app })
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
 

@@ -82,7 +82,7 @@ export default function CoreModule(options) {
         cookieKey: 'i18n-language',
       },
       locales,
-      langDir: 'locales/',
+      langDir: path.resolve(__dirname, '../../locales/'),
       vueI18n: {
         fallbackLocale: 'en',
         silentFallbackWarn: true,

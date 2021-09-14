@@ -48,8 +48,8 @@ export class ViewType extends Registerable {
     return true
   }
 
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.colorClass = this.getColorClass()

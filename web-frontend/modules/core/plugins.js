@@ -6,8 +6,8 @@ import { Registerable } from '@baserow/modules/core/registry'
  * a user account is created.
  */
 export class BaserowPlugin extends Registerable {
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
   }
 

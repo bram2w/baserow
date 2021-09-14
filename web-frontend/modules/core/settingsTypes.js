@@ -31,8 +31,8 @@ export class SettingsType extends Registerable {
     throw new Error('The component of a settings type must be set.')
   }
 
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.name = this.getName()
