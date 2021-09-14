@@ -36,4 +36,7 @@ def test_deleting_many_of_rows_is_fast(data_fixture):
     # Add -s also the the additional args to see the profiling output!
     # As of 22/06/2021 on a 5900X the profiler output showed 0.82 seconds to
     # perm delete these 1000 rows.
+    # As of 23/08/2021 on a 5900X the profiler output showed 1.849 seconds to
+    # perm delete these 1000 rows after the change was made to lookup trash entries
+    # one by one, see https://gitlab.com/bramw/baserow/-/issues/595.
     print(profiler.output_text(unicode=True, color=True))
