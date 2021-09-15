@@ -231,8 +231,10 @@ class TableView(APIView):
 
         table = TableHandler().update_table(
             request.user,
-            TableHandler().get_table(table_id),
-            base_queryset=Table.objects.select_for_update(),
+            TableHandler().get_table(
+                table_id,
+                base_queryset=Table.objects.select_for_update(),
+            ),
             name=data["name"],
         )
         serializer = TableSerializer(table)

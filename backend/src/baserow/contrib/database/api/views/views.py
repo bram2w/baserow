@@ -347,7 +347,11 @@ class ViewView(APIView):
     def patch(self, request, view_id, filters, sortings):
         """Updates the view if the user belongs to the group."""
 
-        view = ViewHandler().get_view(view_id).specific
+        view = (
+            ViewHandler()
+            .get_view(view_id, base_queryset=View.objects.select_for_update())
+            .specific
+        )
         view_type = view_type_registry.get_by_model(view)
         data = validate_data_custom_fields(
             view_type.type,
