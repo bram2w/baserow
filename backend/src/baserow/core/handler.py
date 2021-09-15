@@ -115,7 +115,7 @@ class CoreHandler:
         :rtype: Group
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = Group.objects
 
         try:
@@ -273,7 +273,7 @@ class CoreHandler:
         :rtype: GroupUser
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = GroupUser.objects
 
         try:
@@ -397,7 +397,7 @@ class CoreHandler:
         signer = self.get_group_invitation_signer()
         group_invitation_id = signer.loads(token)
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = GroupInvitation.objects
 
         try:
@@ -426,7 +426,7 @@ class CoreHandler:
         :rtype: GroupInvitation
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = GroupInvitation.objects
 
         try:
@@ -616,7 +616,7 @@ class CoreHandler:
         :rtype: Application
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = Application.objects
 
         try:
@@ -835,7 +835,7 @@ class CoreHandler:
         :rtype: Template
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = Template.objects
 
         try:

@@ -106,7 +106,7 @@ class FieldHandler:
         if not field_model:
             field_model = Field
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = field_model.objects
 
         try:

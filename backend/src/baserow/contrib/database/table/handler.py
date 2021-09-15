@@ -46,7 +46,7 @@ class TableHandler:
         :rtype: Table
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = Table.objects
 
         try:

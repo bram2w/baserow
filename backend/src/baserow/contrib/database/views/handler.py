@@ -68,7 +68,7 @@ class ViewHandler:
         if not view_model:
             view_model = View
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = view_model.objects
 
         try:
@@ -350,7 +350,7 @@ class ViewHandler:
         :type: ViewFilter
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = ViewFilter.objects
 
         try:
@@ -585,7 +585,7 @@ class ViewHandler:
         :type: ViewSort
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = ViewSort.objects
 
         try:

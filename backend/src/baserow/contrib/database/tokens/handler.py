@@ -54,7 +54,7 @@ class TokenHandler:
         :rtype: Token
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = Token.objects
 
         try:
