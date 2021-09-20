@@ -25,4 +25,10 @@ export default {
     minMaxLength:
       'Un minimum de {min} et un maximum def {max} caractères sont attendus ici.',
   },
+  permission: {
+    admin: 'Admin',
+    adminDescription: 'Peut configurer et éditer les groupes et applications.',
+    member: 'Membre',
+    memberDescription: 'Peut configurer et éditer les applications.',
+  },
 }

@@ -117,6 +117,9 @@ export default function CoreModule(options) {
   // after the nuxt-i18n module's plugin
   this.appendPlugin({ src: path.resolve(__dirname, 'plugin.js') })
 
+  // This plugin must be added after nuxt-i18n module's plugin
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/i18n.js') })
+
   // The client handler depends on environment variables so the plugin must be added
   // after the nuxt-env module's plugin.
   this.appendPlugin({

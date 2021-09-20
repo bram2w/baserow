@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit">
-    <h3>Invite by email</h3>
+    <h3>{{ $t('groupInviteForm.invitationFormTitle') }}</h3>
     <div class="row">
       <div class="col col-7">
         <div class="control">
@@ -14,7 +14,7 @@
               @blur="$v.values.email.$touch()"
             />
             <div v-if="$v.values.email.$error" class="error">
-              Please enter a valid e-mail address.
+              {{ $t('groupInviteForm.errorInvalidEmail') }}
             </div>
           </div>
         </div>
@@ -24,14 +24,14 @@
           <div class="control__elements">
             <Dropdown v-model="values.permissions" :show-search="false">
               <DropdownItem
-                name="Admin"
+                :name="$t('permission.admin')"
                 value="ADMIN"
-                description="Can fully configure and edit groups and applications."
+                :description="$t('permission.adminDescription')"
               ></DropdownItem>
               <DropdownItem
-                name="Member"
+                :name="$t('permission.member')"
                 value="MEMBER"
-                description="Can fully configure and edit applications."
+                :description="$t('permission.memberDescription')"
               ></DropdownItem>
             </Dropdown>
           </div>
@@ -45,7 +45,7 @@
               v-model="values.message"
               type="text"
               class="input"
-              placeholder="Optional message"
+              :placeholder="$t('groupInviteForm.optionalMessagePlaceholder')"
             />
           </div>
         </div>
@@ -80,3 +80,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "groupInviteForm": {
+      "invitationFormTitle": "Invite by email",
+      "optionalMessagePlaceholder": "Optional message",
+      "errorInvalidEmail": "Please enter a valid e-mail address."
+    }
+  },
+  "fr": {
+    "groupInviteForm": {
+      "invitationFormTitle": "Inviter par email",
+      "optionalMessagePlaceholder": "Message optionnel",
+      "errorInvalidEmail": "Veuillez saisir une adresse email valide."
+    }
+  }
+}
+</i18n>

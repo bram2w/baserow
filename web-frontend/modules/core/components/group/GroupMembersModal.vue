@@ -1,6 +1,8 @@
 <template>
   <Modal @show="initialize">
-    <h2 class="box__title">{{ group.name }} members</h2>
+    <h2 class="box__title">
+      {{ $t('groupMemberModal.membersModalTitle', { group: group.name }) }}
+    </h2>
     <Error :error="error"></Error>
     <GroupInviteForm ref="inviteForm" @submitted="inviteSubmitted">
       <div class="col col-12 align-right">
@@ -9,7 +11,7 @@
           class="button"
           :disabled="inviteLoading"
         >
-          Send invite
+          {{ $t('groupMemberModal.sendInvite') }}
         </button>
       </div>
     </GroupInviteForm>
@@ -154,9 +156,8 @@ export default {
       } catch (error) {
         this.handleError(error, 'group', {
           ERROR_GROUP_USER_ALREADY_EXISTS: new ResponseErrorMessage(
-            'User is already in the group.',
-            'It is not possible to send an invitation when the user is ' +
-              'already a member of the group.'
+            this.$t('groupMemberModal.userAlreadyInGroupTitle'),
+            this.$t('groupMemberModal.userAlreadyInGroupText')
           ),
         })
       }
@@ -173,7 +174,10 @@ export default {
       this.$refs[name][0].highlight()
     },
     getUserDescription(user) {
-      return `${user.email} - joined ${moment(user.created_on).fromNow()}`
+      return this.$t('groupMemberModal.userDescription', {
+        user: user.email,
+        since: moment(user.created_on).fromNow(true),
+      })
     },
     async updateUser(user, { permissions }) {
       if (user.permissions === permissions) {
@@ -205,7 +209,9 @@ export default {
       }
     },
     getInvitationDescription(invitation) {
-      return `invited ${moment(invitation.created_on).fromNow()}`
+      return this.$t('groupMemberModal.invitationDescription', {
+        since: moment(invitation.created_on).fromNow(true),
+      })
     },
     async updateInvitation(invitation, { permissions }) {
       if (invitation.invitation === permissions) {
@@ -241,3 +247,28 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "groupMemberModal": {
+      "membersModalTitle": "{group} members",
+      "userDescription": "{user} - joined {since} ago",
+      "invitationDescription": "invited {since} ago",
+      "sendInvite": "Send invite",
+      "userAlreadyInGroupTitle": "User is already in the group.",
+      "userAlreadyInGroupText": "It is not possible to send an invitation when the user is already a member of the group."
+    }
+  },
+  "fr": {
+    "groupMemberModal": {
+      "membersModalTitle": "Membres de {group}",
+      "userDescription": "{user} - membre depuis {since}",
+      "invitationDescription": "invité·e depuis {since}",
+      "sendInvite": "Envoyer l'invitation",
+      "userAlreadyInGroupTitle": "L'utilisateur est déjà dans le groupe.",
+      "userAlreadyInGroupText": "Il n'est pas possible d'envoyer une invitation à un utilisateur déjà présent dans le groupe."
+    }
+  }
+}
+</i18n>
