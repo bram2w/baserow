@@ -13,7 +13,7 @@
           :class="{ 'button--loading': loading }"
           :disabled="loading"
         >
-          Change
+          {{ $t('action.change') }}
         </button>
       </div>
     </FieldForm>

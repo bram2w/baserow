@@ -29,7 +29,7 @@ describe('Table Component Tests', () => {
       },
     })
 
-    expect(tableComponent.html()).toContain('1 rows')
+    expect(tableComponent.html()).toContain('gridView.rowCount - 1')
 
     mockServer.creatingRowInTableReturns(table, {
       id: 2,
@@ -43,7 +43,7 @@ describe('Table Component Tests', () => {
     const button = tableComponent.find('.grid-view__add-row')
     await button.trigger('click')
 
-    expect(tableComponent.html()).toContain('2 rows')
+    expect(tableComponent.html()).toContain('gridView.rowCount - 2')
   })
 
   test('Searching for a cells value highlights it', async () => {
@@ -111,10 +111,12 @@ describe('Table Component Tests', () => {
     )
 
     await input.setValue('Doesnt Match Search Term')
-    expect(tableComponent.html()).toContain('Row does not match search')
+    expect(tableComponent.html()).toContain('gridViewRow.rowNotMatchingSearch')
 
     await input.setValue('last_name')
-    expect(tableComponent.html()).not.toContain('Row does not match search')
+    expect(tableComponent.html()).not.toContain(
+      'gridViewRow.rowNotMatchingSearch'
+    )
     await flushPromises()
   })
 

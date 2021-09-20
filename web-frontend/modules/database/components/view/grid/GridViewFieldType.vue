@@ -39,13 +39,13 @@
         <li v-if="canFilter">
           <a @click="createFilter($event, view, field)">
             <i class="context__menu-icon fas fa-fw fa-filter"></i>
-            Create filter
+            {{ $t('gridViewFieldType.createFilter') }}
           </a>
         </li>
         <li v-if="field._.type.canSortInView">
           <a @click="createSort($event, view, field, 'ASC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down-alt"></i>
-            Sort
+            {{ $t('gridViewFieldType.sortField') }}
             <template v-if="field._.type.sortIndicator[0] === 'text'">{{
               field._.type.sortIndicator[1]
             }}</template>
@@ -68,7 +68,7 @@
         <li v-if="field._.type.canSortInView">
           <a @click="createSort($event, view, field, 'DESC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down"></i>
-            Sort
+            {{ $t('gridViewFieldType.sortField') }}
             <template v-if="field._.type.sortIndicator[0] === 'text'">{{
               field._.type.sortIndicator[2]
             }}</template>
@@ -91,7 +91,7 @@
         <li v-if="!field.primary && canFilter">
           <a @click="hide($event, view, field)">
             <i class="context__menu-icon fas fa-fw fa-eye-slash"></i>
-            Hide field
+            {{ $t('gridViewFieldType.hideField') }}
           </a>
         </li>
       </FieldContext>
@@ -249,3 +249,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "gridViewFieldType":{
+      "createFilter": "Create filter",
+      "sortField": "Sort",
+      "hideField":"Hide field"
+    }
+  },  
+  "fr": {
+    "gridViewFieldType":{
+      "createFilter": "Définir un filtre",
+      "sortField": "Trier",
+      "hideField":"Cacher la colonne"
+    }
+  }
+}
+</i18n>
