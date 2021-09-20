@@ -92,6 +92,6 @@ export class CSVTableExporterType extends TableExporterType {
   }
 
   getSupportedViews() {
-    return [new GridViewType().getType()]
+    return [GridViewType.getType()]
   }
 }

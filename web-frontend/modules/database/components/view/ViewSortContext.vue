@@ -2,9 +2,11 @@
   <Context ref="context" class="sortings">
     <div>
       <div v-if="view.sortings.length === 0" class="sortings__none">
-        <div class="sortings__none-title">You have not yet created a sort</div>
+        <div class="sortings__none-title">
+          {{ $t('viewSortContext.noSortTitle') }}
+        </div>
         <div class="sortings__none-description">
-          Sorts allow you to sort rows by a field.
+          {{ $t('viewSortContext.noSortText') }}
         </div>
       </div>
       <div
@@ -20,8 +22,12 @@
           <i class="fas fa-times"></i>
         </a>
         <div class="sortings__description">
-          <template v-if="index === 0">Sort by</template>
-          <template v-if="index > 0">Then by</template>
+          <template v-if="index === 0">{{
+            $t('viewSortContext.sortBy')
+          }}</template>
+          <template v-if="index > 0">{{
+            $t('viewSortContext.thenBy')
+          }}</template>
         </div>
         <div class="sortings__field">
           <Dropdown
@@ -122,7 +128,7 @@
           "
         >
           <i class="fas fa-plus"></i>
-          choose a field to sort by
+          {{ $t('viewSortContext.addSort') }}
         </a>
         <Context ref="addContext" class="sortings__add-context">
           <ul ref="items" class="context__menu">
@@ -258,3 +264,26 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "viewSortContext":{
+      "noSortTitle": "You have not yet created a sort",
+      "noSortText": "Sorts allow you to sort rows by a field.",
+      "sortBy": "Sort by",
+      "thenBy": "Then by",
+      "addSort": "choose a field to sort by"
+    }
+  },
+  "fr":{
+    "viewSortContext":{
+      "noSortTitle": "Vous n'avez configuré aucun filtre",
+      "noSortText": "Le tri vous permet d'ordonner les lignes selon la valeur d'un champ.",
+      "sortBy": "Trier par",
+      "thenBy": "Puis par",
+      "addSort": "Ajouter un tri"
+    }
+  }
+}
+</i18n>

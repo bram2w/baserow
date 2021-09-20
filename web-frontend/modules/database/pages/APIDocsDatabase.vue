@@ -892,7 +892,7 @@
                 <td>{{ filter.type }}</td>
                 <td>{{ filter.example }}</td>
                 <td>
-                  field {{ filter.name }}
+                  field {{ filter.getName() }}
                   <template v-if="filter.example !== ''"
                     >'{{ filter.example }}'</template
                   >

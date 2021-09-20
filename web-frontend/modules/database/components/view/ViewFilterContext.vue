@@ -6,9 +6,11 @@
   >
     <div v-show="view.filters.length === 0">
       <div class="filters__none">
-        <div class="filters__none-title">You have not yet created a filter</div>
+        <div class="filters__none-title">
+          {{ $t('viewFilterContext.noFilterTitle') }}
+        </div>
         <div class="filters__none-description">
-          Filters allow you to show rows that apply to your conditions.
+          {{ $t('viewFilterContext.noFilterText') }}
         </div>
       </div>
     </div>
@@ -28,7 +30,7 @@
         <i class="fas fa-times"></i>
       </a>
       <div class="filters__operator">
-        <span v-if="index === 0">Where</span>
+        <span v-if="index === 0">{{ $t('viewFilterContext.where') }}</span>
         <Dropdown
           v-if="index === 1 && !readOnly"
           :value="view.filter_type"
@@ -36,20 +38,26 @@
           class="dropdown--floating dropdown--tiny"
           @input="updateView(view, { filter_type: $event })"
         >
-          <DropdownItem name="And" value="AND"></DropdownItem>
-          <DropdownItem name="Or" value="OR"></DropdownItem>
+          <DropdownItem
+            :name="$t('viewFilterContext.and')"
+            value="AND"
+          ></DropdownItem>
+          <DropdownItem
+            :name="$t('viewFilterContext.or')"
+            value="OR"
+          ></DropdownItem>
         </Dropdown>
         <span
           v-if="
             (index > 1 || (index > 0 && readOnly)) && view.filter_type === 'AND'
           "
-          >And</span
+          >{{ $t('viewFilterContext.and') }}</span
         >
         <span
           v-if="
             (index > 1 || (index > 0 && readOnly)) && view.filter_type === 'OR'
           "
-          >Or</span
+          >{{ $t('viewFilterContext.or') }}</span
         >
       </div>
       <div class="filters__field">
@@ -89,7 +97,7 @@
               filter.field
             )"
             :key="filterType.type"
-            :name="filterType.name"
+            :name="filterType.getName()"
             :value="filterType.type"
           ></DropdownItem>
         </Dropdown>
@@ -109,13 +117,13 @@
     <div v-if="!readOnly" class="filters_footer">
       <a class="filters__add" @click.prevent="addFilter()">
         <i class="fas fa-plus"></i>
-        add filter
+        {{ $t('viewFilterContext.addFilter') }}
       </a>
       <div v-if="view.filters.length > 0">
         <SwitchInput
           :value="view.filters_disabled"
           @input="updateView(view, { filters_disabled: $event })"
-          >all disabled</SwitchInput
+          >{{ $t('viewFilterContext.disableAllFilters') }}</SwitchInput
         >
       </div>
     </div>
@@ -309,3 +317,30 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "viewFilterContext":{
+      "addFilter": "Add filter",
+      "disableAllFilters":"all disabled",
+      "noFilterTitle": "You have not yet created a filter",
+      "noFilterText": "Filters allow you to show rows that apply to your conditions.",
+      "where": "Where",
+      "and": "And",
+      "or": "Or"
+    }
+  },
+  "fr":{
+    "viewFilterContext":{
+      "addFilter": "Ajouter un filtre",
+      "disableAllFilters":"Tous désactivés",
+      "noFilterTitle": "Vous n'avez pas encore définit de filtre",
+      "noFilterText": "Les filtres permettent de voir uniquement les lignes qui correspondent à vos critères.",
+      "where": "Quand",
+      "and": "Et",
+      "or": "Ou"
+    }
+  }
+}
+</i18n>

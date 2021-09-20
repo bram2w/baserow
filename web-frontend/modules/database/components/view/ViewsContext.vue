@@ -6,7 +6,7 @@
         v-model="query"
         type="text"
         class="select__search-input"
-        placeholder="Search views"
+        :placeholder="$t('viewsContext.searchView')"
       />
     </div>
     <div v-if="isLoading" class="context--loading">
@@ -28,11 +28,13 @@
       ></ViewsContextItem>
     </ul>
     <div v-if="!isLoading && views.length == 0" class="context__description">
-      No views found
+      {{ $t('viewsContext.noViews') }}
     </div>
     <div v-if="!readOnly" class="select__footer">
       <div class="select__footer-multiple">
-        <div class="select__footer-multiple-label">Add a view:</div>
+        <div class="select__footer-multiple-label">
+          {{ $t('viewsContext.addView') }}
+        </div>
         <a
           v-for="(viewType, type) in viewTypes"
           :key="type"
@@ -44,7 +46,7 @@
             class="select__footer-multiple-icon fas"
             :class="'fa-' + viewType.iconClass"
           ></i>
-          {{ viewType.name }}
+          {{ viewType.getName() }}
           <CreateViewModal
             :ref="'createViewModal' + type"
             :table="table"
@@ -133,3 +135,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "viewsContext": {
+      "searchView": "Search views",
+      "noViews": "No views found",
+      "addView": "Add a view:"
+    }
+  },
+  "fr": {
+    "viewsContext": {
+      "searchView": "Recherche",
+      "noViews": "Aucune vue trouvée",
+      "addView": "Ajouter une vue:"
+    }
+  }
+}
+</i18n>

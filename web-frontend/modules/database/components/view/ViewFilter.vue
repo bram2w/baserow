@@ -9,7 +9,11 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-filter"></i>
-      <span class="header__filter-name">{{ filterTitle }}</span>
+      <span class="header__filter-name">{{
+        $tc('viewFilter.filter', view.filters.length, {
+          count: view.filters.length,
+        })
+      }}</span>
     </a>
     <ViewFilterContext
       ref="context"
@@ -46,18 +50,6 @@ export default {
       required: true,
     },
   },
-  computed: {
-    filterTitle() {
-      const numberOfFilters = this.view.filters.length
-      if (numberOfFilters === 0) {
-        return 'Filter'
-      } else if (numberOfFilters === 1) {
-        return `${numberOfFilters} Filter`
-      } else {
-        return `${numberOfFilters} Filters`
-      }
-    },
-  },
   beforeMount() {
     this.$bus.$on('view-filter-created', this.filterCreated)
   },
@@ -74,3 +66,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "viewFilter": {
+      "filter": "Filter | 1 Filter | {count} Filters"
+    }
+  },
+  "fr":{
+    "viewFilter": {
+      "filter": "Filtre | 1 Filtre | {count} Filtres"
+    }
+  }
+}
+</i18n>

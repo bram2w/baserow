@@ -9,7 +9,11 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-sort"></i>
-      <span class="header__filter-name">{{ sortTitle }}</span>
+      <span class="header__filter-name">{{
+        $tc('viewSort.sort', view.sortings.length, {
+          count: view.sortings.length,
+        })
+      }}</span>
     </a>
     <ViewSortContext
       ref="context"
@@ -46,17 +50,20 @@ export default {
       required: true,
     },
   },
-  computed: {
-    sortTitle() {
-      const numberOfSortings = this.view.sortings.length
-      if (numberOfSortings === 0) {
-        return 'Sort'
-      } else if (numberOfSortings === 1) {
-        return `${numberOfSortings} Sort`
-      } else {
-        return `${numberOfSortings} Sorts`
-      }
-    },
-  },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "viewSort":{
+      "sort": "Sort | 1 Sort | {count} Sorts"
+    }
+  },
+  "fr":{
+    "viewSort":{
+      "sort": "Tri | 1 Tri | {count} Tris"
+    }
+  }
+}
+</i18n>
