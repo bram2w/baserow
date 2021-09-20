@@ -16,6 +16,10 @@ export default {
   applicationType: {
     database: 'Base de données',
   },
+  settingType: {
+    password: 'Mot de passe',
+    tokens: "Jetons d'API",
+  },
   field: {
     emailAddress: 'Adresse électronique',
   },
