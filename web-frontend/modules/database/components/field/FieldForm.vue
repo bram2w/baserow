@@ -8,14 +8,14 @@
           :class="{ 'input--error': $v.values.name.$error }"
           type="text"
           class="input"
-          placeholder="Name"
+          :placeholder="$t('fieldForm.name')"
           @blur="$v.values.name.$touch()"
         />
         <div
           v-if="$v.values.name.$dirty && !$v.values.name.required"
           class="error"
         >
-          This field is required.
+          {{ $t('error.requiredField') }}
         </div>
         <div
           v-else-if="
@@ -23,7 +23,7 @@
           "
           class="error"
         >
-          A field with this name already exists.
+          {{ $t('fieldForm.fieldAlreadyExists') }}
         </div>
         <div
           v-else-if="
@@ -32,13 +32,13 @@
           "
           class="error"
         >
-          This field name is not allowed.
+          {{ $t('error.nameNotAllowed') }}
         </div>
         <div
           v-else-if="$v.values.name.$dirty && !$v.values.name.maxLength"
           class="error"
         >
-          This field name is too long.
+          {{ $t('error.nameTooLong') }}
         </div>
       </div>
     </div>
@@ -53,13 +53,13 @@
             v-for="(fieldType, type) in fieldTypes"
             :key="type"
             :icon="fieldType.iconClass"
-            :name="fieldType.name"
+            :name="fieldType.getName()"
             :value="fieldType.type"
             :disabled="primary && !fieldType.canBePrimaryField"
           ></DropdownItem>
         </Dropdown>
         <div v-if="$v.values.type.$error" class="error">
-          This field is required.
+          {{ $t('error.requiredField') }}
         </div>
       </div>
     </div>
@@ -153,3 +153,24 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "fieldForm":{
+      "name": "Name",
+      "fieldAlreadyExists": "A field with this name already exists.",
+      "nameNotAllowed": "This field name is not allowed.",
+      "nameTooLong": "This field name is too long."
+    }
+  },
+  "fr": {
+    "fieldForm":{
+      "name": "Nom",
+      "fieldAlreadyExists": "Un champ avec ce nom existe déjà.",
+      "nameNotAllowed": "Ce nom de champ n'est pas autorisé.",
+      "nameTooLong": "Ce nom de champ est trop long."
+    }
+  }
+}
+</i18n>

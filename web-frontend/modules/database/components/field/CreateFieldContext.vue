@@ -7,7 +7,7 @@
           :class="{ 'button--loading': loading }"
           :disabled="loading"
         >
-          Create
+          {{ $t('action.create') }}
         </button>
       </div>
     </FieldForm>

@@ -18,12 +18,14 @@
         class="grid-view__row-warning"
       >
         <template v-if="!row._.matchFilters">
-          Row does not match filters
+          {{ $t('gridViewRow.rowNotMatchingFilters') }}
         </template>
         <template v-else-if="!row._.matchSearch">
-          Row does not match search
+          {{ $t('gridViewRow.rowNotMatchingSearch') }}
         </template>
-        <template v-else-if="!row._.matchSortings"> Row has moved</template>
+        <template v-else-if="!row._.matchSortings">{{
+          $t('gridViewRow.rowHasMoved')
+        }}</template>
       </div>
       <div
         class="grid-view__column"
@@ -167,3 +169,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "gridViewRow": {
+      "rowNotMatchingFilters": "Row does not match filters",
+      "rowNotMatchingSearch": "Row does not match search",
+      "rowHasMoved": "Row has moved"
+    }
+  },
+  "fr":{
+    "gridViewRow": {
+      "rowNotMatchingFilters": "La ligne est filtrée",
+      "rowNotMatchingSearch": "La ligne ne contient pas le terme recherché",
+      "rowHasMoved": "La ligne est déplacée"
+    }
+  }
+}
+</i18n>
