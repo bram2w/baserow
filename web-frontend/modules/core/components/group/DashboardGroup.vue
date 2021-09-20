@@ -27,7 +27,7 @@
         v-if="group.permissions === 'ADMIN'"
         class="dashboard__group-link"
         @click="$refs.context.showGroupMembersModal()"
-        >Members</a
+        >{{ $t('dashboardGroup.showMembers') }}</a
       >
     </div>
     <ul class="dashboard__group-items">
@@ -63,7 +63,9 @@
           >
             <i class="fas fa-plus"></i>
           </div>
-          <div class="dashboard__group-item-name">Create new</div>
+          <div class="dashboard__group-item-name">
+            {{ $t('dashboardGroup.createApplication') }}
+          </div>
         </a>
         <CreateApplicationContext
           ref="createApplicationContext"
@@ -106,3 +108,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "dashboardGroup":{
+      "showMembers": "Members",
+      "createApplication": "Create new"
+    }
+  },
+  "fr":{
+    "dashboardGroup":{
+      "showMembers": "Membres",
+      "createApplication": "Créer"
+    }
+  }
+}
+</i18n>

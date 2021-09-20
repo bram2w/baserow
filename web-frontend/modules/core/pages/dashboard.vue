@@ -9,10 +9,9 @@
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
       </div>
-      <div class="alert__title">We need your help!</div>
+      <div class="alert__title">{{ $t('dashboard.alertTitle') }}</div>
       <p class="alert__content">
-        If you find Baserow useful then sponsoring, starring or sharing us is
-        greatly appreciated:
+        {{ $t('dashboard.alertText') }}
       </p>
       <a
         href="https://github.com/sponsors/bram2w"
@@ -20,7 +19,7 @@
         rel="noopener noreferrer"
         class="button button--primary dashboard__alert-button"
       >
-        Become a GitHub sponsor
+        {{ $t('dashboard.becomeGithubSponsor') }}
         <i class="fa fa-heart"></i>
       </a>
       <a
@@ -29,17 +28,15 @@
         rel="noopener noreferrer"
         class="button button--primary dashboard__alert-button"
       >
-        Star us on Gitlab
+        {{ $t('dashboard.starOnGitlab') }}
         <i class="fab fa-gitlab"></i>
       </a>
       <a
-        v-tooltip="'Tweet about Baserow'"
+        v-tooltip="$t('dashboard.shareOnTwitter')"
         :href="
           'https://twitter.com/intent/tweet?url=https://baserow.io' +
           '&hashtags=opensource,nocode,database,baserow&text=' +
-          encodeURI(
-            'Check out @baserow an open source no-code database tool and Airtable alternative!'
-          )
+          encodeURI($t('dashboard.tweetContent'))
         "
         target="_blank"
         rel="noopener noreferrer"
@@ -48,10 +45,10 @@
         <i class="fab fa-twitter"></i>
       </a>
       <a
-        v-tooltip="'Share on Reddit'"
+        v-tooltip="$t('dashboard.shareOnReddit')"
         :href="
           'https://www.reddit.com/submit?url=https://baserow.io&title=' +
-          encodeURI('Baserow - An open source no-code database')
+          encodeURI($t('dashboard.redditTitle'))
         "
         target="_blank"
         rel="noopener noreferrer"
@@ -60,7 +57,7 @@
         <i class="fab fa-reddit"></i>
       </a>
       <a
-        v-tooltip="'Share on Facebook'"
+        v-tooltip="$t('dashboard.shareOnFacebook')"
         href="https://www.facebook.com/sharer/sharer.php?u=https://baserow.io"
         target="_blank"
         rel="noopener noreferrer"
@@ -69,7 +66,7 @@
         <i class="fab fa-facebook"></i>
       </a>
       <a
-        v-tooltip="'Share on LinkedIn'"
+        v-tooltip="$t('dashboard.shareOnLinkedIn')"
         href="https://www.linkedin.com/sharing/share-offsite/?url=https://baserow.io"
         target="_blank"
         rel="noopener noreferrer"
@@ -88,15 +85,14 @@
       <div class="placeholder__icon">
         <i class="fas fa-layer-group"></i>
       </div>
-      <h1 class="placeholder__title">No groups found</h1>
+      <h1 class="placeholder__title">{{ $t('dashboard.noGroupTitle') }}</h1>
       <p class="placeholder__content">
-        You aren’t a member of any group. Applications like databases belong to
-        a group, so in order to create them you need to create a group.
+        {{ $t('dashboard.noGroupText') }}
       </p>
       <div class="placeholder__action">
         <a class="button button--large" @click="$refs.createGroupModal.show()">
           <i class="fas fa-plus"></i>
-          Create group
+          {{ $t('dashboard.createGroup') }}
         </a>
       </div>
     </div>
@@ -109,7 +105,7 @@
       <div>
         <a class="button button--large" @click="$refs.createGroupModal.show()">
           <i class="fas fa-plus"></i>
-          Create group
+          {{ $t('dashboard.createGroup') }}
         </a>
       </div>
     </div>
@@ -169,3 +165,42 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "dashboard":{
+      "alertTitle": "We need your help!",
+      "alertText": "If you find Baserow useful then sponsoring, starring or sharing us is greatly appreciated:",
+      "tweetContent": "Check out @baserow an open source no-code database tool and Airtable alternative!",
+      "redditTitle": "'Baserow - An open source no-code database",
+      "noGroupTitle": "No groups found",
+      "noGroupText": "You aren’t a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group.",
+      "createGroup": "Create group",
+      "becomeGithubSponsor": "Become a GitHub sponsor",
+      "starOnGitlab": "Star us on Gitlab",
+      "shareOnTwitter":"Tweet about Baserow",
+      "shareOnReddit": "Share on Reddit",
+      "shareOnFacebook": "Share on Facebook",
+      "shareOnLinkedIn": "Share on LinkedIn"
+    }
+  },
+  "fr":{
+    "dashboard":{
+      "alertTitle": "Soutenez-nous !",
+      "alertText": "Si vous trouvez Baserow utile, n'hésitez pas à nous sponsoriser, étoiler, partager :",
+      "tweetContent": "Découvrez @baserow, une base de données no-code et libre alternative à Airtable",
+      "redditTitle": "Baserow - Une base de données no-code libre",
+      "noGroupTitle": "Aucun groupe",
+      "noGroupText": "Vous n'êtes membre d'aucun groupe. Les applications telles que les bases de données doivent appartenir à un groupe, donc pour pouvoir en créer, vous devez créer au moins un groupe.",
+      "createGroup": "Créer un groupe",
+      "becomeGithubSponsor": "Devenir sponsor Github",
+      "starOnGitlab": "Nous étoiler sur Gitlab",
+      "shareOnTwitter":"Tweeter à propos de Baserow",
+      "shareOnReddit": "Partager sur Reddit",
+      "shareOnFacebook": "Partager sur Facebook",
+      "shareOnLinkedIn": "Partager sur LinkedIn"
+    }
+  }
+}
+</i18n>
