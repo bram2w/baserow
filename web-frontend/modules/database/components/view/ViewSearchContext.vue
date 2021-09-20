@@ -14,7 +14,7 @@
               ref="activeSearchTermInput"
               v-model="activeSearchTerm"
               type="text"
-              placeholder="Search in all rows"
+              :placeholder="$t('viewSearchContext.searchInRows')"
               class="input"
               @keyup="searchIfChanged"
             />
@@ -27,7 +27,7 @@
           v-model="hideRowsNotMatchingSearch"
           @input="searchIfChanged"
         >
-          hide not matching rows
+          {{ $t('viewSearchContext.hideNotMatching') }}
         </SwitchInput>
       </div>
     </form>
@@ -134,3 +134,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "viewSearchContext": {
+      "searchInRows": "Search in all rows",
+      "hideNotMatching": "hide not matching rows"
+    }
+  },
+  "fr": {
+    "viewSearchContext": {
+      "searchInRows": "Chercher dans toute la table",
+      "hideNotMatching": "cacher les lignes sans résultat"
+    }
+  }
+}
+</i18n>

@@ -174,7 +174,7 @@ export class TestApp {
 export const UIHelpers = {
   async performSearch(tableComponent, searchTerm) {
     const searchBox = tableComponent.get(
-      'input[placeholder*="Search in all rows"]'
+      'input[placeholder*="viewSearchContext.searchInRows"]'
     )
     await searchBox.setValue(searchTerm)
     await searchBox.trigger('submit')

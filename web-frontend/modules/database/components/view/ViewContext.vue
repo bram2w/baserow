@@ -4,19 +4,19 @@
       <li>
         <a @click="exportView()">
           <i class="context__menu-icon fas fa-fw fa-file-export"></i>
-          Export view
+          {{ $t('viewContext.exportView') }}
         </a>
       </li>
       <li>
         <a @click="enableRename()">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
-          Rename view
+          {{ $t('viewContext.renameView') }}
         </a>
       </li>
       <li>
         <a @click="deleteView()">
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
-          Delete view
+          {{ $t('viewContext.deleteView') }}
         </a>
       </li>
     </ul>
@@ -63,3 +63,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "viewContext": {
+      "exportView": "Export view",
+      "renameView": "Rename view",
+      "deleteView": "Delete view"
+    }
+  },
+  "fr": {
+    "viewContext": {
+      "exportView": "Exporter la vue",
+      "renameView": "Renommer la vue",
+      "deleteView": "Supprimer la vue"
+    }
+  }
+}
+</i18n>

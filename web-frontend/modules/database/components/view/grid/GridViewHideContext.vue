@@ -22,13 +22,13 @@
         class="button button--ghost hidings__footer-button"
         @click="!noneSelected && updateAllFieldOptions({ hidden: true })"
       >
-        Hide all
+        {{ $t('gridViewHideContext.hideAll') }}
       </button>
       <button
         class="button button--ghost"
         @click="!allSelected && updateAllFieldOptions({ hidden: false })"
       >
-        Show all
+        {{ $t('gridViewHideContext.showAll') }}
       </button>
     </div>
   </Context>
@@ -135,3 +135,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "gridViewHideContext": {
+      "hideAll": "Hide all",
+      "showAll": "Show all"
+    }
+  },
+  "fr":{
+    "gridViewHideContext": {
+      "hideAll": "Masquer tout",
+      "showAll": "Afficher tout"
+    }
+  }
+}
+</i18n>
