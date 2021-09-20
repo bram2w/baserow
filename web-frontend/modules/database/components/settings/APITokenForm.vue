@@ -1,7 +1,7 @@
 <template>
   <form @submit.prevent="submit">
     <div class="control">
-      <label class="control__label"> Name </label>
+      <label class="control__label">{{ $t('apiTokenForm.nameLabel') }}</label>
       <div class="control__elements">
         <input
           ref="name"
@@ -12,12 +12,12 @@
           @blur="$v.values.name.$touch()"
         />
         <div v-if="$v.values.name.$error" class="error">
-          This field is required.
+          {{ $t('error.requiredField') }}
         </div>
       </div>
     </div>
     <div class="control">
-      <label class="control__label"> Group </label>
+      <label class="control__label">{{ $t('apiTokenForm.groupLabel') }}</label>
       <Dropdown
         v-model="values.group"
         class="col-4"
@@ -32,7 +32,7 @@
       </Dropdown>
       <div class="control__elements">
         <div v-if="$v.values.group.$error" class="error">
-          This field is required.
+          {{ $t('error.requiredField') }}
         </div>
       </div>
     </div>
@@ -73,3 +73,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "apiTokenForm": {
+      "nameLabel": "Name",
+      "groupLabel": "Group"
+    }
+  },
+  "fr": {
+    "apiTokenForm": {
+      "nameLabel": "Nom",
+      "groupLabel": "Groupe"
+    }
+  }
+}
+</i18n>

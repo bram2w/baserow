@@ -27,7 +27,9 @@
           </a>
           <Context ref="context">
             <div class="api-token__key">
-              <div class="api-token__key-name">Token:</div>
+              <div class="api-token__key-name">
+                {{ $t('apiToken.tokenPrefix') }}
+              </div>
               <div class="api-token__key-value">
                 <template v-if="tokenVisible">
                   {{ token.key }}
@@ -36,7 +38,7 @@
               </div>
               <a
                 class="api-token__key-visible"
-                title="Show or hide the token"
+                :title="$t('apiToken.showOrHide')"
                 @click.prevent="tokenVisible = !tokenVisible"
               >
                 <i
@@ -46,7 +48,7 @@
               </a>
               <a
                 class="api-token__key-copy"
-                title="Copy to clipboard"
+                :title="$t('apiToken.copyToClipboard')"
                 @click=";[copyTokenToClipboard(), $refs.copied.show()]"
               >
                 <i class="fas fa-copy"></i>
@@ -57,7 +59,7 @@
               <li>
                 <nuxt-link :to="{ name: 'database-api-docs' }">
                   <i class="context__menu-icon fas fa-fw fa-book"></i>
-                  View API documentation
+                  {{ $t('apiToken.viewAPIDocs') }}
                 </nuxt-link>
               </li>
               <li>
@@ -68,13 +70,13 @@
                   @click="rotateKey(token)"
                 >
                   <i class="context__menu-icon fas fa-fw fa-recycle"></i>
-                  Generate new token
+                  {{ $t('apiToken.generateNewToken') }}
                 </a>
               </li>
               <li>
                 <a @click="enableRename()">
                   <i class="context__menu-icon fas fa-fw fa-pen"></i>
-                  Rename
+                  {{ $t('action.rename') }}
                 </a>
               </li>
               <li>
@@ -85,7 +87,7 @@
                   @click.prevent="deleteToken(token)"
                 >
                   <i class="context__menu-icon fas fa-fw fa-trash"></i>
-                  Delete
+                  {{ $t('action.delete') }}
                 </a>
               </li>
             </ul>
@@ -94,7 +96,7 @@
         <div class="api-token__details">
           <div class="api-token__group">{{ group.name }}</div>
           <a class="api-token__expand" @click.prevent="open = !open">
-            show databases
+            {{ $t('apiToken.showDatabases') }}
             <i
               class="fas"
               :class="{
@@ -107,11 +109,11 @@
       </div>
       <div class="api-token__permissions">
         <div
-          v-for="operation in operations"
+          v-for="(operationName, operation) in operations"
           :key="operation"
           class="api-token__permission"
         >
-          {{ operation }}
+          {{ operationName }}
           <SwitchInput
             :value="isActive(operation)"
             :large="true"
@@ -128,7 +130,7 @@
           </div>
           <div class="api-token__permissions">
             <div
-              v-for="operation in operations"
+              v-for="(operationName, operation) in operations"
               :key="operation"
               class="api-token__permission"
             >
@@ -150,7 +152,7 @@
           </div>
           <div class="api-token__permissions">
             <div
-              v-for="operation in operations"
+              v-for="(operationName, operation) in operations"
               :key="operation"
               class="api-token__permission"
             >
@@ -188,7 +190,12 @@ export default {
       deleteLoading: false,
       rotateLoading: false,
       tokenVisible: false,
-      operations: ['create', 'read', 'update', 'delete'],
+      operations: {
+        create: this.$t('apiToken.create'),
+        read: this.$t('apiToken.read'),
+        update: this.$t('apiToken.update'),
+        delete: this.$t('apiToken.delete'),
+      },
     }
   },
   computed: {
@@ -449,3 +456,36 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "apiToken": {
+      "create": "create",
+      "read": "read",
+      "update": "update",
+      "delete": "delete",
+      "tokenPrefix": "Token:",
+      "viewAPIDocs": "View API documentation",
+      "generateNewToken": "Generate new token",
+      "showOrHide": "Show or hide the token",
+      "copyToClipboard": "Copy to clipboard",
+      "showDatabases": "show databases"
+    }
+  },
+  "fr": {
+    "apiToken": {
+      "create": "créer",
+      "read": "lire",
+      "update": "modifier",
+      "delete": "supprimer",
+      "tokenPrefix": "Jeton :",
+      "viewAPIDocs": "Documentation de l'API",
+      "generateNewToken": "Générer un nouveau jeton",
+      "showOrHide": "Montrer ou masquer le jeton",
+      "copyToClipboard": "Copier dans le presse-papier",
+      "showDatabases": "Afficher le détail"
+    }
+  }
+}
+</i18n>

@@ -5,7 +5,9 @@
         <div class="modal-sidebar__head-initials-icon">
           {{ name | nameAbbreviation }}
         </div>
-        <div class="modal-sidebar__head-name">Settings</div>
+        <div class="modal-sidebar__head-name">
+          {{ $t('settingsModal.title') }}
+        </div>
       </div>
       <ul class="modal-sidebar__nav">
         <li v-for="setting in registeredSettings" :key="setting.type">
@@ -18,7 +20,7 @@
               class="fas modal-sidebar__nav-icon"
               :class="'fa-' + setting.iconClass"
             ></i>
-            {{ setting.name }}
+            {{ setting.getName() }}
           </a>
         </li>
       </ul>
@@ -73,3 +75,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "settingsModal": {
+      "title": "Settings"
+    }
+  },
+  "fr": {
+    "settingsModal": {
+      "title": "Profil"
+    }
+  }
+}
+</i18n>

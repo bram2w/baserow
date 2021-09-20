@@ -1,10 +1,10 @@
 <template>
   <div>
     <template v-if="page === 'list'">
-      <h2 class="box__title">Personal API tokens</h2>
+      <h2 class="box__title">{{ $t('apiTokenSettings.title') }}</h2>
       <div class="align-right">
         <a class="button button--primary" @click.prevent="page = 'create'">
-          Create token
+          {{ $t('apiTokenSettings.createToken') }}
           <i class="fas fa-plus"></i>
         </a>
       </div>
@@ -12,10 +12,7 @@
       <div v-if="listLoading" class="loading"></div>
       <div v-else>
         <p v-if="tokens.length === 0" class="margin-top-3">
-          You have not yet created an API token. You can use API tokens to
-          authenticate with the REST API endpoints where you can create, read,
-          update and delete rows. It is possible to set permissions on table
-          level.
+          {{ $t('apiTokenSettings.noTokensMessage') }}
         </p>
         <APIToken
           v-for="token in tokens"
@@ -25,19 +22,19 @@
         ></APIToken>
         <div v-if="tokens.length > 0" class="margin-top-3">
           <SwitchInput :value="true" class="switch--static">
-            Has full permissions, also to all children.
+            {{ $t('apiTokenSettings.hasFullPermissions') }}
           </SwitchInput>
           <SwitchInput :value="2" class="switch--static">
-            Has only permissions to the selected children.
+            {{ $t('apiTokenSettings.hasOnlySelectedPermissions') }}
           </SwitchInput>
           <SwitchInput :value="false" class="switch--static">
-            Doesn't have permissions.
+            {{ $t('apiTokenSettings.noPermissions') }}
           </SwitchInput>
         </div>
       </div>
     </template>
     <template v-else-if="page === 'create'">
-      <h2 class="box__title">Create new API token</h2>
+      <h2 class="box__title">{{ $t('apiTokenSettings.createNewTitle') }}</h2>
       <Error :error="error"></Error>
       <APITokenForm @submitted="create">
         <div class="actions">
@@ -45,7 +42,7 @@
             <li>
               <a @click.prevent="page = 'list'">
                 <i class="fas fa-arrow-left"></i>
-                Back to overview
+                {{ $t('apiTokenSettings.backToOverview') }}
               </a>
             </li>
           </ul>
@@ -54,7 +51,7 @@
             :class="{ 'button--loading': createLoading }"
             :disabled="createLoading"
           >
-            Create token
+            {{ $t('apiTokenSettings.createToken') }}
           </button>
         </div>
       </APITokenForm>
@@ -129,3 +126,32 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "apiTokenSettings": {
+      "title": "Personal API tokens",
+      "createToken": "Create token",
+      "noTokensMessage": "You have not yet created an API token. You can use API tokens to authenticate with the REST API endpoints where you can create, read, update and delete rows. It is possible to set permissions on table level.",
+      "hasFullPermissions": "Has full permissions, also to all children.",
+      "hasOnlySelectedPermissions": "Has only permissions to the selected children.",
+      "noPermissions": "Doesn't have permissions.",
+      "createNewTitle": "Create new API token",
+      "backToOverview": "Back to overview"
+    }
+  },
+  "fr": {
+    "apiTokenSettings": {
+      "title": "Jetons d'API personnels",
+      "createToken": "Créer un jeton",
+      "noTokensMessage": "Vous n'avez pas encore créé de jeton. Vous pouvez utiliser les jetons d'API pour vous authentifier auprès de l'API REST qui vous permet de créer, lire, modifier et supprimer des lignes. Il est possible de définir des permissions différentes pour chaque table.",
+      "hasFullPermissions": "Toutes les permissions, pour les enfants également.",
+      "hasOnlySelectedPermissions": "Uniquement les permissions sélectionnées pour les enfants.",
+      "noPermissions": "Aucune permission",
+      "createNewTitle": "Créer un nouveau jeton",
+      "backToOverview": "Retour"
+    }
+  }
+}
+</i18n>

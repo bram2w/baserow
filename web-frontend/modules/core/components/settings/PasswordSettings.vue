@@ -1,20 +1,23 @@
 <template>
   <div>
-    <h2 class="box__title">Change password</h2>
+    <h2 class="box__title">{{ $t('passwordSettings.title') }}</h2>
     <Error :error="error"></Error>
     <div v-if="success" class="alert alert--success alert--has-icon">
       <div class="alert__icon">
         <i class="fas fa-check"></i>
       </div>
-      <div class="alert__title">Password changed</div>
+      <div class="alert__title">
+        {{ $t('passwordSettings.changedTitle') }}
+      </div>
       <p class="alert__content">
-        Your password has been changed. The next time you want to login, you
-        have to use your new password.
+        {{ $t('passwordSettings.changedDescription') }}
       </p>
     </div>
     <form v-if="!success" @submit.prevent="changePassword">
       <div class="control">
-        <label class="control__label">Old password</label>
+        <label class="control__label">{{
+          $t('passwordSettings.oldPasswordLabel')
+        }}</label>
         <div class="control__elements">
           <input
             v-model="account.oldPassword"
@@ -24,12 +27,14 @@
             @blur="$v.account.oldPassword.$touch()"
           />
           <div v-if="$v.account.oldPassword.$error" class="error">
-            Old password is required.
+            {{ $t('passwordSettings.oldPasswordRequiredError') }}
           </div>
         </div>
       </div>
       <div class="control">
-        <label class="control__label">New password</label>
+        <label class="control__label">{{
+          $t('passwordSettings.newPasswordLabel')
+        }}</label>
         <div class="control__elements">
           <PasswordInput
             v-model="account.newPassword"
@@ -38,7 +43,9 @@
         </div>
       </div>
       <div class="control">
-        <label class="control__label">Repeat new password</label>
+        <label class="control__label">{{
+          $t('passwordSettings.repeatNewPasswordLabel')
+        }}</label>
         <div class="control__elements">
           <input
             v-model="account.passwordConfirm"
@@ -48,7 +55,7 @@
             @blur="$v.account.passwordConfirm.$touch()"
           />
           <div v-if="$v.account.passwordConfirm.$error" class="error">
-            This field must match your new password field.
+            {{ $t('passwordSettings.repeatNewPasswordMatchError') }}
           </div>
         </div>
       </div>
@@ -58,7 +65,7 @@
           class="button button--large"
           :disabled="loading"
         >
-          Change password
+          {{ $t('passwordSettings.submitButton') }}
           <i class="fas fa-pencil-alt"></i>
         </button>
       </div>
@@ -112,8 +119,8 @@ export default {
         this.loading = false
         this.handleError(error, 'changePassword', {
           ERROR_INVALID_OLD_PASSWORD: new ResponseErrorMessage(
-            'Invalid password.',
-            'Could not change your password because your old password is invalid.'
+            this.$t('passwordSettings.errorInvalidOldPasswordTitle'),
+            this.$t('passwordSettings.errorInvalidOldPasswordMessage')
           ),
         })
       }
@@ -130,3 +137,38 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "passwordSettings": {
+      "title": "Change password",
+      "changedTitle": "Password changed",
+      "changedDescription": "Your password has been changed. The next time you want to login, you have to use your new password.",
+      "oldPasswordLabel": "Old password",
+      "oldPasswordRequiredError": "Old password is required.",
+      "newPasswordLabel": "New password",
+      "repeatNewPasswordLabel": "Repeat new password",
+      "repeatNewPasswordMatchError": "This field must match your new password field.",
+      "submitButton": "Change password",
+      "errorInvalidOldPasswordTitle": "Invalid password",
+      "errorInvalidOldPasswordMessage": "Could not change your password because your old password is invalid."
+    }
+  },
+  "fr": {
+    "passwordSettings": {
+      "title": "Mise à jour du mot de passe",
+      "changedTitle": "Mot de passe mis à jour",
+      "changedDescription": "Votre mot de passe a été mis à jour. La prochaine fois que vous souhaitez vous connecter, vous devrez utiliser le nouveau mot de passe",
+      "oldPasswordLabel": "Ancien mot de passe",
+      "oldPasswordRequiredError": "L'ancien mot de passe est obligatoire",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "repeatNewPasswordLabel": "Répétez le mot de passe",
+      "repeatNewPasswordMatchError": "Les deux mots de passe ne correspondent pas.",
+      "submitButton": "Mettre à jour",
+      "errorInvalidOldPasswordTitle": "Ancien mot de passe invalide",
+      "errorInvalidOldPasswordMessage": "Impossible de mettre à jour votre mot de passe car votre ancien mot de passe est invalide."
+    }
+  }
+}
+</i18n>
