@@ -15,7 +15,7 @@
         ></i>
         {{ selectedName }}
       </template>
-      <template v-else>{{ $t('dropdown.makeChoice') }}</template>
+      <template v-else>{{ $t('action.makeChoice') }}</template>
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <div class="dropdown__items" :class="{ hidden: !open }">
@@ -45,18 +45,3 @@ export default {
   mixins: [dropdown],
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "dropdown": {
-      "makeChoice": "Make a choice"
-    }
-  },
-  "en": {
-    "dropdown": {
-      "makeChoice": "Choisissez"
-    }
-  }
-}
-</i18n>

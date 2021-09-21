@@ -3,7 +3,7 @@
     <div class="control">
       <label class="control__label">
         <i class="fas fa-font"></i>
-        Name
+        {{ $t('applicationForm.nameLabel') }}
       </label>
       <div class="control__elements">
         <input
@@ -15,7 +15,7 @@
           @blur="$v.values.name.$touch()"
         />
         <div v-if="$v.values.name.$error" class="error">
-          This field is required.
+          {{ $t('error.requiredField') }}
         </div>
       </div>
     </div>
@@ -48,3 +48,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "applicationForm": {
+      "nameLabel": "Name"
+    }
+  },
+  "fr": {
+    "applicationForm": {
+      "nameLabel": "Nom"
+    }
+  }
+}
+</i18n>

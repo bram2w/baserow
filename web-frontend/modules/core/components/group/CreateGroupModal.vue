@@ -1,6 +1,6 @@
 <template>
   <Modal>
-    <h2 class="box__title">Create new group</h2>
+    <h2 class="box__title">{{ $t('createGroupModal.createNew') }}</h2>
     <Error :error="error"></Error>
     <GroupForm ref="groupForm" @submitted="submitted">
       <div class="actions">
@@ -10,7 +10,7 @@
             :class="{ 'button--loading': loading }"
             :disabled="loading"
           >
-            Add group
+            {{ $t('createGroupModal.add') }}
           </button>
         </div>
       </div>
@@ -50,3 +50,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "createGroupModal": {
+      "createNew": "Create new group",
+      "add": "Add group"
+    }
+  },
+  "fr": {
+    "createGroupModal": {
+      "createNew": "Nouveau groupe",
+      "add": "Ajouter le groupe"
+    }
+  }
+}
+</i18n>

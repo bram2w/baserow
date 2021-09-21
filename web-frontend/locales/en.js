@@ -9,6 +9,8 @@ export default {
     change: 'Change',
     delete: 'Delete',
     rename: 'Rename',
+    add: 'Add',
+    makeChoice: 'Make a choice',
   },
   adminType: {
     settings: 'Settings',
