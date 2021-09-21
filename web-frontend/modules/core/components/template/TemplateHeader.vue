@@ -13,7 +13,7 @@
           class="button"
           :class="{ 'button--loading': installing }"
           @click="install(template)"
-          >Use this template</a
+          >{{ $t('templateHeader.use') }}</a
         >
       </div>
     </template>
@@ -75,3 +75,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "templateHeader": {
+      "use": "Use this template"
+    }
+  },
+  "fr": {
+    "templateHeader": {
+      "use": "Utiliser ce modèle"
+    }
+  }
+}
+</i18n>

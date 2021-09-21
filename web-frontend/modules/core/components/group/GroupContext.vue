@@ -118,7 +118,7 @@ export default {
       "members": "Membres",
       "viewTrash": "Voir la corbeille",
       "leaveGroup": "Quitter le groupe",
-      "deleteGroup": "Supprimer le group"
+      "deleteGroup": "Supprimer le groupe"
     }
   }
 }

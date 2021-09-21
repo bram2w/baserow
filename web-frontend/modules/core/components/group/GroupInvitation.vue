@@ -5,11 +5,14 @@
     <div class="alert__icon">
       <i class="fas fa-exclamation"></i>
     </div>
-    <div class="alert__title">Invitation</div>
+    <div class="alert__title">{{ $t('groupInvitation.title') }}</div>
     <p class="alert__content">
-      <strong>{{ invitation.invited_by }}</strong> has invited you to join
-      <strong>{{ invitation.group }}</strong
-      >.
+      {{
+        $t('groupInvitation.message', {
+          by: invitation.invited_by,
+          group: invitation.group,
+        })
+      }}
     </p>
     <div v-if="invitation.message !== ''" class="quote">
       "{{ invitation.message }}"
@@ -19,14 +22,14 @@
       :class="{ 'button--loading': rejectLoading }"
       :disabled="rejectLoading || acceptLoading"
       @click="!rejectLoading && !acceptLoading && reject(invitation)"
-      >Reject</a
+      >{{ $t('groupInvitation.reject') }}</a
     >
     <a
       class="button button--success dashboard__alert-button"
       :class="{ 'button--loading': acceptLoading }"
       :disabled="rejectLoading || acceptLoading"
       @click="!rejectLoading && !acceptLoading && accept(invitation)"
-      >Accept</a
+      >{{ $t('groupInvitation.accept') }}</a
     >
   </div>
 </template>
@@ -96,3 +99,24 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "groupInvitation": {
+      "title": "Invitation",
+      "message": "{by} has invited you to join {group}.",
+      "reject": "Reject",
+      "accept": "Accept"
+    }
+  },
+  "fr": {
+    "groupInvitation": {
+      "title": "Invitation",
+      "message": "{by} vous a invité à rejoindre le groupe {group}.",
+      "reject": "Refuser",
+      "accept": "Accepter"
+    }
+  }
+}
+</i18n>
