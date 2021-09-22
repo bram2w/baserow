@@ -1,7 +1,9 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label control__label--small">Options</label>
+      <label class="control__label control__label--small">{{
+        $t('fieldSingleSelectSubForm.optionsLabel')
+      }}</label>
       <div class="control__elements">
         <FieldSelectOptions
           ref="selectOptions"
@@ -37,3 +39,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "fieldSingleSelectSubForm": {
+      "optionsLabel": "Options"
+    }
+  },
+  "fr": {
+    "fieldSingleSelectSubForm": {
+      "optionsLabel": "Options"
+    }
+  }
+}
+</i18n>

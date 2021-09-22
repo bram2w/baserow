@@ -34,7 +34,7 @@
     </div>
     <a class="add" @click="add()">
       <i class="fas fa-plus add__icon"></i>
-      Add an option
+      {{ $t('fieldSelectOptions.add') }}
     </a>
     <ColorSelectContext
       ref="colorContext"
@@ -110,3 +110,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "fieldSelectOptions": {
+      "add": "Add an option"
+    }
+  },
+  "fr": {
+    "fieldSelectOptions": {
+      "add": "Ajouter une option"
+    }
+  }
+}
+</i18n>

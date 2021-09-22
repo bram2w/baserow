@@ -7,7 +7,7 @@
           v-model="values.text_default"
           type="text"
           class="input"
-          placeholder="Default text"
+          :placeholder="$t('fieldTextSubForm.placeholder')"
         />
       </div>
     </div>
@@ -37,3 +37,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "fieldTextSubForm": {
+      "placeholder": "Default text"
+    }
+  },
+  "fr": {
+    "fieldTextSubForm": {
+      "placeholder": "Texte par défault"
+    }
+  }
+}
+</i18n>
