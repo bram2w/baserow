@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 class="box__title">Upload from my device</h2>
+    <h2 class="box__title">{{ $t('uploadFileUserFileUpload.title') }}</h2>
     <input
       v-show="false"
       ref="file"
@@ -20,8 +20,12 @@
       <div class="upload-files__dropzone-content">
         <i class="upload-files__dropzone-icon fas fa-cloud-upload-alt"></i>
         <div class="upload-files__dropzone-text">
-          <template v-if="dragging"> Drop here </template>
-          <template v-else> Click or drop your files here </template>
+          <template v-if="dragging"
+            >{{ $t('uploadFileUserFileUpload.drop') }}
+          </template>
+          <template v-else>{{
+            $t('uploadFileUserFileUpload.clickOrDrop')
+          }}</template>
         </div>
       </div>
     </div>
@@ -86,8 +90,10 @@
         :disabled="uploading"
         @click="upload()"
       >
-        <template v-if="!uploading && hasFailed">Retry</template>
-        <template v-else>Upload</template>
+        <template v-if="!uploading && hasFailed">{{
+          $t('uploadFileUserFileUpload.retry')
+        }}</template>
+        <template v-else>{{ $t('action.upload') }}</template>
       </a>
     </div>
   </div>
@@ -249,3 +255,24 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "uploadFileUserFileUpload": {
+      "title": "Upload from my device",
+      "drop": "Drop here",
+      "clickOrDrop": "Click or drop your files here",
+      "retry": "Retry"
+    }
+  },
+  "fr": {
+    "uploadFileUserFileUpload": {
+      "title": "Envoyer un fichier",
+      "drop": "Déposez ici",
+      "clickOrDrop": "Cliquez ou déposez votre fichier ici",
+      "retry": "Recommencer"
+    }
+  }
+}
+</i18n>
