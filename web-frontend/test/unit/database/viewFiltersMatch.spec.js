@@ -6,6 +6,7 @@ import {
   DateEqualViewFilterType,
   DateNotEqualViewFilterType,
   DateEqualsTodayViewFilterType,
+  HasFileTypeViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 
 const dateBeforeCasesWithTimezone = [
@@ -399,5 +400,51 @@ describe('All Tests', () => {
       {}
     )
     expect(result).toBe(values.expected)
+  })
+
+  test('HasFileType contains image', () => {
+    expect(new HasFileTypeViewFilterType().matches([], '', {})).toBe(true)
+    expect(new HasFileTypeViewFilterType().matches([], 'image', {})).toBe(false)
+    expect(new HasFileTypeViewFilterType().matches([], 'document', {})).toBe(
+      false
+    )
+    expect(
+      new HasFileTypeViewFilterType().matches([{ is_image: true }], 'image', {})
+    ).toBe(true)
+    expect(
+      new HasFileTypeViewFilterType().matches(
+        [{ is_image: true }],
+        'document',
+        {}
+      )
+    ).toBe(false)
+    expect(
+      new HasFileTypeViewFilterType().matches(
+        [{ is_image: false }],
+        'image',
+        {}
+      )
+    ).toBe(false)
+    expect(
+      new HasFileTypeViewFilterType().matches(
+        [{ is_image: false }],
+        'document',
+        {}
+      )
+    ).toBe(true)
+    expect(
+      new HasFileTypeViewFilterType().matches(
+        [{ is_image: true }, { is_image: false }],
+        'image',
+        {}
+      )
+    ).toBe(true)
+    expect(
+      new HasFileTypeViewFilterType().matches(
+        [{ is_image: true }, { is_image: false }],
+        'document',
+        {}
+      )
+    ).toBe(true)
   })
 })

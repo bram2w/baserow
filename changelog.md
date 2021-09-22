@@ -19,6 +19,7 @@
 * Fix minor error that could sometimes occur when a row and it's table/group/database
   were deleted in rapid succession.
 * Fix accidentally locking of too many rows in various tables during update operations.
+* Introduced the has file type filter.
 
 ## Released (2021-08-11)
 

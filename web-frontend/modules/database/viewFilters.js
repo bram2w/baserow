@@ -9,6 +9,7 @@ import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/Vi
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
 import { trueString } from '@baserow/modules/database/utils/constants'
 import { isNumeric } from '@baserow/modules/core/utils/string'
+import ViewFilterTypeFileTypeDropdown from '@baserow/modules/database/components/view/ViewFilterTypeFileTypeDropdown'
 
 export class ViewFilterType extends Registerable {
   /**
@@ -174,6 +175,45 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
 
   matches(rowValue, filterValue, field, fieldType) {
     return fieldType.containsFilter(rowValue, filterValue, field)
+  }
+}
+
+export class HasFileTypeViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'has_file_type'
+  }
+
+  getName() {
+    return 'has file type'
+  }
+
+  getExample() {
+    return 'image | document'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeFileTypeDropdown
+  }
+
+  getCompatibleFieldTypes() {
+    return ['file']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    const isImage = filterValue === 'image'
+    const isDocument = filterValue === 'document'
+
+    if (!isImage && !isDocument) {
+      return true
+    }
+
+    for (let i = 0; i < rowValue.length; i++) {
+      if (rowValue[i].is_image === isImage) {
+        return true
+      }
+    }
+
+    return false
   }
 }
 

@@ -112,6 +112,7 @@ class DatabaseConfig(AppConfig):
             LowerThanViewFilterType,
             ContainsViewFilterType,
             FilenameContainsViewFilterType,
+            HasFileTypeViewFilterType,
             ContainsNotViewFilterType,
             BooleanViewFilterType,
             SingleSelectEqualViewFilterType,
@@ -123,6 +124,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(EqualViewFilterType())
         view_filter_type_registry.register(NotEqualViewFilterType())
         view_filter_type_registry.register(FilenameContainsViewFilterType())
+        view_filter_type_registry.register(HasFileTypeViewFilterType())
         view_filter_type_registry.register(ContainsViewFilterType())
         view_filter_type_registry.register(ContainsNotViewFilterType())
         view_filter_type_registry.register(HigherThanViewFilterType())
