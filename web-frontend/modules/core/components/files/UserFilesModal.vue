@@ -2,7 +2,9 @@
   <Modal :left-sidebar="true" @hidden="$emit('hidden')">
     <template #sidebar>
       <div class="modal-sidebar__head">
-        <div class="modal-sidebar__head-name">Upload from</div>
+        <div class="modal-sidebar__head-name">
+          {{ $t('userFilesModal.title') }}
+        </div>
       </div>
       <ul class="modal-sidebar__nav">
         <li v-for="upload in registeredUserFileUploads" :key="upload.type">
@@ -15,7 +17,7 @@
               class="fas modal-sidebar__nav-icon"
               :class="'fa-' + upload.iconClass"
             ></i>
-            {{ upload.name }}
+            {{ upload.getName() }}
           </a>
         </li>
       </ul>
@@ -65,3 +67,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "userFilesModal": {
+      "title": "Upload from"
+    }
+  },
+  "fr": {
+    "userFilesModal": {
+      "title": "En provenance"
+    }
+  }
+}
+</i18n>

@@ -1,10 +1,12 @@
 <template>
   <div>
-    <h2 class="box__title">Upload from a URL</h2>
+    <h2 class="box__title">{{ $t('uploadViaURLUserFileUpload.title') }}</h2>
     <Error :error="error"></Error>
     <form @submit.prevent="upload(values.url)">
       <div class="control">
-        <label class="control__label">URL</label>
+        <label class="control__label">{{
+          $t('uploadViaURLUserFileUpload.urlLabel')
+        }}</label>
         <div class="control__elements">
           <input
             v-model="values.url"
@@ -14,7 +16,7 @@
             @blur="$v.values.url.$touch()"
           />
           <div v-if="$v.values.url.$error" class="error">
-            A valid URL is required.
+            {{ $t('uploadViaURLUserFileUpload.urlError') }}
           </div>
         </div>
       </div>
@@ -24,7 +26,7 @@
           class="button button--large"
           :disabled="loading"
         >
-          Upload
+          {{ $t('action.upload') }}
         </button>
       </div>
     </form>
@@ -75,3 +77,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "uploadViaURLUserFileUpload": {
+      "title": "Upload from a URL",
+      "urlLabel": "URL",
+      "urlError": "A valid URL is required."
+    }
+  },
+  "fr": {
+    "uploadViaURLUserFileUpload": {
+      "title": "À partir d'une URL",
+      "urlLabel": "URL",
+      "urlError": "Une URL valide doit être renseignée."
+    }
+  }
+}
+</i18n>

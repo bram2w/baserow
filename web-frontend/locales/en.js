@@ -1,5 +1,6 @@
 export default {
   action: {
+    upload: 'Upload',
     back: 'Back',
     backToLogin: 'Back to login',
     signUp: 'Sign up',
@@ -21,6 +22,10 @@ export default {
   settingType: {
     password: 'Password',
     tokens: 'API Tokens',
+  },
+  userFileUploadType: {
+    file: 'my device',
+    url: 'a URL',
   },
   field: {
     emailAddress: 'E-mail address',

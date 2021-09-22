@@ -1,5 +1,6 @@
 export default {
   action: {
+    upload: 'Envoyer',
     back: 'Retour',
     backToLogin: "Retour à l'identification",
     signUp: 'Créer un compte',
@@ -21,6 +22,10 @@ export default {
   settingType: {
     password: 'Mot de passe',
     tokens: "Jetons d'API",
+  },
+  userFileUploadType: {
+    file: 'de mon appareil',
+    url: "d'une URL",
   },
   field: {
     emailAddress: 'Adresse électronique',
