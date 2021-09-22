@@ -2335,6 +2335,107 @@ def test_filename_contains_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_has_file_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    file_field = data_fixture.create_file_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_with_single_image = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test_file.jpg", "is_image": True}
+            ],
+        }
+    )
+    row_with_single_document = model.objects.create(
+        **{
+            f"field_{file_field.id}": [{"visible_name": "doc.doc", "is_image": False}],
+        }
+    )
+    row_with_multiple_documents = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test.doc", "is_image": False},
+                {"visible_name": "test.txt", "is_image": False},
+                {"visible_name": "test.doc", "is_image": False},
+                {"visible_name": "test.txt", "is_image": False},
+            ],
+        }
+    )
+    row_with_multiple_images = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test.jpg", "is_image": True},
+                {"visible_name": "test.png", "is_image": True},
+            ],
+        }
+    )
+    row_with_single_image_and_multiple_documents = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test_doc.doc", "is_image": False},
+                {"visible_name": "test_doc.doc", "is_image": False},
+                {"visible_name": "test_image.jpg", "is_image": True},
+                {"visible_name": "test_doc.doc", "is_image": False},
+            ],
+        }
+    )
+    row_with_single_document_and_multiple_images = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "image1.jpg", "is_image": True},
+                {"visible_name": "image2.png", "is_image": True},
+                {"visible_name": "doc.doc", "is_image": False},
+                {"visible_name": "image3.jpg", "is_image": True},
+            ],
+        }
+    )
+    model.objects.create(**{f"field_{file_field.id}": []})
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=file_field,
+        type="has_file_type",
+        value="",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 7
+
+    view_filter.value = "image"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+    assert row_with_single_image.id in ids
+    assert row_with_multiple_images.id in ids
+    assert row_with_single_image_and_multiple_documents.id in ids
+    assert row_with_single_document_and_multiple_images.id in ids
+
+    view_filter.value = "document"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+    assert row_with_single_document.id in ids
+    assert row_with_multiple_documents.id in ids
+    assert row_with_single_image_and_multiple_documents.id in ids
+    assert row_with_single_document_and_multiple_images.id in ids
+
+    data_fixture.create_view_filter(
+        view=grid_view,
+        field=file_field,
+        type="has_file_type",
+        value="image",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_with_single_image_and_multiple_documents.id in ids
+    assert row_with_single_document_and_multiple_images.id in ids
+
+
+@pytest.mark.django_db
 def test_link_row_preload_values(data_fixture, django_assert_num_queries):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)

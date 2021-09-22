@@ -94,6 +94,32 @@ class FilenameContainsViewFilterType(ViewFilterType):
         return filename_contains_filter(*args)
 
 
+class HasFileTypeViewFilterType(ViewFilterType):
+    """
+    The file field type column contains an array of objects with details related to
+    the uploaded user files. Every object always contains the property `is_image`
+    that indicates if the user file is an image. Using the Django contains lookup,
+    we can check if there is at least one object where the `is_image` is True. If the
+    filter value is `image`, there must at least be one object where the `is_image`
+    is true. If the filter value is `document` there must at least be one object
+    where the `is_image` is false. If an unsupported filter value is provided, we don't
+    want to filter on anything.
+    """
+
+    type = "has_file_type"
+    compatible_field_types = [FileFieldType.type]
+
+    def get_filter(self, field_name, value, model_field, field):
+        value = value.strip()
+        is_image = value == "image"
+        is_document = value == "document"
+
+        if is_document or is_image:
+            return Q(**{f"{field_name}__contains": [{"is_image": is_image}]})
+        else:
+            return Q()
+
+
 class ContainsViewFilterType(ViewFilterType):
     """
     The contains filter checks if the field value contains the provided filter value.
