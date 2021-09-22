@@ -3,16 +3,12 @@
     <div class="control">
       <div v-if="tables.length === 0" class="alert alert--error context__alert">
         <p class="alert__content">
-          You need at least one other
-          <br />
-          table in the same database
-          <br />
-          to link to.
+          {{ $t('fieldLinkRowSubForm.noTable') }}
         </p>
       </div>
       <div v-if="tables.length > 0">
         <label class="control__label control__label--small">
-          Select a table to link to
+          {{ $t('fieldLinkRowSubForm.selectTableLabel') }}
         </label>
         <div class="control__elements">
           <Dropdown
@@ -28,7 +24,7 @@
             ></DropdownItem>
           </Dropdown>
           <div v-if="$v.values.link_row_table.$error" class="error">
-            This field is required.
+            {{ $t('error.requiredField') }}
           </div>
           <div
             v-show="
@@ -38,9 +34,7 @@
             class="alert alert--warning context__alert"
           >
             <p class="alert__content">
-              By changing the table, all data
-              <br />
-              will be lost.
+              {{ $t('fieldLinkRowSubForm.dataLost') }}
             </p>
           </div>
         </div>
@@ -110,3 +104,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "fieldLinkRowSubForm": {
+      "noTable": "You need at least one other table in the same database to link to.",
+      "selectTableLabel": "Select a table to link to",
+      "dataLost": "By changing the table, all data will be lost."
+    }
+  },
+  "fr": {
+    "fieldLinkRowSubForm": {
+      "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
+      "selectTableLabel": "Sélectionnez une table",
+      "dataLost": "En modifiant la table, toutes les données de la colonne seront supprimées"
+    }
+  }
+}
+</i18n>

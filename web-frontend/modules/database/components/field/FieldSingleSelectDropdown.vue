@@ -53,7 +53,9 @@
         ></FieldSingleSelectDropdownItem>
       </ul>
       <template v-if="canCreateOption">
-        <div class="select__description">Option not found</div>
+        <div class="select__description">
+          {{ $t('fieldSingleSelectDropdown.notFound') }}
+        </div>
         <div class="select__footer">
           <a
             class="select__footer-button"
@@ -61,7 +63,7 @@
             @click="createOption(query)"
           >
             <i class="fas fa-plus"></i>
-            Create {{ query }}
+            {{ $t('action.create') }} {{ query }}
           </a>
         </div>
       </template>
@@ -129,3 +131,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "fieldSingleSelectDropdown": {
+      "notFound": "Option not found"
+    }
+  },
+  "fr": {
+    "fieldSingleSelectDropdown": {
+      "notFound": "Option manquante"
+    }
+  }
+}
+</i18n>
