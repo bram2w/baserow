@@ -217,3 +217,11 @@ def get_example_row_metadata_field_serializer():
 example_pagination_row_serializer_class = get_example_pagination_serializer_class(
     get_example_row_serializer_class(True, user_field_names=True)
 )
+
+
+class MoveRowQueryParamsSerializer(serializers.Serializer):
+    before_id = serializers.IntegerField(required=False)
+
+
+class CreateRowQueryParamsSerializer(serializers.Serializer):
+    before = serializers.IntegerField(required=False)

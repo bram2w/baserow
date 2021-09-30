@@ -1118,6 +1118,23 @@ def test_move_row(api_client, data_fixture):
         "order": "4.00000000000000000000",
     }
 
+    # Make sure that we receive an error message when calling move row
+    # with an before_id != int
+    url = reverse("api:database:rows:move", kwargs={"table_id": table.id, "row_id": 1})
+    response = api_client.patch(
+        f"{url}?before_id=wrong_type",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert response_json["detail"]["before_id"][0]["code"] == "invalid"
+    assert (
+        response_json["detail"]["before_id"][0]["error"]
+        == "A valid integer is required."
+    )
+
 
 @pytest.mark.django_db
 def test_delete_row(api_client, data_fixture):
