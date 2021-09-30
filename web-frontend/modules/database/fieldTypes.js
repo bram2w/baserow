@@ -261,7 +261,13 @@ export class FieldType extends Registerable {
    * converted to a string.
    */
   prepareValueForCopy(field, value) {
-    return value.toString()
+    // In case that the 'value' is null or undefined (which means that the cell is empty)
+    // we simply want to return an empty string.
+    if (value == null) {
+      return ''
+    } else {
+      return value.toString()
+    }
   }
 
   /**
