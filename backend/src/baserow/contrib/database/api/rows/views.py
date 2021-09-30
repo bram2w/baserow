@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions
+from baserow.api.decorators import map_exceptions, validate_query_parameters
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.api.pagination import PageNumberPagination
@@ -49,6 +49,8 @@ from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .serializers import (
+    MoveRowQueryParamsSerializer,
+    CreateRowQueryParamsSerializer,
     RowSerializer,
     get_example_row_serializer_class,
     get_row_serializer_class,
@@ -345,7 +347,8 @@ class RowsView(APIView):
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, table_id):
+    @validate_query_parameters(CreateRowQueryParamsSerializer)
+    def post(self, request, table_id, query_params):
         """
         Creates a new row for the given table_id. Also the post data is validated
         according to the tables field types.
@@ -361,7 +364,7 @@ class RowsView(APIView):
         )
         data = validate_data(validation_serializer, request.data)
 
-        before_id = request.GET.get("before")
+        before_id = query_params.get("before")
         before = (
             RowHandler().get_row(request.user, table, before_id, model)
             if before_id
@@ -691,7 +694,8 @@ class RowMoveView(APIView):
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
         }
     )
-    def patch(self, request, table_id, row_id):
+    @validate_query_parameters(MoveRowQueryParamsSerializer)
+    def patch(self, request, table_id, row_id, query_params):
         """Moves the row to another position."""
 
         table = TableHandler().get_table(table_id)
@@ -700,7 +704,7 @@ class RowMoveView(APIView):
         user_field_names = "user_field_names" in request.GET
 
         model = table.get_model()
-        before_id = request.GET.get("before_id")
+        before_id = query_params.get("before_id")
         before = (
             RowHandler().get_row(request.user, table, before_id, model)
             if before_id
