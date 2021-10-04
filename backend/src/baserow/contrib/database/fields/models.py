@@ -96,7 +96,7 @@ class Field(
         return name
 
 
-class SelectOption(ParentFieldTrashableModelMixin, models.Model):
+class AbstractSelectOption(ParentFieldTrashableModelMixin, models.Model):
     value = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField()
@@ -105,6 +105,7 @@ class SelectOption(ParentFieldTrashableModelMixin, models.Model):
     )
 
     class Meta:
+        abstract = True
         ordering = (
             "order",
             "id",
@@ -112,6 +113,12 @@ class SelectOption(ParentFieldTrashableModelMixin, models.Model):
 
     def __str__(self):
         return self.value
+
+
+class SelectOption(AbstractSelectOption):
+    @classmethod
+    def get_max_value_length(cls):
+        return cls._meta.get_field("value").max_length
 
 
 class TextField(Field):
@@ -237,6 +244,21 @@ class FileField(Field):
 
 class SingleSelectField(Field):
     pass
+
+
+class MultipleSelectField(Field):
+    THROUGH_DATABASE_TABLE_PREFIX = "database_multipleselect_"
+
+    @property
+    def through_table_name(self):
+        """
+        Generating a unique through table name based on the relation id.
+
+        :return: The table name of the through model.
+        :rtype: string
+        """
+
+        return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.id}"
 
 
 class PhoneNumberField(Field):

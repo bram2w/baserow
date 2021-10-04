@@ -107,7 +107,7 @@ const mockedFields = {
     id: 12,
     name: 'single_select',
     order: 12,
-    primary: true,
+    primary: false,
     table_id: 42,
     type: 'single_select',
     select_options: [],
@@ -119,6 +119,15 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'phone_number',
+  },
+  multiple_select: {
+    id: 14,
+    name: 'multiple_select',
+    order: 14,
+    primary: false,
+    table_id: 42,
+    type: 'multiple_select',
+    select_options: [],
   },
 }
 

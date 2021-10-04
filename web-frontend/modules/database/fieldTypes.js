@@ -14,7 +14,7 @@ import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTe
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 import FieldCreatedOnLastModifiedSubForm from '@baserow/modules/database/components/field/FieldCreatedOnLastModifiedSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
-import FieldSingleSelectSubForm from '@baserow/modules/database/components/field/FieldSingleSelectSubForm'
+import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
@@ -27,6 +27,7 @@ import GridViewFieldDate from '@baserow/modules/database/components/view/grid/fi
 import GridViewFieldDateReadOnly from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDateReadOnly'
 import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFile'
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
+import GridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleSelect'
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
@@ -37,6 +38,7 @@ import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
 import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
+import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleSelect'
 import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
@@ -50,6 +52,7 @@ import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFi
 import RowEditFieldDateReadOnly from '@baserow/modules/database/components/row/RowEditFieldDateReadOnly'
 import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
+import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row/RowEditFieldMultipleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
@@ -1434,7 +1437,7 @@ export class SingleSelectFieldType extends FieldType {
   }
 
   getFormComponent() {
-    return FieldSingleSelectSubForm
+    return FieldSelectOptionsSubForm
   }
 
   getGridViewFieldComponent() {
@@ -1543,6 +1546,143 @@ export class SingleSelectFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+}
+
+export class MultipleSelectFieldType extends FieldType {
+  static getType() {
+    return 'multiple_select'
+  }
+
+  getIconClass() {
+    return 'list'
+  }
+
+  getName() {
+    return 'Multiple select'
+  }
+
+  getFormComponent() {
+    return FieldSelectOptionsSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldMultipleSelect
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldMultipleSelect
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldMultipleSelect
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const valuesA = a[name]
+      const valuesB = b[name]
+      const stringA =
+        valuesA.length > 0 ? valuesA.map((obj) => obj.value).join('') : ''
+      const stringB =
+        valuesB.length > 0 ? valuesB.map((obj) => obj.value).join('') : ''
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+
+  prepareValueForUpdate(field, value) {
+    if (value === undefined || value === null) {
+      return []
+    }
+    return value.map((item) => item.id)
+  }
+
+  prepareValueForCopy(field, value) {
+    let returnValue
+    if (value === undefined || value === null) {
+      returnValue = []
+    }
+    returnValue = value
+    return JSON.stringify({
+      value: returnValue,
+    })
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    let values
+    try {
+      values = JSON.parse(clipboardData.getData('text'))
+    } catch (SyntaxError) {
+      return []
+    }
+    // We need to check whether the pasted select_options belong to this field.
+    const pastedIDs = values.value.map((obj) => obj.id)
+    const fieldSelectOptionIDs = field.select_options.map((obj) => obj.id)
+    const pastedIDsBelongToField = pastedIDs.some((id) =>
+      fieldSelectOptionIDs.includes(id)
+    )
+
+    if (pastedIDsBelongToField) {
+      return values.value
+    } else {
+      return []
+    }
+  }
+
+  toHumanReadableString(field, value) {
+    if (value === undefined || value === null || value === []) {
+      return ''
+    }
+    return value.map((item) => item.value).join(', ')
+  }
+
+  getDocsDataType() {
+    return 'array'
+  }
+
+  getDocsDescription(field) {
+    const options = field.select_options
+      .map(
+        (option) =>
+          // @TODO move this template to a component.
+          `<div class="select-options-listing">
+              <div class="select-options-listing__id">${option.id}</div>
+              <div class="select-options-listing__value background-color--${option.color}">${option.value}</div>
+           </div>
+          `
+      )
+      .join('\n')
+
+    return `
+      Accepts an array of integers each representing the chosen select option id or null if none is selected.
+      <br />
+      ${options}
+    `
+  }
+
+  getDocsRequestExample() {
+    return [1]
+  }
+
+  getDocsResponseExample() {
+    return [
+      {
+        id: 1,
+        value: 'Option',
+        color: 'light-blue',
+      },
+    ]
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  getEmptyValue() {
+    return []
   }
 }
 

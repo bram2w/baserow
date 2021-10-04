@@ -242,6 +242,7 @@ export class ContainsViewFilterType extends ViewFilterType {
       'last_modified',
       'created_on',
       'single_select',
+      'multiple_select',
       'number',
     ]
   }
@@ -276,6 +277,7 @@ export class ContainsNotViewFilterType extends ViewFilterType {
       'last_modified',
       'created_on',
       'single_select',
+      'multiple_select',
       'number',
     ]
   }
@@ -665,6 +667,68 @@ export class SingleSelectNotEqualViewFilterType extends ViewFilterType {
   }
 }
 
+export class MultipleSelectHasFilterType extends ViewFilterType {
+  static getType() {
+    return 'multiple_select_has'
+  }
+
+  getName() {
+    return 'has'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['multiple_select']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return rowValue.some((option) => option.id === filterValueId)
+  }
+}
+
+export class MultipleSelectHasNotFilterType extends ViewFilterType {
+  static getType() {
+    return 'multiple_select_has_not'
+  }
+
+  getName() {
+    return 'has not'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['multiple_select']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return !rowValue.some((option) => option.id === filterValueId)
+  }
+}
+
 export class BooleanViewFilterType extends ViewFilterType {
   static getType() {
     return 'boolean'
@@ -792,6 +856,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'link_row',
       'file',
       'single_select',
+      'multiple_select',
       'phone_number',
     ]
   }
@@ -838,6 +903,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'link_row',
       'file',
       'single_select',
+      'multiple_select',
       'phone_number',
     ]
   }

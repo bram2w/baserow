@@ -224,9 +224,10 @@ def test_can_export_every_interesting_different_field_to_csv(
         "date_eu,last_modified_datetime_us,last_modified_date_us,"
         "last_modified_datetime_eu,last_modified_date_eu,created_on_datetime_us,"
         "created_on_date_us,created_on_datetime_eu,created_on_date_eu,link_row,"
-        "decimal_link_row,file_link_row,file,single_select,phone_number\r\n"
+        "decimal_link_row,file_link_row,file,single_select,multiple_select,"
+        "phone_number\r\n"
         "1,,,,,,,,,False,,,,,01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
-        "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,,,,,,\r\n"
+        "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,,,,,,,\r\n"
         "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,True,"
         "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,"
         "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
@@ -236,7 +237,7 @@ def test_can_export_every_interesting_different_field_to_csv(
         '.txt,unnamed row 2",'
         '"visible_name=a.txt url=http://localhost:8000/media/user_files/hashed_name.txt'
         ',visible_name=b.txt url=http://localhost:8000/media/user_files/other_name.txt"'
-        ",A,+4412345678\r\n"
+        ',A,"D,C,E",+4412345678\r\n'
     )
 
     assert expected == contents

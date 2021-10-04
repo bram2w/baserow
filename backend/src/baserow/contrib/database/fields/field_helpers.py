@@ -109,6 +109,16 @@ def construct_all_possible_field_kwargs(
                 ],
             }
         ],
+        "multiple_select": [
+            {
+                "name": "multiple_select",
+                "select_options": [
+                    {"id": 2, "value": "C", "color": "orange"},
+                    {"id": 3, "value": "D", "color": "yellow"},
+                    {"id": 4, "value": "E", "color": "green"},
+                ],
+            }
+        ],
         "phone_number": [{"name": "phone_number"}],
     }
     # If you have added a new field please add an entry into the dict above with any

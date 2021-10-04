@@ -104,3 +104,18 @@ class ReservedBaserowFieldNameException(Exception):
 class InvalidBaserowFieldName(Exception):
     """Raised when a field name is not provided or an invalid blank field name is
     provided."""
+
+
+class AllProvidedMultipleSelectValuesMustBeIntegers(Exception):
+    """
+    Raised when one tries to create or update a row for a MultipleSelectField that
+    contains a value other than an integer.
+    """
+
+
+class AllProvidedMultipleSelectValuesMustBeSelectOption(Exception):
+    """
+    Raised when one tries to create or update a row for a MultipleSelectField that
+    contains a SelectOption ID that either does not exists or does not belong to the
+    field.
+    """

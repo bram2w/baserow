@@ -1,15 +1,15 @@
 <template>
-  <div class="grid-view__cell grid-field-link-row__cell active">
-    <div class="grid-field-link-row__list">
+  <div class="grid-view__cell grid-field-many-to-many__cell active">
+    <div class="grid-field-many-to-many__list">
       <div
         v-for="item in value"
         :key="item.id"
-        class="grid-field-link-row__item"
+        class="grid-field-many-to-many__item"
       >
         <span
-          class="grid-field-link-row__name"
+          class="grid-field-many-to-many__name"
           :class="{
-            'grid-field-link-row__name--unnamed':
+            'grid-field-link-row__unnamed':
               item.value === null || item.value === '',
           }"
         >
@@ -17,7 +17,7 @@
         </span>
         <a
           v-if="!readOnly"
-          class="grid-field-link-row__remove"
+          class="grid-field-many-to-many__remove"
           @click.prevent="removeValue($event, value, item.id)"
         >
           <i class="fas fa-times"></i>
@@ -25,7 +25,9 @@
       </div>
       <a
         v-if="!readOnly"
-        class="grid-field-link-row__item grid-field-link-row__item--link"
+        class="
+          grid-field-many-to-many__item grid-field-many-to-many__item--link
+        "
         @click.prevent="showModal()"
       >
         <i class="fas fa-plus"></i>

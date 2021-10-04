@@ -12,6 +12,7 @@ import {
   LastModifiedFieldType,
   FileFieldType,
   SingleSelectFieldType,
+  MultipleSelectFieldType,
   PhoneNumberFieldType,
   CreatedOnFieldType,
 } from '@baserow/modules/database/fieldTypes'
@@ -38,6 +39,8 @@ import {
   DateAfterViewFilterType,
   LinkRowHasFilterType,
   LinkRowHasNotFilterType,
+  MultipleSelectHasFilterType,
+  MultipleSelectHasNotFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -107,6 +110,11 @@ export default (context) => {
   app.$registry.register('viewFilter', new BooleanViewFilterType(context))
   app.$registry.register('viewFilter', new LinkRowHasFilterType(context))
   app.$registry.register('viewFilter', new LinkRowHasNotFilterType(context))
+  app.$registry.register('viewFilter', new MultipleSelectHasFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new MultipleSelectHasNotFilterType(context)
+  )
   app.$registry.register('viewFilter', new EmptyViewFilterType(context))
   app.$registry.register('viewFilter', new NotEmptyViewFilterType(context))
   app.$registry.register('field', new TextFieldType(context))
@@ -121,6 +129,7 @@ export default (context) => {
   app.$registry.register('field', new EmailFieldType(context))
   app.$registry.register('field', new FileFieldType(context))
   app.$registry.register('field', new SingleSelectFieldType(context))
+  app.$registry.register('field', new MultipleSelectFieldType(context))
   app.$registry.register('field', new PhoneNumberFieldType(context))
   app.$registry.register('importer', new CSVImporterType(context))
   app.$registry.register('importer', new PasteImporterType(context))

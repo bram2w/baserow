@@ -436,6 +436,8 @@ class FieldType(
         Optionally a different expression can be generated. This is for example used
         by the single select field generates a mapping achieve the correct sorting
         based on the select option value.
+        Additionally an annotation can be returned which will get applied to the
+        queryset.
 
         :param field: The related field object instance.
         :type field: Field
@@ -443,8 +445,9 @@ class FieldType(
         :type field_name: str
         :param view_sort: The view sort that must be applied.
         :type view_sort: ViewSort
-        :return: The expression that is added directly to the model.objects.order().
-        :rtype: Expression or None
+        :return: Either the expression that is added directly to the
+            model.objects.order(), an AnnotatedOrderBy class or None.
+        :rtype: Optional[Expression, AnnotatedOrderBy, None]
         """
 
         return None

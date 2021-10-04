@@ -1,0 +1,19 @@
+@mixin select-option-style($display, $include-shadow-if-bg-light-blue: false) {
+  @extend %ellipsis;
+
+  display: $display;
+  color: $color-primary-900;
+  border-radius: 20px;
+  padding: 0 10px;
+  max-width: 100%;
+
+  @if $include-shadow-if-bg-light-blue {
+    &.background-color--light-blue {
+      .grid-view__column--matches-search & {
+        box-shadow: 0 0 2px 1px rgba($black, 0.16);
+      }
+    }
+  }
+
+  @include fixed-height(20px, 12px);
+}

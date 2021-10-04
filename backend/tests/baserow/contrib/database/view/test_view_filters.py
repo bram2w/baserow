@@ -273,12 +273,30 @@ def test_contains_filter_type(data_fixture):
         number_negative=True,
         number_decimal_places=2,
     )
+    field_handler = FieldHandler()
     single_select_field = data_fixture.create_single_select_field(table=table)
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table)
+    multiple_select_field = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Multiple Select",
+        type_name="multiple_select",
+        select_options=[
+            {"value": "CC", "color": "blue"},
+            {"value": "DC", "color": "blue"},
+        ],
+    )
     option_a = data_fixture.create_select_option(
         field=single_select_field, value="AC", color="blue"
     )
     option_b = data_fixture.create_select_option(
         field=single_select_field, value="BC", color="red"
+    )
+    option_c = data_fixture.create_select_option(
+        field=multiple_select_field, value="CE", color="green"
+    )
+    option_d = data_fixture.create_select_option(
+        field=multiple_select_field, value="DE", color="yellow"
     )
 
     handler = ViewHandler()
@@ -293,6 +311,7 @@ def test_contains_filter_type(data_fixture):
             f"field_{single_select_field.id}": option_a,
         }
     )
+    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
     model.objects.create(
         **{
             f"field_{text_field.id}": "",
@@ -312,6 +331,7 @@ def test_contains_filter_type(data_fixture):
             f"field_{single_select_field.id}": option_b,
         }
     )
+    getattr(row_3, f"field_{multiple_select_field.id}").set([option_c.id])
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="contains", value="john"
@@ -422,6 +442,27 @@ def test_contains_filter_type(data_fixture):
     assert row.id in ids
     assert row_3.id in ids
 
+    view_filter.field = multiple_select_field
+    view_filter.value = "C"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row.id in ids
+    assert row_3.id in ids
+
+    view_filter.field = multiple_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = "D"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row.id in ids
+
 
 @pytest.mark.django_db
 def test_contains_not_filter_type(data_fixture):
@@ -440,11 +481,18 @@ def test_contains_not_filter_type(data_fixture):
         number_decimal_places=2,
     )
     single_select_field = data_fixture.create_single_select_field(table=table)
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table)
     option_a = data_fixture.create_select_option(
         field=single_select_field, value="AC", color="blue"
     )
     option_b = data_fixture.create_select_option(
         field=single_select_field, value="BC", color="red"
+    )
+    option_c = data_fixture.create_select_option(
+        field=multiple_select_field, value="CE", color="green"
+    )
+    option_d = data_fixture.create_select_option(
+        field=multiple_select_field, value="DE", color="yellow"
     )
 
     handler = ViewHandler()
@@ -459,6 +507,8 @@ def test_contains_not_filter_type(data_fixture):
             f"field_{single_select_field.id}": option_a,
         }
     )
+    getattr(row, f"field_{multiple_select_field.id}").set([option_c.id, option_d.id])
+
     row_2 = model.objects.create(
         **{
             f"field_{text_field.id}": "",
@@ -468,6 +518,7 @@ def test_contains_not_filter_type(data_fixture):
             f"field_{single_select_field.id}": None,
         }
     )
+
     row_3 = model.objects.create(
         **{
             f"field_{text_field.id}": "This is a test field.",
@@ -478,6 +529,7 @@ def test_contains_not_filter_type(data_fixture):
             f"field_{single_select_field.id}": option_b,
         }
     )
+    getattr(row_3, f"field_{multiple_select_field.id}").set([option_d.id])
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="contains_not", value="john"
@@ -583,6 +635,27 @@ def test_contains_not_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_2.id in ids
+
+    view_filter.field = multiple_select_field
+    view_filter.value = ""
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = multiple_select_field
+    view_filter.value = "D"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_2.id in ids
+
+    view_filter.field = multiple_select_field
+    view_filter.value = "C"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_3.id in ids
 
 
 @pytest.mark.django_db
@@ -2048,6 +2121,10 @@ def test_empty_filter_type(data_fixture):
     single_select_field = data_fixture.create_single_select_field(table=table)
     option_1 = data_fixture.create_select_option(field=single_select_field)
 
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table)
+    option_2 = data_fixture.create_select_option(field=multiple_select_field)
+    option_3 = data_fixture.create_select_option(field=multiple_select_field)
+
     tmp_table = data_fixture.create_database_table(database=table.database)
     tmp_field = data_fixture.create_text_field(table=tmp_table, primary=True)
     link_row_field = FieldHandler().create_field(
@@ -2092,6 +2169,7 @@ def test_empty_filter_type(data_fixture):
         }
     )
     getattr(row_2, f"field_{link_row_field.id}").add(tmp_row.id)
+    getattr(row_2, f"field_{multiple_select_field.id}").add(option_2.id)
     row_3 = model.objects.create(
         **{
             f"field_{text_field.id}": " ",
@@ -2111,6 +2189,7 @@ def test_empty_filter_type(data_fixture):
         }
     )
     getattr(row_3, f"field_{link_row_field.id}").add(tmp_row.id)
+    getattr(row_3, f"field_{multiple_select_field.id}").add(option_2.id, option_3.id)
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="empty", value=""
@@ -2153,6 +2232,10 @@ def test_empty_filter_type(data_fixture):
     view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
+    view_filter.field = multiple_select_field
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
+
 
 @pytest.mark.django_db
 def test_not_empty_filter_type(data_fixture):
@@ -2173,6 +2256,10 @@ def test_not_empty_filter_type(data_fixture):
     file_field = data_fixture.create_file_field(table=table)
     single_select_field = data_fixture.create_single_select_field(table=table)
     option_1 = data_fixture.create_select_option(field=single_select_field)
+
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table)
+    option_2 = data_fixture.create_select_option(field=multiple_select_field)
+    option_3 = data_fixture.create_select_option(field=multiple_select_field)
 
     tmp_table = data_fixture.create_database_table(database=table.database)
     tmp_field = data_fixture.create_text_field(table=tmp_table, primary=True)
@@ -2218,6 +2305,8 @@ def test_not_empty_filter_type(data_fixture):
         }
     )
     getattr(row_2, f"field_{link_row_field.id}").add(tmp_row.id)
+    getattr(row_2, f"field_{multiple_select_field.id}").add(option_2.id)
+    getattr(row_2, f"field_{multiple_select_field.id}").add(option_3.id)
 
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="not_empty", value=""
@@ -2637,6 +2726,26 @@ def test_link_row_has_filter_type(data_fixture):
     assert row_3.id in ids
     assert row_with_all_relations.id in ids
 
+    # Chaining filters should also work
+    # creating a second filter for the same field
+    data_fixture.create_view_filter(
+        view=grid_view,
+        field=link_row_field,
+        type="link_row_has",
+        value=f"{related_row_1.id}",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_with_all_relations.id in ids
+
+    # Changing the view to use "OR" for multiple filters
+    handler.update_view(user=user, view=grid_view, filter_type="OR")
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_3.id in ids
+    assert row_with_all_relations.id in ids
+
 
 @pytest.mark.django_db
 def test_link_row_has_not_filter_type(data_fixture):
@@ -2775,3 +2884,302 @@ def test_link_row_has_not_filter_type(data_fixture):
     assert len(ids) == 3
     assert row_3.id not in ids
     assert row_with_all_relations.id not in ids
+
+    # Chaining filters should also work
+    # creating a second filter for the same field
+    data_fixture.create_view_filter(
+        view=grid_view,
+        field=link_row_field,
+        type="link_row_has_not",
+        value=f"{related_row_1.id}",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+
+    # Changing the view to use "OR" for multiple filters
+    handler.update_view(user=user, view=grid_view, filter_type="OR")
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+    assert row_with_all_relations.id not in ids
+
+
+@pytest.mark.django_db
+def test_multiple_select_has_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    multiple_select_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_select",
+        name="Multi Select",
+        select_options=[
+            {"value": "Option 1", "color": "blue"},
+            {"value": "Option 2", "color": "blue"},
+            {"value": "Option 3", "color": "red"},
+        ],
+    )
+
+    row_handler = RowHandler()
+    model = table.get_model()
+
+    select_options = multiple_select_field.select_options.all()
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_select_field.id}": [
+                select_options[0].id,
+                select_options[1].id,
+            ],
+        },
+    )
+    row_2 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_select_field.id}": [
+                select_options[1].id,
+                select_options[2].id,
+            ],
+        },
+    )
+
+    row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_select_field.id}": [],
+        },
+    )
+
+    row_with_all_select_options = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_select_field.id}": [
+                select_options[0].id,
+                select_options[1].id,
+                select_options[2].id,
+            ],
+        },
+    )
+
+    handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_select_field,
+        type="multiple_select_has",
+        value=f"",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = "not_number"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = "-1"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.value = f"{select_options[0].id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_with_all_select_options.id in ids
+
+    view_filter.value = f"{select_options[1].id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_with_all_select_options.id in ids
+
+    view_filter.value = f"{select_options[2].id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_with_all_select_options.id in ids
+
+    # chaining filters should also work
+    view_filter.value = f"{select_options[2].id}"
+    view_filter.save()
+
+    # creating a second filter for the same field
+    data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_select_field,
+        type="multiple_select_has",
+        value=f"{select_options[1].id}",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_with_all_select_options.id in ids
+
+    # Changing the view to use "OR" for multiple filters
+    handler.update_view(user=user, view=grid_view, filter_type="OR")
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_with_all_select_options.id in ids
+
+
+@pytest.mark.django_db
+def test_multiple_select_has_filter_type_export_import():
+    view_filter_type = view_filter_type_registry.get("multiple_select_has")
+    id_mapping = {"database_field_select_options": {1: 2}}
+    assert view_filter_type.get_export_serialized_value("1") == "1"
+    assert view_filter_type.set_import_serialized_value("1", id_mapping) == "2"
+    assert view_filter_type.set_import_serialized_value("", id_mapping) == ""
+    assert view_filter_type.set_import_serialized_value("wrong", id_mapping) == ""
+
+
+@pytest.mark.django_db
+def test_multiple_select_has_not_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    field_handler = FieldHandler()
+    multiple_select_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_select",
+        name="Multi Select",
+        select_options=[
+            {"value": "Option 1", "color": "blue"},
+            {"value": "Option 2", "color": "blue"},
+            {"value": "Option 3", "color": "red"},
+        ],
+    )
+
+    row_handler = RowHandler()
+    model = table.get_model()
+
+    select_options = multiple_select_field.select_options.all()
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_select_field.id}": [
+                select_options[0].id,
+                select_options[1].id,
+            ],
+        },
+    )
+    row_2 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_select_field.id}": [
+                select_options[1].id,
+                select_options[2].id,
+            ],
+        },
+    )
+
+    row_3 = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_select_field.id}": [],
+        },
+    )
+
+    row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{multiple_select_field.id}": [
+                select_options[0].id,
+                select_options[1].id,
+                select_options[2].id,
+            ],
+        },
+    )
+
+    handler = ViewHandler()
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_select_field,
+        type="multiple_select_has_not",
+        value=f"",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = "not_number"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = "-1"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    view_filter.value = f"{select_options[0].id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = f"{select_options[1].id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    view_filter.value = f"{select_options[2].id}"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_3.id in ids
+
+    # chaining filters should also work
+    view_filter.value = f"{select_options[2].id}"
+    view_filter.save()
+
+    # creating a second filter for the same field
+    data_fixture.create_view_filter(
+        view=grid_view,
+        field=multiple_select_field,
+        type="multiple_select_has_not",
+        value=f"{select_options[1].id}",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_3.id in ids
+
+    # Changing the view to use "OR" for multiple filters
+    handler.update_view(user=user, view=grid_view, filter_type="OR")
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_3.id in ids

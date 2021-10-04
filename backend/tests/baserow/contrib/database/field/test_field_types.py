@@ -506,6 +506,7 @@ def test_human_readable_values(data_fixture):
         "positive_decimal": "",
         "positive_int": "",
         "single_select": "",
+        "multiple_select": "",
         "text": "",
         "url": "",
     }
@@ -535,6 +536,7 @@ def test_human_readable_values(data_fixture):
         "positive_decimal": "1.2",
         "positive_int": "1",
         "single_select": "A",
+        "multiple_select": "D, C, E",
         "text": "text",
         "url": "https://www.google.com",
     }
