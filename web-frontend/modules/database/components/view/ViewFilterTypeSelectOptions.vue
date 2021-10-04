@@ -1,20 +1,20 @@
 <template>
-  <FieldSingleSelectDropdown
+  <FieldSelectOptionsDropdown
     :value="copy"
     :options="field.select_options"
     :disabled="readOnly"
     class="dropdown--floating filters__value-dropdown dropdown--tiny"
     @input="input"
-  ></FieldSingleSelectDropdown>
+  ></FieldSelectOptionsDropdown>
 </template>
 
 <script>
-import FieldSingleSelectDropdown from '@baserow/modules/database/components/field/FieldSingleSelectDropdown'
+import FieldSelectOptionsDropdown from '@baserow/modules/database/components/field/FieldSelectOptionsDropdown'
 import viewFilter from '@baserow/modules/database/mixins/viewFilter'
 
 export default {
   name: 'ViewFilterTypeSelectOptions',
-  components: { FieldSingleSelectDropdown },
+  components: { FieldSelectOptionsDropdown },
   mixins: [viewFilter],
   computed: {
     copy() {

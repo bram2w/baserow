@@ -20,7 +20,7 @@
 @import 'fields/date';
 @import 'fields/link_row';
 @import 'fields/file';
-@import 'fields/single_select';
+@import 'fields/multiple_select';
 @import 'views/grid';
 @import 'views/grid/text';
 @import 'views/grid/long_text';
@@ -30,6 +30,8 @@
 @import 'views/grid/link_row';
 @import 'views/grid/file';
 @import 'views/grid/single_select';
+@import 'views/grid/multiple_select';
+@import 'views/grid/many_to_many';
 @import 'views/form';
 @import 'box_page';
 @import 'loading';
@@ -57,6 +59,7 @@
 @import 'file_field_modal';
 @import 'select_options';
 @import 'select_options_listing';
+@import 'select_options_dropdown';
 @import 'color_select';
 @import 'group_member';
 @import 'separator';

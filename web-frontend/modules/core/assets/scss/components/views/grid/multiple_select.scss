@@ -1,0 +1,11 @@
+.grid-field-multiple-select__item {
+  white-space: nowrap;
+  margin: 6px 4px 4px 4px;
+  overflow: unset;
+
+  @include select-option-style(flex, true);
+
+  .grid-view__column--matches-search .grid-field-many-to-many__cell.active & {
+    background-color: $color-primary-200;
+  }
+}

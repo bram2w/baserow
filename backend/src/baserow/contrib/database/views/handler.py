@@ -11,6 +11,7 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import row_created
 from .exceptions import (
@@ -550,6 +551,14 @@ class ViewHandler:
             field_type = model._field_objects[view_sort.field_id]["type"]
 
             order = field_type.get_order(field, field_name, view_sort)
+            annotation = None
+
+            if isinstance(order, AnnotatedOrder):
+                annotation = order.annotation
+                order = order.order
+
+            if annotation is not None:
+                queryset = queryset.annotate(**annotation)
 
             # If the field type does not have a specific ordering expression we can
             # order the default way.

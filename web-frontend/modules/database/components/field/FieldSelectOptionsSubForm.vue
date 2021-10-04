@@ -20,7 +20,7 @@ import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 import FieldSelectOptions from '@baserow/modules/database/components/field/FieldSelectOptions'
 
 export default {
-  name: 'FieldNumberSubForm',
+  name: 'FieldSelectOptionsSubForm',
   components: { FieldSelectOptions },
   mixins: [form, fieldSubForm],
   data() {

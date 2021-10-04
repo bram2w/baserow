@@ -5,7 +5,9 @@ from math import floor, ceil
 from dateutil import parser
 from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db.models import Q, IntegerField, BooleanField, DateTimeField
+from django.db.models.functions import Cast
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
 
@@ -16,6 +18,7 @@ from baserow.contrib.database.fields.field_filters import (
 )
 from baserow.contrib.database.fields.field_types import (
     CreatedOnFieldType,
+    MultipleSelectFieldType,
     TextFieldType,
     LongTextFieldType,
     URLFieldType,
@@ -137,6 +140,7 @@ class ContainsViewFilterType(ViewFilterType):
         LastModifiedFieldType.type,
         CreatedOnFieldType.type,
         SingleSelectFieldType.type,
+        MultipleSelectFieldType.type,
         NumberFieldType.type,
     ]
 
@@ -509,24 +513,40 @@ class BooleanViewFilterType(ViewFilterType):
         return Q()
 
 
-class LinkRowHasViewFilterType(ViewFilterType):
+class ManyToManyHasBaseViewFilter(ViewFilterType):
     """
-    The link row has filter accepts the row ID of the related table as value. It
-    filters the queryset so that only rows that have a relationship with the provided
-    row ID will remain. So if for example '10' is provided, then only rows where the
-    link row field has a relationship with the row '10' persists.
+    The many to many base filter accepts an relationship ID. It filters the queryset so
+    that only rows that have a relationship with the provided ID will remain. So if for
+    example '10' is provided, then only rows where the many to many field has a
+    relationship to a foreignkey with the ID of 10.
     """
-
-    type = "link_row_has"
-    compatible_field_types = [LinkRowFieldType.type]
 
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
 
         try:
-            return Q(**{f"{field_name}__in": [int(value)]})
+            # We annotate the queryset with an aggregated Array containing all the ids
+            # of the related field. Then we filter on this annoted column by checking
+            # which of the items in the array overlap with a new Array containing the
+            # value of the filter. That way we can make sure that chaining more than
+            # one filter works correctly.
+            return AnnotatedQ(
+                annotation={
+                    f"{field_name}_array": ArrayAgg(Cast(field_name, IntegerField())),
+                },
+                q={f"{field_name}_array__overlap": [int(value)]},
+            )
         except ValueError:
             return Q()
+
+
+class LinkRowHasViewFilterType(ManyToManyHasBaseViewFilter):
+    """
+    The link row has filter accepts the row ID of the related table as value.
+    """
+
+    type = "link_row_has"
+    compatible_field_types = [LinkRowFieldType.type]
 
     def get_preload_values(self, view_filter):
         """
@@ -568,6 +588,36 @@ class LinkRowHasNotViewFilterType(NotViewFilterTypeMixin, LinkRowHasViewFilterTy
     type = "link_row_has_not"
 
 
+class MultipleSelectHasViewFilterType(ManyToManyHasBaseViewFilter):
+    """
+    The multiple select has filter accepts the ID of the select_option to filter for
+    and filters the rows where the multiple select field has the provided select_option.
+    """
+
+    type = "multiple_select_has"
+    compatible_field_types = [MultipleSelectFieldType.type]
+
+    def set_import_serialized_value(self, value, id_mapping):
+        try:
+            value = int(value)
+        except ValueError:
+            return ""
+
+        return str(id_mapping["database_field_select_options"].get(value, ""))
+
+
+class MultipleSelectHasNotViewFilterType(
+    NotViewFilterTypeMixin, MultipleSelectHasViewFilterType
+):
+    """
+    The multiple select has filter accepts the ID of the select_option to filter for
+    and filters the rows where the multiple select field does not have the provided
+    select_option.
+    """
+
+    type = "multiple_select_has_not"
+
+
 class EmptyViewFilterType(ViewFilterType):
     """
     The empty filter checks if the field value is empty, this can be '', null,
@@ -589,6 +639,7 @@ class EmptyViewFilterType(ViewFilterType):
         FileFieldType.type,
         SingleSelectFieldType.type,
         PhoneNumberFieldType.type,
+        MultipleSelectFieldType.type,
     ]
 
     def get_filter(self, field_name, value, model_field, field):

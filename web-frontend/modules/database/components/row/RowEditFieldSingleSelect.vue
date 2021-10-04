@@ -1,6 +1,6 @@
 <template>
   <div class="control__elements">
-    <FieldSingleSelectDropdown
+    <FieldSelectOptionsDropdown
       :value="valueId"
       :options="field.select_options"
       :allow-create-option="true"
@@ -9,7 +9,7 @@
       @input="updateValue($event, value)"
       @create-option="createOption($event)"
       @hide="touch()"
-    ></FieldSingleSelectDropdown>
+    ></FieldSelectOptionsDropdown>
     <div v-show="touched && !valid" class="error">
       {{ error }}
     </div>
@@ -18,15 +18,11 @@
 
 <script>
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
+import selectOptions from '@baserow/modules/database/mixins/selectOptions'
 import singleSelectField from '@baserow/modules/database/mixins/singleSelectField'
 
 export default {
-  name: 'RowEditFieldSingleSelectVue',
-  mixins: [rowEditField, singleSelectField],
-  methods: {
-    updateValue(...args) {
-      singleSelectField.methods.updateValue.call(this, ...args)
-    },
-  },
+  name: 'RowEditFieldSingleSelect',
+  mixins: [rowEditField, selectOptions, singleSelectField],
 }
 </script>

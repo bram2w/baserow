@@ -127,6 +127,7 @@ def setup_interesting_test_table(data_fixture):
             },
         ],
         "single_select": SelectOption.objects.get(value="A"),
+        "multiple_select": None,
         "phone_number": "+4412345678",
     }
 
@@ -220,6 +221,17 @@ def setup_interesting_test_table(data_fixture):
     )
     getattr(row, f"field_{name_to_field_id['file_link_row']}").add(
         linked_row_7.id, linked_row_8.id
+    )
+
+    # multiple select
+    getattr(row, f"field_{name_to_field_id['multiple_select']}").add(
+        SelectOption.objects.get(value="D").id
+    )
+    getattr(row, f"field_{name_to_field_id['multiple_select']}").add(
+        SelectOption.objects.get(value="C").id
+    )
+    getattr(row, f"field_{name_to_field_id['multiple_select']}").add(
+        SelectOption.objects.get(value="E").id
     )
     return table, user, row, blank_row
 

@@ -283,6 +283,23 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
             "id": SelectOption.objects.get(value="A").id,
             "value": "A",
         },
+        "multiple_select": [
+            {
+                "color": "yellow",
+                "id": SelectOption.objects.get(value="D").id,
+                "value": "D",
+            },
+            {
+                "color": "orange",
+                "id": SelectOption.objects.get(value="C").id,
+                "value": "C",
+            },
+            {
+                "color": "green",
+                "id": SelectOption.objects.get(value="E").id,
+                "value": "E",
+            },
+        ],
         "text": "text",
         "url": "https://www.google.com",
     }

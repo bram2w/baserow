@@ -69,6 +69,7 @@ class DatabaseConfig(AppConfig):
             EmailFieldType,
             FileFieldType,
             SingleSelectFieldType,
+            MultipleSelectFieldType,
             PhoneNumberFieldType,
         )
 
@@ -84,12 +85,28 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())
         field_type_registry.register(SingleSelectFieldType())
+        field_type_registry.register(MultipleSelectFieldType())
         field_type_registry.register(PhoneNumberFieldType())
 
-        from .fields.field_converters import LinkRowFieldConverter, FileFieldConverter
+        from .fields.field_converters import (
+            LinkRowFieldConverter,
+            FileFieldConverter,
+            TextFieldToMultipleSelectFieldConverter,
+            MultipleSelectFieldToTextFieldConverter,
+            MultipleSelectFieldToSingleSelectFieldConverter,
+            SingleSelectFieldToMultipleSelectFieldConverter,
+        )
 
         field_converter_registry.register(LinkRowFieldConverter())
         field_converter_registry.register(FileFieldConverter())
+        field_converter_registry.register(TextFieldToMultipleSelectFieldConverter())
+        field_converter_registry.register(MultipleSelectFieldToTextFieldConverter())
+        field_converter_registry.register(
+            MultipleSelectFieldToSingleSelectFieldConverter()
+        )
+        field_converter_registry.register(
+            SingleSelectFieldToMultipleSelectFieldConverter()
+        )
 
         from .views.view_types import GridViewType, FormViewType
 
@@ -119,6 +136,8 @@ class DatabaseConfig(AppConfig):
             SingleSelectNotEqualViewFilterType,
             LinkRowHasViewFilterType,
             LinkRowHasNotViewFilterType,
+            MultipleSelectHasViewFilterType,
+            MultipleSelectHasNotViewFilterType,
         )
 
         view_filter_type_registry.register(EqualViewFilterType())
@@ -143,6 +162,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(BooleanViewFilterType())
         view_filter_type_registry.register(EmptyViewFilterType())
         view_filter_type_registry.register(NotEmptyViewFilterType())
+        view_filter_type_registry.register(MultipleSelectHasViewFilterType())
+        view_filter_type_registry.register(MultipleSelectHasNotViewFilterType())
 
         from .application_types import DatabaseApplicationType
 

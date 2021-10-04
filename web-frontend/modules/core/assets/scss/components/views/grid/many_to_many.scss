@@ -1,0 +1,81 @@
+.grid-field-many-to-many__cell.active {
+  bottom: auto;
+  right: auto;
+  height: auto;
+  min-width: calc(100% + 4px);
+  min-height: calc(100% + 4px);
+}
+
+.grid-field-many-to-many__list {
+  overflow: hidden;
+  display: flex;
+  flex-flow: row;
+  flex-wrap: nowrap;
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+
+  .grid-field-many-to-many__cell.active & {
+    height: auto;
+    flex-wrap: wrap;
+  }
+}
+
+.grid-field-many-to-many__item {
+  white-space: nowrap;
+  margin: 5px 4px;
+  padding: 0 5px;
+  background-color: $color-neutral-100;
+  border-radius: 3px;
+  display: flex;
+
+  @include fixed-height(22px, 13px);
+
+  .grid-field-many-to-many__cell.active & {
+    background-color: $color-primary-100;
+
+    .grid-view__column--matches-search & {
+      background-color: $color-primary-200;
+    }
+  }
+
+  &.grid-field-many-to-many__item--link {
+    display: none;
+    font-size: 11px;
+    color: $color-primary-900;
+
+    &:hover {
+      background-color: $color-primary-200;
+
+      .grid-view__column--matches-search & {
+        background-color: $color-primary-300;
+      }
+    }
+
+    .grid-field-many-to-many__cell.active & {
+      display: block;
+    }
+  }
+}
+
+.grid-field-many-to-many__name {
+  @extend %ellipsis;
+
+  max-width: 140px;
+}
+
+.grid-field-many-to-many__remove {
+  display: none;
+  color: $color-primary-900;
+  margin-left: 5px;
+  font-size: 11px;
+  padding: 0 2px;
+
+  &:hover {
+    color: $color-neutral-500;
+  }
+
+  .grid-field-many-to-many__cell.active & {
+    display: block;
+  }
+}

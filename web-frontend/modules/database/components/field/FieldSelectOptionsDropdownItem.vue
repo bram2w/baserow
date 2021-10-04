@@ -1,6 +1,6 @@
 <template>
   <li
-    class="field-single-select__dropdown-item"
+    class="select-options__dropdown-item"
     :class="{
       hidden: !isVisible(query),
       active: isActive(value),
@@ -9,12 +9,12 @@
     }"
   >
     <a
-      class="field-single-select__dropdown-link"
+      class="select-options__dropdown-link"
       @click="select(value, disabled)"
       @mousemove="hover(value, disabled)"
     >
       <div
-        class="field-single-select__dropdown-option"
+        class="select-options__dropdown-option"
         :class="'background-color--' + color"
       >
         {{ name }}
@@ -27,7 +27,7 @@
 import dropdownItem from '@baserow/modules/core/mixins/dropdownItem'
 
 export default {
-  name: 'FieldSingleSelectDropdownItem',
+  name: 'FieldSelectOptionsDropdownItem',
   mixins: [dropdownItem],
   props: {
     color: {

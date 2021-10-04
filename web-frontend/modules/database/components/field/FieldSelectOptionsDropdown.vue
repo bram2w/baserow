@@ -9,12 +9,12 @@
   >
     <a
       v-if="showInput"
-      class="field-single-select__dropdown-selected dropdown__selected"
+      class="select-options__dropdown-selected dropdown__selected"
       @click="show()"
     >
       <div
         v-if="hasValue()"
-        class="field-single-select__dropdown-option"
+        class="select-options__dropdown-option"
         :class="'background-color--' + selectedColor"
       >
         {{ selectedName }}
@@ -39,18 +39,19 @@
         v-auto-overflow-scroll
         class="select__items"
       >
-        <FieldSingleSelectDropdownItem
+        <FieldSelectOptionsDropdownItem
+          v-if="showEmptyValue"
           :name="''"
           :value="null"
           :color="''"
-        ></FieldSingleSelectDropdownItem>
-        <FieldSingleSelectDropdownItem
+        ></FieldSelectOptionsDropdownItem>
+        <FieldSelectOptionsDropdownItem
           v-for="option in options"
           :key="option.id"
           :name="option.value"
           :value="option.id"
           :color="option.color"
-        ></FieldSingleSelectDropdownItem>
+        ></FieldSelectOptionsDropdownItem>
       </ul>
       <template v-if="canCreateOption">
         <div class="select__description">
@@ -73,11 +74,11 @@
 
 <script>
 import dropdown from '@baserow/modules/core/mixins/dropdown'
-import FieldSingleSelectDropdownItem from '@baserow/modules/database/components/field/FieldSingleSelectDropdownItem'
+import FieldSelectOptionsDropdownItem from '@baserow/modules/database/components/field/FieldSelectOptionsDropdownItem'
 
 export default {
-  name: 'FieldSingleSelectDropdown',
-  components: { FieldSingleSelectDropdownItem },
+  name: 'FieldSelectOptionsDropdown',
+  components: { FieldSelectOptionsDropdownItem },
   mixins: [dropdown],
   props: {
     options: {
@@ -88,6 +89,11 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    showEmptyValue: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   data() {

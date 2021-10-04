@@ -12,6 +12,8 @@ from baserow.contrib.database.fields.models import (
     CreatedOnField,
     LastModifiedField,
     LongTextField,
+    MultipleSelectField,
+    SelectOption,
     URLField,
     DateField,
     EmailField,
@@ -1069,3 +1071,245 @@ def test_created_on_field_type(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_multiple_select_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Multi 1",
+            "type": "multiple_select",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    field_1_id = response_json["id"]
+    assert response_json["name"] == "Multi 1"
+    assert response_json["type"] == "multiple_select"
+    assert response_json["select_options"] == []
+    assert MultipleSelectField.objects.all().count() == 1
+    assert SelectOption.objects.all().count() == 0
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Multi 2",
+            "type": "multiple_select",
+            "select_options": [{"value": "Option 1", "color": "red"}],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    field_2_id = response_json["id"]
+    select_options = SelectOption.objects.all()
+    assert len(select_options) == 1
+    assert select_options[0].field_id == field_2_id
+    assert select_options[0].value == "Option 1"
+    assert select_options[0].color == "red"
+    assert select_options[0].order == 0
+    assert response_json["name"] == "Multi 2"
+    assert response_json["type"] == "multiple_select"
+    assert response_json["select_options"] == [
+        {"id": select_options[0].id, "value": "Option 1", "color": "red"}
+    ]
+    assert MultipleSelectField.objects.all().count() == 2
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_2_id}),
+        {"name": "New Multi 1"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["name"] == "New Multi 1"
+    assert response_json["type"] == "multiple_select"
+    assert response_json["select_options"] == [
+        {"id": select_options[0].id, "value": "Option 1", "color": "red"}
+    ]
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_2_id}),
+        {
+            "name": "New Multi 1",
+            "select_options": [
+                {"id": select_options[0].id, "value": "Option 1 B", "color": "red 2"},
+                {"value": "Option 2 B", "color": "blue 2"},
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    select_options = SelectOption.objects.all()
+    assert len(select_options) == 2
+    assert response_json["select_options"] == [
+        {"id": select_options[0].id, "value": "Option 1 B", "color": "red 2"},
+        {"id": select_options[1].id, "value": "Option 2 B", "color": "blue 2"},
+    ]
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_2_id}),
+        {"name": "New Multi 1", "select_options": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert SelectOption.objects.all().count() == 0
+    assert response_json["select_options"] == []
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_2_id}),
+        {
+            "name": "New Multi 1",
+            "select_options": [
+                {"value": "Option 1 B", "color": "red 2"},
+                {"value": "Option 2 B", "color": "blue 2"},
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    select_options = SelectOption.objects.all()
+    assert len(select_options) == 2
+
+    response = api_client.delete(
+        reverse("api:database:fields:item", kwargs={"field_id": field_2_id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+    assert MultipleSelectField.objects.all().count() == 1
+    assert SelectOption.objects.all().count() == 0
+
+    response = api_client.patch(
+        reverse("api:database:fields:item", kwargs={"field_id": field_1_id}),
+        {
+            "select_options": [
+                {"value": "Option 1", "color": "red"},
+                {"value": "Option 2", "color": "blue"},
+                {"value": "Option 3", "color": "green"},
+                {"value": "Option 4", "color": "yellow"},
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    select_options = SelectOption.objects.all()
+    assert len(select_options) == 4
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{field_1_id}": "Nothing"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"][f"field_{field_1_id}"]["non_field_errors"][0]["code"]
+        == "not_a_list"
+    )
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{field_1_id}": [999999]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"][f"field_{field_1_id}"][0][0]["code"] == "does_not_exist"
+    )
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{field_1_id}": [select_options[0].id]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json[f"field_{field_1_id}"][0]["id"] == select_options[0].id
+    assert response_json[f"field_{field_1_id}"][0]["value"] == "Option 1"
+    assert response_json[f"field_{field_1_id}"][0]["color"] == "red"
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{field_1_id}": [select_options[2].id]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    row_id = response.json()["id"]
+
+    response = api_client.patch(
+        reverse(
+            "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row_id}
+        ),
+        {f"field_{field_1_id}": [select_options[2].id, select_options[0].id]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+
+    model = table.get_model()
+    rows = list(model.objects.all().enhance_by_fields())
+    assert len(rows) == 2
+
+    field_cell = getattr(rows[1], f"field_{field_1_id}").all()
+    assert field_cell[0].id == select_options[2].id
+    assert field_cell[1].id == select_options[0].id
+
+    # Create second multiple select field
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "Another Multi Field",
+            "type": "multiple_select",
+            "select_options": [
+                {"value": "Option 1", "color": "red"},
+                {"value": "Option 2", "color": "blue"},
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    field_2_id = response_json["id"]
+    field_2_select_options = response_json["select_options"]
+    all_select_options = SelectOption.objects.all()
+    assert len(all_select_options) == 6
+    assert MultipleSelectField.objects.all().count() == 2
+
+    # Make sure we can create a row with just one field
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{field_2_id}": [field_2_select_options[0]["id"]]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
