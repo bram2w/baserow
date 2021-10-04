@@ -14,11 +14,13 @@
     </div>
     <ul
       v-if="!isLoading && views.length > 0"
+      ref="dropdown"
       v-auto-overflow-scroll
       class="select__items"
     >
       <ViewsContextItem
         v-for="view in searchAndOrder(views)"
+        :ref="'view-' + view.id"
         :key="view.id"
         v-sortable="{ id: view.id, update: order, marginTop: -1.5 }"
         :view="view"
@@ -51,6 +53,7 @@
             :ref="'createViewModal' + type"
             :table="table"
             :view-type="viewType"
+            @created="scrollViewDropdownToBottom()"
           ></CreateViewModal>
         </a>
       </div>
@@ -62,6 +65,7 @@
 import { mapState } from 'vuex'
 
 import context from '@baserow/modules/core/mixins/context'
+import dropdownHelpers from '@baserow/modules/core/mixins/dropdownHelpers'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContextItem from '@baserow/modules/database/components/view/ViewsContextItem'
 import CreateViewModal from '@baserow/modules/database/components/view/CreateViewModal'
@@ -72,7 +76,7 @@ export default {
     ViewsContextItem,
     CreateViewModal,
   },
-  mixins: [context],
+  mixins: [context, dropdownHelpers],
   props: {
     table: {
       type: Object,
@@ -102,10 +106,75 @@ export default {
       isLoaded: (state) => state.view.loaded,
     }),
   },
+  mounted() {
+    this.scrollViewDropdownIfNeeded()
+  },
   methods: {
     selectedView(view) {
       this.hide()
       this.$emit('selected-view', view)
+    },
+    /*
+      If the currently selected view is not visible inside the dropdown we need to
+      scroll just enough so that the selected view is visible as the last element
+      in the dropdown.
+    */
+    scrollViewDropdownIfNeeded() {
+      const dropdownElement = this.$refs.dropdown
+      const selectedViewItem = this.getSelectedViewItem()
+      const dropdownHeight = dropdownElement.clientHeight
+      if (
+        this.isSelectedViewOutOfDropdownView(selectedViewItem, dropdownHeight)
+      ) {
+        dropdownElement.scrollTop = this.calculateOffsetToSelectedViewItem(
+          dropdownElement,
+          selectedViewItem
+        )
+      }
+    },
+    /**
+     * This method scrolls the ViewDropdown to the bottom
+     */
+    scrollViewDropdownToBottom() {
+      this.$refs.dropdown.scrollTop = this.$refs.dropdown.scrollHeight
+    },
+    /**
+     * This method filters the view elements and returns the currently selected
+     * view dom item based on whether or not it is selected.
+     */
+    getSelectedViewItem() {
+      const selectedViewArray = this.views.filter((item) => item._.selected)
+      const selectedViewItemID = selectedViewArray[0].id
+      return this.$refs[`view-${selectedViewItemID}`][0].$el
+    },
+    /**
+     * This method calculates whether or not the selectedViewItem is fully visible
+     * inside the ViewContext dropdown or not
+     */
+    isSelectedViewOutOfDropdownView(selectedViewItem, dropdownHeight) {
+      const selectedOffsetPlusHeight =
+        selectedViewItem.offsetTop + selectedViewItem.clientHeight
+      return selectedOffsetPlusHeight > dropdownHeight
+    },
+    /**
+     * This method calculates the necessary offsetTop of the dropdown element so that
+     * the selected view item is the bottom element.
+     */
+    calculateOffsetToSelectedViewItem(dropdownElement, selectedViewItem) {
+      const {
+        parentContainerBeforeHeight,
+        itemHeightWithMargins,
+        itemsInView,
+      } = this.getStyleProperties(dropdownElement, selectedViewItem)
+
+      const viewItemsBeforeSelectedViewItemHeight =
+        (itemsInView - 1) * itemHeightWithMargins
+
+      return (
+        selectedViewItem.offsetTop -
+        viewItemsBeforeSelectedViewItemHeight -
+        parentContainerBeforeHeight
+      )
     },
     toggleCreateViewModal(type) {
       const target = this.$refs['createViewModalToggle' + type][0]

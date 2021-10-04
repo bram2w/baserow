@@ -24,6 +24,8 @@
   'before_id' when moving a row by introducing a decorator to validate query parameters.
 * Fixed bug where copying a cell containing a null value resulted in an error.
 * Added "Multiple Select" field type.
+* Fixed a bug where the currently selected view was not in the viewport of the parent.
+* Fixed a bug where views context would not scroll down after a new view has been added.
 
 ## Released (2021-08-11)
 
