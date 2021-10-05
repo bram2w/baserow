@@ -49,6 +49,7 @@ from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .serializers import (
+    ListRowsQueryParamsSerializer,
     MoveRowQueryParamsSerializer,
     CreateRowQueryParamsSerializer,
     RowSerializer,
@@ -233,7 +234,8 @@ class RowsView(APIView):
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
         }
     )
-    def get(self, request, table_id):
+    @validate_query_parameters(ListRowsQueryParamsSerializer)
+    def get(self, request, table_id, query_params):
         """
         Lists all the rows of the given table id paginated. It is also possible to
         provide a search query.
@@ -243,11 +245,11 @@ class RowsView(APIView):
         table.database.group.has_user(request.user, raise_error=True)
 
         TokenHandler().check_table_permissions(request, "read", table, False)
-        search = request.GET.get("search")
-        order_by = request.GET.get("order_by")
-        include = request.GET.get("include")
-        exclude = request.GET.get("exclude")
-        user_field_names = "user_field_names" in request.GET
+        search = query_params.get("search")
+        order_by = query_params.get("order_by")
+        include = query_params.get("include")
+        exclude = query_params.get("exclude")
+        user_field_names = query_params.get("user_field_names")
         fields = RowHandler().get_include_exclude_fields(
             table, include, exclude, user_field_names=user_field_names
         )
@@ -264,9 +266,10 @@ class RowsView(APIView):
         if order_by:
             queryset = queryset.order_by_fields_string(order_by, user_field_names)
 
+        filter_type_query_param = query_params.get("filter_type")
         filter_type = (
             FILTER_TYPE_OR
-            if str(request.GET.get("filter_type")).upper() == "OR"
+            if filter_type_query_param.upper() == "OR"
             else FILTER_TYPE_AND
         )
         filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}

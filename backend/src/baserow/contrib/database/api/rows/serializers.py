@@ -225,3 +225,12 @@ class MoveRowQueryParamsSerializer(serializers.Serializer):
 
 class CreateRowQueryParamsSerializer(serializers.Serializer):
     before = serializers.IntegerField(required=False)
+
+
+class ListRowsQueryParamsSerializer(serializers.Serializer):
+    user_field_names = serializers.BooleanField(required=False, default=False)
+    search = serializers.CharField(required=False)
+    order_by = serializers.CharField(required=False)
+    include = serializers.CharField(required=False)
+    exclude = serializers.CharField(required=False)
+    filter_type = serializers.CharField(required=False, default="")

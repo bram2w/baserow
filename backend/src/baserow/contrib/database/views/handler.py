@@ -550,7 +550,7 @@ class ViewHandler:
             field_name = model._field_objects[view_sort.field_id]["name"]
             field_type = model._field_objects[view_sort.field_id]["type"]
 
-            order = field_type.get_order(field, field_name, view_sort)
+            order = field_type.get_order(field, field_name, view_sort.order)
             annotation = None
 
             if isinstance(order, AnnotatedOrder):

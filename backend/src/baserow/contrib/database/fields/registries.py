@@ -429,7 +429,7 @@ class FieldType(
         :type connection: DatabaseWrapper
         """
 
-    def get_order(self, field, field_name, view_sort):
+    def get_order(self, field, field_name, order_direction):
         """
         This hook can be called to generate a different order by expression. By default
         None is returned which means the normal field sorting will be applied.
@@ -443,8 +443,8 @@ class FieldType(
         :type field: Field
         :param field_name: The name of the field.
         :type field_name: str
-        :param view_sort: The view sort that must be applied.
-        :type view_sort: ViewSort
+        :param order_direction: The sort order direction.
+        :type order_direction: str (Either "ASC" or "DESC")
         :return: Either the expression that is added directly to the
             model.objects.order(), an AnnotatedOrderBy class or None.
         :rtype: Optional[Expression, AnnotatedOrderBy, None]

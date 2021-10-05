@@ -38,6 +38,8 @@
     * Political Campaign Contributions
 * Updated templates:
     * Blog Post Management
+* Fixed a bug where the backend would fail hard when trying to order by field name without
+  using `user_field_names`.
 
 ## Released (2021-08-11)
 
