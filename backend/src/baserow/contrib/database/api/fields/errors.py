@@ -1,6 +1,6 @@
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from baserow.contrib.database.fields.handler import RESERVED_BASEROW_FIELD_NAMES
+from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 
 ERROR_FIELD_DOES_NOT_EXIST = (
     "ERROR_FIELD_DOES_NOT_EXIST",
@@ -63,4 +63,14 @@ ERROR_INVALID_BASEROW_FIELD_NAME = (
     "ERROR_INVALID_BASEROW_FIELD_NAME",
     HTTP_400_BAD_REQUEST,
     "Fields must not be blank or only consist of whitespace.",
+)
+ERROR_WITH_FORMULA = (
+    "ERROR_WITH_FORMULA",
+    HTTP_400_BAD_REQUEST,
+    "Error with formula: {e}.",
+)
+ERROR_TOO_DEEPLY_NESTED_FORMULA = (
+    "ERROR_TOO_DEEPLY_NESTED_FORMULA",
+    HTTP_400_BAD_REQUEST,
+    "The formula is too deeply nested.",
 )

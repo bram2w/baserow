@@ -16,6 +16,15 @@ DATE_TIME_FORMAT = {
 DATE_TIME_FORMAT_CHOICES = [(k, v["name"]) for k, v in DATE_TIME_FORMAT.items()]
 
 
+def get_date_time_format(options, format_type):
+    date_format_for_type = DATE_FORMAT[options.date_format][format_type]
+    time_format_for_type = DATE_TIME_FORMAT[options.date_time_format][format_type]
+    if options.date_include_time:
+        return f"{date_format_for_type} {time_format_for_type}"
+    else:
+        return date_format_for_type
+
+
 class BaseDateMixin(models.Model):
     date_format = models.CharField(
         choices=DATE_FORMAT_CHOICES,
@@ -82,12 +91,7 @@ class BaseDateMixin(models.Model):
         return "TO_TIMESTAMP" if self.date_include_time else "TO_DATE"
 
     def _get_format(self, format_type):
-        date_format = DATE_FORMAT[self.date_format][format_type]
-        time_format = DATE_TIME_FORMAT[self.date_time_format][format_type]
-        if self.date_include_time:
-            return f"{date_format} {time_format}"
-        else:
-            return date_format
+        return get_date_time_format(self, format_type)
 
 
 class TimezoneMixin(models.Model):

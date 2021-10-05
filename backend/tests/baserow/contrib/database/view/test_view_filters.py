@@ -1,3 +1,4 @@
+from django.db.models import Q
 from freezegun import freeze_time
 
 import pytest
@@ -6,11 +7,56 @@ from pytz import timezone
 
 from django.utils.timezone import make_aware, datetime
 
-from baserow.contrib.database.views.registries import view_filter_type_registry
+from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
+from baserow.contrib.database.views.registries import (
+    view_filter_type_registry,
+    ViewFilterType,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.view_filters import BaseDateFieldLookupFilterType
+
+
+@pytest.mark.django_db
+def test_can_use_a_callable_in_compatible_field_types(data_fixture):
+    class TestViewFilterType(ViewFilterType):
+        type = "test"
+        compatible_field_types = [lambda field: field.name == "compatible"]
+
+        def get_filter(
+            self, field_name, value, model_field, field
+        ) -> OptionallyAnnotatedQ:
+            return Q()
+
+    not_compatible_field = data_fixture.create_text_field(name="not_compat")
+    assert not TestViewFilterType().field_is_compatible(not_compatible_field)
+
+    compatible_field = data_fixture.create_text_field(name="compatible")
+    assert TestViewFilterType().field_is_compatible(compatible_field)
+
+
+@pytest.mark.django_db
+def test_can_mix_field_types_and_callables_in_compatible_field_types(data_fixture):
+    class TestViewFilterType(ViewFilterType):
+        type = "test"
+        compatible_field_types = [
+            "text",
+            lambda field: field.name == "compatible",
+        ]
+
+        def get_filter(
+            self, field_name, value, model_field, field
+        ) -> OptionallyAnnotatedQ:
+            return Q()
+
+    not_compatible_field = data_fixture.create_long_text_field(name="not_compat")
+    assert not TestViewFilterType().field_is_compatible(not_compatible_field)
+
+    compatible_field = data_fixture.create_text_field(
+        name="name doesn't match but type does"
+    )
+    assert TestViewFilterType().field_is_compatible(compatible_field)
 
 
 @pytest.mark.django_db
@@ -25,6 +71,7 @@ def test_equal_filter_type(data_fixture):
         table=table, number_type="DECIMAL", number_decimal_places=2
     )
     boolean_field = data_fixture.create_boolean_field(table=table)
+    formula_field = data_fixture.create_formula_field(table=table, formula="'test'")
 
     handler = ViewHandler()
     model = table.get_model()
@@ -132,6 +179,21 @@ def test_equal_filter_type(data_fixture):
     view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
+    view_filter.field = formula_field
+    view_filter.value = "nottest"
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 0
+
+    view_filter.field = formula_field
+    view_filter.value = "test"
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
+
+    view_filter.field = formula_field
+    view_filter.value = ""
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
+
 
 @pytest.mark.django_db
 def test_not_equal_filter_type(data_fixture):
@@ -145,6 +207,7 @@ def test_not_equal_filter_type(data_fixture):
         table=table, number_type="DECIMAL", number_decimal_places=2
     )
     boolean_field = data_fixture.create_boolean_field(table=table)
+    formula_field = data_fixture.create_formula_field(table=table, formula="'test'")
 
     handler = ViewHandler()
     model = table.get_model()
@@ -256,6 +319,21 @@ def test_not_equal_filter_type(data_fixture):
     view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
 
+    view_filter.field = formula_field
+    view_filter.value = "nottest"
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
+
+    view_filter.field = formula_field
+    view_filter.value = "test"
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 0
+
+    view_filter.field = formula_field
+    view_filter.value = ""
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
+
 
 @pytest.mark.django_db
 def test_contains_filter_type(data_fixture):
@@ -298,6 +376,7 @@ def test_contains_filter_type(data_fixture):
     option_d = data_fixture.create_select_option(
         field=multiple_select_field, value="DE", color="yellow"
     )
+    formula_field = data_fixture.create_formula_field(table=table, formula="'test'")
 
     handler = ViewHandler()
     model = table.get_model()
@@ -463,6 +542,18 @@ def test_contains_filter_type(data_fixture):
     assert len(ids) == 1
     assert row.id in ids
 
+    view_filter.field = formula_field
+    view_filter.value = "tes"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.field = formula_field
+    view_filter.value = "xx"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
 
 @pytest.mark.django_db
 def test_contains_not_filter_type(data_fixture):
@@ -494,6 +585,7 @@ def test_contains_not_filter_type(data_fixture):
     option_d = data_fixture.create_select_option(
         field=multiple_select_field, value="DE", color="yellow"
     )
+    formula_field = data_fixture.create_formula_field(table=table, formula="'test'")
 
     handler = ViewHandler()
     model = table.get_model()
@@ -656,6 +748,18 @@ def test_contains_not_filter_type(data_fixture):
     assert len(ids) == 2
     assert row_2.id in ids
     assert row_3.id in ids
+
+    view_filter.field = formula_field
+    view_filter.value = "tes"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    view_filter.field = formula_field
+    view_filter.value = "xx"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
 
 
 @pytest.mark.django_db
@@ -2120,6 +2224,13 @@ def test_empty_filter_type(data_fixture):
     file_field = data_fixture.create_file_field(table=table)
     single_select_field = data_fixture.create_single_select_field(table=table)
     option_1 = data_fixture.create_select_option(field=single_select_field)
+    populated_formula_field = data_fixture.create_formula_field(
+        table=table, formula="'test'"
+    )
+    empty_formula_field = data_fixture.create_formula_field(table=table, formula="''")
+    populated_date_interval_formula_field = data_fixture.create_formula_field(
+        table=table, formula="date_interval('1 year')"
+    )
 
     multiple_select_field = data_fixture.create_multiple_select_field(table=table)
     option_2 = data_fixture.create_select_option(field=multiple_select_field)
@@ -2236,6 +2347,18 @@ def test_empty_filter_type(data_fixture):
     view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row.id
 
+    view_filter.field = empty_formula_field
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
+
+    view_filter.field = populated_formula_field
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 0
+
+    view_filter.field = populated_date_interval_formula_field
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 0
+
 
 @pytest.mark.django_db
 def test_not_empty_filter_type(data_fixture):
@@ -2256,6 +2379,13 @@ def test_not_empty_filter_type(data_fixture):
     file_field = data_fixture.create_file_field(table=table)
     single_select_field = data_fixture.create_single_select_field(table=table)
     option_1 = data_fixture.create_select_option(field=single_select_field)
+    populated_formula_field = data_fixture.create_formula_field(
+        table=table, formula="'test'"
+    )
+    empty_formula_field = data_fixture.create_formula_field(table=table, formula="''")
+    populated_date_interval_formula_field = data_fixture.create_formula_field(
+        table=table, formula="date_interval('1 year')"
+    )
 
     multiple_select_field = data_fixture.create_multiple_select_field(table=table)
     option_2 = data_fixture.create_select_option(field=multiple_select_field)
@@ -2348,6 +2478,18 @@ def test_not_empty_filter_type(data_fixture):
     view_filter.field = single_select_field
     view_filter.save()
     assert handler.apply_filters(grid_view, model.objects.all()).get().id == row_2.id
+
+    view_filter.field = empty_formula_field
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 0
+
+    view_filter.field = populated_formula_field
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 2
+
+    view_filter.field = populated_date_interval_formula_field
+    view_filter.save()
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 2
 
 
 @pytest.mark.django_db

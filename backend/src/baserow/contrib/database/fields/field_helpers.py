@@ -120,6 +120,9 @@ def construct_all_possible_field_kwargs(
             }
         ],
         "phone_number": [{"name": "phone_number"}],
+        "formula": [
+            {"name": "formula", "formula": "CONCAT('test ', UPPER('formula'))"}
+        ],
     }
     # If you have added a new field please add an entry into the dict above with any
     # test worthy combinations of kwargs

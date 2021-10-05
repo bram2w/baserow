@@ -347,11 +347,20 @@
     }
   }
 
+  &.cell-error {
+    background-color: $color-error-100;
+    color: $color-neutral-500;
+  }
+
   .grid-view__row--selected & {
     background-color: $color-neutral-50;
 
     &.active {
       background-color: $white;
+    }
+
+    &.cell-error {
+      background-color: $color-error-100;
     }
   }
 
@@ -417,6 +426,16 @@
 
     padding-left: 10px;
     text-align: left;
+  }
+
+  .grid-view__description-icon-error {
+    @include absolute(0, 0, 0, auto);
+
+    line-height: inherit;
+    width: 30px;
+    color: $color-error-400;
+    padding-right: 45px;
+    text-align: right;
   }
 
   .grid-view__description-options {

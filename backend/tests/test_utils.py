@@ -129,6 +129,7 @@ def setup_interesting_test_table(data_fixture):
         "single_select": SelectOption.objects.get(value="A"),
         "multiple_select": None,
         "phone_number": "+4412345678",
+        "formula": "test FORMULA",
     }
 
     missing_fields = set(name_to_field_id.keys()) - set(values.keys())

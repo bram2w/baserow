@@ -63,6 +63,10 @@
     border-color: $color-error-500;
   }
 
+  &.input--monospace {
+    font-family: monospace;
+  }
+
   &[disabled] {
     color: $color-primary-900;
     background-color: $color-neutral-50;

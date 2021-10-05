@@ -59,6 +59,7 @@ export default {
     file: 'Fichier',
     singleSelect: 'Liste déroulante',
     phoneNumber: 'Téléphone',
+    formula: 'Formule',
   },
   viewFilter: {
     contains: 'contient',

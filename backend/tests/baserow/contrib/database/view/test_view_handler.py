@@ -886,6 +886,11 @@ def test_update_filter(send_mock, data_fixture):
     equal_filter_type.compatible_field_types = []
     with pytest.raises(ViewFilterTypeNotAllowedForField):
         handler.update_filter(user=user, view_filter=equal_filter, field=text_field)
+
+    equal_filter_type.compatible_field_types = [lambda _: False]
+    with pytest.raises(ViewFilterTypeNotAllowedForField):
+        handler.update_filter(user=user, view_filter=equal_filter, field=text_field)
+
     equal_filter_type.compatible_field_types = allowed
 
     with pytest.raises(FieldNotInTable):

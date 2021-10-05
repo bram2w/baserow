@@ -6,7 +6,7 @@ from dateutil import parser
 from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.aggregates.general import ArrayAgg
-from django.db.models import Q, IntegerField, BooleanField, DateTimeField
+from django.db.models import Q, IntegerField, BooleanField, DateTimeField, DurationField
 from django.db.models.functions import Cast
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
@@ -31,11 +31,18 @@ from baserow.contrib.database.fields.field_types import (
     FileFieldType,
     SingleSelectFieldType,
     PhoneNumberFieldType,
+    FormulaFieldType,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.core.expressions import Timezone
-
 from .registries import ViewFilterType
+from baserow.contrib.database.formula.types.formula_types import (
+    BaserowFormulaTextType,
+    BaserowFormulaNumberType,
+    BaserowFormulaCharType,
+    BaserowFormulaDateType,
+    BaserowFormulaBooleanType,
+)
 
 
 class NotViewFilterTypeMixin:
@@ -57,9 +64,13 @@ class EqualViewFilterType(ViewFilterType):
         LongTextFieldType.type,
         URLFieldType.type,
         NumberFieldType.type,
-        BooleanFieldType.type,
         EmailFieldType.type,
         PhoneNumberFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaTextType.type,
+            BaserowFormulaCharType.type,
+            BaserowFormulaNumberType.type,
+        ),
     ]
 
     def get_filter(self, field_name, value, model_field, field):
@@ -142,6 +153,12 @@ class ContainsViewFilterType(ViewFilterType):
         SingleSelectFieldType.type,
         MultipleSelectFieldType.type,
         NumberFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaTextType.type,
+            BaserowFormulaCharType.type,
+            BaserowFormulaNumberType.type,
+            BaserowFormulaDateType.type,
+        ),
     ]
 
     def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
@@ -161,7 +178,12 @@ class HigherThanViewFilterType(ViewFilterType):
     """
 
     type = "higher_than"
-    compatible_field_types = [NumberFieldType.type]
+    compatible_field_types = [
+        NumberFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaNumberType.type,
+        ),
+    ]
 
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
@@ -192,7 +214,12 @@ class LowerThanViewFilterType(ViewFilterType):
     """
 
     type = "lower_than"
-    compatible_field_types = [NumberFieldType.type]
+    compatible_field_types = [
+        NumberFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaNumberType.type,
+        ),
+    ]
 
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
@@ -227,6 +254,9 @@ class DateEqualViewFilterType(ViewFilterType):
         DateFieldType.type,
         LastModifiedFieldType.type,
         CreatedOnFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaDateType.type,
+        ),
     ]
 
     def get_filter(self, field_name, value, model_field, field):
@@ -301,6 +331,9 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
         DateFieldType.type,
         LastModifiedFieldType.type,
         CreatedOnFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaDateType.type,
+        ),
     ]
 
     @staticmethod
@@ -366,6 +399,9 @@ class DateBeforeViewFilterType(BaseDateFieldLookupFilterType):
         DateFieldType.type,
         LastModifiedFieldType.type,
         CreatedOnFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaDateType.type,
+        ),
     ]
 
 
@@ -390,6 +426,9 @@ class DateEqualsTodayViewFilterType(ViewFilterType):
         DateFieldType.type,
         LastModifiedFieldType.type,
         CreatedOnFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaDateType.type,
+        ),
     ]
     query_for = ["year", "month", "day"]
 
@@ -489,7 +528,12 @@ class BooleanViewFilterType(ViewFilterType):
     """
 
     type = "boolean"
-    compatible_field_types = [BooleanFieldType.type]
+    compatible_field_types = [
+        BooleanFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaBooleanType.type,
+        ),
+    ]
 
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip().lower()
@@ -640,6 +684,7 @@ class EmptyViewFilterType(ViewFilterType):
         SingleSelectFieldType.type,
         PhoneNumberFieldType.type,
         MultipleSelectFieldType.type,
+        FormulaFieldType.type,
     ]
 
     def get_filter(self, field_name, value, model_field, field):
@@ -658,6 +703,9 @@ class EmptyViewFilterType(ViewFilterType):
         if isinstance(model_field, JSONField):
             q.add(Q(**{f"{field_name}": []}), Q.OR)
             q.add(Q(**{f"{field_name}": {}}), Q.OR)
+
+        if isinstance(model_field, DurationField):
+            return Q(**{f"{field_name}": None})
 
         # If the model field accepts an empty string as value we are going to add
         # that to the or statement.

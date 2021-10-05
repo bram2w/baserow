@@ -19,6 +19,9 @@
         <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
       </div>
       <div class="grid-view__description-name">{{ field.name }}</div>
+      <div v-if="field.error" class="grid-view__description-icon-error">
+        <i v-tooltip="field.error" class="fas fa-exclamation-triangle"></i>
+      </div>
       <a
         v-if="!readOnly"
         ref="contextLink"
@@ -46,22 +49,22 @@
           <a @click="createSort($event, view, field, 'ASC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down-alt"></i>
             {{ $t('gridViewFieldType.sortField') }}
-            <template v-if="field._.type.sortIndicator[0] === 'text'">{{
-              field._.type.sortIndicator[1]
+            <template v-if="getSortIndicator(field, 0) === 'text'">{{
+              getSortIndicator(field, 1)
             }}</template>
             <i
-              v-if="field._.type.sortIndicator[0] === 'icon'"
+              v-if="getSortIndicator(field, 0) === 'icon'"
               class="fa"
-              :class="'fa-' + field._.type.sortIndicator[1]"
+              :class="'fa-' + getSortIndicator(field, 1)"
             ></i>
             <i class="fas fa-long-arrow-alt-right"></i>
-            <template v-if="field._.type.sortIndicator[0] === 'text'">{{
-              field._.type.sortIndicator[2]
+            <template v-if="getSortIndicator(field, 0) === 'text'">{{
+              getSortIndicator(field, 2)
             }}</template>
             <i
-              v-if="field._.type.sortIndicator[0] === 'icon'"
+              v-if="getSortIndicator(field, 0) === 'icon'"
               class="fa"
-              :class="'fa-' + field._.type.sortIndicator[2]"
+              :class="'fa-' + getSortIndicator(field, 2)"
             ></i>
           </a>
         </li>
@@ -69,22 +72,22 @@
           <a @click="createSort($event, view, field, 'DESC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down"></i>
             {{ $t('gridViewFieldType.sortField') }}
-            <template v-if="field._.type.sortIndicator[0] === 'text'">{{
-              field._.type.sortIndicator[2]
+            <template v-if="getSortIndicator(field, 0) === 'text'">{{
+              getSortIndicator(field, 2)
             }}</template>
             <i
-              v-if="field._.type.sortIndicator[0] === 'icon'"
+              v-if="getSortIndicator(field, 0) === 'icon'"
               class="fa"
-              :class="'fa-' + field._.type.sortIndicator[2]"
+              :class="'fa-' + getSortIndicator(field, 2)"
             ></i>
             <i class="fas fa-long-arrow-alt-right"></i>
-            <template v-if="field._.type.sortIndicator[0] === 'text'">{{
-              field._.type.sortIndicator[1]
+            <template v-if="getSortIndicator(field, 0) === 'text'">{{
+              getSortIndicator(field, 1)
             }}</template>
             <i
-              v-if="field._.type.sortIndicator[0] === 'icon'"
+              v-if="getSortIndicator(field, 0) === 'icon'"
               class="fa"
-              :class="'fa-' + field._.type.sortIndicator[1]"
+              :class="'fa-' + getSortIndicator(field, 1)"
             ></i>
           </a>
         </li>
@@ -153,7 +156,7 @@ export default {
     canFilter() {
       const filters = Object.values(this.$registry.getAll('viewFilter'))
       for (const type in filters) {
-        if (filters[type].compatibleFieldTypes.includes(this.field.type)) {
+        if (filters[type].fieldIsCompatible(this.field)) {
           return true
         }
       }
@@ -246,6 +249,11 @@ export default {
       event.preventDefault()
       this.$emit('dragging', { field, event })
     },
+    getSortIndicator(field, index) {
+      return this.$registry
+        .get('field', field.type)
+        .getSortIndicator(field, this.$registry)[index]
+    },
   },
 }
 </script>
@@ -258,7 +266,7 @@ export default {
       "sortField": "Sort",
       "hideField":"Hide field"
     }
-  },  
+  },
   "fr": {
     "gridViewFieldType":{
       "createFilter": "Définir un filtre",

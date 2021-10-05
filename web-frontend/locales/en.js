@@ -59,6 +59,7 @@ export default {
     file: 'File',
     singleSelect: 'Single select',
     phoneNumber: 'Phone number',
+    formula: 'Formula',
   },
   viewFilter: {
     contains: 'contains',

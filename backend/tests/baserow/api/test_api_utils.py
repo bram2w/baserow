@@ -29,6 +29,10 @@ class TemporaryException2(Exception):
     pass
 
 
+class TemporarySubClassException(TemporaryException):
+    pass
+
+
 class TemporarySerializer(serializers.Serializer):
     field_1 = serializers.CharField()
     field_2 = serializers.ChoiceField(choices=("choice_1", "choice_2"))
@@ -79,16 +83,13 @@ def test_map_exceptions():
     assert api_exception_1.value.detail["detail"] == ""
     assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
 
+    error_tuple = (
+        "ERROR_TEMPORARY_2",
+        HTTP_404_NOT_FOUND,
+        "Another message {e.message}",
+    )
     with pytest.raises(APIException) as api_exception_2:
-        with map_exceptions(
-            {
-                TemporaryException: (
-                    "ERROR_TEMPORARY_2",
-                    HTTP_404_NOT_FOUND,
-                    "Another message {e.message}",
-                )
-            }
-        ):
+        with map_exceptions({TemporaryException: error_tuple}):
             e = TemporaryException()
             e.message = "test"
             raise e
@@ -103,6 +104,71 @@ def test_map_exceptions():
 
     with map_exceptions({TemporaryException: "ERROR_TEMPORARY_4"}):
         pass
+
+    # Can map to a callable which returns an error code
+    with pytest.raises(APIException) as api_exception_3:
+        with map_exceptions(
+            {
+                TemporaryException: lambda ex: "CONDITIONAL_ERROR"
+                if "test" in str(ex)
+                else None
+            }
+        ):
+            raise TemporaryException("test")
+
+    assert api_exception_3.value.detail["error"] == "CONDITIONAL_ERROR"
+
+    # If the callable returns None the exception is rethrown
+    with pytest.raises(TemporaryException):
+        with map_exceptions(
+            {
+                TemporaryException: lambda ex: "CONDITIONAL_ERROR"
+                if "test" in str(ex)
+                else None
+            }
+        ):
+            raise TemporaryException("not matching lambda")
+
+    # Can map to a callable condition which can return a error tuple
+    with pytest.raises(APIException) as api_exception_5:
+        with map_exceptions(
+            {
+                TemporaryException: lambda ex: error_tuple
+                if "test" in ex.message
+                else None
+            }
+        ):
+            exception = TemporaryException()
+            exception.message = "test"
+            raise exception
+
+    assert api_exception_5.value.detail["error"] == "ERROR_TEMPORARY_2"
+    assert api_exception_5.value.detail["detail"] == "Another message test"
+    assert api_exception_5.value.status_code == status.HTTP_404_NOT_FOUND
+
+    # Can map to a sub type of an exception and it will be chosen
+    with pytest.raises(APIException) as api_exception_3:
+        with map_exceptions(
+            {
+                TemporarySubClassException: "SUB_TYPE_ERROR",
+                TemporaryException: "BASE_TYPE_ERROR",
+            }
+        ):
+            raise TemporarySubClassException
+
+    assert api_exception_3.value.detail["error"] == "SUB_TYPE_ERROR"
+
+    # Can map to a base type of an exception and it will be chosen
+    with pytest.raises(APIException) as api_exception_3:
+        with map_exceptions(
+            {
+                TemporarySubClassException: "SUB_TYPE_ERROR",
+                TemporaryException: "BASE_TYPE_ERROR",
+            }
+        ):
+            raise TemporaryException
+
+    assert api_exception_3.value.detail["error"] == "BASE_TYPE_ERROR"
 
 
 def test_validate_data():

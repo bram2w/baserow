@@ -240,6 +240,23 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database tokens"},
         {"name": "Admin"},
     ],
+    "ENUM_NAME_OVERRIDES": {
+        "NumberDecimalPlacesB02Enum": [
+            (0, "1"),
+            (1, "1.0"),
+            (2, "1.00"),
+            (3, "1.000"),
+            (4, "1.0000"),
+            (5, "1.00000"),
+        ],
+        "NumberDecimalPlaces0c0Enum": [
+            (1, "1.0"),
+            (2, "1.00"),
+            (3, "1.000"),
+            (4, "1.0000"),
+            (5, "1.00000"),
+        ],
+    },
 }
 
 # The storage must always overwrite existing files.
@@ -332,3 +349,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # on it. See
 # https://docs.djangoproject.com/en/3.2/releases/3.0/#new-default-value-for-the-file-upload-permissions-setting
 FILE_UPLOAD_PERMISSIONS = None
+
+
+MAX_FORMULA_STRING_LENGTH = 10000

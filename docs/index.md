@@ -23,7 +23,7 @@ New to Baserow? This is the place to start.
 
 ## Guides
 
-Need some help with setting things up?
+Need some help with setting things up or understanding how Baserow works?
 
 * [Running Locally](guides/running-baserow-locally.md): A step-by-step guide to run
   Baserow on your computer.
@@ -31,6 +31,11 @@ Need some help with setting things up?
   to manually install Baserow on Cloudron.
 * [Install on Ubuntu](./guides/installation/install-on-ubuntu.md): A step-by-step guide
   to install Baserow on an Ubuntu server.
+* [Understanding Baserow Formulas](./guides/understanding-baserow-formulas.md): A guide
+  explaining how to use the formula field in Baserow.
+* [Formula Technical Guide](./guides/formula-technical-guide.md): A more technical guide
+  about formulas aimed at developers who want to understand and work with internals of 
+  Baserow formulas.
 
 ## Development
 

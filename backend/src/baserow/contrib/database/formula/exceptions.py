@@ -1,0 +1,2 @@
+class BaserowFormulaException(Exception):
+    pass

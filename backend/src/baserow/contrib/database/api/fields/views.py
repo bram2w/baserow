@@ -1,26 +1,16 @@
 from django.db import transaction
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.decorators import permission_classes as method_permission_classes
-
-from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from rest_framework.decorators import permission_classes as method_permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from baserow.api.decorators import validate_body_custom_fields, map_exceptions
-from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.api.schemas import get_error_schema
-from baserow.core.exceptions import UserNotInGroup
-from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
-from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
-from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
-from baserow.contrib.database.table.handler import TableHandler
-from baserow.contrib.database.table.exceptions import TableDoesNotExist
-from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
-from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
+from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
 from baserow.contrib.database.api.fields.errors import (
     ERROR_CANNOT_DELETE_PRIMARY_FIELD,
     ERROR_CANNOT_CHANGE_FIELD_TYPE,
@@ -30,6 +20,9 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
     ERROR_INVALID_BASEROW_FIELD_NAME,
 )
+from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
+from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
+from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
 from baserow.contrib.database.fields.exceptions import (
     CannotDeletePrimaryField,
     CannotChangeFieldType,
@@ -39,11 +32,21 @@ from baserow.contrib.database.fields.exceptions import (
     FieldWithSameNameAlreadyExists,
     InvalidBaserowFieldName,
 )
-from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-
-from .serializers import FieldSerializer, CreateFieldSerializer, UpdateFieldSerializer
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
+from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.core.exceptions import UserNotInGroup
+from .serializers import (
+    FieldSerializer,
+    CreateFieldSerializer,
+    UpdateFieldSerializer,
+    FieldSerializerWithRelatedFields,
+    RelatedFieldsSerializer,
+)
 
 
 class FieldsView(APIView):
@@ -133,13 +136,16 @@ class FieldsView(APIView):
             "parameter if the authorized user has access to the related database's "
             "group. Depending on the type, different properties can optionally be "
             "set."
+            "If creating the field causes other fields to change then the specific"
+            "instances of those fields will be included in the related fields "
+            "response key."
         ),
         request=DiscriminatorCustomFieldsMappingSerializer(
             field_type_registry, CreateFieldSerializer
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
-                field_type_registry, FieldSerializer
+                field_type_registry, FieldSerializerWithRelatedFields
             ),
             400: get_error_schema(
                 [
@@ -186,9 +192,13 @@ class FieldsView(APIView):
         # field we need to be able to map those to the correct API exceptions which are
         # defined in the type.
         with field_type.map_api_exceptions():
-            field = FieldHandler().create_field(request.user, table, type_name, **data)
+            field, updated_fields = FieldHandler().create_field(
+                request.user, table, type_name, return_updated_fields=True, **data
+            )
 
-        serializer = field_type_registry.get_serializer(field, FieldSerializer)
+        serializer = field_type_registry.get_serializer(
+            field, FieldSerializerWithRelatedFields, related_fields=updated_fields
+        )
         return Response(serializer.data)
 
 
@@ -252,13 +262,16 @@ class FieldView(APIView):
             "that case the `ERROR_CANNOT_CHANGE_FIELD_TYPE` is returned, but this "
             "rarely happens. If a data value cannot be converted it is set to `null` "
             "so data might go lost."
+            "If updated the field causes other fields to change then the specific"
+            "instances of those fields will be included in the related fields "
+            "response key."
         ),
         request=DiscriminatorCustomFieldsMappingSerializer(
             field_type_registry, UpdateFieldSerializer
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
-                field_type_registry, FieldSerializer
+                field_type_registry, FieldSerializerWithRelatedFields
             ),
             400: get_error_schema(
                 [
@@ -305,9 +318,13 @@ class FieldView(APIView):
         # field we need to be able to map those to the correct API exceptions which are
         # defined in the type.
         with field_type.map_api_exceptions():
-            field = FieldHandler().update_field(request.user, field, type_name, **data)
+            field, related_fields = FieldHandler().update_field(
+                request.user, field, type_name, return_updated_fields=True, **data
+            )
 
-        serializer = field_type_registry.get_serializer(field, FieldSerializer)
+        serializer = field_type_registry.get_serializer(
+            field, FieldSerializerWithRelatedFields, related_fields=related_fields
+        )
         return Response(serializer.data)
 
     @extend_schema(
@@ -325,10 +342,13 @@ class FieldView(APIView):
             "Deletes the existing field if the authorized user has access to the "
             "related database's group. Note that all the related data to that field "
             "is also deleted. Primary fields cannot be deleted because their value "
-            "represents the row."
+            "represents the row. "
+            "If deleting the field causes other fields to change then the specific"
+            "instances of those fields will be included in the related fields "
+            "response key."
         ),
         responses={
-            204: None,
+            200: RelatedFieldsSerializer,
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_CANNOT_DELETE_PRIMARY_FIELD"]
             ),
@@ -347,6 +367,8 @@ class FieldView(APIView):
         """Deletes an existing field if the user belongs to the group."""
 
         field = FieldHandler().get_field(field_id)
-        FieldHandler().delete_field(request.user, field)
+        field_type = field_type_registry.get_by_model(field.specific_class)
+        with field_type.map_api_exceptions():
+            updated_fields = FieldHandler().delete_field(request.user, field)
 
-        return Response(status=204)
+        return Response(RelatedFieldsSerializer({}, related_fields=updated_fields).data)

@@ -656,3 +656,54 @@ def test_filter_by_fields_object_queryset(data_fixture):
     )
     assert len(results) == 1
     assert results[0].id == row_4.id
+
+
+@pytest.mark.django_db
+def test_table_model_fields_requiring_refresh_on_insert(data_fixture):
+    table = data_fixture.create_database_table(name="Cars")
+    data_fixture.create_text_field(table=table, name="Color", text_default="white")
+    model = table.get_model()
+    assert model.fields_requiring_refresh_after_insert() == []
+
+    data_fixture.create_formula_field(
+        table=table, name="Formula", formula="'a'", formula_type="text"
+    )
+    model_with_normal_formula_field = table.get_model()
+    fields_from_normal_formula_model = (
+        model_with_normal_formula_field.fields_requiring_refresh_after_insert()
+    )
+    assert fields_from_normal_formula_model == []
+
+    field_needing_refresh = data_fixture.create_formula_field(
+        table=table,
+        name="Formula",
+        formula="row_id()",
+        formula_type="number",
+        number_decimal_places=0,
+    )
+    model_with_normal_formula_field = table.get_model()
+    fields_from_model_with_row_id_formula = (
+        model_with_normal_formula_field.fields_requiring_refresh_after_insert()
+    )
+    assert len(fields_from_model_with_row_id_formula) == 1
+    assert (
+        fields_from_model_with_row_id_formula[0] == f"field_{field_needing_refresh.id}"
+    )
+
+
+@pytest.mark.django_db
+def test_table_model_fields_requiring_refresh_after_update(data_fixture):
+    table = data_fixture.create_database_table(name="Cars")
+    data_fixture.create_text_field(table=table, name="Color", text_default="white")
+    model = table.get_model()
+    assert model.fields_requiring_refresh_after_update() == []
+
+    formula_field = data_fixture.create_formula_field(
+        table=table, name="Formula", formula="'a'", formula_type="text"
+    )
+    model_with_normal_formula_field = table.get_model()
+    fields_from_normal_formula_model = (
+        model_with_normal_formula_field.fields_requiring_refresh_after_update()
+    )
+    assert len(fields_from_normal_formula_model) == 1
+    assert fields_from_normal_formula_model[0] == f"field_{formula_field.id}"

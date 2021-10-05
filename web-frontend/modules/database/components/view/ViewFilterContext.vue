@@ -71,14 +71,14 @@
             :key="'filter-field-' + filter.id + '-' + primary.id"
             :name="primary.name"
             :value="primary.id"
-            :disabled="hasCompatibleFilterTypes(primary, filterTypes)"
+            :disabled="hasNoCompatibleFilterTypes(primary, filterTypes)"
           ></DropdownItem>
           <DropdownItem
             v-for="field in fields"
             :key="'filter-field-' + filter.id + '-' + field.id"
             :name="field.name"
             :value="field.id"
-            :disabled="hasCompatibleFilterTypes(field, filterTypes)"
+            :disabled="hasNoCompatibleFilterTypes(field, filterTypes)"
           ></DropdownItem>
         </Dropdown>
       </div>
@@ -187,9 +187,9 @@ export default {
     /**
      * Indicates if the field has any compatible filter types.
      */
-    hasCompatibleFilterTypes(field, filterTypes) {
+    hasNoCompatibleFilterTypes(field, filterTypes) {
       for (const type in filterTypes) {
-        if (filterTypes[type].compatibleFieldTypes.includes(field.type)) {
+        if (filterTypes[type].fieldIsCompatible(field)) {
           return false
         }
       }
@@ -202,10 +202,7 @@ export default {
       const field =
         primary.id === fieldId ? primary : fields.find((f) => f.id === fieldId)
       return Object.values(filterTypes).filter((filterType) => {
-        return (
-          field !== undefined &&
-          filterType.compatibleFieldTypes.includes(field.type)
-        )
+        return field !== undefined && filterType.fieldIsCompatible(field)
       })
     },
     async addFilter() {

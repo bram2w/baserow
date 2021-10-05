@@ -1,18 +1,18 @@
-import pytz
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime, date
 from decimal import Decimal
 from random import randrange, randint, sample
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Tuple, Union
 
+import pytz
 from dateutil import parser
 from dateutil.parser import ParserError
-from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.aggregates import StringAgg
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
-from django.db import models
+from django.db import models, OperationalError
 from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
@@ -24,6 +24,8 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
     ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+    ERROR_WITH_FORMULA,
+    ERROR_TOO_DEEPLY_NESTED_FORMULA,
 )
 from baserow.contrib.database.api.fields.serializers import (
     LinkRowValueSerializer,
@@ -31,6 +33,24 @@ from baserow.contrib.database.api.fields.serializers import (
     SelectOptionSerializer,
     FileFieldResponseSerializer,
 )
+from baserow.contrib.database.formula.exceptions import BaserowFormulaException
+from baserow.contrib.database.formula.expression_generator.generator import (
+    baserow_expression_to_django_expression,
+)
+from baserow.contrib.database.formula.parser.ast_mapper import (
+    replace_field_refs_according_to_new_or_deleted_fields,
+)
+from baserow.contrib.database.formula.types.formula_type import BaserowFormulaType
+from baserow.contrib.database.formula.types.formula_types import (
+    BaserowFormulaTextType,
+    BaserowFormulaNumberType,
+    BaserowFormulaBooleanType,
+    BaserowFormulaDateType,
+    BaserowFormulaCharType,
+    construct_type_from_formula_field,
+    BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
+)
+from baserow.contrib.database.formula.types.table_typer import TypedBaserowTable
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
@@ -44,12 +64,15 @@ from .exceptions import (
 )
 from .field_filters import contains_filter, AnnotatedQ, filename_contains_filter
 from .field_sortings import AnnotatedOrder
-from .fields import SingleSelectForeignKey, MultipleSelectManyToManyField
+from .fields import (
+    SingleSelectForeignKey,
+    BaserowExpressionField,
+    MultipleSelectManyToManyField,
+)
 from .handler import FieldHandler
 from .models import (
     NUMBER_TYPE_INTEGER,
     NUMBER_TYPE_DECIMAL,
-    Field,
     TextField,
     LongTextField,
     URLField,
@@ -66,6 +89,8 @@ from .models import (
     SelectOption,
     AbstractSelectOption,
     PhoneNumberField,
+    FormulaField,
+    Field,
 )
 from .registries import FieldType, field_type_registry
 
@@ -141,6 +166,12 @@ class TextFieldMatchingRegexFieldType(FieldType, ABC):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaTextType()
+
+    def from_baserow_formula_type(self, formula_type: BaserowFormulaCharType):
+        return self.model_class()
+
 
 class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
     """
@@ -176,6 +207,9 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
             **kwargs,
         )
 
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaCharType()
+
 
 class TextFieldType(FieldType):
     type = "text"
@@ -206,6 +240,14 @@ class TextFieldType(FieldType):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaTextType()
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaTextType
+    ) -> TextField:
+        return TextField()
+
 
 class LongTextFieldType(FieldType):
     type = "long_text"
@@ -230,6 +272,14 @@ class LongTextFieldType(FieldType):
 
     def contains_query(self, *args):
         return contains_filter(*args)
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaTextType()
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaTextType
+    ) -> "LongTextField":
+        return LongTextField()
 
 
 class URLFieldType(TextFieldMatchingRegexFieldType):
@@ -356,6 +406,26 @@ class NumberFieldType(FieldType):
         value = getattr(row, field_name)
         return value if value is None else str(value)
 
+    def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
+        if field.number_type == NUMBER_TYPE_INTEGER:
+            number_decimal_places = 0
+        else:
+            number_decimal_places = field.number_decimal_places
+        return BaserowFormulaNumberType(number_decimal_places=number_decimal_places)
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaNumberType
+    ) -> NumberField:
+        if formula_type.number_decimal_places == 0:
+            number_type = NUMBER_TYPE_INTEGER
+        else:
+            number_type = NUMBER_TYPE_DECIMAL
+        return NumberField(
+            number_type=number_type,
+            number_decimal_places=formula_type.number_decimal_places,
+            number_negative=True,
+        )
+
 
 class BooleanFieldType(FieldType):
     type = "boolean"
@@ -379,6 +449,14 @@ class BooleanFieldType(FieldType):
         self, row, field_name, value, id_mapping, files_zip, storage
     ):
         setattr(row, field_name, value == "true")
+
+    def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
+        return BaserowFormulaBooleanType()
+
+    def from_baserow_formula_type(
+        self, boolean_formula_type: BaserowFormulaBooleanType
+    ) -> BooleanField:
+        return BooleanField()
 
 
 class DateFieldType(FieldType):
@@ -553,8 +631,23 @@ class DateFieldType(FieldType):
 
         setattr(row, field_name, datetime.fromisoformat(value))
 
+    def to_baserow_formula_type(self, field: DateField) -> BaserowFormulaType:
+        return BaserowFormulaDateType(
+            field.date_format, field.date_include_time, field.date_time_format
+        )
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaDateType
+    ) -> DateField:
+        return DateField(
+            date_format=formula_type.date_format,
+            date_include_time=formula_type.date_include_time,
+            date_time_format=formula_type.date_time_format,
+        )
+
 
 class CreatedOnLastModifiedBaseFieldType(DateFieldType):
+    read_only = True
     can_be_in_form_view = False
     allowed_fields = DateFieldType.allowed_fields + ["timezone"]
     serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
@@ -1931,3 +2024,202 @@ class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.phone_number()
+
+
+class FormulaFieldType(FieldType):
+    type = "formula"
+    model_class = FormulaField
+
+    requires_typing = True
+    read_only = True
+
+    can_be_primary_field = False
+    can_be_in_form_view = False
+
+    CORE_FORMULA_FIELDS = [
+        "formula",
+        "formula_type",
+    ]
+    allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
+    serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
+    serializer_field_overrides = {
+        "error": serializers.CharField(
+            required=False, allow_blank=True, allow_null=True
+        ),
+    }
+
+    @staticmethod
+    def _stack_error_mapper(e):
+        return (
+            ERROR_TOO_DEEPLY_NESTED_FORMULA
+            if "stack depth limit exceeded" in str(e)
+            else None
+        )
+
+    api_exceptions_map = {
+        BaserowFormulaException: ERROR_WITH_FORMULA,
+        OperationalError: _stack_error_mapper,
+    }
+
+    @staticmethod
+    def compatible_with_formula_types(*compatible_formula_types: List[str]):
+        def checker(field) -> bool:
+            from baserow.contrib.database.fields.registries import field_type_registry
+
+            field_type = field_type_registry.get_by_model(field.specific_class)
+            if field_type.type == FormulaFieldType.type:
+                formula_type = construct_type_from_formula_field(field.specific)
+                return formula_type.type in compatible_formula_types
+            else:
+                return False
+
+        return checker
+
+    @staticmethod
+    def _get_field_instance_and_type_from_formula_field(
+        formula_field_instance: FormulaField,
+    ) -> Tuple[Field, FieldType]:
+        """
+        Gets the BaserowFormulaType the provided formula field currently has and the
+        Baserow FieldType used to work with a formula of that formula type.
+
+        :param formula_field_instance: An instance of a formula field.
+        :return: The BaserowFormulaType of the formula field instance.
+        """
+
+        formula_type = construct_type_from_formula_field(formula_field_instance)
+        return formula_type.get_baserow_field_instance_and_type()
+
+    def get_serializer_field(self, instance: FormulaField, **kwargs):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        return field_type.get_serializer_field(field_instance, **kwargs)
+
+    def get_model_field(self, instance: FormulaField, **kwargs):
+        typed_table: Union[TypedBaserowTable, bool] = kwargs.pop("typed_table")
+        # When typed_table is False we are constructing a table model without
+        # doing any type checking, we can't know what the expression is in this
+        # case but we still want to generate a model field so the model can be
+        # used to do SQL operations like dropping fields etc.
+        if typed_table and not (instance.error or instance.trashed):
+            typed_field = typed_table.get_typed_field(instance)
+            expression = typed_field.typed_expression
+            requires_refresh_after_insert = (
+                typed_field.expression_needs_refresh_on_insert
+            )
+        else:
+            expression = None
+            requires_refresh_after_insert = False
+
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        expression_field_type = field_type.get_model_field(field_instance, **kwargs)
+
+        return BaserowExpressionField(
+            null=True,
+            blank=True,
+            expression=expression,
+            expression_field=expression_field_type,
+            requires_refresh_after_insert=requires_refresh_after_insert,
+            **kwargs,
+        )
+
+    def prepare_value_for_db(self, instance, value):
+        """
+        Since the Formula Field is a read only field, we raise a
+        ValidationError when there is a value present.
+        """
+
+        if not value:
+            return value
+
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
+
+    def get_export_value(self, value, field_object) -> BaserowFormulaType:
+        instance = field_object["field"]
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        return field_type.get_export_value(
+            value,
+            {"field": field_instance, "type": field_type, "name": field_object["name"]},
+        )
+
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+        # We don't want to export the per row formula values as they can all and
+        # should be derived from the formula itself.
+        return None
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
+        # We don't want to import any per row formula values as they can all and
+        # should be derived from the formula itself.
+        pass
+
+    def contains_query(self, field_name, value, model_field, field: FormulaField):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field)
+        return field_type.contains_query(field_name, value, model_field, field_instance)
+
+    def expression_to_update_field_after_related_field_changes(self, field, to_model):
+        if not (field.error or field.trashed):
+            f = to_model._meta.get_field(field.db_column)
+            return baserow_expression_to_django_expression(f.expression, None)
+        else:
+            return None
+
+    def export_serialized(self, field, include_allowed_fields=True):
+        serialized = super().export_serialized(field, include_allowed_fields)
+        if include_allowed_fields:
+            # Replace all field_by_id references back into their field('actual field
+            # name') format when serializing the formula to file. This enables us to
+            # easily re-import this formula into a table with new field ids as when
+            # typing that table we will automatically translate field('..') back into
+            # the field_by_id form but with the correct new field id's. If we did not
+            # do this step instead we would serialize formulas with field_by_id(N)
+            # where the id is a direct reference to a field in this particular table,
+            # meaning you could never import this field into a different table as it
+            # would be referencing an a field id in a different table.
+
+            serialized[
+                "formula"
+            ] = replace_field_refs_according_to_new_or_deleted_fields(
+                serialized["formula"],
+                {f.id: f.name for f in field.table.field_set.all()},
+                {},
+            )
+        return serialized
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(from_field)
+        return field_type.get_alter_column_prepare_old_value(
+            connection, field_instance, to_field
+        )
+
+    def add_related_fields_to_model(
+        self, typed_table, field, already_included_field_ids
+    ):
+        # If we are building a model with some formula fields we need to
+        # establish the types fields and whether they depend on any other
+        # child fields to be calculated. These child fields then need to be
+        # included in the django model otherwise we cannot reference them.
+        # Allow passing in typer=False to disable any type checking.
+        if typed_table:
+            return typed_table.get_all_depended_on_fields(
+                field, already_included_field_ids
+            )
+        else:
+            return []

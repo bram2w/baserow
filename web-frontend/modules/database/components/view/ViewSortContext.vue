@@ -63,26 +63,26 @@
             @click="updateSort(sort, { order: 'ASC' })"
           >
             <div>
-              <template v-if="field._.type.sortIndicator[0] === 'text'">{{
-                field._.type.sortIndicator[1]
+              <template v-if="getSortIndicator(field, 0) === 'text'">{{
+                getSortIndicator(field, 1)
               }}</template>
               <i
-                v-if="field._.type.sortIndicator[0] === 'icon'"
+                v-if="getSortIndicator(field, 0) === 'icon'"
                 class="fa"
-                :class="'fa-' + field._.type.sortIndicator[1]"
+                :class="'fa-' + getSortIndicator(field, 1)"
               ></i>
             </div>
             <div>
               <i class="fas fa-long-arrow-alt-right"></i>
             </div>
             <div>
-              <template v-if="field._.type.sortIndicator[0] === 'text'">{{
-                field._.type.sortIndicator[2]
+              <template v-if="getSortIndicator(field, 0) === 'text'">{{
+                getSortIndicator(field, 2)
               }}</template>
               <i
-                v-if="field._.type.sortIndicator[0] === 'icon'"
+                v-if="getSortIndicator(field, 0) === 'icon'"
                 class="fa"
-                :class="'fa-' + field._.type.sortIndicator[2]"
+                :class="'fa-' + getSortIndicator(field, 2)"
               ></i>
             </div>
           </a>
@@ -92,26 +92,26 @@
             @click="updateSort(sort, { order: 'DESC' })"
           >
             <div>
-              <template v-if="field._.type.sortIndicator[0] === 'text'">{{
-                field._.type.sortIndicator[2]
+              <template v-if="getSortIndicator(field, 0) === 'text'">{{
+                getSortIndicator(field, 2)
               }}</template>
               <i
-                v-if="field._.type.sortIndicator[0] === 'icon'"
+                v-if="getSortIndicator(field, 0) === 'icon'"
                 class="fa"
-                :class="'fa-' + field._.type.sortIndicator[2]"
+                :class="'fa-' + getSortIndicator(field, 2)"
               ></i>
             </div>
             <div>
               <i class="fas fa-long-arrow-alt-right"></i>
             </div>
             <div>
-              <template v-if="field._.type.sortIndicator[0] === 'text'">{{
-                field._.type.sortIndicator[1]
+              <template v-if="getSortIndicator(field, 0) === 'text'">{{
+                getSortIndicator(field, 1)
               }}</template>
               <i
-                v-if="field._.type.sortIndicator[0] === 'icon'"
+                v-if="getSortIndicator(field, 0) === 'icon'"
                 class="fa"
-                :class="'fa-' + field._.type.sortIndicator[1]"
+                :class="'fa-' + getSortIndicator(field, 1)"
               ></i>
             </div>
           </a>
@@ -260,6 +260,11 @@ export default {
       } catch (error) {
         notifyIf(error, 'view')
       }
+    },
+    getSortIndicator(field, index) {
+      return this.$registry
+        .get('field', field.type)
+        .getSortIndicator(field, this.$registry)[index]
     },
   },
 }

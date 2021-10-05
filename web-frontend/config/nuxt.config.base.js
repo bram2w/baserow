@@ -13,5 +13,11 @@ export default function (base = '@') {
   const modules = baseModules.concat(additionalModules)
   return {
     modules,
+    build: {
+      extend(config, ctx) {
+        config.node = { fs: 'empty' }
+      },
+      babel: { compact: true },
+    },
   }
 }

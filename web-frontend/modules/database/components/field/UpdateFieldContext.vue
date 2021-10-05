@@ -82,7 +82,10 @@ export default {
         this.$emit('update', { callback })
       } catch (error) {
         this.loading = false
-        notifyIf(error, 'field')
+        const handledByForm = this.$refs.form.handleErrorByForm(error)
+        if (!handledByForm) {
+          notifyIf(error, 'field')
+        }
       }
     },
   },

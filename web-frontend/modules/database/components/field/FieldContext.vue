@@ -71,9 +71,12 @@ export default {
       const { field } = this
 
       try {
-        await this.$store.dispatch('field/deleteCall', field)
+        const { data } = await this.$store.dispatch('field/deleteCall', field)
         this.$emit('delete')
         await this.$store.dispatch('field/forceDelete', field)
+        await this.$store.dispatch('field/forceUpdateFields', {
+          fields: data.related_fields,
+        })
         await this.$store.dispatch('notification/restore', {
           trash_item_type: 'field',
           trash_item_id: field.id,

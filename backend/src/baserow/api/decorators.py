@@ -1,26 +1,25 @@
 from datetime import datetime
 
+from django.utils import timezone
 from pytz import timezone as pytz_timezone
 from pytz.exceptions import UnknownTimeZoneError
-
-from django.utils import timezone
-
 from rest_framework import status, serializers
 from rest_framework.exceptions import APIException
 
+from .exceptions import (
+    QueryParameterValidationException,
+    RequestBodyValidationException,
+)
 from .utils import (
     map_exceptions as map_exceptions_utility,
     get_request,
     validate_data,
     validate_data_custom_fields,
-)
-from .exceptions import (
-    QueryParameterValidationException,
-    RequestBodyValidationException,
+    ExceptionMappingType,
 )
 
 
-def map_exceptions(exceptions):
+def map_exceptions(exceptions: ExceptionMappingType):
     """
     This decorator simplifies mapping specific exceptions to a standard api response.
     Note that this decorator uses the map_exception function from baserow.api.utils
@@ -48,6 +47,34 @@ def map_exceptions(exceptions):
         "error": "ERROR_1",
         "detail": "Other message"
       }
+
+    Example 3:
+      with map_api_exceptions(
+          {
+              SomeException: lambda e: ('ERROR_1', 404, 'Conditional Error')
+              if "something" in str(e)
+              else None
+          }
+      ):
+          raise SomeException('something')
+
+      HTTP/1.1 404
+      {
+        "error": "ERROR_1",
+        "detail": "Conditional Error"
+      }
+
+    Example 4:
+      with map_api_exceptions(
+          {
+              SomeException: lambda e: ('ERROR_1', 404, 'Conditional Error')
+              if "something" in str(e)
+              else None
+          }
+      ):
+          raise SomeException('doesnt match')
+
+      # SomeException will be thrown directly if the provided callable returns None.
     """
 
     def map_exceptions_decorator(func):

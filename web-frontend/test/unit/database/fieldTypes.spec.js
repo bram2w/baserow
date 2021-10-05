@@ -129,6 +129,14 @@ const mockedFields = {
     type: 'multiple_select',
     select_options: [],
   },
+  formula: {
+    id: 15,
+    name: 'formula',
+    order: 14,
+    primary: false,
+    table_id: 42,
+    type: 'formula',
+  },
 }
 
 const valuesToCall = [null, undefined]

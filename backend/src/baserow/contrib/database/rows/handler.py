@@ -365,6 +365,12 @@ class RowHandler:
         values["order"] = self.get_order_before_row(before, model)
         instance = model.objects.create(**values)
 
+        if model.fields_requiring_refresh_after_insert():
+            instance.save()
+            instance.refresh_from_db(
+                fields=model.fields_requiring_refresh_after_insert()
+            )
+
         for name, value in manytomany_values.items():
             getattr(instance, name).set(value)
 
@@ -450,6 +456,10 @@ class RowHandler:
                 setattr(row, name, value)
 
             row.save()
+            # We need to refresh here as ExpressionFields might have had their values
+            # updated. Django does not support UPDATE .... RETURNING and so we need to
+            # query for the rows updated values instead.
+            row.refresh_from_db(fields=model.fields_requiring_refresh_after_update())
 
             for name, value in manytomany_values.items():
                 getattr(row, name).set(value)

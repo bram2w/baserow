@@ -1,5 +1,5 @@
 <template functional>
-  <div ref="cell" class="grid-view__cell">
+  <div ref="cell" class="grid-view__cell" :class="data.staticClass || ''">
     <div
       class="grid-field-date"
       :class="{ 'grid-field-date--has-time': props.field.date_include_time }"

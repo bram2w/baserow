@@ -2,7 +2,10 @@ import pytest
 
 from decimal import Decimal
 
+from django.contrib.contenttypes.models import ContentType
+
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import NumberField, NUMBER_TYPE_DECIMAL
 from baserow.contrib.database.fields.registries import field_type_registry
 
 
@@ -181,3 +184,20 @@ def test_import_export_number_field(data_fixture):
     assert number_field.number_decimal_places == (
         number_field_imported.number_decimal_places
     )
+
+
+@pytest.mark.django_db
+def test_content_type_still_set_when_save_overridden(data_fixture):
+    table = data_fixture.create_database_table()
+    field = NumberField(
+        number_negative=False,
+        number_decimal_places=1,
+        number_type=NUMBER_TYPE_DECIMAL,
+        order=1,
+        table=table,
+    )
+    assert field.content_type_id is None
+    field.save()
+    expected_content_type = ContentType.objects.get_for_model(NumberField)
+    assert field.content_type == expected_content_type
+    assert field.content_type_id == expected_content_type.id

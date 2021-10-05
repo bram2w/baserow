@@ -308,12 +308,15 @@ export const mutations = {
     const currentValue = row._.metadata[rowMetadataType]
     Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
   },
-  FINALIZE_ROW_IN_BUFFER(state, { oldId, id, order }) {
+  FINALIZE_ROW_IN_BUFFER(state, { oldId, id, order, values }) {
     const index = state.rows.findIndex((item) => item.id === oldId)
     if (index !== -1) {
       state.rows[index].id = id
       state.rows[index].order = order
       state.rows[index]._.loading = false
+      Object.keys(values).forEach((key) => {
+        state.rows[index][key] = values[key]
+      })
     }
   },
   /**
@@ -911,6 +914,7 @@ export const actions = {
         oldId: row.id,
         id: data.id,
         order: data.order,
+        values: data,
       })
       dispatch('onRowChange', { view, row, fields, primary })
     } catch (error) {
@@ -1127,6 +1131,7 @@ export const actions = {
         values
       )
       commit('UPDATE_ROW_IN_BUFFER', { row, values: updatedRow.data })
+      dispatch('onRowChange', { view, row, fields, primary })
     } catch (error) {
       commit('UPDATE_ROW_IN_BUFFER', {
         row,

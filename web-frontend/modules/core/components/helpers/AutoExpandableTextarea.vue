@@ -1,26 +1,26 @@
 <template>
-  <div
-    class="auto-expandable-textarea__container"
-    :class="{
-      'auto-expandable-textarea--loading-overlay': loading,
+  <textarea
+    ref="inputTextArea"
+    v-model="innerValue"
+    :placeholder="placeholder"
+    class="input auto-expandable-textarea"
+    :style="{
+      height: textBoxSize + 'px',
+      overflow: textBoxOverflow,
     }"
-  >
-    <div v-if="loading" class="auto-expandable-textarea--loading"></div>
-    <textarea
-      ref="inputTextArea"
-      v-model="innerValue"
-      :placeholder="placeholder"
-      class="input auto-expandable-textarea"
-      :style="{
-        height: textBoxSize + 'px',
-        overflow: textBoxOverflow,
-      }"
-      rows="1"
-      @keydown.enter.exact.prevent="$emit('entered')"
-    />
-  </div>
+    rows="1"
+    @click="$emit('click', $event)"
+    @keyup="$emit('keyup', $event)"
+    @keydown="$emit('keydown', $event)"
+    @blur="$emit('blur', $event)"
+  />
 </template>
 <script>
+/**
+ * A blank textarea with no surrounding box styling (see AutoExpandableTextareaInput if
+ * you want a nice styled box around this) which will automatically expand given the
+ * users input to the maximum number of rows specified by the maxRows prop.
+ */
 export default {
   name: 'AutoExpandableTextarea',
   props: {
@@ -64,10 +64,10 @@ export default {
       },
     },
     textBoxSize() {
-      return 22 * Math.min(this.numTextAreaLines, 4)
+      return 22 * Math.min(this.numTextAreaLines, this.maxRows)
     },
     textBoxOverflow() {
-      return this.numTextAreaLines > 4 ? 'auto' : 'hidden'
+      return this.numTextAreaLines > this.maxRows ? 'auto' : 'hidden'
     },
   },
   watch: {
@@ -119,6 +119,10 @@ export default {
           /// put the overflow back
           ta.style.overflow = overflow
           return height
+        } else {
+          // We weren't able to resize this element inside this function call to figure
+          // out it's true height so we give up and just return the scrollHeight.
+          return scrollHeight
         }
       } else {
         return scrollHeight

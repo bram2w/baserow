@@ -51,6 +51,9 @@ class DatabaseConfig(AppConfig):
         from .views.registries import view_type_registry, view_filter_type_registry
         from .fields.registries import field_type_registry, field_converter_registry
         from .export.registries import table_exporter_registry
+        from .formula.registries import (
+            formula_function_registry,
+        )
 
         from .plugins import DatabasePlugin
 
@@ -71,6 +74,7 @@ class DatabaseConfig(AppConfig):
             SingleSelectFieldType,
             MultipleSelectFieldType,
             PhoneNumberFieldType,
+            FormulaFieldType,
         )
 
         field_type_registry.register(TextFieldType())
@@ -87,6 +91,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(SingleSelectFieldType())
         field_type_registry.register(MultipleSelectFieldType())
         field_type_registry.register(PhoneNumberFieldType())
+        field_type_registry.register(FormulaFieldType())
 
         from .fields.field_converters import (
             LinkRowFieldConverter,
@@ -95,6 +100,7 @@ class DatabaseConfig(AppConfig):
             MultipleSelectFieldToTextFieldConverter,
             MultipleSelectFieldToSingleSelectFieldConverter,
             SingleSelectFieldToMultipleSelectFieldConverter,
+            FormulaFieldConverter,
         )
 
         field_converter_registry.register(LinkRowFieldConverter())
@@ -107,6 +113,7 @@ class DatabaseConfig(AppConfig):
         field_converter_registry.register(
             SingleSelectFieldToMultipleSelectFieldConverter()
         )
+        field_converter_registry.register(FormulaFieldConverter())
 
         from .views.view_types import GridViewType, FormViewType
 
@@ -186,6 +193,10 @@ class DatabaseConfig(AppConfig):
         trash_item_type_registry.register(TableTrashableItemType())
         trash_item_type_registry.register(FieldTrashableItemType())
         trash_item_type_registry.register(RowTrashableItemType())
+
+        from .formula.ast.function_defs import register_formula_functions
+
+        register_formula_functions(formula_function_registry)
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
