@@ -7,6 +7,7 @@ from django.db.models import (
     DecimalField,
     BooleanField,
     fields,
+    ExpressionWrapper,
 )
 from django.db.models.functions import Cast
 
@@ -109,14 +110,13 @@ class BaserowExpressionToDjangoExpressionGenerator(
         field_id = field_by_id_reference.referenced_field_id
         db_field_name = f"field_{field_id}"
 
+        expression_type = field_by_id_reference.expression_type
+        model_field = _get_model_field_for_type(expression_type)
         if self.model_instance is None:
-            return F(db_field_name)
+            return ExpressionWrapper(F(db_field_name), output_field=model_field)
         elif not hasattr(self.model_instance, db_field_name):
             raise UnknownFieldByIdReference(field_id)
         else:
-            expression_type = field_by_id_reference.expression_type
-            model_field = _get_model_field_for_type(expression_type)
-
             # We need to cast and be super explicit what type this raw value is so
             # postgres does not get angry and claim this is an unknown type.
             return Cast(
