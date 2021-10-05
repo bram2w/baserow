@@ -1,7 +1,8 @@
 # Baserow
 
-Open source no-code database tool and Airtable alternative. Join our community on 
-Gitter https://gitter.im/bramw-baserow/community.
+Open source no-code database tool and Airtable alternative. Join our forum on
+https://community.baserow.io/ or on Gitter via
+https://gitter.im/bramw-baserow/community.
 
 > Warning: From version 0.8.0 to 1.4.1 of Baserow the docker-compose.yml included in 
 > the root of this repository has exposed an unsecured redis instance by default on the 
@@ -119,7 +120,7 @@ Created by Baserow B.V. - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 1.5.0
+Version: 1.6.0
 
 The official repository can be found at https://gitlab.com/bramw/baserow.
 

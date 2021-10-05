@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Released (2021-10-05)
+
 * Introduced new endpoint to get and update user account information.
 * Fixed bug where a user could not be edited in the admin interface without providing 
   a password.
