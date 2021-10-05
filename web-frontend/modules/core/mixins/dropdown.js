@@ -1,6 +1,8 @@
 import { isDomElement, isElement } from '@baserow/modules/core/utils/dom'
+import dropdownHelpers from './dropdownHelpers'
 
 export default {
+  mixins: [dropdownHelpers],
   props: {
     value: {
       type: [String, Number, Boolean, Object],
@@ -256,44 +258,14 @@ export default {
      * to is the first viewable item in the dropdown window.
      */
     getScrollTopAmountForNextChild(itemToScrollTo, isArrowUp) {
-      // Styles of the itemToScroll to. Needed in order to get margins and height
-      const itemToScrollToStyles =
-        itemToScrollTo.$el.currentStyle ||
-        window.getComputedStyle(itemToScrollTo.$el)
-
-      // Styles of the ref items (the dropdown window). Needed in order to get
-      // ::before height and ::after height
-      const dropdownWindowBeforeStyles =
-        this.$refs.items.currentStyle ||
-        window.getComputedStyle(this.$refs.items, ':before')
-
-      const dropdownWindowAfterStyles =
-        this.$refs.items.currentStyle ||
-        window.getComputedStyle(this.$refs.items, ':after')
-
-      const dropdownWindowBeforeHeight = parseInt(
-        dropdownWindowBeforeStyles.height
-      )
-      const dropdownWindowAfterHeight = parseInt(
-        dropdownWindowAfterStyles.height
-      )
-      const dropdownWindowHeight = this.$refs.items.clientHeight
-
-      const itemHeight = parseInt(itemToScrollToStyles.height)
-      const itemMarginTop = parseInt(itemToScrollToStyles.marginTop)
-      const itemMarginBottom = parseInt(itemToScrollToStyles.marginBottom)
-      const itemHeightWithMargins =
-        itemHeight + itemMarginTop + itemMarginBottom
-
-      // Based on the values set in the SCSS files. The height of a dropdowns select
-      // item is set to 32px and the height of the select_items window is set to 4 *
-      // 36 (select item height plus margins) plus 20 (heights of before and after
-      // pseudo elements) so that there is room for four elements
-      const itemsInView =
-        (dropdownWindowHeight -
-          dropdownWindowBeforeHeight -
-          dropdownWindowAfterHeight) /
-        itemHeightWithMargins
+      const {
+        parentContainerHeight,
+        parentContainerAfterHeight,
+        parentContainerBeforeHeight,
+        itemHeightWithMargins,
+        itemMarginTop,
+        itemsInView,
+      } = this.getStyleProperties(this.$refs.items, itemToScrollTo.$el)
 
       // Get the direction of the scrolling.
       const movingDownwards = !isArrowUp
@@ -306,7 +278,7 @@ export default {
       // of the dropdown minus the full height of the element
       const nextItemOutOfView =
         itemToScrollTo.$el.offsetTop - this.$refs.items.scrollTop >
-        dropdownWindowHeight - itemHeightWithMargins
+        parentContainerHeight - itemHeightWithMargins
 
       // prevItemOutOfView can be used if one wants to check if the item to scroll
       // to is out of view of the current dropdowns top scroll position.
@@ -317,7 +289,7 @@ export default {
 
       // When the user is scrolling downwards (i.e. pressing key down)
       // and the itemToScrollTo is out of view we want to add the height of the
-      // elements preceding the itemToScrollTo plus the dropdownWindowBeforeHeight.
+      // elements preceding the itemToScrollTo plus the parentContainerBeforeHeight.
       // This can be achieved by removing said heights from the itemToScrollTo's
       // offsetTop
       if (nextItemOutOfView && movingDownwards) {
@@ -327,7 +299,7 @@ export default {
         return (
           itemToScrollTo.$el.offsetTop -
           elementsHeightBeforeItemToScrollTo -
-          dropdownWindowBeforeHeight
+          parentContainerBeforeHeight
         )
       }
 
@@ -339,7 +311,7 @@ export default {
         return (
           itemToScrollTo.$el.offsetTop -
           itemMarginTop -
-          dropdownWindowAfterHeight
+          parentContainerAfterHeight
         )
       }
 

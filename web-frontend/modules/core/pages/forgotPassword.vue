@@ -1,15 +1,17 @@
 <template>
   <div>
     <div v-if="!success">
-      <h1 class="box__title">Forgot password</h1>
+      <div class="box__head">
+        <h1 class="box__head-title">{{ $t('forgotPassword.title') }}</h1>
+        <LangPicker />
+      </div>
       <p>
-        Please enter your e-mail address in the form. If we find an account then
-        we will send an e-mail with a link to reset your password.
+        {{ $t('forgotPassword.message') }}
       </p>
       <Error :error="error"></Error>
       <form @submit.prevent="sendLink">
         <div class="control">
-          <label class="control__label">E-mail address</label>
+          <label class="control__label">{{ $t('field.emailAddress') }}</label>
           <div class="control__elements">
             <input
               ref="email"
@@ -21,7 +23,7 @@
               @blur="$v.account.email.$touch()"
             />
             <div v-if="$v.account.email.$error" class="error">
-              Please enter a valid e-mail address.
+              {{ $t('error.invalidEmail') }}
             </div>
           </div>
         </div>
@@ -30,7 +32,7 @@
             <li>
               <nuxt-link :to="{ name: 'login' }">
                 <i class="fas fa-arrow-left"></i>
-                Back
+                {{ $t('action.back') }}
               </nuxt-link>
             </li>
           </ul>
@@ -39,7 +41,7 @@
             class="button button--large"
             :disabled="loading || success"
           >
-            Send link
+            {{ $t('forgotPassword.submit') }}
             <i class="fas fa-envelope"></i>
           </button>
         </div>
@@ -50,12 +52,11 @@
         <i class="fas fa-paper-plane"></i>
       </div>
       <p class="box__message-text">
-        If your email address exists in our database, you will receive a
-        password reset link at your email address in a few minutes.
+        {{ $t('forgotPassword.confirmation') }}
       </p>
       <nuxt-link :to="{ name: 'login' }" class="button button--large">
         <i class="fas fa-arrow-left"></i>
-        Back to login
+        {{ $t('action.backToLogin') }}
       </nuxt-link>
     </div>
   </div>
@@ -66,8 +67,10 @@ import { required, email } from 'vuelidate/lib/validators'
 
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
+import LangPicker from '@baserow/modules/core/components/LangPicker'
 
 export default {
+  components: { LangPicker },
   mixins: [error],
   layout: 'login',
   data() {
@@ -115,3 +118,24 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "forgotPassword": {
+      "title": "Forgot password",
+      "message": "Please enter your e-mail address in the form. If we find an account then we will send an e-mail with a link to reset your password.",
+      "submit": "Send link",
+      "confirmation": "If your email address exists in our database, you will receive a password reset link at your email address in a few minutes."
+    }
+  },
+  "fr": {
+    "forgotPassword": {
+      "title": "Mot de passe oublié",
+      "message": "Veuillez saisir votre adresse email dans le formulaire. Si nous trouvons un compte correspondant, nous vous enverrons un email avec un lien pour réinitialiser votre mot de passe.",
+      "submit": "Envoyer le lien",
+      "confirmation": "Si un compte correspondant à votre adresse email, vous allez recevoir un lien de réinitialisation de mot de passe sur votre messagerie dans quelques minutes."
+    }
+  }
+}
+</i18n>

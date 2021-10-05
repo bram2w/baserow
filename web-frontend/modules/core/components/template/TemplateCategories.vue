@@ -1,14 +1,16 @@
 <template>
   <div class="templates__sidebar">
     <slot></slot>
-    <div class="templates__sidebar-title">Templates</div>
+    <div class="templates__sidebar-title">
+      {{ $t('templateCategories.title') }}
+    </div>
     <div class="templates__search">
       <div class="input__with-icon input__with-icon--left">
         <input
           v-model="search"
           type="text"
           class="input"
-          placeholder="Search templates"
+          :placeholder="$t('templateCategories.search')"
         />
         <i class="fas fa-search"></i>
       </div>
@@ -65,3 +67,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "templateCategories": {
+      "search": "Search templates",
+      "title": "Templates"
+    }
+  },
+  "fr": {
+    "templateCategories": {
+      "search": "Chercher des modèles",
+      "title": "Modèles"
+    }
+  }
+}
+</i18n>

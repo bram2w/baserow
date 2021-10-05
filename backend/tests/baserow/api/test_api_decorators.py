@@ -15,9 +15,14 @@ from rest_framework.test import APIRequestFactory
 from baserow.api.decorators import (
     map_exceptions,
     validate_body,
+    validate_query_parameters,
     validate_body_custom_fields,
     allowed_includes,
     accept_timezone,
+)
+from baserow.api.exceptions import (
+    QueryParameterValidationException,
+    RequestBodyValidationException,
 )
 from baserow.core.models import Group
 from baserow.core.registry import (
@@ -35,6 +40,10 @@ class TemporaryException(Exception):
 class TemporarySerializer(serializers.Serializer):
     field_1 = serializers.CharField()
     field_2 = serializers.ChoiceField(choices=("choice_1", "choice_2"))
+
+
+class TemporaryQueryParamSerializer(serializers.Serializer):
+    field_3 = serializers.IntegerField(required=True)
 
 
 class TemporaryBaseModelSerializer(serializers.ModelSerializer):
@@ -156,6 +165,161 @@ def test_validate_body():
     func = MagicMock()
 
     validate_body(TemporarySerializer)(func)(*[object, request])
+
+
+def test_validate_query_parameter():
+    factory = APIRequestFactory()
+
+    request = Request(
+        factory.post(
+            "/some-page/?field_3=wrong_type",
+            content_type="application/json",
+        ),
+        parsers=[JSONParser()],
+    )
+    func = MagicMock()
+
+    with pytest.raises(QueryParameterValidationException) as api_exception_1:
+        validate_query_parameters(TemporaryQueryParamSerializer)(func)(
+            *[object, request]
+        )
+
+    assert api_exception_1.value.detail["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert api_exception_1.value.detail["detail"]["field_3"][0]["error"] == (
+        "A valid integer is required."
+    )
+    assert api_exception_1.value.detail["detail"]["field_3"][0]["code"] == "invalid"
+    assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
+
+    request = Request(
+        factory.post(
+            "/some-page/",
+            content_type="application/json",
+        ),
+        parsers=[JSONParser()],
+    )
+    func = MagicMock()
+
+    with pytest.raises(QueryParameterValidationException) as api_exception_2:
+        validate_query_parameters(TemporaryQueryParamSerializer)(func)(
+            *[object, request]
+        )
+
+    assert api_exception_2.value.detail["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert api_exception_2.value.detail["detail"]["field_3"][0]["error"] == (
+        "This field is required."
+    )
+    assert api_exception_2.value.detail["detail"]["field_3"][0]["code"] == ("required")
+    assert api_exception_2.value.status_code == status.HTTP_400_BAD_REQUEST
+
+    request = Request(
+        factory.post(
+            "/some-page/?field_3=5",
+            content_type="application/json",
+        ),
+        parsers=[JSONParser()],
+    )
+    func = MagicMock()
+
+    validate_query_parameters(TemporaryQueryParamSerializer)(func)(*[object, request])
+
+    request = Request(
+        factory.post(
+            "/some-page/?field_3=-6",
+            content_type="application/json",
+        ),
+        parsers=[JSONParser()],
+    )
+    func = MagicMock()
+
+    validate_query_parameters(TemporaryQueryParamSerializer)(func)(*[object, request])
+
+    # Make sure that having additional query parameters in the query string will not
+    # have any effect on validating the parameters
+    request = Request(
+        factory.post(
+            "/some-page/?field_3=-6&field_6=5",
+            content_type="application/json",
+        ),
+        parsers=[JSONParser()],
+    )
+    func = MagicMock()
+
+    validate_query_parameters(TemporaryQueryParamSerializer)(func)(*[object, request])
+
+
+def test_validate_body_and_query_parameters():
+    factory = APIRequestFactory()
+
+    request = Request(
+        factory.post(
+            "/some-page/?field_3=wrong_type",
+            data=json.dumps({"field_1": "test", "field_2": "choice_1"}),
+            content_type="application/json",
+        ),
+        parsers=[JSONParser()],
+    )
+    func = MagicMock()
+
+    with pytest.raises(QueryParameterValidationException) as api_exception_1:
+        validate_body(TemporarySerializer)(func)(*[object, request])
+        validate_query_parameters(TemporaryQueryParamSerializer)(func)(
+            *[object, request]
+        )
+    assert api_exception_1.value.detail["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+
+    request = Request(
+        factory.post(
+            "/some-page/?field_3=5",
+            data=json.dumps({"field_1": "test"}),
+            content_type="application/json",
+        ),
+        parsers=[JSONParser()],
+    )
+    func = MagicMock()
+
+    with pytest.raises(RequestBodyValidationException) as api_exception_2:
+        validate_body(TemporarySerializer)(func)(*[object, request])
+        validate_query_parameters(TemporaryQueryParamSerializer)(func)(
+            *[object, request]
+        )
+    assert api_exception_2.value.detail["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    # When both the request body and the query parameters are incorrect
+    # which Exception gets raised depends on the order of the decorators.
+    request = Request(
+        factory.post(
+            "/some-page/?field_3=wrong_type",
+            data=json.dumps({"field_1": "test"}),
+            content_type="application/json",
+        ),
+        parsers=[JSONParser()],
+    )
+    func = MagicMock()
+
+    with pytest.raises(RequestBodyValidationException) as api_exception_3:
+        validate_body(TemporarySerializer)(func)(*[object, request])
+        validate_query_parameters(TemporaryQueryParamSerializer)(func)(
+            *[object, request]
+        )
+    assert api_exception_3.value.detail["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    request = Request(
+        factory.post(
+            "/some-page/?field_3=wrong_type",
+            data=json.dumps({"field_1": "test"}),
+            content_type="application/json",
+        ),
+        parsers=[JSONParser()],
+    )
+    func = MagicMock()
+
+    with pytest.raises(QueryParameterValidationException) as api_exception_4:
+        validate_query_parameters(TemporaryQueryParamSerializer)(func)(
+            *[object, request]
+        )
+        validate_body(TemporarySerializer)(func)(*[object, request])
+    assert api_exception_4.value.detail["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
 
 
 def test_validate_body_custom_fields():

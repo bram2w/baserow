@@ -15,7 +15,7 @@
           "
         >
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
-          Edit field
+          {{ $t('fieldContext.editField') }}
         </a>
         <UpdateFieldContext
           ref="updateFieldContext"
@@ -32,7 +32,7 @@
           @click="deleteField()"
         >
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
-          Delete field
+          {{ $t('fieldContext.deleteField') }}
         </a>
       </li>
     </ul>
@@ -71,9 +71,12 @@ export default {
       const { field } = this
 
       try {
-        await this.$store.dispatch('field/deleteCall', field)
+        const { data } = await this.$store.dispatch('field/deleteCall', field)
         this.$emit('delete')
         await this.$store.dispatch('field/forceDelete', field)
+        await this.$store.dispatch('field/forceUpdateFields', {
+          fields: data.related_fields,
+        })
         await this.$store.dispatch('notification/restore', {
           trash_item_type: 'field',
           trash_item_id: field.id,
@@ -92,3 +95,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "fieldContext":{
+      "editField": "Edit field",
+      "deleteField": "Delete field"
+    }
+  },  
+  "fr": {
+    "fieldContext":{
+      "editField": "Modifier la colonne",
+      "deleteField": "Supprimer la colonne"
+    }
+  }
+}
+</i18n>

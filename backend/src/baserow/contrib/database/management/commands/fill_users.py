@@ -4,7 +4,12 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from faker import Faker
 
-from baserow.core.models import Group, GroupUser, GROUP_USER_PERMISSION_ADMIN
+from baserow.core.models import (
+    Group,
+    GroupUser,
+    GROUP_USER_PERMISSION_ADMIN,
+    UserProfile,
+)
 
 User = get_user_model()
 
@@ -41,6 +46,9 @@ class Command(BaseCommand):
             user = User(first_name=name, email=username, username=username)
             user.set_password(password)
             user.save()
+
+            # Manually create the user profile
+            UserProfile.objects.create(user=user)
 
             group = Group.objects.create(name=name + "'s Group")
             GroupUser.objects.create(

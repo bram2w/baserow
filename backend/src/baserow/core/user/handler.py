@@ -11,6 +11,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.registries import plugin_registry
 from baserow.core.exceptions import BaseURLHostnameNotAllowed
 from baserow.core.exceptions import GroupInvitationEmailMismatch
+from baserow.core.models import UserProfile
 
 from .exceptions import (
     UserAlreadyExist,
@@ -60,7 +61,13 @@ class UserHandler:
             raise UserNotFound("The user with the provided parameters is not found.")
 
     def create_user(
-        self, name, email, password, group_invitation_token=None, template=None
+        self,
+        name,
+        email,
+        password,
+        language=settings.LANGUAGE_CODE,
+        group_invitation_token=None,
+        template=None,
     ):
         """
         Creates a new user with the provided information and creates a new group and
@@ -73,6 +80,8 @@ class UserHandler:
         :type email: str
         :param password: The password of the user.
         :type password: str
+        :param language: The language selected by the user.
+        :type language: str
         :param group_invitation_token: If provided and valid, the invitation will be
             accepted and and initial group will not be created.
         :type group_invitation_token: str
@@ -131,6 +140,11 @@ class UserHandler:
 
         user.save()
 
+        # Since there is a one-to-one relationship between the user and their
+        # profile, we create and populate it here because this way
+        # you can assume safely that, everywhere else in the code, it exists.
+        UserProfile.objects.create(user=user, language=language)
+
         if group_invitation_token:
             group_user = core_handler.accept_group_invitation(user, group_invitation)
 
@@ -143,6 +157,28 @@ class UserHandler:
         # Call the user_created method for each plugin that is un the registry.
         for plugin in plugin_registry.registry.values():
             plugin.user_created(user, group_user.group, group_invitation, template)
+
+        return user
+
+    def update_user(self, user, first_name=None, language=None):
+        """
+        Update user modifiable properties
+
+        :param user: The user instance to update.
+        :type user: User
+        :param language: The language selected by the user.
+        :type language: str
+        :return: The user object.
+        :rtype: User
+        """
+
+        if first_name is not None:
+            user.first_name = first_name
+            user.save()
+
+        if language is not None:
+            user.profile.language = language
+            user.profile.save()
 
         return user
 

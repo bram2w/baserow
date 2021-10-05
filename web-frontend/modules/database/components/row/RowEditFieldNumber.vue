@@ -5,7 +5,9 @@
       v-model="copy"
       type="text"
       class="input input--large field-number"
-      :class="{ 'input--error': touched && !valid }"
+      :class="{
+        'input--error': (touched && !valid) || isInvalidNumber,
+      }"
       :disabled="readOnly"
       @keyup.enter="$refs.input.blur()"
       @focus="select()"
@@ -14,6 +16,7 @@
     <div v-show="touched && !valid" class="error">
       {{ error }}
     </div>
+    <div v-show="isInvalidNumber" class="error">Invalid Number</div>
   </div>
 </template>
 
@@ -24,5 +27,10 @@ import numberField from '@baserow/modules/database/mixins/numberField'
 
 export default {
   mixins: [rowEditField, rowEditFieldInput, numberField],
+  computed: {
+    isInvalidNumber() {
+      return this.copy === 'NaN'
+    },
+  },
 }
 </script>

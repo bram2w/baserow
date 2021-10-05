@@ -2,6 +2,49 @@
 
 ## Unreleased
 
+## Released (2021-10-05)
+
+* Introduced new endpoint to get and update user account information.
+* Fixed bug where a user could not be edited in the admin interface without providing 
+  a password.
+* Fixed bug where sometimes fields would not be ordered correctly in view exports.
+* Fixed bug where brand-new fields weren't included in view exports.
+* Fixed error when pasting into a single select field.
+* Pasting the value of a single select option into a single select field now selects the
+  first option with that value.
+* The API now returns appropriate errors when trying to create a field with a name which is too long.
+* Importing table data with a column name that is too long will now truncate that name.
+* Fixed error when rapidly switching between template tables or views in the template 
+  preview.
+* Upgraded Django to version 3.2.6 and also upgraded all other backend libraries to 
+  their latest versions.
+* Fix minor error that could sometimes occur when a row and it's table/group/database
+  were deleted in rapid succession.
+* Fix accidentally locking of too many rows in various tables during update operations.
+* Introduced the has file type filter.
+* Fixed bug where the backend would fail hard when an invalid integer was provided as
+  'before_id' when moving a row by introducing a decorator to validate query parameters.
+* Fixed bug where copying a cell containing a null value resulted in an error.
+* Added "Multiple Select" field type.
+* Fixed a bug where the currently selected view was not in the viewport of the parent.
+* Fixed a bug where views context would not scroll down after a new view has been added.
+* New templates:
+    * Recipe Book
+    * Healthcare Facility Management
+    * Bucket List
+    * Apartment Hunt
+    * Holiday Shopping
+    * Email Marketing Campaigns
+    * Book Writing Guide
+    * Home Inventory
+    * Political Campaign Contributions
+* Updated templates:
+    * Blog Post Management
+* Fixed a bug where the backend would fail hard when trying to order by field name without
+  using `user_field_names`.
+* Added "Formula" field type with 30+ useful functions allowing dynamic per row
+  calculations.
+
 ## Released (2021-08-11)
 
 * Made it possible to leave a group.

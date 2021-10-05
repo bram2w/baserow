@@ -1,3 +1,5 @@
+from typing import Callable, Union, List
+
 from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
@@ -13,6 +15,8 @@ from baserow.core.registry import (
     ImportExportMixin,
     MapAPIExceptionsInstanceMixin,
 )
+from baserow.contrib.database import models
+
 from .exceptions import (
     ViewTypeAlreadyRegistered,
     ViewTypeDoesNotExist,
@@ -324,10 +328,12 @@ class ViewFilterType(Instance):
         view_filter_type_registry.register(ExampleViewFilterType())
     """
 
-    compatible_field_types = []
+    compatible_field_types: List[Union[str, Callable[["models.Field"], bool]]] = []
     """
     Defines which field types are compatible with the filter. Only the supported ones
-    can be used in combination with the field.
+    can be used in combination with the field. The values in this list can either be
+    the literal field_type.type string, or a callable which takes the field being
+    checked and returns True if compatible or False if not.
     """
 
     def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
@@ -392,6 +398,28 @@ class ViewFilterType(Instance):
         """
 
         return value
+
+    def field_is_compatible(self, field):
+        """
+        Given a particular instance of a field returns a list of Type[FieldType] which
+        are compatible with this particular field type.
+
+        Works by checking the field_type against this view filters list of compatible
+        field types or compatibility checking functions defined in
+        self.allowed_field_types.
+
+        :param field: The field to check.
+        :return: True if the field is compatible, False otherwise.
+        """
+
+        from baserow.contrib.database.fields.registries import field_type_registry
+
+        field_type = field_type_registry.get_by_model(field.specific_class)
+
+        return any(
+            callable(t) and t(field) or t == field_type.type
+            for t in self.compatible_field_types
+        )
 
 
 class ViewFilterTypeRegistry(Registry):

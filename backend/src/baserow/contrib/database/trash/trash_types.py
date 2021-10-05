@@ -6,6 +6,10 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.signals import field_restored
+from baserow.contrib.database.formula.types.typed_field_updater import (
+    type_table_and_update_fields_given_changed_field,
+    type_table_and_update_fields_given_deleted_field,
+)
 from baserow.contrib.database.rows.signals import row_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
@@ -38,6 +42,15 @@ class TableTrashableItemType(TrashableItemType):
         trash_item_lookup_cache=None,
     ):
         """Deletes the table schema and instance."""
+
+        if (
+            trash_item_lookup_cache is not None
+            and "row_table_model_cache" in trash_item_lookup_cache
+        ):
+            # Invalidate the cached model for this table after it is deleted as
+            # otherwise a row being deleted after will use the cached model and assume
+            # it still exists.
+            trash_item_lookup_cache["row_table_model_cache"].pop(trashed_item.id, None)
 
         with connection.schema_editor() as schema_editor:
             model = trashed_item.get_model()
@@ -78,13 +91,23 @@ class FieldTrashableItemType(TrashableItemType):
         # We need to set the specific field's name also so when the field_restored
         # serializer switches to serializing the specific instance it picks up and uses
         # the new name set here rather than the name currently in the DB.
-        trashed_item.specific.name = trashed_item.name
+        trashed_item = trashed_item.specific
+        trashed_item.name = trashed_item.name
+        trashed_item.trashed = False
         trashed_item.save()
+        (
+            typed_updated_table,
+            trashed_item,
+        ) = type_table_and_update_fields_given_changed_field(
+            trashed_item.table, initial_field=trashed_item
+        )
         field_restored.send(
             self,
             field=trashed_item,
+            related_fields=typed_updated_table.updated_fields,
             user=None,
         )
+        typed_updated_table.update_values_for_all_updated_fields()
 
     def permanently_delete_item(
         self,
@@ -111,7 +134,11 @@ class FieldTrashableItemType(TrashableItemType):
             model_field = from_model._meta.get_field(field.db_column)
             schema_editor.remove_field(from_model, model_field)
 
+        table = field.table
+        field_id = field.id
+        field_name = field.name
         field.delete()
+        type_table_and_update_fields_given_deleted_field(table, field_id, field_name)
 
         # After the field is deleted we are going to to call the after_delete method of
         # the field type because some instance cleanup might need to happen.
@@ -123,11 +150,10 @@ class FieldTrashableItemType(TrashableItemType):
         When trashing a link row field we also want to trash the related link row field.
         """
 
+        trashed_item = trashed_item.specific
         items_to_trash = [trashed_item]
-        field_type = field_type_registry.get_by_model(trashed_item.specific)
-        return items_to_trash + field_type.get_related_items_to_trash(
-            trashed_item.specific
-        )
+        field_type = field_type_registry.get_by_model(trashed_item)
+        return items_to_trash + field_type.get_related_items_to_trash(trashed_item)
 
 
 class RowTrashableItemType(TrashableItemType):

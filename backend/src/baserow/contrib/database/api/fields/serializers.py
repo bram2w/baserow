@@ -34,6 +34,28 @@ class FieldSerializer(serializers.ModelSerializer):
         return field.type
 
 
+class RelatedFieldsSerializer(serializers.Serializer):
+    related_fields = serializers.SerializerMethodField(
+        help_text="A list of related fields which also changed.",
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.related_fields_list = kwargs.pop("related_fields", [])
+        super().__init__(*args, **kwargs)
+
+    @extend_schema_field(FieldSerializer(many=True))
+    def get_related_fields(self, instance):
+        return [
+            field_type_registry.get_serializer(f, FieldSerializer).data
+            for f in self.related_fields_list
+        ]
+
+
+class FieldSerializerWithRelatedFields(FieldSerializer, RelatedFieldsSerializer):
+    class Meta(FieldSerializer.Meta):
+        fields = FieldSerializer.Meta.fields + ("related_fields",)
+
+
 class SelectOptionSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False)
     value = serializers.CharField(max_length=255, required=True)

@@ -9,6 +9,8 @@ import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/Vi
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
 import { trueString } from '@baserow/modules/database/utils/constants'
 import { isNumeric } from '@baserow/modules/core/utils/string'
+import ViewFilterTypeFileTypeDropdown from '@baserow/modules/database/components/view/ViewFilterTypeFileTypeDropdown'
+import { FormulaFieldType } from '@baserow/modules/database/fieldTypes'
 
 export class ViewFilterType extends Registerable {
   /**
@@ -22,10 +24,9 @@ export class ViewFilterType extends Registerable {
     return 'string'
   }
 
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
-    this.name = this.getName()
     this.example = this.getExample()
     this.compatibleFieldTypes = this.getCompatibleFieldTypes()
 
@@ -43,7 +44,7 @@ export class ViewFilterType extends Registerable {
   serialize() {
     return {
       type: this.type,
-      name: this.name,
+      name: this.getName(),
       compatibleFieldTypes: this.compatibleFieldTypes,
     }
   }
@@ -75,13 +76,38 @@ export class ViewFilterType extends Registerable {
   }
 
   /**
-   * Should return the field type names that the filter is compatible with. So for
-   * example ['text', 'long_text']. When that field is selected as filter it is only
-   * possible to select compatible filter types. If no filters are compatible with a
-   * field then that field will be disabled.
+   * Should return the field type names that the filter is compatible with or
+   * functions which take a field and return a boolean indicating if the field is
+   * compatible or not.
+   *
+   * So for example ['text', 'long_text']. When that field is selected as filter it
+   * is only possible to select compatible filter types.
+   *
+   * Or using a function you could do [(field) => field.some_prop === 10, 'long_text']
+   * and then fields which pass the test defined by the function will be deemed as
+   * compatible.
+   *
+   * If no filters are compatible with a field then that field will be disabled.
    */
   getCompatibleFieldTypes() {
     return []
+  }
+
+  /**
+   * Returns if a given field is compatible with this view filter or not. Uses the
+   * list provided by getCompatibleFieldTypes to calculate this.
+   */
+  fieldIsCompatible(field) {
+    for (const typeOrFunc of this.getCompatibleFieldTypes()) {
+      if (typeOrFunc instanceof Function) {
+        if (typeOrFunc(field)) {
+          return true
+        }
+      } else if (field.type === typeOrFunc) {
+        return true
+      }
+    }
+    return false
   }
 
   /**
@@ -103,7 +129,8 @@ export class EqualViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'is'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.is')
   }
 
   getInputComponent() {
@@ -111,7 +138,15 @@ export class EqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'phone_number',
+      FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -131,7 +166,8 @@ export class NotEqualViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'is not'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isNot')
   }
 
   getInputComponent() {
@@ -139,7 +175,15 @@ export class NotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'phone_number',
+      FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -159,7 +203,8 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'filename contains'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.filenameContains')
   }
 
   getInputComponent() {
@@ -170,8 +215,47 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
     return ['file']
   }
 
+  matches(rowValue, filterValue, field, fieldType, $registry) {
+    return fieldType.containsFilter(rowValue, filterValue, field, $registry)
+  }
+}
+
+export class HasFileTypeViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'has_file_type'
+  }
+
+  getName() {
+    return 'has file type'
+  }
+
+  getExample() {
+    return 'image | document'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeFileTypeDropdown
+  }
+
+  getCompatibleFieldTypes() {
+    return ['file']
+  }
+
   matches(rowValue, filterValue, field, fieldType) {
-    return fieldType.containsFilter(rowValue, filterValue, field)
+    const isImage = filterValue === 'image'
+    const isDocument = filterValue === 'document'
+
+    if (!isImage && !isDocument) {
+      return true
+    }
+
+    for (let i = 0; i < rowValue.length; i++) {
+      if (rowValue[i].is_image === isImage) {
+        return true
+      }
+    }
+
+    return false
   }
 }
 
@@ -181,7 +265,8 @@ export class ContainsViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'contains'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.contains')
   }
 
   getInputComponent() {
@@ -199,12 +284,19 @@ export class ContainsViewFilterType extends ViewFilterType {
       'last_modified',
       'created_on',
       'single_select',
+      'multiple_select',
       'number',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'number',
+        'date'
+      ),
     ]
   }
 
-  matches(rowValue, filterValue, field, fieldType) {
-    return fieldType.containsFilter(rowValue, filterValue, field)
+  matches(rowValue, filterValue, field, fieldType, $registry) {
+    return fieldType.containsFilter(rowValue, filterValue, field, $registry)
   }
 }
 
@@ -214,7 +306,8 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'contains not'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.containsNot')
   }
 
   getInputComponent() {
@@ -232,7 +325,14 @@ export class ContainsNotViewFilterType extends ViewFilterType {
       'last_modified',
       'created_on',
       'single_select',
+      'multiple_select',
       'number',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'number',
+        'date'
+      ),
     ]
   }
 
@@ -247,7 +347,8 @@ export class DateEqualViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'is date'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isDate')
   }
 
   getExample() {
@@ -259,7 +360,12 @@ export class DateEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -284,7 +390,8 @@ export class DateBeforeViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'before date'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isBeforeDate')
   }
 
   getExample() {
@@ -296,7 +403,12 @@ export class DateBeforeViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -331,7 +443,8 @@ export class DateAfterViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'after date'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isAfterDate')
   }
 
   getExample() {
@@ -343,7 +456,12 @@ export class DateAfterViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -378,7 +496,8 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'is not date'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isNotDate')
   }
 
   getExample() {
@@ -390,7 +509,12 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -415,7 +539,8 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'is today'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isToday')
   }
 
   getInputComponent() {
@@ -423,7 +548,12 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   getDefaultValue() {
@@ -469,7 +599,8 @@ export class DateEqualsCurrentMonthViewFilterType extends DateEqualsTodayViewFil
   }
 
   getName() {
-    return 'in this month'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.inThisMonth')
   }
 }
 
@@ -483,7 +614,8 @@ export class DateEqualsCurrentYearViewFilterType extends DateEqualsTodayViewFilt
   }
 
   getName() {
-    return 'in this year'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.inThisYear')
   }
 }
 
@@ -493,7 +625,8 @@ export class HigherThanViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'higher than'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.higherThan')
   }
 
   getExample() {
@@ -505,7 +638,7 @@ export class HigherThanViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['number']
+    return ['number', FormulaFieldType.compatibleWithFormulaTypes('number')]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -525,7 +658,8 @@ export class LowerThanViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'lower than'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.lowerThan')
   }
 
   getExample() {
@@ -537,7 +671,7 @@ export class LowerThanViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['number']
+    return ['number', FormulaFieldType.compatibleWithFormulaTypes('number')]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -557,7 +691,8 @@ export class SingleSelectEqualViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'is'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.is')
   }
 
   getExample() {
@@ -586,7 +721,8 @@ export class SingleSelectNotEqualViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'is not'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isNot')
   }
 
   getExample() {
@@ -610,13 +746,76 @@ export class SingleSelectNotEqualViewFilterType extends ViewFilterType {
   }
 }
 
+export class MultipleSelectHasFilterType extends ViewFilterType {
+  static getType() {
+    return 'multiple_select_has'
+  }
+
+  getName() {
+    return 'has'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['multiple_select']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return rowValue.some((option) => option.id === filterValueId)
+  }
+}
+
+export class MultipleSelectHasNotFilterType extends ViewFilterType {
+  static getType() {
+    return 'multiple_select_has_not'
+  }
+
+  getName() {
+    return 'has not'
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeSelectOptions
+  }
+
+  getCompatibleFieldTypes() {
+    return ['multiple_select']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return !rowValue.some((option) => option.id === filterValueId)
+  }
+}
+
 export class BooleanViewFilterType extends ViewFilterType {
   static getType() {
     return 'boolean'
   }
 
   getName() {
-    return 'is'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.is')
   }
 
   getExample() {
@@ -628,7 +827,7 @@ export class BooleanViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['boolean']
+    return ['boolean', FormulaFieldType.compatibleWithFormulaTypes('boolean')]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -646,7 +845,8 @@ export class LinkRowHasFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'has'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.has')
   }
 
   getExample() {
@@ -677,7 +877,8 @@ export class LinkRowHasNotFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'has not'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.hasNot')
   }
 
   getExample() {
@@ -708,7 +909,8 @@ export class EmptyViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'is empty'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isEmpty')
   }
 
   getExample() {
@@ -733,7 +935,9 @@ export class EmptyViewFilterType extends ViewFilterType {
       'link_row',
       'file',
       'single_select',
+      'multiple_select',
       'phone_number',
+      'formula',
     ]
   }
 
@@ -753,7 +957,8 @@ export class NotEmptyViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'is not empty'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isNotEmpty')
   }
 
   getExample() {
@@ -778,7 +983,9 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'link_row',
       'file',
       'single_select',
+      'multiple_select',
       'phone_number',
+      'formula',
     ]
   }
 

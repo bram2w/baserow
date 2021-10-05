@@ -33,7 +33,9 @@
     >
       <template #foot>
         <div class="grid-view__column" :style="{ width: leftWidth + 'px' }">
-          <div class="grid-view__foot-info">{{ count }} rows</div>
+          <div class="grid-view__foot-info">
+            {{ $tc('gridView.rowCount', count, { count }) }}
+          </div>
         </div>
       </template>
     </GridViewSection>
@@ -88,13 +90,13 @@
         <li v-if="!readOnly">
           <a @click=";[addRow(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
-            Insert row above
+            {{ $t('gridView.insertRowAbove') }}
           </a>
         </li>
         <li v-if="!readOnly">
           <a @click=";[addRowAfter(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
-            Insert row below
+            {{ $t('gridView.insertRowBelow') }}
           </a>
         </li>
         <li>
@@ -107,13 +109,13 @@
             "
           >
             <i class="context__menu-icon fas fa-fw fa-expand"></i>
-            Enlarge row
+            {{ $t('gridView.enlargeRow') }}
           </a>
         </li>
         <li v-if="!readOnly">
           <a @click="deleteRow(selectedRow)">
             <i class="context__menu-icon fas fa-fw fa-trash"></i>
-            Delete row
+            {{ $t('gridView.deleteRow') }}
           </a>
         </li>
       </ul>
@@ -702,3 +704,26 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "gridView":{
+      "insertRowAbove": "Insert row above",
+      "insertRowBelow": "Insert row below",
+      "enlargeRow": "Enlarge row",
+      "deleteRow": "Delete row",
+      "rowCount": "No rows | 1 row | {count} rows"
+    }
+  },  
+  "fr": {
+    "gridView":{
+      "insertRowAbove": "Insérer au dessus",
+      "insertRowBelow": "Insérer en dessous",
+      "enlargeRow": "Afficher la ligne",
+      "deleteRow": "Supprimer la ligne",
+      "rowCount": "Acunne ligne | 1 ligne | {count} lignes"
+    }
+  }
+}
+</i18n>

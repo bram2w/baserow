@@ -5,7 +5,7 @@ import serveStatic from 'serve-static'
 import { routes } from './routes'
 import head from './head'
 
-export default function DatabaseModule(options) {
+export default function CoreModule(options) {
   /**
    * This function adds a plugin, but rather then prepending it to the list it will
    * be appended.
@@ -48,6 +48,10 @@ export default function DatabaseModule(options) {
           default: 'http://localhost:3000',
         },
         {
+          key: 'ENABLE_I18N',
+          default: false,
+        },
+        {
           key: 'INITIAL_TABLE_DATA_LIMIT',
           default: null,
         },
@@ -58,6 +62,31 @@ export default function DatabaseModule(options) {
           default: 24 * 3,
         },
       ],
+    },
+  ])
+
+  // Use feature flag to enable i18n
+  const locales = [{ code: 'en', name: 'English', file: 'en.js' }]
+  if (process.env.ENABLE_I18N) {
+    locales.push({ code: 'fr', name: 'Français', file: 'fr.js' })
+  }
+
+  this.requireModule([
+    '@nuxtjs/i18n',
+    {
+      vueI18nLoader: true,
+      strategy: 'no_prefix',
+      defaultLocale: 'en',
+      detectBrowserLanguage: {
+        useCookie: true,
+        cookieKey: 'i18n-language',
+      },
+      locales,
+      langDir: path.resolve(__dirname, '../../locales/'),
+      vueI18n: {
+        fallbackLocale: 'en',
+        silentFallbackWarn: true,
+      },
     },
   ])
 
@@ -83,7 +112,13 @@ export default function DatabaseModule(options) {
     ssr: false,
   })
   this.addPlugin({ src: path.resolve(__dirname, 'middleware.js') })
-  this.addPlugin({ src: path.resolve(__dirname, 'plugin.js') })
+
+  // Some plugins depends on i18n instance so the plugin must be added
+  // after the nuxt-i18n module's plugin
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugin.js') })
+
+  // This plugin must be added after nuxt-i18n module's plugin
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/i18n.js') })
 
   // The client handler depends on environment variables so the plugin must be added
   // after the nuxt-env module's plugin.

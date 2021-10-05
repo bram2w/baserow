@@ -1,7 +1,7 @@
 import {
   clone,
   mappingToStringifiedJSONLines,
-} from '@/modules/core/utils/object'
+} from '@baserow/modules/core/utils/object'
 
 describe('test utils object', () => {
   test('test clone', () => {

@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.db import connection
 
+from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
+    MaxFieldNameLengthExceeded,
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
 )
@@ -12,8 +14,8 @@ from baserow.contrib.database.fields.field_types import (
 )
 from baserow.contrib.database.fields.handler import (
     FieldHandler,
-    RESERVED_BASEROW_FIELD_NAMES,
 )
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
@@ -45,7 +47,7 @@ class TableHandler:
         :rtype: Table
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = Table.objects
 
         try:
@@ -148,6 +150,7 @@ class TableHandler:
         :return: A list containing the field names and a list containing all the rows.
         :rtype: list, list
         :raises InvalidInitialTableData: When the data doesn't contain a column or row.
+        :raises MaxFieldNameLengthExceeded: When the provided name is too long.
         """
 
         if len(data) == 0:
@@ -177,6 +180,12 @@ class TableHandler:
 
         if len(field_name_set) != len(fields):
             raise InitialTableDataDuplicateName()
+
+        max_field_name_length = Field.get_max_name_length()
+        long_field_names = [x for x in field_name_set if len(x) > max_field_name_length]
+
+        if len(long_field_names) > 0:
+            raise MaxFieldNameLengthExceeded()
 
         if len(field_name_set.intersection(RESERVED_BASEROW_FIELD_NAMES)) > 0:
             raise ReservedBaserowFieldNameException()

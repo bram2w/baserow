@@ -9,7 +9,11 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-eye-slash"></i>
-      <span class="header__filter-name">{{ hiddenFieldsTitle }}</span>
+      <span class="header__filter-name">{{
+        $tc('gridViewHide.hideField', hiddenFields.length, {
+          count: hiddenFields.length,
+        })
+      }}</span>
     </a>
     <GridViewHideContext
       ref="context"
@@ -56,16 +60,6 @@ export default {
         return !exists || (exists && this.fieldOptions[field.id].hidden)
       })
     },
-    hiddenFieldsTitle() {
-      const numberOfHiddenFields = this.hiddenFields.length
-      if (numberOfHiddenFields === 0) {
-        return 'Hide Fields'
-      } else if (numberOfHiddenFields === 1) {
-        return `${numberOfHiddenFields} hidden field`
-      } else {
-        return `${numberOfHiddenFields} hidden fields`
-      }
-    },
   },
   beforeCreate() {
     this.$options.computed = {
@@ -78,3 +72,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "gridViewHide": {
+      "hideField": "Hide Fields | 1 hidden field | {count} hidden fields"
+    }
+  },
+  "fr":{
+    "gridViewHide": {
+      "hideField": "Cacher des colonnes | 1 colonne cachée | {count} colonnes cachées"
+    }
+  }
+}
+</i18n>

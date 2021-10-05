@@ -92,6 +92,7 @@ def test_create_user(data_fixture):
     assert user.first_name == "Test1"
     assert user.email == "test@test.nl"
     assert user.username == "test@test.nl"
+    assert user.profile.language == "en"
 
     assert Group.objects.all().count() == 1
     group = Group.objects.all().first()
@@ -126,8 +127,34 @@ def test_create_user(data_fixture):
 
     plugin_mock.user_created.assert_called_with(user, group, None, None)
 
+    # Test profile properties
+    user2 = user_handler.create_user(
+        "Test2", "test2@test.nl", "password", language="fr"
+    )
+    assert user2.profile.language == "fr"
+
     with pytest.raises(UserAlreadyExist):
         user_handler.create_user("Test1", "test@test.nl", valid_password)
+
+
+@pytest.mark.django_db
+def test_update_user(data_fixture):
+    user_handler = UserHandler()
+    user = data_fixture.create_user(first_name="Initial", language="fr")
+
+    user_handler.update_user(user, first_name="Updated")
+
+    user.refresh_from_db()
+    user.profile.refresh_from_db()
+    assert user.first_name == "Updated"
+    assert user.profile.language == "fr"
+
+    user_handler.update_user(user, language="en")
+
+    user.refresh_from_db()
+    user.profile.refresh_from_db()
+    assert user.first_name == "Updated"
+    assert user.profile.language == "en"
 
 
 @pytest.mark.django_db
@@ -172,20 +199,31 @@ def test_create_user_with_invitation(data_fixture):
     signer = core_handler.get_group_invitation_signer()
 
     with pytest.raises(BadSignature):
-        user_handler.create_user("Test1", "test0@test.nl", valid_password, "INVALID")
+        user_handler.create_user(
+            "Test1", "test0@test.nl", valid_password, group_invitation_token="INVALID"
+        )
 
     with pytest.raises(GroupInvitationDoesNotExist):
         user_handler.create_user(
-            "Test1", "test0@test.nl", valid_password, signer.dumps(99999)
+            "Test1",
+            "test0@test.nl",
+            valid_password,
+            group_invitation_token=signer.dumps(99999),
         )
 
     with pytest.raises(GroupInvitationEmailMismatch):
         user_handler.create_user(
-            "Test1", "test1@test.nl", valid_password, signer.dumps(invitation.id)
+            "Test1",
+            "test1@test.nl",
+            valid_password,
+            group_invitation_token=signer.dumps(invitation.id),
         )
 
     user = user_handler.create_user(
-        "Test1", "test0@test.nl", valid_password, signer.dumps(invitation.id)
+        "Test1",
+        "test0@test.nl",
+        valid_password,
+        group_invitation_token=signer.dumps(invitation.id),
     )
 
     assert Group.objects.all().count() == 1

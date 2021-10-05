@@ -1,6 +1,6 @@
 <template>
   <div class="paginator">
-    <div class="paginator__name">page</div>
+    <div class="paginator__name">{{ $t('paginator.page') }}</div>
     <div class="paginator__group">
       <a
         class="paginator__button"
@@ -17,7 +17,9 @@
         type="number"
         @keypress.enter="changePage(textInputPage)"
       />
-      <div class="paginator__count">of {{ totalPages }}</div>
+      <div class="paginator__count">
+        {{ $t('paginator.of', { pages: totalPages }) }}
+      </div>
       <a
         class="paginator__button"
         :class="{
@@ -83,3 +85,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "paginator": {
+      "page": "page",
+      "of": "of {pages}"
+    }
+  },
+  "fr": {
+    "paginator": {
+      "page": "page",
+      "of": "sur {pages}"
+    }
+  }
+}
+</i18n>

@@ -1,18 +1,23 @@
 <template>
   <div>
-    <h1 class="box__title">
-      <nuxt-link :to="{ name: 'index' }">
-        <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
-      </nuxt-link>
-    </h1>
+    <div class="box__head">
+      <h1 class="box__head-title">
+        <nuxt-link :to="{ name: 'index' }">
+          <img src="@baserow/modules/core/static/img/logo.svg" alt="" />
+        </nuxt-link>
+      </h1>
+      <LangPicker />
+    </div>
     <AuthLogin :invitation="invitation" @success="success">
       <ul class="action__links">
         <li v-if="settings.allow_new_signups">
-          <nuxt-link :to="{ name: 'signup' }"> Sign up </nuxt-link>
+          <nuxt-link :to="{ name: 'signup' }">
+            {{ $t('action.signUp') }}
+          </nuxt-link>
         </li>
         <li>
           <nuxt-link :to="{ name: 'forgot-password' }">
-            Forgot password
+            {{ $t('action.forgotPassword') }}
           </nuxt-link>
         </li>
       </ul>
@@ -25,9 +30,10 @@ import { mapGetters } from 'vuex'
 
 import AuthLogin from '@baserow/modules/core/components/auth/AuthLogin'
 import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
+import LangPicker from '@baserow/modules/core/components/LangPicker'
 
 export default {
-  components: { AuthLogin },
+  components: { AuthLogin, LangPicker },
   mixins: [groupInvitationToken],
   layout: 'login',
   head() {
@@ -58,3 +64,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "action": {
+      "forgotPassword": "Forgot password"
+    }
+  },
+  "fr": {
+    "action": {
+      "forgotPassword": "Mot de passe oublié"
+    }
+  }
+}
+</i18n>

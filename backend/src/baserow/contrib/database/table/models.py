@@ -1,8 +1,8 @@
 import re
-from typing import Dict, Any
+from typing import Dict, Any, Union
 
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
@@ -14,7 +14,9 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
+from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.formula.types.table_typer import type_table
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.mixins import (
@@ -72,6 +74,42 @@ class TableModelQuerySet(models.QuerySet):
 
         return filter_builder.apply_to_queryset(self)
 
+    def _get_field_name(self, field: str) -> str:
+        """
+        Helper method for parsing a field name from a string
+        with a possible prefix.
+
+        :param field: The string from which the field name
+            should be parsed.
+        :type field: str
+        :return: The field without prefix.
+        :rtype: str
+        """
+
+        possible_prefix = field[:1]
+        if possible_prefix in {"-", "+"}:
+            return field[1:]
+        else:
+            return field
+
+    def _get_field_id(self, field: str) -> Union[int, None]:
+        """
+        Helper method for parsing a field ID from a string.
+
+        :param field: The string from which the field id
+            should be parsed.
+        :type field: str
+        :return: The ID of the field or None
+        :rtype: int or None
+        """
+
+        try:
+            field_id = int(re.sub("[^0-9]", "", str(field)))
+        except ValueError:
+            field_id = None
+
+        return field_id
+
     def order_by_fields_string(self, order_string, user_field_names=False):
         """
         Orders the query by the given field order string. This string is often
@@ -112,22 +150,18 @@ class TableModelQuerySet(models.QuerySet):
 
         for index, order in enumerate(order_by):
             if user_field_names:
-                possible_prefix = order[:1]
-                if possible_prefix in {"-", "+"}:
-                    field_name_or_id = order[1:]
-                else:
-                    field_name_or_id = order
+                field_name_or_id = self._get_field_name(order)
             else:
-                field_name_or_id = int(re.sub("[^0-9]", "", str(order)))
+                field_name_or_id = self._get_field_id(order)
 
             if field_name_or_id not in field_object_dict:
-                raise OrderByFieldNotFound(
-                    order, f"Field {field_name_or_id} does not exist."
-                )
+                raise OrderByFieldNotFound(order)
 
+            order_direction = "DESC" if order[:1] == "-" else "ASC"
             field_object = field_object_dict[field_name_or_id]
             field_type = field_object["type"]
             field_name = field_object["name"]
+            field = field_object["field"]
             user_field_name = field_object["field"].name
             error_display_name = user_field_name if user_field_names else field_name
 
@@ -138,11 +172,32 @@ class TableModelQuerySet(models.QuerySet):
                     f"It is not possible to order by field type {field_type.type}.",
                 )
 
-            order_by[index] = "{}{}".format("-" if order[:1] == "-" else "", field_name)
+            field_order = field_type.get_order(field, field_name, order_direction)
+            annotation = None
+
+            if isinstance(field_order, AnnotatedOrder):
+                annotation = field_order.annotation
+                field_order = field_order.order
+
+            if field_order:
+                order_by[index] = field_order
+            else:
+                order_expression = F(field_name)
+
+                if order_direction == "ASC":
+                    order_expression = order_expression.asc(nulls_first=True)
+                else:
+                    order_expression = order_expression.desc(nulls_last=True)
+
+                order_by[index] = order_expression
 
         order_by.append("order")
         order_by.append("id")
-        return self.order_by(*order_by)
+
+        if annotation is not None:
+            return self.annotate(**annotation).order_by(*order_by)
+        else:
+            return self.order_by(*order_by)
 
     def filter_by_fields_object(self, filter_object, filter_type=FILTER_TYPE_AND):
         """
@@ -188,12 +243,13 @@ class TableModelQuerySet(models.QuerySet):
                 raise FilterFieldNotFound(field_id, f"Field {field_id} does not exist.")
 
             field_object = self.model._field_objects[field_id]
+            field_instance = field_object["field"]
             field_name = field_object["name"]
             field_type = field_object["type"].type
             model_field = self.model._meta.get_field(field_name)
             view_filter_type = view_filter_type_registry.get(matches[2])
 
-            if field_type not in view_filter_type.compatible_field_types:
+            if not view_filter_type.field_is_compatible(field_instance):
                 raise ViewFilterTypeNotAllowedForField(
                     matches[2],
                     field_type,
@@ -220,13 +276,31 @@ class TableModelManager(models.Manager):
 FieldObject = Dict[str, Any]
 
 
-class GeneratedTableModel:
+class GeneratedTableModel(models.Model):
     """
-    This class is purely used to mark Model classes which have been generated by Baserow
-    for identification using instance(possible_baserow_model, GeneratedTableModel).
+    Mixed into Model classes which have been generated by Baserow.
+    Can also be used to identify instances of generated baserow models
+    like `instance(possible_baserow_model, GeneratedTableModel)`.
     """
 
-    pass
+    @classmethod
+    def fields_requiring_refresh_after_insert(cls):
+        return [
+            f.attname
+            for f in cls._meta.fields
+            if getattr(f, "requires_refresh_after_insert", False)
+        ]
+
+    @classmethod
+    def fields_requiring_refresh_after_update(cls):
+        return [
+            f.attname
+            for f in cls._meta.fields
+            if getattr(f, "requires_refresh_after_update", False)
+        ]
+
+    class Meta:
+        abstract = True
 
 
 class Table(
@@ -255,7 +329,8 @@ class Table(
         field_names=None,
         attribute_names=False,
         manytomany_models=None,
-    ):
+        typed_table=None,
+    ) -> GeneratedTableModel:
         """
         Generates a temporary Django model based on available fields that belong to
         this table. Note that the model will not be registered with the apps because
@@ -279,6 +354,10 @@ class Table(
             generated in order to generate that model. In order to prevent a
             recursion loop we cache the generated models and pass those along.
         :type manytomany_models: dict
+        :param typed_table: If the table has already been typed then it can be provided
+            here to prevent any retyping calculations. Or instead false can be provided
+            to prevent any automatic typing operations what so ever.
+        :type Union[bool, Optional[TypedBaserowTable]]
         :return: The generated model.
         :rtype: Model
         """
@@ -375,13 +454,23 @@ class Table(
         # later which ones are duplicate.
         duplicate_field_names = []
 
+        already_included_field_ids = set([f.id for f in fields])
+
         # We will have to add each field to with the correct field name and model field
         # to the attribute list in order for the model to work.
-        for field in fields:
+        while len(fields) > 0:
+            field = fields.pop(0)
             trashed = field.trashed
             field = field.specific
             field_type = field_type_registry.get_by_model(field)
             field_name = field.db_column
+
+            if typed_table is None and field_type.requires_typing:
+                typed_table = type_table(self)
+
+            fields += field_type.add_related_fields_to_model(
+                typed_table, field, already_included_field_ids
+            )
 
             # If attribute_names is True we will not use 'field_{id}' as attribute name,
             # but we will rather use a name the user provided.
@@ -412,11 +501,17 @@ class Table(
             if field.primary:
                 attrs["_primary_field_id"] = field.id
 
-            # Add the field to the attribute dict that is used to generate the model.
-            # All the kwargs that are passed to the `get_model_field` method are going
-            # to be passed along to the model field.
+            # Add the field to the attribute dict that is used to generate the
+            # model. All the kwargs that are passed to the `get_model_field`
+            # method are going to be passed along to the model field.
+            extra_kwargs = {}
+            if field_type.requires_typing:
+                extra_kwargs["typed_table"] = typed_table
             attrs[field_name] = field_type.get_model_field(
-                field, db_column=field.db_column, verbose_name=field.name
+                field,
+                db_column=field.db_column,
+                verbose_name=field.name,
+                **extra_kwargs,
             )
 
         # Create the model class.

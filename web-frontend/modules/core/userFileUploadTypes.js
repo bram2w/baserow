@@ -33,11 +33,10 @@ export class UserFileUploadType extends Registerable {
     throw new Error('The component of a user file upload type must be set.')
   }
 
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
-    this.name = this.getName()
 
     if (this.type === null) {
       throw new Error('The type name of a user file upload type must be set.')
@@ -57,7 +56,7 @@ export class UserFileUploadType extends Registerable {
     return {
       type: this.type,
       iconClass: this.iconClass,
-      name: this.name,
+      name: this.getName(),
     }
   }
 }
@@ -72,7 +71,8 @@ export class UploadFileUserFileUploadType extends UserFileUploadType {
   }
 
   getName() {
-    return 'my device'
+    const { i18n } = this.app
+    return i18n.t('userFileUploadType.file')
   }
 
   getComponent() {
@@ -90,7 +90,8 @@ export class UploadViaURLUserFileUploadType extends UserFileUploadType {
   }
 
   getName() {
-    return 'a URL'
+    const { i18n } = this.app
+    return i18n.t('userFileUploadType.url')
   }
 
   getComponent() {

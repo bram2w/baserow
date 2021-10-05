@@ -135,5 +135,17 @@ export default {
         }
       }
     },
+    /**
+     * Returns if a child form has indicated it handled the error, false otherwise.
+     */
+    handleErrorByForm(error) {
+      let childHandledIt = false
+      for (const child of this.$children) {
+        if ('handleErrorByForm' in child && child.handleErrorByForm(error)) {
+          childHandledIt = true
+        }
+      }
+      return childHandledIt
+    },
   },
 }

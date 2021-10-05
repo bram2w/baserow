@@ -2,22 +2,27 @@
   <div>
     <div
       v-if="invitation !== null"
-      class="alert alert--simple alert-primary alert--has-icon"
+      class="alert alert--simple alert--primary alert--has-icon"
     >
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
       </div>
-      <div class="alert__title">Invitation</div>
-      <p class="alert__content">
-        <strong>{{ invitation.invited_by }}</strong> has invited you to join
-        <strong>{{ invitation.group }}</strong
-        >.
-      </p>
+      <div class="alert__title">
+        {{ $t('invitationTitle') }}
+      </div>
+      <i18n path="invitationMessage" tag="p" class="alert__content">
+        <template #invitedBy>
+          <strong>{{ invitation.invited_by }}</strong>
+        </template>
+        <template #group>
+          <strong>{{ invitation.group }}</strong>
+        </template>
+      </i18n>
     </div>
     <Error :error="error"></Error>
     <form @submit.prevent="login">
       <div class="control">
-        <label class="control__label">E-mail address</label>
+        <label class="control__label">{{ $t('field.emailAddress') }}</label>
         <div class="control__elements">
           <input
             v-if="invitation !== null"
@@ -37,12 +42,12 @@
             @blur="$v.credentials.email.$touch()"
           />
           <div v-if="$v.credentials.email.$error" class="error">
-            Please enter a valid e-mail address.
+            {{ $t('error.invalidEmail') }}
           </div>
         </div>
       </div>
       <div class="control">
-        <label class="control__label">Password</label>
+        <label class="control__label">{{ $t('field.password') }}</label>
         <div class="control__elements">
           <input
             ref="password"
@@ -53,7 +58,7 @@
             @blur="$v.credentials.password.$touch()"
           />
           <div v-if="$v.credentials.password.$error" class="error">
-            A password is required.
+            {{ $t('error.passwordRequired') }}
           </div>
         </div>
       </div>
@@ -64,7 +69,7 @@
           class="button button--large"
           :disabled="loading"
         >
-          Sign in
+          {{ $t('action.signIn') }}
           <i class="fas fa-lock-open"></i>
         </button>
       </div>
@@ -140,13 +145,13 @@ export default {
               response.data.non_field_errors[0] === 'User account is disabled.'
             ) {
               this.showError(
-                'Account disabled',
-                'This user account has been disabled.'
+                this.$t('error.disabledAccountTitle'),
+                this.$t('error.disabledAccountMessage')
               )
             } else {
               this.showError(
-                'Incorrect credentials',
-                'The provided e-mail address or password is incorrect.'
+                this.$t('error.incorrectCredentialTitle'),
+                this.$t('error.incorrectCredentialMessage')
               )
             }
             this.credentials.password = ''
@@ -173,3 +178,38 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en":{
+    "error":{
+      "passwordRequired": "A password is required.",
+      "invalidEmail": "Please enter a valid e-mail address.",
+      "disabledAccountTitle": "Account disabled",
+      "disabledAccountMessage": "This user account has been disabled.",
+      "incorrectCredentialTitle": "Incorrect credentials",
+      "incorrectCredentialMessage": "The provided e-mail address or password is incorrect."
+    },
+    "field":{
+      "password": "Password"
+    },
+    "invitationTitle": "Invitation",
+    "invitationMessage": "{invitedBy} has invited you to join {group}."
+  },
+  "fr": {
+    "error":{
+      "passwordRequired": "Le mot de passe est obligatoire.",
+      "invalidEmail": "Veuillez entrer une adresse électronique valide.",
+      "disabledAccountTitle": "Compte désactivé",
+      "disabledAccountMessage": "Ce compte utilisateur est desactivé.",
+      "incorrectCredentialTitle": "Identifiants incorrects",
+      "incorrectCredentialMessage": "L'adresse éléctronique et/ou le mot de passe sont incorrects."
+    },
+    "field":{
+      "password": "Mot de passe"
+    },
+    "invitationTitle": "Invitation",
+    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le groupe {group}."
+  }
+}
+</i18n>

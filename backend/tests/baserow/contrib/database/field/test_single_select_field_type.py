@@ -341,7 +341,7 @@ def test_single_select_field_type_api_views(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_200_OK
     assert SingleSelectField.objects.all().count() == 1
     assert SelectOption.objects.all().count() == 0
 

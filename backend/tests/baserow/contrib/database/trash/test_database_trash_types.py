@@ -52,7 +52,7 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
 
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
-    with django_assert_num_queries(10):
+    with django_assert_num_queries(13):
         TrashHandler.permanently_delete_marked_trash()
 
     row_2 = handler.create_row(user=user, table=table)
@@ -70,16 +70,18 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
 
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
-    # We only want five more queries when deleting 2 rows instead of 1 compared to
+    # We only want seven more queries when deleting 2 rows instead of 1 compared to
     # above:
-    # 1. A query to lookup the extra row we are deleting
-    # 2. A query to delete said row
-    # 3. A query to delete it's trash entry.
-    # 4. A query to delete any related row comments.
-    # 5. Queries to open and close transactions for each deletion
+    # 1. An extra query to open the second trash entries savepoint
+    # 2. An extra query to lookup the second trash entry
+    # 3. A query to lookup the extra row we are deleting
+    # 4. A query to delete said row
+    # 5. A query to delete it's trash entry.
+    # 6. A query to delete any related row comments.
+    # 7. An extra query to close the second trash entries savepoint
     # If we weren't caching the table models an extra number of queries would be first
     # performed to lookup the table information which breaks this assertion.
-    with django_assert_num_queries(16):
+    with django_assert_num_queries(20):
         TrashHandler.permanently_delete_marked_trash()
 
 
@@ -1048,3 +1050,69 @@ def test_perm_delete_table_and_related_link_row_field(data_fixture):
     assert TrashEntry.objects.count() == 0
     assert LinkRowField.objects_and_trash.all().count() == 0
     assert Table.objects_and_trash.all().count() == 1
+
+
+@pytest.mark.django_db
+def test_can_delete_applications_and_rows_in_the_same_perm_delete_batch(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    data_fixture.create_text_field(table=table, name="Name", text_default="Test")
+
+    handler = RowHandler()
+    model = table.get_model()
+    row_1 = handler.create_row(user=user, table=table)
+    row_2 = handler.create_row(user=user, table=table)
+
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_1, parent_id=table.id
+    )
+    TrashHandler.trash(user, table.database.group, table.database, table.database)
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_2, parent_id=table.id
+    )
+    assert model.objects.all().count() == 0
+    assert model.trash.all().count() == 2
+    assert TrashEntry.objects.count() == 3
+    assert table.get_database_table_name() in connection.introspection.table_names()
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert table.get_database_table_name() not in connection.introspection.table_names()
+    assert TrashEntry.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_can_delete_tables_and_rows_in_the_same_perm_delete_batch(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    data_fixture.create_text_field(table=table, name="Name", text_default="Test")
+
+    handler = RowHandler()
+    model = table.get_model()
+    row_1 = handler.create_row(user=user, table=table)
+    row_2 = handler.create_row(user=user, table=table)
+
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_1, parent_id=table.id
+    )
+    TrashHandler.trash(user, table.database.group, table.database, table)
+    TrashHandler.trash(
+        user, table.database.group, table.database, row_2, parent_id=table.id
+    )
+    assert model.objects.all().count() == 0
+    assert model.trash.all().count() == 2
+    assert TrashEntry.objects.count() == 3
+    assert table.get_database_table_name() in connection.introspection.table_names()
+
+    TrashEntry.objects.update(should_be_permanently_deleted=True)
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert TrashEntry.objects.count() == 0
+    assert table.get_database_table_name() not in connection.introspection.table_names()

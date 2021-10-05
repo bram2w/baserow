@@ -107,9 +107,10 @@ plugins/my_baserow_plugin/web-frontend/plugin.js
 import { PluginNamePlugin } from '@my-baserow-plugin/plugins'
 import { TextFileApplicationType } from '@my-baserow-plugin/applicationTypes'
 
-export default ({ store, app }) => {
-  app.$registry.register('plugin', new PluginNamePlugin())
-  app.$registry.register('application', new TextFileApplicationType())
+export default (context) => {
+  const { app } = context
+  app.$registry.register('plugin', new PluginNamePlugin(context))
+  app.$registry.register('application', new TextFileApplicationType(context))
 }
 ```
 

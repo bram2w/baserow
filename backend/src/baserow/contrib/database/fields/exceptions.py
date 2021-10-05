@@ -1,3 +1,4 @@
+from baserow.contrib.database.fields.models import Field
 from baserow.core.exceptions import (
     InstanceTypeDoesNotExist,
     InstanceTypeAlreadyRegistered,
@@ -46,7 +47,15 @@ class LinkRowTableNotInSameDatabase(Exception):
 
 
 class MaxFieldLimitExceeded(Exception):
-    """ Raised when the field count exceeds the limit"""
+    """Raised when the field count exceeds the limit"""
+
+
+class MaxFieldNameLengthExceeded(Exception):
+    """Raised when the field name exceeds the max length."""
+
+    def __init__(self, *args, **kwargs):
+        self.max_field_name_length = Field.get_max_name_length()
+        super().__init__(*args, **kwargs)
 
 
 class OrderByFieldNotFound(Exception):
@@ -95,3 +104,18 @@ class ReservedBaserowFieldNameException(Exception):
 class InvalidBaserowFieldName(Exception):
     """Raised when a field name is not provided or an invalid blank field name is
     provided."""
+
+
+class AllProvidedMultipleSelectValuesMustBeIntegers(Exception):
+    """
+    Raised when one tries to create or update a row for a MultipleSelectField that
+    contains a value other than an integer.
+    """
+
+
+class AllProvidedMultipleSelectValuesMustBeSelectOption(Exception):
+    """
+    Raised when one tries to create or update a row for a MultipleSelectField that
+    contains a SelectOption ID that either does not exists or does not belong to the
+    field.
+    """

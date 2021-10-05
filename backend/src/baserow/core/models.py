@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 from rest_framework.exceptions import NotAuthenticated
 
@@ -57,6 +58,22 @@ class Settings(models.Model):
         default=True,
         help_text="Indicates whether new users can create a new account when signing "
         "up.",
+    )
+
+
+class UserProfile(models.Model):
+    """
+    User profile to store user specific information that can't be stored in
+    default user model.
+    """
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    language = models.TextField(
+        max_length=10,
+        choices=settings.LANGUAGES,
+        default=settings.LANGUAGE_CODE,
+        help_text="An ISO 639 language code (with optional variant) "
+        "selected by the user. Ex: en-GB.",
     )
 
 

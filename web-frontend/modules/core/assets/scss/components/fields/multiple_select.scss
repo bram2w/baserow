@@ -1,0 +1,34 @@
+.field-multiple-select__items {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.field-multiple-select__item {
+  margin: 6px 0 5px;
+
+  @include select-option-style(flex, true);
+
+  &:not(:last-child) {
+    margin-right: 5px;
+  }
+}
+
+.field-multiple-select__name {
+  @extend %ellipsis;
+
+  max-width: 200px;
+}
+
+.field-multiple-select__remove {
+  color: $color-primary-900;
+  margin-left: 5px;
+  font-size: 11px;
+  padding: 0 2px;
+
+  &:hover {
+    color: $color-neutral-500;
+  }
+}

@@ -1,6 +1,15 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
+from baserow.contrib.database.fields.mixins import (
+    BaseDateMixin,
+    TimezoneMixin,
+    DATE_FORMAT_CHOICES,
+    DATE_TIME_FORMAT_CHOICES,
+)
+from baserow.contrib.database.formula.types.formula_types import (
+    BASEROW_FORMULA_TYPE_CHOICES,
+)
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 from baserow.core.mixins import (
     OrderableMixin,
@@ -8,7 +17,6 @@ from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     TrashableModelMixin,
 )
-from baserow.contrib.database.fields.mixins import BaseDateMixin, TimezoneMixin
 from baserow.core.utils import to_snake_case, remove_special_characters
 
 NUMBER_TYPE_INTEGER = "INTEGER"
@@ -18,13 +26,15 @@ NUMBER_TYPE_CHOICES = (
     ("DECIMAL", "Decimal"),
 )
 
-NUMBER_DECIMAL_PLACES_CHOICES = (
+NUMBER_MAX_DECIMAL_PLACES = 5
+
+NUMBER_DECIMAL_PLACES_CHOICES = [
     (1, "1.0"),
     (2, "1.00"),
     (3, "1.000"),
     (4, "1.0000"),
-    (5, "1.00000"),
-)
+    (NUMBER_MAX_DECIMAL_PLACES, "1.00000"),
+]
 
 
 def get_default_field_content_type():
@@ -70,6 +80,10 @@ class Field(
         queryset = Field.objects.filter(table=table)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
+    @classmethod
+    def get_max_name_length(cls):
+        return cls._meta.get_field("name").max_length
+
     @property
     def db_column(self):
         return f"field_{self.id}"
@@ -92,7 +106,7 @@ class Field(
         return name
 
 
-class SelectOption(ParentFieldTrashableModelMixin, models.Model):
+class AbstractSelectOption(ParentFieldTrashableModelMixin, models.Model):
     value = models.CharField(max_length=255, blank=True)
     color = models.CharField(max_length=255, blank=True)
     order = models.PositiveIntegerField()
@@ -101,6 +115,7 @@ class SelectOption(ParentFieldTrashableModelMixin, models.Model):
     )
 
     class Meta:
+        abstract = True
         ordering = (
             "order",
             "id",
@@ -108,6 +123,12 @@ class SelectOption(ParentFieldTrashableModelMixin, models.Model):
 
     def __str__(self):
         return self.value
+
+
+class SelectOption(AbstractSelectOption):
+    @classmethod
+    def get_max_value_length(cls):
+        return cls._meta.get_field("value").max_length
 
 
 class TextField(Field):
@@ -235,5 +256,75 @@ class SingleSelectField(Field):
     pass
 
 
+class MultipleSelectField(Field):
+    THROUGH_DATABASE_TABLE_PREFIX = "database_multipleselect_"
+
+    @property
+    def through_table_name(self):
+        """
+        Generating a unique through table name based on the relation id.
+
+        :return: The table name of the through model.
+        :rtype: string
+        """
+
+        return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.id}"
+
+
 class PhoneNumberField(Field):
     pass
+
+
+class FormulaField(Field):
+    formula = models.TextField()
+    error = models.TextField(null=True, blank=True)
+
+    formula_type = models.TextField(
+        choices=BASEROW_FORMULA_TYPE_CHOICES,
+        default="invalid",
+    )
+    number_decimal_places = models.IntegerField(
+        choices=[(0, "1")] + NUMBER_DECIMAL_PLACES_CHOICES,
+        default=None,
+        null=True,
+        help_text="The amount of digits allowed after the point.",
+    )
+    date_format = models.CharField(
+        choices=DATE_FORMAT_CHOICES,
+        default=None,
+        max_length=32,
+        help_text="EU (20/02/2020), US (02/20/2020) or ISO (2020-02-20)",
+        null=True,
+    )
+    date_include_time = models.BooleanField(
+        default=None,
+        help_text="Indicates if the field also includes a time.",
+        null=True,
+    )
+    date_time_format = models.CharField(
+        choices=DATE_TIME_FORMAT_CHOICES,
+        default=None,
+        null=True,
+        max_length=32,
+        help_text="24 (14:30) or 12 (02:30 PM)",
+    )
+
+    def same_as(self, other):
+        return (
+            self.formula == other.formula
+            and self.error == other.error
+            and self.formula_type == other.formula_type
+            and self.number_decimal_places == other.number_decimal_places
+            and self.date_format == other.date_format
+            and self.date_time_format == other.date_time_format
+            and self.date_include_time == other.date_include_time
+        )
+
+    def __str__(self):
+        return (
+            "FormulaField(\n"
+            + f"formula={self.formula},\n"
+            + f"formula_type={self.formula_type},\n"
+            + f"error={self.error},\n"
+            + ")"
+        )

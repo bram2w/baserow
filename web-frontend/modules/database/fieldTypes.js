@@ -2,9 +2,10 @@ import BigNumber from 'bignumber.js'
 
 import moment from '@baserow/modules/core/moment'
 import {
-  isValidURL,
-  isValidEmail,
+  isNumeric,
   isSimplePhoneNumber,
+  isValidEmail,
+  isValidURL,
 } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
@@ -13,7 +14,7 @@ import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTe
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 import FieldCreatedOnLastModifiedSubForm from '@baserow/modules/database/components/field/FieldCreatedOnLastModifiedSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
-import FieldSingleSelectSubForm from '@baserow/modules/database/components/field/FieldSingleSelectSubForm'
+import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
@@ -26,6 +27,7 @@ import GridViewFieldDate from '@baserow/modules/database/components/view/grid/fi
 import GridViewFieldDateReadOnly from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDateReadOnly'
 import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFile'
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
+import GridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleSelect'
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
@@ -36,7 +38,9 @@ import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
 import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
+import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleSelect'
 import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
+import FunctionalGridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -49,6 +53,7 @@ import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFi
 import RowEditFieldDateReadOnly from '@baserow/modules/database/components/row/RowEditFieldDateReadOnly'
 import RowEditFieldFile from '@baserow/modules/database/components/row/RowEditFieldFile'
 import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/RowEditFieldSingleSelect'
+import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row/RowEditFieldMultipleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
@@ -62,6 +67,9 @@ import {
   filenameContainsFilter,
   genericContainsFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
+import GridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula'
+import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
+import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 
 export class FieldType extends Registerable {
   /**
@@ -179,12 +187,10 @@ export class FieldType extends Registerable {
     return true
   }
 
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
-    this.name = this.getName()
-    this.sortIndicator = this.getSortIndicator()
     this.canSortInView = this.getCanSortInView()
     this.canBePrimaryField = this.getCanBePrimaryField()
     this.isReadOnly = this.getIsReadOnly()
@@ -217,8 +223,7 @@ export class FieldType extends Registerable {
     return {
       type: this.type,
       iconClass: this.iconClass,
-      name: this.name,
-      sortIndicator: this.sortIndicator,
+      name: this.getName(),
       canSortInView: this.canSortInView,
       isReadOnly: this.isReadOnly,
     }
@@ -261,7 +266,13 @@ export class FieldType extends Registerable {
    * converted to a string.
    */
   prepareValueForCopy(field, value) {
-    return value.toString()
+    // In case that the 'value' is null or undefined (which means that the cell is empty)
+    // we simply want to return an empty string.
+    if (value == null) {
+      return ''
+    } else {
+      return value.toString()
+    }
   }
 
   /**
@@ -355,10 +366,10 @@ export class FieldType extends Registerable {
    * Converts rowValue to its human readable form first before applying the
    * filter returned from getContainsFilterFunction.
    */
-  containsFilter(rowValue, filterValue, field) {
+  containsFilter(rowValue, filterValue, field, $registry) {
     return (
       filterValue === '' ||
-      this.getContainsFilterFunction()(
+      this.getContainsFilterFunction(field, $registry)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
@@ -373,7 +384,7 @@ export class FieldType extends Registerable {
   notContainsFilter(rowValue, filterValue, field) {
     return (
       filterValue === '' ||
-      !this.getContainsFilterFunction()(
+      !this.getContainsFilterFunction(field)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
@@ -446,7 +457,8 @@ export class TextFieldType extends FieldType {
   }
 
   getName() {
-    return 'Single line text'
+    const { i18n } = this.app
+    return i18n.t('fieldType.singleLineText')
   }
 
   getFormComponent() {
@@ -507,7 +519,8 @@ export class LongTextFieldType extends FieldType {
   }
 
   getName() {
-    return 'Long text'
+    const { i18n } = this.app
+    return i18n.t('fieldType.longText')
   }
 
   getGridViewFieldComponent() {
@@ -564,7 +577,8 @@ export class LinkRowFieldType extends FieldType {
   }
 
   getName() {
-    return 'Link to table'
+    const { i18n } = this.app
+    return i18n.t('fieldType.linkToTable')
   }
 
   getFormComponent() {
@@ -682,7 +696,8 @@ export class NumberFieldType extends FieldType {
   }
 
   getName() {
-    return 'Number'
+    const { i18n } = this.app
+    return i18n.t('fieldType.number')
   }
 
   getFormComponent() {
@@ -834,7 +849,8 @@ export class BooleanFieldType extends FieldType {
   }
 
   getName() {
-    return 'Boolean'
+    const { i18n } = this.app
+    return i18n.t('fieldType.boolean')
   }
 
   getGridViewFieldComponent() {
@@ -985,7 +1001,8 @@ export class DateFieldType extends BaseDateFieldType {
   }
 
   getName() {
-    return 'Date'
+    const { i18n } = this.app
+    return i18n.t('fieldType.date')
   }
 
   getGridViewFieldComponent() {
@@ -1090,7 +1107,8 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
   }
 
   getName() {
-    return 'Last Modified'
+    const { i18n } = this.app
+    return i18n.t('fieldType.lastModified')
   }
 
   getDocsDescription(field) {
@@ -1137,7 +1155,8 @@ export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
   }
 
   getName() {
-    return 'Created On'
+    const { i18n } = this.app
+    return i18n.t('fieldType.createdOn')
   }
 }
 
@@ -1151,7 +1170,8 @@ export class URLFieldType extends FieldType {
   }
 
   getName() {
-    return 'URL'
+    const { i18n } = this.app
+    return i18n.t('fieldType.url')
   }
 
   getGridViewFieldComponent() {
@@ -1223,7 +1243,8 @@ export class EmailFieldType extends FieldType {
   }
 
   getName() {
-    return 'Email'
+    const { i18n } = this.app
+    return i18n.t('fieldType.email')
   }
 
   getGridViewFieldComponent() {
@@ -1298,7 +1319,8 @@ export class FileFieldType extends FieldType {
   }
 
   getName() {
-    return 'File'
+    const { i18n } = this.app
+    return i18n.t('fieldType.file')
   }
 
   getGridViewFieldComponent() {
@@ -1412,11 +1434,12 @@ export class SingleSelectFieldType extends FieldType {
   }
 
   getName() {
-    return 'Single select'
+    const { i18n } = this.app
+    return i18n.t('fieldType.singleSelect')
   }
 
   getFormComponent() {
-    return FieldSingleSelectSubForm
+    return FieldSelectOptionsSubForm
   }
 
   getGridViewFieldComponent() {
@@ -1456,15 +1479,28 @@ export class SingleSelectFieldType extends FieldType {
     return value.id
   }
 
-  prepareValueForPaste(field, clipboardData) {
-    const value = parseInt(clipboardData.getData('text'))
-
-    for (let i = 0; i <= field.select_options.length; i++) {
-      const option = field.select_options[i]
-      if (option.id === value) {
-        return option
-      }
+  _findOptionWithMatchingId(field, rawTextValue) {
+    if (isNumeric(rawTextValue)) {
+      const pastedOptionId = parseInt(rawTextValue)
+      return field.select_options.find((option) => option.id === pastedOptionId)
     }
+    return undefined
+  }
+
+  _findOptionWithMatchingValue(field, rawTextValue) {
+    const trimmedPastedText = rawTextValue.trim()
+    return field.select_options.find(
+      (option) => option.value === trimmedPastedText
+    )
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    const rawTextValue = clipboardData.getData('text')
+
+    return (
+      this._findOptionWithMatchingId(field, rawTextValue) ||
+      this._findOptionWithMatchingValue(field, rawTextValue)
+    )
   }
 
   toHumanReadableString(field, value) {
@@ -1515,6 +1551,143 @@ export class SingleSelectFieldType extends FieldType {
   }
 }
 
+export class MultipleSelectFieldType extends FieldType {
+  static getType() {
+    return 'multiple_select'
+  }
+
+  getIconClass() {
+    return 'list'
+  }
+
+  getName() {
+    return 'Multiple select'
+  }
+
+  getFormComponent() {
+    return FieldSelectOptionsSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldMultipleSelect
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldMultipleSelect
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldMultipleSelect
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const valuesA = a[name]
+      const valuesB = b[name]
+      const stringA =
+        valuesA.length > 0 ? valuesA.map((obj) => obj.value).join('') : ''
+      const stringB =
+        valuesB.length > 0 ? valuesB.map((obj) => obj.value).join('') : ''
+
+      return order === 'ASC'
+        ? stringA.localeCompare(stringB)
+        : stringB.localeCompare(stringA)
+    }
+  }
+
+  prepareValueForUpdate(field, value) {
+    if (value === undefined || value === null) {
+      return []
+    }
+    return value.map((item) => item.id)
+  }
+
+  prepareValueForCopy(field, value) {
+    let returnValue
+    if (value === undefined || value === null) {
+      returnValue = []
+    }
+    returnValue = value
+    return JSON.stringify({
+      value: returnValue,
+    })
+  }
+
+  prepareValueForPaste(field, clipboardData) {
+    let values
+    try {
+      values = JSON.parse(clipboardData.getData('text'))
+    } catch (SyntaxError) {
+      return []
+    }
+    // We need to check whether the pasted select_options belong to this field.
+    const pastedIDs = values.value.map((obj) => obj.id)
+    const fieldSelectOptionIDs = field.select_options.map((obj) => obj.id)
+    const pastedIDsBelongToField = pastedIDs.some((id) =>
+      fieldSelectOptionIDs.includes(id)
+    )
+
+    if (pastedIDsBelongToField) {
+      return values.value
+    } else {
+      return []
+    }
+  }
+
+  toHumanReadableString(field, value) {
+    if (value === undefined || value === null || value === []) {
+      return ''
+    }
+    return value.map((item) => item.value).join(', ')
+  }
+
+  getDocsDataType() {
+    return 'array'
+  }
+
+  getDocsDescription(field) {
+    const options = field.select_options
+      .map(
+        (option) =>
+          // @TODO move this template to a component.
+          `<div class="select-options-listing">
+              <div class="select-options-listing__id">${option.id}</div>
+              <div class="select-options-listing__value background-color--${option.color}">${option.value}</div>
+           </div>
+          `
+      )
+      .join('\n')
+
+    return `
+      Accepts an array of integers each representing the chosen select option id or null if none is selected.
+      <br />
+      ${options}
+    `
+  }
+
+  getDocsRequestExample() {
+    return [1]
+  }
+
+  getDocsResponseExample() {
+    return [
+      {
+        id: 1,
+        value: 'Option',
+        color: 'light-blue',
+      },
+    ]
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  getEmptyValue() {
+    return []
+  }
+}
+
 export class PhoneNumberFieldType extends FieldType {
   static getType() {
     return 'phone_number'
@@ -1525,7 +1698,8 @@ export class PhoneNumberFieldType extends FieldType {
   }
 
   getName() {
-    return 'Phone Number'
+    const { i18n } = this.app
+    return i18n.t('fieldType.phoneNumber')
   }
 
   getGridViewFieldComponent() {
@@ -1592,5 +1766,116 @@ export class PhoneNumberFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+}
+
+export class FormulaFieldType extends FieldType {
+  static getType() {
+    return 'formula'
+  }
+
+  static compatibleWithFormulaTypes(...formulaTypeStrings) {
+    return (field) => {
+      return (
+        field.type === this.getType() &&
+        formulaTypeStrings.includes(field.formula_type)
+      )
+    }
+  }
+
+  getIconClass() {
+    return 'square-root-alt'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.formula')
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldFormula
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldFormula
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldFormula
+  }
+
+  _mapFormulaTypeToFieldType(formulaType) {
+    return {
+      invalid: TextFieldType.getType(),
+      text: TextFieldType.getType(),
+      char: TextFieldType.getType(),
+      number: NumberFieldType.getType(),
+      date: DateFieldType.getType(),
+      boolean: BooleanFieldType.getType(),
+      date_interval: DateFieldType.getType(),
+    }[formulaType]
+  }
+
+  getSort(name, order, field, $registry) {
+    const underlyingFieldType = $registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.getSort(name, order)
+  }
+
+  getEmptyValue(field) {
+    return null
+  }
+
+  getDocsDataType(field) {
+    return null
+  }
+
+  getDocsDescription(field) {
+    return (
+      'A read-only field defined by a formula written in the Baserow formula' +
+      ' language.'
+    )
+  }
+
+  getDocsRequestExample(field) {
+    return 'Result of a formula calculation'
+  }
+
+  getContainsFilterFunction(field, $registry) {
+    const underlyingFieldType = $registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.getContainsFilterFunction()
+  }
+
+  getSortIndicator(field, $registry) {
+    const underlyingFieldType = $registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.getSortIndicator()
+  }
+
+  getFormComponent() {
+    return FieldFormulaSubForm
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldRefreshWhenAdded() {
+    return true
+  }
+
+  getFormViewFieldComponent() {
+    return null
+  }
+
+  getCanBePrimaryField() {
+    return false
   }
 }

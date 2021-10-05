@@ -48,12 +48,11 @@ export class ViewType extends Registerable {
     return true
   }
 
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
     this.colorClass = this.getColorClass()
-    this.name = this.getName()
     this.canFilter = this.canFilter()
     this.canSort = this.canSort()
 
@@ -209,7 +208,7 @@ export class ViewType extends Registerable {
       type: this.type,
       iconClass: this.iconClass,
       colorClass: this.colorClass,
-      name: this.name,
+      name: this.getName(),
       canFilter: this.canFilter,
       canSort: this.canSort,
     }
@@ -226,7 +225,8 @@ export class GridViewType extends ViewType {
   }
 
   getName() {
-    return 'Grid'
+    const { i18n } = this.app
+    return i18n.t('viewType.grid')
   }
 
   getHeaderComponent() {
@@ -451,7 +451,8 @@ export class FormViewType extends ViewType {
   }
 
   getName() {
-    return 'Form'
+    const { i18n } = this.app
+    return i18n.t('viewType.form')
   }
 
   canFilter() {

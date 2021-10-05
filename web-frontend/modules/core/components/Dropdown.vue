@@ -15,7 +15,7 @@
         ></i>
         {{ selectedName }}
       </template>
-      <template v-else>Make a choice</template>
+      <template v-else>{{ $t('action.makeChoice') }}</template>
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <div class="dropdown__items" :class="{ hidden: !open }">

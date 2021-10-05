@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Type, List
+from typing import List
 from unittest.mock import patch
 
 import pytest
@@ -37,7 +37,7 @@ from baserow.contrib.database.export.registries import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.exceptions import ViewNotInTable
-from baserow.contrib.database.views.models import GridView
+from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
 from tests.test_utils import setup_interesting_test_table
 
 
@@ -169,7 +169,7 @@ def test_exporting_table_ignores_view_filters_sorts_hides(storage_mock, data_fix
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.export.handler.default_storage")
-def test_columns_are_exported_by_order_then_id(storage_mock, data_fixture):
+def test_columns_are_exported_by_order_then_field_id(storage_mock, data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field_a = data_fixture.create_text_field(table=table, name="field_a")
@@ -190,15 +190,19 @@ def test_columns_are_exported_by_order_then_id(storage_mock, data_fixture):
             f"field_{field_c.id}": "c",
         },
     )
+    # Create the option id's in the opposite order than the fields so their id's are
+    # ordered backwards to ensure the test doesn't coincidentally pass if the option
+    # ids were being used to sort.
     data_fixture.create_grid_view_field_option(
-        grid_view=grid_view, field=field_a, order=1
+        grid_view=grid_view, field=field_c, order=0
     )
     data_fixture.create_grid_view_field_option(
         grid_view=grid_view, field=field_b, order=1
     )
     data_fixture.create_grid_view_field_option(
-        grid_view=grid_view, field=field_c, order=0
+        grid_view=grid_view, field=field_a, order=1
     )
+    assert field_a.id < field_b.id
     _, contents = run_export_job_with_mock_storage(table, grid_view, storage_mock, user)
     bom = "\ufeff"
     expected = bom + "id,field_c,field_a,field_b\r\n" "1,c,a,b\r\n"
@@ -220,9 +224,11 @@ def test_can_export_every_interesting_different_field_to_csv(
         "date_eu,last_modified_datetime_us,last_modified_date_us,"
         "last_modified_datetime_eu,last_modified_date_eu,created_on_datetime_us,"
         "created_on_date_us,created_on_datetime_eu,created_on_date_eu,link_row,"
-        "decimal_link_row,file_link_row,file,single_select,phone_number\r\n"
+        "decimal_link_row,file_link_row,file,single_select,multiple_select,"
+        "phone_number,formula\r\n"
         "1,,,,,,,,,False,,,,,01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
-        "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,,,,,,\r\n"
+        "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,,,,,,,,test FORMULA"
+        "\r\n"
         "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,True,"
         "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,"
         "01/02/2021 13:00,01/02/2021,02/01/2021 13:00,02/01/2021,"
@@ -232,7 +238,7 @@ def test_can_export_every_interesting_different_field_to_csv(
         '.txt,unnamed row 2",'
         '"visible_name=a.txt url=http://localhost:8000/media/user_files/hashed_name.txt'
         ',visible_name=b.txt url=http://localhost:8000/media/user_files/other_name.txt"'
-        ",A,+4412345678\r\n"
+        ',A,"D,C,E",+4412345678,test FORMULA\r\n'
     )
 
     assert expected == contents
@@ -411,11 +417,11 @@ def test_attempting_to_export_a_table_for_a_type_which_doesnt_support_it_fails(
             return []
 
         @property
-        def option_serializer_class(self) -> Type["BaseExporterOptionsSerializer"]:
+        def option_serializer_class(self):
             return BaseExporterOptionsSerializer
 
         @property
-        def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+        def queryset_serializer_class(self):
             raise Exception("This should not even be run")
 
     table_exporter_registry.register(CantExportTableExporter())
@@ -452,11 +458,11 @@ def test_attempting_to_export_a_view_for_a_type_which_doesnt_support_it_fails(
             return ["not_grid_view"]
 
         @property
-        def option_serializer_class(self) -> Type["BaseExporterOptionsSerializer"]:
+        def option_serializer_class(self):
             return BaseExporterOptionsSerializer
 
         @property
-        def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+        def queryset_serializer_class(self):
             raise Exception("This should not even be run")
 
     table_exporter_registry.register(CantExportViewExporter())
@@ -494,18 +500,18 @@ def test_an_export_job_which_fails_will_be_marked_as_a_failed_job(
             return []
 
         @property
-        def option_serializer_class(self) -> Type["BaseExporterOptionsSerializer"]:
+        def option_serializer_class(self):
             return BaseExporterOptionsSerializer
 
         @property
-        def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+        def queryset_serializer_class(self):
             raise Exception("Failed")
 
     class CancelledTestFileExporter(BrokenTestFileExporter):
         type = "cancelled"
 
         @property
-        def queryset_serializer_class(self) -> Type["QuerysetSerializer"]:
+        def queryset_serializer_class(self):
             raise ExportJobCanceledException()
 
     table_exporter_registry.register(BrokenTestFileExporter())
@@ -776,3 +782,38 @@ def setup_table_and_run_export_decoding_result(
     return run_export_job_with_mock_storage(
         table, grid_view, storage_mock, user, options=options
     )
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.export.handler.default_storage")
+def test_a_column_without_a_grid_view_option_has_an_option_made_and_is_exported(
+    storage_mock, data_fixture
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field_with_an_option = data_fixture.create_text_field(table=table, name="field_a")
+    field_without_an_option = data_fixture.create_text_field(
+        table=table,
+        name="field_b",
+    )
+    grid_view = GridView.objects.create(table=table, order=0, name="grid_view")
+    model = table.get_model()
+    model.objects.create(
+        **{
+            f"field_{field_with_an_option.id}": "a",
+            f"field_{field_without_an_option.id}": "b",
+        },
+    )
+    data_fixture.create_grid_view_field_option(
+        grid_view=grid_view, field=field_with_an_option, order=1
+    )
+
+    assert GridViewFieldOptions.objects.count() == 1
+
+    _, contents = run_export_job_with_mock_storage(table, grid_view, storage_mock, user)
+    bom = "\ufeff"
+    expected = bom + "id,field_a,field_b\r\n" "1,a,b\r\n"
+    assert contents == expected
+
+    assert GridViewFieldOptions.objects.count() == 2
+    assert GridViewFieldOptions.objects.filter(field=field_without_an_option).exists()

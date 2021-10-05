@@ -36,6 +36,23 @@ def test_create_user(client, data_fixture):
     assert response_json["user"]["is_staff"] is True
     assert response_json["user"]["id"] == user.id
 
+    # Test profile properties
+    response = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1Bis",
+            "email": "test1bis@test.nl",
+            "password": valid_password,
+            "language": "fr",
+        },
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    user = User.objects.get(email="test1bis@test.nl")
+    assert user.profile.language == "fr"
+    assert response_json["user"]["language"] == "fr"
+
     response_failed = client.post(
         reverse("api:user:index"),
         {"name": "Test1", "email": "test@test.nl", "password": valid_password},
@@ -51,6 +68,27 @@ def test_create_user(client, data_fixture):
     )
     assert response_failed.status_code == 400
     assert response_failed.json()["error"] == "ERROR_EMAIL_ALREADY_EXISTS"
+
+    too_long_name = "x" * 151
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": too_long_name,
+            "email": "new@example.com ",
+            "password": valid_password,
+        },
+        format="json",
+    )
+    assert response_failed.status_code == 400
+    assert response_failed.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_failed.json()["detail"] == {
+        "name": [
+            {
+                "code": "max_length",
+                "error": "Ensure this field has no more than 150 characters.",
+            }
+        ]
+    }
 
     data_fixture.update_settings(allow_new_signups=False)
     response_failed = client.post(
@@ -110,6 +148,79 @@ def test_create_user(client, data_fixture):
         == "This password is too short. It must contain at least 8 characters."
     )
 
+    # Test profile attribute errors
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test20@test.nl",
+            "password": valid_password,
+            "language": "invalid",
+        },
+        format="json",
+    )
+    response_json = response_failed.json()
+    assert response_failed.status_code == 400
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["language"][0]["code"] == "invalid_language"
+    assert response_json["detail"]["language"][0]["error"] == (
+        "Only the following language keys are "
+        f"valid: {','.join([l[0] for l in settings.LANGUAGES])}"
+    )
+
+
+@pytest.mark.django_db
+def test_user_account(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token(
+        email="test@localhost.nl", language="en", first_name="Nikolas"
+    )
+
+    response = api_client.get(
+        reverse("api:user:account"),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["first_name"] == "Nikolas"
+    assert response_json["language"] == "en"
+
+    response = api_client.patch(
+        reverse("api:user:account"),
+        {
+            "first_name": "NewOriginalName",
+            "language": "fr",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+
+    assert response.status_code == HTTP_200_OK
+    assert response_json["first_name"] == "NewOriginalName"
+    assert response_json["language"] == "fr"
+
+    user.refresh_from_db()
+    assert user.first_name == "NewOriginalName"
+    assert user.profile.language == "fr"
+
+    response = api_client.patch(
+        reverse("api:user:account"),
+        {
+            "language": "invalid",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["language"][0]["code"] == "invalid_language"
+    assert response_json["detail"]["language"][0]["error"] == (
+        "Only the following language keys are "
+        f"valid: {','.join([l[0] for l in settings.LANGUAGES])}"
+    )
+
 
 @pytest.mark.django_db
 def test_create_user_with_invitation(data_fixture, client):
@@ -130,6 +241,20 @@ def test_create_user_with_invitation(data_fixture, client):
     )
     assert response_failed.status_code == HTTP_400_BAD_REQUEST
     assert response_failed.json()["error"] == "BAD_TOKEN_SIGNATURE"
+
+    response_failed = client.post(
+        reverse("api:user:index"),
+        {
+            "name": "Test1",
+            "email": "test0@test.nl",
+            "password": valid_password,
+            "group_invitation_token": f"{signer.dumps(invitation.id)}2",
+        },
+        format="json",
+    )
+    assert response_failed.status_code == HTTP_400_BAD_REQUEST
+    assert response_failed.json()["error"] == "BAD_TOKEN_SIGNATURE"
+    assert User.objects.all().count() == 1
 
     response_failed = client.post(
         reverse("api:user:index"),

@@ -21,14 +21,14 @@
         @input="$emit('updated', { permissions: $event })"
       >
         <DropdownItem
-          name="Admin"
+          :name="$t('permission.admin')"
           value="ADMIN"
-          description="Can fully configure and edit groups and applications."
+          :description="$t('permission.adminDescription')"
         ></DropdownItem>
         <DropdownItem
-          name="Member"
+          :name="$t('permission.member')"
           value="MEMBER"
-          description="Can fully configure and edit applications."
+          :description="$t('permission.memberDescription')"
         ></DropdownItem>
       </Dropdown>
     </div>

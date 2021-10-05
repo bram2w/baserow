@@ -16,22 +16,9 @@
 }
 
 .grid-field-single-select__option {
-  @extend %ellipsis;
-
-  display: inline-block;
-  color: $color-primary-900;
-  border-radius: 20px;
-  padding: 0 10px;
-  max-width: 100%;
   margin-top: 6px;
 
-  &.background-color--light-blue {
-    .grid-view__column--matches-search & {
-      box-shadow: 0 0 2px 1px rgba($black, 0.16);
-    }
-  }
-
-  @include fixed-height(20px, 12px);
+  @include select-option-style(inline-block, true);
 }
 
 .grid-field-single-select__icon {

@@ -1,6 +1,6 @@
 {
   "name": "baserow",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
   "description": "Baserow: open source no-code database web frontend.",
   "author": "Bram Wiepjes (Baserow)",
@@ -18,6 +18,9 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.3",
     "@nuxtjs/axios": "^5.13.6",
+    "@nuxtjs/i18n": "^7.0.1",
+    "async-mutex": "^0.3.1",
+    "antlr4": "4.8.0",
     "axios": "^0.21.0",
     "bignumber.js": "^9.0.1",
     "chart.js": "2.9.4",

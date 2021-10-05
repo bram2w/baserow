@@ -11,6 +11,7 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import row_created
 from .exceptions import (
@@ -68,7 +69,7 @@ class ViewHandler:
         if not view_model:
             view_model = View
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = view_model.objects
 
         try:
@@ -282,7 +283,7 @@ class ViewHandler:
         for filter in field.viewfilter_set.all():
             filter_type = view_filter_type_registry.get(filter.type)
 
-            if field_type.type not in filter_type.compatible_field_types:
+            if not filter_type.field_is_compatible(field):
                 filter.delete()
 
     def apply_filters(self, view, queryset):
@@ -350,7 +351,7 @@ class ViewHandler:
         :type: ViewFilter
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = ViewFilter.objects
 
         try:
@@ -414,7 +415,7 @@ class ViewHandler:
         field_type = field_type_registry.get_by_model(field.specific_class)
 
         # Check if the field is allowed for this filter type.
-        if field_type.type not in view_filter_type.compatible_field_types:
+        if not view_filter_type.field_is_compatible(field):
             raise ViewFilterTypeNotAllowedForField(type_name, field_type.type)
 
         # Check if field belongs to the grid views table
@@ -460,7 +461,7 @@ class ViewHandler:
         field_type = field_type_registry.get_by_model(field.specific_class)
 
         # Check if the field is allowed for this filter type.
-        if field_type.type not in view_filter_type.compatible_field_types:
+        if not view_filter_type.field_is_compatible(field):
             raise ViewFilterTypeNotAllowedForField(type_name, field_type.type)
 
         # If the field has changed we need to check if the field belongs to the table.
@@ -549,7 +550,15 @@ class ViewHandler:
             field_name = model._field_objects[view_sort.field_id]["name"]
             field_type = model._field_objects[view_sort.field_id]["type"]
 
-            order = field_type.get_order(field, field_name, view_sort)
+            order = field_type.get_order(field, field_name, view_sort.order)
+            annotation = None
+
+            if isinstance(order, AnnotatedOrder):
+                annotation = order.annotation
+                order = order.order
+
+            if annotation is not None:
+                queryset = queryset.annotate(**annotation)
 
             # If the field type does not have a specific ordering expression we can
             # order the default way.
@@ -585,7 +594,7 @@ class ViewHandler:
         :type: ViewSort
         """
 
-        if not base_queryset:
+        if base_queryset is None:
             base_queryset = ViewSort.objects
 
         try:

@@ -36,7 +36,8 @@ export class DatabaseApplicationType extends ApplicationType {
   }
 
   getName() {
-    return 'Database'
+    const { i18n } = this.app
+    return i18n.t('applicationType.database')
   }
 
   getSidebarComponent() {

@@ -35,11 +35,10 @@ export class AdminType extends Registerable {
     throw new Error('The route name of an admin type must be set.')
   }
 
-  constructor() {
-    super()
+  constructor(...args) {
+    super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
-    this.name = this.getName()
     this.routeName = this.getRouteName()
 
     if (this.type === null) {
@@ -60,7 +59,7 @@ export class AdminType extends Registerable {
     return {
       type: this.type,
       iconClass: this.iconClass,
-      name: this.name,
+      name: this.getName(),
       routeName: this.routeName,
     }
   }
@@ -76,7 +75,8 @@ export class SettingsAdminType extends AdminType {
   }
 
   getName() {
-    return 'Settings'
+    const { i18n } = this.app
+    return i18n.t('adminType.settings')
   }
 
   getRouteName() {

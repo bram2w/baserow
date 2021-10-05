@@ -2,6 +2,10 @@ from typing import Any, List
 
 from django.db.models import Q
 
+from baserow.contrib.database.formula.types.formula_type import (
+    BaserowFormulaType,
+    BaserowFormulaInvalidType,
+)
 from baserow.core.registry import (
     Instance,
     Registry,
@@ -15,7 +19,7 @@ from baserow.core.registry import (
     ImportExportMixin,
 )
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
-from .models import SelectOption
+from .models import SelectOption, Field
 
 
 class FieldType(
@@ -64,6 +68,14 @@ class FieldType(
 
     can_be_in_form_view = True
     """Indicates whether the field is compatible with the form view."""
+
+    read_only = False
+    """Indicates whether the field allows inserting/updating row values or if it is
+    read only."""
+
+    requires_typing = False
+    """Indicates whether the field needs extra typing information to calculate its
+    various methods correctly."""
 
     def prepare_value_for_db(self, instance, value):
         """
@@ -429,22 +441,25 @@ class FieldType(
         :type connection: DatabaseWrapper
         """
 
-    def get_order(self, field, field_name, view_sort):
+    def get_order(self, field, field_name, order_direction):
         """
         This hook can be called to generate a different order by expression. By default
         None is returned which means the normal field sorting will be applied.
         Optionally a different expression can be generated. This is for example used
         by the single select field generates a mapping achieve the correct sorting
         based on the select option value.
+        Additionally an annotation can be returned which will get applied to the
+        queryset.
 
         :param field: The related field object instance.
         :type field: Field
         :param field_name: The name of the field.
         :type field_name: str
-        :param view_sort: The view sort that must be applied.
-        :type view_sort: ViewSort
-        :return: The expression that is added directly to the model.objects.order().
-        :rtype: Expression or None
+        :param order_direction: The sort order direction.
+        :type order_direction: str (Either "ASC" or "DESC")
+        :return: Either the expression that is added directly to the
+            model.objects.order(), an AnnotatedOrderBy class or None.
+        :rtype: Optional[Expression, AnnotatedOrderBy, None]
         """
 
         return None
@@ -615,6 +630,8 @@ class FieldType(
         :type value: Object
         :param field_object: The field object for the field to extract
         :type field_object: FieldObject
+        :return: A value suitable to be serialized and stored in a file format for
+            users.
         """
 
         return value
@@ -652,6 +669,68 @@ class FieldType(
             table is being trashed.
         :return: A list of related trashable items that should be trashed or restored
             in tandem with this field or it's table.
+        """
+
+        return []
+
+    def expression_to_update_field_after_related_field_changes(self, instance, model):
+        """
+        Should return a Django Expression for use in an update query to update the value
+        of this field after a field this field depends on has changed.
+
+        :param instance: The instance of the field to generate the update expression
+            for.
+        :param model: The model of the table that the field is on.
+        :return: A Django Expression for the instance's column in the table which will
+            be executed to update this fields value given a change in one of this fields
+            related fields.
+        """
+
+        return None
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        """
+        Should return the Baserow Formula Type to use when referencing a field of this
+        type in a formula.
+
+        :param field: The specific instance of the field that a formula type should
+            be created for.
+        :return: The Baserow Formula Type that represents this field in a formula.
+        """
+
+        return BaserowFormulaInvalidType(
+            f"A field of type {self.type} cannot be referenced in a Baserow formula."
+        )
+
+    def from_baserow_formula_type(self, formula_type) -> Field:
+        """
+        Should return the Baserow Field Type when converting a formula type back
+        to a field type.
+
+        :param formula_type: The specific instance of a formula type that a field type
+            model should be created for.
+        :return: A Baserow Field Type model instance that represents this formula type.
+        """
+
+        raise NotImplementedError(
+            f"A field of type {self.type} cannot be referenced in a Baserow formula."
+        )
+
+    def add_related_fields_to_model(
+        self, typed_table, field, already_included_field_ids
+    ):
+        """
+        Should return any fields related to this field which are not already present
+        in the already_included_field_ids set.
+
+        :param typed_table: A TypedBaserowTable containing the formula types of all
+            fields in the fields table.
+        :param field: The specific instance of the field we want to know the related
+            fields for.
+        :param already_included_field_ids: A set of already included field ids which
+            should not be included in the returned list.
+        :return: A list of field instances which relate to field but are not present in
+            already_included_field_ids.
         """
 
         return []

@@ -1,9 +1,7 @@
 import pytest
-
 from channels.testing import WebsocketCommunicator
 
 from baserow.config.asgi import application
-
 from baserow.ws.auth import get_user
 
 

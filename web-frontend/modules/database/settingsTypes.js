@@ -11,7 +11,8 @@ export class APITokenSettingsType extends SettingsType {
   }
 
   getName() {
-    return 'API Tokens'
+    const { i18n } = this.app
+    return i18n.t('settingType.tokens')
   }
 
   getComponent() {

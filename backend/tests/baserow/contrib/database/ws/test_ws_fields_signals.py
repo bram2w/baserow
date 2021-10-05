@@ -20,6 +20,7 @@ def test_field_created(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][0] == f"table-{table.id}"
     assert args[0][1]["type"] == "field_created"
     assert args[0][1]["field"]["id"] == field.id
+    assert args[0][1]["related_fields"] == []
 
 
 @pytest.mark.django_db(transaction=True)
@@ -34,6 +35,7 @@ def test_field_restored(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][0] == f"table-{field.table.id}"
     assert args[0][1]["type"] == "field_restored"
     assert args[0][1]["field"]["id"] == field.id, args[0]
+    assert args[0][1]["related_fields"] == []
 
 
 @pytest.mark.django_db(transaction=True)
@@ -49,6 +51,7 @@ def test_field_updated(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["type"] == "field_updated"
     assert args[0][1]["field_id"] == field.id
     assert args[0][1]["field"]["id"] == field.id
+    assert args[0][1]["related_fields"] == []
 
 
 @pytest.mark.django_db(transaction=True)
@@ -66,3 +69,4 @@ def test_field_deleted(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["type"] == "field_deleted"
     assert args[0][1]["field_id"] == field_id
     assert args[0][1]["table_id"] == table_id
+    assert args[0][1]["related_fields"] == []

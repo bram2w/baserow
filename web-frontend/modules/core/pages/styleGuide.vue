@@ -729,6 +729,147 @@
             </ul>
           </div>
         </div>
+        <div class="formula-field margin-bottom-3">
+          <div class="formula-field__input">
+            <AutoExpandableTextarea
+              v-model="formula"
+              class="formula-field__input-formula"
+            ></AutoExpandableTextarea>
+          </div>
+          <div class="formula-field__body">
+            <div class="formula-field__items">
+              <ul class="formula-field__item-group">
+                <li class="formula-field__item-group-title">Fields</li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-font formula-field__item-icon" />
+                    Text
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    Number
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-check-square formula-field__item-icon" />
+                    Checkbox
+                  </a>
+                </li>
+              </ul>
+              <ul class="formula-field__item-group">
+                <li class="formula-field__item-group-title">Constants</li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    e
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    pi
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-check-square formula-field__item-icon" />
+                    true
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-check-square formula-field__item-icon" />
+                    false
+                  </a>
+                </li>
+              </ul>
+              <ul class="formula-field__item-group">
+                <li class="formula-field__item-group-title">Operators</li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-font formula-field__item-icon" />
+                    If
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    add
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    subtract
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    multiply
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    divide
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    pow
+                  </a>
+                </li>
+              </ul>
+              <ul class="formula-field__item-group">
+                <li class="formula-field__item-group-title">Functions</li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-font formula-field__item-icon" />
+                    concat
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-font formula-field__item-icon" />
+                    join
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-font formula-field__item-icon" />
+                    slice
+                  </a>
+                </li>
+                <li class="formula-field__item">
+                  <a href="#" class="formula-field__item-link">
+                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    length
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div class="formula-field__description">
+              <div class="formula-field__description-heading-1">concat</div>
+              <div class="formula-field__description-text">
+                Concatenates its arguments and returns the result.
+              </div>
+              <div class="formula-field__description-heading-2">Syntax</div>
+              <pre
+                class="formula-field__description-example"
+              ><code>concat(text...)</code></pre>
+              <div class="formula-field__description-heading-2">Examples</div>
+              <pre
+                class="formula-field__description-example"
+              ><code>concat(“Hello”, “World”) == “HelloWorld”
+“Hello” + “World” == “HelloWorld”</code></pre>
+            </div>
+          </div>
+        </div>
         <div class="margin-bottom-3">
           <a class="button" @click="$refs.context1.toggle($event.target)">
             toggle context
@@ -965,10 +1106,12 @@
 
 <script>
 import Notifications from '@baserow/modules/core/components/notifications/Notifications'
+import AutoExpandableTextarea from '@baserow/modules/core/components/helpers/AutoExpandableTextarea'
 
 export default {
   components: {
     Notifications,
+    AutoExpandableTextarea,
   },
   data() {
     return {
@@ -978,6 +1121,7 @@ export default {
       dropdown: '',
       longDropdown: '0',
       date: '',
+      formula: 'concat(field("Text"), field("Text"))',
     }
   },
   head() {

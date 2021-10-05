@@ -34,13 +34,13 @@
           </InfiniteScroll>
         </div>
         <div v-if="!readOnly" class="row-comments__foot">
-          <AutoExpandableTextarea
+          <AutoExpandableTextareaInput
             ref="AutoExpandableTextarea"
             v-model="comment"
             placeholder="Comment"
             @entered="postComment"
           >
-          </AutoExpandableTextarea>
+          </AutoExpandableTextareaInput>
         </div>
       </div>
     </div>
@@ -52,12 +52,12 @@ import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import RowComment from '@baserow_premium/components/row_comments/RowComment'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
-import AutoExpandableTextarea from '@baserow_premium/components/helpers/AutoExpandableTextarea'
+import AutoExpandableTextareaInput from '@baserow/modules/core/components/helpers/AutoExpandableTextareaInput'
 
 export default {
   name: 'RowCommentsSidebar',
   components: {
-    AutoExpandableTextarea,
+    AutoExpandableTextareaInput,
     InfiniteScroll,
     RowComment,
   },

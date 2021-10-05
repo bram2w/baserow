@@ -11,11 +11,13 @@ from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
 from baserow.contrib.database.api.fields.errors import (
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
+    ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
     ERROR_RESERVED_BASEROW_FIELD_NAME,
     ERROR_INVALID_BASEROW_FIELD_NAME,
 )
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
+    MaxFieldNameLengthExceeded,
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
 )
@@ -134,6 +136,7 @@ class TablesView(APIView):
             InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA,
             InitialTableDataLimitExceeded: ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
             MaxFieldLimitExceeded: ERROR_MAX_FIELD_COUNT_EXCEEDED,
+            MaxFieldNameLengthExceeded: ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
             InitialTableDataDuplicateName: ERROR_INITIAL_TABLE_DATA_HAS_DUPLICATE_NAMES,
             ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
             InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
@@ -228,8 +231,10 @@ class TableView(APIView):
 
         table = TableHandler().update_table(
             request.user,
-            TableHandler().get_table(table_id),
-            base_queryset=Table.objects.select_for_update(),
+            TableHandler().get_table(
+                table_id,
+                base_queryset=Table.objects.select_for_update(),
+            ),
             name=data["name"],
         )
         serializer = TableSerializer(table)

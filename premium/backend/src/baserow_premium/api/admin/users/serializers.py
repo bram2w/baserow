@@ -45,7 +45,7 @@ class UserAdminResponseSerializer(ModelSerializer):
     """
 
     # Max length set to match django user models first_name fields max length
-    name = CharField(source="first_name", max_length=30)
+    name = CharField(source="first_name", max_length=150)
     username = EmailField()
     groups = UserAdminGroupsSerializer(source="groupuser_set", many=True)
 
@@ -73,14 +73,13 @@ class UserAdminUpdateSerializer(
     """
 
     # Max length set to match django user models first_name fields max length
-    name = CharField(source="first_name", max_length=30, required=False)
+    name = CharField(source="first_name", max_length=150, required=False)
     username = EmailField(required=False)
-    password = CharField(validators=[password_validation])
+    password = CharField(validators=[password_validation], required=False)
 
     class Meta:
         model = User
         fields = ("username", "name", "is_active", "is_staff", "password")
         extra_kwargs = {
             **_USER_ADMIN_SERIALIZER_API_DOC_KWARGS,
-            "password": {"required": False},
         }

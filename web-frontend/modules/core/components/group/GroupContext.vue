@@ -5,25 +5,25 @@
       <li v-if="group.permissions === 'ADMIN'">
         <a @click="$emit('rename')">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
-          Rename group
+          {{ $t('groupContext.renameGroup') }}
         </a>
       </li>
       <li v-if="group.permissions === 'ADMIN'">
         <a @click=";[$refs.groupMembersModal.show(), hide()]">
           <i class="context__menu-icon fas fa-fw fa-users"></i>
-          Members
+          {{ $t('groupContext.members') }}
         </a>
       </li>
       <li v-if="group.permissions === 'ADMIN'">
         <a @click="showGroupTrashModal">
           <i class="context__menu-icon fas fa-fw fa-recycle"></i>
-          View trash
+          {{ $t('groupContext.viewTrash') }}
         </a>
       </li>
       <li>
         <a @click="$refs.leaveGroupModal.show()">
           <i class="context__menu-icon fas fa-fw fa-door-open"></i>
-          Leave group
+          {{ $t('groupContext.leaveGroup') }}
         </a>
       </li>
       <li v-if="group.permissions === 'ADMIN'">
@@ -32,7 +32,7 @@
           @click="deleteGroup"
         >
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
-          Delete group
+          {{ $t('groupContext.deleteGroup') }}
         </a>
       </li>
     </ul>
@@ -100,3 +100,26 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "groupContext": {
+      "renameGroup": "Rename group",
+      "members": "Members",
+      "viewTrash": "View trash",
+      "leaveGroup": "Leave group",
+      "deleteGroup": "Delete group"
+    }
+  },
+  "fr": {
+    "groupContext": {
+      "renameGroup": "Renommer le groupe",
+      "members": "Membres",
+      "viewTrash": "Voir la corbeille",
+      "leaveGroup": "Quitter le groupe",
+      "deleteGroup": "Supprimer le groupe"
+    }
+  }
+}
+</i18n>

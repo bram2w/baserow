@@ -16,7 +16,8 @@ import groupStore from '@baserow/modules/core/store/group'
 import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 
-export default ({ store, app }, inject) => {
+export default (context, inject) => {
+  const { store } = context
   inject('bus', new Vue())
 
   const registry = new Registry()
@@ -26,10 +27,13 @@ export default ({ store, app }, inject) => {
   registry.registerNamespace('field')
   registry.registerNamespace('settings')
   registry.registerNamespace('userFileUpload')
-  registry.register('settings', new PasswordSettingsType())
-  registry.register('userFileUpload', new UploadFileUserFileUploadType())
-  registry.register('userFileUpload', new UploadViaURLUserFileUploadType())
-  registry.register('admin', new SettingsAdminType())
+  registry.register('settings', new PasswordSettingsType(context))
+  registry.register('userFileUpload', new UploadFileUserFileUploadType(context))
+  registry.register(
+    'userFileUpload',
+    new UploadViaURLUserFileUploadType(context)
+  )
+  registry.register('admin', new SettingsAdminType(context))
   inject('registry', registry)
 
   store.registerModule('settings', settingsStore)

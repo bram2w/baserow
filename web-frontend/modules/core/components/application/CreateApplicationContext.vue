@@ -10,7 +10,7 @@
             class="context__menu-icon fas fa-fw"
             :class="'fa-' + applicationType.iconClass"
           ></i>
-          {{ applicationType.name }}
+          {{ applicationType.getName() }}
         </a>
         <CreateApplicationModal
           :ref="'createApplicationModal' + type"
@@ -22,7 +22,7 @@
       <li>
         <a @click=";[$refs.templateModal.show(), hide()]">
           <i class="context__menu-icon fas fa-fw fa-file-alt"></i>
-          From template
+          {{ $t('createApplicationContext.fromTemplate') }}
         </a>
         <TemplateModal ref="templateModal" :group="group"></TemplateModal>
       </li>
@@ -61,3 +61,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "createApplicationContext":{
+      "fromTemplate": "From template"
+    }
+  },
+  "fr": {
+    "createApplicationContext":{
+      "fromTemplate": "À partir d'un modèle"
+    }
+  }
+}
+</i18n>

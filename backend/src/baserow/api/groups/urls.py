@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 from django.urls import path, include
 
 from .views import GroupsView, GroupView, GroupLeaveView, GroupOrderView
@@ -11,8 +11,8 @@ app_name = "baserow.api.groups"
 urlpatterns = [
     path("users/", include(user_urls, namespace="users")),
     path("invitations/", include(invitation_urls, namespace="invitations")),
-    url(r"^$", GroupsView.as_view(), name="list"),
-    url(r"(?P<group_id>[0-9]+)/leave/$", GroupLeaveView.as_view(), name="leave"),
-    url(r"(?P<group_id>[0-9]+)/$", GroupView.as_view(), name="item"),
-    url(r"order/$", GroupOrderView.as_view(), name="order"),
+    re_path(r"^$", GroupsView.as_view(), name="list"),
+    re_path(r"(?P<group_id>[0-9]+)/leave/$", GroupLeaveView.as_view(), name="leave"),
+    re_path(r"(?P<group_id>[0-9]+)/$", GroupView.as_view(), name="item"),
+    re_path(r"order/$", GroupOrderView.as_view(), name="order"),
 ]

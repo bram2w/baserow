@@ -2,6 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Case, When, Value, Manager
 from django.db.models.fields import NOT_PROVIDED
+from django.db.models.fields.mixins import FieldCacheMixin
 from django.utils.functional import cached_property
 
 from baserow.core.managers import (
@@ -85,6 +86,11 @@ class PolymorphicContentTypeMixin:
                 f"PolymorphicContentTypeMixin."
             )
 
+    def save(self, *args, **kwargs):
+        self._ensure_content_type_is_set()
+        super().save(*args, **kwargs)
+
+    def _ensure_content_type_is_set(self):
         if not self.id:
             if not self.content_type_id:
                 self.content_type = ContentType.objects.get_for_model(self)
@@ -93,6 +99,7 @@ class PolymorphicContentTypeMixin:
     def specific(self):
         """Returns this instance in its most specific subclassed form."""
 
+        self._ensure_content_type_is_set()
         content_type = ContentType.objects.get_for_id(self.content_type_id)
         model_class = self.specific_class
         if model_class is None:
@@ -109,6 +116,7 @@ class PolymorphicContentTypeMixin:
         most specific form.
         """
 
+        self._ensure_content_type_is_set()
         content_type = ContentType.objects.get_for_id(self.content_type_id)
         return content_type.model_class()
 
@@ -143,9 +151,16 @@ class PolymorphicContentTypeMixin:
             if name in self.__dict__:
                 del self.__dict__[name]
 
+            if isinstance(field, FieldCacheMixin) and field.is_cached(self):
+                field.delete_cached_value(self)
+
         for field in field_names_to_add:
             name = get_field_name(field)
             field = new_model_class._meta.get_field(name)
+
+            if isinstance(field, FieldCacheMixin) and field.is_cached(self):
+                field.delete_cached_value(self)
+
             if hasattr(field, "default"):
                 self.__dict__[name] = (
                     field.default if field.default != NOT_PROVIDED else None

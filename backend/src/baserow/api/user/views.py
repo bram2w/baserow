@@ -1,5 +1,5 @@
 from django.db import transaction
-from itsdangerous.exc import BadSignature, SignatureExpired
+from itsdangerous.exc import BadSignature, BadTimeSignature, SignatureExpired
 
 from django.conf import settings
 
@@ -10,9 +10,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.views import (
-    ObtainJSONWebToken as RegularObtainJSONWebToken,
-    RefreshJSONWebToken as RegularRefreshJSONWebToken,
-    VerifyJSONWebToken as RegularVerifyJSONWebToken,
+    ObtainJSONWebTokenView as RegularObtainJSONWebToken,
+    RefreshJSONWebTokenView as RegularRefreshJSONWebToken,
+    VerifyJSONWebTokenView as RegularVerifyJSONWebToken,
 )
 
 from baserow.api.decorators import map_exceptions, validate_body
@@ -41,6 +41,7 @@ from baserow.core.user.exceptions import (
 )
 
 from .serializers import (
+    AccountSerializer,
     RegisterSerializer,
     UserSerializer,
     SendResetPasswordEmailBodyValidationSerializer,
@@ -183,6 +184,7 @@ class UserView(APIView):
             name=data["name"],
             email=data["email"],
             password=data["password"],
+            language=data["language"],
             group_invitation_token=data.get("group_invitation_token"),
             template=template,
         )
@@ -270,6 +272,7 @@ class ResetPasswordView(APIView):
     @map_exceptions(
         {
             BadSignature: BAD_TOKEN_SIGNATURE,
+            BadTimeSignature: BAD_TOKEN_SIGNATURE,
             SignatureExpired: EXPIRED_TOKEN_SIGNATURE,
             UserNotFound: ERROR_USER_NOT_FOUND,
         }
@@ -321,6 +324,54 @@ class ChangePasswordView(APIView):
         )
 
         return Response("", status=204)
+
+
+class AccountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        tags=["User"],
+        operation_id="get_account",
+        description=(
+            "Responds with account information of the authenticated user. "
+            "For example the chosen `language` and `name` are included "
+            "in the response."
+        ),
+        responses={
+            200: AccountSerializer,
+        },
+    )
+    @transaction.atomic
+    def get(self, request):
+        """Returns user account."""
+
+        account_serializer = AccountSerializer(request.user)
+        return Response(account_serializer.data)
+
+    @extend_schema(
+        tags=["User"],
+        request=AccountSerializer,
+        operation_id="update_account",
+        description=("Updates the account information of the authenticated user."),
+        responses={
+            200: AccountSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @validate_body(AccountSerializer)
+    def patch(self, request, data):
+        """Update editable user account information."""
+
+        user = UserHandler().update_user(
+            request.user,
+            **data,
+        )
+        return Response(AccountSerializer(user).data)
 
 
 class DashboardView(APIView):

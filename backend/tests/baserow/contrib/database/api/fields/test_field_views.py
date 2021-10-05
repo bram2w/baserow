@@ -244,6 +244,17 @@ def test_create_field(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_RESERVED_BASEROW_FIELD_NAME"
 
+    # Test creating field with too long name
+    too_long_field_name = "x" * 256
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": too_long_field_name, "type": "text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
 
 @pytest.mark.django_db
 def test_get_field(api_client, data_fixture):
@@ -434,6 +445,17 @@ def test_update_field(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS"
 
+    too_long_field_name = "x" * 256
+    url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
+    response = api_client.patch(
+        url,
+        {"name": too_long_field_name},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
 
 @pytest.mark.django_db
 def test_delete_field(api_client, data_fixture):
@@ -457,7 +479,7 @@ def test_delete_field(api_client, data_fixture):
 
     url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == 204
+    assert response.status_code == 200
 
     assert Field.objects.all().count() == 1
     assert TextField.objects.all().count() == 0

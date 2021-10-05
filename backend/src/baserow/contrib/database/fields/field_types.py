@@ -1,17 +1,18 @@
-import pytz
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from datetime import datetime, date
 from decimal import Decimal
-from random import randrange, randint
-from typing import Any, Callable, Dict, List
+from random import randrange, randint, sample
+from typing import Any, Callable, Dict, List, Tuple, Union
 
+import pytz
 from dateutil import parser
 from dateutil.parser import ParserError
+from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
-from django.db import models
+from django.db import models, OperationalError
 from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
@@ -23,6 +24,8 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
     ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+    ERROR_WITH_FORMULA,
+    ERROR_TOO_DEEPLY_NESTED_FORMULA,
 )
 from baserow.contrib.database.api.fields.serializers import (
     LinkRowValueSerializer,
@@ -30,6 +33,24 @@ from baserow.contrib.database.api.fields.serializers import (
     SelectOptionSerializer,
     FileFieldResponseSerializer,
 )
+from baserow.contrib.database.formula.exceptions import BaserowFormulaException
+from baserow.contrib.database.formula.expression_generator.generator import (
+    baserow_expression_to_django_expression,
+)
+from baserow.contrib.database.formula.parser.ast_mapper import (
+    replace_field_refs_according_to_new_or_deleted_fields,
+)
+from baserow.contrib.database.formula.types.formula_type import BaserowFormulaType
+from baserow.contrib.database.formula.types.formula_types import (
+    BaserowFormulaTextType,
+    BaserowFormulaNumberType,
+    BaserowFormulaBooleanType,
+    BaserowFormulaDateType,
+    BaserowFormulaCharType,
+    construct_type_from_formula_field,
+    BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
+)
+from baserow.contrib.database.formula.types.table_typer import TypedBaserowTable
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
@@ -38,9 +59,16 @@ from .exceptions import (
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
     IncompatiblePrimaryFieldTypeError,
+    AllProvidedMultipleSelectValuesMustBeIntegers,
+    AllProvidedMultipleSelectValuesMustBeSelectOption,
 )
 from .field_filters import contains_filter, AnnotatedQ, filename_contains_filter
-from .fields import SingleSelectForeignKey
+from .field_sortings import AnnotatedOrder
+from .fields import (
+    SingleSelectForeignKey,
+    BaserowExpressionField,
+    MultipleSelectManyToManyField,
+)
 from .handler import FieldHandler
 from .models import (
     NUMBER_TYPE_INTEGER,
@@ -57,8 +85,12 @@ from .models import (
     EmailField,
     FileField,
     SingleSelectField,
+    MultipleSelectField,
     SelectOption,
+    AbstractSelectOption,
     PhoneNumberField,
+    FormulaField,
+    Field,
 )
 from .registries import FieldType, field_type_registry
 
@@ -134,6 +166,12 @@ class TextFieldMatchingRegexFieldType(FieldType, ABC):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaTextType()
+
+    def from_baserow_formula_type(self, formula_type: BaserowFormulaCharType):
+        return self.model_class()
+
 
 class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
     """
@@ -169,6 +207,9 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
             **kwargs,
         )
 
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaCharType()
+
 
 class TextFieldType(FieldType):
     type = "text"
@@ -199,6 +240,14 @@ class TextFieldType(FieldType):
     def contains_query(self, *args):
         return contains_filter(*args)
 
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaTextType()
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaTextType
+    ) -> TextField:
+        return TextField()
+
 
 class LongTextFieldType(FieldType):
     type = "long_text"
@@ -223,6 +272,14 @@ class LongTextFieldType(FieldType):
 
     def contains_query(self, *args):
         return contains_filter(*args)
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaTextType()
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaTextType
+    ) -> "LongTextField":
+        return LongTextField()
 
 
 class URLFieldType(TextFieldMatchingRegexFieldType):
@@ -349,6 +406,26 @@ class NumberFieldType(FieldType):
         value = getattr(row, field_name)
         return value if value is None else str(value)
 
+    def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
+        if field.number_type == NUMBER_TYPE_INTEGER:
+            number_decimal_places = 0
+        else:
+            number_decimal_places = field.number_decimal_places
+        return BaserowFormulaNumberType(number_decimal_places=number_decimal_places)
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaNumberType
+    ) -> NumberField:
+        if formula_type.number_decimal_places == 0:
+            number_type = NUMBER_TYPE_INTEGER
+        else:
+            number_type = NUMBER_TYPE_DECIMAL
+        return NumberField(
+            number_type=number_type,
+            number_decimal_places=formula_type.number_decimal_places,
+            number_negative=True,
+        )
+
 
 class BooleanFieldType(FieldType):
     type = "boolean"
@@ -372,6 +449,14 @@ class BooleanFieldType(FieldType):
         self, row, field_name, value, id_mapping, files_zip, storage
     ):
         setattr(row, field_name, value == "true")
+
+    def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
+        return BaserowFormulaBooleanType()
+
+    def from_baserow_formula_type(
+        self, boolean_formula_type: BaserowFormulaBooleanType
+    ) -> BooleanField:
+        return BooleanField()
 
 
 class DateFieldType(FieldType):
@@ -546,8 +631,23 @@ class DateFieldType(FieldType):
 
         setattr(row, field_name, datetime.fromisoformat(value))
 
+    def to_baserow_formula_type(self, field: DateField) -> BaserowFormulaType:
+        return BaserowFormulaDateType(
+            field.date_format, field.date_include_time, field.date_time_format
+        )
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaDateType
+    ) -> DateField:
+        return DateField(
+            date_format=formula_type.date_format,
+            date_include_time=formula_type.date_include_time,
+            date_time_format=formula_type.date_time_format,
+        )
+
 
 class CreatedOnLastModifiedBaseFieldType(DateFieldType):
+    read_only = True
     can_be_in_form_view = False
     allowed_fields = DateFieldType.allowed_fields + ["timezone"]
     serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
@@ -1406,15 +1506,56 @@ class FileFieldType(FieldType):
         setattr(row, field_name, files)
 
 
-class SingleSelectFieldType(FieldType):
-    type = "single_select"
-    model_class = SingleSelectField
+class SelectOptionBaseFieldType(FieldType):
     can_have_select_options = True
     allowed_fields = ["select_options"]
     serializer_field_names = ["select_options"]
     serializer_field_overrides = {
         "select_options": SelectOptionSerializer(many=True, required=False)
     }
+
+    def before_create(self, table, primary, values, order, user):
+        if "select_options" in values:
+            return values.pop("select_options")
+
+    def after_create(self, field, model, user, connection, before):
+        if before and len(before) > 0:
+            FieldHandler().update_field_select_options(user, field, before)
+
+    def before_update(self, from_field, to_field_values, user):
+        if "select_options" in to_field_values:
+            FieldHandler().update_field_select_options(
+                user, from_field, to_field_values["select_options"]
+            )
+            to_field_values.pop("select_options")
+
+
+class SingleSelectFieldType(SelectOptionBaseFieldType):
+    type = "single_select"
+    model_class = SingleSelectField
+
+    def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        field_serializer = serializers.PrimaryKeyRelatedField(
+            **{
+                "queryset": SelectOption.objects.filter(field=instance),
+                "required": required,
+                "allow_null": not required,
+                **kwargs,
+            }
+        )
+        return field_serializer
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        return SelectOptionSerializer(
+            **{
+                "required": required,
+                "allow_null": not required,
+                "many": False,
+                **kwargs,
+            }
+        )
 
     def enhance_queryset(self, queryset, field, name):
         return queryset.prefetch_related(
@@ -1437,23 +1578,6 @@ class SingleSelectFieldType(FieldType):
         # If the select option is not found or if it does not belong to the right field
         # then the provided value is invalid and a validation error can be raised.
         raise ValidationError(f"The provided value is not a valid option.")
-
-    def get_serializer_field(self, instance, **kwargs):
-        required = kwargs.get("required", False)
-        return serializers.PrimaryKeyRelatedField(
-            **{
-                "queryset": SelectOption.objects.filter(field=instance),
-                "required": required,
-                "allow_null": not required,
-                **kwargs,
-            }
-        )
-
-    def get_response_serializer_field(self, instance, **kwargs):
-        required = kwargs.get("required", False)
-        return SelectOptionSerializer(
-            **{"required": required, "allow_null": not required, **kwargs}
-        )
 
     def get_serializer_help_text(self, instance):
         return (
@@ -1479,21 +1603,6 @@ class SingleSelectFieldType(FieldType):
             blank=True,
             **kwargs,
         )
-
-    def before_create(self, table, primary, values, order, user):
-        if "select_options" in values:
-            return values.pop("select_options")
-
-    def after_create(self, field, model, user, connection, before):
-        if before and len(before) > 0:
-            FieldHandler().update_field_select_options(user, field, before)
-
-    def before_update(self, from_field, to_field_values, user):
-        if "select_options" in to_field_values:
-            FieldHandler().update_field_select_options(
-                user, from_field, to_field_values["select_options"]
-            )
-            to_field_values.pop("select_options")
 
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         """
@@ -1564,7 +1673,7 @@ class SingleSelectFieldType(FieldType):
             connection, from_field, to_field
         )
 
-    def get_order(self, field, field_name, view_sort):
+    def get_order(self, field, field_name, order_direction):
         """
         If the user wants to sort the results he expects them to be ordered
         alphabetically based on the select option value and not in the id which is
@@ -1576,7 +1685,7 @@ class SingleSelectFieldType(FieldType):
         options = [select_option.pk for select_option in select_options]
         options.insert(0, None)
 
-        if view_sort.order == "DESC":
+        if order_direction == "DESC":
             options.reverse()
 
         order = Case(
@@ -1663,6 +1772,216 @@ class SingleSelectFieldType(FieldType):
         )
 
 
+class MultipleSelectFieldType(SelectOptionBaseFieldType):
+    type = "multiple_select"
+    model_class = MultipleSelectField
+
+    def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        field_serializer = serializers.PrimaryKeyRelatedField(
+            **{
+                "queryset": SelectOption.objects.filter(field=instance),
+                "required": required,
+                "allow_null": not required,
+                **kwargs,
+            }
+        )
+        return serializers.ListSerializer(child=field_serializer, required=required)
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        return SelectOptionSerializer(
+            **{
+                "required": required,
+                "allow_null": not required,
+                "many": True,
+                **kwargs,
+            }
+        )
+
+    def enhance_queryset(self, queryset, field, name):
+        remote_field = queryset.model._meta.get_field(name).remote_field
+        remote_model = remote_field.model
+        through_model = remote_field.through
+        related_queryset = remote_model.objects.all().extra(
+            order_by=[f"{through_model._meta.db_table}.id"]
+        )
+        return queryset.prefetch_related(
+            models.Prefetch(name, queryset=related_queryset)
+        )
+
+    def prepare_value_for_db(self, instance, value):
+        if value is None:
+            return value
+
+        if not all(isinstance(x, int) for x in value):
+            raise AllProvidedMultipleSelectValuesMustBeIntegers
+
+        options = SelectOption.objects.filter(field=instance, id__in=value)
+
+        if len(options) != len(value):
+            raise AllProvidedMultipleSelectValuesMustBeSelectOption
+
+        return value
+
+    def get_serializer_help_text(self, instance):
+        return (
+            "This field accepts a list of `integer` each of which representing the"
+            "chosen select option id related to the field. Available ids can be found"
+            "when getting or listing the field. The response represents chosen field,"
+            "but also the value and color is exposed."
+        )
+
+    def random_value(self, instance, fake, cache):
+        """
+        Selects a random sublist out of the possible options.
+        """
+
+        cache_entry_name = f"field_{instance.id}_options"
+
+        if cache_entry_name not in cache:
+            cache[cache_entry_name] = instance.select_options.all()
+
+        select_options = cache[cache_entry_name]
+
+        # if the select_options are empty return None
+        if not select_options:
+            return None
+
+        random_choice = randint(1, len(select_options))
+
+        return sample(set([x.id for x in select_options]), random_choice)
+
+    def get_export_value(self, value, field_object):
+        if value is None:
+            return value
+        return [item.value for item in value.all()]
+
+    def get_human_readable_value(self, value, field_object):
+        export_value = self.get_export_value(value, field_object)
+
+        return ", ".join(export_value)
+
+    def get_model_field(self, instance, **kwargs):
+        return None
+
+    def after_model_generation(self, instance, model, field_name, manytomany_models):
+        select_option_meta = type(
+            "Meta",
+            (AbstractSelectOption.Meta,),
+            {
+                "managed": False,
+                "app_label": model._meta.app_label,
+                "db_tablespace": model._meta.db_tablespace,
+                "db_table": "database_selectoption",
+                "apps": model._meta.apps,
+            },
+        )
+        select_option_model = type(
+            str(f"MultipleSelectField{instance.id}SelectOption"),
+            (AbstractSelectOption,),
+            {
+                "Meta": select_option_meta,
+                "field": models.ForeignKey(
+                    Field, on_delete=models.CASCADE, related_name="+"
+                ),
+                "__module__": model.__module__,
+                "_generated_table_model": True,
+            },
+        )
+        related_name = f"reversed_field_{instance.id}"
+        shared_kwargs = {
+            "null": True,
+            "blank": True,
+            "db_table": instance.through_table_name,
+            "db_constraint": False,
+        }
+
+        MultipleSelectManyToManyField(
+            to=select_option_model, related_name=related_name, **shared_kwargs
+        ).contribute_to_class(model, field_name)
+        MultipleSelectManyToManyField(
+            to=model, related_name=field_name, **shared_kwargs
+        ).contribute_to_class(select_option_model, related_name)
+
+        # Trigger the newly created pending operations of all the models related to the
+        # created ManyToManyField. They need to be called manually because normally
+        # they are triggered when a new new model is registered. Not triggering them
+        # can cause a memory leak because everytime a table model is generated, it will
+        # register new pending operations.
+        apps = model._meta.apps
+        model_field = model._meta.get_field(field_name)
+        select_option_field = select_option_model._meta.get_field(related_name)
+        apps.do_pending_operations(model)
+        apps.do_pending_operations(select_option_model)
+        apps.do_pending_operations(model_field.remote_field.through)
+        apps.do_pending_operations(model)
+        apps.do_pending_operations(select_option_field.remote_field.through)
+        apps.clear_cache()
+
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+        cache_entry = f"{field_name}_relations"
+        if cache_entry not in cache:
+            # In order to prevent a lot of lookup queries in the through table, we want
+            # to fetch all the relations and add it to a temporary in memory cache
+            # containing a mapping of the old ids to the new ids. Every relation can
+            # use the cached mapped relations to find the correct id.
+            cache[cache_entry] = defaultdict(list)
+            through_model = row._meta.get_field(field_name).remote_field.through
+            through_model_fields = through_model._meta.get_fields()
+            current_field_name = through_model_fields[1].name
+            relation_field_name = through_model_fields[2].name
+            for relation in through_model.objects.all():
+                cache[cache_entry][
+                    getattr(relation, f"{current_field_name}_id")
+                ].append(getattr(relation, f"{relation_field_name}_id"))
+
+        return cache[cache_entry][row.id]
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
+        mapped_values = [
+            id_mapping["database_field_select_options"][item] for item in value
+        ]
+        getattr(row, field_name).set(mapped_values)
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+
+        query = StringAgg(f"{field_name}__value", "")
+
+        return AnnotatedQ(
+            annotation={
+                f"select_option_value_{field_name}": Coalesce(query, Value(""))
+            },
+            q={f"select_option_value_{field_name}__icontains": value},
+        )
+
+    def get_order(self, field, field_name, order_direction):
+        """
+        If the user wants to sort the results he expects them to be ordered
+        alphabetically based on the select option value and not in the id which is
+        stored in the table. This method generates a Case expression which maps the id
+        to the correct position.
+        """
+
+        sort_column_name = f"{field_name}_agg_sort"
+        query = Coalesce(StringAgg(f"{field_name}__value", ""), Value(""))
+        annotation = {sort_column_name: query}
+
+        order = F(sort_column_name)
+        if order_direction == "DESC":
+            order = order.desc(nulls_first=True)
+        else:
+            order = order.asc(nulls_first=True)
+
+        return AnnotatedOrder(annotation=annotation, order=order)
+
+
 class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
     """
     A simple wrapper around a TextField which ensures any entered data is a
@@ -1705,3 +2024,202 @@ class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.phone_number()
+
+
+class FormulaFieldType(FieldType):
+    type = "formula"
+    model_class = FormulaField
+
+    requires_typing = True
+    read_only = True
+
+    can_be_primary_field = False
+    can_be_in_form_view = False
+
+    CORE_FORMULA_FIELDS = [
+        "formula",
+        "formula_type",
+    ]
+    allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
+    serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + CORE_FORMULA_FIELDS
+    serializer_field_overrides = {
+        "error": serializers.CharField(
+            required=False, allow_blank=True, allow_null=True
+        ),
+    }
+
+    @staticmethod
+    def _stack_error_mapper(e):
+        return (
+            ERROR_TOO_DEEPLY_NESTED_FORMULA
+            if "stack depth limit exceeded" in str(e)
+            else None
+        )
+
+    api_exceptions_map = {
+        BaserowFormulaException: ERROR_WITH_FORMULA,
+        OperationalError: _stack_error_mapper,
+    }
+
+    @staticmethod
+    def compatible_with_formula_types(*compatible_formula_types: List[str]):
+        def checker(field) -> bool:
+            from baserow.contrib.database.fields.registries import field_type_registry
+
+            field_type = field_type_registry.get_by_model(field.specific_class)
+            if field_type.type == FormulaFieldType.type:
+                formula_type = construct_type_from_formula_field(field.specific)
+                return formula_type.type in compatible_formula_types
+            else:
+                return False
+
+        return checker
+
+    @staticmethod
+    def _get_field_instance_and_type_from_formula_field(
+        formula_field_instance: FormulaField,
+    ) -> Tuple[Field, FieldType]:
+        """
+        Gets the BaserowFormulaType the provided formula field currently has and the
+        Baserow FieldType used to work with a formula of that formula type.
+
+        :param formula_field_instance: An instance of a formula field.
+        :return: The BaserowFormulaType of the formula field instance.
+        """
+
+        formula_type = construct_type_from_formula_field(formula_field_instance)
+        return formula_type.get_baserow_field_instance_and_type()
+
+    def get_serializer_field(self, instance: FormulaField, **kwargs):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        return field_type.get_serializer_field(field_instance, **kwargs)
+
+    def get_model_field(self, instance: FormulaField, **kwargs):
+        typed_table: Union[TypedBaserowTable, bool] = kwargs.pop("typed_table")
+        # When typed_table is False we are constructing a table model without
+        # doing any type checking, we can't know what the expression is in this
+        # case but we still want to generate a model field so the model can be
+        # used to do SQL operations like dropping fields etc.
+        if typed_table and not (instance.error or instance.trashed):
+            typed_field = typed_table.get_typed_field(instance)
+            expression = typed_field.typed_expression
+            requires_refresh_after_insert = (
+                typed_field.expression_needs_refresh_on_insert
+            )
+        else:
+            expression = None
+            requires_refresh_after_insert = False
+
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        expression_field_type = field_type.get_model_field(field_instance, **kwargs)
+
+        return BaserowExpressionField(
+            null=True,
+            blank=True,
+            expression=expression,
+            expression_field=expression_field_type,
+            requires_refresh_after_insert=requires_refresh_after_insert,
+            **kwargs,
+        )
+
+    def prepare_value_for_db(self, instance, value):
+        """
+        Since the Formula Field is a read only field, we raise a
+        ValidationError when there is a value present.
+        """
+
+        if not value:
+            return value
+
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
+
+    def get_export_value(self, value, field_object) -> BaserowFormulaType:
+        instance = field_object["field"]
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        return field_type.get_export_value(
+            value,
+            {"field": field_instance, "type": field_type, "name": field_object["name"]},
+        )
+
+    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+        # We don't want to export the per row formula values as they can all and
+        # should be derived from the formula itself.
+        return None
+
+    def set_import_serialized_value(
+        self, row, field_name, value, id_mapping, files_zip, storage
+    ):
+        # We don't want to import any per row formula values as they can all and
+        # should be derived from the formula itself.
+        pass
+
+    def contains_query(self, field_name, value, model_field, field: FormulaField):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field)
+        return field_type.contains_query(field_name, value, model_field, field_instance)
+
+    def expression_to_update_field_after_related_field_changes(self, field, to_model):
+        if not (field.error or field.trashed):
+            f = to_model._meta.get_field(field.db_column)
+            return baserow_expression_to_django_expression(f.expression, None)
+        else:
+            return None
+
+    def export_serialized(self, field, include_allowed_fields=True):
+        serialized = super().export_serialized(field, include_allowed_fields)
+        if include_allowed_fields:
+            # Replace all field_by_id references back into their field('actual field
+            # name') format when serializing the formula to file. This enables us to
+            # easily re-import this formula into a table with new field ids as when
+            # typing that table we will automatically translate field('..') back into
+            # the field_by_id form but with the correct new field id's. If we did not
+            # do this step instead we would serialize formulas with field_by_id(N)
+            # where the id is a direct reference to a field in this particular table,
+            # meaning you could never import this field into a different table as it
+            # would be referencing an a field id in a different table.
+
+            serialized[
+                "formula"
+            ] = replace_field_refs_according_to_new_or_deleted_fields(
+                serialized["formula"],
+                {f.id: f.name for f in field.table.field_set.all()},
+                {},
+            )
+        return serialized
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(from_field)
+        return field_type.get_alter_column_prepare_old_value(
+            connection, field_instance, to_field
+        )
+
+    def add_related_fields_to_model(
+        self, typed_table, field, already_included_field_ids
+    ):
+        # If we are building a model with some formula fields we need to
+        # establish the types fields and whether they depend on any other
+        # child fields to be calculated. These child fields then need to be
+        # included in the django model otherwise we cannot reference them.
+        # Allow passing in typer=False to disable any type checking.
+        if typed_table:
+            return typed_table.get_all_depended_on_fields(
+                field, already_included_field_ids
+            )
+        else:
+            return []

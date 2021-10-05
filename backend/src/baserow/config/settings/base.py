@@ -165,7 +165,12 @@ AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.AllowAllUsersModelBacke
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"
+
+LANGUAGES = [
+    ("en", "English"),
+    ("fr", "French"),
+]
 
 TIME_ZONE = "UTC"
 
@@ -200,8 +205,8 @@ JWT_AUTH = {
     "JWT_EXPIRATION_DELTA": datetime.timedelta(seconds=60 * 60),
     "JWT_ALLOW_REFRESH": True,
     "JWT_REFRESH_EXPIRATION_DELTA": datetime.timedelta(days=7),
-    "JWT_RESPONSE_PAYLOAD_HANDLER": "baserow.api.user.jwt."
-    "jwt_response_payload_handler",
+    "JWT_AUTH_HEADER_PREFIX": "JWT",
+    "JWT_RESPONSE_PAYLOAD_HANDLER": "baserow.api.user.jwt.jwt_response_payload_handler",
 }
 
 SPECTACULAR_SETTINGS = {
@@ -212,7 +217,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.5.0",
+    "VERSION": "1.6.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -235,6 +240,23 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database tokens"},
         {"name": "Admin"},
     ],
+    "ENUM_NAME_OVERRIDES": {
+        "NumberDecimalPlacesB02Enum": [
+            (0, "1"),
+            (1, "1.0"),
+            (2, "1.00"),
+            (3, "1.000"),
+            (4, "1.0000"),
+            (5, "1.00000"),
+        ],
+        "NumberDecimalPlaces0c0Enum": [
+            (1, "1.0"),
+            (2, "1.00"),
+            (3, "1.000"),
+            (4, "1.0000"),
+            (5, "1.00000"),
+        ],
+    },
 }
 
 # The storage must always overwrite existing files.
@@ -320,3 +342,13 @@ HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = os.getenv(
 OLD_TRASH_CLEANUP_CHECK_INTERVAL_MINUTES = 5
 
 MAX_ROW_COMMENT_LENGTH = 10000
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+# For now force the old os dependant behaviour of file uploads as users might be relying
+# on it. See
+# https://docs.djangoproject.com/en/3.2/releases/3.0/#new-default-value-for-the-file-upload-permissions-setting
+FILE_UPLOAD_PERMISSIONS = None
+
+
+MAX_FORMULA_STRING_LENGTH = 10000

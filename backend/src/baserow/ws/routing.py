@@ -1,6 +1,6 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from .consumers import CoreConsumer
 
 
-websocket_urlpatterns = [url(r"^ws/core/", CoreConsumer.as_asgi())]
+websocket_urlpatterns = [re_path(r"^ws/core/", CoreConsumer.as_asgi())]

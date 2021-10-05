@@ -283,7 +283,7 @@
                     </td>
                     <td>
                       <code
-                        v-for="filter in getCompatibleFilterTypes(field.type)"
+                        v-for="filter in getCompatibleFilterTypes(field)"
                         :key="filter.type"
                         class="
                           api-docs__code
@@ -892,7 +892,7 @@
                 <td>{{ filter.type }}</td>
                 <td>{{ filter.example }}</td>
                 <td>
-                  field {{ filter.name }}
+                  field {{ filter.getName() }}
                   <template v-if="filter.example !== ''"
                     >'{{ filter.example }}'</template
                   >
@@ -1184,9 +1184,9 @@ export default {
         (addUserFieldParam ? this.userFieldNamesParam : '')
       )
     },
-    getCompatibleFilterTypes(fieldType) {
+    getCompatibleFilterTypes(field) {
       return this.viewFilterTypes.filter((filter) =>
-        filter.compatibleFieldTypes.includes(fieldType)
+        filter.fieldIsCompatible(field)
       )
     },
   },

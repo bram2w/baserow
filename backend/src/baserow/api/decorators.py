@@ -1,23 +1,25 @@
 from datetime import datetime
 
+from django.utils import timezone
 from pytz import timezone as pytz_timezone
 from pytz.exceptions import UnknownTimeZoneError
-
-from django.utils import timezone
-
-from rest_framework import status
+from rest_framework import status, serializers
 from rest_framework.exceptions import APIException
 
+from .exceptions import (
+    QueryParameterValidationException,
+    RequestBodyValidationException,
+)
 from .utils import (
     map_exceptions as map_exceptions_utility,
     get_request,
     validate_data,
     validate_data_custom_fields,
+    ExceptionMappingType,
 )
-from .exceptions import RequestBodyValidationException
 
 
-def map_exceptions(exceptions):
+def map_exceptions(exceptions: ExceptionMappingType):
     """
     This decorator simplifies mapping specific exceptions to a standard api response.
     Note that this decorator uses the map_exception function from baserow.api.utils
@@ -45,6 +47,34 @@ def map_exceptions(exceptions):
         "error": "ERROR_1",
         "detail": "Other message"
       }
+
+    Example 3:
+      with map_api_exceptions(
+          {
+              SomeException: lambda e: ('ERROR_1', 404, 'Conditional Error')
+              if "something" in str(e)
+              else None
+          }
+      ):
+          raise SomeException('something')
+
+      HTTP/1.1 404
+      {
+        "error": "ERROR_1",
+        "detail": "Conditional Error"
+      }
+
+    Example 4:
+      with map_api_exceptions(
+          {
+              SomeException: lambda e: ('ERROR_1', 404, 'Conditional Error')
+              if "something" in str(e)
+              else None
+          }
+      ):
+          raise SomeException('doesnt match')
+
+      # SomeException will be thrown directly if the provided callable returns None.
     """
 
     def map_exceptions_decorator(func):
@@ -55,6 +85,68 @@ def map_exceptions(exceptions):
         return func_wrapper
 
     return map_exceptions_decorator
+
+
+def validate_query_parameters(serializer: serializers.Serializer):
+    """
+    This decorator can validate the query parameters using a serializer. If the query
+    parameters match the fields on the serializer it will add the query params to the
+    kwargs. If not it will raise an APIException with structured details about what is
+    wrong.
+
+    The name of the field on the serializer must be the name of the expected query
+    parameter in the query string.
+    By passing "required=False" to the serializer field, we allow the query
+    parameter to be unset.
+
+    Example:
+        class MoveRowQueryParamsSerializer(serializers.Serializer):
+            before_id = serializers.IntegerField(required=False)
+
+        @validate_query_parameters(MoveRowQueryParamsSerializer)
+        def patch(self, request, query_params):
+           raise SomeException('This is a test')
+
+        HTTP/1.1 400
+        URL: /api/database/rows/table/11/1/move/?before_id=wrong_type
+        {
+          "error": "ERROR_QUERY_PARAMETER_VALIDATION",
+          "detail": {
+            "before_id": [
+              {
+                "error": "A valid integer is required.",
+                "code": "invalid"
+              }
+            ]
+          }
+        }
+
+    :raises ValueError: When the `query_params` attribute is already in the kwargs. This
+        decorator tries to add the `query_params` attribute, but cannot do that if it is
+        already present.
+    """
+
+    def validate_decorator(func):
+        def func_wrapper(*args, **kwargs):
+            request = get_request(args)
+
+            if "query_params" in kwargs:
+                raise ValueError("The query_params attribute is already in the kwargs.")
+
+            params_dict = request.GET.dict()
+
+            kwargs["query_params"] = validate_data(
+                serializer,
+                params_dict,
+                partial=False,
+                exception_to_raise=QueryParameterValidationException,
+            )
+
+            return func(*args, **kwargs)
+
+        return func_wrapper
+
+    return validate_decorator
 
 
 def validate_body(serializer_class, partial=False):

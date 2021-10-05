@@ -1,0 +1,23 @@
+.select-options__dropdown-item.hover {
+  background-color: $color-neutral-100;
+}
+
+.select-options__dropdown-link {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  height: 32px;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.select-options__dropdown-selected {
+  display: flex;
+  align-items: center;
+}
+
+.select-options__dropdown-option {
+  @include select-option-style(inline-block, false);
+}

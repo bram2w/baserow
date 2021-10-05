@@ -22,7 +22,12 @@ export function getRowSortFunction(
     if (field !== undefined) {
       const fieldName = `field_${field.id}`
       const fieldType = $registry.get('field', field.type)
-      const fieldSortFunction = fieldType.getSort(fieldName, sort.order)
+      const fieldSortFunction = fieldType.getSort(
+        fieldName,
+        sort.order,
+        field,
+        $registry
+      )
       sortFunction = sortFunction.thenBy(fieldSortFunction)
     }
   })
@@ -60,7 +65,7 @@ export const matchSearchFilters = (
     const fieldType = $registry.get('field', field.type)
     const matches = $registry
       .get('viewFilter', filter.type)
-      .matches(rowValue, filterValue, field, fieldType)
+      .matches(rowValue, filterValue, field, fieldType, $registry)
     if (filterType === 'AND' && !matches) {
       // With an `AND` filter type, the row must match all the filters, so if
       // one of the filters doesn't match we can mark it as isvalid.

@@ -385,7 +385,7 @@ export const actions = {
       const viewFilterTypes = this.$registry.getAll('viewFilter')
       const compatibleType = Object.values(viewFilterTypes).find(
         (viewFilterType) => {
-          return viewFilterType.compatibleFieldTypes.includes(field.type)
+          return viewFilterType.fieldIsCompatible(field)
         }
       )
       if (compatibleType === undefined) {
@@ -620,9 +620,7 @@ export const actions = {
         .filter((filter) => filter.field === field.id)
         .forEach((filter) => {
           const filterType = this.$registry.get('viewFilter', filter.type)
-          const compatible = filterType.compatibleFieldTypes.includes(
-            fieldType.type
-          )
+          const compatible = filterType.fieldIsCompatible(field)
           if (!compatible) {
             commit('DELETE_FILTER', { view, id: filter.id })
           }

@@ -1,0 +1,18 @@
+.lang-picker__link {
+  color: $color-primary-900;
+  user-select: none;
+  white-space: nowrap;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.lang-picker__icon {
+  color: $color-neutral-600;
+  margin-left: 6px;
+}
+
+.lang-picker__dropdown {
+  top: 5px;
+}

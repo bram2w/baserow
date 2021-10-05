@@ -200,10 +200,19 @@ class TrashHandler:
 
         trash_item_lookup_cache = {}
         deleted_count = 0
-        for trash_entry in TrashEntry.objects.filter(
-            should_be_permanently_deleted=True
-        ):
+        while True:
             with transaction.atomic():
+                # Perm deleting a group or application can cause cascading deletion of
+                # other trash entries hence we only look up one a time. If we instead
+                # looped over a single queryset lookup of all TrashEntries then we could
+                # end up trying to delete TrashEntries which have already been deleted
+                # by a previous cascading delete of a group or application.
+                trash_entry = TrashEntry.objects.filter(
+                    should_be_permanently_deleted=True
+                ).first()
+                if not trash_entry:
+                    break
+
                 trash_item_type = trash_item_type_registry.get(
                     trash_entry.trash_item_type
                 )

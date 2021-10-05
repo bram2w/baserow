@@ -14,7 +14,6 @@ from tests.test_utils import setup_interesting_test_table
 @pytest.mark.django_db
 def test_get_table_serializer(data_fixture):
     table = data_fixture.create_database_table(name="Cars")
-    table_2 = data_fixture.create_database_table()
     text_field = data_fixture.create_text_field(
         table=table, order=0, name="Color", text_default="white"
     )
@@ -144,7 +143,7 @@ def test_get_table_serializer(data_fixture):
 
     # adding an extra field and only use that one.
     price_field = data_fixture.create_number_field(
-        table=table_2,
+        table=table,
         order=0,
         name="Sale price",
         number_type="DECIMAL",
@@ -283,6 +282,24 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
             "id": SelectOption.objects.get(value="A").id,
             "value": "A",
         },
+        "multiple_select": [
+            {
+                "color": "yellow",
+                "id": SelectOption.objects.get(value="D").id,
+                "value": "D",
+            },
+            {
+                "color": "orange",
+                "id": SelectOption.objects.get(value="C").id,
+                "value": "C",
+            },
+            {
+                "color": "green",
+                "id": SelectOption.objects.get(value="E").id,
+                "value": "E",
+            },
+        ],
         "text": "text",
         "url": "https://www.google.com",
+        "formula": "test FORMULA",
     }

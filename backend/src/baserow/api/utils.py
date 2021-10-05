@@ -1,18 +1,33 @@
 from contextlib import contextmanager
+from typing import Dict, Union, Tuple, Callable, Optional, Type
 
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from rest_framework import status
 from rest_framework.exceptions import APIException
 from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer
 
 from baserow.core.exceptions import InstanceTypeDoesNotExist
-
 from .exceptions import RequestBodyValidationException
+
+ErrorTupleType = Tuple[str, int, str]
+ExceptionMappingType = Dict[
+    Type[Exception],
+    Union[
+        str,
+        ErrorTupleType,
+        Callable[
+            [
+                Exception,
+            ],
+            Optional[Union[str, ErrorTupleType]],
+        ],
+    ],
+]
 
 
 @contextmanager
-def map_exceptions(mapping):
+def map_exceptions(mapping: ExceptionMappingType):
     """
     This utility function simplifies mapping uncaught exceptions to a standard api
     response exception.
@@ -36,15 +51,47 @@ def map_exceptions(mapping):
         "error": "ERROR_1",
         "detail": "Other message"
       }
+
+    Example 3:
+      with map_api_exceptions(
+          {
+              SomeException: lambda e: ('ERROR_1', 404, 'Conditional Error')
+              if "something" in str(e)
+              else None
+          }
+      ):
+          raise SomeException('something')
+
+      HTTP/1.1 404
+      {
+        "error": "ERROR_1",
+        "detail": "Conditional Error"
+      }
+
+    Example 4:
+      with map_api_exceptions(
+          {
+              SomeException: lambda e: ('ERROR_1', 404, 'Conditional Error')
+              if "something" in str(e)
+              else None
+          }
+      ):
+          raise SomeException('doesnt match')
+
+      # SomeException will be thrown directly if the provided callable returns None.
     """
 
     try:
         yield
     except tuple(mapping.keys()) as e:
-        value = mapping.get(e.__class__)
+        value = _search_up_class_hierarchy_for_mapping(e, mapping)
         status_code = status.HTTP_400_BAD_REQUEST
         detail = ""
 
+        if callable(value):
+            value = value(e)
+            if value is None:
+                raise e
         if isinstance(value, str):
             error = value
         if isinstance(value, tuple):
@@ -60,7 +107,20 @@ def map_exceptions(mapping):
         raise exc
 
 
-def validate_data(serializer_class, data, partial=False):
+def _search_up_class_hierarchy_for_mapping(e, mapping):
+    for clazz in e.__class__.mro():
+        value = mapping.get(clazz)
+        if value:
+            return value
+    return None
+
+
+def validate_data(
+    serializer_class,
+    data,
+    partial=False,
+    exception_to_raise=RequestBodyValidationException,
+):
     """
     Validates the provided data via the provided serializer class. If the data doesn't
     match with the schema of the serializer an api exception containing more detailed
@@ -84,12 +144,12 @@ def validate_data(serializer_class, data, partial=False):
         elif isinstance(error, list):
             return [serialize_errors_recursive(errors) for errors in error]
         else:
-            return {"error": force_text(error), "code": error.code}
+            return {"error": force_str(error), "code": error.code}
 
     serializer = serializer_class(data=data, partial=partial)
     if not serializer.is_valid():
         detail = serialize_errors_recursive(serializer.errors)
-        raise RequestBodyValidationException(detail)
+        raise exception_to_raise(detail)
 
     return serializer.data
 
@@ -278,12 +338,15 @@ class DiscriminatorCustomFieldsMappingSerializer:
     extension class.
     """
 
-    def __init__(self, registry, base_class, type_field_name="type", many=False):
+    def __init__(
+        self, registry, base_class, type_field_name="type", many=False, help_text=None
+    ):
         self.read_only = False
         self.registry = registry
         self.base_class = base_class
         self.type_field_name = type_field_name
         self.many = many
+        self.help_text = help_text
 
 
 class DiscriminatorMappingSerializer:

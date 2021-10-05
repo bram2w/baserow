@@ -4,6 +4,7 @@ from rest_framework import status, serializers
 from rest_framework.exceptions import APIException
 from rest_framework.serializers import CharField
 from rest_framework.status import HTTP_404_NOT_FOUND
+from baserow.api.exceptions import QueryParameterValidationException
 
 from baserow.core.models import Group
 from baserow.core.registry import (
@@ -25,6 +26,10 @@ class TemporaryException(Exception):
 
 
 class TemporaryException2(Exception):
+    pass
+
+
+class TemporarySubClassException(TemporaryException):
     pass
 
 
@@ -64,6 +69,11 @@ class TemporaryTypeRegistry(Registry):
     name = "temporary"
 
 
+class TemporaryQueryParamSerializer(serializers.Serializer):
+    field_5 = serializers.IntegerField(required=True)
+    field_6 = serializers.CharField(max_length=20, required=False)
+
+
 def test_map_exceptions():
     with pytest.raises(APIException) as api_exception_1:
         with map_exceptions({TemporaryException: "ERROR_TEMPORARY"}):
@@ -73,16 +83,13 @@ def test_map_exceptions():
     assert api_exception_1.value.detail["detail"] == ""
     assert api_exception_1.value.status_code == status.HTTP_400_BAD_REQUEST
 
+    error_tuple = (
+        "ERROR_TEMPORARY_2",
+        HTTP_404_NOT_FOUND,
+        "Another message {e.message}",
+    )
     with pytest.raises(APIException) as api_exception_2:
-        with map_exceptions(
-            {
-                TemporaryException: (
-                    "ERROR_TEMPORARY_2",
-                    HTTP_404_NOT_FOUND,
-                    "Another message {e.message}",
-                )
-            }
-        ):
+        with map_exceptions({TemporaryException: error_tuple}):
             e = TemporaryException()
             e.message = "test"
             raise e
@@ -97,6 +104,71 @@ def test_map_exceptions():
 
     with map_exceptions({TemporaryException: "ERROR_TEMPORARY_4"}):
         pass
+
+    # Can map to a callable which returns an error code
+    with pytest.raises(APIException) as api_exception_3:
+        with map_exceptions(
+            {
+                TemporaryException: lambda ex: "CONDITIONAL_ERROR"
+                if "test" in str(ex)
+                else None
+            }
+        ):
+            raise TemporaryException("test")
+
+    assert api_exception_3.value.detail["error"] == "CONDITIONAL_ERROR"
+
+    # If the callable returns None the exception is rethrown
+    with pytest.raises(TemporaryException):
+        with map_exceptions(
+            {
+                TemporaryException: lambda ex: "CONDITIONAL_ERROR"
+                if "test" in str(ex)
+                else None
+            }
+        ):
+            raise TemporaryException("not matching lambda")
+
+    # Can map to a callable condition which can return a error tuple
+    with pytest.raises(APIException) as api_exception_5:
+        with map_exceptions(
+            {
+                TemporaryException: lambda ex: error_tuple
+                if "test" in ex.message
+                else None
+            }
+        ):
+            exception = TemporaryException()
+            exception.message = "test"
+            raise exception
+
+    assert api_exception_5.value.detail["error"] == "ERROR_TEMPORARY_2"
+    assert api_exception_5.value.detail["detail"] == "Another message test"
+    assert api_exception_5.value.status_code == status.HTTP_404_NOT_FOUND
+
+    # Can map to a sub type of an exception and it will be chosen
+    with pytest.raises(APIException) as api_exception_3:
+        with map_exceptions(
+            {
+                TemporarySubClassException: "SUB_TYPE_ERROR",
+                TemporaryException: "BASE_TYPE_ERROR",
+            }
+        ):
+            raise TemporarySubClassException
+
+    assert api_exception_3.value.detail["error"] == "SUB_TYPE_ERROR"
+
+    # Can map to a base type of an exception and it will be chosen
+    with pytest.raises(APIException) as api_exception_3:
+        with map_exceptions(
+            {
+                TemporarySubClassException: "SUB_TYPE_ERROR",
+                TemporaryException: "BASE_TYPE_ERROR",
+            }
+        ):
+            raise TemporaryException
+
+    assert api_exception_3.value.detail["error"] == "BASE_TYPE_ERROR"
 
 
 def test_validate_data():
@@ -163,6 +235,62 @@ def test_validate_data():
     assert len(api_exception_3.value.detail["detail"]) == 1
     assert api_exception_3.value.detail["detail"][0]["field_1"][0]["code"] == "required"
     assert api_exception_3.value.detail["detail"][0]["field_2"][0]["code"] == "required"
+
+    with pytest.raises(QueryParameterValidationException) as api_exception_4:
+        validate_data(
+            TemporaryQueryParamSerializer,
+            {"field_5": "wrong_type"},
+            exception_to_raise=QueryParameterValidationException,
+        )
+    assert api_exception_4.value.status_code == status.HTTP_400_BAD_REQUEST
+    assert api_exception_4.value.detail["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert api_exception_4.value.detail["detail"]["field_5"][0]["code"] == "invalid"
+    assert api_exception_4.value.detail["detail"]["field_5"][0]["error"] == (
+        "A valid integer is required."
+    )
+
+    with pytest.raises(QueryParameterValidationException) as api_exception_5:
+        validate_data(
+            TemporaryQueryParamSerializer,
+            {},
+            exception_to_raise=QueryParameterValidationException,
+        )
+    assert api_exception_5.value.status_code == status.HTTP_400_BAD_REQUEST
+    assert api_exception_5.value.detail["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert api_exception_5.value.detail["detail"]["field_5"][0]["code"] == "required"
+    assert api_exception_5.value.detail["detail"]["field_5"][0]["error"] == (
+        "This field is required."
+    )
+
+    with pytest.raises(QueryParameterValidationException) as api_exception_6:
+        validate_data(
+            TemporaryQueryParamSerializer,
+            {"field_5": 5, "field_6": "string_is_way_too_long"},
+            exception_to_raise=QueryParameterValidationException,
+        )
+    assert api_exception_6.value.status_code == status.HTTP_400_BAD_REQUEST
+    assert api_exception_6.value.detail["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert api_exception_6.value.detail["detail"]["field_6"][0]["code"] == "max_length"
+    assert api_exception_6.value.detail["detail"]["field_6"][0]["error"] == (
+        "Ensure this field has no more than 20 characters."
+    )
+
+    with pytest.raises(QueryParameterValidationException) as api_exception_7:
+        validate_data(
+            TemporaryQueryParamSerializer,
+            {"field_5": "wrong_type", "field_6": "string_is_way_too_long"},
+            exception_to_raise=QueryParameterValidationException,
+        )
+    assert api_exception_7.value.status_code == status.HTTP_400_BAD_REQUEST
+    assert api_exception_7.value.detail["error"] == "ERROR_QUERY_PARAMETER_VALIDATION"
+    assert api_exception_7.value.detail["detail"]["field_6"][0]["code"] == "max_length"
+    assert api_exception_7.value.detail["detail"]["field_6"][0]["error"] == (
+        "Ensure this field has no more than 20 characters."
+    )
+    assert api_exception_7.value.detail["detail"]["field_5"][0]["code"] == "invalid"
+    assert api_exception_7.value.detail["detail"]["field_5"][0]["error"] == (
+        "A valid integer is required."
+    )
 
 
 def test_validate_data_custom_fields():
