@@ -69,7 +69,8 @@ get a nicer set of functions to implement corresponding to the arguments.
 
 Operators are implemented as a mapping from an operator to a `BaserowFunctionDefinition`
 . So the `+` operator is just a fancy way of calling the `BaserowAdd` function.
-Operators have precedence as defined by the rule ordering in [[BaserowParser.g4]][1]
+Operators have precedence as defined by the rule ordering in the BaserowParser.g4
+grammar file.
 
 ### Operator Overloading
 

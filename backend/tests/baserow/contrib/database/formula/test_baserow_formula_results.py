@@ -227,6 +227,20 @@ COMPLEX_VALID_TESTS = [
             ]
         ),
     ),
+    a_test_case(
+        "Can use a boolean field in an if",
+        given_a_table(
+            columns=[("boolean", "boolean")],
+            rows=[[True], [False]],
+        ),
+        when_a_formula_field_is_added("if(field('boolean'), 'true', 'false')"),
+        then_expect_the_rows_to_be(
+            [
+                [True, "true"],
+                [False, "false"],
+            ]
+        ),
+    ),
 ]
 
 INVALID_FORMULA_TESTS = [
