@@ -1,8 +1,8 @@
 import re
-from typing import Dict, Any
+from typing import Dict, Any, Union
 
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, F
 
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
@@ -14,6 +14,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
+from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
@@ -72,6 +73,42 @@ class TableModelQuerySet(models.QuerySet):
 
         return filter_builder.apply_to_queryset(self)
 
+    def _get_field_name(self, field: str) -> str:
+        """
+        Helper method for parsing a field name from a string
+        with a possible prefix.
+
+        :param field: The string from which the field name
+            should be parsed.
+        :type field: str
+        :return: The field without prefix.
+        :rtype: str
+        """
+
+        possible_prefix = field[:1]
+        if possible_prefix in {"-", "+"}:
+            return field[1:]
+        else:
+            return field
+
+    def _get_field_id(self, field: str) -> Union[int, None]:
+        """
+        Helper method for parsing a field ID from a string.
+
+        :param field: The string from which the field id
+            should be parsed.
+        :type field: str
+        :return: The ID of the field or None
+        :rtype: int or None
+        """
+
+        try:
+            field_id = int(re.sub("[^0-9]", "", str(field)))
+        except ValueError:
+            field_id = None
+
+        return field_id
+
     def order_by_fields_string(self, order_string, user_field_names=False):
         """
         Orders the query by the given field order string. This string is often
@@ -112,22 +149,18 @@ class TableModelQuerySet(models.QuerySet):
 
         for index, order in enumerate(order_by):
             if user_field_names:
-                possible_prefix = order[:1]
-                if possible_prefix in {"-", "+"}:
-                    field_name_or_id = order[1:]
-                else:
-                    field_name_or_id = order
+                field_name_or_id = self._get_field_name(order)
             else:
-                field_name_or_id = int(re.sub("[^0-9]", "", str(order)))
+                field_name_or_id = self._get_field_id(order)
 
             if field_name_or_id not in field_object_dict:
-                raise OrderByFieldNotFound(
-                    order, f"Field {field_name_or_id} does not exist."
-                )
+                raise OrderByFieldNotFound(order)
 
+            order_direction = "DESC" if order[:1] == "-" else "ASC"
             field_object = field_object_dict[field_name_or_id]
             field_type = field_object["type"]
             field_name = field_object["name"]
+            field = field_object["field"]
             user_field_name = field_object["field"].name
             error_display_name = user_field_name if user_field_names else field_name
 
@@ -138,11 +171,32 @@ class TableModelQuerySet(models.QuerySet):
                     f"It is not possible to order by field type {field_type.type}.",
                 )
 
-            order_by[index] = "{}{}".format("-" if order[:1] == "-" else "", field_name)
+            field_order = field_type.get_order(field, field_name, order_direction)
+            annotation = None
+
+            if isinstance(field_order, AnnotatedOrder):
+                annotation = field_order.annotation
+                field_order = field_order.order
+
+            if field_order:
+                order_by[index] = field_order
+            else:
+                order_expression = F(field_name)
+
+                if order_direction == "ASC":
+                    order_expression = order_expression.asc(nulls_first=True)
+                else:
+                    order_expression = order_expression.desc(nulls_last=True)
+
+                order_by[index] = order_expression
 
         order_by.append("order")
         order_by.append("id")
-        return self.order_by(*order_by)
+
+        if annotation is not None:
+            return self.annotate(**annotation).order_by(*order_by)
+        else:
+            return self.order_by(*order_by)
 
     def filter_by_fields_object(self, filter_object, filter_type=FILTER_TYPE_AND):
         """

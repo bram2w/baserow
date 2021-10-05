@@ -1580,7 +1580,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             connection, from_field, to_field
         )
 
-    def get_order(self, field, field_name, view_sort):
+    def get_order(self, field, field_name, order_direction):
         """
         If the user wants to sort the results he expects them to be ordered
         alphabetically based on the select option value and not in the id which is
@@ -1592,7 +1592,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         options = [select_option.pk for select_option in select_options]
         options.insert(0, None)
 
-        if view_sort.order == "DESC":
+        if order_direction == "DESC":
             options.reverse()
 
         order = Case(
@@ -1868,7 +1868,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
             q={f"select_option_value_{field_name}__icontains": value},
         )
 
-    def get_order(self, field, field_name, view_sort):
+    def get_order(self, field, field_name, order_direction):
         """
         If the user wants to sort the results he expects them to be ordered
         alphabetically based on the select option value and not in the id which is
@@ -1881,7 +1881,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         annotation = {sort_column_name: query}
 
         order = F(sort_column_name)
-        if view_sort.order == "DESC":
+        if order_direction == "DESC":
             order = order.desc(nulls_first=True)
         else:
             order = order.asc(nulls_first=True)

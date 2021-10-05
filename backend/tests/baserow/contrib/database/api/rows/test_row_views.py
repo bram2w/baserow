@@ -1389,3 +1389,65 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
             "Link": [],
         },
     ]
+
+    # make sure that when user_field_names is not set
+    # that a correct error is presented when still using
+    # a field names in order_by
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f"{url}?order_by={field_1.name}",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_FOUND"
+    assert (
+        response_json["detail"]
+        == f"The field {field_1.name} was not found in the table."
+    )
+
+    # make sure that when user_field_names is false and we provide
+    # a field_id string that we get a result.
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f"{url}?user_field_names=false&order_by=field_{field_1.id}",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["results"] == [
+        {
+            "id": 1,
+            "order": "1.00000000000000000000",
+            f"field_{field_1.id}": "name 1",
+            f"field_{field_3.id}": False,
+            f"field_{field_2.id}": "2",
+            f"field_{link_field.id}": [],
+        },
+        {
+            "id": 2,
+            "order": "1.00000000000000000000",
+            f"field_{field_1.id}": "name 2",
+            f"field_{field_3.id}": True,
+            f"field_{field_2.id}": "1",
+            f"field_{link_field.id}": [],
+        },
+    ]
+
+    # make sure that when user_field_names is true and we provide
+    # a field_id string that we get an error.
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        f"{url}?user_field_names=true&order_by=field_{field_1.id}",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_FOUND"
+    assert (
+        response_json["detail"]
+        == f"The field field_{field_1.id} was not found in the table."
+    )

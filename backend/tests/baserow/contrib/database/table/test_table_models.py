@@ -325,17 +325,43 @@ def test_order_by_fields_string_queryset(data_fixture):
         table=table, order=3, name="Description"
     )
     link_field = data_fixture.create_link_row_field(table=table, link_row_table=table_2)
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="Single"
+    )
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="Multi"
+    )
+
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="B", color="red"
+    )
+    option_c = data_fixture.create_select_option(
+        field=single_select_field, value="C", color="blue"
+    )
+    option_d = data_fixture.create_select_option(
+        field=single_select_field, value="D", color="red"
+    )
 
     model = table.get_model(attribute_names=True)
     row_1 = model.objects.create(
-        name="BMW", color="Blue", price=10000, description="Sports car."
+        name="BMW",
+        color="Blue",
+        price=10000,
+        description="Sports car.",
+        single=option_a,
     )
+    getattr(row_1, "multi").set([option_c.id])
     row_2 = model.objects.create(
         name="Audi",
         color="Orange",
         price=20000,
         description="This is the most expensive car we have.",
+        single=option_b,
     )
+    getattr(row_2, "multi").set([option_d.id])
     row_3 = model.objects.create(
         name="Volkswagen", color="White", price=5000, description="A very old car."
     )
@@ -343,17 +369,20 @@ def test_order_by_fields_string_queryset(data_fixture):
         name="Volkswagen", color="Green", price=4000, description="Strange color."
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(OrderByFieldNotFound):
         model.objects.all().order_by_fields_string("xxxx")
 
     with pytest.raises(ValueError):
         model.objects.all().order_by_fields_string("")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(OrderByFieldNotFound):
         model.objects.all().order_by_fields_string("id")
 
     with pytest.raises(OrderByFieldNotFound):
         model.objects.all().order_by_fields_string("field_99999")
+
+    with pytest.raises(OrderByFieldNotFound):
+        model.objects.all().order_by_fields_string(f"{name_field.name}")
 
     with pytest.raises(OrderByFieldNotPossible):
         model.objects.all().order_by_fields_string(f"field_{link_field.id}")
@@ -393,6 +422,38 @@ def test_order_by_fields_string_queryset(data_fixture):
     assert results[0].id == row_5.id
     assert results[1].id == row_2.id
     assert results[2].id == row_1.id
+    assert results[3].id == row_3.id
+    assert results[4].id == row_4.id
+
+    results = model.objects.all().order_by_fields_string(f"{single_select_field.id}")
+    assert results[0].id == row_5.id
+    assert results[1].id == row_3.id
+    assert results[2].id == row_4.id
+    assert results[3].id == row_1.id
+    assert results[4].id == row_2.id
+
+    results = model.objects.all().order_by_fields_string(
+        f"-field_{single_select_field.id}"
+    )
+    assert results[0].id == row_2.id
+    assert results[1].id == row_1.id
+    assert results[2].id == row_5.id
+    assert results[3].id == row_3.id
+    assert results[4].id == row_4.id
+
+    results = model.objects.all().order_by_fields_string(f"{multiple_select_field.id}")
+    assert results[0].id == row_5.id
+    assert results[1].id == row_3.id
+    assert results[2].id == row_4.id
+    assert results[3].id == row_1.id
+    assert results[4].id == row_2.id
+
+    results = model.objects.all().order_by_fields_string(
+        f"-field_{multiple_select_field.id}"
+    )
+    assert results[0].id == row_2.id
+    assert results[1].id == row_1.id
+    assert results[2].id == row_5.id
     assert results[3].id == row_3.id
     assert results[4].id == row_4.id
 
