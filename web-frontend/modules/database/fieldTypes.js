@@ -2,10 +2,10 @@ import BigNumber from 'bignumber.js'
 
 import moment from '@baserow/modules/core/moment'
 import {
-  isValidURL,
-  isValidEmail,
-  isSimplePhoneNumber,
   isNumeric,
+  isSimplePhoneNumber,
+  isValidEmail,
+  isValidURL,
 } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
@@ -40,6 +40,7 @@ import FunctionalGridViewFieldFile from '@baserow/modules/database/components/vi
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
 import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleSelect'
 import FunctionalGridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldPhoneNumber'
+import FunctionalGridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -66,6 +67,9 @@ import {
   filenameContainsFilter,
   genericContainsFilter,
 } from '@baserow/modules/database/utils/fieldFilters'
+import GridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula'
+import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
+import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 
 export class FieldType extends Registerable {
   /**
@@ -187,7 +191,6 @@ export class FieldType extends Registerable {
     super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
-    this.sortIndicator = this.getSortIndicator()
     this.canSortInView = this.getCanSortInView()
     this.canBePrimaryField = this.getCanBePrimaryField()
     this.isReadOnly = this.getIsReadOnly()
@@ -221,7 +224,6 @@ export class FieldType extends Registerable {
       type: this.type,
       iconClass: this.iconClass,
       name: this.getName(),
-      sortIndicator: this.sortIndicator,
       canSortInView: this.canSortInView,
       isReadOnly: this.isReadOnly,
     }
@@ -364,10 +366,10 @@ export class FieldType extends Registerable {
    * Converts rowValue to its human readable form first before applying the
    * filter returned from getContainsFilterFunction.
    */
-  containsFilter(rowValue, filterValue, field) {
+  containsFilter(rowValue, filterValue, field, $registry) {
     return (
       filterValue === '' ||
-      this.getContainsFilterFunction()(
+      this.getContainsFilterFunction(field, $registry)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
@@ -382,7 +384,7 @@ export class FieldType extends Registerable {
   notContainsFilter(rowValue, filterValue, field) {
     return (
       filterValue === '' ||
-      !this.getContainsFilterFunction()(
+      !this.getContainsFilterFunction(field)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
@@ -1764,5 +1766,116 @@ export class PhoneNumberFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+}
+
+export class FormulaFieldType extends FieldType {
+  static getType() {
+    return 'formula'
+  }
+
+  static compatibleWithFormulaTypes(...formulaTypeStrings) {
+    return (field) => {
+      return (
+        field.type === this.getType() &&
+        formulaTypeStrings.includes(field.formula_type)
+      )
+    }
+  }
+
+  getIconClass() {
+    return 'square-root-alt'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.formula')
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldFormula
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldFormula
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldFormula
+  }
+
+  _mapFormulaTypeToFieldType(formulaType) {
+    return {
+      invalid: TextFieldType.getType(),
+      text: TextFieldType.getType(),
+      char: TextFieldType.getType(),
+      number: NumberFieldType.getType(),
+      date: DateFieldType.getType(),
+      boolean: BooleanFieldType.getType(),
+      date_interval: DateFieldType.getType(),
+    }[formulaType]
+  }
+
+  getSort(name, order, field, $registry) {
+    const underlyingFieldType = $registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.getSort(name, order)
+  }
+
+  getEmptyValue(field) {
+    return null
+  }
+
+  getDocsDataType(field) {
+    return null
+  }
+
+  getDocsDescription(field) {
+    return (
+      'A read-only field defined by a formula written in the Baserow formula' +
+      ' language.'
+    )
+  }
+
+  getDocsRequestExample(field) {
+    return 'Result of a formula calculation'
+  }
+
+  getContainsFilterFunction(field, $registry) {
+    const underlyingFieldType = $registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.getContainsFilterFunction()
+  }
+
+  getSortIndicator(field, $registry) {
+    const underlyingFieldType = $registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.getSortIndicator()
+  }
+
+  getFormComponent() {
+    return FieldFormulaSubForm
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldRefreshWhenAdded() {
+    return true
+  }
+
+  getFormViewFieldComponent() {
+    return null
+  }
+
+  getCanBePrimaryField() {
+    return false
   }
 }

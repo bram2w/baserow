@@ -80,6 +80,7 @@ up=true
 migrate=true
 sync_templates=true
 exit_if_other_owners_found=true
+delete_db_volume=false
 while true; do
 case "${1:-noneleft}" in
     dont_migrate)
@@ -128,6 +129,13 @@ case "${1:-noneleft}" in
         shift
         build=true
         up=false
+    ;;
+    restart_wipe)
+        echo "./dev.sh: Restarting Dev Env and Wiping Database"
+        shift
+        down=true
+        up=true
+        delete_db_volume=true
     ;;
     ignore_ownership)
         echo "./dev.sh: Continuing if files in repo are not owned by $USER."
@@ -221,6 +229,10 @@ fi
 
 if [ "$build" = true ] ; then
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml build "$@"
+fi
+
+if [ "$delete_db_volume" = true ] ; then
+  docker volume rm baserow_pgdata
 fi
 
 if [ "$up" = true ] ; then

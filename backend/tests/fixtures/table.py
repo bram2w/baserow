@@ -26,8 +26,14 @@ class TableFixtures:
         table = self.create_database_table(user=user, create_table=True, **kwargs)
         fields = []
         for name, field_type in columns:
+            kwargs = {}
+            if isinstance(field_type, dict):
+                kwargs = field_type
+                field_type = kwargs.pop("type")
             fields.append(
-                getattr(self, f"create_{field_type}_field")(name=name, table=table)
+                getattr(self, f"create_{field_type}_field")(
+                    name=name, table=table, **kwargs
+                )
             )
 
         model = table.get_model()

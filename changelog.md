@@ -40,6 +40,8 @@
     * Blog Post Management
 * Fixed a bug where the backend would fail hard when trying to order by field name without
   using `user_field_names`.
+* Added "Formula" field type with 30+ useful functions allowing dynamic per row
+  calculations.
 
 ## Released (2021-08-11)
 

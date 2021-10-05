@@ -586,7 +586,7 @@ def test_link_row_field_type_api_views(api_client, data_fixture):
 
     url = reverse("api:database:fields:item", kwargs={"field_id": field_id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_200_OK
     assert LinkRowField.objects.all().count() == 0
 
 

@@ -25,6 +25,12 @@ from baserow.core.exceptions import (
     TrashItemDoesNotExist,
 )
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.trash.exceptions import (
+    CannotRestoreChildBeforeParent,
+    ParentIdMustNotBeProvidedException,
+    ParentIdMustBeProvidedException,
+)
+
 from .errors import (
     ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD,
     ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
@@ -35,11 +41,6 @@ from .serializers import (
     TrashContentsSerializer,
     TrashStructureSerializer,
     TrashEntryRequestSerializer,
-)
-from ...core.trash.exceptions import (
-    CannotRestoreChildBeforeParent,
-    ParentIdMustNotBeProvidedException,
-    ParentIdMustBeProvidedException,
 )
 
 

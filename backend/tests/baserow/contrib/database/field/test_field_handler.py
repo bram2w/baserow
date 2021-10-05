@@ -31,6 +31,7 @@ from baserow.contrib.database.fields.models import (
     BooleanField,
     SelectOption,
     LongTextField,
+    FormulaField,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
@@ -95,31 +96,37 @@ def test_can_convert_between_all_fields(data_fixture):
     i = 1
     for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
         for kwargs in all_possible_kwargs:
+            name = kwargs.pop("name")
             for inner_field_type_name in field_type_registry.get_types():
                 for inner_kwargs in all_possible_kwargs_per_type[inner_field_type_name]:
+                    copy = dict(inner_kwargs)
+                    copy.pop("name", None)
                     field_type = field_type_registry.get(field_type_name)
+                    new_name = f"{name}_to_{inner_field_type_name}_{i}"
                     from_field = handler.create_field(
                         user=user,
                         table=table,
                         type_name=field_type_name,
+                        name=new_name,
                         **kwargs,
                     )
-                    random_value = field_type.random_value(from_field, fake, cache)
-                    if isinstance(random_value, date):
-                        # Faker produces subtypes of date / datetime which baserow
-                        # does not want, instead just convert to str.
-                        random_value = str(random_value)
-                    row_handler.update_row(
-                        user=user,
-                        table=table,
-                        row_id=second_row_with_values.id,
-                        values={f"field_{from_field.id}": random_value},
-                    )
+                    if not field_type.read_only:
+                        random_value = field_type.random_value(from_field, fake, cache)
+                        if isinstance(random_value, date):
+                            # Faker produces subtypes of date / datetime which baserow
+                            # does not want, instead just convert to str.
+                            random_value = str(random_value)
+                        row_handler.update_row(
+                            user=user,
+                            table=table,
+                            row_id=second_row_with_values.id,
+                            values={f"field_{from_field.id}": random_value},
+                        )
                     handler.update_field(
                         user=user,
                         field=from_field,
                         new_type_name=inner_field_type_name,
-                        **inner_kwargs,
+                        **copy,
                     )
                     i = i + 1
 
@@ -1034,3 +1041,38 @@ def test_find_next_free_field_name_returns_strings_with_max_length(data_fixture)
     data_fixture.create_text_field(name=expected_name_1, table=table, order=1)
 
     assert handler.find_next_unused_field_name(table, [initial_name]) == expected_name_2
+
+
+@pytest.mark.django_db
+def test_can_convert_formula_to_numeric_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    existing_formula_field = data_fixture.create_formula_field(
+        table=table, formula="'1'"
+    )
+
+    model = table.get_model()
+
+    field_name = f"field_{existing_formula_field.id}"
+    row = model.objects.create()
+    assert getattr(row, field_name) == "1"
+
+    handler = FieldHandler()
+
+    # Update to the same baserow type, but due to this fields implementation of
+    # get_model_field this will alter the underlying database column from type
+    # of varchar to text, which should make our reversing alter sql run.
+    handler.update_field(
+        user=user,
+        field=existing_formula_field,
+        new_type_name="number",
+        name="Price field",
+        number_type="INTEGER",
+        number_negative=True,
+    )
+
+    row.refresh_from_db()
+    assert getattr(row, field_name) == 1
+    assert Field.objects.all().count() == 1
+    assert NumberField.objects.all().count() == 1
+    assert FormulaField.objects.all().count() == 0

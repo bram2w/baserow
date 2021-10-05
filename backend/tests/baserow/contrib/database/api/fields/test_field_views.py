@@ -479,7 +479,7 @@ def test_delete_field(api_client, data_fixture):
 
     url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == 204
+    assert response.status_code == 200
 
     assert Field.objects.all().count() == 1
     assert TextField.objects.all().count() == 0

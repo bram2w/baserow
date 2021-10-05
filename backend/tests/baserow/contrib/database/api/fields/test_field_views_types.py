@@ -6,7 +6,7 @@ from django.shortcuts import reverse
 from faker import Faker
 from freezegun import freeze_time
 from pytz import timezone
-from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from baserow.contrib.database.fields.models import (
     CreatedOnField,
@@ -20,6 +20,7 @@ from baserow.contrib.database.fields.models import (
     FileField,
     NumberField,
     PhoneNumberField,
+    FormulaField,
 )
 
 
@@ -128,7 +129,7 @@ def test_long_text_field_type(api_client, data_fixture):
 
     url = reverse("api:database:fields:item", kwargs={"field_id": field_id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_200_OK
     assert LongTextField.objects.all().count() == 0
 
 
@@ -214,7 +215,7 @@ def test_url_field_type(api_client, data_fixture):
 
     url = reverse("api:database:fields:item", kwargs={"field_id": field_id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_200_OK
     assert URLField.objects.all().count() == 0
 
 
@@ -287,7 +288,7 @@ def test_date_field_type(api_client, data_fixture):
 
     url = reverse("api:database:fields:item", kwargs={"field_id": date_time_field_id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_200_OK
     assert DateField.objects.all().count() == 1
 
 
@@ -373,7 +374,7 @@ def test_email_field_type(api_client, data_fixture):
 
     email = reverse("api:database:fields:item", kwargs={"field_id": field_id})
     response = api_client.delete(email, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_200_OK
     assert EmailField.objects.all().count() == 0
 
 
@@ -888,7 +889,7 @@ def test_phone_number_field_type(api_client, data_fixture):
 
     email = reverse("api:database:fields:item", kwargs={"field_id": field_id})
     response = api_client.delete(email, HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_200_OK
     assert PhoneNumberField.objects.all().count() == 0
 
 
@@ -1192,7 +1193,7 @@ def test_multiple_select_field_type(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_200_OK
     assert MultipleSelectField.objects.all().count() == 1
     assert SelectOption.objects.all().count() == 0
 
@@ -1313,3 +1314,98 @@ def test_multiple_select_field_type(api_client, data_fixture):
 
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_formula_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "Formula", "type": "formula", "formula": "'test'"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["type"] == "formula"
+    assert FormulaField.objects.all().count() == 1
+    formula_field_id = response_json["id"]
+    assert formula_field_id
+
+    # Create a row
+    api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    # Verify the value of the formula field is the sql expression evaluated for that row
+    model = table.get_model(attribute_names=True)
+    row = model.objects.get()
+    assert row.formula == "test"
+
+    # You cannot modify a formula field row value
+    response = api_client.patch(
+        reverse(
+            "api:database:rows:item",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        ),
+        {f"field_{formula_field_id}": "test_second"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]
+        == "Field of type formula is read only and should not be set manually."
+    )
+
+    # You cannot create a row with a formula field value
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{formula_field_id}": "some value",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]
+        == "Field of type formula is read only and should not be set manually."
+    )
+
+    # You cannot create a field with an invalid formula
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "Formula2", "type": "formula", "formula": "drop database baserow;"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_WITH_FORMULA"
+    assert "Invalid syntax" in response_json["detail"]
+
+    # You cannot create a field calling an invalid function
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "Formula2", "type": "formula", "formula": "version()"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_WITH_FORMULA"
+    assert (
+        response_json["detail"]
+        == "Error with formula: version is not a valid function."
+    )

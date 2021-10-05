@@ -39,6 +39,42 @@ def test_import_export_text_field(data_fixture):
 
 
 @pytest.mark.django_db
+def test_import_export_formula_field(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    first_table = data_fixture.create_database_table(user=user)
+    second_table = data_fixture.create_database_table(user=user)
+    id_mapping = {}
+
+    text_field = data_fixture.create_text_field(
+        table=first_table, name="Text name", text_default="Text default"
+    )
+    formula_field = data_fixture.create_formula_field(
+        table=first_table,
+        name="formula field",
+        formula=f"field_by_id({text_field.id})",
+        formula_type="text",
+    )
+    formula_field_type = field_type_registry.get_by_model(formula_field)
+    formula_serialized = formula_field_type.export_serialized(formula_field)
+    assert formula_serialized["formula"] == "field('Text name')"
+
+    text_field_in_diff_table = data_fixture.create_text_field(
+        table=second_table, name="Text name", text_default="Text default"
+    )
+    formula_field_imported = formula_field_type.import_serialized(
+        text_field_in_diff_table.table,
+        formula_serialized,
+        id_mapping,
+    )
+    assert formula_field.id != formula_field_imported.id
+    assert formula_field.name == formula_field_imported.name
+    assert formula_field.order == formula_field_imported.order
+    assert formula_field.primary == formula_field_imported.primary
+    assert formula_field_imported.formula == f"field('Text name')"
+    assert id_mapping["database_fields"][formula_field.id] == formula_field_imported.id
+
+
+@pytest.mark.django_db
 def test_long_text_field_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -509,6 +545,7 @@ def test_human_readable_values(data_fixture):
         "multiple_select": "",
         "text": "",
         "url": "",
+        "formula": "test FORMULA",
     }
     assert results == {
         "boolean": "True",
@@ -539,4 +576,5 @@ def test_human_readable_values(data_fixture):
         "multiple_select": "D, C, E",
         "text": "text",
         "url": "https://www.google.com",
+        "formula": "test FORMULA",
     }

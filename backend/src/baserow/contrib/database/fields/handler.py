@@ -7,9 +7,11 @@ from django.db import connection
 from django.db.utils import ProgrammingError, DataError
 
 from baserow.contrib.database.db.schema import lenient_schema_editor
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
+from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from .exceptions import (
     PrimaryFieldAlreadyExists,
     CannotDeletePrimaryField,
@@ -25,13 +27,12 @@ from .exceptions import (
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
 from .signals import field_created, field_updated, field_deleted
-from ..table.models import Table
+from baserow.contrib.database.formula.types.typed_field_updater import (
+    type_table_and_update_fields_given_changed_field,
+    type_table_and_update_fields_given_deleted_field,
+)
 
 logger = logging.getLogger(__name__)
-
-# Please keep in sync with the web-frontend version of this constant found in
-# web-frontend/modules/database/utils/constants.js
-RESERVED_BASEROW_FIELD_NAMES = {"id", "order"}
 
 
 def _validate_field_name(
@@ -93,7 +94,7 @@ class FieldHandler:
         :param field_model: If provided that model's objects are used to select the
             field. This can for example be useful when you want to select a TextField or
             other child of the Field model.
-        :type field_model: Field
+        :type field_model: Type[Field]
         :param base_queryset: The base queryset from where to select the field.
             object. This can for example be used to do a `select_related`. Note that
             if this is used the `field_model` parameter doesn't work anymore.
@@ -122,7 +123,14 @@ class FieldHandler:
         return field
 
     def create_field(
-        self, user, table, type_name, primary=False, do_schema_change=True, **kwargs
+        self,
+        user,
+        table,
+        type_name,
+        primary=False,
+        do_schema_change=True,
+        return_updated_fields=False,
+        **kwargs,
     ):
         """
         Creates a new field with the given type for a table.
@@ -140,14 +148,19 @@ class FieldHandler:
         :param do_schema_change: Indicates whether or not he actual database schema
             change has be made.
         :type do_schema_change: bool
+        :param return_updated_fields: When True any other fields who changed as a
+            result of this field creation are returned with their new field instances.
+        :type return_updated_fields: bool
         :param kwargs: The field values that need to be set upon creation.
         :type kwargs: object
         :raises PrimaryFieldAlreadyExists: When we try to create a primary field,
             but one already exists.
         :raises MaxFieldLimitExceeded: When we try to create a field,
             but exceeds the field limit.
-        :return: The created field instance.
-        :rtype: Field
+        :return: The created field instance. If return_updated_field is set then any
+            updated fields as a result of creating the field are returned in a list
+            as a second tuple value.
+        :rtype: Union[Field, Tuple[Field, List[Field]]
         """
 
         group = table.database.group
@@ -181,25 +194,46 @@ class FieldHandler:
             table, primary, field_values, last_order, user
         )
 
-        instance = model_class.objects.create(
+        instance = model_class(
             table=table, order=last_order, primary=primary, **field_values
+        )
+        instance.save()
+        (
+            typed_updated_table,
+            instance,
+        ) = type_table_and_update_fields_given_changed_field(
+            table,
+            initial_field=instance,
         )
 
         # Add the field to the table schema.
         with connection.schema_editor() as schema_editor:
-            to_model = table.get_model(field_ids=[], fields=[instance])
+            to_model = typed_updated_table.model
             model_field = to_model._meta.get_field(instance.db_column)
 
             if do_schema_change:
                 schema_editor.add_field(to_model, model_field)
 
+        typed_updated_table.update_values_for_all_updated_fields()
+
         field_type.after_create(instance, to_model, user, connection, before)
 
-        field_created.send(self, field=instance, user=user, type_name=type_name)
+        field_created.send(
+            self,
+            field=instance,
+            user=user,
+            related_fields=typed_updated_table.updated_fields,
+            type_name=type_name,
+        )
 
-        return instance
+        if return_updated_fields:
+            return instance, typed_updated_table.updated_fields
+        else:
+            return instance
 
-    def update_field(self, user, field, new_type_name=None, **kwargs):
+    def update_field(
+        self, user, field, new_type_name=None, return_updated_fields=False, **kwargs
+    ):
         """
         Updates the values of the given field, if provided it is also possible to change
         the type.
@@ -210,6 +244,9 @@ class FieldHandler:
         :type field: Field
         :param new_type_name: If the type needs to be changed it can be provided here.
         :type new_type_name: str
+        :param return_updated_fields: When True any other fields who changed as a
+            result of this field update are returned with their new field instances.
+        :type return_updated_fields: bool
         :param kwargs: The field values that need to be updated
         :type kwargs: object
         :raises ValueError: When the provided field is not an instance of Field.
@@ -217,8 +254,10 @@ class FieldHandler:
             error while trying to change the field type. This should rarely happen
             because of the lenient schema editor, which replaces the value with null
             if it could not be converted.
-        :return: The updated field instance.
-        :rtype: Field
+        :return: The updated field instance. If return_updated_field is set then any
+            updated fields as a result of updated the field are returned in a list
+            as a second tuple value.
+        :rtype: Union[Field, Tuple[Field, List[Field]]
         """
 
         if not isinstance(field, Field):
@@ -262,11 +301,14 @@ class FieldHandler:
 
         field = set_allowed_attrs(field_values, allowed_fields, field)
         field.save()
-
+        typed_updated_table, field = type_table_and_update_fields_given_changed_field(
+            field.table,
+            initial_field=field,
+        )
         # If no converter is found we are going to convert to field using the
         # lenient schema editor which will alter the field's type and set the data
         # value to null if it can't be converted.
-        to_model = field.table.get_model(field_ids=[], fields=[field])
+        to_model = typed_updated_table.model
         from_model_field = from_model._meta.get_field(field.db_column)
         to_model_field = to_model._meta.get_field(field.db_column)
 
@@ -362,10 +404,19 @@ class FieldHandler:
             altered_column,
             before,
         )
+        typed_updated_table.update_values_for_all_updated_fields()
 
-        field_updated.send(self, field=field, user=user)
+        field_updated.send(
+            self,
+            field=field,
+            related_fields=typed_updated_table.updated_fields,
+            user=user,
+        )
 
-        return field
+        if return_updated_fields:
+            return field, typed_updated_table.updated_fields
+        else:
+            return field
 
     def delete_field(self, user, field):
         """
@@ -393,8 +444,17 @@ class FieldHandler:
 
         field = field.specific
         TrashHandler.trash(user, group, field.table.database, field)
-        field_id = field.id
-        field_deleted.send(self, field_id=field_id, field=field, user=user)
+        typed_updated_table = type_table_and_update_fields_given_deleted_field(
+            field.table, deleted_field_id=field.id, deleted_field_name=field.name
+        )
+        field_deleted.send(
+            self,
+            field_id=field.id,
+            field=field,
+            related_fields=typed_updated_table.updated_fields,
+            user=user,
+        )
+        return typed_updated_table.updated_fields
 
     def update_field_select_options(self, user, field, select_options):
         """

@@ -13,6 +13,7 @@ from .models import (
     MultipleSelectField,
     SingleSelectField,
     SelectOption,
+    FormulaField,
 )
 
 
@@ -37,6 +38,13 @@ class RecreateFieldConverter(FieldConverter):
         with connection.schema_editor() as schema_editor:
             schema_editor.remove_field(from_model, from_model_field)
             schema_editor.add_field(to_model, to_model_field)
+
+
+class FormulaFieldConverter(RecreateFieldConverter):
+    type = "formula"
+
+    def is_applicable(self, from_model, from_field, to_field):
+        return isinstance(to_field, FormulaField)
 
 
 class LinkRowFieldConverter(RecreateFieldConverter):

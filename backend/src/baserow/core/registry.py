@@ -2,7 +2,7 @@ import contextlib
 
 from django.core.exceptions import ImproperlyConfigured
 
-from baserow.api.utils import get_serializer_class, map_exceptions
+from baserow.api.utils import get_serializer_class, map_exceptions, ExceptionMappingType
 from .exceptions import InstanceTypeDoesNotExist, InstanceTypeAlreadyRegistered
 
 
@@ -23,7 +23,7 @@ class Instance(object):
 class ModelInstanceMixin:
     """
     This mixin introduces a model_class that will be related to the instance. It is to
-    be used in combination with a registry that extends the ModelRegisteryMixin.
+    be used in combination with a registry that extends the ModelRegistryMixin.
     """
 
     model_class = None
@@ -145,7 +145,7 @@ class MapAPIExceptionsInstanceMixin:
         }
     """
 
-    api_exceptions_map = {}
+    api_exceptions_map: ExceptionMappingType = {}
 
     @contextlib.contextmanager
     def map_api_exceptions(self):
@@ -253,6 +253,16 @@ class Registry(object):
         """
 
         return list(self.registry.keys())
+
+    def get_types_as_tuples(self):
+        """
+        Returns a list of available type names.
+
+        :return: The list of available types.
+        :rtype: List[Tuple[str,str]]
+        """
+
+        return [(k, k) for k in self.registry.keys()]
 
     def register(self, instance):
         """

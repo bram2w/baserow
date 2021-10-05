@@ -107,3 +107,5 @@ backend/plugins/
 .vscode
 jsconfig.json
 vetur.config.js
+
+formula/out/

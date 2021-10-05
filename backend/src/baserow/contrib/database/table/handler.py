@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import connection
 
+from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
     MaxFieldNameLengthExceeded,
@@ -13,9 +14,9 @@ from baserow.contrib.database.fields.field_types import (
 )
 from baserow.contrib.database.fields.handler import (
     FieldHandler,
-    RESERVED_BASEROW_FIELD_NAMES,
 )
-from baserow.contrib.database.fields.models import TextField, Field
+from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.trash.handler import TrashHandler

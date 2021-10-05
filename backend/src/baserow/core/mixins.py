@@ -86,6 +86,11 @@ class PolymorphicContentTypeMixin:
                 f"PolymorphicContentTypeMixin."
             )
 
+    def save(self, *args, **kwargs):
+        self._ensure_content_type_is_set()
+        super().save(*args, **kwargs)
+
+    def _ensure_content_type_is_set(self):
         if not self.id:
             if not self.content_type_id:
                 self.content_type = ContentType.objects.get_for_model(self)
@@ -94,6 +99,7 @@ class PolymorphicContentTypeMixin:
     def specific(self):
         """Returns this instance in its most specific subclassed form."""
 
+        self._ensure_content_type_is_set()
         content_type = ContentType.objects.get_for_id(self.content_type_id)
         model_class = self.specific_class
         if model_class is None:
@@ -110,6 +116,7 @@ class PolymorphicContentTypeMixin:
         most specific form.
         """
 
+        self._ensure_content_type_is_set()
         content_type = ContentType.objects.get_for_id(self.content_type_id)
         return content_type.model_class()
 

@@ -9,7 +9,7 @@ from baserow.contrib.database.api.fields.serializers import FieldSerializer
 
 
 @receiver(field_signals.field_created)
-def field_created(sender, field, user, **kwargs):
+def field_created(sender, field, related_fields, user, **kwargs):
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(
@@ -18,6 +18,10 @@ def field_created(sender, field, user, **kwargs):
                 "field": field_type_registry.get_serializer(
                     field, FieldSerializer
                 ).data,
+                "related_fields": [
+                    field_type_registry.get_serializer(f, FieldSerializer).data
+                    for f in related_fields
+                ],
             },
             getattr(user, "web_socket_id", None),
             table_id=field.table_id,
@@ -26,7 +30,7 @@ def field_created(sender, field, user, **kwargs):
 
 
 @receiver(field_signals.field_restored)
-def field_restored(sender, field, user, **kwargs):
+def field_restored(sender, field, related_fields, user, **kwargs):
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(
@@ -35,6 +39,10 @@ def field_restored(sender, field, user, **kwargs):
                 "field": field_type_registry.get_serializer(
                     field, FieldSerializer
                 ).data,
+                "related_fields": [
+                    field_type_registry.get_serializer(f, FieldSerializer).data
+                    for f in related_fields
+                ],
             },
             getattr(user, "web_socket_id", None),
             table_id=field.table_id,
@@ -43,7 +51,7 @@ def field_restored(sender, field, user, **kwargs):
 
 
 @receiver(field_signals.field_updated)
-def field_updated(sender, field, user, **kwargs):
+def field_updated(sender, field, related_fields, user, **kwargs):
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(
@@ -53,6 +61,10 @@ def field_updated(sender, field, user, **kwargs):
                 "field": field_type_registry.get_serializer(
                     field, FieldSerializer
                 ).data,
+                "related_fields": [
+                    field_type_registry.get_serializer(f, FieldSerializer).data
+                    for f in related_fields
+                ],
             },
             getattr(user, "web_socket_id", None),
             table_id=field.table_id,
@@ -61,11 +73,19 @@ def field_updated(sender, field, user, **kwargs):
 
 
 @receiver(field_signals.field_deleted)
-def field_deleted(sender, field_id, field, user, **kwargs):
+def field_deleted(sender, field_id, field, related_fields, user, **kwargs):
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(
-            {"type": "field_deleted", "table_id": field.table_id, "field_id": field_id},
+            {
+                "type": "field_deleted",
+                "table_id": field.table_id,
+                "field_id": field_id,
+                "related_fields": [
+                    field_type_registry.get_serializer(f, FieldSerializer).data
+                    for f in related_fields
+                ],
+            },
             getattr(user, "web_socket_id", None),
             table_id=field.table_id,
         )

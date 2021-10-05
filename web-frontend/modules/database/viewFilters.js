@@ -10,6 +10,7 @@ import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/Vie
 import { trueString } from '@baserow/modules/database/utils/constants'
 import { isNumeric } from '@baserow/modules/core/utils/string'
 import ViewFilterTypeFileTypeDropdown from '@baserow/modules/database/components/view/ViewFilterTypeFileTypeDropdown'
+import { FormulaFieldType } from '@baserow/modules/database/fieldTypes'
 
 export class ViewFilterType extends Registerable {
   /**
@@ -75,13 +76,38 @@ export class ViewFilterType extends Registerable {
   }
 
   /**
-   * Should return the field type names that the filter is compatible with. So for
-   * example ['text', 'long_text']. When that field is selected as filter it is only
-   * possible to select compatible filter types. If no filters are compatible with a
-   * field then that field will be disabled.
+   * Should return the field type names that the filter is compatible with or
+   * functions which take a field and return a boolean indicating if the field is
+   * compatible or not.
+   *
+   * So for example ['text', 'long_text']. When that field is selected as filter it
+   * is only possible to select compatible filter types.
+   *
+   * Or using a function you could do [(field) => field.some_prop === 10, 'long_text']
+   * and then fields which pass the test defined by the function will be deemed as
+   * compatible.
+   *
+   * If no filters are compatible with a field then that field will be disabled.
    */
   getCompatibleFieldTypes() {
     return []
+  }
+
+  /**
+   * Returns if a given field is compatible with this view filter or not. Uses the
+   * list provided by getCompatibleFieldTypes to calculate this.
+   */
+  fieldIsCompatible(field) {
+    for (const typeOrFunc of this.getCompatibleFieldTypes()) {
+      if (typeOrFunc instanceof Function) {
+        if (typeOrFunc(field)) {
+          return true
+        }
+      } else if (field.type === typeOrFunc) {
+        return true
+      }
+    }
+    return false
   }
 
   /**
@@ -112,7 +138,15 @@ export class EqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'phone_number',
+      FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -141,7 +175,15 @@ export class NotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['text', 'long_text', 'url', 'email', 'number', 'phone_number']
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'phone_number',
+      FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -173,8 +215,8 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
     return ['file']
   }
 
-  matches(rowValue, filterValue, field, fieldType) {
-    return fieldType.containsFilter(rowValue, filterValue, field)
+  matches(rowValue, filterValue, field, fieldType, $registry) {
+    return fieldType.containsFilter(rowValue, filterValue, field, $registry)
   }
 }
 
@@ -244,11 +286,17 @@ export class ContainsViewFilterType extends ViewFilterType {
       'single_select',
       'multiple_select',
       'number',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'number',
+        'date'
+      ),
     ]
   }
 
-  matches(rowValue, filterValue, field, fieldType) {
-    return fieldType.containsFilter(rowValue, filterValue, field)
+  matches(rowValue, filterValue, field, fieldType, $registry) {
+    return fieldType.containsFilter(rowValue, filterValue, field, $registry)
   }
 }
 
@@ -279,6 +327,12 @@ export class ContainsNotViewFilterType extends ViewFilterType {
       'single_select',
       'multiple_select',
       'number',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'number',
+        'date'
+      ),
     ]
   }
 
@@ -306,7 +360,12 @@ export class DateEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -344,7 +403,12 @@ export class DateBeforeViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -392,7 +456,12 @@ export class DateAfterViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -440,7 +509,12 @@ export class DateNotEqualViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -474,7 +548,12 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['date', 'last_modified', 'created_on']
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
   }
 
   getDefaultValue() {
@@ -559,7 +638,7 @@ export class HigherThanViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['number']
+    return ['number', FormulaFieldType.compatibleWithFormulaTypes('number')]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -592,7 +671,7 @@ export class LowerThanViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['number']
+    return ['number', FormulaFieldType.compatibleWithFormulaTypes('number')]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -748,7 +827,7 @@ export class BooleanViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['boolean']
+    return ['boolean', FormulaFieldType.compatibleWithFormulaTypes('boolean')]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -858,6 +937,7 @@ export class EmptyViewFilterType extends ViewFilterType {
       'single_select',
       'multiple_select',
       'phone_number',
+      'formula',
     ]
   }
 
@@ -905,6 +985,7 @@ export class NotEmptyViewFilterType extends ViewFilterType {
       'single_select',
       'multiple_select',
       'phone_number',
+      'formula',
     ]
   }
 

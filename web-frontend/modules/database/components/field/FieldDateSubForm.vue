@@ -76,6 +76,22 @@ export default {
       },
     }
   },
+  watch: {
+    'values.date_time_format'(newValue, oldValue) {
+      // For formula fields date_time_format is nullable, ensure it is set to the
+      // default otherwise we will be sending nulls to the server.
+      if (newValue == null) {
+        this.values.date_time_format = '24'
+      }
+    },
+    'values.date_include_time'(newValue, oldValue) {
+      // For formula fields date_include_time is nullable, ensure it is set to the
+      // default otherwise we will be sending nulls to the server.
+      if (newValue == null) {
+        this.values.date_include_time = false
+      }
+    },
+  },
   validations: {
     values: {
       date_format: { required },

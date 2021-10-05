@@ -1,4 +1,5 @@
 import { clone } from '@baserow/modules/core/utils/object'
+import { anyFieldsNeedRefresh } from '@baserow/modules/database/store/field'
 
 /**
  * Registers the real time events related to the database module. When a message comes
@@ -46,15 +47,21 @@ export const registerRealtimeEvents = (realtime) => {
 
   realtime.registerEvent('field_created', ({ store, app }, data) => {
     const table = store.getters['table/getSelected']
-    const fieldType = app.$registry.get('field', data.field.type)
+    const registry = app.$registry
+    const fieldType = registry.get('field', data.field.type)
     if (table !== undefined && table.id === data.field.table_id) {
+      const relatedFields = data.related_fields
       const callback = async () => {
         await store.dispatch('field/forceCreate', {
           table,
           values: data.field,
+          related_fields: relatedFields,
         })
       }
-      if (!fieldType.shouldRefreshWhenAdded()) {
+      if (
+        !fieldType.shouldRefreshWhenAdded() &&
+        !anyFieldsNeedRefresh(relatedFields, registry)
+      ) {
         callback()
       } else {
         app.$bus.$emit('table-refresh', {
@@ -66,11 +73,14 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
-  realtime.registerEvent('field_restored', ({ store, app }, data) => {
+  realtime.registerEvent('field_restored', async ({ store, app }, data) => {
     const table = store.getters['table/getSelected']
     if (table !== undefined && table.id === data.field.table_id) {
       // Trigger a table refresh to get the row data for the field including field
       // options to get those also.
+      await store.dispatch('field/forceUpdateFields', {
+        fields: data.related_fields,
+      })
       app.$bus.$emit('table-refresh', {
         tableId: store.getters['table/getSelectedId'],
         includeFieldOptions: true,
@@ -96,6 +106,7 @@ export const registerRealtimeEvents = (realtime) => {
           field,
           oldField,
           data: data.field,
+          relatedFields: data.related_fields,
         })
       }
       if (store.getters['table/getSelectedId'] === data.field.table_id) {
@@ -111,11 +122,14 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
-  realtime.registerEvent('field_deleted', ({ store, app }, data) => {
+  realtime.registerEvent('field_deleted', async ({ store, app }, data) => {
     const field = store.getters['field/get'](data.field_id)
     if (field !== undefined) {
-      store.dispatch('field/forceDelete', field)
+      await store.dispatch('field/forceDelete', field)
       if (store.getters['table/getSelectedId'] === data.table_id) {
+        await store.dispatch('field/forceUpdateFields', {
+          fields: data.related_fields,
+        })
         app.$bus.$emit('table-refresh', {
           tableId: store.getters['table/getSelectedId'],
         })
