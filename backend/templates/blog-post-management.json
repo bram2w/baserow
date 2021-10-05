@@ -162,6 +162,17 @@
               "primary": false,
               "link_row_table_id": 21079,
               "link_row_related_field_id": 120406
+            },
+            {
+              "id": 165825,
+              "type": "created_on",
+              "name": "Created On",
+              "order": 11,
+              "primary": false,
+              "date_format": "ISO",
+              "date_include_time": false,
+              "date_time_format": "24",
+              "timezone": "America/Chicago"
             }
           ],
           "views": [
@@ -257,6 +268,13 @@
                   "width": 177,
                   "hidden": false,
                   "order": 7
+                },
+                {
+                  "id": 175784,
+                  "field_id": 165825,
+                  "width": 136,
+                  "hidden": false,
+                  "order": 32767
                 }
               ]
             },
@@ -359,6 +377,13 @@
                   "width": 179,
                   "hidden": false,
                   "order": 7
+                },
+                {
+                  "id": 175785,
+                  "field_id": 165825,
+                  "width": 134,
+                  "hidden": false,
+                  "order": 32767
                 }
               ]
             },
@@ -461,6 +486,13 @@
                   "width": 181,
                   "hidden": false,
                   "order": 7
+                },
+                {
+                  "id": 175786,
+                  "field_id": 165825,
+                  "width": 132,
+                  "hidden": false,
+                  "order": 32767
                 }
               ]
             }
@@ -492,7 +524,8 @@
                 2,
                 13,
                 14
-              ]
+              ],
+              "field_165825": null
             },
             {
               "id": 2,
@@ -521,7 +554,8 @@
                 12,
                 13,
                 14
-              ]
+              ],
+              "field_165825": null
             },
             {
               "id": 3,
@@ -548,7 +582,8 @@
               "field_120405": [
                 9,
                 13
-              ]
+              ],
+              "field_165825": null
             },
             {
               "id": 4,
@@ -577,7 +612,8 @@
                 8,
                 13,
                 16
-              ]
+              ],
+              "field_165825": null
             },
             {
               "id": 5,
@@ -608,7 +644,8 @@
                 8,
                 12,
                 13
-              ]
+              ],
+              "field_165825": null
             },
             {
               "id": 6,
@@ -640,7 +677,8 @@
                 10,
                 13,
                 15
-              ]
+              ],
+              "field_165825": null
             },
             {
               "id": 7,
@@ -670,7 +708,8 @@
                 13,
                 15,
                 16
-              ]
+              ],
+              "field_165825": null
             }
           ]
         },

@@ -26,6 +26,18 @@
 * Added "Multiple Select" field type.
 * Fixed a bug where the currently selected view was not in the viewport of the parent.
 * Fixed a bug where views context would not scroll down after a new view has been added.
+* New templates:
+    * Recipe Book
+    * Healthcare Facility Management
+    * Bucket List
+    * Apartment Hunt
+    * Holiday Shopping
+    * Email Marketing Campaigns
+    * Book Writing Guide
+    * Home Inventory
+    * Political Campaign Contributions
+* Updated templates:
+    * Blog Post Management
 
 ## Released (2021-08-11)
 
