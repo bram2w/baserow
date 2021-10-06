@@ -55,6 +55,8 @@ Everything related to contributing and developing for Baserow.
   previewed and installed by others.
 * [dev.sh](./development/dev_sh.md): Further details on how to use Baserow's `./dev.sh`
   helper script.
+- [IntelliJ setup](./development/intellij-setup.md): How to configure Intellij to work 
+  well with Baserow for development purposes.
 
 ## FAQs 
 
