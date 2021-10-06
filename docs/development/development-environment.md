@@ -11,8 +11,10 @@ found in the root of the Baserow repo.
   step-by-step guide on how to set-up the dev env.
 - See [baserow docker api](../reference/baserow-docker-api.md) for more detail on how
   Baserow's docker setup can be used and configured.
-- See [dev.sh](../development/dev_sh.md) for further detail on the CLI tool for managing
+- See [dev.sh](dev_sh.md) for further detail on the CLI tool for managing
   the dev environment.
+- See [intellij setup](intellij-setup.md) for how to configure Intellij 
+  to work well with Baserow for development purposes.
 
 ## Fixing git blame
 

@@ -28,5 +28,6 @@ module.exports = {
         semi: false,
       },
     ],
+    'import/order': 'off',
   },
 }

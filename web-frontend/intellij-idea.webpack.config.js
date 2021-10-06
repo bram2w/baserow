@@ -13,6 +13,7 @@ module.exports = {
     extensions: ['.js', '.json', '.vue', '.ts'],
     root: path.resolve(__dirname),
     alias: {
+      '@': path.resolve(__dirname),
       '@baserow': path.resolve(__dirname),
       '@baserow_premium': path.resolve(
         __dirname,
