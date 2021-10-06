@@ -118,8 +118,12 @@ export default {
       If the currently selected view is not visible inside the dropdown we need to
       scroll just enough so that the selected view is visible as the last element
       in the dropdown.
+      In case there are no views, we don't need to do anything and can simply return.
     */
     scrollViewDropdownIfNeeded() {
+      if (this.views.length === 0) {
+        return
+      }
       const dropdownElement = this.$refs.dropdown
       const selectedViewItem = this.getSelectedViewItem()
       const dropdownHeight = dropdownElement.clientHeight

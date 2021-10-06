@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fixed a bug where the frontend would fail hard if a table with no views was accessed.
+
 ## Released (2021-10-05)
 
 * Introduced new endpoint to get and update user account information.
