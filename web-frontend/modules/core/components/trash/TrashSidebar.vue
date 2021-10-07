@@ -3,7 +3,7 @@
     <div class="modal-sidebar__head">
       <div class="modal-sidebar__head-icon-and-name">
         <i class="modal-sidebar__head-icon-and-name-icon fas fa-trash"></i>
-        Trash
+        {{ $t('trashSidebar.title') }}
       </div>
     </div>
     <ul class="trash-sidebar__groups">
@@ -21,7 +21,7 @@
           class="trash-sidebar__group-link"
           @click="emitIfNotAlreadySelectedTrashGroup(group)"
         >
-          {{ group.name || 'Unnamed group ' + group.id }}
+          {{ group.name || $t('trashSidebar.unnamedGroup', { id: group.id }) }}
         </a>
         <ul class="trash-sidebar__applications">
           <li
@@ -103,3 +103,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "trashSidebar": {
+      "title": "Trash",
+      "unnamedGroup": "Unnamed group {id}"
+    }
+  },
+  "fr": {
+    "trashSidebar": {
+      "title": "Corbeille",
+      "unnamedGroup": "Groupe anonyme {id}"
+    }
+  }
+}
+</i18n>

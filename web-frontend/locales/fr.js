@@ -10,6 +10,7 @@ export default {
     change: 'Changer',
     delete: 'Supprimer',
     rename: 'Renomer',
+    cancel: 'Annuler',
     add: 'Ajouter',
     makeChoice: 'Choisissez',
   },
@@ -84,5 +85,12 @@ export default {
   viewType: {
     grid: 'Tableau',
     form: 'Formulaire',
+  },
+  trashType: {
+    group: 'groupe',
+    application: 'application',
+    table: 'table',
+    field: 'champ',
+    row: 'ligne',
   },
 }

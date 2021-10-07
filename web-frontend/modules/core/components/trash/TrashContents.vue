@@ -4,7 +4,7 @@
       <div class="trash__title-left">
         <h2 class="trash__title-heading">{{ title }}</h2>
         <div class="trash__title-description">
-          Restore deleted items from the past {{ trashDuration }}
+          {{ $t('trashContents.message', { duration: trashDuration }) }}
         </div>
       </div>
       <div class="trash__title-right">
@@ -24,7 +24,7 @@
     >
       <i class="trash__empty-icon fas fa-recycle"></i>
       <div class="trash__empty-text">
-        Nothing has been deleted in the past three days.
+        {{ $t('trashContents.empty') }}
       </div>
     </div>
     <div v-else class="trash__entries">
@@ -117,19 +117,26 @@ export default {
         : this.selectedTrashApplication
     },
     selectedItemType() {
-      return this.selectedTrashApplication === null ? 'Group' : 'Application'
+      return this.selectedTrashApplication === null ? 'group' : 'application'
     },
     title() {
       const title = this.selectedItem.name
       return title === ''
-        ? `Unnamed ${this.selectedItemType} ${this.selectedItem.id}`
+        ? this.$t('trashContents.unnamed', {
+            type: this.$t('trashType.' + this.selectedItemType),
+            id: this.selectedItem.id,
+          })
         : title
     },
     emptyButtonText() {
       if (this.selectedItem.trashed) {
-        return `Delete ${this.selectedItemType} permanently`
+        return this.$t('trashContents.emptyButtonTrashed', {
+          type: this.$t('trashType.' + this.selectedItemType),
+        })
       } else {
-        return `Empty this ${this.selectedItemType}'s trash`
+        return this.$t('trashContents.emptyButtonNotTrashed', {
+          type: this.$t('trashType.' + this.selectedItemType),
+        })
       }
     },
     trashDuration() {
@@ -144,10 +151,9 @@ export default {
       }
     },
     shouldTrashEntryBeDisabled(entry) {
-      const selectedItemType = this.selectedItemType.toLowerCase()
       const entryIsForSelectedItem =
         entry.trash_item_id === this.selectedItem.id &&
-        entry.trash_item_type === selectedItemType
+        entry.trash_item_type === this.selectedItemType
       return (
         this.parentIsTrashed ||
         (this.selectedItem.trashed && !entryIsForSelectedItem)
@@ -156,3 +162,26 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "trashContents": {
+      "message": "Restore deleted items from the past {duration}",
+      "empty": "Nothing has been deleted in the past three days.",
+      "emptyButtonTrashed": "Delete {type} permanently",
+      "emptyButtonNotTrashed": "Empty this {type}'s trash",
+      "unnamed": "Unnamed {type} {id}"
+    }
+  },
+  "fr": {
+    "trashContents": {
+      "message": "Restaurer les éléments supprimés durant les {duration} derniers",
+      "empty": "Rien n'a été supprimé durant les trois derniers jours.",
+      "emptyButtonTrashed": "Supprimer {type} définitivement",
+      "emptyButtonNotTrashed": "Vider la corbeille pour {type}",
+      "unnamed": "Sans nom {type} {id}"
+    }
+  }
+}
+</i18n>

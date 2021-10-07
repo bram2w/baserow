@@ -8,8 +8,12 @@
     }"
     @click="restore"
   >
-    <i class="button__icon fas fa-undo"> </i>
-    Restore deleted {{ notification.data.trash_item_type }}
+    <i class="button__icon fas fa-undo"></i>
+    {{
+      $t('restoreNotification.restore', {
+        type: $t('trashType.' + notification.data.trash_item_type),
+      })
+    }}
   </button>
 </template>
 
@@ -57,3 +61,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "restoreNotification": {
+      "restore": "Restore deleted {type}"
+    }
+  },
+  "fr": {
+    "restoreNotification": {
+      "restore": "Restore deleted {type}"
+    }
+  }
+}
+</i18n>

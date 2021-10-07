@@ -9,10 +9,16 @@
     </div>
     <div class="trash-entry__content">
       <div class="trash-entry__name">
-        {{ trashEntry.user_who_trashed || 'A Deleted User' }} Deleted
-        {{ trashEntry.trash_item_type }}
-        <strong>{{ trashItemTitle }}</strong>
-        {{ trashEntry.parent_name ? ' from ' + trashEntry.parent_name : '' }}
+        {{
+          $t('trashEntry.name', {
+            user: trashEntry.user_who_trashed || $t('trashEntry.deletedUser'),
+            type: $t('trashType.' + trashEntry.trash_item_type),
+            title: trashItemTitle,
+            parent: trashEntry.parent_name
+              ? $t('trashEntry.fromParent', { parent: trashEntry.parent_name })
+              : '',
+          })
+        }}
       </div>
       <div class="trash-entry__deleted-at-display">{{ timeAgo }}</div>
       <span
@@ -29,7 +35,7 @@
         :class="{ 'trash-entry__action--loading': trashEntry.loading }"
         @click="emitRestoreIfNotLoading"
       >
-        {{ trashEntry.loading ? '' : 'Restore' }}
+        {{ trashEntry.loading ? '' : $t('trashEntry.restore') }}
       </a>
     </div>
   </div>
@@ -65,12 +71,10 @@ export default {
     },
     trashItemTitle() {
       if (this.trashEntry.name === '') {
-        return (
-          'Unnamed ' +
-          this.trashEntry.trash_item_type +
-          ' ' +
-          this.trashEntry.trash_item_id
-        )
+        return this.$t('trashEntry.unnamed', {
+          type: this.$t('trashType.' + this.trashEntry.trash_item_type),
+          id: this.trashEntry.trash_item_id,
+        })
       } else {
         return this.trashEntry.name
       }
@@ -85,3 +89,26 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "trashEntry": {
+      "deletedUser": "A deleted user",
+      "fromParent": "from {parent}",
+      "name": "{user} deleted {type} {title} {parent}",
+      "restore": "Restore",
+      "unnamed": "Unnamed {type} {id}"
+    }
+  },
+  "fr": {
+    "trashEntry": {
+      "deletedUser": "Un utilisateur supprimé",
+      "fromParent": "provenant de {parent}",
+      "name": "{user} a supprimé {type} {title} {parent}",
+      "restore": "Restaurer",
+      "unnamed": "Sans nom {type} {id}"
+    }
+  }
+}
+</i18n>
