@@ -12,6 +12,7 @@ export default {
     rename: 'Rename',
     add: 'Add',
     makeChoice: 'Make a choice',
+    cancel: 'Cancel',
   },
   adminType: {
     settings: 'Settings',
@@ -84,5 +85,12 @@ export default {
   viewType: {
     grid: 'Grid',
     form: 'Form',
+  },
+  trashType: {
+    group: 'group',
+    application: 'application',
+    table: 'table',
+    field: 'field',
+    row: 'row',
   },
 }

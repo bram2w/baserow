@@ -20,10 +20,9 @@
         <div class="placeholder__icon">
           <i class="fas fa-layer-group"></i>
         </div>
-        <h1 class="placeholder__title">No groups found</h1>
+        <h1 class="placeholder__title">{{ $t('trashModal.emptyTitle') }}</h1>
         <p class="placeholder__content">
-          You aren't a member of any group. Applications like databases belong
-          to a group, so in order to create them you need to create a group.
+          {{ $t('trashModal.emptyMessage') }}
         </p>
       </div>
       <TrashContent
@@ -336,3 +335,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "trashModal": {
+      "emptyTitle": "No groups found",
+      "emptyMessage": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group."
+    }
+  },
+  "fr": {
+    "trashModal": {
+      "emptyTitle": "Aucun groupe trouvé",
+      "emptyMessage": "Vous n'êtes membre d'aucun groupe. Les applications comme les bases de données doivent appartenir à un groupe, par conséquent vous devez créer un groupe afin d'être capable d'en créer."
+    }
+  }
+}
+</i18n>
