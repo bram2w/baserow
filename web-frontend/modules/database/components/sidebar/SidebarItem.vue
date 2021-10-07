@@ -1,6 +1,11 @@
 <template>
   <li class="tree__sub" :class="{ active: table._.selected }">
-    <a class="tree__sub-link" @click="selectTable(database, table)">
+    <a
+      class="tree__sub-link"
+      :href="resolveTableHref(database, table)"
+      @mousedown.prevent
+      @click.prevent="selectTable(database, table)"
+    >
       <Editable
         ref="rename"
         :value="table.name"
@@ -136,6 +141,17 @@ export default {
       }
 
       this.deleteLoading = false
+    },
+    resolveTableHref(database, table) {
+      const props = this.$nuxt.$router.resolve({
+        name: 'database-table',
+        params: {
+          databaseId: database.id,
+          tableId: table.id,
+        },
+      })
+
+      return props.href
     },
   },
 }
