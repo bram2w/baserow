@@ -26,18 +26,24 @@ and `media` containers to your machine's network. If you already have applicatio
 services using those ports the Baserow service which uses that port will crash.
 
 To fix this you can change which ports Baserow will use by setting the corresponding
-environment variable:
+environment variables:
 
-- For `backend` set `BACKEND_PORT` which defaults to `8000`
-- For `web-frontend` set `WEB_FRONTEND_PORT` which defaults to `3000`
-- For `media` set `MEDIA_PORT` which defaults to `4000`
+- For `backend` change both:
+  - `BACKEND_PORT`, defaults to `8000` 
+  - `PUBLIC_BACKEND_URL` with the new port, defaults to `http://localhost:8000`
+- For `web-frontend` change both:
+  - `WEB_FRONTEND_PORT`, defaults to `3000`
+  - `PUBLIC_WEB_FRONTEND_URL` with the new port, defaults to `http://localhost:3000`
+- For `media` change both:
+  - `MEDIA_PORT`, defaults to `4000`
+  - `MEDIA_URL`, defaults to `http://localhost:4000/media/`
 
 This is how to set these variables in bash:
 
 ```bash
-$ BACKEND_PORT=8001 docker-compose up 
+$ BACKEND_PORT=8001 PUBLIC_BACKEND_URL=http://localhost:8001 docker-compose up 
 $ # or using dev.sh
-$ BACKEND_PORT=8001 ./dev.sh
+$ BACKEND_PORT=8001 PUBLIC_BACKEND_URL=http://localhost:8001 ./dev.sh
 ```
 
 ### Make Baserow publicly accessible

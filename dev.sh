@@ -51,6 +51,23 @@ new_tab() {
   fi
 }
 
+launch_tab_and_attach(){
+  tab_name=$1
+  service_name=$2
+  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose ps -q "$service_name")" | cut -c2-)
+  command="docker logs $container_name && docker attach $container_name"
+  new_tab "$tab_name" "$command"
+}
+
+launch_tab_and_exec(){
+  tab_name=$1
+  service_name=$2
+  exec_command=$3
+  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose ps -q "$service_name")" | cut -c2-)
+  command="docker exec -it $container_name $exec_command"
+  new_tab "$tab_name" "$command"
+}
+
 show_help() {
     echo """
 ./dev.sh starts the baserow development environment and by default attempts to
@@ -60,6 +77,7 @@ Usage: ./dev.sh [optional start dev commands] [optional docker-compose up comman
 
 The ./dev.sh Commands are:
 restart         : Stop the dev environment first before relaunching.
+restart_wipe    : Stop the dev environment, delete the db and relaunch.
 down            : Down the dev environment and don't up after.
 kill            : Kill the dev environment and don't up after.
 build_only      : Build the dev environment and don't up after.
@@ -244,21 +262,17 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml run "$@"
 fi
 
 if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
-  new_tab "Backend" \
-          "docker logs backend && docker attach backend"
 
-  new_tab "Backend celery" \
-          "docker logs celery && docker attach celery"
+  launch_tab_and_attach "backend" "backend"
+  launch_tab_and_attach "web frontend" "web-frontend"
+  launch_tab_and_attach "celery" "celery"
+  launch_tab_and_attach "export worker" "celery-export-worker"
+  launch_tab_and_attach "beat worker" "celery-beat-worker"
 
-  new_tab "Backend celery export worker" \
-          "docker logs celery-export-worker && docker attach celery-export-worker"
-
-  new_tab "Backend celery beat worker" \
-          "docker logs celery-beat-worker && docker attach celery-beat-worker"
-
-  new_tab "Web frontend" \
-          "docker logs web-frontend && docker attach web-frontend"
-
-  new_tab "Web frontend lint" \
-          "docker exec -it web-frontend /bin/bash /baserow/web-frontend/docker/docker-entrypoint.sh lint-fix"
+  launch_tab_and_exec "web frontend lint" \
+          "web-frontend" \
+          "/bin/bash /baserow/web-frontend/docker/docker-entrypoint.sh lint-fix"
+  launch_tab_and_exec "backend lint" \
+          "backend" \
+          "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint"
 fi
