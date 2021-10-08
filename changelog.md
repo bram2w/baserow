@@ -4,6 +4,7 @@
 
 * Fixed a bug where the frontend would fail hard if a table with no views was accessed.
 * Tables can now be opened in new browser tabs.
+* Fixed propType validation error when converting from a date field to a boolean field.
 
 ## Released (2021-10-05)
 
