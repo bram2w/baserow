@@ -4,6 +4,10 @@
 
 * Fixed a bug where the frontend would fail hard if a table with no views was accessed.
 * Tables can now be opened in new browser tabs.
+* **Breaking Change**: Baserow's `docker-compose.yml` now allows setting the MEDIA_URL 
+  env variable. If using MEDIA_PORT you now need to set MEDIA_URL also.
+* **Breaking Change**: Baserow's `docker-compose.yml` container names have changed to
+  no longer be hardcoded to prevent naming clashes.
 
 ## Released (2021-10-05)
 

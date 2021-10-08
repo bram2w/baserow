@@ -100,7 +100,9 @@ case "$1" in
         exec python /baserow/backend/src/baserow/manage.py shell
     ;;
     lint)
-        exec make lint-python
+        CMD="make lint-python"
+        echo "$CMD"
+        exec bash --init-file <(echo "history -s $CMD; $CMD")
     ;;
     celery)
         exec celery -A baserow "${@:2}"
