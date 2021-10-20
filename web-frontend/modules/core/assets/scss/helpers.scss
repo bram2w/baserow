@@ -25,8 +25,16 @@
   color: $color-primary-500 !important;
 }
 
+.color-success {
+  color: $color-success-500 !important;
+}
+
 .color-warning {
   color: $color-warning-500 !important;
+}
+
+.color-error {
+  color: $color-error-500 !important;
 }
 
 .margin-top-0 {
@@ -67,6 +75,14 @@
 
 .margin-bottom-4 {
   margin-bottom: 40px !important;
+}
+
+.margin-left-1 {
+  margin-left: 8px !important;
+}
+
+.margin-left-2 {
+  margin-left: 16px !important;
 }
 
 .margin-right-1 {

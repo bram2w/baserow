@@ -16,4 +16,14 @@ export const routes = [
     path: '/admin/groups',
     component: path.resolve(__dirname, 'pages/admin/groups.vue'),
   },
+  {
+    name: 'admin-licenses',
+    path: '/admin/licenses',
+    component: path.resolve(__dirname, 'pages/admin/licenses.vue'),
+  },
+  {
+    name: 'admin-license',
+    path: '/admin/license/:id',
+    component: path.resolve(__dirname, 'pages/admin/license.vue'),
+  },
 ]

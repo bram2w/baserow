@@ -95,8 +95,9 @@ class CoreHandler:
         if not settings_instance:
             settings_instance = self.get_settings()
 
-        for name, value in kwargs.items():
-            setattr(settings_instance, name, value)
+        settings_instance = set_allowed_attrs(
+            kwargs, ["allow_new_signups"], settings_instance
+        )
 
         settings_instance.save()
         return settings_instance

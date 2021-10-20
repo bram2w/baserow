@@ -86,6 +86,9 @@ export default {
     grid: 'Tableau',
     form: 'Formulaire',
   },
+  premium: {
+    deactivated: '@TODO',
+  },
   trashType: {
     group: 'groupe',
     application: 'application',

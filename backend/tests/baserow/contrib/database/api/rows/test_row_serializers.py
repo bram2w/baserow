@@ -8,7 +8,7 @@ from baserow.contrib.database.api.rows.serializers import (
 )
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.fields.registries import field_type_registry
-from tests.test_utils import setup_interesting_test_table
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db

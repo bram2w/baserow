@@ -3,6 +3,28 @@
     <div class="admin-settings">
       <h1>Admin settings</h1>
       <div class="admin-settings__group">
+        <div class="admin-settings__item">
+          <div class="admin-settings__label">
+            <div class="admin-settings__name">Instance ID</div>
+            <div class="admin-settings__description">
+              The instance ID is the unique identifier of your Baserow copy.
+            </div>
+          </div>
+          <div class="admin-settings__control">
+            {{ instanceId }}
+            <a
+              class="licenses__instance-id-copy"
+              @click.prevent="
+                ;[copyToClipboard(instanceId), $refs.instanceIdCopied.show()]
+              "
+            >
+              Copy
+              <Copied ref="instanceIdCopied"></Copied>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="admin-settings__group">
         <h2 class="admin-settings__group-title">Signup restrictions</h2>
         <div class="admin-settings__item">
           <div class="admin-settings__label">
@@ -30,6 +52,8 @@
 import { mapGetters } from 'vuex'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import SettingsService from '@baserow/modules/core/services/settings'
+import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
 export default {
   layout: 'app',
@@ -39,6 +63,10 @@ export default {
       settings: 'settings/get',
     }),
   },
+  async asyncData({ app }) {
+    const { data } = await SettingsService(app.$client).getInstanceID()
+    return { instanceId: data.instance_id }
+  },
   methods: {
     async updateSettings(values) {
       try {
@@ -46,6 +74,9 @@ export default {
       } catch (error) {
         notifyIf(error, 'settings')
       }
+    },
+    copyToClipboard(value) {
+      copyToClipboard(value)
     },
   },
 }

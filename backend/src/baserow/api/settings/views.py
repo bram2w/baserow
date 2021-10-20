@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser
 from baserow.api.decorators import validate_body
 from baserow.core.handler import CoreHandler
 
-from .serializers import SettingsSerializer
+from .serializers import SettingsSerializer, InstanceIdSerializer
 
 
 class SettingsView(APIView):
@@ -25,12 +25,29 @@ class SettingsView(APIView):
         auth=[None],
     )
     def get(self, request):
-        """
-        Responds with all the admin configured settings.
-        """
+        """Responds with all the admin configured settings."""
 
         settings = CoreHandler().get_settings()
         return Response(SettingsSerializer(settings).data)
+
+
+class InstanceIdView(APIView):
+    permission_classes = (IsAdminUser,)
+
+    @extend_schema(
+        tags=["Settings"],
+        operation_id="get_instance_id",
+        description="Responds with the self hosted instance id. Only a user with "
+        "staff permissions can request it.",
+        responses={
+            200: InstanceIdSerializer,
+        },
+    )
+    def get(self, request):
+        """Responds with the instance id."""
+
+        settings = CoreHandler().get_settings()
+        return Response(InstanceIdSerializer(settings).data)
 
 
 class UpdateSettingsView(APIView):

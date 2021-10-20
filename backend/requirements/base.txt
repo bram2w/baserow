@@ -25,4 +25,5 @@ celery-redbeat==2.0.0
 service-identity==21.1.0
 regex==2021.8.3
 click==7.1.2
+cryptography==3.4.8
 antlr4-python3-runtime==4.8.0

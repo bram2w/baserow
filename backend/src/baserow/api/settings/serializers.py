@@ -10,3 +10,12 @@ class SettingsSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "allow_new_signups": {"required": False},
         }
+
+
+class InstanceIdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Settings
+        fields = ("instance_id",)
+        extra_kwargs = {
+            "instance_id": {"read_only": True},
+        }

@@ -6,22 +6,15 @@
       >
       <div class="control__elements">
         <ul class="choice-items">
-          <li v-for="exporterType in exporterTypes" :key="exporterType.type">
-            <a
-              class="choice-items__link"
-              :class="{
-                active: value !== null && value === exporterType.type,
-                disabled: loading,
-              }"
-              @click="switchToExporterType(exporterType.type)"
-            >
-              <i
-                class="choice-items__icon fas"
-                :class="'fa-' + exporterType.iconClass"
-              ></i>
-              {{ exporterType.name }}
-            </a>
-          </li>
+          <ExporterTypeChoice
+            v-for="exporterType in exporterTypes"
+            :key="exporterType.type"
+            :exporter-type="exporterType"
+            :active="value !== null && value === exporterType.type"
+            :disabled="loading"
+            @selected="switchToExporterType(exporterType.type)"
+          >
+          </ExporterTypeChoice>
         </ul>
       </div>
     </div>
@@ -29,7 +22,11 @@
 </template>
 
 <script>
+import ExporterTypeChoice from '@baserow/modules/database/components/export/ExporterTypeChoice'
+
 export default {
+  name: 'ExporterTypeChoices',
+  components: { ExporterTypeChoice },
   props: {
     exporterTypes: {
       required: true,

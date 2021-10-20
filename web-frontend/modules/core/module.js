@@ -104,7 +104,6 @@ export default function CoreModule(options) {
   this.addLayout(path.resolve(__dirname, 'layouts/app.vue'), 'app')
   this.addLayout(path.resolve(__dirname, 'layouts/login.vue'), 'login')
 
-  this.addPlugin({ src: path.resolve(__dirname, 'plugins/auth.js') })
   this.addPlugin({ src: path.resolve(__dirname, 'plugins/global.js') })
   this.addPlugin({ src: path.resolve(__dirname, 'plugins/vuelidate.js') })
   this.addPlugin({
@@ -128,6 +127,7 @@ export default function CoreModule(options) {
   this.appendPlugin({
     src: path.resolve(__dirname, 'plugins/realTimeHandler.js'),
   })
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/auth.js') })
 
   this.extendRoutes((configRoutes) => {
     // Remove all the routes created by nuxt.

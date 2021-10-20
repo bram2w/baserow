@@ -63,6 +63,18 @@ export class AdminType extends Registerable {
       routeName: this.routeName,
     }
   }
+
+  /**
+   * If the admin type is disabled, this text will be visible explaining why.
+   */
+  getDeactivatedText() {}
+
+  /**
+   * Indicates if the admin type is disabled.
+   */
+  isDeactivated() {
+    return false
+  }
 }
 
 export class SettingsAdminType extends AdminType {

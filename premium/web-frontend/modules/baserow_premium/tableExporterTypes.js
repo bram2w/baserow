@@ -1,9 +1,22 @@
 import { TableExporterType } from '@baserow/modules/database/exporterTypes'
 import { GridViewType } from '@baserow/modules/database/viewTypes'
+import { PremiumPlugin } from '@baserow_premium/plugins'
 import TableJSONExporter from '@baserow_premium/components/exporter/TableJSONExporter'
 import TableXMLExporter from '@baserow_premium/components/exporter/TableXMLExporter'
 
-export class JSONTableExporter extends TableExporterType {
+class PremiumTableExporterType extends TableExporterType {
+  getDeactivatedText() {
+    return this.app.i18n.t('premium.deactivated')
+  }
+
+  isDeactivated() {
+    return !PremiumPlugin.hasValidPremiumLicense(
+      this.app.store.getters['auth/getAdditionalUserData']
+    )
+  }
+}
+
+export class JSONTableExporter extends PremiumTableExporterType {
   getType() {
     return 'json'
   }
@@ -29,7 +42,7 @@ export class JSONTableExporter extends TableExporterType {
   }
 }
 
-export class XMLTableExporter extends TableExporterType {
+export class XMLTableExporter extends PremiumTableExporterType {
   getType() {
     return 'xml'
   }

@@ -1,3 +1,5 @@
+import secrets
+
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -55,6 +57,7 @@ class Settings(models.Model):
     change. This table can only contain a single row.
     """
 
+    instance_id = models.SlugField(default=secrets.token_urlsafe)
     allow_new_signups = models.BooleanField(
         default=True,
         help_text="Indicates whether new users can create a new account when signing "

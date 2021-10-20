@@ -12,7 +12,19 @@ from baserow.contrib.database.export.file_writer import (
 from baserow.contrib.database.export.registries import TableExporter
 from baserow.contrib.database.views.view_types import GridViewType
 
+from baserow_premium.license.handler import check_active_premium_license
+
 from .utils import get_unique_name, safe_xml_tag_name, to_xml
+
+
+class PremiumTableExporter(TableExporter):
+    def before_job_create(self, user, table, view, export_options):
+        """
+        Checks if the related user access to a valid license before the job is created.
+        """
+
+        check_active_premium_license(user)
+        super().before_job_create(user, table, view, export_options)
 
 
 class JSONQuerysetSerializer(QuerysetSerializer):
@@ -49,7 +61,7 @@ class JSONQuerysetSerializer(QuerysetSerializer):
         file_writer.write("\n]\n", encoding=export_charset)
 
 
-class JSONTableExporter(TableExporter):
+class JSONTableExporter(PremiumTableExporter):
     type = "json"
 
     @property
@@ -112,7 +124,7 @@ class XMLQuerysetSerializer(QuerysetSerializer):
         file_writer.write("</rows>\n", encoding=export_charset)
 
 
-class XMLTableExporter(TableExporter):
+class XMLTableExporter(PremiumTableExporter):
     type = "xml"
 
     @property

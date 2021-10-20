@@ -26,6 +26,7 @@ from baserow.api.groups.invitations.errors import (
     ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
 )
 from baserow.api.schemas import get_error_schema
+from baserow.api.user.registries import user_data_registry
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch,
@@ -195,6 +196,7 @@ class UserView(APIView):
             payload = jwt_payload_handler(user)
             token = jwt_encode_handler(payload)
             response.update(token=token)
+            response.update(**user_data_registry.get_all_user_data(user, request))
 
         return Response(response)
 

@@ -15,7 +15,7 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
-from tests.test_utils import setup_interesting_test_table
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -369,7 +369,7 @@ def test_email_field_type(data_fixture):
 
 
 @pytest.mark.django_db
-@override_settings(debug=True)
+@override_settings(DEBUG=True)
 def test_phone_number_field_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

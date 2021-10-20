@@ -12,7 +12,7 @@ from baserow.contrib.database.rows.registries import (
     RowMetadataType,
     row_metadata_registry,
 )
-from tests.test_utils import register_instance_temporarily
+from baserow.test_utils.helpers import register_instance_temporarily
 
 
 @pytest.mark.django_db(transaction=True)

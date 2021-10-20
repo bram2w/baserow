@@ -21,7 +21,7 @@ def _parse_date(date):
     return parse_date(date)
 
 
-def setup_interesting_test_table(data_fixture):
+def setup_interesting_test_table(data_fixture, user_kwargs=None):
     """
     Constructs a testing table with every field type, their sub types and any other
     interesting baserow edge cases worth testing when writing a comphensive "does this
@@ -31,7 +31,10 @@ def setup_interesting_test_table(data_fixture):
     :return:
     """
 
-    user = data_fixture.create_user()
+    if not user_kwargs:
+        user_kwargs = {}
+
+    user = data_fixture.create_user(**user_kwargs)
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database, user=user)
     link_table = data_fixture.create_database_table(database=database, user=user)

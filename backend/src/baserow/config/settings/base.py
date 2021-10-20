@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "baserow.api",
     "baserow.ws",
     "baserow.contrib.database",
+    "baserow_premium",
 ]
 
 ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", None)

@@ -9,15 +9,14 @@ export class ResponseErrorMessage {
   }
 }
 
-class ErrorHandler {
-  constructor(store, response, code = null, detail = null) {
-    this.isHandled = false
-    this.store = store
-    this.response = response
-    this.setError(code, detail)
-
-    // A temporary global errorMap containing error messages for certain errors codes.
-    // This must later be replaced by a more dynamic way.
+/**
+ * This class holds all the default error messages and offers the ability to
+ * register new ones. This is stored in a separate class because need to inject
+ * this, so it can be used by other modules.
+ */
+class ClientErrorMap {
+  constructor() {
+    // Declare the default error messages.
     this.errorMap = {
       ERROR_USER_NOT_IN_GROUP: new ResponseErrorMessage(
         'Action not allowed.',
@@ -79,6 +78,20 @@ class ErrorHandler {
           ' delete the group or give another user admin permissions.'
       ),
     }
+  }
+
+  setError(code, title, description) {
+    this.errorMap[code] = new ResponseErrorMessage(title, description)
+  }
+}
+
+export class ErrorHandler {
+  constructor(store, clientErrorMap, response, code = null, detail = null) {
+    this.isHandled = false
+    this.store = store
+    this.response = response
+    this.setError(code, detail)
+    this.errorMap = clientErrorMap.errorMap
 
     // A temporary notFoundMap containing the error messages for when the
     // response contains a 404 error based on the provided context name. Note
@@ -243,6 +256,11 @@ class ErrorHandler {
 }
 
 export default function ({ store, app }, inject) {
+  // Create and inject the client error map, so that other modules can also register
+  // default error messages.
+  const clientErrorMap = new ClientErrorMap(app)
+  inject('clientErrorMap', clientErrorMap)
+
   const url =
     (process.client
       ? app.$env.PUBLIC_BACKEND_URL
@@ -277,7 +295,7 @@ export default function ({ store, app }, inject) {
       return response
     },
     (error) => {
-      error.handler = new ErrorHandler(store, error.response)
+      error.handler = new ErrorHandler(store, clientErrorMap, error.response)
 
       // Add the error message in the response to the error object.
       if (

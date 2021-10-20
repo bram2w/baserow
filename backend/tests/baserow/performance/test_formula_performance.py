@@ -9,7 +9,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.management.commands.fill_table import fill_table
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.trash.handler import TrashHandler
-from tests.test_utils import setup_interesting_test_table
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db

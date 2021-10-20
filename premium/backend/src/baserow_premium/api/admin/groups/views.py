@@ -16,8 +16,9 @@ from baserow.core.exceptions import GroupDoesNotExist
 from baserow_premium.admin.groups.exceptions import CannotDeleteATemplateGroupError
 from baserow_premium.api.admin.views import AdminListingView
 from baserow_premium.admin.groups.handler import GroupsAdminHandler
-from .errors import ERROR_CANNOT_DELETE_A_TEMPLATE_GROUP
+from baserow_premium.license.handler import check_active_premium_license
 
+from .errors import ERROR_CANNOT_DELETE_A_TEMPLATE_GROUP
 from .serializers import GroupsAdminResponseSerializer
 
 
@@ -49,8 +50,9 @@ class GroupsAdminView(AdminListingView):
             "groups", serializer_class, search_fields, sort_field_mapping
         ),
     )
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
+    def get(self, request):
+        check_active_premium_license(request.user)
+        return super().get(request)
 
 
 class GroupAdminView(APIView):
