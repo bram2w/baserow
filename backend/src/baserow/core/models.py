@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
+from django.db.models import UniqueConstraint, Q
 
 from rest_framework.exceptions import NotAuthenticated
 
@@ -361,7 +362,17 @@ class TrashEntry(models.Model):
     extra_description = models.TextField(null=True, blank=True)
 
     class Meta:
-        unique_together = ("trash_item_type", "parent_trash_item_id", "trash_item_id")
+        constraints = [
+            UniqueConstraint(
+                fields=["trash_item_type", "parent_trash_item_id", "trash_item_id"],
+                name="unique_with_parent_trash_item_id",
+            ),
+            UniqueConstraint(
+                fields=["trash_item_type", "trash_item_id"],
+                condition=Q(parent_trash_item_id=None),
+                name="unique_without_parent_trash_item_id",
+            ),
+        ]
         indexes = [
             models.Index(
                 fields=["-trashed_at", "trash_item_type", "group", "application"]

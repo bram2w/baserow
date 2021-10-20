@@ -9,7 +9,10 @@ from baserow.contrib.database.table.models import Table
 from baserow.core.exceptions import GroupDoesNotExist, ApplicationDoesNotExist
 from baserow.core.models import Group, Application
 from baserow.core.models import TrashEntry
-from baserow.core.trash.exceptions import CannotRestoreChildBeforeParent
+from baserow.core.trash.exceptions import (
+    CannotRestoreChildBeforeParent,
+    CannotDeleteAlreadyDeletedItem,
+)
 from baserow.core.trash.handler import TrashHandler, _get_trash_entry
 
 
@@ -433,3 +436,50 @@ def test_cannot_restore_a_child_before_the_parent(
 
     with pytest.raises(CannotRestoreChildBeforeParent):
         TrashHandler.restore_item(user, "table", table_1.id)
+
+
+@pytest.mark.django_db
+def test_cant_trash_same_item_twice(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    group_to_delete = data_fixture.create_group(user=user)
+    TrashHandler.trash(user, group_to_delete, None, group_to_delete)
+    with pytest.raises(CannotDeleteAlreadyDeletedItem):
+        TrashHandler.trash(user, group_to_delete, None, group_to_delete)
+    assert (
+        TrashEntry.objects.filter(
+            trash_item_id=group_to_delete.id, trash_item_type="group"
+        ).count()
+        == 1
+    )
+    assert Group.objects.count() == 0
+    assert Group.trash.count() == 1
+
+
+@pytest.mark.django_db
+def test_cant_trash_same_row_twice(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second_row"], user=user
+    )
+    TrashHandler.trash(
+        user, table.database.group, table.database, rows[0], parent_id=table.id
+    )
+    with pytest.raises(CannotDeleteAlreadyDeletedItem):
+        TrashHandler.trash(
+            user, table.database.group, table.database, rows[0], parent_id=table.id
+        )
+    assert (
+        TrashEntry.objects.filter(
+            trash_item_id=rows[0].id,
+            trash_item_type="row",
+            parent_trash_item_id=table.id,
+        ).count()
+        == 1
+    )
+    model = table.get_model()
+    assert model.objects.count() == 1
+    assert model.trash.count() == 1

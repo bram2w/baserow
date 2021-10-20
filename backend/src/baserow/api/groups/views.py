@@ -16,6 +16,7 @@ from baserow.api.errors import (
 )
 from baserow.api.schemas import get_error_schema
 from baserow.api.groups.users.serializers import GroupUserGroupSerializer
+from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.core.models import GroupUser, Group
 from baserow.core.handler import CoreHandler
 from baserow.core.exceptions import (
@@ -24,6 +25,7 @@ from baserow.core.exceptions import (
     GroupUserIsLastAdmin,
     UserInvalidGroupPermissionsError,
 )
+from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
 from .serializers import GroupSerializer, OrderGroupsSerializer
 from .schemas import group_user_schema
@@ -147,6 +149,7 @@ class GroupView(APIView):
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_USER_INVALID_GROUP_PERMISSIONS",
+                    "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM",
                 ]
             ),
             404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
@@ -158,6 +161,7 @@ class GroupView(APIView):
             GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             UserInvalidGroupPermissionsError: ERROR_USER_INVALID_GROUP_PERMISSIONS,
+            CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
         }
     )
     def delete(self, request, group_id):
