@@ -6,6 +6,7 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow_premium.row_comments.exceptions import InvalidRowCommentException
 from baserow_premium.row_comments.models import RowComment
 from baserow_premium.row_comments.signals import row_comment_created
+from baserow_premium.license.handler import check_active_premium_license
 
 User = get_user_model()
 
@@ -52,6 +53,8 @@ class RowCommentHandler:
             table is in.
         :raises InvalidRowCommentException: If the comment is blank or None.
         """
+
+        check_active_premium_license(requesting_user)
 
         if comment is None or comment == "":
             raise InvalidRowCommentException()

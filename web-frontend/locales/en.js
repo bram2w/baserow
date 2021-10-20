@@ -86,6 +86,9 @@ export default {
     grid: 'Grid',
     form: 'Form',
   },
+  premium: {
+    deactivated: 'Available in premium version',
+  },
   trashType: {
     group: 'group',
     application: 'application',

@@ -2,9 +2,11 @@ import pytest
 
 from django.utils.timezone import make_aware, datetime, utc
 from django.shortcuts import reverse
+from django.test.utils import override_settings
 
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_402_PAYMENT_REQUIRED,
     HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_400_BAD_REQUEST,
@@ -14,7 +16,8 @@ from baserow.core.models import Group
 
 
 @pytest.mark.django_db
-def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
+@override_settings(DEBUG=True)
+def test_list_admin_groups(api_client, premium_data_fixture, django_assert_num_queries):
     """
     This endpoint doesn't need to be tested extensively because it uses the same base
     class as the list users endpoint which already has extensive tests. We only need to
@@ -22,22 +25,30 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
     """
 
     created = make_aware(datetime(2020, 4, 10, 0, 0, 0), utc)
-    staff_user, staff_token = data_fixture.create_user_and_token(is_staff=True)
-    normal_user, normal_token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(name="A")
+    staff_user, staff_token = premium_data_fixture.create_user_and_token(
+        is_staff=True, has_active_premium_license=True
+    )
+    normal_user, normal_token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    group_1 = premium_data_fixture.create_group(name="A")
     group_1.created_on = created
     group_1.save()
-    group_2 = data_fixture.create_group(name="B", created_on=created)
+    group_2 = premium_data_fixture.create_group(name="B", created_on=created)
     group_2.created_on = created
     group_2.save()
-    template_group = data_fixture.create_group(name="Template", created_on=created)
-    data_fixture.create_template(group=template_group)
-    data_fixture.create_user_group(
+    template_group = premium_data_fixture.create_group(
+        name="Template", created_on=created
+    )
+    premium_data_fixture.create_template(group=template_group)
+    premium_data_fixture.create_user_group(
         group=group_1, user=normal_user, permissions="MEMBER"
     )
-    data_fixture.create_user_group(group=group_2, user=normal_user, permissions="ADMIN")
-    data_fixture.create_database_application(group=group_1)
-    data_fixture.create_database_application(group=group_1)
+    premium_data_fixture.create_user_group(
+        group=group_2, user=normal_user, permissions="ADMIN"
+    )
+    premium_data_fixture.create_database_application(group=group_1)
+    premium_data_fixture.create_database_application(group=group_1)
 
     response = api_client.get(
         reverse("api:premium:admin:groups:list"),
@@ -46,7 +57,7 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
     )
     assert response.status_code == HTTP_403_FORBIDDEN
 
-    with django_assert_num_queries(5):
+    with django_assert_num_queries(6):
         response = api_client.get(
             reverse("api:premium:admin:groups:list"),
             format="json",
@@ -158,12 +169,26 @@ def test_list_admin_groups(api_client, data_fixture, django_assert_num_queries):
         ],
     }
 
+    premium_data_fixture.remove_all_active_premium_licenses(staff_user)
+    response = api_client.get(
+        f'{reverse("api:premium:admin:groups:list")}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {staff_token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+
 
 @pytest.mark.django_db
-def test_delete_group(api_client, data_fixture):
-    normal_user, normal_token = data_fixture.create_user_and_token()
-    staff_user, staff_token = data_fixture.create_user_and_token(is_staff=True)
-    group = data_fixture.create_group()
+@override_settings(DEBUG=True)
+def test_delete_group(api_client, premium_data_fixture):
+    normal_user, normal_token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    staff_user, staff_token = premium_data_fixture.create_user_and_token(
+        is_staff=True, has_active_premium_license=True
+    )
+    group = premium_data_fixture.create_group()
 
     url = reverse("api:premium:admin:groups:edit", kwargs={"group_id": 99999})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {staff_token}")
@@ -179,12 +204,22 @@ def test_delete_group(api_client, data_fixture):
     assert response.status_code == 204
     assert Group.objects.all().count() == 0
 
+    premium_data_fixture.remove_all_active_premium_licenses(staff_user)
+    group = premium_data_fixture.create_group()
+    url = reverse("api:premium:admin:groups:edit", kwargs={"group_id": group.id})
+    response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {staff_token}")
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+
 
 @pytest.mark.django_db
-def test_cant_delete_template_group(api_client, data_fixture):
-    staff_user, staff_token = data_fixture.create_user_and_token(is_staff=True)
-    group = data_fixture.create_group()
-    data_fixture.create_template(group=group)
+@override_settings(DEBUG=True)
+def test_cant_delete_template_group(api_client, premium_data_fixture):
+    staff_user, staff_token = premium_data_fixture.create_user_and_token(
+        is_staff=True, has_active_premium_license=True
+    )
+    group = premium_data_fixture.create_group()
+    premium_data_fixture.create_template(group=group)
 
     url = reverse("api:premium:admin:groups:edit", kwargs={"group_id": group.id})
     response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {staff_token}")

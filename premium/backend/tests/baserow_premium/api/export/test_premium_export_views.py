@@ -1,33 +1,46 @@
 from unittest.mock import patch
 
 import pytest
+
 from django.core.files.storage import FileSystemStorage
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import utc, make_aware
+from django.test.utils import override_settings
+
 from freezegun import freeze_time
+from rest_framework.status import HTTP_402_PAYMENT_REQUIRED
 from rest_framework.fields import DateTimeField
 
 from baserow.contrib.database.rows.handler import RowHandler
 
 
 @pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_exporting_json_writes_file_to_storage(
-    data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
+    premium_data_fixture,
+    api_client,
+    tmpdir,
+    settings,
+    django_capture_on_commit_callbacks,
 ):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    text_field = data_fixture.create_text_field(table=table, name="text_field", order=0)
-    option_field = data_fixture.create_single_select_field(
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    text_field = premium_data_fixture.create_text_field(
+        table=table, name="text_field", order=0
+    )
+    option_field = premium_data_fixture.create_single_select_field(
         table=table, name="option_field", order=1
     )
-    option_a = data_fixture.create_select_option(
+    option_a = premium_data_fixture.create_select_option(
         field=option_field, value="A", color="blue"
     )
-    option_b = data_fixture.create_select_option(
+    option_b = premium_data_fixture.create_select_option(
         field=option_field, value="B", color="red"
     )
-    date_field = data_fixture.create_date_field(
+    date_field = premium_data_fixture.create_date_field(
         table=table,
         date_include_time=True,
         date_format="US",
@@ -35,11 +48,11 @@ def test_exporting_json_writes_file_to_storage(
         order=2,
     )
 
-    grid_view = data_fixture.create_grid_view(table=table)
-    data_fixture.create_view_filter(
+    grid_view = premium_data_fixture.create_grid_view(table=table)
+    premium_data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="contains", value="test"
     )
-    data_fixture.create_view_sort(view=grid_view, field=text_field, order="ASC")
+    premium_data_fixture.create_view_sort(view=grid_view, field=text_field, order="ASC")
 
     row_handler = RowHandler()
     row_handler.create_row(
@@ -135,24 +148,50 @@ def test_exporting_json_writes_file_to_storage(
                 real = written_file.read()
                 assert real == expected
 
+            premium_data_fixture.remove_all_active_premium_licenses(user)
+            response = api_client.post(
+                reverse(
+                    "api:database:export:export_table",
+                    kwargs={"table_id": table.id},
+                ),
+                data={
+                    "view_id": grid_view.id,
+                    "exporter_type": "json",
+                    "json_charset": "utf-8",
+                },
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+            assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+            assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+
 
 @pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_exporting_xml_writes_file_to_storage(
-    data_fixture, api_client, tmpdir, settings, django_capture_on_commit_callbacks
+    premium_data_fixture,
+    api_client,
+    tmpdir,
+    settings,
+    django_capture_on_commit_callbacks,
 ):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    text_field = data_fixture.create_text_field(table=table, name="text_field", order=0)
-    option_field = data_fixture.create_single_select_field(
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    text_field = premium_data_fixture.create_text_field(
+        table=table, name="text_field", order=0
+    )
+    option_field = premium_data_fixture.create_single_select_field(
         table=table, name="option_field", order=1
     )
-    option_a = data_fixture.create_select_option(
+    option_a = premium_data_fixture.create_select_option(
         field=option_field, value="A", color="blue"
     )
-    option_b = data_fixture.create_select_option(
+    option_b = premium_data_fixture.create_select_option(
         field=option_field, value="B", color="red"
     )
-    date_field = data_fixture.create_date_field(
+    date_field = premium_data_fixture.create_date_field(
         table=table,
         date_include_time=True,
         date_format="US",
@@ -160,11 +199,11 @@ def test_exporting_xml_writes_file_to_storage(
         order=2,
     )
 
-    grid_view = data_fixture.create_grid_view(table=table)
-    data_fixture.create_view_filter(
+    grid_view = premium_data_fixture.create_grid_view(table=table)
+    premium_data_fixture.create_view_filter(
         view=grid_view, field=text_field, type="contains", value="test"
     )
-    data_fixture.create_view_sort(view=grid_view, field=text_field, order="ASC")
+    premium_data_fixture.create_view_sort(view=grid_view, field=text_field, order="ASC")
 
     row_handler = RowHandler()
     row_handler.create_row(
@@ -262,6 +301,23 @@ def test_exporting_xml_writes_file_to_storage(
                 assert strip_indents_and_newlines(xml) == strip_indents_and_newlines(
                     expected
                 )
+
+            premium_data_fixture.remove_all_active_premium_licenses(user)
+            response = api_client.post(
+                reverse(
+                    "api:database:export:export_table",
+                    kwargs={"table_id": table.id},
+                ),
+                data={
+                    "view_id": grid_view.id,
+                    "exporter_type": "xml",
+                    "xml_charset": "utf-8",
+                },
+                format="json",
+                HTTP_AUTHORIZATION=f"JWT {token}",
+            )
+            assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+            assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
 
 
 def strip_indents_and_newlines(xml):

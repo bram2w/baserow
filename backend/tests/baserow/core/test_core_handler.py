@@ -45,6 +45,7 @@ from baserow.core.user_files.models import UserFile
 def test_get_settings():
     settings = CoreHandler().get_settings()
     assert isinstance(settings, Settings)
+    assert len(settings.instance_id) > 32
     assert settings.allow_new_signups is True
 
 
@@ -56,10 +57,14 @@ def test_update_settings(data_fixture):
     with pytest.raises(IsNotAdminError):
         CoreHandler().update_settings(user_2, allow_new_signups=False)
 
-    settings = CoreHandler().update_settings(user_1, allow_new_signups=False)
+    settings = CoreHandler().update_settings(
+        user_1, allow_new_signups=False, instance_id="test"
+    )
     assert settings.allow_new_signups is False
+    assert settings.instance_id != "test"
 
     settings = Settings.objects.all().first()
+    assert settings.instance_id != "test"
     assert settings.allow_new_signups is False
 
 

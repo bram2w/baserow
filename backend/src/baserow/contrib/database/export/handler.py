@@ -84,14 +84,16 @@ class ExportHandler:
         :return: The created export job.
         """
 
+        exporter_type = export_options.pop("exporter_type")
+        exporter = table_exporter_registry.get(exporter_type)
+        exporter.before_job_create(user, table, view, export_options)
+
         table.database.group.has_user(user, raise_error=True)
 
         if view and view.table.id != table.id:
             raise ViewNotInTable()
 
         _cancel_unfinished_jobs(user)
-
-        exporter_type = export_options.pop("exporter_type")
 
         _raise_if_invalid_view_or_table_for_exporter(exporter_type, view)
 

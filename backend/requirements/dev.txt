@@ -12,3 +12,4 @@ black==21.7b0
 pyinstrument==4.0.3
 pyfakefs==4.5.0
 pytest-xdist==2.3.0
+responses==0.13.4

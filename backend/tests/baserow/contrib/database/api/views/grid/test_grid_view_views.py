@@ -16,7 +16,7 @@ from baserow.contrib.database.rows.registries import (
     row_metadata_registry,
 )
 from baserow.contrib.database.views.models import GridView
-from tests.test_utils import register_instance_temporarily
+from baserow.test_utils.helpers import register_instance_temporarily
 
 
 @pytest.mark.django_db

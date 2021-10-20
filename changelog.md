@@ -8,6 +8,7 @@
   env variable. If using MEDIA_PORT you now need to set MEDIA_URL also.
 * **Breaking Change**: Baserow's `docker-compose.yml` container names have changed to
   no longer be hardcoded to prevent naming clashes.
+* Added a licensing system for the premium version.
 * Fixed bug where it was possible to create duplicate trash entries. 
 
 ## Released (2021-10-05)

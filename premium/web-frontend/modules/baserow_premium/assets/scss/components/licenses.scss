@@ -1,0 +1,120 @@
+.licenses {
+  padding: 30px;
+}
+
+.licenses__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.licenses__items {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.licenses__item {
+  position: relative;
+  margin-bottom: 20px;
+  padding: 16px 10% 16px 20px;
+  border-radius: 3px;
+  color: $color-primary-900;
+  flex: 0 0 100%;
+
+  &::before {
+    display: none;
+    font-family: $font-awesome-font-family;
+    font-weight: $font-awesome-font-weight;
+    content: fa-content($fa-var-arrow-right);
+    border-radius: 100%;
+    background-color: $color-primary-500;
+    color: $white;
+    margin-top: -15px;
+
+    @include center-text(30px, 14px);
+    @include absolute(50%, 5%, auto, auto);
+  }
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+
+    &::before {
+      display: block;
+    }
+  }
+
+  @media screen and (min-width: 768px) {
+    flex: 0 0 calc(50% - 15px);
+
+    &:not(:nth-child(2n+2)) {
+      margin-right: 30px;
+    }
+  }
+}
+
+.licenses__item-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.licenses__item-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-right: 20px;
+}
+
+.licenses__item-title-license {
+  font-size: 11px;
+  font-weight: 400;
+  color: $color-neutral-400;
+}
+
+.licenses__item-validity {
+  margin-bottom: 15px;
+}
+
+.licenses__item-details {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+
+  li {
+    &:not(:last-child) {
+      margin-right: 20px;
+    }
+  }
+}
+
+.licenses__features {
+  display: inline-block;
+  list-style: none;
+  margin: 0 auto 30px auto;
+  padding: 0;
+  text-align: left;
+}
+
+.licenses__feature {
+  margin-bottom: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.licenses__feature-icon {
+  margin-right: 4px;
+  color: $color-success-500;
+}
+
+.licenses__instance-id {
+  padding: 0 6px;
+  background-color: $color-neutral-100;
+  border-radius: 3px;
+  color: $color-primary-900;
+}
+
+.licenses__instance-id-copy {
+  position: relative;
+}

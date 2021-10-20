@@ -12,6 +12,7 @@ from baserow.api.decorators import accept_timezone
 from baserow.core.models import Group, Application
 
 from baserow_premium.admin.dashboard.handler import AdminDashboardHandler
+from baserow_premium.license.handler import check_active_premium_license
 
 from .serializers import AdminDashboardSerializer
 
@@ -46,6 +47,8 @@ class AdminDashboardView(APIView):
         amount of signups. A list of the new and active users for every day for the
         last 30 days is also included.
         """
+
+        check_active_premium_license(request.user)
 
         handler = AdminDashboardHandler()
         total_users = User.objects.filter(is_active=True).count()

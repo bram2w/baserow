@@ -2,15 +2,19 @@ from unittest.mock import patch
 
 import pytest
 from freezegun import freeze_time
+from django.test.utils import override_settings
 
 from baserow_premium.row_comments.handler import RowCommentHandler
 
 
 @pytest.mark.django_db(transaction=True)
+@override_settings(DEBUG=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_row_comment_created(mock_broadcast_to_channel_group, data_fixture):
-    user = data_fixture.create_user(first_name="test_user")
-    table, fields, rows = data_fixture.build_table(
+def test_row_comment_created(mock_broadcast_to_channel_group, premium_data_fixture):
+    user = premium_data_fixture.create_user(
+        first_name="test_user", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
 

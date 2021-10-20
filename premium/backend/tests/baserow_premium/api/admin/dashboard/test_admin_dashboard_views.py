@@ -2,9 +2,11 @@ import pytest
 from freezegun import freeze_time
 
 from django.shortcuts import reverse
+from django.test.utils import override_settings
 
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_402_PAYMENT_REQUIRED,
     HTTP_403_FORBIDDEN,
 )
 
@@ -12,16 +14,17 @@ from baserow.core.models import UserLogEntry
 
 
 @pytest.mark.django_db
-def test_admin_dashboard(api_client, data_fixture):
+@override_settings(DEBUG=True)
+def test_admin_dashboard(api_client, premium_data_fixture):
     with freeze_time("2020-01-01 00:01"):
-        normal_user, normal_token = data_fixture.create_user_and_token(
-            is_staff=False,
+        normal_user, normal_token = premium_data_fixture.create_user_and_token(
+            is_staff=False, has_active_premium_license=True
         )
-        admin_user, admin_token = data_fixture.create_user_and_token(
-            is_staff=True,
+        admin_user, admin_token = premium_data_fixture.create_user_and_token(
+            is_staff=True, has_active_premium_license=True
         )
 
-        data_fixture.create_database_application(user=normal_user)
+        premium_data_fixture.create_database_application(user=normal_user)
         UserLogEntry.objects.create(actor=admin_user, action="SIGNED_IN")
 
         response = api_client.get(
@@ -83,3 +86,13 @@ def test_admin_dashboard(api_client, data_fixture):
             "new_users_per_day": [{"date": "2019-12-31", "count": 2}],
             "active_users_per_day": [{"date": "2019-12-31", "count": 1}],
         }
+
+        premium_data_fixture.remove_all_active_premium_licenses(admin_user)
+        url = reverse("api:premium:admin:dashboard:dashboard")
+        response = api_client.get(
+            url,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {admin_token}",
+        )
+        assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+        assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"

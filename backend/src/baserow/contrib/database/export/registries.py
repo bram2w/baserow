@@ -19,6 +19,21 @@ class TableExporter(Instance, ABC):
     without specifying a particular view.
     """
 
+    def before_job_create(self, user, table, view, export_options):
+        """
+        This method is called just before an export job is created. It can be used to
+        do some additional checking of the provided values.
+
+        :param user: The user that requested the creation of the job.
+        :type user: User
+        :param table: The table that must be exported.
+        :type table: Table
+        :param view: The view that must be exported.
+        :type view: None or View
+        :param export_options: The additional user provided export options.
+        :type export_options: dict
+        """
+
     @property
     @abstractmethod
     def file_extension(self) -> str:
