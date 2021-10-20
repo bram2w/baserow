@@ -715,3 +715,52 @@ def test_cant_restore_a_trashed_item_requiring_a_parent_id_without_providing_it(
 
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_PARENT_ID_MUST_BE_PROVIDED"
+
+
+@pytest.mark.django_db
+def test_cant_delete_same_item_twice(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    group = data_fixture.create_group(user=user)
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(user=user)
+    row_table, _, rows = data_fixture.build_table(
+        user=user, columns=[("text", "text")], rows=["test"]
+    )
+    row = rows[0]
+
+    url = reverse("api:groups:item", kwargs={"group_id": group.id})
+    _assert_delete_called_twice_returns_correct_api_error(api_client, group, token, url)
+
+    url = reverse("api:applications:item", kwargs={"application_id": database.id})
+    _assert_delete_called_twice_returns_correct_api_error(
+        api_client, database, token, url
+    )
+    url = reverse("api:database:tables:item", kwargs={"table_id": table.id})
+    _assert_delete_called_twice_returns_correct_api_error(api_client, table, token, url)
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": field.id})
+    _assert_delete_called_twice_returns_correct_api_error(
+        api_client, field, token, url, response_code=HTTP_200_OK
+    )
+
+    url = reverse(
+        "api:database:rows:item", kwargs={"table_id": row_table.id, "row_id": row.id}
+    )
+    _assert_delete_called_twice_returns_correct_api_error(api_client, row, token, url)
+
+
+def _assert_delete_called_twice_returns_correct_api_error(
+    api_client, deletable_item, token, url, response_code=HTTP_204_NO_CONTENT
+):
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == response_code
+    # Fake two requests doing the deletion at once by manually unsetting the trashed
+    # flag so we can attempt to trash again and hit the integrity error.
+    deletable_item.trashed = False
+    deletable_item.save()
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM"

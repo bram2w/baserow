@@ -1,30 +1,29 @@
 from django.db import transaction
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-
-from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from baserow.api.decorators import validate_body, map_exceptions
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
-from baserow.api.schemas import get_error_schema
-from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.api.applications.errors import (
     ERROR_APPLICATION_DOES_NOT_EXIST,
     ERROR_APPLICATION_NOT_IN_GROUP,
 )
-from baserow.core.models import Application
-from baserow.core.handler import CoreHandler
+from baserow.api.decorators import validate_body, map_exceptions
+from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
+from baserow.api.schemas import get_error_schema
+from baserow.api.utils import DiscriminatorMappingSerializer
+from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.core.exceptions import (
     UserNotInGroup,
     GroupDoesNotExist,
     ApplicationDoesNotExist,
     ApplicationNotInGroup,
 )
+from baserow.core.handler import CoreHandler
+from baserow.core.models import Application
 from baserow.core.registries import application_type_registry
-
+from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .serializers import (
     ApplicationSerializer,
     ApplicationCreateSerializer,
@@ -32,7 +31,6 @@ from .serializers import (
     OrderApplicationsSerializer,
     get_application_serializer,
 )
-
 
 application_type_serializers = {
     application_type.type: (
@@ -297,7 +295,9 @@ class ApplicationView(APIView):
         ),
         responses={
             204: None,
-            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM"]
+            ),
             404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
         },
     )
@@ -306,6 +306,7 @@ class ApplicationView(APIView):
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
         }
     )
     def delete(self, request, application_id):
