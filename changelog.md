@@ -10,6 +10,7 @@
   no longer be hardcoded to prevent naming clashes.
 * Added a licensing system for the premium version.
 * Fixed bug where it was possible to create duplicate trash entries. 
+* Fixed propType validation error when converting from a date field to a boolean field.
 
 ## Released (2021-10-05)
 
