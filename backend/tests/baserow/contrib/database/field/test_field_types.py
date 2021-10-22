@@ -51,7 +51,7 @@ def test_import_export_formula_field(data_fixture, api_client):
     formula_field = data_fixture.create_formula_field(
         table=first_table,
         name="formula field",
-        formula=f"field_by_id({text_field.id})",
+        formula=f"field('{text_field.name}')",
         formula_type="text",
     )
     formula_field_type = field_type_registry.get_by_model(formula_field)

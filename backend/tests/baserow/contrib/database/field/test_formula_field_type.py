@@ -2,9 +2,6 @@ import pytest
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.formula.parser.ast_mapper import (
-    replace_field_refs_according_to_new_or_deleted_fields,
-)
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaInvalidType,
 )
@@ -113,32 +110,6 @@ def test_get_set_export_serialized_value_formula_field(data_fixture):
 
     assert old_row_1_value == getattr(row_1, formula_field_name)
     assert old_row_2_value == getattr(row_2, formula_field_name)
-
-
-@pytest.mark.django_db
-def test_can_replace_field_with_field_by_id_whilst_keeping_whitespace(data_fixture):
-    assert (
-        replace_field_refs_according_to_new_or_deleted_fields(
-            'field\n(\n"My Field Name")', {}, {"My Field Name": 1}
-        )
-        == "field_by_id\n(\n1)"
-    )
-    assert (
-        replace_field_refs_according_to_new_or_deleted_fields(
-            """concat(\nfield_by_id(2), 'test')""",
-            {2: "Deleted Field"},
-            {"My Field Name": 3},
-        )
-        == """concat(\nfield('Deleted Field'), 'test')"""
-    )
-    assert (
-        replace_field_refs_according_to_new_or_deleted_fields(
-            """concat(\nfield('Deleted Field'), 'test')""",
-            {2: "Deleted Field"},
-            {"My Field Name": 3},
-        )
-        == """concat(\nfield('Deleted Field'), 'test')"""
-    )
 
 
 @pytest.mark.django_db
@@ -274,3 +245,26 @@ def test_formula_with_row_id_is_populated_after_creating_row(
 
     row = RowHandler().create_row(user=user, table=table)
     assert getattr(row, f"field_{formula_field.id}") == row.id
+
+
+@pytest.mark.django_db
+def test_can_rename_field_preserving_whitespace(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    handler = FieldHandler()
+    test_field = handler.create_field(
+        user=user, table=table, type_name="text", name="a"
+    )
+    formula_field = handler.create_field(
+        user=user, table=table, type_name="formula", name="2", formula=" field('a') \n"
+    )
+
+    assert formula_field.formula == f" field('a') \n"
+
+    handler.update_field(user=user, field=test_field, name="b")
+
+    formula_field.refresh_from_db()
+
+    assert formula_field.formula == f" field('b') \n"

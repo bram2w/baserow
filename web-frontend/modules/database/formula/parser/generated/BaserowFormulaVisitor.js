@@ -42,8 +42,20 @@ BaserowFormulaVisitor.prototype.visitBooleanLiteral = function(ctx) {
 };
 
 
+// Visit a parse tree produced by BaserowFormula#RightWhitespaceOrComments.
+BaserowFormulaVisitor.prototype.visitRightWhitespaceOrComments = function(ctx) {
+  return this.visitChildren(ctx);
+};
+
+
 // Visit a parse tree produced by BaserowFormula#DecimalLiteral.
 BaserowFormulaVisitor.prototype.visitDecimalLiteral = function(ctx) {
+  return this.visitChildren(ctx);
+};
+
+
+// Visit a parse tree produced by BaserowFormula#LeftWhitespaceOrComments.
+BaserowFormulaVisitor.prototype.visitLeftWhitespaceOrComments = function(ctx) {
   return this.visitChildren(ctx);
 };
 
@@ -68,6 +80,12 @@ BaserowFormulaVisitor.prototype.visitIntegerLiteral = function(ctx) {
 
 // Visit a parse tree produced by BaserowFormula#BinaryOp.
 BaserowFormulaVisitor.prototype.visitBinaryOp = function(ctx) {
+  return this.visitChildren(ctx);
+};
+
+
+// Visit a parse tree produced by BaserowFormula#ws_or_comment.
+BaserowFormulaVisitor.prototype.visitWs_or_comment = function(ctx) {
   return this.visitChildren(ctx);
 };
 

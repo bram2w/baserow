@@ -676,7 +676,7 @@ def test_table_model_fields_requiring_refresh_on_insert(data_fixture):
 
     field_needing_refresh = data_fixture.create_formula_field(
         table=table,
-        name="Formula",
+        name="Formula2",
         formula="row_id()",
         formula_type="number",
         number_decimal_places=0,

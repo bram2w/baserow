@@ -21,12 +21,6 @@ class BaserowFormulaASTVisitor(abc.ABC, Generic[Y, X]):
         pass
 
     @abc.abstractmethod
-    def visit_field_by_id_reference(
-        self, field_by_id_reference: "tree.BaserowFieldByIdReference[Y]"
-    ) -> X:
-        pass
-
-    @abc.abstractmethod
     def visit_field_reference(
         self, field_reference: "tree.BaserowFieldReference[Y]"
     ) -> X:

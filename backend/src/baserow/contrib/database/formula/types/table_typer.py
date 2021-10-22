@@ -9,31 +9,30 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.fields.registries import field_type_registry, FieldType
 from baserow.contrib.database.formula.ast.tree import (
-    BaserowFieldByIdReference,
     BaserowExpression,
     BaserowFunctionDefinition,
+    BaserowFieldReference,
 )
 from baserow.contrib.database.formula.parser.ast_mapper import (
     raw_formula_to_untyped_expression,
-    replace_field_refs_according_to_new_or_deleted_fields,
 )
 from baserow.contrib.database.formula.parser.exceptions import MaximumFormulaSizeError
 from baserow.contrib.database.formula.types.exceptions import (
     NoSelfReferencesError,
     NoCircularReferencesError,
 )
-from baserow.contrib.database.formula.types.formula_types import (
-    BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
-)
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
     BaserowFormulaValidType,
     UnTyped,
 )
+from baserow.contrib.database.formula.types.formula_types import (
+    BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
+)
 from baserow.contrib.database.formula.types.visitors import (
     FieldReferenceResolvingVisitor,
     TypeAnnotatingASTVisitor,
-    SubstituteFieldByIdWithThatFieldsExpressionVisitor,
+    SubstituteFieldWithThatFieldsExpressionVisitor,
     FunctionsUsedVisitor,
 )
 from baserow.contrib.database.table import models
@@ -43,7 +42,7 @@ def _get_all_fields_and_build_name_dict(
     table: "models.Table", overridden_field: Optional[Field]
 ):
     all_fields = []
-    field_name_to_id = {}
+    field_name_to_db_column = {}
     for field in table.field_set.all():
         if overridden_field and field.id == overridden_field.id:
             extracted_field = overridden_field
@@ -51,47 +50,39 @@ def _get_all_fields_and_build_name_dict(
             extracted_field = field
         extracted_field = extracted_field.specific
         all_fields.append(extracted_field)
-        field_name_to_id[extracted_field.name] = extracted_field.id
-    return all_fields, field_name_to_id
+        field_name_to_db_column[extracted_field.name] = extracted_field.db_column
+    return all_fields, field_name_to_db_column
 
 
-def _fix_deleted_or_new_refs_in_formula_and_parse_into_untyped_formula(
+def _parse_formula_string_to_untyped_expression(
     field: FormulaField,
-    deleted_field_id_to_name: Dict[int, str],
-    field_name_to_id: Dict[str, int],
+    field_name_to_db_column: Dict[str, str],
 ):
-    fixed_formula = replace_field_refs_according_to_new_or_deleted_fields(
-        field.formula, deleted_field_id_to_name, field_name_to_id
-    )
+
     untyped_expression = raw_formula_to_untyped_expression(
-        fixed_formula, set(field_name_to_id.values())
+        field.formula, field_name_to_db_column
     )
-    return UntypedFormulaFieldWithReferences(field, fixed_formula, untyped_expression)
+
+    return UntypedFormulaFieldWithReferences(field, untyped_expression)
 
 
 class UntypedFormulaFieldWithReferences:
     """
     A graph node class, containing a formula field and it's untyped but parsed
     BaserowExpression, references to it's child and parent fields and it's formula
-    field with any field/field_by_id transformations applied already.
+    field.
     """
 
     def __init__(
         self,
         original_formula_field: FormulaField,
-        fixed_raw_formula: str,
         untyped_expression: BaserowExpression[UnTyped],
     ):
         self.original_formula_field = original_formula_field
         self.untyped_expression = untyped_expression
-        self.fixed_raw_formula = fixed_raw_formula
-        self.parents: Dict[int, "UntypedFormulaFieldWithReferences"] = {}
-        self.formula_children: Dict[int, "UntypedFormulaFieldWithReferences"] = {}
-        self.field_children: Set[int] = set()
-
-    @property
-    def field_id(self):
-        return self.original_formula_field.id
+        self.parents: Dict[str, "UntypedFormulaFieldWithReferences"] = {}
+        self.formula_children: Dict[str, "UntypedFormulaFieldWithReferences"] = {}
+        self.field_children: Set[str] = set()
 
     @property
     def field_name(self):
@@ -107,19 +98,19 @@ class UntypedFormulaFieldWithReferences:
         :param child_formula: The new child to register to this node.
         """
 
-        if child_formula.field_id == self.field_id:
+        if child_formula.field_name == self.field_name:
             raise NoSelfReferencesError()
-        self.formula_children[child_formula.field_id] = child_formula
-        child_formula.parents[self.field_id] = self
+        self.formula_children[child_formula.field_name] = child_formula
+        child_formula.parents[self.field_name] = self
 
     def add_child_field(self, child):
         self.field_children.add(child)
 
     def add_all_children_depth_first_order_raise_for_circular_ref(
         self,
-        visited_so_far: OrderedDictType[int, "UntypedFormulaFieldWithReferences"],
+        visited_so_far: OrderedDictType[str, "UntypedFormulaFieldWithReferences"],
         ordered_formula_fields: OrderedDictType[
-            int, "UntypedFormulaFieldWithReferences"
+            str, "UntypedFormulaFieldWithReferences"
         ],
     ):
         """
@@ -134,39 +125,38 @@ class UntypedFormulaFieldWithReferences:
             children appear in the list before their parents.
         """
 
-        if self.field_id in visited_so_far:
+        if self.field_name in visited_so_far:
             raise NoCircularReferencesError(
                 [f.field_name for f in visited_so_far.values()] + [self.field_name]
             )
 
-        visited_so_far[self.field_id] = self
-        if self.field_id in ordered_formula_fields:
+        visited_so_far[self.field_name] = self
+        if self.field_name in ordered_formula_fields:
             return
         for formula_child in self.formula_children.values():
             formula_child.add_all_children_depth_first_order_raise_for_circular_ref(
                 visited_so_far.copy(),
                 ordered_formula_fields,
             )
-        ordered_formula_fields[self.field_id] = self
+        ordered_formula_fields[self.field_name] = self
 
     def to_typed(
         self,
         typed_expression: BaserowExpression[BaserowFormulaType],
-        field_id_to_typed_field: Dict[int, "TypedFieldWithReferences"],
+        field_name_to_typed_field: Dict[str, "TypedFieldWithReferences"],
     ) -> "TypedFieldWithReferences":
         """
         Given a typed expression for this field generates a TypedFieldWithReferences
         graph node.
 
         :param typed_expression: The typed expression for this field.
-        :param field_id_to_typed_field: A dictionary of field id to other
+        :param field_name_to_typed_field: A dictionary of field name to other
             TypedFieldWithReferences which must already contain all child fields of this
             field.
         :return: A new TypedFieldWithReferences based off this field.
         """
 
         updated_formula_field = self._create_untyped_copy_of_original_field()
-        updated_formula_field.formula = self.fixed_raw_formula
 
         functions_used: Set[BaserowFunctionDefinition] = typed_expression.accept(
             FunctionsUsedVisitor()
@@ -185,9 +175,9 @@ class UntypedFormulaFieldWithReferences:
         )
 
         for field_child in self.field_children:
-            typed_field.add_child(field_id_to_typed_field[field_child])
+            typed_field.add_child(field_name_to_typed_field[field_child])
         for formula_child in self.formula_children.values():
-            typed_field.add_child(field_id_to_typed_field[formula_child.field_id])
+            typed_field.add_child(field_name_to_typed_field[formula_child.field_name])
 
         return typed_field
 
@@ -200,14 +190,14 @@ class UntypedFormulaFieldWithReferences:
 
 def _add_children_to_untyped_formula_raising_if_self_ref_found(
     untyped_formula_field: UntypedFormulaFieldWithReferences,
-    field_id_to_untyped_formula: Dict[int, UntypedFormulaFieldWithReferences],
+    field_name_to_untyped_formula: Dict[str, UntypedFormulaFieldWithReferences],
 ):
     children = untyped_formula_field.untyped_expression.accept(
         FieldReferenceResolvingVisitor()
     )
     for child in children:
-        if child in field_id_to_untyped_formula:
-            child_formula = field_id_to_untyped_formula[child]
+        if child in field_name_to_untyped_formula:
+            child_formula = field_name_to_untyped_formula[child]
             untyped_formula_field.add_child_formulas_and_raise_if_self_ref_found(
                 child_formula
             )
@@ -216,10 +206,10 @@ def _add_children_to_untyped_formula_raising_if_self_ref_found(
 
 
 def _find_formula_field_type_resolution_order_and_raise_if_circular_ref_found(
-    field_id_to_untyped_formula: Dict[int, UntypedFormulaFieldWithReferences]
-) -> typing.OrderedDict[int, UntypedFormulaFieldWithReferences]:
+    field_id_to_untyped_formula: Dict[str, UntypedFormulaFieldWithReferences]
+) -> typing.OrderedDict[str, UntypedFormulaFieldWithReferences]:
     ordered_untyped_formulas: OrderedDict[
-        int, UntypedFormulaFieldWithReferences
+        str, UntypedFormulaFieldWithReferences
     ] = OrderedDict()
     for untyped_formula in field_id_to_untyped_formula.values():
         untyped_formula.add_all_children_depth_first_order_raise_for_circular_ref(
@@ -233,8 +223,8 @@ def _calculate_non_formula_field_typed_expression(
 ):
     field_type: FieldType = field_type_registry.get_by_model(field)
     formula_type = field_type.to_baserow_formula_type(field)
-    typed_expr = BaserowFieldByIdReference[BaserowFormulaValidType](
-        field.id, formula_type
+    typed_expr = BaserowFieldReference[BaserowFormulaValidType](
+        field.name, field.db_column, formula_type
     )
     return TypedFieldWithReferences(field, field, typed_expr, False)
 
@@ -257,41 +247,41 @@ class TypedFieldWithReferences:
         self.original_field = original_field
         self.new_field = updated_field
         self.typed_expression = typed_expression
-        self.children: Dict[int, "TypedFieldWithReferences"] = {}
-        self.parents: Dict[int, "TypedFieldWithReferences"] = {}
+        self.children: Dict[str, "TypedFieldWithReferences"] = {}
+        self.parents: Dict[str, "TypedFieldWithReferences"] = {}
 
     @property
     def formula_type(self) -> BaserowFormulaType:
         return self.typed_expression.expression_type
 
     @property
-    def field_id(self) -> int:
-        return self.new_field.id
+    def field_name(self) -> str:
+        return self.new_field.name
 
     def add_all_missing_valid_parents(
         self,
-        other_changed_fields: Dict[int, Field],
-        field_id_to_typed_field: Dict[int, "TypedFieldWithReferences"],
+        other_changed_fields: Dict[str, Field],
+        field_name_to_typed_field: Dict[str, "TypedFieldWithReferences"],
     ):
 
         for parent in self.parents.values():
-            typed_parent_field = field_id_to_typed_field[parent.field_id]
+            typed_parent_field = field_name_to_typed_field[parent.field_name]
             if typed_parent_field.formula_type.is_valid:
                 typed_parent_field.add_all_missing_valid_parents(
-                    other_changed_fields, field_id_to_typed_field
+                    other_changed_fields, field_name_to_typed_field
                 )
-                other_changed_fields[parent.field_id] = typed_parent_field.new_field
+                other_changed_fields[parent.field_name] = typed_parent_field.new_field
 
     def get_all_child_fields_not_already_found_recursively(
-        self, already_found_field_ids: Set[int]
+        self, already_found_field_names: Set[str]
     ) -> List[Field]:
         all_not_found_already_child_fields = []
         for child_field_id, child in self.children.items():
-            if child_field_id not in already_found_field_ids:
-                already_found_field_ids.add(child_field_id)
+            if child_field_id not in already_found_field_names:
+                already_found_field_names.add(child_field_id)
                 recursive_child_fields = (
                     child.get_all_child_fields_not_already_found_recursively(
-                        already_found_field_ids
+                        already_found_field_names
                     )
                 )
                 all_not_found_already_child_fields += [
@@ -300,18 +290,18 @@ class TypedFieldWithReferences:
         return all_not_found_already_child_fields
 
     def add_child(self, child: "TypedFieldWithReferences"):
-        self.children[child.field_id] = child
-        child.parents[self.field_id] = self
+        self.children[child.field_name] = child
+        child.parents[self.field_name] = self
 
 
 def _type_and_substitute_formula_field(
     untyped_formula: UntypedFormulaFieldWithReferences,
-    field_id_to_typed_expression: Dict[int, TypedFieldWithReferences],
+    field_name_to_typed_field: Dict[str, TypedFieldWithReferences],
 ):
     typed_expr: BaserowExpression[
         BaserowFormulaType
     ] = untyped_formula.untyped_expression.accept(
-        TypeAnnotatingASTVisitor(field_id_to_typed_expression)
+        TypeAnnotatingASTVisitor(field_name_to_typed_field)
     )
 
     merged_expression_type = (
@@ -333,60 +323,51 @@ def _type_and_substitute_formula_field(
     # is guaranteed to only contain references to static normal fields meaning we
     # can evaluate the result of this formula in one shot instead of having to evaluate
     # all depended on formula fields in turn to then calculate this one.
-    typed_expr_with_substituted_field_by_id_references = wrapped_typed_expr.accept(
-        SubstituteFieldByIdWithThatFieldsExpressionVisitor(field_id_to_typed_expression)
+    typed_expr_with_substituted_field_references = wrapped_typed_expr.accept(
+        SubstituteFieldWithThatFieldsExpressionVisitor(field_name_to_typed_field)
     )
-    return typed_expr_with_substituted_field_by_id_references
+    return typed_expr_with_substituted_field_references
 
 
 def type_all_fields_in_table(
     table: "models.Table",
-    deleted_field_id_to_name: Optional[Dict[int, str]] = None,
     overridden_field: Optional[Field] = None,
-) -> Dict[int, TypedFieldWithReferences]:
+) -> Dict[str, TypedFieldWithReferences]:
     """
     The key algorithm responsible for typing a table in Baserow.
 
     :param table: The table to find Baserow Formula Types for every field.
-    :param deleted_field_id_to_name: A map of field id's to field names which should be
-        provided when a field has just been deleted. It should contain the deleted
-        fields old id and its name prior to deletion. This is used to correctly replace
-        any field_by_id references to that deleted field with field(name) references
-        instead.
     :param overridden_field: An optional field instance which will be used instead of
         that field's current database value when typing the table.
-    :return: A dictionary of field id to a wrapper object TypedFieldWithReferences
+    :return: A dictionary of field name to a wrapper object TypedFieldWithReferences
         containing type and reference information about that field.
     """
 
     try:
-        if deleted_field_id_to_name is None:
-            deleted_field_id_to_name = {}
-
         # Step 1. Preprocess every field:
         # We go over all the fields, parse formula fields, fix any
-        # references to deleted fields, replace any field references with
-        # field_by_id and finally store type information for non formula fields.
+        # references to renamed fields and finally store type information for non
+        # formula fields.
         (
-            field_id_to_untyped_formula,
-            field_id_to_updated_typed_field,
-        ) = _fix_and_parse_all_fields(deleted_field_id_to_name, table, overridden_field)
+            field_name_to_untyped_formula,
+            field_name_to_typed_field,
+        ) = _parse_all_fields(table, overridden_field)
 
         # Step 2. Construct the graph of field dependencies by:
         # For every untyped formula populate its list of children with
         # references to formulas it depends on.
-        for untyped_formula in field_id_to_untyped_formula.values():
+        for untyped_formula in field_name_to_untyped_formula.values():
             _add_children_to_untyped_formula_raising_if_self_ref_found(
-                untyped_formula, field_id_to_untyped_formula
+                untyped_formula, field_name_to_untyped_formula
             )
 
         # Step 3. Order the formula fields using the graph so we can type them:
         # Now using the graph of field dependencies we build an ordering of
         # the formula fields so that any field that is depended on by another field
         # comes earlier in the list than it's parent.
-        formula_field_ids_ordered_by_typing_order = (
+        formula_fields_ordered_by_typing_order = (
             _find_formula_field_type_resolution_order_and_raise_if_circular_ref_found(
-                field_id_to_untyped_formula
+                field_name_to_untyped_formula
             )
         )
 
@@ -398,46 +379,45 @@ def type_all_fields_in_table(
         for (
             formula_id,
             untyped_formula,
-        ) in formula_field_ids_ordered_by_typing_order.items():
+        ) in formula_fields_ordered_by_typing_order.items():
             typed_expr = _type_and_substitute_formula_field(
-                untyped_formula, field_id_to_updated_typed_field
+                untyped_formula, field_name_to_typed_field
             )
-            field_id = untyped_formula.field_id
-            field_id_to_updated_typed_field[field_id] = untyped_formula.to_typed(
-                typed_expr, field_id_to_updated_typed_field
+            field_name = untyped_formula.field_name
+            field_name_to_typed_field[field_name] = untyped_formula.to_typed(
+                typed_expr, field_name_to_typed_field
             )
 
-        return field_id_to_updated_typed_field
+        return field_name_to_typed_field
     except RecursionError:
         raise MaximumFormulaSizeError()
 
 
-def _fix_and_parse_all_fields(
-    deleted_field_id_to_name: Dict[int, str],
+def _parse_all_fields(
     table: "models.Table",
     overridden_field: Optional[Field],
 ):
-    all_fields, field_name_to_id = _get_all_fields_and_build_name_dict(
+    all_fields, field_name_to_db_column = _get_all_fields_and_build_name_dict(
         table, overridden_field
     )
 
-    field_id_to_untyped_formula: Dict[int, UntypedFormulaFieldWithReferences] = {}
-    field_id_to_updated_typed_field: Dict[int, TypedFieldWithReferences] = {}
+    field_name_to_untyped_formula: Dict[str, UntypedFormulaFieldWithReferences] = {}
+    field_name_to_updated_typed_field: Dict[str, TypedFieldWithReferences] = {}
 
     for field in all_fields:
         specific_class = field.specific_class
         field_type = field_type_registry.get_by_model(specific_class)
-        field_id = field.id
+        field_name = field.name
         if field_type.type == "formula":
-            field_id_to_untyped_formula[
-                field_id
-            ] = _fix_deleted_or_new_refs_in_formula_and_parse_into_untyped_formula(
-                field, deleted_field_id_to_name, field_name_to_id
+            field_name_to_untyped_formula[
+                field_name
+            ] = _parse_formula_string_to_untyped_expression(
+                field, field_name_to_db_column
             )
         else:
             updated_typed_field = _calculate_non_formula_field_typed_expression(field)
-            field_id_to_updated_typed_field[field_id] = updated_typed_field
-    return field_id_to_untyped_formula, field_id_to_updated_typed_field
+            field_name_to_updated_typed_field[field_name] = updated_typed_field
+    return field_name_to_untyped_formula, field_name_to_updated_typed_field
 
 
 class TypedBaserowTable:
@@ -446,27 +426,27 @@ class TypedBaserowTable:
     references for all fields in a table.
     """
 
-    def __init__(self, typed_fields: Dict[int, TypedFieldWithReferences]):
+    def __init__(self, typed_fields: Dict[str, TypedFieldWithReferences]):
         self.typed_fields_with_references = typed_fields
 
     def get_all_depended_on_fields(
-        self, field: Field, field_ids_to_ignore: Set[int]
+        self, field: Field, field_names_to_ignore: Set[str]
     ) -> List[Field]:
         """
         Returns all other fields not already present in the field_ids_to_ignore set
         for which field depends on to calculate it's value.
 
         :param field: The field to get all dependant fields for.
-        :param field_ids_to_ignore: A set of field ids to ignore, will be updated with
+        :param field_names_to_ignore: A set of field ids to ignore, will be updated with
             all the field id's of fields returned by this call.
         :return: A list of field instances for which field depends on.
         """
 
-        if field.id not in self.typed_fields_with_references:
+        if field.name not in self.typed_fields_with_references:
             return []
-        typed_field = self.typed_fields_with_references[field.id]
+        typed_field = self.typed_fields_with_references[field.name]
         return typed_field.get_all_child_fields_not_already_found_recursively(
-            field_ids_to_ignore
+            field_names_to_ignore
         )
 
     def get_typed_field(self, field: Field) -> Optional[TypedFieldWithReferences]:
@@ -476,17 +456,17 @@ class TypedBaserowTable:
             None.
         """
 
-        if field.id not in self.typed_fields_with_references:
+        if field.name not in self.typed_fields_with_references:
             return None
-        return self.typed_fields_with_references[field.id]
+        return self.typed_fields_with_references[field.name]
 
-    def get_typed_field_instance(self, field_id: int) -> Field:
+    def get_typed_field_instance(self, field_name: str) -> Field:
         """
-        :param field_id: The field id to get its newly typed field for.
+        :param field_name: The field name get its newly typed field for.
         :return: The updated field instance after typing.
         """
 
-        return self.typed_fields_with_references[field_id].new_field
+        return self.typed_fields_with_references[field_name].new_field
 
 
 def type_table(

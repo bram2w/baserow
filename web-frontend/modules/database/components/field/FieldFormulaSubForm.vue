@@ -38,8 +38,6 @@ import FieldFormulaInitialSubForm from '@baserow/modules/database/components/for
 import FormulaAdvancedEditContext from '@baserow/modules/database/components/formula/FormulaAdvancedEditContext'
 import FormulaService from '@baserow/modules/database/services/formula'
 import parseBaserowFormula from '@baserow/modules/database/formula/parser/parser'
-import { replaceFieldByIdWithField } from '@baserow/modules/database/formula/parser/replaceFieldByIdWithField'
-import { updateFieldNames } from '@baserow/modules/database/formula/parser/updateFieldNames'
 import {
   FileFieldType,
   LinkRowFieldType,
@@ -90,12 +88,6 @@ export default {
         return isNotThisField && !isInvalidFieldType
       })
     },
-    fieldIdToNameMap() {
-      return this.rawFields.reduce(function (map, obj) {
-        map[obj.id] = obj.name
-        return map
-      }, {})
-    },
     localOrServerError() {
       const dirty = this.$v.values.formula.$dirty
       if (dirty && !this.$v.values.formula.required) {
@@ -133,20 +125,7 @@ export default {
     },
   },
   watch: {
-    fieldIdToNameMap(idToNewNames, idToOldNames) {
-      const oldToNewNameMapBuilder = function (map, key) {
-        map[idToOldNames[key]] = idToNewNames[key]
-        return map
-      }
-      const oldKnownFieldIds = Object.keys(idToOldNames)
-      const oldFieldNameToNewFieldName = oldKnownFieldIds.reduce(
-        oldToNewNameMapBuilder,
-        {}
-      )
-      this.fieldNameChanged(oldFieldNameToNewFieldName)
-    },
     defaultValues(newValue, oldValue) {
-      this.convertServerSideFormulaToClient(newValue.formula)
       this.mergedTypeOptions = Object.assign({}, newValue)
     },
     'values.formula'(newValue, oldValue) {
@@ -163,32 +142,14 @@ export default {
       }
       try {
         parseBaserowFormula(value)
-        this.convertServerSideFormulaToClient(value)
+        if (!this.initialFormula) {
+          this.initialFormula = this.values.formula
+        }
         this.parsingError = null
         return true
       } catch (e) {
         this.parsingError = e
         return false
-      }
-    },
-    convertServerSideFormulaToClient(formula) {
-      if (formula != null) {
-        this.values.formula = replaceFieldByIdWithField(
-          formula,
-          this.fieldIdToNameMap
-        )
-        if (!this.initialFormula) {
-          this.initialFormula = this.values.formula
-        }
-      }
-    },
-    fieldNameChanged(oldNameToNewNameMap) {
-      this.convertServerSideFormulaToClient(this.values.formula)
-      if (this.values.formula != null) {
-        this.values.formula = updateFieldNames(
-          this.values.formula,
-          oldNameToNewNameMap
-        )
       }
     },
     toHumanReadableErrorMessage(error) {

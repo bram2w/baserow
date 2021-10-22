@@ -55,7 +55,7 @@ export const registerRealtimeEvents = (realtime) => {
         await store.dispatch('field/forceCreate', {
           table,
           values: data.field,
-          related_fields: relatedFields,
+          relatedFields,
         })
       }
       if (

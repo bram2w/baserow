@@ -312,6 +312,7 @@ INVALID_FORMULA_TESTS = [
     ("10/LOWER(1)", "ERROR_WITH_FORMULA", None),
     ("'t'/1", "ERROR_WITH_FORMULA", None),
     ("1/'t'", "ERROR_WITH_FORMULA", None),
+    ("field(9999)", "ERROR_WITH_FORMULA", None),
     ("field_by_id(9999)", "ERROR_WITH_FORMULA", None),
     (
         "upper(1)",

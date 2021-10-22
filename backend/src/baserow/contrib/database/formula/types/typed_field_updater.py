@@ -8,6 +8,9 @@ from baserow.contrib.database.fields.registries import (
     field_type_registry,
     field_converter_registry,
 )
+from baserow.contrib.database.formula.parser.update_field_names import (
+    update_field_names,
+)
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
 )
@@ -51,11 +54,11 @@ def _recreate_field_if_required(
 
 def _calculate_and_save_updated_fields(
     table: "models.Table",
-    field_id_to_typed_field: Dict[int, TypedFieldWithReferences],
+    field_name_to_typed_field: Dict[str, TypedFieldWithReferences],
     field_which_changed=None,
 ) -> List[Field]:
     other_changed_fields = {}
-    for typed_field in field_id_to_typed_field.values():
+    for typed_field in field_name_to_typed_field.values():
         new_field = typed_field.new_field
         if not isinstance(new_field, FormulaField):
             continue
@@ -76,7 +79,7 @@ def _calculate_and_save_updated_fields(
             new_field.save()
             ViewHandler().field_type_changed(new_field)
             if not checking_field_which_changed:
-                other_changed_fields[new_field.id] = new_field
+                other_changed_fields[new_field.name] = new_field
                 _recreate_field_if_required(
                     table, original_formula_field, formula_field_type, new_field
                 )
@@ -85,9 +88,9 @@ def _calculate_and_save_updated_fields(
         # All fields that depend on the field_which_changed need to have their
         # values recalculated as a result, even if their formula or type did not
         # change as a result.
-        field_id_to_typed_field[field_which_changed.id].add_all_missing_valid_parents(
-            other_changed_fields, field_id_to_typed_field
-        )
+        field_name_to_typed_field[
+            field_which_changed.name
+        ].add_all_missing_valid_parents(other_changed_fields, field_name_to_typed_field)
 
     return list(other_changed_fields.values())
 
@@ -101,7 +104,7 @@ class TypedBaserowTableWithUpdatedFields(TypedBaserowTable):
 
     def __init__(
         self,
-        typed_fields: Dict[int, TypedFieldWithReferences],
+        typed_fields: Dict[str, TypedFieldWithReferences],
         table: "models.Table",
         initially_updated_field: Optional[Field],
         updated_fields: List[Field],
@@ -134,7 +137,7 @@ class TypedBaserowTableWithUpdatedFields(TypedBaserowTable):
                 updated_field, self.model
             )
             if expr is not None:
-                all_fields_update_dict[f"field_{updated_field.id}"] = expr
+                all_fields_update_dict[updated_field.db_column] = expr
 
         # Also update trash rows so when restored they immediately have correct formula
         # values.
@@ -183,7 +186,7 @@ def type_table_and_update_fields_given_changed_field(
     )
 
     if isinstance(initial_field, FormulaField):
-        typed_changed_field = typed_fields[initial_field.id].new_field
+        typed_changed_field = typed_fields[initial_field.name].new_field
     else:
         typed_changed_field = initial_field
 
@@ -195,32 +198,20 @@ def type_table_and_update_fields_given_changed_field(
     )
 
 
-def type_table_and_update_fields_given_deleted_field(
-    table: "models.Table", deleted_field_id: int, deleted_field_name: str
+def update_other_fields_referencing_this_fields_name(
+    field: "models.Field", new_field_name: str
 ):
-    """
-    Given a field with the provided name and id has been deleted will retype all formula
-    fields in the table, update their definitions in the database and return a wrapper
-    class which can then be used to trigger a recalculation of the changed fields at
-    an appropriate time.
-
-    Any formulas which reference the deleted field will be changed to have an invalid
-    type. Those formulas will also have their actual formula changed replacing any
-    field_by_id references to deleted_field_id with a field reference to the
-    deleted_field_name.
-
-    :param table: The table from which the field was deleted.
-    :param deleted_field_id: The id of the field before it was deleted.
-    :param deleted_field_name: The name of the field before it was deleted.
-    :return: A wrapper object containing all updated fields and all types for fields in
-        the table. The updated fields have not yet had their values recalculated as a
-        result of the field deletion and it is up to you to call
-        update_values_for_all_updated_fields when appropriate otherwise those fields
-        will have stale data.
-    """
-
-    typed_fields = type_all_fields_in_table(
-        table, {deleted_field_id: deleted_field_name}
-    )
-    updated_fields = _calculate_and_save_updated_fields(table, typed_fields)
-    return TypedBaserowTableWithUpdatedFields(typed_fields, table, None, updated_fields)
+    old_field_name = field.name
+    field_updates = []
+    if old_field_name != new_field_name:
+        for other_field in field.table.field_set.exclude(id=field.id).all():
+            other_field = other_field.specific
+            if isinstance(other_field, FormulaField):
+                old_formula = other_field.formula
+                other_field.formula = update_field_names(
+                    old_formula, {old_field_name: new_field_name}
+                )
+                if old_formula != other_field.formula:
+                    field_updates.append(other_field)
+        FormulaField.objects.bulk_update(field_updates, fields=["formula"])
+    return field_updates

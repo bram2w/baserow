@@ -5,7 +5,6 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowStringLiteral,
     BaserowFieldReference,
     BaserowIntegerLiteral,
-    BaserowFieldByIdReference,
     BaserowExpression,
     BaserowDecimalLiteral,
     BaserowBooleanLiteral,
@@ -26,10 +25,11 @@ from baserow.contrib.database.formula.types import table_typer
 
 
 class FieldReferenceResolvingVisitor(BaserowFormulaASTVisitor[Any, List[str]]):
-    def visit_field_reference(self, field_reference: BaserowFunctionCall):
-        # The only time when we should encounter a field reference here is when this
-        # field is pointing at a trashed or deleted field.
-        return []
+    def visit_field_reference(self, field_reference: BaserowFieldReference):
+        if field_reference.is_reference_to_valid_field():
+            return [field_reference.referenced_field_name]
+        else:
+            return []
 
     def visit_string_literal(self, string_literal: BaserowStringLiteral) -> List[str]:
         return []
@@ -52,16 +52,11 @@ class FieldReferenceResolvingVisitor(BaserowFormulaASTVisitor[Any, List[str]]):
     def visit_decimal_literal(self, decimal_literal: BaserowDecimalLiteral):
         return []
 
-    def visit_field_by_id_reference(
-        self, field_by_id_reference: BaserowFieldByIdReference
-    ):
-        return [field_by_id_reference.referenced_field_id]
-
 
 class FunctionsUsedVisitor(
     BaserowFormulaASTVisitor[Any, Set[BaserowFunctionDefinition]]
 ):
-    def visit_field_reference(self, field_reference: BaserowFunctionCall):
+    def visit_field_reference(self, field_reference: BaserowFieldReference):
         return set()
 
     def visit_string_literal(
@@ -93,26 +88,28 @@ class FunctionsUsedVisitor(
     ) -> Set[BaserowFunctionDefinition]:
         return set()
 
-    def visit_field_by_id_reference(
-        self, field_by_id_reference: BaserowFieldByIdReference
-    ) -> BaserowFunctionDefinition:
-        return set()
-
 
 class TypeAnnotatingASTVisitor(
     BaserowFormulaASTVisitor[UnTyped, BaserowExpression[BaserowFormulaType]]
 ):
     def __init__(self, field_id_to_typed_field):
-        self.field_id_to_typed_field: Dict[
-            int, "table_typer.TypedFieldWithReferences"
+        self.field_to_typed_expr: Dict[
+            str, "table_typer.TypedFieldWithReferences"
         ] = field_id_to_typed_field
 
     def visit_field_reference(
         self, field_reference: BaserowFieldReference[UnTyped]
     ) -> BaserowExpression[BaserowFormulaType]:
-        return field_reference.with_invalid_type(
-            f"references the deleted field {field_reference.referenced_field_name}"
-        )
+        field_name = field_reference.referenced_field_name
+        if field_name in self.field_to_typed_expr:
+            updated_typed_field = self.field_to_typed_expr[field_name]
+            return field_reference.with_type(
+                updated_typed_field.typed_expression.expression_type
+            )
+        else:
+            return field_reference.with_invalid_type(
+                f"references the deleted or unknown field {field_name}"
+            )
 
     def visit_string_literal(
         self, string_literal: BaserowStringLiteral[UnTyped]
@@ -150,34 +147,23 @@ class TypeAnnotatingASTVisitor(
     ) -> BaserowExpression[BaserowFormulaType]:
         return boolean_literal.with_valid_type(BaserowFormulaBooleanType())
 
-    def visit_field_by_id_reference(
-        self, field_by_id_reference: BaserowFieldByIdReference[UnTyped]
-    ) -> BaserowExpression[BaserowFormulaType]:
-        field_id = field_by_id_reference.referenced_field_id
-        if field_id in self.field_id_to_typed_field:
-            updated_typed_field = self.field_id_to_typed_field[
-                field_by_id_reference.referenced_field_id
-            ]
-            return field_by_id_reference.with_type(
-                updated_typed_field.typed_expression.expression_type
-            )
-        else:
-            return field_by_id_reference.with_invalid_type(
-                f"references an unknown field with id "
-                f"{field_by_id_reference.referenced_field_id}"
-            )
 
-
-class SubstituteFieldByIdWithThatFieldsExpressionVisitor(
+class SubstituteFieldWithThatFieldsExpressionVisitor(
     BaserowFormulaASTVisitor[Any, BaserowExpression]
 ):
-    def visit_field_reference(self, field_reference: BaserowFieldByIdReference):
-        return field_reference
-
     def __init__(
-        self, field_id_to_typed_field: Dict[int, "table_typer.TypedFieldWithReferences"]
+        self,
+        field_name_to_typed_field: Dict[str, "table_typer.TypedFieldWithReferences"],
     ):
-        self.field_id_to_typed_field = field_id_to_typed_field
+        self.field_name_to_typed_field = field_name_to_typed_field
+
+    def visit_field_reference(self, field_reference: BaserowFieldReference):
+        field_name = field_reference.referenced_field_name
+        if field_name in self.field_name_to_typed_field:
+            typed_field = self.field_name_to_typed_field[field_name]
+            return typed_field.typed_expression
+        else:
+            return field_reference
 
     def visit_string_literal(
         self, string_literal: BaserowStringLiteral
@@ -200,14 +186,3 @@ class SubstituteFieldByIdWithThatFieldsExpressionVisitor(
 
     def visit_boolean_literal(self, boolean_literal: BaserowBooleanLiteral):
         return boolean_literal
-
-    def visit_field_by_id_reference(
-        self, field_by_id_reference: BaserowFieldByIdReference
-    ) -> BaserowExpression:
-        if field_by_id_reference.referenced_field_id in self.field_id_to_typed_field:
-            typed_field = self.field_id_to_typed_field[
-                field_by_id_reference.referenced_field_id
-            ]
-            return typed_field.typed_expression
-        else:
-            return field_by_id_reference

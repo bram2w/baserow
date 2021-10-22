@@ -7,11 +7,16 @@ from django.db import connection
 from django.db.utils import ProgrammingError, DataError
 
 from baserow.contrib.database.db.schema import lenient_schema_editor
+from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
+from baserow.contrib.database.formula.types.typed_field_updater import (
+    type_table_and_update_fields_given_changed_field,
+    type_table_and_update_fields,
+    update_other_fields_referencing_this_fields_name,
+)
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
-from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from .exceptions import (
     PrimaryFieldAlreadyExists,
     CannotDeletePrimaryField,
@@ -27,10 +32,6 @@ from .exceptions import (
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
 from .signals import field_created, field_updated, field_deleted
-from baserow.contrib.database.formula.types.typed_field_updater import (
-    type_table_and_update_fields_given_changed_field,
-    type_table_and_update_fields_given_deleted_field,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,15 @@ def _validate_field_name(
             f"A field named {name} cannot be created as it already exists as a "
             f"reserved Baserow field name."
         )
+
+
+def _merge_updated_fields(
+    updated_fields: List[Field], merged_sets: List[Field]
+) -> List[Field]:
+    updated_fields_set = set(updated_fields)
+    merged_sets = set(merged_sets)
+    merged_sets.update(updated_fields_set)
+    return list(merged_sets)
 
 
 class FieldHandler:
@@ -299,6 +309,11 @@ class FieldHandler:
         field_values = field_type.prepare_values(field_values, user)
         before = field_type.before_update(old_field, field_values, user)
 
+        new_field_name = field_values.get("name", field.name)
+        fields_updated_due_to_name_change = (
+            update_other_fields_referencing_this_fields_name(field, new_field_name)
+        )
+
         field = set_allowed_attrs(field_values, allowed_fields, field)
         field.save()
         typed_updated_table, field = type_table_and_update_fields_given_changed_field(
@@ -406,15 +421,18 @@ class FieldHandler:
         )
         typed_updated_table.update_values_for_all_updated_fields()
 
+        merged_updated_fields = _merge_updated_fields(
+            typed_updated_table.updated_fields, fields_updated_due_to_name_change
+        )
         field_updated.send(
             self,
             field=field,
-            related_fields=typed_updated_table.updated_fields,
+            related_fields=merged_updated_fields,
             user=user,
         )
 
         if return_updated_fields:
-            return field, typed_updated_table.updated_fields
+            return field, merged_updated_fields
         else:
             return field
 
@@ -444,9 +462,7 @@ class FieldHandler:
 
         field = field.specific
         TrashHandler.trash(user, group, field.table.database, field)
-        typed_updated_table = type_table_and_update_fields_given_deleted_field(
-            field.table, deleted_field_id=field.id, deleted_field_name=field.name
-        )
+        typed_updated_table = type_table_and_update_fields(field.table)
         field_deleted.send(
             self,
             field_id=field.id,
