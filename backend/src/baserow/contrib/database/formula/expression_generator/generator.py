@@ -8,6 +8,7 @@ from django.db.models import (
     BooleanField,
     fields,
     ExpressionWrapper,
+    Model,
 )
 from django.db.models.functions import Cast
 
@@ -16,7 +17,6 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowStringLiteral,
     BaserowFunctionCall,
     BaserowIntegerLiteral,
-    BaserowFieldByIdReference,
     BaserowFieldReference,
     BaserowExpression,
     BaserowDecimalLiteral,
@@ -25,18 +25,16 @@ from baserow.contrib.database.formula.ast.tree import (
 from baserow.contrib.database.formula.ast.visitors import BaserowFormulaASTVisitor
 from baserow.contrib.database.formula.parser.exceptions import (
     MaximumFormulaSizeError,
-    UnknownFieldByIdReference,
 )
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
     BaserowFormulaInvalidType,
 )
-from baserow.contrib.database.table import models
 
 
 def baserow_expression_to_django_expression(
     baserow_expression: BaserowExpression[BaserowFormulaType],
-    model_instance: Optional["models.GeneratedTableModel"],
+    model_instance: Optional[Model],
 ) -> Expression:
     """
     Takes a BaserowExpression and converts it to a Django Expression which calculates
@@ -92,36 +90,27 @@ class BaserowExpressionToDjangoExpressionGenerator(
 
     def __init__(
         self,
-        model_instance: Optional["models.GeneratedTableModel"],
+        model_instance: Optional[Model],
     ):
         self.model_instance = model_instance
 
     def visit_field_reference(
         self, field_reference: BaserowFieldReference[BaserowFormulaType]
     ):
-        # If a field() reference still exists it must not have been able to find a
-        # field with that name and replace it with a field_by_id. This means we cannot
-        # proceed as we do not know what field should be referenced here.
-        raise UnknownFieldReference(field_reference.referenced_field_name)
+        db_column = field_reference.underlying_db_column
 
-    def visit_field_by_id_reference(
-        self, field_by_id_reference: BaserowFieldByIdReference[BaserowFormulaType]
-    ):
-        field_id = field_by_id_reference.referenced_field_id
-        db_field_name = f"field_{field_id}"
-
-        expression_type = field_by_id_reference.expression_type
+        expression_type = field_reference.expression_type
         model_field = _get_model_field_for_type(expression_type)
         if self.model_instance is None:
-            return ExpressionWrapper(F(db_field_name), output_field=model_field)
-        elif not hasattr(self.model_instance, db_field_name):
-            raise UnknownFieldByIdReference(field_id)
+            return ExpressionWrapper(F(db_column), output_field=model_field)
+        elif not hasattr(self.model_instance, db_column):
+            raise UnknownFieldReference(db_column)
         else:
             # We need to cast and be super explicit what type this raw value is so
             # postgres does not get angry and claim this is an unknown type.
             return Cast(
                 Value(
-                    getattr(self.model_instance, db_field_name),
+                    getattr(self.model_instance, db_column),
                 ),
                 output_field=model_field,
             )

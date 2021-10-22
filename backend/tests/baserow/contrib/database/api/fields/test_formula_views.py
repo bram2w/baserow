@@ -225,7 +225,7 @@ def test_trashing_child_field(api_client, data_fixture):
     assert len(response_json["related_fields"]) == 1
     assert response_json["related_fields"][0]["id"] == formula_field_id
     assert (
-        "references the deleted field number"
+        "references the deleted or unknown field number"
         in response_json["related_fields"][0]["error"]
     )
 
@@ -236,7 +236,7 @@ def test_trashing_child_field(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
-    assert "references the deleted field number" in response_json[0]["error"]
+    assert "references the deleted or unknown field number" in response_json[0]["error"]
 
 
 @pytest.mark.django_db
@@ -276,7 +276,7 @@ def test_perm_deleting_child_field(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
-    assert "references the deleted field number" in response_json[0]["error"]
+    assert "references the deleted or unknown field number" in response_json[0]["error"]
 
 
 @pytest.mark.django_db
@@ -321,7 +321,7 @@ def test_trashing_restoring_child_field(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
-    assert "references the deleted field number" in response_json[0]["error"]
+    assert "references the deleted or unknown field number" in response_json[0]["error"]
     assert response_json[0]["formula"] == "field('number')+1"
 
     response = api_client.patch(
@@ -343,7 +343,7 @@ def test_trashing_restoring_child_field(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
     assert response_json[1]["error"] is None
-    assert response_json[1]["formula"] == f"field_by_id({fields[0].id})+1"
+    assert response_json[1]["formula"] == f"field('{fields[0].name}')+1"
 
     response = api_client.get(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -398,7 +398,7 @@ def test_trashing_renaming_child_field(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
-    assert "references the deleted field number" in response_json[1]["error"]
+    assert "references the deleted or unknown field number" in response_json[1]["error"]
     assert response_json[1]["formula"] == "field('number')+1"
 
     # We rename the other field to fit into the formula slot
@@ -418,7 +418,7 @@ def test_trashing_renaming_child_field(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
     assert response_json[1]["error"] is None
-    assert response_json[1]["formula"] == f"field_by_id({fields[1].id})+1"
+    assert response_json[1]["formula"] == f"field('number')+1"
 
     response = api_client.get(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -473,7 +473,7 @@ def test_trashing_creating_child_field(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
-    assert "references the deleted field number" in response_json[0]["error"]
+    assert "references the deleted or unknown field number" in response_json[0]["error"]
     assert response_json[0]["formula"] == "field('number')+1"
 
     # We create the another field to fit into the formula slot
@@ -485,7 +485,6 @@ def test_trashing_creating_child_field(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
-    new_field_id = response_json["id"]
 
     response = api_client.get(
         reverse("api:database:fields:item", kwargs={"field_id": formula_field_id}),
@@ -495,7 +494,7 @@ def test_trashing_creating_child_field(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
     assert response_json["error"] is None
-    assert response_json["formula"] == f"field_by_id({new_field_id})+1"
+    assert response_json["formula"] == f"field('number')+1"
 
     response = api_client.get(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),

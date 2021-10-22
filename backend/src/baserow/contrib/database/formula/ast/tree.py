@@ -190,38 +190,32 @@ class BaserowBooleanLiteral(BaserowExpression[A]):
         return str(self.literal)
 
 
-class BaserowFieldByIdReference(BaserowExpression[A]):
-    """
-    Represents a reference to a specific field with the referenced_field_id in the same
-    table.
-    """
-
-    def __init__(self, referenced_field_id: int, expression_type: A):
-        super().__init__(expression_type)
-        self.referenced_field_id = referenced_field_id
-
-    def accept(self, visitor: "visitors.BaserowFormulaASTVisitor[A, T]") -> T:
-        return visitor.visit_field_by_id_reference(self)
-
-    def __str__(self):
-        return f"field_by_id({self.referenced_field_id})"
-
-
 class BaserowFieldReference(BaserowExpression[A]):
     """
-    Represents a reference to a field with the same name as the referenced_field_name
-    if it exists in the table.
+    Represents a reference to a field with the same name as the referenced_field_name.
+    If it is a valid reference to a real column then underlying_db_column will contain
+    the name of that column. Otherwise if a reference to an unknown or invalid field
+    underlying_db_column will be None.
     """
 
-    def __init__(self, referenced_field_name: str, expression_type: A):
+    def __init__(
+        self,
+        referenced_field_name: str,
+        underlying_db_column: Optional[str],
+        expression_type: A,
+    ):
         super().__init__(expression_type)
         self.referenced_field_name = referenced_field_name
+        self.underlying_db_column = underlying_db_column
 
     def accept(self, visitor: "visitors.BaserowFormulaASTVisitor[A, T]") -> T:
         return visitor.visit_field_reference(self)
 
+    def is_reference_to_valid_field(self):
+        return self.underlying_db_column is not None
+
     def __str__(self):
-        return f"field({self.referenced_field_name})"
+        return f"field({self.referenced_field_name}, {self.underlying_db_column})"
 
 
 class ArgCountSpecifier(abc.ABC):

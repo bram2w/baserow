@@ -37,9 +37,6 @@ from baserow.contrib.database.formula.exceptions import BaserowFormulaException
 from baserow.contrib.database.formula.expression_generator.generator import (
     baserow_expression_to_django_expression,
 )
-from baserow.contrib.database.formula.parser.ast_mapper import (
-    replace_field_refs_according_to_new_or_deleted_fields,
-)
 from baserow.contrib.database.formula.types.formula_type import BaserowFormulaType
 from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaTextType,
@@ -2178,28 +2175,6 @@ class FormulaFieldType(FieldType):
         else:
             return None
 
-    def export_serialized(self, field, include_allowed_fields=True):
-        serialized = super().export_serialized(field, include_allowed_fields)
-        if include_allowed_fields:
-            # Replace all field_by_id references back into their field('actual field
-            # name') format when serializing the formula to file. This enables us to
-            # easily re-import this formula into a table with new field ids as when
-            # typing that table we will automatically translate field('..') back into
-            # the field_by_id form but with the correct new field id's. If we did not
-            # do this step instead we would serialize formulas with field_by_id(N)
-            # where the id is a direct reference to a field in this particular table,
-            # meaning you could never import this field into a different table as it
-            # would be referencing an a field id in a different table.
-
-            serialized[
-                "formula"
-            ] = replace_field_refs_according_to_new_or_deleted_fields(
-                serialized["formula"],
-                {f.id: f.name for f in field.table.field_set.all()},
-                {},
-            )
-        return serialized
-
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         (
             field_instance,
@@ -2210,7 +2185,7 @@ class FormulaFieldType(FieldType):
         )
 
     def add_related_fields_to_model(
-        self, typed_table, field, already_included_field_ids
+        self, typed_table, field, already_included_field_names
     ):
         # If we are building a model with some formula fields we need to
         # establish the types fields and whether they depend on any other
@@ -2219,7 +2194,7 @@ class FormulaFieldType(FieldType):
         # Allow passing in typer=False to disable any type checking.
         if typed_table:
             return typed_table.get_all_depended_on_fields(
-                field, already_included_field_ids
+                field, already_included_field_names
             )
         else:
             return []

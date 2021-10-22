@@ -454,7 +454,7 @@ class Table(
         # later which ones are duplicate.
         duplicate_field_names = []
 
-        already_included_field_ids = set([f.id for f in fields])
+        already_included_field_names = set([f.name for f in fields])
 
         # We will have to add each field to with the correct field name and model field
         # to the attribute list in order for the model to work.
@@ -469,7 +469,7 @@ class Table(
                 typed_table = type_table(self)
 
             fields += field_type.add_related_fields_to_model(
-                typed_table, field, already_included_field_ids
+                typed_table, field, already_included_field_names
             )
 
             # If attribute_names is True we will not use 'field_{id}' as attribute name,

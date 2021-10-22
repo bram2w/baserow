@@ -12,7 +12,7 @@ def test_import_export_database(data_fixture):
     formula_field = data_fixture.create_formula_field(
         table=table,
         name="formula",
-        formula=f"field_by_id({text_field.id})",
+        formula=f"field('{text_field.name}')",
         formula_type="text",
     )
     view = data_fixture.create_grid_view(table=table)
@@ -52,7 +52,7 @@ def test_import_export_database(data_fixture):
 
     imported_text_field = TextField.objects.get(table=imported_table)
     imported_formula_field = FormulaField.objects.get(table=imported_table)
-    assert imported_formula_field.formula == f"field_by_id({imported_text_field.id})"
+    assert imported_formula_field.formula == f"field('{imported_text_field.name}')"
 
     # Because the rows have unique id within the table, we expect the row id to be the
     # same.

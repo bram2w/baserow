@@ -26,6 +26,14 @@ class UnknownFieldByIdReference(BaserowFormulaException):
         )
 
 
+class FieldByIdReferencesAreDeprecated(BaserowFormulaException):
+    def __init__(self):
+        super().__init__(
+            "It is no longer possible to reference a field by it's ID in the Baserow"
+            "formula language."
+        )
+
+
 class UnknownOperator(BaserowFormulaException):
     def __init__(self, operatorText):
         super().__init__(f"it used the unknown operator {operatorText}")

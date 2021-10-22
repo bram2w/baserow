@@ -717,7 +717,7 @@ class FieldType(
         )
 
     def add_related_fields_to_model(
-        self, typed_table, field, already_included_field_ids
+        self, typed_table, field, already_included_field_names
     ):
         """
         Should return any fields related to this field which are not already present
@@ -727,8 +727,8 @@ class FieldType(
             fields in the fields table.
         :param field: The specific instance of the field we want to know the related
             fields for.
-        :param already_included_field_ids: A set of already included field ids which
-            should not be included in the returned list.
+        :param already_included_field_names: A set of already included field names
+            whose fields should not be included in the returned list.
         :return: A list of field instances which relate to field but are not present in
             already_included_field_ids.
         """

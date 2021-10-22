@@ -22,10 +22,6 @@
 
 lexer grammar BaserowFormulaLexer;
 
-// Skip whitespace and comments
-WHITESPACE          : [ \t\r\n]+    -> channel(HIDDEN);
-BLOCK_COMMENT       : '/*' .*? '*/' -> channel(HIDDEN);
-LINE_COMMENT        : '//' .*? '\n' -> channel(HIDDEN);
 
 // Fragments
 fragment A          : ('A'|'a') ;
@@ -61,6 +57,11 @@ fragment DEC_DIGIT                    : [0-9];
 fragment DQUOTA_STRING                : '"' ( '\\'. | ~('"' | '\\') )* '"';
 fragment SQUOTA_STRING                : '\'' ('\\'. | ~('\'' | '\\'))* '\'';
 fragment BQUOTA_STRING                : '`' ( '\\'. | '``' | ~('`' | '\\'))* '`';
+
+// Skip whitespace and comments
+BLOCK_COMMENT       : '/*' .* '*/';
+LINE_COMMENT        : '//' ~[\r\n]*;
+WHITESPACE          : [ \t\r\n]+;
 
 TRUE                                 : T R U E;
 FALSE                                : F A L S E;

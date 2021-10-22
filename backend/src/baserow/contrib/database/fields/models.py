@@ -277,6 +277,7 @@ class PhoneNumberField(Field):
 
 class FormulaField(Field):
     formula = models.TextField()
+    old_formula_with_field_by_id = models.TextField(null=True, blank=True)
     error = models.TextField(null=True, blank=True)
 
     formula_type = models.TextField(
