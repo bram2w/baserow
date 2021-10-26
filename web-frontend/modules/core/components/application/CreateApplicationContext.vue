@@ -57,6 +57,7 @@ export default {
     toggleCreateApplicationModal(type) {
       const target = this.$refs['createApplicationModalToggle' + type][0]
       this.$refs['createApplicationModal' + type][0].toggle(target)
+      this.hide()
     },
   },
 }

@@ -1410,7 +1410,12 @@ export const actions = {
     commit('SET_SEARCH', { activeSearchTerm, hideRowsNotMatchingSearch })
     if (refreshMatchesOnClient) {
       getters.getAllRows.forEach((row) =>
-        dispatch('updateSearchMatchesForRow', { row, fields, primary })
+        dispatch('updateSearchMatchesForRow', {
+          row,
+          fields,
+          primary,
+          forced: true,
+        })
       )
     }
   },
@@ -1421,18 +1426,21 @@ export const actions = {
    */
   updateSearchMatchesForRow(
     { commit, getters, rootGetters },
-    { row, fields, primary = null, overrides }
+    { row, fields, primary = null, overrides, forced = false }
   ) {
-    const rowSearchMatches = calculateSingleRowSearchMatches(
-      row,
-      getters.getActiveSearchTerm,
-      getters.isHidingRowsNotMatchingSearch,
-      [primary, ...fields],
-      this.$registry,
-      overrides
-    )
+    // Avoid computing search on table loading
+    if (getters.getActiveSearchTerm || forced) {
+      const rowSearchMatches = calculateSingleRowSearchMatches(
+        row,
+        getters.getActiveSearchTerm,
+        getters.isHidingRowsNotMatchingSearch,
+        [primary, ...fields],
+        this.$registry,
+        overrides
+      )
 
-    commit('SET_ROW_SEARCH_MATCHES', rowSearchMatches)
+      commit('SET_ROW_SEARCH_MATCHES', rowSearchMatches)
+    }
   },
   /**
    * Checks if the given row index is still the same. The row's matchSortings value is

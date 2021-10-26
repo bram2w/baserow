@@ -1,5 +1,46 @@
 .hidings {
-  padding: 0 16px 16px 16px;
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+}
+
+.hidings__head {
+  padding: 4px 16px 0 16px;
+}
+
+.hidings__search {
+  position: relative;
+  border-bottom: 1px solid $color-neutral-200;
+}
+
+.hidings__search-icon {
+  color: $color-neutral-300;
+
+  @include absolute(0, auto, auto, 0);
+  @include center-text(32px, 14px, 36px);
+}
+
+.hidings__search-input {
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 0 12px 0 36px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+
+  @include fixed-height(36px, 14px);
+}
+
+.hidings__body {
+  padding: 0 16px;
+  overflow-y: scroll;
+  height: 100%;
+}
+
+.hidings__list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0 0 0;
 }
 
 .hidings__item {
@@ -15,7 +56,7 @@
   display: flex;
   width: 100%;
   flex-direction: row;
-  margin-top: 16px;
+  padding: 8px 16px 16px 16px;
 }
 
 .hidings__footer-button:not(:last-child) {

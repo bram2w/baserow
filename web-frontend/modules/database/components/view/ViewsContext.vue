@@ -1,5 +1,5 @@
 <template>
-  <Context ref="viewsContext" class="select">
+  <Context ref="viewsContext" class="select" @shown="shown">
     <div class="select__search">
       <i class="select__search-icon fas fa-search"></i>
       <input
@@ -69,6 +69,7 @@ import dropdownHelpers from '@baserow/modules/core/mixins/dropdownHelpers'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContextItem from '@baserow/modules/database/components/view/ViewsContextItem'
 import CreateViewModal from '@baserow/modules/database/components/view/CreateViewModal'
+import { escapeRegExp } from '@baserow/modules/core/utils/string'
 
 export default {
   name: 'ViewsContext',
@@ -95,6 +96,7 @@ export default {
   data() {
     return {
       query: '',
+      firstShow: true,
     }
   },
   computed: {
@@ -106,10 +108,15 @@ export default {
       isLoaded: (state) => state.view.loaded,
     }),
   },
-  mounted() {
-    this.scrollViewDropdownIfNeeded()
-  },
   methods: {
+    shown() {
+      if (this.firstShow) {
+        this.$nextTick(() => {
+          this.scrollViewDropdownIfNeeded()
+        })
+        this.firstShow = false
+      }
+    },
     selectedView(view) {
       this.hide()
       this.$emit('selected-view', view)
@@ -189,7 +196,7 @@ export default {
 
       return views
         .filter(function (view) {
-          const regex = new RegExp('(' + query + ')', 'i')
+          const regex = new RegExp('(' + escapeRegExp(query) + ')', 'i')
           return view.name.match(regex)
         })
         .sort((a, b) => a.order - b.order)

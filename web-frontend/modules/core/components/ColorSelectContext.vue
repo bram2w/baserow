@@ -22,7 +22,7 @@ import context from '@baserow/modules/core/mixins/context'
 import { colors } from '@baserow/modules/core/utils/colors'
 
 export default {
-  name: 'CreateFieldContext',
+  name: 'ColorSelectContext',
   mixins: [context],
   data() {
     return {

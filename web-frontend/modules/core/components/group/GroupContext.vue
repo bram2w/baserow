@@ -75,7 +75,12 @@ export default {
   },
   methods: {
     showGroupMembersModal() {
-      this.$refs.groupMembersModal.show()
+      // We need to make sure that the group members modal is rendered before we can
+      // open it.
+      this.$refs.context.forceRender()
+      this.$nextTick(() => {
+        this.$refs.groupMembersModal.show()
+      })
     },
     showGroupTrashModal() {
       this.$refs.context.hide()

@@ -1,6 +1,6 @@
 <template>
-  <div class="context" :class="{ 'visibility-hidden': !open }">
-    <slot></slot>
+  <div class="context" :class="{ 'visibility-hidden': !open || !updatedOnce }">
+    <slot v-if="openedOnce"></slot>
   </div>
 </template>
 
@@ -22,6 +22,9 @@ export default {
     return {
       open: false,
       opener: null,
+      updatedOnce: false,
+      // If opened once, should stay in DOM to keep nested content
+      openedOnce: false,
     }
   },
   methods: {
@@ -73,7 +76,7 @@ export default {
      * Calculate the position, show the context menu and register a click event on the
      * body to check if the user has clicked outside the context.
      */
-    show(
+    async show(
       target,
       vertical,
       horizontal,
@@ -103,14 +106,20 @@ export default {
           const value = css[key] !== null ? Math.ceil(css[key]) + 'px' : 'auto'
           this.$el.style[key] = value
         }
+        this.updatedOnce = true
       }
-
-      updatePosition()
 
       // If we store the element who opened the context menu we can exclude the element
       // when clicked outside of this element.
       this.opener = isElementOrigin ? target : null
+
       this.open = true
+      this.openedOnce = true
+
+      // Delay the position update to the next tick to let the Context content
+      // be available in DOM for accurate positioning.
+      await this.$nextTick()
+      updatePosition()
 
       this.$el.clickOutsideEvent = (event) => {
         if (
@@ -142,6 +151,14 @@ export default {
       window.addEventListener('resize', this.$el.updatePositionEvent)
 
       this.$emit('shown')
+    },
+    /**
+     * Forces the child elements to render by setting `openedOnce` to `true`. This
+     * could be useful when children of the context must be accessed before the context
+     * has been opened.
+     */
+    forceRender() {
+      this.openedOnce = true
     },
     /**
      * Hide the context menu and make sure the body event is removed.

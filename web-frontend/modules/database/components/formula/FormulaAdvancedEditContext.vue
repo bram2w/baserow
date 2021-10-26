@@ -165,7 +165,9 @@ export default {
         return
       }
       const cursorLocation =
-        this.$refs.textAreaFormulaInput.$refs.inputTextArea.selectionStart
+        this.$refs.textAreaFormulaInput !== undefined
+          ? this.$refs.textAreaFormulaInput.$refs.inputTextArea.selectionStart
+          : 0
 
       const { filteredFields, filteredFunctions, filtered } =
         calculateFilteredFunctionsAndFieldsBasedOnCursorLocation(
@@ -210,8 +212,8 @@ export default {
         this.recalcAutoComplete()
       })
     },
-    openContext(triggeringEl) {
-      this.$refs.editContext.show(
+    async openContext(triggeringEl) {
+      await this.$refs.editContext.show(
         triggeringEl,
         'top',
         'left',

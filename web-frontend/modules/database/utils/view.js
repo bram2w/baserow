@@ -109,7 +109,7 @@ function _findFieldsInRowMatchingSearch(
     if (rowValue) {
       const doesMatch = registry
         .get('field', field.type)
-        .containsFilter(rowValue, activeSearchTerm, field)
+        .containsFilter(rowValue, activeSearchTerm, field, registry)
       if (doesMatch) {
         fieldSearchMatches.add(field.id.toString())
       }

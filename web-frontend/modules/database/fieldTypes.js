@@ -381,10 +381,10 @@ export class FieldType extends Registerable {
    * Converts rowValue to its human readable form first before applying the field
    * filter returned by getContainsFilterFunction's notted.
    */
-  notContainsFilter(rowValue, filterValue, field) {
+  notContainsFilter(rowValue, filterValue, field, $registry) {
     return (
       filterValue === '' ||
-      !this.getContainsFilterFunction(field)(
+      !this.getContainsFilterFunction(field, $registry)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
