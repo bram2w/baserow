@@ -1,8 +1,24 @@
 <template>
-  <Context ref="context" class="hidings">
-    <div>
-      <ul class="context__menu margin-bottom-0">
-        <li v-for="field in fields" :key="field.id" class="hidings__item">
+  <Context ref="context" class="hidings" @shown="shown()">
+    <div class="hidings__head">
+      <div class="hidings__search">
+        <i class="hidings__search-icon fas fa-search"></i>
+        <input
+          ref="search"
+          v-model="query"
+          type="text"
+          placeholder="Search fields"
+          class="hidings__search-input"
+        />
+      </div>
+    </div>
+    <div v-auto-overflow-scroll class="hidings__body">
+      <ul class="hidings__list margin-bottom-0">
+        <li
+          v-for="field in filteredFields"
+          :key="field.id"
+          class="hidings__item"
+        >
           <SwitchInput
             :value="!isHidden(field.id)"
             :disabled="readOnly"
@@ -17,7 +33,7 @@
         </li>
       </ul>
     </div>
-    <div v-if="!readOnly" class="hidings__footer">
+    <div v-if="!readOnly" v-show="query === ''" class="hidings__footer">
       <button
         class="button button--ghost hidings__footer-button"
         @click="!noneSelected && updateAllFieldOptions({ hidden: true })"
@@ -37,9 +53,11 @@
 <script>
 import { mapGetters } from 'vuex'
 
+import { escapeRegExp } from '@baserow/modules/core/utils/string'
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { clone } from '@baserow/modules/core/utils/object'
+import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 
 export default {
   name: 'ViewHideContext',
@@ -62,6 +80,11 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      query: '',
+    }
+  },
   computed: {
     noneSelected() {
       for (const i in this.fields) {
@@ -78,6 +101,39 @@ export default {
         }
       }
       return true
+    },
+    filteredFields() {
+      const query = this.query
+
+      return this.fields
+        .filter((field) => {
+          const regex = new RegExp('(' + escapeRegExp(query) + ')', 'i')
+          return field.name.match(regex)
+        })
+        .sort((a, b) => {
+          const orderA = this.fieldOptions[a.id]
+            ? this.fieldOptions[a.id].order
+            : maxPossibleOrderValue
+          const orderB = this.fieldOptions[b.id]
+            ? this.fieldOptions[b.id].order
+            : maxPossibleOrderValue
+
+          // First by order.
+          if (orderA > orderB) {
+            return 1
+          } else if (orderA < orderB) {
+            return -1
+          }
+
+          // Then by id.
+          if (a.id < b.id) {
+            return -1
+          } else if (a.id > b.id) {
+            return 1
+          } else {
+            return 0
+          }
+        })
     },
   },
   beforeCreate() {
@@ -131,6 +187,12 @@ export default {
         fieldId
       )
       return exists ? this.fieldOptions[fieldId].hidden : false
+    },
+    shown() {
+      this.query = ''
+      this.$nextTick(() => {
+        this.$refs.search.focus()
+      })
     },
   },
 }

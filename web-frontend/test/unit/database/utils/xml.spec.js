@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { parseXML } from '@/modules/database/utils/xml'
+import { parseXML } from '@baserow/modules/database/utils/xml'
 
 describe('test xml utils', () => {
   test('test xml parser', () => {

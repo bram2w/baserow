@@ -48,6 +48,7 @@ import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroup
 import GroupsContextItem from '@baserow/modules/core/components/group/GroupsContextItem'
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { escapeRegExp } from '@baserow/modules/core/utils/string'
 
 export default {
   name: 'GroupsContext',
@@ -84,7 +85,7 @@ export default {
 
       return groups
         .filter(function (group) {
-          const regex = new RegExp('(' + query + ')', 'i')
+          const regex = new RegExp('(' + escapeRegExp(query) + ')', 'i')
           return group.name.match(regex)
         })
         .sort((a, b) => {

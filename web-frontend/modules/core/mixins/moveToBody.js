@@ -11,7 +11,7 @@ export default {
   /**
    * Because we want the to be able to stack nested elements that are moved to
    * the body, they have to be placed at the correct position. If it has no
-   * parent is must be moved to the top of the body, but if there is a parent it
+   * parent it must be moved to the top of the body, but if there is a parent it
    * must be directly under that so it will always display on over of that
    * component.
    */
@@ -19,7 +19,7 @@ export default {
     let parent = this.$parent
     let first = null
 
-    // Loop over the parent components to register himself als child in order
+    // Loop over the parent components to register himself as child in order
     // to prevent closing when clicking in a child. We also check which parent
     // is first so can correctly move the element.
     while (parent !== undefined) {
