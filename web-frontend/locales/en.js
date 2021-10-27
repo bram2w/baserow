@@ -18,6 +18,8 @@ export default {
     add: 'Add',
     makeChoice: 'Make a choice',
     cancel: 'Cancel',
+    search: 'Search',
+    copy: 'Copy',
   },
   adminType: {
     settings: 'Settings',
@@ -144,6 +146,55 @@ export default {
     table: 'table',
     field: 'field',
     row: 'row',
+  },
+  clientHandler: {
+    notFoundTitle: '{name} not found.',
+    notFoundDescription:
+      "The selected {name} wasn't found, maybe it has already been deleted.",
+    networkErrorTitle: 'Network error',
+    networkErrorDescription: 'Could not connect to the API server.',
+    tooManyRequestsTitle: 'Too many requests',
+    tooManyRequestsDescription:
+      'You are sending too many requests to the server. Please wait a moment.',
+    notCompletedTitle: 'Action not completed.',
+    notCompletedDescription:
+      "The action couldn't be completed because an unknown error has occured.",
+    userNotInGroupTitle: 'Action not allowed.',
+    userNotInGroupDescription:
+      "The action couldn't be completed because you aren't a member of the related group.",
+    invalidGroupPermissionsTitle: 'Action not allowed.',
+    invalidGroupPermissionsDescription:
+      "The action couldn't be completed because you don't have the right permissions to the related group.",
+    tableDoesNotExistTitle: "Table doesn't exist.",
+    tableDoesNotExistDescription:
+      "The action couldn't be completed because the related table doesn't exist anymore.",
+    rowDoesNotExistTitle: "Row doesn't exist.",
+    rowDoesNotExistDescription:
+      "The action couldn't be completed because the related row doesn't exist anymore.",
+    fileSizeTooLargeTitle: 'File to large',
+    fileSizeTooLargeDescription: 'The provided file is too large.',
+    invalidFileTitle: 'Invalid file',
+    invalidFileDescription: 'The provided file is not a valid file.',
+    fileUrlCouldNotBeReachedTitle: 'Invalid URL',
+    fileUrlCouldNotBeReachedDescription:
+      'The provided file URL could not be reached.',
+    invalidFileUrlTitle: 'Invalid URL',
+    invalidFileUrlDescription:
+      'The provided file URL is invalid or not allowed.',
+    adminCannotDeactivateSelfTitle: 'Action not allowed.',
+    adminCannotDeactivateSelfDescription:
+      'You cannot de-activate or un-staff yourself.',
+    adminCannotDeleteSelfTitle: 'Action not allowed.',
+    adminCannotDeleteSelfDescription: 'You cannot delete yourself.',
+    maxFieldCountExceededTitle: "Couldn't create field.",
+    maxFieldCountExceededDescription:
+      "The action couldn't be completed because the field count exceeds the limit",
+    cannotRestoreParentBeforeChildTitle: 'Please restore the parent first.',
+    cannotRestoreParentBeforeChildDescription:
+      'You cannot restore this item because it depends on a deleted item. Please restore the parent item first.',
+    groupUserIsLastAdminTitle: "Can't leave the group",
+    groupUserIsLastAdminDescription:
+      "It's not possible to leave the group because you're the last admin. Please delete the group or give another user admin permissions.",
   },
   importerType: {
     csv: 'Import a CSV file',

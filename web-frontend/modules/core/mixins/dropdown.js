@@ -10,9 +10,9 @@ export default {
       default: null,
     },
     searchText: {
-      type: String,
+      type: [String, null],
       required: false,
-      default: 'Search',
+      default: null,
     },
     showSearch: {
       type: Boolean,

@@ -244,9 +244,7 @@ describe('User Admin Component Tests', () => {
 
     await flushPromises()
 
-    expect(ui.getErrorText(modal)).toBe(
-      "The action couldn't be completed because an unknown error has occured."
-    )
+    expect(ui.getErrorText(modal)).toBe('clientHandler.notCompletedDescription')
   })
 
   test('a users full name can be changed', async () => {
@@ -286,9 +284,7 @@ describe('User Admin Component Tests', () => {
 
     await flushPromises()
 
-    expect(ui.getErrorText(modal)).toBe(
-      "The action couldn't be completed because an unknown error has occured."
-    )
+    expect(ui.getErrorText(modal)).toBe('clientHandler.notCompletedDescription')
   })
 
   test('a users full name cant be changed to less than 2 characters', async () => {
