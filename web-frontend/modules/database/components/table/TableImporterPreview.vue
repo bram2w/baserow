@@ -1,6 +1,6 @@
 <template>
   <div class="control mt-3">
-    <label class="control__label">Quick preview</label>
+    <label class="control__label">{{ $t('tableImporterPreview.label') }}</label>
     <div class="control__elements">
       <div class="table-preview__container">
         <div class="table-preview">
@@ -27,7 +27,11 @@
             </div>
           </div>
           <div v-if="preview.remaining > 0" class="table-preview__more">
-            {{ preview.remaining }} other rows
+            {{
+              $t('tableImporterPreview.remaining', {
+                remaining: preview.remaining,
+              })
+            }}
           </div>
         </div>
       </div>
@@ -45,3 +49,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "tableImporterPreview": {
+      "label": "Quick preview",
+      "remaining": "{remaining} other rows"
+    }
+  },
+  "fr": {
+    "tableImporterPreview": {
+      "label": "Aperçu",
+      "remaining": "{remaining} autres lignes"
+    }
+  }
+}
+</i18n>

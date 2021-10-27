@@ -1,9 +1,11 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label">Paste the table data</label>
+      <label class="control__label">{{
+        $t('tablePasteImporter.pasteLabel')
+      }}</label>
       <div class="control__description">
-        You can copy the cells from a spreadsheet and paste them below.
+        {{ $t('tablePasteImporter.pasteDescription') }}
       </div>
       <div class="control__elements">
         <textarea
@@ -12,23 +14,25 @@
           @input="changed($event.target.value)"
         ></textarea>
         <div v-if="$v.content.$error" class="error">
-          This field is required.
+          {{ $t('error.fieldRequired') }}
         </div>
       </div>
     </div>
     <div class="control">
-      <label class="control__label">First row is header</label>
+      <label class="control__label">{{
+        $t('tablePasteImporter.firstRowHeader')
+      }}</label>
       <div class="control__elements">
-        <Checkbox v-model="values.firstRowHeader" @input="reload()"
-          >yes</Checkbox
-        >
+        <Checkbox v-model="values.firstRowHeader" @input="reload()">{{
+          $t('common.yes')
+        }}</Checkbox>
       </div>
     </div>
     <div v-if="error !== ''" class="alert alert--error alert--has-icon">
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
       </div>
-      <div class="alert__title">Something went wrong</div>
+      <div class="alert__title">{{ $t('common.wrong') }}</div>
       <p class="alert__content">
         {{ error }}
       </p>
@@ -83,11 +87,13 @@ export default {
         return
       }
 
-      const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
+      const limit = this.$env.INITIAL_TABLE_DATA_LIMIT || 1
       const count = this.content.split(/\r\n|\r|\n/).length
       if (limit !== null && count > limit) {
         this.values.data = ''
-        this.error = `It is not possible to import more than ${limit} rows.`
+        this.error = this.$t('tablePasteImporter.limitError', {
+          limit,
+        })
         this.preview = {}
         this.$emit('input', this.value)
         return
@@ -121,3 +127,24 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "tablePasteImporter": {
+      "pasteLabel": "Paste the table data",
+      "pasteDescription": "You can copy the cells from a spreadsheet and paste them below.",
+      "firstRowHeader": "First row is header",
+      "limitError": "It is not possible to import more than {limit} rows."
+    }
+  },
+  "fr": {
+    "tablePasteImporter": {
+      "pasteLabel": "Collez les données tabulaires",
+      "pasteDescription": "Vous pouvez copier les lignes provenant d'un tableur et les coller ci-dessous.",
+      "firstRowHeader": "La première ligne est l'entête",
+      "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
+    }
+  }
+}
+</i18n>

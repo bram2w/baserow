@@ -1,10 +1,11 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label">Choose XML file</label>
+      <label class="control__label">{{
+        $t('tableXMLImporter.fileLabel')
+      }}</label>
       <div class="control__description">
-        You can import an existing XML by uploading the .XML file with tabular
-        data, i.e.:
+        {{ $t('tableXMLImporter.fileDescription') }}
         <pre>
 &lt;notes&gt;
   &lt;note&gt;
@@ -37,12 +38,12 @@
             @click.prevent="$refs.file.click($event)"
           >
             <i class="fas fa-cloud-upload-alt"></i>
-            Choose XML file
+            {{ $t('tableXMLImporter.chooseButton') }}
           </a>
           <div class="file-upload__file">{{ filename }}</div>
         </div>
         <div v-if="$v.filename.$error" class="error">
-          This field is required.
+          {{ $t('error.fieldRequired') }}
         </div>
       </div>
     </div>
@@ -50,7 +51,7 @@
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
       </div>
-      <div class="alert__title">Something went wrong</div>
+      <div class="alert__title">{{ $t('common.wrong') }}</div>
       <p class="alert__content">
         {{ error }}
       </p>
@@ -111,7 +112,9 @@ export default {
       if (file.size > maxSize) {
         this.filename = ''
         this.values.data = ''
-        this.error = 'The maximum file size is 15MB.'
+        this.error = this.$t('tableXMLImporter.limitFileSize', {
+          limit: 15,
+        })
         this.preview = {}
       } else {
         this.filename = file.name
@@ -128,14 +131,16 @@ export default {
 
       if (errors.length > 0) {
         this.values.data = ''
-        this.error = `Error occured while processing XML: ${errors.join('\n')}`
+        this.error = this.$t('tableXMLImporter.processingError', {
+          errors: errors.join('\n'),
+        })
         this.preview = {}
         return
       }
 
       if (xmlData.length === 0) {
         this.values.data = ''
-        this.error = 'This XML file is empty.'
+        this.error = this.$t('tableXMLImporter.emptyError')
         this.preview = {}
         return
       }
@@ -149,7 +154,7 @@ export default {
       const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
       if (limit !== null && xmlData.length > limit) {
         this.values.data = ''
-        this.error = `It is not possible to import more than ${limit} rows.`
+        this.error = this.$t('tableXMLImporter.limitError', { limit })
         this.preview = {}
         return
       }
@@ -165,3 +170,30 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "tableXMLImporter": {
+      "fileLabel": "Choose XML file",
+      "fileDescription": "You can import an existing XML by uploading the .XML file with tabular data, i.e.:",
+      "chooseButton": "Choose XML file",
+      "processingError": "Error occurred while processing XML: {errors}",
+      "emptyError": "This XML file is empty.",
+      "limitFileSize": "The maximum file size is {limit}MB.",
+      "limitError": "It is not possible to import more than {limit} rows."
+    }
+  },
+  "fr": {
+    "tableXMLImporter": {
+      "fileLabel": "Choisissez un fichier XML",
+      "fileDescription": "Vous pouvez importer un XML existant en envoyant un fichier .XML contenant des données tabulaires, c'est-à-dire :",
+      "chooseButton": "Choisir un fichier XML",
+      "processingError": "Une erreur est survenue lors du traitement du XML : {errors}",
+      "emptyError": "Ce fichier XML est vide",
+      "limitFileSize": "La taille maximum du fichier est de {limit}Mo.",
+      "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
+    }
+  }
+}
+</i18n>
