@@ -29,7 +29,7 @@
           @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
         >
           <i class="fas fa-plus"></i>
-          add field
+          {{ $t('rowEditModal.addField') }}
         </a>
         <CreateFieldContext
           ref="createFieldContext"
@@ -160,3 +160,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "rowEditModal": {
+      "addField": "add field"
+    }
+  },
+  "fr": {
+    "rowEditModal": {
+      "addField": "Ajouter une colonne"
+    }
+  }
+}
+</i18n>
