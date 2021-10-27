@@ -18,6 +18,8 @@ export default {
     cancel: 'Annuler',
     add: 'Ajouter',
     makeChoice: 'Choisissez',
+    search: 'Chercher',
+    copy: 'Copier',
   },
   adminType: {
     settings: 'Paramètres',
@@ -146,6 +148,57 @@ export default {
     table: 'table',
     field: 'champ',
     row: 'ligne',
+  },
+  clientHandler: {
+    notFoundTitle: "L'élément {name} n'a pas été trouvé",
+    notFoundDescription:
+      "L'élément {name} sélectionné n'a pas été trouvé. Peut-être qu'il a déjà été supprimé.",
+    networkErrorTitle: 'Erreur de connection',
+    networkErrorDescription:
+      'Connection impossible avec le serveur. Veuillez vérifier votre connection.',
+    tooManyRequestsTitle: 'Trop de requêtes',
+    tooManyRequestsDescription:
+      'Vous envoyez trop de requêtes au serveur. Veuillez patienter avant de recommencer.',
+    notCompletedTitle: "Échec de l'action",
+    notCompletedDescription:
+      "L'action n'a pas pu aboutir pour une raison inconnue.",
+    userNotInGroupTitle: 'Action interdite',
+    userNotInGroupDescription:
+      "L'action n'a pas pu aboutir car vous n'êtes pas membre du groupe associé.",
+    invalidGroupPermissionsTitle: 'Action interdite',
+    invalidGroupPermissionsDescription:
+      "L'action n'a pas pu aboutir car vous n'avez pas les permissions nécessaires dans le groupe associé.",
+    tableDoesNotExistTitle: "La table n'existe pas",
+    tableDoesNotExistDescription:
+      "L'action n'a pas pu aboutir car la table concernée n'existe plus.",
+    rowDoesNotExistTitle: "La ligne n'existe pas",
+    rowDoesNotExistDescription:
+      "L'action n'a pas pu aboutir car la ligne concernée n'existe plus",
+    fileSizeTooLargeTitle: 'Fichier trop volumineux',
+    fileSizeTooLargeDescription: 'Le fichier fourni est trop volumineux.',
+    invalidFileTitle: 'Fichier invalide',
+    invalidFileDescription: "Le fichier fourni n'est pas un fichier valide.",
+    fileUrlCouldNotBeReachedTitle: 'URL invalide',
+    fileUrlCouldNotBeReachedDescription: "L'URL fournie n'est pas accessible.",
+    invalidFileUrlTitle: 'URL invalide',
+    invalidFileUrlDescription:
+      "L'URL fournie n'est pas valide ou est protégée.",
+    adminCannotDeactivateSelfTitle: 'Action interdite',
+    adminCannotDeactivateSelfDescription:
+      "Vous ne pouvez pas désactiver votre compte ou modifier votre appartenance à l'équipe staff.",
+    adminCannotDeleteSelfTitle: 'Action interdite',
+    adminCannotDeleteSelfDescription:
+      'Vous ne pouvez pas supprimer votre propre compte utilisateur.',
+    maxFieldCountExceededTitle: 'Impossible de créer une colonne',
+    maxFieldCountExceededDescription:
+      "L'action n'a pas pu aboutir car vous avez atteint le nombre maximum de colonne pour cette table.",
+    cannotRestoreParentBeforeChildTitle:
+      "Veuillez restaurer l'élément parent d'abord",
+    cannotRestoreParentBeforeChildDescription:
+      "Vous ne pouvez pas restaurer cet élément car il dépend d'un autre élément supprimé. Vous devez restaurer l'élément parent avant de pouvoir restaurer cet élément",
+    groupUserIsLastAdminTitle: 'Impossible de quitter le groupe',
+    groupUserIsLastAdminDescription:
+      "Il est impossible de quitter ce groupe car vous en êtes le dernier administrateur. Veuillez supprimer le groupe ou donner les droits d'administration à un autre utilisateur.",
   },
   importerType: {
     csv: 'Importer un fichier CSV',
