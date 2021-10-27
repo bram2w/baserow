@@ -1,7 +1,9 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label control__label--small">Number type</label>
+      <label class="control__label control__label--small">{{
+        $t('fieldNumberSubForm.typeLabel')
+      }}</label>
       <div class="control__elements">
         <Dropdown
           :class="{ 'dropdown--error': $v.numberType.$error }"
@@ -9,13 +11,21 @@
           @input="changeNumberType($event)"
           @hide="$v.numberType.$touch()"
         >
-          <DropdownItem name="Integer (1)" value="INTEGER"></DropdownItem>
-          <DropdownItem name="Decimal (1.0)" value="DECIMAL"></DropdownItem>
+          <DropdownItem
+            :name="$t('fieldNumberSubForm.integer') + ' (1)'"
+            value="INTEGER"
+          ></DropdownItem>
+          <DropdownItem
+            :name="$t('fieldNumberSubForm.decimal') + ' (1.0)'"
+            value="DECIMAL"
+          ></DropdownItem>
         </Dropdown>
       </div>
     </div>
     <div v-show="numberType === 'DECIMAL'" class="control">
-      <label class="control__label control__label--small">Decimal places</label>
+      <label class="control__label control__label--small">{{
+        $t('fieldNumberSubForm.decimalPlacesLabel')
+      }}</label>
       <div class="control__elements">
         <Dropdown
           v-model="values.number_decimal_places"

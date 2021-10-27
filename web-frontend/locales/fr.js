@@ -1,4 +1,8 @@
 export default {
+  common: {
+    yes: 'oui',
+    no: 'non',
+  },
   action: {
     upload: 'Envoyer',
     back: 'Retour',
@@ -87,7 +91,7 @@ export default {
     form: 'Formulaire',
   },
   premium: {
-    deactivated: '@TODO',
+    deactivated: 'Désactivé',
   },
   trashType: {
     group: 'groupe',
@@ -95,5 +99,8 @@ export default {
     table: 'table',
     field: 'champ',
     row: 'ligne',
+  },
+  exporterType: {
+    csv: 'Exporter vers CSV',
   },
 }
