@@ -1,11 +1,11 @@
 <template>
   <Modal>
-    <h2 class="box__title">Create new table</h2>
+    <h2 class="box__title">{{ $t('createTableModal.title') }}</h2>
     <Error :error="error"></Error>
     <TableForm ref="tableForm" @submitted="submitted">
       <div class="control">
         <label class="control__label">
-          Would you like to import existing data?
+          {{ $t('createTableModal.importLabel') }}
         </label>
         <div class="control__elements">
           <ul class="choice-items">
@@ -16,7 +16,7 @@
                 @click="importer = ''"
               >
                 <i class="choice-items__icon fas fa-clone"></i>
-                Start with a new table
+                {{ $t('createTableModal.newTable') }}
               </a>
             </li>
             <li v-for="importerType in importerTypes" :key="importerType.type">
@@ -29,7 +29,7 @@
                   class="choice-items__icon fas"
                   :class="'fa-' + importerType.iconClass"
                 ></i>
-                {{ importerType.name }}
+                {{ importerType.getName() }}
               </a>
             </li>
           </ul>
@@ -43,7 +43,7 @@
             :class="{ 'button--loading': loading }"
             :disabled="loading"
           >
-            Add table
+            {{ $t('createTableModal.addButton') }}
           </button>
         </div>
       </div>
@@ -136,3 +136,24 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "createTableModal": {
+      "title": "Create new table",
+      "importLabel": "Would you like to import existing data?",
+      "newTable": "Start with a new table",
+      "addButton": "Add table"
+    }
+  },
+  "fr": {
+    "createTableModal": {
+      "title": "Créer une nouvelle table",
+      "importLabel": "Souhaitez-vous importer des données existantes ?",
+      "newTable": "Commencer avec une table vide",
+      "addButton": "Ajouter la table"
+    }
+  }
+}
+</i18n>

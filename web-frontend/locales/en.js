@@ -2,6 +2,7 @@ export default {
   common: {
     yes: 'yes',
     no: 'no',
+    wrong: 'Something went wrong',
   },
   action: {
     upload: 'Upload',
@@ -143,6 +144,12 @@ export default {
     table: 'table',
     field: 'field',
     row: 'row',
+  },
+  importerType: {
+    csv: 'Import a CSV file',
+    paste: 'Paste table data',
+    xml: 'Import an XML file',
+    json: 'Import a JSON file',
   },
   exporterType: {
     csv: 'Export to CSV',

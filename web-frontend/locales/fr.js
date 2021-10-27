@@ -2,6 +2,7 @@ export default {
   common: {
     yes: 'oui',
     no: 'non',
+    wrong: 'Une erreur est survenue',
   },
   action: {
     upload: 'Envoyer',
@@ -145,6 +146,12 @@ export default {
     table: 'table',
     field: 'champ',
     row: 'ligne',
+  },
+  importerType: {
+    csv: 'Importer un fichier CSV',
+    paste: 'Coller des données tabulaires',
+    xml: 'Importer un fichier XML',
+    json: 'Importer un fichier JSON',
   },
   exporterType: {
     csv: 'Exporter vers CSV',
