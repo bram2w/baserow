@@ -1,9 +1,9 @@
 <template>
   <div>
     <div v-if="exporterTypes.length > 0" class="control">
-      <label class="control__label"
-        >To which format would you like to export?</label
-      >
+      <label class="control__label">{{
+        $t('exporterTypeChoices.formatLabel')
+      }}</label>
       <div class="control__elements">
         <ul class="choice-items">
           <ExporterTypeChoice
@@ -53,3 +53,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "exporterTypeChoices": {
+      "formatLabel": "To which format would you like to export?"
+    }
+  },
+  "fr": {
+    "exporterTypeChoices": {
+      "formatLabel": "Vers quel format souhaitez-vous réaliser l'export ?"
+    }
+  }
+}
+</i18n>

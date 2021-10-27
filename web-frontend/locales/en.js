@@ -1,4 +1,8 @@
 export default {
+  common: {
+    yes: 'yes',
+    no: 'no',
+  },
   action: {
     upload: 'Upload',
     back: 'Back',
@@ -95,5 +99,8 @@ export default {
     table: 'table',
     field: 'field',
     row: 'row',
+  },
+  exporterType: {
+    csv: 'Export to CSV',
   },
 }

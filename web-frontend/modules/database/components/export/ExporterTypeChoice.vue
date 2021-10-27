@@ -10,7 +10,7 @@
         class="choice-items__icon fas"
         :class="'fa-' + exporterType.iconClass"
       ></i>
-      {{ exporterType.name }}
+      {{ exporterType.getName() }}
     </a>
   </li>
 </template>

@@ -23,7 +23,7 @@
       :class="{ 'button--loading': loading }"
       :disabled="disabled"
     >
-      Export
+      {{ $t('exportTableLoadingBar.export') }}
     </button>
     <a
       v-else
@@ -34,7 +34,7 @@
       :href="job.url"
       target="_blank"
     >
-      Download
+      {{ $t('exportTableLoadingBar.download') }}
     </a>
   </div>
 </template>
@@ -66,3 +66,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "exportTableLoadingBar": {
+      "export": "Export",
+      "download": "Download"
+    }
+  },
+  "fr": {
+    "exportTableLoadingBar": {
+      "export": "Exporter",
+      "download": "Télécharger"
+    }
+  }
+}
+</i18n>
