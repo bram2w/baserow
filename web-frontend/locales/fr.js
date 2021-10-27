@@ -66,6 +66,52 @@ export default {
     phoneNumber: 'Téléphone',
     formula: 'Formule',
   },
+  fieldErrors: {
+    invalidNumber: 'Nombre invalide',
+    maxDigits: '{max} chiffres sont autorisés.',
+    invalidUrl: 'URL invalide',
+    max254Chars: '254 caractères maximum',
+    invalidEmail: 'Adresse email invalide',
+    invalidPhoneNumber: 'Num. téléphone invalide',
+  },
+  fieldDocs: {
+    readOnly: 'Ce champ est en lecture seule.',
+    text: 'Accepte une seule ligne de texte.',
+    longText: 'Accepte un texte multi-ligne.',
+    linkRow:
+      'Accepte un tableau contenant les identifiants des lignes ' +
+      "provenant de la table d'identifiant {table}. Tous les identifiants " +
+      'doivent être fournis à chaque fois que les relations sont modifiées. ' +
+      'Si une liste vide est fournie, toutes les relations seront supprimées.',
+    number: 'Accepte un entier.',
+    numberPositive: 'Accepte un entier positive.',
+    decimal: 'Accepte un nombre décimal.',
+    decimalPositive: 'Accepte un nombre décimal positif.',
+    boolean: 'Accepte une valeur booléenne.',
+    date: 'Accepte une date au format ISO.',
+    dateTime: 'Accepte une date/heure au format ISO.',
+    dateResponse: 'La réponse sera une date au format ISO.',
+    dateTimeResponse: 'La réponse sera une date/heure au format ISO.',
+    lastModifiedReadOnly:
+      'La date de modification de la ligne en lecture seule.',
+    createdOnReadOnly: 'La date de modification de la ligne en lecture seule.',
+    url: 'Accept une URL valide.',
+    email: 'Accepte une adresse email valide.',
+    file: "Accept un tableau d'objet contenant au moins le nom du fichier utilisateur.",
+    singleSelect:
+      "Accepte un entier correspondant à l'identifiant de l'option sélectionnée " +
+      'ou null si vide.',
+    multipleSelect:
+      "Accepte un tableau d'entier correspondant chacun à l'identifiant " +
+      "d'une valeur sélectionnée.",
+    phoneNumber:
+      "Accepte un numéro  de téléphone d'une longueur maximum de 100 caractères " +
+      'qui doivent être des chiffres, des espaces ou les caractères suivants : ' +
+      'Nx,._+*()#=;/- .',
+    formula:
+      'Un champ en lecture seule défini par une formule rédigée ' +
+      'dans le format spécifique de Baserow.',
+  },
   viewFilter: {
     contains: 'contient',
     containsNot: 'ne contient pas',

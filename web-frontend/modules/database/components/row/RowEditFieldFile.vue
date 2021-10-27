@@ -58,7 +58,7 @@
     </ul>
     <a v-if="!readOnly" class="add" @click.prevent="showModal()">
       <i class="fas fa-plus add__icon"></i>
-      Add a file
+      {{ $t('rowEditFieldFile.addFile') }}
     </a>
     <div v-show="touched && !valid" class="error">
       {{ error }}
@@ -112,3 +112,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "rowEditFieldFile": {
+      "addFile": "Add a file"
+    }
+  },
+  "fr": {
+    "rowEditFieldFile": {
+      "addFile": "Ajouter un fichier"
+    }
+  }
+}
+</i18n>

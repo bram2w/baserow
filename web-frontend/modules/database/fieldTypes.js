@@ -497,7 +497,7 @@ export class TextFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts single line text.'
+    return this.app.i18n.t('fieldDocs.text')
   }
 
   getDocsRequestExample(field) {
@@ -555,7 +555,7 @@ export class LongTextFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts multi line text.'
+    return this.app.i18n.t('fieldDocs.longText')
   }
 
   getDocsRequestExample(field) {
@@ -660,12 +660,7 @@ export class LinkRowFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return (
-      `Accepts an array containing the identifiers of the related rows from table ` +
-      `${field.link_row_table}. All identifiers must be provided every time the ` +
-      `relations are updated. If an empty array is provided all relations will be ` +
-      `deleted.`
-    )
+    return this.app.i18n.t('fieldDocs.linkRow', { table: field.link_row_table })
   }
 
   getDocsRequestExample(field) {
@@ -758,13 +753,15 @@ export class NumberFieldType extends FieldType {
       return null
     }
     if (isNaN(parseFloat(value)) || !isFinite(value)) {
-      return 'Invalid number'
+      return this.app.i18n.t('fieldErrors.invalidNumber')
     }
     if (
       value.split('.')[0].replace('-', '').length >
       NumberFieldType.getMaxNumberLength()
     ) {
-      return `Max ${NumberFieldType.getMaxNumberLength()} digits allowed.`
+      return this.app.i18n.t('fieldErrors.maxDigits', {
+        max: NumberFieldType.getMaxNumberLength(),
+      })
     }
     return null
   }
@@ -809,18 +806,13 @@ export class NumberFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    let description = 'Accepts a '
-
+    let t = field.number_type === 'INTEGER' ? 'number' : 'decimal'
     if (!field.number_negative) {
-      description += 'positive '
+      t += 'Positive'
     }
-
-    description +=
-      field.number_type === 'DECIMAL'
-        ? `decimal with ${field.number_decimal_places} places after the dot.`
-        : 'number.'
-
-    return description
+    return this.app.i18n.t(`fieldDocs.${t}`, {
+      places: field.number_decimal_places,
+    })
   }
 
   getDocsRequestExample(field) {
@@ -895,7 +887,7 @@ export class BooleanFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts a boolean.'
+    return this.app.i18n.t('fieldDocs.boolean')
   }
 
   getDocsRequestExample(field) {
@@ -982,8 +974,8 @@ class BaseDateFieldType extends FieldType {
 
   getDocsDescription(field) {
     return field.date_include_time
-      ? 'Accepts a date time in ISO format.'
-      : 'Accepts a date in ISO format.'
+      ? this.app.i18n.t('fieldDocs.dateTime')
+      : this.app.i18n.t('fieldDocs.date')
   }
 
   getDocsRequestExample(field) {
@@ -1082,10 +1074,11 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
   }
 
   getDocsDescription(field, firstPartOverwrite) {
-    const firstPart = firstPartOverwrite || 'This is a read only field.'
+    const firstPart =
+      firstPartOverwrite || this.app.i18n.t('fieldDocs.readOnly')
     return field.date_include_time
-      ? `${firstPart} The response will be a datetime in ISO format.`
-      : `${firstPart} The response will be a date in ISO format.`
+      ? `${firstPart} ${this.app.i18n.t('fieldDocs.dateTimeResponse')}`
+      : `${firstPart} ${this.app.i18n.t('fieldDocs.dateResponse')}`
   }
 
   getDocsRequestExample(field) {
@@ -1114,7 +1107,7 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
   getDocsDescription(field) {
     return super.getDocsDescription(
       field,
-      'The last modified field is a read only field.'
+      this.app.i18n.t('fieldDocs.lastModifiedReadOnly')
     )
   }
 
@@ -1150,7 +1143,7 @@ export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
   getDocsDescription(field) {
     return super.getDocsDescription(
       field,
-      'The created on field is a read only field.'
+      this.app.i18n.t('fieldDocs.createdOnReadOnly')
     )
   }
 
@@ -1211,7 +1204,7 @@ export class URLFieldType extends FieldType {
       return null
     }
     if (!isValidURL(value)) {
-      return 'Invalid URL'
+      return this.app.i18n.t('fieldErrors.invalidUrl')
     }
     return null
   }
@@ -1221,7 +1214,7 @@ export class URLFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts a string that must be a URL.'
+    return this.app.i18n.t('fieldDocs.url')
   }
 
   getDocsRequestExample(field) {
@@ -1284,10 +1277,10 @@ export class EmailFieldType extends FieldType {
       return null
     }
     if (value.length > 254) {
-      return 'Max 254 chars'
+      return this.app.i18n.t('fieldErrors.max254Chars')
     }
     if (!isValidEmail(value)) {
-      return 'Invalid email'
+      return this.app.i18n.t('fieldErrors.invalidEmail')
     }
     return null
   }
@@ -1297,7 +1290,7 @@ export class EmailFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts a string that must be an email address.'
+    return this.app.i18n.t('fieldDocs.email')
   }
 
   getDocsRequestExample(field) {
@@ -1381,7 +1374,7 @@ export class FileFieldType extends FieldType {
   }
 
   getDocsDescription() {
-    return 'Accepts an array of objects containing at least the name of the user file.'
+    return this.app.i18n.t('fieldDocs.file')
   }
 
   getDocsRequestExample() {
@@ -1528,7 +1521,7 @@ export class SingleSelectFieldType extends FieldType {
       .join('\n')
 
     return `
-      Accepts an integer representing the chosen select option id or null if none is selected.
+      ${this.app.i18n.t('fieldDocs.singleSelect')}
       <br />
       ${options}
     `
@@ -1659,7 +1652,7 @@ export class MultipleSelectFieldType extends FieldType {
       .join('\n')
 
     return `
-      Accepts an array of integers each representing the chosen select option id or null if none is selected.
+      ${this.app.i18n.t('fieldDocs.multipleSelect')}
       <br />
       ${options}
     `
@@ -1739,7 +1732,7 @@ export class PhoneNumberFieldType extends FieldType {
       return null
     }
     if (!isSimplePhoneNumber(value)) {
-      return 'Invalid Phone Number'
+      return this.app.i18n.t('fieldErrors.invalidPhoneNumber')
     }
     return null
   }
@@ -1753,11 +1746,7 @@ export class PhoneNumberFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return (
-      'Accepts a phone number which has a maximum length of 100 characters' +
-      ' consisting solely of digits, spaces and the following characters: ' +
-      'Nx,._+*()#=;/- .'
-    )
+    return this.app.i18n.t('fieldDocs.phoneNumber')
   }
 
   getDocsRequestExample(field) {
@@ -1833,10 +1822,7 @@ export class FormulaFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return (
-      'A read-only field defined by a formula written in the Baserow formula' +
-      ' language.'
-    )
+    return this.app.i18n.t('fieldDocs.formula')
   }
 
   getDocsRequestExample(field) {

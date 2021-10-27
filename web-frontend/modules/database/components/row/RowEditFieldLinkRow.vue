@@ -22,7 +22,7 @@
     </ul>
     <a v-if="!readOnly" class="add" @click.prevent="$refs.selectModal.show()">
       <i class="fas fa-plus add__icon"></i>
-      Add another link
+      {{ $t('rowEditFieldLinkRow.addLink') }}
     </a>
     <div v-show="touched && !valid" class="error">
       {{ error }}
@@ -57,3 +57,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "rowEditFieldLinkRow": {
+      "addLink": "Add another link"
+    }
+  },
+  "fr": {
+    "rowEditFieldLinkRow": {
+      "addLink": "Ajouter un lien"
+    }
+  }
+}
+</i18n>

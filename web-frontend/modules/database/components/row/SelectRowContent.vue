@@ -13,7 +13,7 @@
         <input
           v-model="visibleSearch"
           type="text"
-          placeholder="Search rows"
+          :placeholder="$t('selectRowContent.search')"
           class="input select-row-modal__search-input"
           @keypress.enter="doSearch(visibleSearch)"
         />
@@ -269,3 +269,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "selectRowContent": {
+      "search": "Search rows"
+    }
+  },
+  "fr": {
+    "selectRowContent": {
+      "search": "Rechercher dans la table"
+    }
+  }
+}
+</i18n>
