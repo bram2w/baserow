@@ -72,6 +72,10 @@ class RegisterSerializer(serializers.Serializer):
 
 
 class AccountSerializer(serializers.Serializer):
+    """
+    This serializer must be kept in sync with `UserSerializer`.
+    """
+
     first_name = serializers.CharField(min_length=1, max_length=32)
     language = serializers.CharField(
         source="profile.language",

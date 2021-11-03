@@ -182,16 +182,6 @@ def test_user_account(data_fixture, api_client):
         email="test@localhost.nl", language="en", first_name="Nikolas"
     )
 
-    response = api_client.get(
-        reverse("api:user:account"),
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-
-    response_json = response.json()
-    assert response.status_code == HTTP_200_OK
-    assert response_json["first_name"] == "Nikolas"
-    assert response_json["language"] == "en"
-
     response = api_client.patch(
         reverse("api:user:account"),
         {

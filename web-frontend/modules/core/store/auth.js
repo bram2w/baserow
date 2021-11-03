@@ -50,6 +50,7 @@ export const actions = {
     setToken(data.token, this.app)
     commit('SET_USER_DATA', data)
     dispatch('startRefreshTimeout')
+    return data.user
   },
   /**
    * Register a new user and immediately authenticate. If successful commit the
@@ -144,6 +145,14 @@ export const actions = {
   setWebSocketId({ commit }, webSocketId) {
     commit('SET_WEB_SOCKET_ID', webSocketId)
   },
+  /**
+   * Updates the account information is the authenticated user.
+   */
+  async update({ commit }, values) {
+    const { data } = await AuthService(this.$client).update(values)
+    commit('UPDATE_USER_DATA', { user: data })
+    return data
+  },
   forceUpdateUserData({ commit }, data) {
     commit('UPDATE_USER_DATA', data)
   },
@@ -161,6 +170,9 @@ export const getters = {
   },
   webSocketId(state) {
     return state.webSocketId
+  },
+  getUserObject(state) {
+    return state.user
   },
   getName(state) {
     return state.user ? state.user.first_name : ''

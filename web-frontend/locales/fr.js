@@ -28,6 +28,7 @@ export default {
     database: 'Base de données',
   },
   settingType: {
+    account: 'Informations personnelles',
     password: 'Mot de passe',
     tokens: "Jetons d'API",
   },

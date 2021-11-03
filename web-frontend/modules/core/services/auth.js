@@ -59,5 +59,8 @@ export default (client) => {
     dashboard() {
       return client.get('/user/dashboard/')
     },
+    update(values) {
+      return client.patch('/user/account/', values)
+    },
   }
 }
