@@ -333,28 +333,9 @@ class AccountView(APIView):
 
     @extend_schema(
         tags=["User"],
-        operation_id="get_account",
-        description=(
-            "Responds with account information of the authenticated user. "
-            "For example the chosen `language` and `name` are included "
-            "in the response."
-        ),
-        responses={
-            200: AccountSerializer,
-        },
-    )
-    @transaction.atomic
-    def get(self, request):
-        """Returns user account."""
-
-        account_serializer = AccountSerializer(request.user)
-        return Response(account_serializer.data)
-
-    @extend_schema(
-        tags=["User"],
         request=AccountSerializer,
         operation_id="update_account",
-        description=("Updates the account information of the authenticated user."),
+        description="Updates the account information of the authenticated user.",
         responses={
             200: AccountSerializer,
             400: get_error_schema(

@@ -31,14 +31,7 @@
         <div class="context__menu-title">{{ name }}</div>
         <ul class="context__menu">
           <li>
-            <a
-              @click="
-                ;[
-                  $refs.settingsModal.show('password'),
-                  $refs.userContext.hide(),
-                ]
-              "
-            >
+            <a @click=";[$refs.settingsModal.show(), $refs.userContext.hide()]">
               <i class="context__menu-icon fas fa-fw fa-cogs"></i>
               {{ $t('sidebar.settings') }}
             </a>
@@ -361,7 +354,7 @@ export default {
       "admin": "Administration",
       "dashboard": "Accueil",
       "trash": "Corbeille",
-      "settings": "Profil"
+      "settings": "Mon compte"
     }
   }
 }

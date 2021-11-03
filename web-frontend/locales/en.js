@@ -28,6 +28,7 @@ export default {
     database: 'Database',
   },
   settingType: {
+    account: 'Account',
     password: 'Password',
     tokens: 'API Tokens',
   },

@@ -68,8 +68,13 @@ export default {
     isPage(page) {
       return this.page === page
     },
-    show(page, ...args) {
-      this.page = page
+    show(page = null, ...args) {
+      if (page === null) {
+        const settings = Object.values(this.$registry.getAll('settings'))
+        this.page = settings.length > 0 ? settings[0].type : ''
+      } else {
+        this.page = page
+      }
       return modal.methods.show.call(this, ...args)
     },
   },
@@ -85,7 +90,7 @@ export default {
   },
   "fr": {
     "settingsModal": {
-      "title": "Profil"
+      "title": "Mon compte"
     }
   }
 }

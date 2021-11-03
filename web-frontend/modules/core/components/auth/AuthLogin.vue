@@ -117,7 +117,7 @@ export default {
       this.hideError()
 
       try {
-        await this.$store.dispatch('auth/login', {
+        const data = await this.$store.dispatch('auth/login', {
           email: this.credentials.email,
           password: this.credentials.password,
         })
@@ -131,6 +131,7 @@ export default {
           await GroupService(this.$client).acceptInvitation(this.invitation.id)
         }
 
+        this.$i18n.setLocale(data.language)
         this.$emit('success')
       } catch (error) {
         if (error.handler) {

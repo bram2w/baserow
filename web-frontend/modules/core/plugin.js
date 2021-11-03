@@ -2,7 +2,10 @@ import Vue from 'vue'
 
 import { Registry } from '@baserow/modules/core/registry'
 
-import { PasswordSettingsType } from '@baserow/modules/core/settingsTypes'
+import {
+  AccountSettingsType,
+  PasswordSettingsType,
+} from '@baserow/modules/core/settingsTypes'
 import {
   UploadFileUserFileUploadType,
   UploadViaURLUserFileUploadType,
@@ -27,6 +30,7 @@ export default (context, inject) => {
   registry.registerNamespace('field')
   registry.registerNamespace('settings')
   registry.registerNamespace('userFileUpload')
+  registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('userFileUpload', new UploadFileUserFileUploadType(context))
   registry.register(
