@@ -1,12 +1,15 @@
 {% extends 'baserow/base.html' %}
+{% load i18n %}
 
 {% block body %}
   <mj-section>
     <mj-column>
-      <mj-text mj-class="title">Invitation</mj-text>
+      <mj-text mj-class="title">{% trans "Invitation" %}</mj-text>
       <mj-text mj-class="text">
-        <strong>{{ invitation.invited_by.first_name }}</strong> has invited you to
-        collaborate on <strong>{{ invitation.group.name }}</strong>.
+        {% blocktrans with invitation.invited_by.first_name as first_name and invitation.group.name as group_name %}
+          <strong>{{ first_name }}</strong> has invited you to collaborate on
+          <strong>{{ group_name }}</strong>.
+        {% endblocktrans %}
       </mj-text>
       {% if invitation.message %}
         <mj-text mj-class="text">
@@ -14,15 +17,17 @@
         </mj-text>
       {% endif %}
       <mj-button mj-class="button" href="{{ public_accept_url }}">
-        Accept invitation
+        {% trans "Accept invitation" %}
       </mj-button>
       <mj-text mj-class="button-url">
         {{ public_accept_url }}
       </mj-text>
       <mj-text mj-class="text">
-        Baserow is an open source no-code database tool which allows you to collaborate
-        on projects, customers and more. It gives you the powers of a developer without
-        leaving your browser.
+        {% blocktrans %}
+          Baserow is an open source no-code database tool which allows you to collaborate
+          on projects, customers and more. It gives you the powers of a developer without
+          leaving your browser.
+        {% endblocktrans %}
       </mj-text>
     </mj-column>
   </mj-section>

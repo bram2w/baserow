@@ -20,6 +20,7 @@ RUN apt-get update && \
     dos2unix \
     tini \
     postgresql-client \
+    gettext \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \

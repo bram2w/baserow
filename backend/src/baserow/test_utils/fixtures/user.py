@@ -31,9 +31,7 @@ class UserFixtures:
         if "password" not in kwargs:
             kwargs["password"] = "password"
 
-        profile_data["language"] = kwargs.pop(
-            "language", self.fake.word(ext_word_list=["en", "fr"])
-        )
+        profile_data["language"] = kwargs.pop("language", "en")
 
         user = User(**kwargs)
         user.set_password(kwargs["password"])

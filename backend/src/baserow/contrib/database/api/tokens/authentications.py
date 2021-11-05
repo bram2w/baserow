@@ -1,5 +1,3 @@
-from django.utils.translation import gettext_lazy as _
-
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 from rest_framework import HTTP_HEADER_ENCODING
@@ -24,12 +22,12 @@ class TokenAuthentication(BaseAuthentication):
             return None
 
         if len(auth) == 1:
-            msg = _("Invalid token header. No token provided.")
+            msg = "Invalid token header. No token provided."
             raise AuthenticationFailed(
                 {"detail": msg, "error": "ERROR_INVALID_TOKEN_HEADER"}
             )
         elif len(auth) > 2:
-            msg = _("Invalid token header. Token string should not contain spaces.")
+            msg = "Invalid token header. Token string should not contain spaces."
             raise AuthenticationFailed(
                 {"detail": msg, "error": "ERROR_INVALID_TOKEN_HEADER"}
             )
@@ -40,12 +38,12 @@ class TokenAuthentication(BaseAuthentication):
         try:
             token = handler.get_by_key(decoded_key)
         except UserNotInGroup:
-            msg = _("The token's user does not belong to the group anymore.")
+            msg = "The token's user does not belong to the group anymore."
             raise AuthenticationFailed(
                 {"detail": msg, "error": "ERROR_TOKEN_GROUP_MISMATCH"}
             )
         except TokenDoesNotExist:
-            msg = _("The provided token does not exist.")
+            msg = "The provided token does not exist."
             raise AuthenticationFailed(
                 {"detail": msg, "error": "ERROR_TOKEN_DOES_NOT_EXIST"}
             )

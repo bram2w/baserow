@@ -1,5 +1,4 @@
 from django.core.exceptions import ValidationError
-from django.utils.translation import ngettext
 
 
 class MaximumLengthValidator:
@@ -12,27 +11,19 @@ class MaximumLengthValidator:
 
     def validate(self, password, user=None):
         if len(password) > self.max_length:
-            error_singular = (
-                "This password is too long. "
-                "It must not exceed %(max_length)d character."
-            )
-
-            error_plural = (
-                "This password is too long. "
-                "It must not exceed %(max_length)d characters."
+            error = (
+                f"This password is too long. "
+                f"It must not exceed {self.max_length} character"
+                f"{'s' if self.max_length != 1 else ''}."
             )
             raise ValidationError(
-                ngettext(error_singular, error_plural, self.max_length),
+                error,
                 code="password_too_long",
                 params={"max_length": self.max_length},
             )
 
     def get_help_text(self):
         return (
-            ngettext(
-                "Your password must not exceed %(max_length)d character.",
-                "Your password must not exceed %(max_length)d characters.",
-                self.max_length,
-            )
-            % {"max_length": self.max_length}
+            f"Your password must not exceed {self.max_length} character"
+            f"{'s' if self.max_length != 1 else ''}."
         )

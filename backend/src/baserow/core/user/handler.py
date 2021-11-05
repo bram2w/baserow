@@ -6,6 +6,8 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.db.models import Q
+from django.utils import translation
+from django.utils.translation import gettext as _
 
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import plugin_registry
@@ -149,7 +151,10 @@ class UserHandler:
             group_user = core_handler.accept_group_invitation(user, group_invitation)
 
         if not group_user:
-            group_user = core_handler.create_group(user=user, name=f"{name}'s group")
+            with translation.override(language):
+                group_user = core_handler.create_group(
+                    user=user, name=_("%(name)s's group") % {"name": name}
+                )
 
         if not group_invitation_token and template:
             core_handler.install_template(user, group_user.group, template)
@@ -218,8 +223,9 @@ class UserHandler:
 
         reset_url = urljoin(base_url, signed_user_id)
 
-        email = ResetPasswordEmail(user, reset_url, to=[user.email])
-        email.send()
+        with translation.override(user.profile.language):
+            email = ResetPasswordEmail(user, reset_url, to=[user.email])
+            email.send()
 
     def reset_password(self, token, password):
         """

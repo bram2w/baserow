@@ -2,7 +2,6 @@ import regex
 from django.core.exceptions import ValidationError
 from django.utils.deconstruct import deconstructible
 from django.utils.functional import SimpleLazyObject
-from django.utils.translation import gettext_lazy as _
 
 
 def _lazy_re_compile(regex_value, flags=0):
@@ -30,7 +29,7 @@ class UnicodeRegexValidator:
     """
 
     regex = ""
-    message = _("Enter a valid value.")
+    message = "Enter a valid value."
     code = "invalid"
     inverse_match = False
     flags = 0

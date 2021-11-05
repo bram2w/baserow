@@ -474,6 +474,24 @@ def test_send_group_invitation_email(data_fixture, mailoutbox):
     assert invitation_id == group_invitation.id
 
 
+@pytest.mark.django_db(transaction=True)
+def test_send_group_invitation_email_in_different_language(data_fixture, mailoutbox):
+    user = data_fixture.create_user(language="fr")
+    group_invitation = data_fixture.create_group_invitation(invited_by=user)
+
+    handler = CoreHandler()
+    handler.send_group_invitation_email(
+        invitation=group_invitation, base_url="http://localhost:3000/group-invite"
+    )
+
+    assert len(mailoutbox) == 1
+    assert (
+        mailoutbox[0].subject
+        == f"{group_invitation.invited_by.first_name} vous a invité à "
+        f"{group_invitation.group.name} - Baserow"
+    )
+
+
 @pytest.mark.django_db
 @patch("baserow.core.handler.CoreHandler.send_group_invitation_email")
 def test_create_group_invitation(mock_send_email, data_fixture):
