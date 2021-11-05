@@ -5,7 +5,6 @@ from drf_spectacular.types import OpenApiTypes
 
 from django.conf import settings
 from django.core.files.storage import default_storage
-from django.utils.translation import gettext_lazy as _
 
 from baserow.core.models import UserFile
 from baserow.core.user_files.handler import UserFileHandler
@@ -96,8 +95,8 @@ class UserFileField(serializers.Field):
     """
 
     default_error_messages = {
-        "invalid_value": _("The value must be an object containing the file name."),
-        "invalid_user_file": _("The provided user file does not exist."),
+        "invalid_value": "The value must be an object containing the file name.",
+        "invalid_user_file": "The provided user file does not exist.",
     }
 
     def __init__(self, *args, **kwargs):

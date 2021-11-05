@@ -132,6 +132,7 @@ def test_create_user(data_fixture):
         "Test2", "test2@test.nl", "password", language="fr"
     )
     assert user2.profile.language == "fr"
+    assert Group.objects.filter(users__in=[user2.id])[0].name == "Groupe de Test2"
 
     with pytest.raises(UserAlreadyExist):
         user_handler.create_user("Test1", "test@test.nl", valid_password)
@@ -294,6 +295,17 @@ def test_send_reset_password_email(data_fixture, mailoutbox):
 
     user_id = signer.loads(token)
     assert user_id == user.id
+
+
+@pytest.mark.django_db(transaction=True)
+def test_send_reset_password_email_in_different_language(data_fixture, mailoutbox):
+    user = data_fixture.create_user(email="test@localhost", language="fr")
+    handler = UserHandler()
+
+    handler.send_reset_password_email(user, "http://localhost:3000/reset-password")
+
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == "Réinitialiser le mot de passe - Baserow"
 
 
 @pytest.mark.django_db

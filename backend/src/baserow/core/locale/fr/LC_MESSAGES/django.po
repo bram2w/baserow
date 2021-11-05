@@ -1,0 +1,120 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-28 20:39+0000\n"
+"PO-Revision-Date: 2021-10-19 22:12+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 2.4.2\n"
+
+#: src/baserow/core/emails.py:88
+#, python-format
+msgid "%(by)s invited you to %(group_name)s - Baserow"
+msgstr "%(by)s vous a invité à %(group_name)s - Baserow"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:7
+msgid "Invitation"
+msgstr "Invitation"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:9
+#, python-format
+msgid ""
+"\n"
+"          <strong>%(first_name)s</strong> has invited you to collaborate on\n"
+"          <strong>%(group_name)s</strong>.\n"
+"        "
+msgstr ""
+"\n"
+"          <strong>%(first_name)s</strong> vous a invité à collaborer au "
+"groupe\n"
+"          <strong>%(group_name)s</strong>.\n"
+"        "
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:20
+msgid "Accept invitation"
+msgstr "Accepter l’invitation"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:26
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:29
+msgid ""
+"\n"
+"          Baserow is an open source no-code database tool which allows you "
+"to collaborate\n"
+"          on projects, customers and more. It gives you the powers of a "
+"developer without\n"
+"          leaving your browser.\n"
+"        "
+msgstr ""
+"\n"
+"          Baserow est un outil de base de données open source no-code qui "
+"vous permet de collaborer\n"
+"          sur des projets, avec des clients et plus encore. Il vous donne "
+"les possibilités d'un développeur \n"
+"          sans quitter votre navigateur.\n"
+"        "
+
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:7
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:23
+msgid "Reset password"
+msgstr "Réinitialiser le mot de passe"
+
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:9
+#, fuzzy, python-format
+#| msgid ""
+#| "\n"
+#| "          A password reset was requested for your account "
+#| "(%(user.username)s) on\n"
+#| "          Baserow (%(public_web_frontend_hostname)s). If you did not "
+#| "authorize this,\n"
+#| "          you may simply ignore this email.\n"
+#| "        "
+msgid ""
+"\n"
+"          A password reset was requested for your account (%(username)s) on\n"
+"          Baserow (%(public_web_frontend_hostname)s). If you did not "
+"authorize this,\n"
+"          you may simply ignore this email.\n"
+"        "
+msgstr ""
+"\n"
+"          La réinitialisation du mot de passe a été demandée pour le compte "
+"(%(user.username)s) sur\n"
+"          Baserow (%(public_web_frontend_hostname)s). Si vous n'êtes pas à "
+"l'initiative de cette demande,\n"
+"          vous pouvez simplement ignorer cet e-mail.\n"
+"        "
+
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:16
+#, python-format
+msgid ""
+"\n"
+"          To continue with your password reset, simply click the button "
+"below, and you\n"
+"          will be able to change your password. This link will expire in\n"
+"          %(hours)s hours.\n"
+"        "
+msgstr ""
+"\n"
+"          Pour poursuivre la réinitialisation de votre mot de passe, il "
+"suffit de cliquer sur le bouton ci-dessous, et vous\n"
+"          vous pourrez modifier votre mot de passe. Ce lien expirera dans\n"
+"          %(hours)s heures.\n"
+"        "
+
+#: src/baserow/core/user/emails.py:16
+msgid "Reset password - Baserow"
+msgstr "Réinitialiser le mot de passe - Baserow"
+
+#: src/baserow/core/user/handler.py:155
+#, python-format
+msgid "%(name)s's group"
+msgstr "Groupe de %(name)s"
+
+#~ msgid "Group invitation"
+#~ msgstr "Invitation à un groupe"
