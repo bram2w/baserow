@@ -13,6 +13,7 @@
 * Fixed propType validation error when converting from a date field to a boolean field.
 * Deprecate internal formula field function field_by_id.
 * Made it possible to change user information.
+* Added extra indexes for user tables increasing performance.
 
 ## Released (2021-10-05)
 

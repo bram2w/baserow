@@ -125,7 +125,8 @@ class TableHandler:
 
         # Create the table schema in the database database.
         with connection.schema_editor() as schema_editor:
-            model = table.get_model()
+            # Django only creates indexes when the model is managed.
+            model = table.get_model(managed=True)
             schema_editor.create_model(model)
 
         if data is not None:
