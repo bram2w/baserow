@@ -146,8 +146,7 @@ class DatabaseApplicationType(ApplicationType):
             # editor can handle the creation of the table schema in one go.
             with connection.schema_editor() as schema_editor:
                 model = table["_object"].get_model(
-                    fields=table["_field_objects"],
-                    field_ids=[],
+                    fields=table["_field_objects"], field_ids=[], managed=True
                 )
                 table["_model"] = model
                 schema_editor.create_model(model)

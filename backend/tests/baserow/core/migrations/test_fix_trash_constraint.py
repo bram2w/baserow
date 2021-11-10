@@ -3,8 +3,6 @@ import pytest
 # noinspection PyPep8Naming
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
-from django.db import DEFAULT_DB_ALIAS
-from django.core.management import call_command
 
 from baserow.core.trash.handler import TrashHandler
 
@@ -15,7 +13,7 @@ migrate_to = [("core", "0010_fix_trash_constraint")]
 # noinspection PyPep8Naming
 @pytest.mark.django_db
 def test_migration_doesnt_fail_if_duplicate_entries_present_without_parent_id(
-    data_fixture, transactional_db
+    data_fixture, transactional_db, migrate_to_latest_at_end
 ):
     migrate(migrate_from)
 
@@ -35,14 +33,11 @@ def test_migration_doesnt_fail_if_duplicate_entries_present_without_parent_id(
     assert MigrationTrashEntry.objects.count() == 2
     assert MigrationTrashEntry.objects.filter(id=other_trash_entry.id).exists()
 
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
-
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
 def test_migration_doesnt_fail_if_duplicate_entries_present_with_parent_id(
-    data_fixture, transactional_db
+    data_fixture, transactional_db, migrate_to_latest_at_end
 ):
     migrate(migrate_from)
 
@@ -86,9 +81,6 @@ def test_migration_doesnt_fail_if_duplicate_entries_present_with_parent_id(
     assert not MigrationTrashEntry.objects.filter(
         id=second_duplicate_trash_entry.id
     ).exists()
-
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
 
 def migrate(target):

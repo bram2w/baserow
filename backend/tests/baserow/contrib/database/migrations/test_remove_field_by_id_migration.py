@@ -1,6 +1,4 @@
 import pytest
-from django.core.management import call_command
-from django.db import DEFAULT_DB_ALIAS
 
 # noinspection PyPep8Naming
 from django.db import connection
@@ -9,7 +7,7 @@ from django.db.migrations.executor import MigrationExecutor
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
-def test_forwards_migration(data_fixture, transactional_db):
+def test_forwards_migration(data_fixture, transactional_db, migrate_to_latest_at_end):
     migrate_from = [("database", "0039_formulafield")]
     migrate_to = [("database", "0040_formulafield_remove_field_by_id")]
 
@@ -51,13 +49,10 @@ def test_forwards_migration(data_fixture, transactional_db):
     assert new_unknown_field_by_id.formula == "field('unknown field 9999')"
     assert new_unknown_field_by_id.old_formula_with_field_by_id == f"field_by_id(9999)"
 
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
-
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
-def test_backwards_migration(data_fixture, transactional_db):
+def test_backwards_migration(data_fixture, transactional_db, migrate_to_latest_at_end):
     migrate_from = [("database", "0040_formulafield_remove_field_by_id")]
     migrate_to = [("database", "0039_formulafield")]
 
@@ -93,9 +88,6 @@ def test_backwards_migration(data_fixture, transactional_db):
     assert new_formula_field.formula == f"field_by_id({text_field.id})"
     new_unknown_field_by_id = NewFormulaField.objects.get(id=unknown_field.id)
     assert new_unknown_field_by_id.formula == "field('unknown')"
-
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
 
 def migrate(target):

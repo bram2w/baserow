@@ -218,7 +218,7 @@ class TrashableModelMixin(models.Model):
     new columns recording it's trash status.
     """
 
-    trashed = models.BooleanField(default=False)
+    trashed = models.BooleanField(default=False, db_index=True)
 
     objects = NoTrashManager()
     trash = TrashOnlyManager()

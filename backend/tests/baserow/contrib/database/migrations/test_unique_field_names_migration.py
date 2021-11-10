@@ -3,8 +3,8 @@ import pytest
 # noinspection PyPep8Naming
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
-from django.db import DEFAULT_DB_ALIAS
-from django.core.management import call_command
+
+from baserow.contrib.database.table.handler import TableHandler
 
 migrate_from = [("database", "0032_trash")]
 migrate_to = [("database", "0033_unique_field_names")]
@@ -12,7 +12,9 @@ migrate_to = [("database", "0033_unique_field_names")]
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
-def test_migration_fixes_duplicate_field_names(data_fixture, transactional_db):
+def test_migration_fixes_duplicate_field_names(
+    data_fixture, transactional_db, migrate_to_latest_at_end
+):
     old_state = migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
@@ -20,10 +22,13 @@ def test_migration_fixes_duplicate_field_names(data_fixture, transactional_db):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
-    Table = old_state.apps.get_model("database", "Table")
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
-    table = Table.objects.create(database_id=database.id, name="test", order=0)
-    other_table = Table.objects.create(database_id=database.id, name="test", order=1)
+    table = TableHandler().create_table(
+        user=user, database=database, name="test", order=0
+    )
+    other_table = TableHandler().create_table(
+        user=user, database=database, name="test", order=1
+    )
 
     TextField = old_state.apps.get_model("database", "TextField")
     Field = old_state.apps.get_model("database", "Field")
@@ -73,14 +78,11 @@ def test_migration_fixes_duplicate_field_names(data_fixture, transactional_db):
         MigratedField,
     )
 
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
-
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
 def test_migration_handles_existing_fields_with_underscore_number(
-    data_fixture, transactional_db
+    data_fixture, transactional_db, migrate_to_latest_at_end
 ):
     old_state = migrate(migrate_from)
     # The models used by the data_fixture below are not touched by this migration so
@@ -88,9 +90,10 @@ def test_migration_handles_existing_fields_with_underscore_number(
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
-    Table = old_state.apps.get_model("database", "Table")
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
-    table = Table.objects.create(database_id=database.id, name="test", order=0)
+    table = TableHandler().create_table(
+        user=user, database=database, name="test", order=0
+    )
 
     TextField = old_state.apps.get_model("database", "TextField")
     Field = old_state.apps.get_model("database", "Field")
@@ -139,13 +142,12 @@ def test_migration_handles_existing_fields_with_underscore_number(
         MigratedField,
     )
 
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
-
 
 # noinspection PyPep8Naming
 @pytest.mark.django_db
-def test_backwards_migration_restores_field_names(data_fixture, transactional_db):
+def test_backwards_migration_restores_field_names(
+    data_fixture, transactional_db, migrate_to_latest_at_end
+):
 
     old_state = migrate(migrate_to)
     # The models used by the data_fixture below are not touched by this migration so
@@ -153,9 +155,10 @@ def test_backwards_migration_restores_field_names(data_fixture, transactional_db
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
-    Table = old_state.apps.get_model("database", "Table")
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
-    table = Table.objects.create(database_id=database.id, name="test", order=0)
+    table = TableHandler().create_table(
+        user=user, database=database, name="test", order=0
+    )
 
     TextField = old_state.apps.get_model("database", "TextField")
     Field = old_state.apps.get_model("database", "Field")
@@ -184,14 +187,11 @@ def test_backwards_migration_restores_field_names(data_fixture, transactional_db
         BackwardsMigratedField,
     )
 
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
-
 
 # noinspection PyPep8Naming
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_migration_fixes_duplicate_field_names_and_reserved_names(
-    data_fixture, transactional_db
+    data_fixture, migrate_to_latest_at_end
 ):
     old_state = migrate(migrate_from)
 
@@ -200,10 +200,13 @@ def test_migration_fixes_duplicate_field_names_and_reserved_names(
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
 
-    Table = old_state.apps.get_model("database", "Table")
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
-    table = Table.objects.create(database_id=database.id, name="test", order=0)
-    other_table = Table.objects.create(database_id=database.id, name="test", order=1)
+    table = TableHandler().create_table(
+        user=user, database=database, name="test", order=0
+    )
+    other_table = TableHandler().create_table(
+        user=user, database=database, name="test", order=1
+    )
 
     TextField = old_state.apps.get_model("database", "TextField")
     Field = old_state.apps.get_model("database", "Field")
@@ -254,9 +257,6 @@ def test_migration_fixes_duplicate_field_names_and_reserved_names(
         table_2_fields,
         MigratedField,
     )
-
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
 
 def make_fields_with_names(field_names, table_id, content_type_id, Field):
