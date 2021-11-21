@@ -1,0 +1,308 @@
+.webhook {
+  border: solid 1px $color-neutral-200;
+  border-radius: 6px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+
+.webhook__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.webhook__head {
+  display: flex;
+  width: 100%;
+  background-color: $color-neutral-100;
+  padding: 20px;
+}
+
+.webhook__head-left {
+  flex-basis: 50%;
+  min-width: 0;
+}
+
+.webhook__head-right {
+  flex-basis: 50%;
+  margin-left: 5%;
+  min-width: 0;
+}
+
+.webhook__head-name {
+  @extend %ellipsis;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+  margin-bottom: 10px;
+}
+
+.webhook__head-details {
+  display: flex;
+}
+
+.webhook__head-details-target {
+  @extend %ellipsis;
+
+  color: $color-neutral-600;
+  font-size: 12px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.webhook__head-toggle {
+  flex: 0 0;
+  white-space: nowrap;
+  margin-left: 6px;
+  font-size: 12px;
+}
+
+.webhook__head-toggle-icon {
+  margin-left: 4px;
+  font-size: 11px;
+}
+
+.webhook__head-trigger {
+  @extend %ellipsis;
+
+  font-size: 12px;
+  line-height: 16px;
+  margin-bottom: 10px;
+}
+
+.webhook__head-call {
+  display: flex;
+  color: $color-neutral-400;
+  font-size: 12px;
+}
+
+.webhook__head-date {
+  @extend %ellipsis;
+}
+
+.webhook__head-call-state {
+  flex: 0 0;
+  font-family: monospace;
+  white-space: nowrap;
+  margin-left: 10px;
+
+  &.webhook__head-call-state--ok {
+    color: $color-success-500;
+  }
+
+  &.webhook__head-call-state--error {
+    color: $color-error-500;
+  }
+}
+
+.webhook__body {
+  display: none;
+  padding: 20px;
+
+  .webhook--open & {
+    display: block;
+  }
+}
+
+.webhook__types {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  padding: 6px 0 0 24px;
+}
+
+.webhook__type {
+  flex: 0 0 33.33%;
+}
+
+.webhook__header {
+  &:not(:last-child) {
+    margin-bottom: 10px;
+  }
+}
+
+.webhook__header-row {
+  position: relative;
+  display: flex;
+  width: 100%;
+  padding-right: 44px;
+}
+
+.webhook__header-key {
+  flex-basis: 40%;
+  margin-right: 10px;
+}
+
+.webhook__header-value {
+  flex-basis: 60%;
+}
+
+.webhook__header-delete {
+  width: 32px;
+  padding: 0 0;
+
+  @include absolute(0, 0, 0, auto);
+}
+
+.webhook__header-add {
+  width: 32px;
+  padding: 0 0;
+
+  @include absolute(0, 0, 0, auto);
+}
+
+.webhook__code-with-dropdown {
+  position: relative;
+}
+
+.webhook__code-dropdown {
+  z-index: 1;
+
+  @include absolute(20px, 20px, auto, auto);
+}
+
+.webhook__code-container {
+  position: relative;
+  padding: 10px;
+  width: 100%;
+  min-height: 100px;
+  max-height: 250px;
+  min-width: 0;
+  background-color: $color-neutral-100;
+  overflow: auto;
+
+  &.webhook__code-container--fixed-height {
+    height: 250px;
+  }
+}
+
+.webhook__code {
+  margin: 0;
+  line-height: 21px;
+  color: $color-primary-900;
+  font-size: 13px;
+  font-family: monospace;
+
+  &.webhook__code--small {
+    font-size: 12px;
+    line-height: 18px;
+  }
+}
+
+.webhook__call:not(:last-child) {
+  margin-bottom: 16px;
+}
+
+.webhook__call-head {
+  // nothing
+}
+
+.webhook__call-name {
+  display: flex;
+  margin-bottom: 6px;
+  line-height: 16px;
+}
+
+.webhook__call-type {
+  white-space: nowrap;
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.webhook__call-target {
+  @extend %ellipsis;
+
+  min-width: 0;
+}
+
+.webhook__call-description {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.webhook__call-info {
+  @extend %ellipsis;
+
+  min-width: 0;
+  padding-top: 2px;
+  color: $color-neutral-700;
+  font-size: 12px;
+}
+
+.webhook__call-toggle {
+  display: flex;
+  flex: 0 0;
+  line-height: 16px;
+  text-align: center;
+  color: $color-neutral-600;
+  align-content: center;
+  margin-left: 16px;
+
+  &:hover {
+    color: $color-primary-900;
+    text-decoration: none;
+  }
+}
+
+.webhook__call-state {
+  font-family: monospace;
+  white-space: nowrap;
+  margin-right: 10px;
+
+  &.webhook__head-call-state--ok {
+    color: $color-success-500;
+  }
+
+  &.webhook__head-call-state--error {
+    color: $color-error-500;
+  }
+}
+
+.webhook__call-toggle-icon {
+  font-size: 14px;
+}
+
+.webhook__call-body {
+  display: none;
+  width: 100%;
+  padding: 16px 0 0 0;
+
+  .webhook__call--open & {
+    display: flex;
+  }
+}
+
+.webhook__call-body-content {
+  flex: 0 0 calc(50% - 8px);
+  min-width: 0;
+
+  &:not(:last-child) {
+    margin-right: 16px;
+  }
+}
+
+.webhook__call-body-label {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.webhook__test-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.webhook__test-state {
+  font-family: monospace;
+  white-space: nowrap;
+  text-align: right;
+
+  &.webhook__test-state--ok {
+    color: $color-success-500;
+  }
+
+  &.webhook__test-state--error {
+    color: $color-error-500;
+  }
+}

@@ -11,6 +11,7 @@ from .field import FieldFixtures
 from .token import TokenFixtures
 from .template import TemplateFixtures
 from .row import RowFixture
+from .webhook import TableWebhookFixture
 
 
 class Fixtures(
@@ -25,5 +26,6 @@ class Fixtures(
     TokenFixtures,
     TemplateFixtures,
     RowFixture,
+    TableWebhookFixture,
 ):
     fake = Faker()

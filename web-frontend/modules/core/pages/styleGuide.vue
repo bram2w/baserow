@@ -131,6 +131,19 @@
             </div>
           </div>
           <div class="control">
+            <label class="control__label">Radio field</label>
+            <div class="control__elements">
+              value: {{ radio }}
+              <br />
+              <br />
+              <Radio v-model="radio" value=""></Radio>
+              <Radio v-model="radio" value="a">Option A</Radio>
+              <Radio v-model="radio" value="b">Option B</Radio>
+              <Radio v-model="radio" value="c">Option C</Radio>
+              <Radio v-model="radio" value="d" :disabled="true">Option D</Radio>
+            </div>
+          </div>
+          <div class="control">
             <label class="control__label">Switch field</label>
             <div class="control__elements">
               value: {{ switchValue }}
@@ -1116,6 +1129,7 @@ export default {
   data() {
     return {
       checkbox: false,
+      radio: 'a',
       switchValue: false,
       switchUnknown: 2,
       dropdown: '',

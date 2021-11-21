@@ -178,6 +178,51 @@
   }
 }
 
+.radio {
+  position: relative;
+  height: 28px;
+  line-height: 28px;
+  padding-left: 18px;
+  cursor: pointer;
+  user-select: none;
+
+  &.radio--has-content {
+    padding-left: 24px;
+  }
+
+  &::before {
+    @include absolute(5px, auto, 0, 0);
+
+    content: "";
+    font-family: $font-awesome-font-family;
+    font-weight: $font-awesome-font-weight;
+    font-size: 10px;
+    border: 1px solid $color-neutral-400;
+    border-radius: 100%;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    background-color: $white;
+    color: $white;
+  }
+
+  &.selected::before {
+    content: fa-content($fa-var-check);
+    background-color: $color-primary-500;
+    border-color: $color-primary-500;
+  }
+
+  &.radio--disabled {
+    cursor: inherit;
+    color: $color-neutral-600;
+
+    &::before {
+      background-color: $color-neutral-50;
+    }
+  }
+}
+
 .switch {
   position: relative;
   line-height: 28px;

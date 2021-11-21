@@ -22,6 +22,12 @@ from .fields.models import (
     PhoneNumberField,
 )
 from .tokens.models import Token, TokenPermission
+from .webhooks.models import (
+    TableWebhook,
+    TableWebhookEvent,
+    TableWebhookCall,
+    TableWebhookHeader,
+)
 
 __all__ = [
     "Database",
@@ -44,6 +50,10 @@ __all__ = [
     "PhoneNumberField",
     "Token",
     "TokenPermission",
+    "TableWebhook",
+    "TableWebhookEvent",
+    "TableWebhookHeader",
+    "TableWebhookCall",
 ]
 
 

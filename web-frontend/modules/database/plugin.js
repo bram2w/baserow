@@ -49,6 +49,11 @@ import {
   XMLImporterType,
   JSONImporterType,
 } from '@baserow/modules/database/importerTypes'
+import {
+  RowCreatedWebhookEventType,
+  RowUpdatedWebhookEventType,
+  RowDeletedWebhookEventType,
+} from '@baserow/modules/database/webhookEventTypes'
 import { APITokenSettingsType } from '@baserow/modules/database/settingsTypes'
 
 import tableStore from '@baserow/modules/database/store/table'
@@ -173,6 +178,18 @@ export default (context) => {
   app.$registry.register('importer', new JSONImporterType(context))
   app.$registry.register('settings', new APITokenSettingsType(context))
   app.$registry.register('exporter', new CSVTableExporterType(context))
+  app.$registry.register(
+    'webhookEvent',
+    new RowCreatedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new RowUpdatedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new RowDeletedWebhookEventType(context)
+  )
 
   // Text functions
   app.$registry.register('formula_function', new BaserowUpper())
