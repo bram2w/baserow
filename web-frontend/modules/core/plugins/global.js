@@ -6,6 +6,7 @@ import Editable from '@baserow/modules/core/components/Editable'
 import Dropdown from '@baserow/modules/core/components/Dropdown'
 import DropdownItem from '@baserow/modules/core/components/DropdownItem'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
+import Radio from '@baserow/modules/core/components/Radio'
 import Scrollbars from '@baserow/modules/core/components/Scrollbars'
 import Error from '@baserow/modules/core/components/Error'
 import SwitchInput from '@baserow/modules/core/components/SwitchInput'
@@ -29,6 +30,7 @@ Vue.component('Editable', Editable)
 Vue.component('Dropdown', Dropdown)
 Vue.component('DropdownItem', DropdownItem)
 Vue.component('Checkbox', Checkbox)
+Vue.component('Radio', Radio)
 Vue.component('Scrollbars', Scrollbars)
 Vue.component('Error', Error)
 Vue.component('SwitchInput', SwitchInput)

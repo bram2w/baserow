@@ -18,6 +18,8 @@ export default {
     add: 'Add',
     makeChoice: 'Make a choice',
     cancel: 'Cancel',
+    save: 'Save',
+    retry: 'Retry',
     search: 'Search',
     copy: 'Copy',
   },
@@ -147,6 +149,21 @@ export default {
     table: 'table',
     field: 'field',
     row: 'row',
+  },
+  webhook: {
+    request: 'Request',
+    response: 'Response',
+    successfullyUpdated: 'Webhook successfully updated.',
+    status: {
+      noStatus: 'NO STATUS',
+      statusOK: 'OK',
+      statusNotOK: 'NOT OK',
+    },
+    eventType: {
+      rowCreated: 'When a row is created',
+      rowUpdated: 'When a row is updated',
+      rowDeleted: 'When a row is deleted',
+    },
   },
   clientHandler: {
     notFoundTitle: '{name} not found.',

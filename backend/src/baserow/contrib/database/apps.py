@@ -54,6 +54,7 @@ class DatabaseConfig(AppConfig):
         from .formula.registries import (
             formula_function_registry,
         )
+        from .webhooks.registries import webhook_event_type_registry
 
         from .plugins import DatabasePlugin
 
@@ -197,6 +198,16 @@ class DatabaseConfig(AppConfig):
         from .formula.ast.function_defs import register_formula_functions
 
         register_formula_functions(formula_function_registry)
+
+        from .rows.webhook_event_types import (
+            RowCreatedEventType,
+            RowUpdatedEventType,
+            RowDeletedEventType,
+        )
+
+        webhook_event_type_registry.register(RowCreatedEventType())
+        webhook_event_type_registry.register(RowUpdatedEventType())
+        webhook_event_type_registry.register(RowDeletedEventType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

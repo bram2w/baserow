@@ -78,4 +78,9 @@
   .dropdown--floating & {
     right: auto;
   }
+
+  .dropdown--floating-left & {
+    left: auto;
+    right: 0;
+  }
 }

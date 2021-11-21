@@ -8,6 +8,12 @@
         </a>
       </li>
       <li>
+        <a @click="openWebhookModal()">
+          <i class="context__menu-icon fas fa-fw fa-globe"></i>
+          Webhooks
+        </a>
+      </li>
+      <li>
         <a @click="enableRename()">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
           {{ $t('viewContext.renameView') }}
@@ -22,6 +28,7 @@
     </ul>
     <DeleteViewModal ref="deleteViewModal" :view="view" />
     <ExportTableModal ref="exportViewModal" :table="table" :view="view" />
+    <WebhookModal ref="webhookModal" :table="table" />
   </Context>
 </template>
 
@@ -29,10 +36,11 @@
 import context from '@baserow/modules/core/mixins/context'
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 import DeleteViewModal from './DeleteViewModal'
+import WebhookModal from '@baserow/modules/database/components/webhook/WebhookModal.vue'
 
 export default {
   name: 'ViewContext',
-  components: { DeleteViewModal, ExportTableModal },
+  components: { DeleteViewModal, ExportTableModal, WebhookModal },
   mixins: [context],
   props: {
     view: {
@@ -59,6 +67,10 @@ export default {
     exportView() {
       this.$refs.context.hide()
       this.$refs.exportViewModal.show()
+    },
+    openWebhookModal() {
+      this.$refs.context.hide()
+      this.$refs.webhookModal.show()
     },
   },
 }
