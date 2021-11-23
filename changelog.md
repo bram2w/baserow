@@ -17,6 +17,7 @@
 * Added extra indexes for user tables increasing performance.
 * Fixed a bug where the frontend would fail hard when converting a multiple select field
   inside the row edit modal.
+* Added the kanban view.
 * New templates:
     * House Search
     * Personal Health Log
