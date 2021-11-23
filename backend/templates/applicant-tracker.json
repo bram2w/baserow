@@ -224,6 +224,15 @@
               "name": "CV",
               "order": 13,
               "primary": false
+            },
+            {
+              "id": 197477,
+              "type": "link_row",
+              "name": "References",
+              "order": 14,
+              "primary": false,
+              "link_row_table_id": 36665,
+              "link_row_related_field_id": 197476
             }
           ],
           "views": [
@@ -340,6 +349,13 @@
                   "width": 100,
                   "hidden": false,
                   "order": 0
+                },
+                {
+                  "id": 219758,
+                  "field_id": 197477,
+                  "width": 297,
+                  "hidden": false,
+                  "order": 32767
                 }
               ]
             },
@@ -613,6 +629,9 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
+              ],
+              "field_197477": [
+                1
               ]
             },
             {
@@ -644,6 +663,9 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
+              ],
+              "field_197477": [
+                3
               ]
             },
             {
@@ -672,6 +694,10 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
+              ],
+              "field_197477": [
+                2,
+                10
               ]
             },
             {
@@ -700,7 +726,8 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
-              ]
+              ],
+              "field_197477": []
             },
             {
               "id": 7,
@@ -728,7 +755,8 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
-              ]
+              ],
+              "field_197477": []
             },
             {
               "id": 8,
@@ -759,6 +787,9 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
+              ],
+              "field_197477": [
+                5
               ]
             },
             {
@@ -790,6 +821,10 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
+              ],
+              "field_197477": [
+                4,
+                8
               ]
             },
             {
@@ -810,7 +845,10 @@
               "field_133439": [],
               "field_133440": null,
               "field_133441": "",
-              "field_133442": []
+              "field_133442": [],
+              "field_197477": [
+                11
+              ]
             },
             {
               "id": 11,
@@ -840,6 +878,10 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
+              ],
+              "field_197477": [
+                7,
+                9
               ]
             },
             {
@@ -868,6 +910,10 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
+              ],
+              "field_197477": [
+                6,
+                12
               ]
             },
             {
@@ -900,7 +946,8 @@
                   "visible_name": "cv.pdf",
                   "original_name": "cv.pdf"
                 }
-              ]
+              ],
+              "field_197477": []
             },
             {
               "id": 14,
@@ -921,7 +968,8 @@
               "field_133439": [],
               "field_133440": null,
               "field_133441": "",
-              "field_133442": []
+              "field_133442": [],
+              "field_197477": []
             }
           ]
         },
@@ -1795,6 +1843,499 @@
                 13
               ],
               "field_133450": 10170
+            }
+          ]
+        },
+        {
+          "id": 36665,
+          "name": "References",
+          "order": 4,
+          "fields": [
+            {
+              "id": 197471,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 197472,
+              "type": "single_select",
+              "name": "Relationship",
+              "order": 1,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 21463,
+                  "value": "Manager",
+                  "color": "orange",
+                  "order": 0
+                },
+                {
+                  "id": 21464,
+                  "value": "Relative",
+                  "color": "green",
+                  "order": 1
+                },
+                {
+                  "id": 21465,
+                  "value": "Friend",
+                  "color": "dark-red",
+                  "order": 2
+                },
+                {
+                  "id": 21466,
+                  "value": "Coworker",
+                  "color": "dark-gray",
+                  "order": 3
+                }
+              ]
+            },
+            {
+              "id": 197474,
+              "type": "phone_number",
+              "name": "Phone number",
+              "order": 2,
+              "primary": false
+            },
+            {
+              "id": 197475,
+              "type": "email",
+              "name": "Email",
+              "order": 3,
+              "primary": false
+            },
+            {
+              "id": 197476,
+              "type": "link_row",
+              "name": "Applicant",
+              "order": 4,
+              "primary": false,
+              "link_row_table_id": 25349,
+              "link_row_related_field_id": 197477
+            },
+            {
+              "id": 197478,
+              "type": "boolean",
+              "name": "Contacted",
+              "order": 5,
+              "primary": false
+            }
+          ],
+          "views": [
+            {
+              "id": 42676,
+              "type": "grid",
+              "name": "All references",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 5111,
+                  "field_id": 197471,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 219733,
+                  "field_id": 197471,
+                  "width": 165,
+                  "hidden": false,
+                  "order": 4
+                },
+                {
+                  "id": 219731,
+                  "field_id": 197472,
+                  "width": 141,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 219734,
+                  "field_id": 197474,
+                  "width": 162,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 219735,
+                  "field_id": 197475,
+                  "width": 244,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 219736,
+                  "field_id": 197476,
+                  "width": 139,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 219737,
+                  "field_id": 197478,
+                  "width": 130,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            },
+            {
+              "id": 42677,
+              "type": "grid",
+              "name": "To be contacted",
+              "order": 2,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 9717,
+                  "field_id": 197478,
+                  "type": "boolean",
+                  "value": ""
+                }
+              ],
+              "sortings": [
+                {
+                  "id": 5112,
+                  "field_id": 197471,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 219738,
+                  "field_id": 197471,
+                  "width": 121,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 219739,
+                  "field_id": 197472,
+                  "width": 138,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 219740,
+                  "field_id": 197474,
+                  "width": 153,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 219741,
+                  "field_id": 197475,
+                  "width": 219,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 219742,
+                  "field_id": 197476,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 219743,
+                  "field_id": 197478,
+                  "width": 131,
+                  "hidden": false,
+                  "order": 4
+                }
+              ]
+            },
+            {
+              "id": 42679,
+              "type": "grid",
+              "name": "Contacted",
+              "order": 3,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 9720,
+                  "field_id": 197478,
+                  "type": "boolean",
+                  "value": "1"
+                }
+              ],
+              "sortings": [
+                {
+                  "id": 5113,
+                  "field_id": 197471,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 219750,
+                  "field_id": 197471,
+                  "width": 161,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 219751,
+                  "field_id": 197472,
+                  "width": 140,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 219752,
+                  "field_id": 197474,
+                  "width": 153,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 219753,
+                  "field_id": 197475,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 219754,
+                  "field_id": 197476,
+                  "width": 139,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 219755,
+                  "field_id": 197478,
+                  "width": 128,
+                  "hidden": false,
+                  "order": 4
+                }
+              ]
+            },
+            {
+              "id": 42678,
+              "type": "grid",
+              "name": "Professional relationships",
+              "order": 4,
+              "filter_type": "OR",
+              "filters_disabled": false,
+              "filters": [
+                {
+                  "id": 9718,
+                  "field_id": 197472,
+                  "type": "single_select_equal",
+                  "value": "21463"
+                },
+                {
+                  "id": 9719,
+                  "field_id": 197472,
+                  "type": "single_select_equal",
+                  "value": "21466"
+                }
+              ],
+              "sortings": [
+                {
+                  "id": 5114,
+                  "field_id": 197471,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 219744,
+                  "field_id": 197471,
+                  "width": 146,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 219745,
+                  "field_id": 197472,
+                  "width": 139,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 219746,
+                  "field_id": 197474,
+                  "width": 157,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 219747,
+                  "field_id": 197475,
+                  "width": 247,
+                  "hidden": false,
+                  "order": 3
+                },
+                {
+                  "id": 219748,
+                  "field_id": 197476,
+                  "width": 133,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 219749,
+                  "field_id": 197478,
+                  "width": 128,
+                  "hidden": false,
+                  "order": 4
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_197471": "Zachary S. Radcliffe",
+              "field_197472": 21463,
+              "field_197474": "313-772-3962",
+              "field_197475": "zacharysradcliffe@yahoo.com",
+              "field_197476": [
+                3
+              ],
+              "field_197478": "true"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_197471": "Aidan McPhillamy",
+              "field_197472": 21465,
+              "field_197474": "715-684-6928",
+              "field_197475": "aidanmcphillamy@aol.com",
+              "field_197476": [
+                5
+              ],
+              "field_197478": "true"
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_197471": "Jonne Eskelinen",
+              "field_197472": 21463,
+              "field_197474": "775-637-4269",
+              "field_197475": "jonneeskelinen@gmail.com",
+              "field_197476": [
+                4
+              ],
+              "field_197478": "false"
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_197471": "Nicodemo Palerma",
+              "field_197472": 21466,
+              "field_197474": "615-757-8761",
+              "field_197475": "nicodemopalerma@protonmail.com",
+              "field_197476": [
+                9
+              ],
+              "field_197478": "true"
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_197471": "Martyn Symanski",
+              "field_197472": 21464,
+              "field_197474": "310-475-9953",
+              "field_197475": "martynsymanski@gmail.com",
+              "field_197476": [
+                8
+              ],
+              "field_197478": "true"
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_197471": "Peter Carrero Herrera",
+              "field_197472": 21465,
+              "field_197474": "757-301-6272",
+              "field_197475": "peterherrera@yahoo.com",
+              "field_197476": [
+                12
+              ],
+              "field_197478": "true"
+            },
+            {
+              "id": 7,
+              "order": "7.00000000000000000000",
+              "field_197471": "Ashley J. Hahn",
+              "field_197472": 21463,
+              "field_197474": "401-744-4305",
+              "field_197475": "ashleyhahn@interviews.com",
+              "field_197476": [
+                11
+              ],
+              "field_197478": "false"
+            },
+            {
+              "id": 8,
+              "order": "8.00000000000000000000",
+              "field_197471": "Teresa W. Montano",
+              "field_197472": 21463,
+              "field_197474": "330-830-2570",
+              "field_197475": "teresamontano@yahoo.com",
+              "field_197476": [
+                9
+              ],
+              "field_197478": "true"
+            },
+            {
+              "id": 9,
+              "order": "9.00000000000000000000",
+              "field_197471": "Russel P. Sargent",
+              "field_197472": 21466,
+              "field_197474": "384-384-3745",
+              "field_197475": "russelsargent@protonmail.com",
+              "field_197476": [
+                11
+              ],
+              "field_197478": "true"
+            },
+            {
+              "id": 10,
+              "order": "10.00000000000000000000",
+              "field_197471": "Kari R. Wellman",
+              "field_197472": 21464,
+              "field_197474": "385-373-2902",
+              "field_197475": "kariwellman@kariwellman.com",
+              "field_197476": [
+                5
+              ],
+              "field_197478": "false"
+            },
+            {
+              "id": 11,
+              "order": "11.00000000000000000000",
+              "field_197471": "George P. Doran",
+              "field_197472": 21465,
+              "field_197474": "290-484-4938",
+              "field_197475": "georgepdoran@teleworm.us",
+              "field_197476": [
+                10
+              ],
+              "field_197478": "true"
+            },
+            {
+              "id": 12,
+              "order": "12.00000000000000000000",
+              "field_197471": "Anthony F. Gray",
+              "field_197472": 21463,
+              "field_197474": "272-449-4837",
+              "field_197475": "anthonyfgray@teleworm.us",
+              "field_197476": [
+                12
+              ],
+              "field_197478": "true"
             }
           ]
         }

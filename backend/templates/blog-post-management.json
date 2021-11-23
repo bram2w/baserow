@@ -173,6 +173,159 @@
               "date_include_time": false,
               "date_time_format": "24",
               "timezone": "America/Chicago"
+            },
+            {
+              "id": 189481,
+              "type": "text",
+              "name": "Excerpt",
+              "order": 12,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 189482,
+              "type": "multiple_select",
+              "name": "Tags",
+              "order": 13,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 19989,
+                  "value": "baserow",
+                  "color": "dark-blue",
+                  "order": 0
+                },
+                {
+                  "id": 19990,
+                  "value": "passwords",
+                  "color": "light-green",
+                  "order": 1
+                },
+                {
+                  "id": 19991,
+                  "value": "cloudron",
+                  "color": "blue",
+                  "order": 2
+                },
+                {
+                  "id": 19992,
+                  "value": "n8n",
+                  "color": "red",
+                  "order": 3
+                },
+                {
+                  "id": 19993,
+                  "value": "workflows",
+                  "color": "light-green",
+                  "order": 4
+                },
+                {
+                  "id": 19994,
+                  "value": "facial recognition",
+                  "color": "light-gray",
+                  "order": 5
+                },
+                {
+                  "id": 19995,
+                  "value": "ai/ml",
+                  "color": "dark-gray",
+                  "order": 6
+                },
+                {
+                  "id": 19996,
+                  "value": "bitwarden",
+                  "color": "light-blue",
+                  "order": 7
+                },
+                {
+                  "id": 19997,
+                  "value": "keepass",
+                  "color": "red",
+                  "order": 8
+                },
+                {
+                  "id": 19998,
+                  "value": "zulip",
+                  "color": "light-orange",
+                  "order": 9
+                },
+                {
+                  "id": 19999,
+                  "value": "element",
+                  "color": "light-blue",
+                  "order": 10
+                },
+                {
+                  "id": 20000,
+                  "value": "freetube",
+                  "color": "dark-red",
+                  "order": 11
+                },
+                {
+                  "id": 20001,
+                  "value": "mastodon",
+                  "color": "orange",
+                  "order": 12
+                },
+                {
+                  "id": 20002,
+                  "value": "anytype",
+                  "color": "green",
+                  "order": 13
+                },
+                {
+                  "id": 20003,
+                  "value": "facebook",
+                  "color": "dark-red",
+                  "order": 14
+                },
+                {
+                  "id": 20004,
+                  "value": "youtube",
+                  "color": "light-gray",
+                  "order": 15
+                },
+                {
+                  "id": 20005,
+                  "value": "twitter",
+                  "color": "light-red",
+                  "order": 16
+                },
+                {
+                  "id": 20006,
+                  "value": "tiktok",
+                  "color": "light-orange",
+                  "order": 17
+                },
+                {
+                  "id": 20007,
+                  "value": "instagram",
+                  "color": "light-blue",
+                  "order": 18
+                }
+              ]
+            },
+            {
+              "id": 189483,
+              "type": "text",
+              "name": "URL Handle",
+              "order": 14,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 189488,
+              "type": "formula",
+              "name": "Permalink",
+              "order": 15,
+              "primary": false,
+              "error": null,
+              "date_format": null,
+              "date_include_time": null,
+              "date_time_format": null,
+              "number_decimal_places": null,
+              "formula": "concat('https://www.ourgreatblog.com/',field('URL Handle'))",
+              "formula_type": "text"
             }
           ],
           "views": [
@@ -195,86 +348,114 @@
                 {
                   "id": 117594,
                   "field_id": 120322,
-                  "width": 200,
+                  "width": 339,
                   "hidden": false,
-                  "order": 10
+                  "order": 15
                 },
                 {
                   "id": 117595,
                   "field_id": 120325,
                   "width": 161,
                   "hidden": false,
-                  "order": 1
+                  "order": 2
                 },
                 {
                   "id": 117596,
                   "field_id": 120326,
                   "width": 200,
                   "hidden": false,
-                  "order": 2
+                  "order": 3
                 },
                 {
                   "id": 117597,
                   "field_id": 120327,
                   "width": 125,
                   "hidden": false,
-                  "order": 3
+                  "order": 0
                 },
                 {
                   "id": 117598,
                   "field_id": 120328,
-                  "width": 200,
+                  "width": 233,
                   "hidden": false,
                   "order": 4
                 },
                 {
                   "id": 117600,
                   "field_id": 120329,
-                  "width": 200,
+                  "width": 226,
                   "hidden": false,
-                  "order": 5
+                  "order": 7
                 },
                 {
                   "id": 117601,
                   "field_id": 120331,
                   "width": 123,
                   "hidden": false,
-                  "order": 6
+                  "order": 8
                 },
                 {
                   "id": 117602,
                   "field_id": 120332,
-                  "width": 159,
+                  "width": 150,
                   "hidden": false,
-                  "order": 8
+                  "order": 10
                 },
                 {
                   "id": 117603,
                   "field_id": 120333,
-                  "width": 171,
+                  "width": 167,
                   "hidden": false,
-                  "order": 9
+                  "order": 13
                 },
                 {
                   "id": 117646,
                   "field_id": 120362,
                   "width": 129,
                   "hidden": false,
-                  "order": 0
+                  "order": 6
                 },
                 {
                   "id": 117712,
                   "field_id": 120405,
-                  "width": 177,
+                  "width": 416,
                   "hidden": false,
-                  "order": 7
+                  "order": 9
                 },
                 {
                   "id": 175784,
                   "field_id": 165825,
                   "width": 136,
                   "hidden": false,
-                  "order": 32767
+                  "order": 14
+                },
+                {
+                  "id": 209085,
+                  "field_id": 189481,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 209088,
+                  "field_id": 189482,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 209095,
+                  "field_id": 189483,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 11
+                },
+                {
+                  "id": 209094,
+                  "field_id": 189488,
+                  "width": 451,
+                  "hidden": false,
+                  "order": 12
                 }
               ]
             },
@@ -306,28 +487,28 @@
                   "field_id": 120322,
                   "width": 200,
                   "hidden": false,
-                  "order": 10
+                  "order": 15
                 },
                 {
                   "id": 117719,
                   "field_id": 120325,
                   "width": 158,
                   "hidden": false,
-                  "order": 1
+                  "order": 2
                 },
                 {
                   "id": 117720,
                   "field_id": 120326,
                   "width": 200,
                   "hidden": false,
-                  "order": 2
+                  "order": 3
                 },
                 {
                   "id": 117721,
                   "field_id": 120327,
                   "width": 121,
                   "hidden": false,
-                  "order": 3
+                  "order": 0
                 },
                 {
                   "id": 117722,
@@ -341,49 +522,77 @@
                   "field_id": 120329,
                   "width": 140,
                   "hidden": false,
-                  "order": 5
+                  "order": 7
                 },
                 {
                   "id": 117724,
                   "field_id": 120331,
                   "width": 123,
                   "hidden": false,
-                  "order": 6
+                  "order": 8
                 },
                 {
                   "id": 117725,
                   "field_id": 120332,
                   "width": 153,
                   "hidden": false,
-                  "order": 8
+                  "order": 10
                 },
                 {
                   "id": 117726,
                   "field_id": 120333,
                   "width": 169,
                   "hidden": false,
-                  "order": 9
+                  "order": 13
                 },
                 {
                   "id": 117727,
                   "field_id": 120362,
                   "width": 127,
                   "hidden": false,
-                  "order": 0
+                  "order": 6
                 },
                 {
                   "id": 117728,
                   "field_id": 120405,
                   "width": 179,
                   "hidden": false,
-                  "order": 7
+                  "order": 9
                 },
                 {
                   "id": 175785,
                   "field_id": 165825,
                   "width": 134,
                   "hidden": false,
-                  "order": 32767
+                  "order": 14
+                },
+                {
+                  "id": 209086,
+                  "field_id": 189481,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 209089,
+                  "field_id": 189482,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 209096,
+                  "field_id": 189483,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 11
+                },
+                {
+                  "id": 209097,
+                  "field_id": 189488,
+                  "width": 341,
+                  "hidden": false,
+                  "order": 12
                 }
               ]
             },
@@ -415,28 +624,28 @@
                   "field_id": 120322,
                   "width": 200,
                   "hidden": false,
-                  "order": 10
+                  "order": 15
                 },
                 {
                   "id": 117730,
                   "field_id": 120325,
                   "width": 157,
                   "hidden": false,
-                  "order": 1
+                  "order": 2
                 },
                 {
                   "id": 117731,
                   "field_id": 120326,
                   "width": 200,
                   "hidden": false,
-                  "order": 2
+                  "order": 3
                 },
                 {
                   "id": 117732,
                   "field_id": 120327,
                   "width": 118,
                   "hidden": false,
-                  "order": 3
+                  "order": 0
                 },
                 {
                   "id": 117733,
@@ -450,49 +659,77 @@
                   "field_id": 120329,
                   "width": 200,
                   "hidden": false,
-                  "order": 5
+                  "order": 7
                 },
                 {
                   "id": 117735,
                   "field_id": 120331,
                   "width": 123,
                   "hidden": false,
-                  "order": 6
+                  "order": 8
                 },
                 {
                   "id": 117736,
                   "field_id": 120332,
                   "width": 153,
                   "hidden": false,
-                  "order": 8
+                  "order": 10
                 },
                 {
                   "id": 117737,
                   "field_id": 120333,
                   "width": 170,
                   "hidden": false,
-                  "order": 9
+                  "order": 13
                 },
                 {
                   "id": 117738,
                   "field_id": 120362,
                   "width": 110,
                   "hidden": false,
-                  "order": 0
+                  "order": 6
                 },
                 {
                   "id": 117739,
                   "field_id": 120405,
                   "width": 181,
                   "hidden": false,
-                  "order": 7
+                  "order": 9
                 },
                 {
                   "id": 175786,
                   "field_id": 165825,
                   "width": 132,
                   "hidden": false,
-                  "order": 32767
+                  "order": 14
+                },
+                {
+                  "id": 209087,
+                  "field_id": 189481,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5
+                },
+                {
+                  "id": 209090,
+                  "field_id": 189482,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 1
+                },
+                {
+                  "id": 209098,
+                  "field_id": 189483,
+                  "width": 248,
+                  "hidden": false,
+                  "order": 11
+                },
+                {
+                  "id": 209099,
+                  "field_id": 189488,
+                  "width": 446,
+                  "hidden": false,
+                  "order": 12
                 }
               ]
             }
@@ -501,7 +738,7 @@
             {
               "id": 1,
               "order": "1.00000000000000000000",
-              "field_120322": "5 Open Source Alternatives to Popular Apps",
+              "field_120322": "10 Open Source Alternatives to Popular Apps",
               "field_120325": [
                 {
                   "name": "XwPkmw8UtWZD0Jik8duEuH7evDvFxdcK_dbc4edc4b16ba7d1f2d7ed6bc6b16ff9aa73b79466151ad397771975e4d028f6.png",
@@ -525,7 +762,21 @@
                 13,
                 14
               ],
-              "field_165825": null
+              "field_165825": null,
+              "field_189481": "Ut quis tellus sodales, ultrices lorem vel, consequat massa.",
+              "field_189482": [
+                19989,
+                19998,
+                20000,
+                19996,
+                19997,
+                19999,
+                19992,
+                20001,
+                20002
+              ],
+              "field_189483": "10-open-source-alternatives-popular-apps",
+              "field_189488": null
             },
             {
               "id": 2,
@@ -555,7 +806,14 @@
                 13,
                 14
               ],
-              "field_165825": null
+              "field_165825": null,
+              "field_189481": "Suspendisse eget orci quis eros porta ornare.",
+              "field_189482": [
+                19993,
+                19991
+              ],
+              "field_189483": "self-hosting-crash-course",
+              "field_189488": null
             },
             {
               "id": 3,
@@ -583,7 +841,13 @@
                 9,
                 13
               ],
-              "field_165825": null
+              "field_165825": null,
+              "field_189481": "Duis ultrices nibh auctor neque tempus, non tempus lacus facilisis.",
+              "field_189482": [
+                19991
+              ],
+              "field_189483": "self-host-with-cloudron",
+              "field_189488": null
             },
             {
               "id": 4,
@@ -613,7 +877,15 @@
                 13,
                 16
               ],
-              "field_165825": null
+              "field_165825": null,
+              "field_189481": "Suspendisse eu lorem non diam euismod consequat ac in tellus.",
+              "field_189482": [
+                19992,
+                19989,
+                19993
+              ],
+              "field_189483": "automate-your-life-using-baserow-n8n",
+              "field_189488": null
             },
             {
               "id": 5,
@@ -645,7 +917,14 @@
                 12,
                 13
               ],
-              "field_165825": null
+              "field_165825": null,
+              "field_189481": "Aenean id dolor sit amet mauris imperdiet facilisis.",
+              "field_189482": [
+                19997,
+                19996
+              ],
+              "field_189483": "top-open-source-password-managers",
+              "field_189488": null
             },
             {
               "id": 6,
@@ -678,7 +957,17 @@
                 13,
                 15
               ],
-              "field_165825": null
+              "field_165825": null,
+              "field_189481": "Etiam aliquam velit et leo sodales, mattis cursus magna pellentesque.",
+              "field_189482": [
+                20005,
+                20003,
+                20004,
+                20006,
+                20007
+              ],
+              "field_189483": "delete-these-privacy-invading-apps",
+              "field_189488": null
             },
             {
               "id": 7,
@@ -709,7 +998,14 @@
                 15,
                 16
               ],
-              "field_165825": null
+              "field_165825": null,
+              "field_189481": "Maecenas a tellus ac ligula scelerisque euismod et at diam.",
+              "field_189482": [
+                19994,
+                19995
+              ],
+              "field_189483": "facial-recognition-abuse-misuse",
+              "field_189488": null
             }
           ]
         },
@@ -824,7 +1120,7 @@
                 {
                   "id": 105959,
                   "field_id": 110632,
-                  "width": 200,
+                  "width": 184,
                   "hidden": false,
                   "order": 6
                 },
@@ -880,7 +1176,7 @@
               "field_110632": "Jane Appleseed",
               "field_110728": 5920,
               "field_110729": "jane@company.com",
-              "field_110730": "(123) 123-1234",
+              "field_110730": "(905) 898-6357",
               "field_110731": "Chicago",
               "field_110750": [
                 {
@@ -902,7 +1198,7 @@
               "field_110632": "Nora Williamson",
               "field_110728": 5919,
               "field_110729": "nora@company.com",
-              "field_110730": "(123) 123-1234",
+              "field_110730": "(403) 245-9521",
               "field_110731": "Dublin",
               "field_110750": [
                 {
@@ -921,7 +1217,7 @@
               "field_110632": "Mike Windsor",
               "field_110728": 5922,
               "field_110729": "mike@company.com",
-              "field_110730": "(123) 123-1234",
+              "field_110730": "(843) 389-2430",
               "field_110731": "Cambridge",
               "field_110750": [
                 {
@@ -940,7 +1236,7 @@
               "field_110632": "Eric West",
               "field_110728": 5923,
               "field_110729": "eric@company.com",
-              "field_110730": "(123) 123-1234",
+              "field_110730": "(416) 466-7900",
               "field_110731": "New York",
               "field_110750": [
                 {
@@ -959,7 +1255,7 @@
               "field_110632": "Josie Reams",
               "field_110728": 5921,
               "field_110729": "josie@company.com",
-              "field_110730": "(123) 123-1234",
+              "field_110730": "(219) 956-9186",
               "field_110731": "Sydney",
               "field_110750": [
                 {
@@ -979,7 +1275,7 @@
               "field_110632": "Drew Murray",
               "field_110728": 5919,
               "field_110729": "drew@company.com",
-              "field_110730": "(123) 123-1234",
+              "field_110730": "(805) 239-9057",
               "field_110731": "CDMX",
               "field_110750": [
                 {
@@ -1056,7 +1352,7 @@
                 {
                   "id": 105962,
                   "field_id": 110635,
-                  "width": 159,
+                  "width": 152,
                   "hidden": false,
                   "order": 3
                 },

@@ -82,9 +82,23 @@
               "name": "Rental Cost",
               "order": 7,
               "primary": false,
-              "number_type": "DECIMAL",
+              "number_type": "INTEGER",
               "number_decimal_places": 2,
               "number_negative": false
+            },
+            {
+              "id": 189440,
+              "type": "formula",
+              "name": "Cost Per Person",
+              "order": 8,
+              "primary": false,
+              "error": null,
+              "date_format": null,
+              "date_include_time": null,
+              "date_time_format": null,
+              "number_decimal_places": 0,
+              "formula": "field('Rental Cost')/field('Capacity')",
+              "formula_type": "number"
             }
           ],
           "views": [
@@ -109,21 +123,21 @@
                   "field_id": 129862,
                   "width": 200,
                   "hidden": false,
-                  "order": 7
+                  "order": 8
                 },
                 {
                   "id": 129531,
                   "field_id": 129863,
-                  "width": 250,
+                  "width": 393,
                   "hidden": false,
-                  "order": 5
+                  "order": 6
                 },
                 {
                   "id": 129532,
                   "field_id": 129864,
                   "width": 185,
                   "hidden": false,
-                  "order": 6
+                  "order": 7
                 },
                 {
                   "id": 129533,
@@ -149,16 +163,23 @@
                 {
                   "id": 129536,
                   "field_id": 129868,
-                  "width": 140,
+                  "width": 115,
                   "hidden": false,
                   "order": 3
                 },
                 {
                   "id": 129537,
                   "field_id": 129869,
-                  "width": 134,
+                  "width": 129,
                   "hidden": false,
                   "order": 4
+                },
+                {
+                  "id": 209045,
+                  "field_id": 189440,
+                  "width": 156,
+                  "hidden": false,
+                  "order": 5
                 }
               ]
             },
@@ -236,6 +257,103 @@
                   "order": 32767
                 }
               ]
+            },
+            {
+              "id": 40770,
+              "type": "form",
+              "name": "New Venue form",
+              "order": 3,
+              "public": false,
+              "title": "Name of form",
+              "description": "Description",
+              "cover_image": null,
+              "logo_image": null,
+              "submit_action": "MESSAGE",
+              "submit_action_message": "THanks for submitting the issue, we'll look into it aklsdhaskljfhasdkl",
+              "submit_action_redirect_url": "",
+              "field_options": [
+                {
+                  "id": 6199,
+                  "field_id": 129862,
+                  "name": "",
+                  "description": "",
+                  "enabled": true,
+                  "required": true,
+                  "order": 0
+                },
+                {
+                  "id": 6201,
+                  "field_id": 129864,
+                  "name": "",
+                  "description": "",
+                  "enabled": true,
+                  "required": true,
+                  "order": 1
+                },
+                {
+                  "id": 6202,
+                  "field_id": 129865,
+                  "name": "",
+                  "description": "",
+                  "enabled": true,
+                  "required": true,
+                  "order": 2
+                },
+                {
+                  "id": 6205,
+                  "field_id": 129868,
+                  "name": "",
+                  "description": "",
+                  "enabled": true,
+                  "required": true,
+                  "order": 3
+                },
+                {
+                  "id": 6206,
+                  "field_id": 129869,
+                  "name": "",
+                  "description": "",
+                  "enabled": true,
+                  "required": true,
+                  "order": 4
+                },
+                {
+                  "id": 6200,
+                  "field_id": 129863,
+                  "name": "",
+                  "description": "",
+                  "enabled": false,
+                  "required": true,
+                  "order": 5
+                },
+                {
+                  "id": 6203,
+                  "field_id": 129866,
+                  "name": "",
+                  "description": "",
+                  "enabled": false,
+                  "required": true,
+                  "order": 6
+                },
+                {
+                  "id": 6204,
+                  "field_id": 129867,
+                  "name": "",
+                  "description": "",
+                  "enabled": false,
+                  "required": true,
+                  "order": 7
+                },
+                {
+                  "id": 6207,
+                  "field_id": 189440,
+                  "name": "",
+                  "description": "",
+                  "enabled": false,
+                  "required": true,
+                  "order": 8
+                }
+              ]
             }
           ],
           "rows": [
@@ -276,7 +394,8 @@
                 }
               ],
               "field_129868": "300",
-              "field_129869": "5000.00"
+              "field_129869": "5000",
+              "field_189440": null
             },
             {
               "id": 2,
@@ -315,7 +434,8 @@
                 }
               ],
               "field_129868": "300",
-              "field_129869": "6500.00"
+              "field_129869": "6500",
+              "field_189440": null
             },
             {
               "id": 3,
@@ -349,7 +469,8 @@
                 }
               ],
               "field_129868": "175",
-              "field_129869": "9000.00"
+              "field_129869": "9000",
+              "field_189440": null
             },
             {
               "id": 4,
@@ -383,7 +504,8 @@
                 }
               ],
               "field_129868": "500",
-              "field_129869": "25000.00"
+              "field_129869": "25000",
+              "field_189440": null
             },
             {
               "id": 5,
@@ -412,7 +534,8 @@
                 }
               ],
               "field_129868": "350",
-              "field_129869": "12000.00"
+              "field_129869": "12000",
+              "field_189440": null
             },
             {
               "id": 7,
@@ -446,7 +569,8 @@
                 }
               ],
               "field_129868": "250",
-              "field_129869": "11500.00"
+              "field_129869": "11500",
+              "field_189440": null
             }
           ]
         },
@@ -562,7 +686,7 @@
                 {
                   "id": 129538,
                   "field_id": 129870,
-                  "width": 200,
+                  "width": 154,
                   "hidden": false,
                   "order": 7
                 },
@@ -1663,7 +1787,7 @@
                 {
                   "id": 129554,
                   "field_id": 129886,
-                  "width": 200,
+                  "width": 293,
                   "hidden": false,
                   "order": 0
                 },
@@ -1871,7 +1995,7 @@
               "id": 3,
               "order": "3.00000000000000000000",
               "field_129890": "Table Three",
-              "field_129891": "We have an extra space at this table should we need it!",
+              "field_129891": "We have some extra space at this table should we need it!",
               "field_129892": [
                 4,
                 10,
