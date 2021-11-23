@@ -106,18 +106,20 @@ class ViewHandler:
         # Figure out which model to use for the given view type.
         view_type = view_type_registry.get(type_name)
         model_class = view_type.model_class
+        view_values = view_type.prepare_values(kwargs, table, user)
         allowed_fields = [
             "name",
             "filter_type",
             "filters_disabled",
         ] + view_type.allowed_fields
-        view_values = extract_allowed(kwargs, allowed_fields)
+        view_values = extract_allowed(view_values, allowed_fields)
         last_order = model_class.get_last_order(table)
 
         instance = model_class.objects.create(
             table=table, order=last_order, **view_values
         )
 
+        view_type.view_created(view=instance)
         view_created.send(self, view=instance, user=user, type_name=type_name)
 
         return instance
@@ -144,12 +146,13 @@ class ViewHandler:
         group.has_user(user, raise_error=True)
 
         view_type = view_type_registry.get_by_model(view)
+        view_values = view_type.prepare_values(kwargs, view.table, user)
         allowed_fields = [
             "name",
             "filter_type",
             "filters_disabled",
         ] + view_type.allowed_fields
-        view = set_allowed_attrs(kwargs, allowed_fields, view)
+        view = set_allowed_attrs(view_values, allowed_fields, view)
         view.save()
 
         view_updated.send(self, view=view, user=user)

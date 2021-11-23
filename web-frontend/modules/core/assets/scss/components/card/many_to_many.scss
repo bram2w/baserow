@@ -1,0 +1,31 @@
+.card-many-to-many__list-wrapper {
+  overflow: hidden;
+  margin: 0 -16px;
+  height: 22px;
+}
+
+.card-many-to-many__list {
+  overflow: hidden;
+  display: flex;
+  flex-wrap: nowrap;
+  height: 22px + 15px;
+  padding: 0 16px 15px 16px;
+  overflow-x: scroll;
+}
+
+.card-many-to-many__item {
+  white-space: nowrap;
+  display: flex;
+
+  @include fixed-height(22px, 13px);
+
+  &:not(:last-child) {
+    margin-right: 5px;
+  }
+}
+
+.card-many-to-many__name {
+  @extend %ellipsis;
+
+  max-width: 140px;
+}

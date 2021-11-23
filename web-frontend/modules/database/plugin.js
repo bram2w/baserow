@@ -61,6 +61,7 @@ import viewStore from '@baserow/modules/database/store/view'
 import fieldStore from '@baserow/modules/database/store/field'
 import gridStore from '@baserow/modules/database/store/view/grid'
 import formStore from '@baserow/modules/database/store/view/form'
+import rowModal from '@baserow/modules/database/store/rowModal'
 
 import { registerRealtimeEvents } from '@baserow/modules/database/realtime'
 import { CSVTableExporterType } from '@baserow/modules/database/exporterTypes'
@@ -104,6 +105,7 @@ export default (context) => {
   store.registerModule('table', tableStore)
   store.registerModule('view', viewStore)
   store.registerModule('field', fieldStore)
+  store.registerModule('rowModal', rowModal)
   store.registerModule('page/view/grid', gridStore)
   store.registerModule('page/view/form', formStore)
   store.registerModule('template/view/grid', gridStore)

@@ -17,8 +17,19 @@
         <li
           v-for="field in filteredFields"
           :key="field.id"
+          v-sortable="{
+            enabled: !readOnly,
+            id: field.id,
+            update: order,
+            handle: '[data-field-handle]',
+          }"
           class="hidings__item"
         >
+          <a
+            v-show="!readOnly"
+            class="hidings__item-handle"
+            data-field-handle
+          ></a>
           <SwitchInput
             :value="!isHidden(field.id)"
             :disabled="readOnly"
@@ -51,32 +62,25 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-
 import { escapeRegExp } from '@baserow/modules/core/utils/string'
 import context from '@baserow/modules/core/mixins/context'
-import { notifyIf } from '@baserow/modules/core/utils/error'
 import { clone } from '@baserow/modules/core/utils/object'
 import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 
 export default {
-  name: 'ViewHideContext',
+  name: 'ViewFieldsContext',
   mixins: [context],
   props: {
     fields: {
       type: Array,
       required: true,
     },
-    view: {
-      type: Object,
-      required: true,
-    },
     readOnly: {
       type: Boolean,
       required: true,
     },
-    storePrefix: {
-      type: String,
+    fieldOptions: {
+      type: Object,
       required: true,
     },
   },
@@ -136,50 +140,28 @@ export default {
         })
     },
   },
-  beforeCreate() {
-    this.$options.computed = {
-      ...(this.$options.computed || {}),
-      ...mapGetters({
-        fieldOptions:
-          this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
-      }),
-    }
-  },
   methods: {
-    async updateAllFieldOptions(values) {
+    order(order, oldOrder) {
+      this.$emit('update-order', { order, oldOrder })
+    },
+    updateAllFieldOptions(values) {
       const newFieldOptions = {}
       const oldFieldOptions = clone(this.fieldOptions)
       this.fields.forEach((field) => {
-        if (!field.primary) {
-          newFieldOptions[field.id] = values
-        }
+        newFieldOptions[field.id] = values
       })
 
-      try {
-        await this.$store.dispatch(
-          this.storePrefix + 'view/grid/updateAllFieldOptions',
-          {
-            newFieldOptions,
-            oldFieldOptions,
-          }
-        )
-      } catch (error) {
-        notifyIf(error, 'view')
-      }
+      this.$emit('update-all-field-options', {
+        newFieldOptions,
+        oldFieldOptions,
+      })
     },
-    async updateFieldOptionsOfField(field, values) {
-      try {
-        await this.$store.dispatch(
-          this.storePrefix + 'view/grid/updateFieldOptionsOfField',
-          {
-            field,
-            values,
-            oldValues: { hidden: this.fieldOptions[field.id].hidden },
-          }
-        )
-      } catch (error) {
-        notifyIf(error, 'view')
-      }
+    updateFieldOptionsOfField(field, values) {
+      this.$emit('update-field-options-of-field', {
+        field,
+        values,
+        oldValues: { hidden: this.fieldOptions[field.id].hidden },
+      })
     },
     isHidden(fieldId) {
       const exists = Object.prototype.hasOwnProperty.call(

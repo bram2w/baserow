@@ -89,6 +89,7 @@ class UserAdminView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "USER_ADMIN_CANNOT_DEACTIVATE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
+                    "ERROR_NO_ACTIVE_PREMIUM_LICENSE",
                 ]
             ),
             401: None,
@@ -134,6 +135,7 @@ class UserAdminView(APIView):
                 [
                     "USER_ADMIN_CANNOT_DELETE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
+                    "ERROR_NO_ACTIVE_PREMIUM_LICENSE",
                 ]
             ),
             401: None,

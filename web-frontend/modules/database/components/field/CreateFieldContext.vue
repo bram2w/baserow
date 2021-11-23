@@ -1,6 +1,11 @@
 <template>
   <Context ref="context">
-    <FieldForm ref="form" :table="table" @submitted="submit">
+    <FieldForm
+      ref="form"
+      :table="table"
+      :forced-type="forcedType"
+      @submitted="submit"
+    >
       <div class="context__form-actions">
         <button
           class="button"
@@ -27,6 +32,11 @@ export default {
     table: {
       type: Object,
       required: true,
+    },
+    forcedType: {
+      type: [String, null],
+      required: false,
+      default: null,
     },
   },
   data() {

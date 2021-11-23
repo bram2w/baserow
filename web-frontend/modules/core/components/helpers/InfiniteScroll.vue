@@ -4,6 +4,7 @@
     :class="{ 'infinite-scroll--reversed': reverse }"
     class="infinite-scroll"
     @scroll="handleScroll"
+    v-on="$listeners"
   >
     <slot />
     <div
@@ -13,7 +14,10 @@
     >
       <div v-if="loading" class="loading"></div>
     </div>
-    <slot v-if="currentCount >= maxCount && wrapperHasScrollbar" name="end">
+    <slot
+      v-if="renderEnd && currentCount >= maxCount && wrapperHasScrollbar"
+      name="end"
+    >
       <div class="infinite-scroll__end-line"></div>
     </slot>
   </section>
@@ -57,6 +61,11 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    renderEnd: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
   data() {

@@ -1,0 +1,9 @@
+.card-single-select-option__wrapper {
+  height: 20px;
+}
+
+.card-single-select-option {
+  @extend %ellipsis;
+
+  @include select-option-style(inline-block);
+}

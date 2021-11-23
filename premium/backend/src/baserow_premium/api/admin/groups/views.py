@@ -73,7 +73,9 @@ class GroupAdminView(APIView):
         ],
         responses={
             204: None,
-            400: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
+            400: get_error_schema(
+                ["ERROR_GROUP_DOES_NOT_EXIST", "ERROR_NO_ACTIVE_PREMIUM_LICENSE"]
+            ),
             401: None,
         },
     )

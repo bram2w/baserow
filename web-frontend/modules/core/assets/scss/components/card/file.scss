@@ -1,0 +1,50 @@
+.card-file__list-wrapper {
+  overflow: hidden;
+  margin: 0 -16px;
+  height: 22px;
+}
+
+.card-file__list {
+  overflow: hidden;
+  display: flex;
+  flex-wrap: nowrap;
+  height: 22px + 15px;
+  list-style: none;
+  padding: 0 16px 15px 16px;
+  margin: 0;
+  overflow-x: scroll;
+}
+
+%card-file__border {
+  border-radius: 3px;
+  border: solid 1px $color-neutral-300;
+}
+
+.card-file__item {
+  white-space: nowrap;
+  display: flex;
+  height: 22px;
+
+  &:not(:last-child) {
+    margin-right: 4px;
+  }
+}
+
+.card-file__image {
+  @extend %card-file__border;
+
+  display: block;
+  width: auto;
+  height: 22px;
+}
+
+.card-file__icon {
+  @extend %card-file__border;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $color-neutral-600;
+  width: 22px;
+  height: 22px;
+}

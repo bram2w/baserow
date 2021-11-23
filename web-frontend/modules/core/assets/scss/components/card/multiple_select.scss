@@ -1,0 +1,5 @@
+.card-multiple-select-option {
+  overflow: visible;
+
+  @include select-option-style(flex);
+}

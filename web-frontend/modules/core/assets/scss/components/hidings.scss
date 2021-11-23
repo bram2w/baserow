@@ -38,9 +38,10 @@
 }
 
 .hidings__list {
+  position: relative;
   list-style: none;
-  margin: 0;
-  padding: 8px 0 0 0;
+  margin: 8px 0 0 0;
+  padding: 0;
 }
 
 .hidings__item {
@@ -48,8 +49,21 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   padding: 0;
+}
+
+.hidings__item-handle {
+  width: 8px;
+  height: 16px;
+  margin-right: 8px;
+  background-image: radial-gradient($color-neutral-200 40%, transparent 40%);
+  background-size: 4px 4px;
+  background-repeat: repeat;
+
+  &:hover {
+    background-image: radial-gradient($color-neutral-500 40%, transparent 40%);
+  }
 }
 
 .hidings__footer {

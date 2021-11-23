@@ -42,7 +42,7 @@
         </div>
       </div>
     </div>
-    <div class="control">
+    <div v-if="forcedType === null" class="control">
       <div class="control__elements">
         <Dropdown
           v-model="values.type"
@@ -99,13 +99,18 @@ export default {
       required: false,
       default: false,
     },
+    forcedType: {
+      type: [String, null],
+      required: false,
+      default: null,
+    },
   },
   data() {
     return {
       allowedValues: ['name', 'type'],
       values: {
         name: '',
-        type: '',
+        type: this.forcedType || '',
       },
     }
   },

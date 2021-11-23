@@ -1,0 +1,77 @@
+<template>
+  <Context>
+    <KanbanViewOptionForm
+      ref="form"
+      :default-values="option"
+      @submitted="submit"
+    >
+      <div class="context__form-actions">
+        <button
+          class="button"
+          :class="{ 'button--loading': loading }"
+          :disabled="loading"
+        >
+          {{ $t('action.change') }}
+        </button>
+      </div>
+    </KanbanViewOptionForm>
+  </Context>
+</template>
+
+<script>
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import context from '@baserow/modules/core/mixins/context'
+import KanbanViewOptionForm from '@baserow_premium/components/views/kanban/KanbanViewOptionForm'
+
+export default {
+  name: 'KanbanViewUpdateStackContext',
+  components: { KanbanViewOptionForm },
+  mixins: [context],
+  props: {
+    option: {
+      type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
+      required: true,
+    },
+    primary: {
+      type: Object,
+      required: true,
+    },
+    storePrefix: {
+      type: String,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+    }
+  },
+  methods: {
+    async submit(values) {
+      this.loading = true
+
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/kanban/updateStack',
+          {
+            optionId: this.option.id,
+            fields: this.fields,
+            primary: this.primary,
+            values,
+          }
+        )
+        this.$emit('saved')
+        this.hide()
+      } catch (error) {
+        notifyIf(error, 'field')
+      }
+
+      this.loading = false
+    },
+  },
+}
+</script>
