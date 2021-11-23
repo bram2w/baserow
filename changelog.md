@@ -15,6 +15,8 @@
 * Made it possible to change user information.
 * Added table webhooks functionality.
 * Added extra indexes for user tables increasing performance.
+* Fixed a bug where the frontend would fail hard when converting a multiple select field
+  inside the row edit modal.
 
 ## Released (2021-10-05)
 
