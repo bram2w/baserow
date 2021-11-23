@@ -56,6 +56,19 @@ import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/R
 import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row/RowEditFieldMultipleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 
+import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
+import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
+import RowCardFieldEmail from '@baserow/modules/database/components/card/RowCardFieldEmail'
+import RowCardFieldFile from '@baserow/modules/database/components/card/RowCardFieldFile'
+import RowCardFieldFormula from '@baserow/modules/database/components/card/RowCardFieldFormula'
+import RowCardFieldLinkRow from '@baserow/modules/database/components/card/RowCardFieldLinkRow'
+import RowCardFieldMultipleSelect from '@baserow/modules/database/components/card/RowCardFieldMultipleSelect'
+import RowCardFieldNumber from '@baserow/modules/database/components/card/RowCardFieldNumber'
+import RowCardFieldPhoneNumber from '@baserow/modules/database/components/card/RowCardFieldPhoneNumber'
+import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/RowCardFieldSingleSelect'
+import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
+import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
+
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
@@ -142,6 +155,26 @@ export class FieldType extends Registerable {
    */
   getFormViewFieldComponent() {
     return this.getRowEditFieldComponent()
+  }
+
+  /**
+   * This component should represent the field's value in a row card display. To
+   * improve performance, this component should be a functional component.
+   */
+  getCardComponent() {
+    throw new Error(
+      'Not implement error. This method should return a component.'
+    )
+  }
+
+  /**
+   * In some cases, for example with the kanban view or the gallery view, we want to
+   * only show the visible cards. In order to calculate the correct position of
+   * those cards, we need to know the height. Because every field could have a
+   * different height in the card, it must be returned here.
+   */
+  getCardValueHeight(field) {
+    return this.getCardComponent().height || 0
   }
 
   /**
@@ -477,6 +510,10 @@ export class TextFieldType extends FieldType {
     return RowEditFieldText
   }
 
+  getCardComponent() {
+    return RowCardFieldText
+  }
+
   getEmptyValue(field) {
     return field.text_default
   }
@@ -533,6 +570,10 @@ export class LongTextFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldLongText
+  }
+
+  getCardComponent() {
+    return RowCardFieldText
   }
 
   getEmptyValue(field) {
@@ -599,6 +640,10 @@ export class LinkRowFieldType extends FieldType {
 
   getFormViewFieldComponent() {
     return FormViewFieldLinkRow
+  }
+
+  getCardComponent() {
+    return RowCardFieldLinkRow
   }
 
   getEmptyValue(field) {
@@ -709,6 +754,10 @@ export class NumberFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldNumber
+  }
+
+  getCardComponent() {
+    return RowCardFieldNumber
   }
 
   getSortIndicator() {
@@ -857,6 +906,10 @@ export class BooleanFieldType extends FieldType {
     return RowEditFieldBoolean
   }
 
+  getCardComponent() {
+    return RowCardFieldBoolean
+  }
+
   getEmptyValue(field) {
     return false
   }
@@ -906,6 +959,10 @@ class BaseDateFieldType extends FieldType {
 
   getFormComponent() {
     return FieldDateSubForm
+  }
+
+  getCardComponent() {
+    return RowCardFieldDate
   }
 
   getSort(name, order) {
@@ -1179,6 +1236,10 @@ export class URLFieldType extends FieldType {
     return RowEditFieldURL
   }
 
+  getCardComponent() {
+    return RowCardFieldURL
+  }
+
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
     return isValidURL(value) ? value : ''
@@ -1250,6 +1311,10 @@ export class EmailFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldEmail
+  }
+
+  getCardComponent() {
+    return RowCardFieldEmail
   }
 
   prepareValueForPaste(field, clipboardData) {
@@ -1326,6 +1391,10 @@ export class FileFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldFile
+  }
+
+  getCardComponent() {
+    return RowCardFieldFile
   }
 
   getFormViewFieldComponent() {
@@ -1445,6 +1514,10 @@ export class SingleSelectFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldSingleSelect
+  }
+
+  getCardComponent() {
+    return RowCardFieldSingleSelect
   }
 
   getSort(name, order) {
@@ -1571,6 +1644,10 @@ export class MultipleSelectFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldMultipleSelect
+  }
+
+  getCardComponent() {
+    return RowCardFieldMultipleSelect
   }
 
   getSort(name, order) {
@@ -1707,6 +1784,10 @@ export class PhoneNumberFieldType extends FieldType {
     return RowEditFieldPhoneNumber
   }
 
+  getCardComponent() {
+    return RowCardFieldPhoneNumber
+  }
+
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
     return isSimplePhoneNumber(value) ? value : ''
@@ -1793,6 +1874,10 @@ export class FormulaFieldType extends FieldType {
     return RowEditFieldFormula
   }
 
+  getCardComponent() {
+    return RowCardFieldFormula
+  }
+
   _mapFormulaTypeToFieldType(formulaType) {
     return {
       invalid: TextFieldType.getType(),
@@ -1803,6 +1888,12 @@ export class FormulaFieldType extends FieldType {
       boolean: BooleanFieldType.getType(),
       date_interval: DateFieldType.getType(),
     }[formulaType]
+  }
+
+  getCardValueHeight(field) {
+    return this.app.$registry
+      .get('field', this._mapFormulaTypeToFieldType(field.formula_type))
+      .getCardValueHeight(field)
   }
 
   getSort(name, order, field, $registry) {

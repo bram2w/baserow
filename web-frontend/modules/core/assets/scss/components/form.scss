@@ -220,6 +220,26 @@
     &::before {
       background-color: $color-neutral-50;
     }
+
+    &.selected::before {
+      background-color: $color-neutral-500;
+      border-color: $color-neutral-500;
+    }
+  }
+
+  &.radio--loading {
+    cursor: inherit;
+
+    &::before {
+      display: none;
+    }
+
+    &::after {
+      content: '';
+
+      @include loading(14px);
+      @include absolute(7px, auto, 0, 1px);
+    }
   }
 }
 

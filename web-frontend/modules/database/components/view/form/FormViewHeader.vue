@@ -10,7 +10,7 @@
         <i class="header__filter-icon fas fa-share-square"></i>
         <span class="header__filter-name">Share form</span>
       </a>
-      <Context ref="context" class="view-form__shared-link-context">
+      <Context ref="context">
         <a
           v-if="!view.public"
           class="view-form__create-link"

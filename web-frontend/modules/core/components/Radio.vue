@@ -15,12 +15,19 @@ export default {
     value: {
       type: [String, Number, Boolean, Object],
       required: false,
+      default: '',
     },
     modelValue: {
       type: [String, Number, Boolean, Object],
       required: false,
+      default: '',
     },
     disabled: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    loading: {
       type: Boolean,
       required: false,
       default: false,
@@ -34,13 +41,17 @@ export default {
           'default'
         ),
         'radio--disabled': this.disabled,
+        'radio--loading': this.loading,
         selected: this.modelValue === this.value,
       }
+    },
+    selected() {
+      return this.modelValue === this.value
     },
   },
   methods: {
     select(value) {
-      if (this.disabled) {
+      if (this.disabled || this.selected) {
         return
       }
       this.$emit('input', value)

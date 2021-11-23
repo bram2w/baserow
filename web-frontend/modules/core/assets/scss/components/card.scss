@@ -1,0 +1,31 @@
+// Some of the properties must be kept in sync with `KanbanViewStack.vue::cardHeight`.
+// This is because the kanban view needs to know the height of each card in order to
+// paginate correctly. If properties that influence the height and added or changed, we
+// most likely need to make a change in the KanbanView.vue::cardHeight method. These
+// are properties like margin-top, margin-bottom, padding-top, padding-bottom, height,
+// line-height, etc
+.card {
+  background-color: $white;
+  box-shadow: 0 1px 3px 0 rgba($black, 0.16);
+  border-radius: 3px;
+  padding: 16px 0;
+}
+
+.card__field {
+  padding: 0 16px;
+
+  &:not(:last-child) {
+    margin-bottom: 10px;
+  }
+}
+
+.card__field-name {
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.card__field-value {
+  width: 100%;
+}

@@ -15,23 +15,26 @@
         })
       }}</span>
     </a>
-    <GridViewHideContext
+    <ViewFieldsContext
       ref="context"
-      :view="view"
       :fields="fields"
       :read-only="readOnly"
-      :store-prefix="storePrefix"
-    ></GridViewHideContext>
+      :field-options="fieldOptions"
+      @update-all-field-options="updateAllFieldOptions"
+      @update-field-options-of-field="updateFieldOptionsOfField"
+      @update-order="orderFieldOptions"
+    ></ViewFieldsContext>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
-import GridViewHideContext from '@baserow/modules/database/components/view/grid/GridViewHideContext'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import ViewFieldsContext from '@baserow/modules/database/components/view/ViewFieldsContext'
 
 export default {
   name: 'GridViewHide',
-  components: { GridViewHideContext },
+  components: { ViewFieldsContext },
   props: {
     fields: {
       type: Array,
@@ -69,6 +72,47 @@ export default {
           this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
       }),
     }
+  },
+  methods: {
+    async updateAllFieldOptions({ newFieldOptions, oldFieldOptions }) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateAllFieldOptions',
+          {
+            newFieldOptions,
+            oldFieldOptions,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+    },
+    async updateFieldOptionsOfField({ field, values, oldValues }) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateFieldOptionsOfField',
+          {
+            field,
+            values,
+            oldValues,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+    },
+    async orderFieldOptions({ order }) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/updateFieldOptionsOrder',
+          {
+            order,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+    },
   },
 }
 </script>

@@ -104,6 +104,21 @@ export class ViewType extends Registerable {
   }
 
   /**
+   * Indicates whether of nor the provided table id has this current view type
+   * selected. Because every view type has it's own store, this check can be used to
+   * check if the state of that store has to be updated.
+   */
+  isCurrentView(store, tableId) {
+    const table = store.getters['table/getSelected']
+    const view = store.getters['view/getSelected']
+    return (
+      table.id === tableId &&
+      Object.prototype.hasOwnProperty.call(view, 'type') &&
+      view.type === this.getType()
+    )
+  }
+
+  /**
    * The fetch method is called inside the asyncData function when the table page
    * loads with a selected view. It is possible to fill some stores serverside here.
    */
@@ -116,7 +131,14 @@ export class ViewType extends Registerable {
    * stay the same if possible. Can throw a RefreshCancelledException when the view
    * wishes to cancel the current refresh call due to a new refresh call.
    */
-  refresh({ store }, view) {}
+  refresh(
+    context,
+    view,
+    fields,
+    primary,
+    storePrefix = '',
+    includeFieldOptions = false
+  ) {}
 
   /**
    * Method that is called when a field has been created. This can be useful to
@@ -146,6 +168,16 @@ export class ViewType extends Registerable {
    * Method that is called when the field options of a view are updated.
    */
   fieldOptionsUpdated(context, view, fieldOptions, storePrefix) {}
+
+  /**
+   * Method that is called when the selected view is updated.
+   *
+   * @return  Indicates whether the page should be refreshed. The view is already
+   *          refreshed automatically when the filter type or disabled is updated.
+   */
+  updated(context, view, oldView, storePrefix) {
+    return false
+  }
 
   /**
    * Event that is called when a row is created from an outside source, so for example
@@ -212,6 +244,18 @@ export class ViewType extends Registerable {
       canFilter: this.canFilter,
       canSort: this.canSort,
     }
+  }
+
+  /**
+   * If the view type is disabled, this text will be visible explaining why.
+   */
+  getDeactivatedText() {}
+
+  /**
+   * Indicates if the view type is disabled.
+   */
+  isDeactivated() {
+    return false
   }
 }
 
@@ -340,16 +384,6 @@ export class GridViewType extends ViewType {
     )
   }
 
-  isCurrentView(store, tableId) {
-    const table = store.getters['table/getSelected']
-    const grid = store.getters['view/getSelected']
-    return (
-      table.id === tableId &&
-      Object.prototype.hasOwnProperty.call(grid, 'type') &&
-      grid.type === GridViewType.getType()
-    )
-  }
-
   async rowCreated(
     { store },
     tableId,
@@ -426,7 +460,7 @@ export class GridViewType extends ViewType {
     updateFunction,
     storePrefix = ''
   ) {
-    if (this.isCurrentView(store, tableId, storePrefix)) {
+    if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/grid/updateRowMetadata', {
         tableId,
         rowId,

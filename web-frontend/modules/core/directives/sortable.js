@@ -52,7 +52,7 @@ export default {
       : el
 
     el.mousedownEvent = (event) => {
-      if (!el.sortableEnabled) {
+      if (!el.sortableEnabled || event.button !== 0) {
         return
       }
 

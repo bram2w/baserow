@@ -141,6 +141,7 @@
               <Radio v-model="radio" value="b">Option B</Radio>
               <Radio v-model="radio" value="c">Option C</Radio>
               <Radio v-model="radio" value="d" :disabled="true">Option D</Radio>
+              <Radio v-model="radio" value="e" :loading="true">Option E</Radio>
             </div>
           </div>
           <div class="control">
@@ -1109,6 +1110,188 @@
                 dignissim mauris dictum imperdiet. Mauris ultrices ac eros at
                 fringilla. Praesent ut tincidunt dui.
               </p>
+            </div>
+          </div>
+        </div>
+        <div class="margin-bottom-3">
+          <div class="card" style="width: 320px">
+            <div class="card__field">
+              <div class="card__field-name">Text</div>
+              <div class="card__field-value">
+                <div class="card-text">This is a single line text field</div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Long text</div>
+              <div class="card__field-value">
+                <div class="card-text">
+                  This is a long text field with a very long content that
+                  doesn't fit.
+                </div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Link row</div>
+              <div class="card__field-value">
+                <div class="card-many-to-many__list-wrapper">
+                  <div class="card-many-to-many__list">
+                    <div class="card-many-to-many__item card-link-row">
+                      <span class="card-many-to-many__name">
+                        Value 1 with a very long name that doesn't
+                      </span>
+                    </div>
+                    <div
+                      class="
+                        card-many-to-many__item
+                        card-link-row card-link-row--unnamed
+                      "
+                    >
+                      <span class="card-many-to-many__name">
+                        unnamed row 1
+                      </span>
+                    </div>
+                    <div class="card-many-to-many__item card-link-row">
+                      <span class="card-many-to-many__name">
+                        Another value
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Number</div>
+              <div class="card__field-value">
+                <div class="card-text">205</div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Decimal</div>
+              <div class="card__field-value">
+                <div class="card-text">205.55</div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Boolean</div>
+              <div class="card__field-value">
+                <div class="card-boolean">
+                  <i class="fas fa-check"></i>
+                </div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Date</div>
+              <div class="card__field-value">
+                <div class="card-text">2021-01-01</div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Datetime</div>
+              <div class="card__field-value">
+                <div class="card-text">2021-01-01</div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">URL</div>
+              <div class="card__field-value">
+                <div class="card-text">
+                  <a href="#">http://baserow.io</a>
+                </div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Email</div>
+              <div class="card__field-value">
+                <div class="card-text">
+                  <a href="#">bram@baserow.io</a>
+                </div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">File</div>
+              <div class="card__field-value">
+                <ul class="card-file__list">
+                  <li class="card-file__item">
+                    <img
+                      src="http://localhost:4000/media/thumbnails/tiny/NcTfu10MwH9xtUkzL5jcmqIDXE0vkHin_1e01581444c66c952aa585f6fc79a671885b75053d275329f20e7b5faa73d7ec.png"
+                      class="card-file__image"
+                    />
+                  </li>
+                  <li class="card-file__item">
+                    <img
+                      src="http://localhost:4000/media/thumbnails/tiny/E413HC1eHsw9gakeRrpUOodHprEBT1pv_01bb5d9bbbd9addb39d1352877ca061573f2ca8ba64631ae5d4b7f8e16f6b18b.png"
+                      class="card-file__image"
+                    />
+                  </li>
+                  <li class="card-file__item">
+                    <i class="fas card-file__icon fa-file"></i>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Single select</div>
+              <div class="card__field-value">
+                <div class="card-single-select-option background-color--orange">
+                  Option 1 with a very long name that doesn't fit unfortunately.
+                </div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Single select</div>
+              <div class="card__field-value">
+                <div class="card-single-select-option background-color--gray">
+                  Option 2
+                </div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Multiple select</div>
+              <div class="card__field-value">
+                <div class="card-many-to-many__list-wrapper">
+                  <div class="card-many-to-many__list">
+                    <div
+                      class="
+                        card-many-to-many__item
+                        card-multiple-select-option
+                        background-color--green
+                      "
+                    >
+                      <span class="card-many-to-many__name">
+                        Option value 1
+                      </span>
+                    </div>
+                    <div
+                      class="
+                        card-many-to-many__item
+                        card-multiple-select-option
+                        background-color--blue
+                      "
+                    >
+                      <span class="card-many-to-many__name">
+                        Option 2 with a very long name that doesn't fit
+                      </span>
+                    </div>
+                    <div
+                      class="
+                        card-many-to-many__item
+                        card-multiple-select-option
+                        background-color--blue
+                      "
+                    >
+                      <span class="card-many-to-many__name"> Option 3 </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card__field">
+              <div class="card__field-name">Phone</div>
+              <div class="card__field-value">
+                <div class="card-text">
+                  <a href="#">+316 12345678</a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

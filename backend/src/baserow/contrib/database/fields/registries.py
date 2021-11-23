@@ -295,7 +295,7 @@ class FieldType(
         """
         The prepare_values hook gives the possibility to change the provided values
         that just before they are going to be used to create or update the instance. For
-        example if an ID is provided it can be converted to a model instance. Or to
+        example if an ID is provided, it can be converted to a model instance. Or to
         convert a certain date string to a date object.
 
         :param values: The provided values.

@@ -141,7 +141,6 @@ export default {
             this.job.status === 'failed'
               ? this.$t('exportTableModal.failedDescription')
               : this.$t('exportTableModal.cancelledDescription')
-          console.log(title, message)
           this.showError(title, message)
         }
       } catch (error) {

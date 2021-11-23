@@ -37,25 +37,13 @@
         <div class="select__footer-multiple-label">
           {{ $t('viewsContext.addView') }}
         </div>
-        <a
+        <CreateViewLink
           v-for="(viewType, type) in viewTypes"
           :key="type"
-          :ref="'createViewModalToggle' + type"
-          class="select__footer-multiple-item"
-          @click="toggleCreateViewModal(type)"
-        >
-          <i
-            class="select__footer-multiple-icon fas"
-            :class="'fa-' + viewType.iconClass"
-          ></i>
-          {{ viewType.getName() }}
-          <CreateViewModal
-            :ref="'createViewModal' + type"
-            :table="table"
-            :view-type="viewType"
-            @created="scrollViewDropdownToBottom()"
-          ></CreateViewModal>
-        </a>
+          :table="table"
+          :view-type="viewType"
+          @created="scrollViewDropdownToBottom()"
+        ></CreateViewLink>
       </div>
     </div>
   </Context>
@@ -64,18 +52,18 @@
 <script>
 import { mapState } from 'vuex'
 
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import { escapeRegExp } from '@baserow/modules/core/utils/string'
 import context from '@baserow/modules/core/mixins/context'
 import dropdownHelpers from '@baserow/modules/core/mixins/dropdownHelpers'
-import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContextItem from '@baserow/modules/database/components/view/ViewsContextItem'
-import CreateViewModal from '@baserow/modules/database/components/view/CreateViewModal'
-import { escapeRegExp } from '@baserow/modules/core/utils/string'
+import CreateViewLink from '@baserow/modules/database/components/view/CreateViewLink'
 
 export default {
   name: 'ViewsContext',
   components: {
     ViewsContextItem,
-    CreateViewModal,
+    CreateViewLink,
   },
   mixins: [context, dropdownHelpers],
   props: {
@@ -186,10 +174,6 @@ export default {
         viewItemsBeforeSelectedViewItemHeight -
         parentContainerBeforeHeight
       )
-    },
-    toggleCreateViewModal(type) {
-      const target = this.$refs['createViewModalToggle' + type][0]
-      this.$refs['createViewModal' + type][0].toggle(target)
     },
     searchAndOrder(views) {
       const query = this.query

@@ -3,8 +3,8 @@ import { DatabaseApplicationType } from '@baserow/modules/database/applicationTy
 import GridViewRowExpandButtonWithCommentCount from '@baserow_premium/components/row_comments/GridViewRowExpandButtonWithCommentCount'
 
 export class PremiumDatabaseApplicationType extends DatabaseApplicationType {
-  getRowEditModalRightSidebarComponent() {
-    return RowCommentsSidebar
+  getRowEditModalRightSidebarComponent(readOnly) {
+    return readOnly ? null : RowCommentsSidebar
   }
 
   getRowExpandButtonComponent() {

@@ -1,17 +1,26 @@
 <template>
   <li
+    v-tooltip="deactivated ? deactivatedText : null"
     class="select__item"
     :class="{
       active: view._.selected,
       'select__item--loading': view._.loading,
       'select__item--no-options': readOnly,
+      disabled: deactivated,
     }"
   >
-    <a class="select__item-link" @click="$emit('selected', view)">
+    <a
+      class="select__item-link"
+      @click="!deactivated && $emit('selected', view)"
+    >
       <div class="select__item-name">
         <i
           class="select__item-icon fas fa-fw"
-          :class="view._.type.colorClass + ' fa-' + view._.type.iconClass"
+          :class="
+            (deactivated ? '' : view._.type.colorClass) +
+            ' fa-' +
+            view._.type.iconClass
+          "
         ></i>
         <EditableViewName ref="rename" :view="view"></EditableViewName>
       </div>
@@ -57,6 +66,17 @@ export default {
       type: Boolean,
       required: false,
       default: true,
+    },
+  },
+  computed: {
+    deactivatedText() {
+      return this.$registry.get('view', this.view.type).getDeactivatedText()
+    },
+    deactivated() {
+      return (
+        !this.readOnly &&
+        this.$registry.get('view', this.view.type).isDeactivated()
+      )
     },
   },
   methods: {

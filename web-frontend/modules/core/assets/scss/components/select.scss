@@ -215,9 +215,18 @@
   color: $color-primary-900;
   border-radius: 3px;
 
-  &:hover {
+  &:not(.select__footer-multiple-item--disabled):hover {
     text-decoration: none;
     background-color: $color-neutral-100;
+  }
+
+  &.select__footer-multiple-item--disabled {
+    color: $color-neutral-400;
+
+    &:hover {
+      cursor: inherit;
+      text-decoration: none;
+    }
   }
 }
 

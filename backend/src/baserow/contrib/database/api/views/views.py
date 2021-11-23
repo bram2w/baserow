@@ -225,10 +225,10 @@ class ViewsView(APIView):
         """Creates a new view for a user."""
 
         type_name = data.pop("type")
-        field_type = view_type_registry.get(type_name)
+        view_type = view_type_registry.get(type_name)
         table = TableHandler().get_table(table_id)
 
-        with field_type.map_api_exceptions():
+        with view_type.map_api_exceptions():
             view = ViewHandler().create_view(request.user, table, type_name, **data)
 
         serializer = view_type_registry.get_serializer(

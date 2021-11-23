@@ -63,14 +63,14 @@ import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 export default {
   layout: 'app',
   middleware: 'staff',
+  async asyncData({ app }) {
+    const { data } = await SettingsService(app.$client).getInstanceID()
+    return { instanceId: data.instance_id }
+  },
   computed: {
     ...mapGetters({
       settings: 'settings/get',
     }),
-  },
-  async asyncData({ app }) {
-    const { data } = await SettingsService(app.$client).getInstanceID()
-    return { instanceId: data.instance_id }
   },
   methods: {
     async updateSettings(values) {
