@@ -129,6 +129,8 @@ $ source env/bin/activate
 
 # Install backend dependencies through pip
 $ pip3 install -e ./baserow/backend
+# Install the premium plugin
+$ pip3 install -e ./baserow/premium/backend
 
 # Deactivate the virtual environment
 $ deactivate
@@ -215,9 +217,6 @@ $ baserow migrate
 
 # Sync the template files with the database
 $ baserow sync_templates
-
-# Ensure formulas are updated to the latest version
-$ baserow update_formulas 
 
 $ deactivate
 ```
@@ -373,12 +372,12 @@ $ git pull
 $ cd /baserow
 $ source env/bin/activate
 $ pip3 install -e ./baserow/backend
+$ pip3 install -e ./baserow/premium/backend
 $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST='localhost'
 $ baserow migrate
 $ baserow sync_templates
-$ baserow update_formulas 
 $ deactivate
 $ cd baserow/web-frontend
 $ yarn install
@@ -395,12 +394,12 @@ $ cd /baserow
 $ git pull
 $ source backend/env/bin/activate
 $ pip3 install -e ./backend
+$ pip3 install -e ./premium/backend
 $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST='localhost'
 $ baserow migrate
 $ baserow sync_templates
-$ baserow update_formulas 
 $ deactivate
 $ cd web-frontend
 $ yarn install

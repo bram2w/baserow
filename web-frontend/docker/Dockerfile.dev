@@ -35,7 +35,7 @@ WORKDIR /baserow/web-frontend
 RUN yarn install
 
 COPY --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
-COPY --chown=$UID:$GID ./premium/web-frontend /baserow/web-frontend/plugins/premium
+COPY --chown=$UID:$GID ./premium/web-frontend /baserow/premium/web-frontend/
 
 RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/web-frontend/docker/docker-entrypoint.sh

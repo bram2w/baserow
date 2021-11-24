@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Released (2021-11-24)
 
 * Fixed a bug where the frontend would fail hard if a table with no views was accessed.
 * Tables can now be opened in new browser tabs.

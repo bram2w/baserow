@@ -25,7 +25,6 @@ describe('Formula Functions Test', () => {
       'right',
       'trim',
       'regex_replace',
-      'repeat',
       'multiply',
       'divide',
       'tonumber',
