@@ -1,13 +1,23 @@
 import abc
-from typing import List, Optional
+from typing import List, Optional, Type, Dict, Set
 
-from django.db.models import Expression
+from django.db.models import (
+    Expression,
+    Model,
+    ExpressionWrapper,
+    OuterRef,
+    Subquery,
+    Value,
+)
 
 from baserow.contrib.database.formula.ast.tree import (
     BaserowFunctionCall,
     BaserowFunctionDefinition,
     ArgCountSpecifier,
     BaserowExpression,
+)
+from baserow.contrib.database.formula.expression_generator.django_expressions import (
+    AndExpr,
 )
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
@@ -16,7 +26,6 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowSingleArgumentTypeChecker,
     BaserowArgumentTypeChecker,
 )
-from baserow.contrib.database.table.models import GeneratedTableModel
 
 
 class FixedNumOfArgs(ArgCountSpecifier):
@@ -101,7 +110,13 @@ class ZeroArgumentBaserowFunction(BaserowFunctionDefinition):
         return self.type_function(func_call)
 
     def to_django_expression_given_args(
-        self, args: List[Expression], model_instance: Optional[GeneratedTableModel]
+        self,
+        args: List[Expression],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
     ) -> Expression:
         return self.to_django_expression()
 
@@ -116,6 +131,8 @@ class OneArgumentBaserowFunction(BaserowFunctionDefinition):
     . Without this normal classes implementing BaserowFunctionDefinition need to faff
     about accessing argument lists etc.
     """
+
+    aggregate = False
 
     @property
     def arg_type(self) -> BaserowSingleArgumentTypeChecker:
@@ -188,17 +205,67 @@ class OneArgumentBaserowFunction(BaserowFunctionDefinition):
         args: List[BaserowExpression[BaserowFormulaValidType]],
         func_call: BaserowFunctionCall[UnTyped],
     ) -> BaserowExpression[BaserowFormulaType]:
-        return self.type_function(func_call, args[0])
+        arg = args[0]
+        if self.aggregate:
+            if not arg.many:
+                func_call.with_invalid_type(
+                    "first argument must be an aggregate formula"
+                )
+
+        expr = self.type_function(func_call, arg)
+        if self.aggregate:
+            expr.many = False
+        return expr
 
     def to_django_expression_given_args(
-        self, args: List[Expression], model_instance: Optional[GeneratedTableModel]
+        self,
+        args: List[Expression],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
     ) -> Expression:
-        return self.to_django_expression(args[0])
+        django_expr = self.to_django_expression(args[0])
+        if self.aggregate:
+            return aggregate_wrapper(
+                django_expr, model, pre_annotations, aggregate_filters, join_ids
+            )
+        else:
+            return django_expr
 
     def call_and_type_with(
         self, arg: BaserowExpression[BaserowFormulaType]
     ) -> BaserowFunctionCall[BaserowFormulaType]:
         return self.call_and_type_with_args([arg])
+
+
+def aggregate_wrapper(
+    aggregate_func_expr, model, pre_annotations, aggregate_filters, join_ids
+):
+    if len(aggregate_filters) > 0:
+        combined_filter = Value(True)
+        for f in aggregate_filters:
+            combined_filter = AndExpr(combined_filter, f)
+        aggregate_func_expr.filter = combined_filter
+        aggregate_filters.clear()
+
+    # We need to enforce that each filtered relation is not null so django generates us
+    # inner joins.
+    not_null_filters_for_inner_join = {
+        key + "__isnull": False for key in pre_annotations
+    }
+    expr = ExpressionWrapper(
+        Subquery(
+            model.objects_and_trash.annotate(**pre_annotations)
+            .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
+            .values(result=aggregate_func_expr),
+        ),
+        output_field=aggregate_func_expr.output_field,
+    )
+    pre_annotations.clear()
+    join_ids.clear()
+    return expr
 
 
 class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
@@ -208,6 +275,8 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
     Without this normal classes implementing BaserowFunctionDefinition need to faff
     about accessing argument lists etc.
     """
+
+    aggregate = False
 
     @property
     def arg1_type(self) -> BaserowSingleArgumentTypeChecker:
@@ -297,12 +366,33 @@ class TwoArgumentBaserowFunction(BaserowFunctionDefinition):
         args: List[BaserowExpression[BaserowFormulaValidType]],
         func_call: BaserowFunctionCall[UnTyped],
     ) -> BaserowExpression[BaserowFormulaType]:
-        return self.type_function(func_call, args[0], args[1])
+        if self.aggregate:
+            if not args[0].many and not args[1].many:
+                func_call.with_invalid_type(
+                    "one of the two arguments must be an aggregate formula"
+                )
+
+        expr = self.type_function(func_call, args[0], args[1])
+        if self.aggregate:
+            expr.many = False
+        return expr
 
     def to_django_expression_given_args(
-        self, args: List[Expression], model_instance: Optional[GeneratedTableModel]
+        self,
+        args: List[Expression],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
     ) -> Expression:
-        return self.to_django_expression(args[0], args[1])
+        django_expr = self.to_django_expression(args[0], args[1])
+        if self.aggregate:
+            return aggregate_wrapper(
+                django_expr, model, pre_annotations, aggregate_filters, join_ids
+            )
+        else:
+            return django_expr
 
     def call_and_type_with(
         self,
@@ -425,7 +515,13 @@ class ThreeArgumentBaserowFunction(BaserowFunctionDefinition):
         return self.type_function(func_call, args[0], args[1], args[2])
 
     def to_django_expression_given_args(
-        self, args: List[Expression], model_instance: Optional[GeneratedTableModel]
+        self,
+        args: List[Expression],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
     ) -> Expression:
         return self.to_django_expression(args[0], args[1], args[2])
 

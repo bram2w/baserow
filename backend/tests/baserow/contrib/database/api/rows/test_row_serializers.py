@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from rest_framework import serializers
 
@@ -214,7 +216,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
         model, RowSerializer, is_response=True, user_field_names=True
     )
     serializer_instance = serializer_class(queryset, many=True)
-    assert serializer_instance.data[1] == {
+    assert json.loads(json.dumps(serializer_instance.data[1])) == {
         "boolean": True,
         "date_eu": "2020-02-01",
         "date_us": "2020-02-01",
@@ -302,4 +304,9 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
         "text": "text",
         "url": "https://www.google.com",
         "formula": "test FORMULA",
+        "lookup": [
+            {"id": 1, "value": "linked_row_1"},
+            {"id": 2, "value": "linked_row_2"},
+            {"id": 3, "value": None},
+        ],
     }

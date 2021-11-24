@@ -1,4 +1,3 @@
-from baserow.contrib.database.fields.models import Field
 from baserow.core.exceptions import (
     InstanceTypeDoesNotExist,
     InstanceTypeAlreadyRegistered,
@@ -53,8 +52,8 @@ class MaxFieldLimitExceeded(Exception):
 class MaxFieldNameLengthExceeded(Exception):
     """Raised when the field name exceeds the max length."""
 
-    def __init__(self, *args, **kwargs):
-        self.max_field_name_length = Field.get_max_name_length()
+    def __init__(self, max_field_name_length, *args, **kwargs):
+        self.max_field_name_length = max_field_name_length
         super().__init__(*args, **kwargs)
 
 
@@ -118,4 +117,18 @@ class AllProvidedMultipleSelectValuesMustBeSelectOption(Exception):
     Raised when one tries to create or update a row for a MultipleSelectField that
     contains a SelectOption ID that either does not exists or does not belong to the
     field.
+    """
+
+
+class InvalidLookupThroughField(Exception):
+    """
+    Raised when a a lookup field is attempted to be created or updated with a through
+    field that does not exist, is in a different table or is not a link row field.
+    """
+
+
+class InvalidLookupTargetField(Exception):
+    """
+    Raised when a a lookup field is attempted to be created or updated with a target
+    field that does not exist or is not in the through fields linked table.
     """

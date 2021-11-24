@@ -1,4 +1,5 @@
-from django.db.models import Transform
+from django.contrib.postgres.aggregates.mixins import OrderableAggMixin
+from django.db.models import Transform, Aggregate
 
 
 # noinspection PyAbstractClass
@@ -54,3 +55,17 @@ class OrExpr(BinaryOpExpr):
 class NotExpr(Transform):
     template = "(not %(expressions)s)"
     arity = 1
+
+
+class BaserowStringAgg(OrderableAggMixin, Aggregate):
+    function = "STRING_AGG"
+    template = "%(function)s(%(distinct)s%(expressions)s %(ordering)s)"
+    allow_distinct = True
+
+    def __init__(self, expression, delimiter, **extra):
+        super().__init__(expression, delimiter, **extra)
+
+    def convert_value(self, value, expression, connection):
+        if not value:
+            return ""
+        return value

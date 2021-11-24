@@ -1,0 +1,40 @@
+.grid-view-array-field {
+  overflow: hidden;
+  display: flex;
+  flex-flow: row;
+  flex-wrap: nowrap;
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+
+  &.active {
+    height: auto;
+    flex-wrap: wrap;
+    overflow: auto;
+    bottom: auto;
+    right: auto;
+    min-width: calc(100% + 4px);
+    min-height: calc(100% + 4px);
+
+    .array-field__item {
+      height: auto;
+      white-space: normal;
+    }
+  }
+
+  &:not(.active) {
+    .array-field__item span {
+      @extend %ellipsis;
+
+      max-width: 140px;
+    }
+  }
+
+  .grid-view__column--matches-search & {
+    background-color: $color-primary-100;
+
+    &.active {
+      background-color: $color-primary-100;
+    }
+  }
+}

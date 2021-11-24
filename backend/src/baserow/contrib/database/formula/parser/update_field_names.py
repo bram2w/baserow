@@ -29,6 +29,7 @@ class UpdateFieldNameFormulaVisitor(BaserowFormulaVisitor):
         field_names_to_update: Optional[Dict[str, str]] = None,
         field_ids_to_replace_with_name_refs: Optional[Dict[int, str]] = None,
         field_names_to_replace_with_id_refs: Optional[Dict[str, int]] = None,
+        via_field: Optional[str] = None,
     ):
         if field_names_to_update is None:
             field_names_to_update = {}
@@ -40,6 +41,7 @@ class UpdateFieldNameFormulaVisitor(BaserowFormulaVisitor):
         self.field_names_to_replace_with_id_refs = field_names_to_replace_with_id_refs
         self.field_names_to_update = field_names_to_update
         self.field_ids_to_replace_with_name_refs = field_ids_to_replace_with_name_refs
+        self.via_field = via_field
 
     def visitRoot(self, ctx: BaserowFormula.RootContext):
         return ctx.expr().accept(self)
@@ -81,11 +83,12 @@ class UpdateFieldNameFormulaVisitor(BaserowFormulaVisitor):
         field_name = convert_string_literal_token_to_string(
             reference.getText(), is_single_quote_ref
         )
-        if field_name in self.field_names_to_update:
-            new_name = self.field_names_to_update[field_name]
-            escaped_new_name = convert_string_to_string_literal_token(
-                new_name, is_single_quote_ref
-            )
+        if self.via_field is not None:
+            # Don't do any field reference renaming as this is a field being re-named
+            # in another table
+            return ctx.getText()
+        elif field_name in self.field_names_to_update:
+            escaped_new_name = self._rename_and_escape(field_name, is_single_quote_ref)
             field = ctx.FIELD().getText()
             return f"{field}({escaped_new_name})"
         elif field_name in self.field_names_to_replace_with_id_refs:
@@ -94,6 +97,52 @@ class UpdateFieldNameFormulaVisitor(BaserowFormulaVisitor):
             )
         else:
             return ctx.getText()
+
+    def visitLookupFieldReference(
+        self, ctx: BaserowFormula.LookupFieldReferenceContext
+    ):
+        reference = ctx.field_reference(0)
+        is_single_quote_ref = reference.SINGLEQ_STRING_LITERAL()
+        field_name = convert_string_literal_token_to_string(
+            reference.getText(), is_single_quote_ref
+        )
+        lookup = ctx.field_reference(1)
+        if self.via_field is None:
+            if field_name in self.field_names_to_update:
+                escaped_new_name = self._rename_and_escape(
+                    field_name, is_single_quote_ref
+                )
+                return self._rebuild_lookup(ctx, escaped_new_name, lookup.getText())
+            else:
+                return ctx.getText()
+        else:
+            is_single_quote_lookup = lookup.SINGLEQ_STRING_LITERAL()
+            lookup_field_name = convert_string_literal_token_to_string(
+                lookup.getText(), is_single_quote_lookup
+            )
+            if (
+                self.via_field == field_name
+                and lookup_field_name in self.field_names_to_update
+            ):
+                escaped_lookup = self._rename_and_escape(
+                    lookup_field_name, is_single_quote_lookup
+                )
+                return self._rebuild_lookup(ctx, reference.getText(), escaped_lookup)
+            else:
+                return ctx.getText()
+
+    def _rebuild_lookup(self, ctx, via, lookup):
+        lookup_text = ctx.LOOKUP().getText()
+        whitespace = ctx.WHITESPACE()
+        optional_whitespace = whitespace.getText() if whitespace else ""
+        return f"{lookup_text}({via},{optional_whitespace}{lookup})"
+
+    def _rename_and_escape(self, current_name, is_single_quote):
+        new_name = self.field_names_to_update[current_name]
+        escaped_new_name = convert_string_to_string_literal_token(
+            new_name, is_single_quote
+        )
+        return escaped_new_name
 
     def visitFieldByIdReference(self, ctx: BaserowFormula.FieldByIdReferenceContext):
         field_id = int(str(ctx.INTEGER_LITERAL()))
@@ -121,6 +170,7 @@ def update_field_names(
     field_names_to_update: Optional[Dict[str, str]] = None,
     field_ids_to_replace_with_name_refs: Optional[Dict[int, str]] = None,
     field_names_to_replace_with_id_refs: Optional[Dict[str, int]] = None,
+    via_field: Optional[str] = None,
 ) -> str:
     """
     :param formula: The raw formula string to update field names in.
@@ -144,6 +194,7 @@ def update_field_names(
             field_names_to_update,
             field_ids_to_replace_with_name_refs,
             field_names_to_replace_with_id_refs,
+            via_field,
         ).visit(tree)
     except RecursionError:
         raise MaximumFormulaSizeError()

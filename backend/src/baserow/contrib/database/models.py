@@ -28,6 +28,9 @@ from .webhooks.models import (
     TableWebhookCall,
     TableWebhookHeader,
 )
+from baserow.contrib.database.fields.dependencies.models import (
+    FieldDependency,
+)
 
 __all__ = [
     "Database",
@@ -54,6 +57,7 @@ __all__ = [
     "TableWebhookEvent",
     "TableWebhookHeader",
     "TableWebhookCall",
+    "FieldDependency",
 ]
 
 

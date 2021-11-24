@@ -38,6 +38,9 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database, user=user)
     link_table = data_fixture.create_database_table(database=database, user=user)
+    other_table_primary_text_field = data_fixture.create_text_field(
+        table=link_table, name="text_field", primary=True
+    )
     decimal_link_table = data_fixture.create_database_table(
         database=database, user=user
     )
@@ -48,21 +51,6 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
     )
     name_to_field_id = {}
     i = 0
-    for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
-        for kwargs in all_possible_kwargs:
-            field = handler.create_field(
-                user=user,
-                table=table,
-                type_name=field_type_name,
-                order=i,
-                **kwargs,
-            )
-            i += 1
-            name_to_field_id[kwargs["name"]] = field.id
-    row_handler = RowHandler()
-    other_table_primary_text_field = data_fixture.create_text_field(
-        table=link_table, name="text_field", primary=True
-    )
     other_table_primary_decimal_field = data_fixture.create_number_field(
         table=decimal_link_table,
         name="text_field",
@@ -76,6 +64,18 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
         name="file_field",
         primary=True,
     )
+    for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
+        for kwargs in all_possible_kwargs:
+            field = handler.create_field(
+                user=user,
+                table=table,
+                type_name=field_type_name,
+                order=i,
+                **kwargs,
+            )
+            i += 1
+            name_to_field_id[kwargs["name"]] = field.id
+    row_handler = RowHandler()
 
     model = table.get_model()
     datetime = _parse_datetime("2020-02-01 01:23")
@@ -135,8 +135,8 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
         "formula": "test FORMULA",
     }
 
-    missing_fields = set(name_to_field_id.keys()) - set(values.keys())
-    assert values.keys() == name_to_field_id.keys(), (
+    missing_fields = set(name_to_field_id.keys()) - set(values.keys()) - {"lookup"}
+    assert missing_fields == set(), (
         "Please update the dictionary above with interesting test values for your new "
         f"field type. In the values dict you are missing the fields {missing_fields}."
     )
@@ -150,7 +150,7 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
     # created_on field types are going to be. Freezing the datetime will also freeze
     # the current daylight savings time information.
     with freeze_time("2021-01-02 12:00"):
-        blank_row = model.objects.create(**{})
+        blank_row = row_handler.create_row(user, table, {})
         row = model.objects.create(**row_values)
 
     # Setup the link rows
@@ -217,15 +217,29 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
         },
     )
 
-    getattr(row, f"field_{name_to_field_id['link_row']}").add(
-        linked_row_1.id, linked_row_2.id, linked_row_3.id
-    )
-    getattr(row, f"field_{name_to_field_id['decimal_link_row']}").add(
-        linked_row_4.id, linked_row_5.id, linked_row_6.id
-    )
-    getattr(row, f"field_{name_to_field_id['file_link_row']}").add(
-        linked_row_7.id, linked_row_8.id
-    )
+    link_row_field_id = name_to_field_id["link_row"]
+    decimal_row_field_id = name_to_field_id["decimal_link_row"]
+    file_link_row_id = name_to_field_id["file_link_row"]
+    with freeze_time("2021-01-02 12:00"):
+        handler = RowHandler()
+        row = handler.update_row(
+            user,
+            table,
+            row.id,
+            {
+                f"field_{link_row_field_id}": [
+                    linked_row_1.id,
+                    linked_row_2.id,
+                    linked_row_3.id,
+                ],
+                f"field_{decimal_row_field_id}": [
+                    linked_row_4.id,
+                    linked_row_5.id,
+                    linked_row_6.id,
+                ],
+                f"field_{file_link_row_id}": [linked_row_7.id, linked_row_8.id],
+            },
+        )
 
     # multiple select
     getattr(row, f"field_{name_to_field_id['multiple_select']}").add(

@@ -74,3 +74,25 @@ ERROR_TOO_DEEPLY_NESTED_FORMULA = (
     HTTP_400_BAD_REQUEST,
     "The formula is too deeply nested.",
 )
+ERROR_FIELD_SELF_REFERENCE = (
+    "ERROR_FIELD_SELF_REFERENCE",
+    HTTP_400_BAD_REQUEST,
+    "Fields cannot reference themselves.",
+)
+ERROR_FIELD_CIRCULAR_REFERENCE = (
+    "ERROR_FIELD_CIRCULAR_REFERENCE",
+    HTTP_400_BAD_REQUEST,
+    "Fields cannot reference each other resulting in a circular chain of references.",
+)
+ERROR_INVALID_LOOKUP_THROUGH_FIELD = (
+    "ERROR_INVALID_LOOKUP_THROUGH_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The provided through field does not exist, is in a different table or is not a "
+    "link row field.",
+)
+ERROR_INVALID_LOOKUP_TARGET_FIELD = (
+    "ERROR_INVALID_LOOKUP_TARGET_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The provided target field does not exist or is in a different table to the table"
+    " linked to by the through field.",
+)

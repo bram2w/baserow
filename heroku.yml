@@ -4,6 +4,6 @@ build:
 release:
   image: web
   command:
-    - /baserow/env/bin/python /baserow/baserow/backend/src/baserow/manage.py migrate --settings=heroku.settings && /baserow/env/bin/python /baserow/baserow/backend/src/baserow/manage.py sync_templates --settings=heroku.settings
+    - /baserow/env/bin/python /baserow/baserow/backend/src/baserow/manage.py migrate --settings=heroku.settings && /baserow/env/bin/python /baserow/baserow/backend/src/baserow/manage.py sync_templates --settings=heroku.settings && /baserow/env/bin/python /baserow/baserow/backend/src/baserow/manage.py update_formulas --settings=heroku.settings
 run:
   web: . /baserow/entry.sh && /usr/bin/supervisord --configuration /etc/supervisor/conf.d/supervisor.conf

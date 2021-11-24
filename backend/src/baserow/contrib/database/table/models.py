@@ -4,6 +4,7 @@ from typing import Dict, Any, Union
 from django.db import models
 from django.db.models import Q, F
 
+from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
@@ -16,7 +17,6 @@ from baserow.contrib.database.fields.field_filters import (
 )
 from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.formula.types.table_typer import type_table
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.mixins import (
@@ -329,7 +329,7 @@ class Table(
         field_names=None,
         attribute_names=False,
         manytomany_models=None,
-        typed_table=None,
+        add_dependencies=True,
         managed=False,
     ) -> GeneratedTableModel:
         """
@@ -355,10 +355,9 @@ class Table(
             generated in order to generate that model. In order to prevent a
             recursion loop we cache the generated models and pass those along.
         :type manytomany_models: dict
-        :param typed_table: If the table has already been typed then it can be provided
-            here to prevent any retyping calculations. Or instead false can be provided
-            to prevent any automatic typing operations what so ever.
-        :type Union[bool, Optional[TypedBaserowTable]]
+        :param add_dependencies: When True will ensure any direct field dependencies
+            are included in the model. Otherwise only the exact fields you specify will
+            be added to the model.
         :param managed: Whether the created model should be managed by Django or not.
             Only in very specific limited situations should this be enabled as
             generally Baserow itself manages most aspects of returned generated models.
@@ -366,6 +365,8 @@ class Table(
         :return: The generated model.
         :rtype: Model
         """
+
+        filtered = field_names is not None or field_ids is not None
 
         if not fields:
             fields = []
@@ -470,12 +471,14 @@ class Table(
             field_type = field_type_registry.get_by_model(field)
             field_name = field.db_column
 
-            if typed_table is None and field_type.requires_typing:
-                typed_table = type_table(self)
-
-            fields += field_type.add_related_fields_to_model(
-                typed_table, field, already_included_field_names
-            )
+            if filtered and add_dependencies:
+                direct_dependencies = (
+                    FieldDependencyHandler.get_same_table_dependencies(field)
+                )
+                for f in direct_dependencies:
+                    if f.name not in already_included_field_names:
+                        fields.append(f)
+                        already_included_field_names.add(f.name)
 
             # If attribute_names is True we will not use 'field_{id}' as attribute name,
             # but we will rather use a name the user provided.
@@ -510,8 +513,6 @@ class Table(
             # model. All the kwargs that are passed to the `get_model_field`
             # method are going to be passed along to the model field.
             extra_kwargs = {}
-            if field_type.requires_typing:
-                extra_kwargs["typed_table"] = typed_table
             attrs[field_name] = field_type.get_model_field(
                 field,
                 db_column=field.db_column,

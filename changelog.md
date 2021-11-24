@@ -15,6 +15,9 @@
 * Made it possible to change user information.
 * Added table webhooks functionality.
 * Added extra indexes for user tables increasing performance.
+* Add lookup field type.
+* Add aggregate formula functions and the lookup formula function.
+* Fixed date_diff formula function.
 * Fixed a bug where the frontend would fail hard when converting a multiple select field
   inside the row edit modal.
 * Added the kanban view.

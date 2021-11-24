@@ -18,7 +18,9 @@
       <div class="grid-view__description-icon">
         <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
       </div>
-      <div class="grid-view__description-name">{{ field.name }}</div>
+      <div class="grid-view__description-name">
+        {{ field.name }}
+      </div>
       <div v-if="field.error" class="grid-view__description-icon-error">
         <i v-tooltip="field.error" class="fas fa-exclamation-triangle"></i>
       </div>

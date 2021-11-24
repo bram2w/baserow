@@ -1,10 +1,10 @@
 import re
 from decimal import Decimal
+from math import floor, ceil
 
 from django.db import transaction
 from django.db.models import Max, F
 from django.db.models.fields.related import ManyToManyField
-from math import floor, ceil
 
 from baserow.contrib.database.fields.models import Field
 from baserow.core.trash.handler import TrashHandler
@@ -16,6 +16,9 @@ from .signals import (
     row_created,
     row_updated,
     row_deleted,
+)
+from baserow.contrib.database.fields.dependencies.update_collector import (
+    CachingFieldUpdateCollector,
 )
 
 
@@ -365,14 +368,29 @@ class RowHandler:
         values["order"] = self.get_order_before_row(before, model)
         instance = model.objects.create(**values)
 
+        for name, value in manytomany_values.items():
+            getattr(instance, name).set(value)
+
         if model.fields_requiring_refresh_after_insert():
             instance.save()
             instance.refresh_from_db(
                 fields=model.fields_requiring_refresh_after_insert()
             )
 
-        for name, value in manytomany_values.items():
-            getattr(instance, name).set(value)
+        updated_fields = [field["field"] for field in model._field_objects.values()]
+        update_collector = CachingFieldUpdateCollector(
+            table, starting_row_id=instance.id, existing_model=model
+        )
+        for field in updated_fields:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in field.dependant_fields_with_types(update_collector):
+                dependant_field_type.row_of_dependency_created(
+                    dependant_field, instance, update_collector, path_to_starting_table
+                )
+        update_collector.apply_updates_returning_updated_fields_in_start_table()
 
         return instance
 
@@ -449,20 +467,39 @@ class RowHandler:
                 values = self.map_user_field_name_dict_to_internal(
                     model._field_objects, values
                 )
+            updated_fields = [
+                field["field"]
+                for field_id, field in model._field_objects.items()
+                if field_id in values or field["name"] in values
+            ]
             values = self.prepare_values(model._field_objects, values)
             values, manytomany_values = self.extract_manytomany_values(values, model)
 
             for name, value in values.items():
                 setattr(row, name, value)
 
+            for name, value in manytomany_values.items():
+                getattr(row, name).set(value)
+
             row.save()
+
+            update_collector = CachingFieldUpdateCollector(
+                table, starting_row_id=row.id, existing_model=model
+            )
+            for field in updated_fields:
+                for (
+                    dependant_field,
+                    dependant_field_type,
+                    path_to_starting_table,
+                ) in field.dependant_fields_with_types(update_collector):
+                    dependant_field_type.row_of_dependency_updated(
+                        dependant_field, row, update_collector, path_to_starting_table
+                    )
+            update_collector.apply_updates_returning_updated_fields_in_start_table()
             # We need to refresh here as ExpressionFields might have had their values
             # updated. Django does not support UPDATE .... RETURNING and so we need to
             # query for the rows updated values instead.
             row.refresh_from_db(fields=model.fields_requiring_refresh_after_update())
-
-            for name, value in manytomany_values.items():
-                getattr(row, name).set(value)
 
         row_updated.send(
             self,
@@ -513,6 +550,23 @@ class RowHandler:
         row.order = self.get_order_before_row(before, model)
         row.save()
 
+        updated_fields = [
+            field["field"] for field_id, field in model._field_objects.items()
+        ]
+        update_collector = CachingFieldUpdateCollector(
+            table, starting_row_id=row.id, existing_model=model
+        )
+        for field in updated_fields:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in field.dependant_fields_with_types(update_collector):
+                dependant_field_type.row_of_dependency_moved(
+                    dependant_field, row, update_collector, path_to_starting_table
+                )
+        update_collector.apply_updates_returning_updated_fields_in_start_table()
+
         row_updated.send(
             self,
             row=row,
@@ -557,6 +611,20 @@ class RowHandler:
         row_id = row.id
 
         TrashHandler.trash(user, group, table.database, row, parent_id=table.id)
+        updated_fields = [field["field"] for field in model._field_objects.values()]
+        update_collector = CachingFieldUpdateCollector(
+            table, starting_row_id=row.id, existing_model=model
+        )
+        for field in updated_fields:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in field.dependant_fields_with_types(update_collector):
+                dependant_field_type.row_of_dependency_deleted(
+                    dependant_field, row, update_collector, path_to_starting_table
+                )
+        update_collector.apply_updates_returning_updated_fields_in_start_table()
 
         row_deleted.send(
             self,

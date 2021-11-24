@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from copy import deepcopy
 from datetime import datetime, date
 from decimal import Decimal
 from random import randrange, randint, sample
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple
 
 import pytz
 from dateutil import parser
@@ -26,6 +27,8 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
     ERROR_WITH_FORMULA,
     ERROR_TOO_DEEPLY_NESTED_FORMULA,
+    ERROR_INVALID_LOOKUP_THROUGH_FIELD,
+    ERROR_INVALID_LOOKUP_TARGET_FIELD,
 )
 from baserow.contrib.database.api.fields.serializers import (
     LinkRowValueSerializer,
@@ -33,31 +36,39 @@ from baserow.contrib.database.api.fields.serializers import (
     SelectOptionSerializer,
     FileFieldResponseSerializer,
 )
-from baserow.contrib.database.formula.exceptions import BaserowFormulaException
-from baserow.contrib.database.formula.expression_generator.generator import (
-    baserow_expression_to_django_expression,
-)
-from baserow.contrib.database.formula.types.formula_type import BaserowFormulaType
-from baserow.contrib.database.formula.types.formula_types import (
+from baserow.contrib.database.formula import (
+    BaserowExpression,
     BaserowFormulaTextType,
     BaserowFormulaNumberType,
     BaserowFormulaBooleanType,
     BaserowFormulaDateType,
     BaserowFormulaCharType,
-    construct_type_from_formula_field,
     BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
+    BaserowFormulaType,
+    BaserowFormulaException,
+    BaserowFormulaInvalidType,
+    BaserowFormulaSingleSelectType,
 )
-from baserow.contrib.database.formula.types.table_typer import TypedBaserowTable
+from baserow.contrib.database.formula import FormulaHandler
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
+from .dependencies.exceptions import (
+    SelfReferenceFieldDependencyError,
+    CircularFieldDependencyError,
+)
+from .dependencies.handler import FieldDependencyHandler
+from .dependencies.types import OptionalFieldDependencies
 from .exceptions import (
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
     IncompatiblePrimaryFieldTypeError,
     AllProvidedMultipleSelectValuesMustBeIntegers,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
+    FieldDoesNotExist,
+    InvalidLookupThroughField,
+    InvalidLookupTargetField,
 )
 from .field_filters import contains_filter, AnnotatedQ, filename_contains_filter
 from .field_sortings import AnnotatedOrder
@@ -88,6 +99,7 @@ from .models import (
     PhoneNumberField,
     FormulaField,
     Field,
+    LookupField,
 )
 from .registries import FieldType, field_type_registry
 
@@ -1285,6 +1297,31 @@ class LinkRowFieldType(FieldType):
     def get_related_items_to_trash(self, field) -> List[Any]:
         return [field.link_row_related_field]
 
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        primary_field = field.get_related_primary_field().specific
+        related_field_type = field_type_registry.get_by_model(primary_field)
+        return related_field_type.to_baserow_formula_type(primary_field)
+
+    def to_baserow_formula_expression(
+        self, field
+    ) -> BaserowExpression[BaserowFormulaType]:
+        primary_field = field.get_related_primary_field().specific
+        return FormulaHandler.get_lookup_field_reference_expression(
+            field, primary_field, self.to_baserow_formula_type(field)
+        )
+
+    def get_field_dependencies(self, field_instance, field_lookup_cache):
+        primary_related_field = field_instance.get_related_primary_field()
+        if primary_related_field is not None:
+            return [
+                (
+                    field_instance.name,
+                    primary_related_field.name,
+                )
+            ]
+        else:
+            return []
+
 
 class EmailFieldType(CharFieldMatchingRegexFieldType):
     type = "email"
@@ -1768,6 +1805,12 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             row, field_name + "_id", id_mapping["database_field_select_options"][value]
         )
 
+    def to_baserow_formula_type(self, field):
+        return BaserowFormulaSingleSelectType()
+
+    def from_baserow_formula_type(self, formula_type) -> Field:
+        return self.model_class()
+
 
 class MultipleSelectFieldType(SelectOptionBaseFieldType):
     type = "multiple_select"
@@ -2027,7 +2070,6 @@ class FormulaFieldType(FieldType):
     type = "formula"
     model_class = FormulaField
 
-    requires_typing = True
     read_only = True
 
     can_be_primary_field = False
@@ -2064,16 +2106,19 @@ class FormulaFieldType(FieldType):
             from baserow.contrib.database.fields.registries import field_type_registry
 
             field_type = field_type_registry.get_by_model(field.specific_class)
-            if field_type.type == FormulaFieldType.type:
-                formula_type = construct_type_from_formula_field(field.specific)
+            if (
+                field_type.type == FormulaFieldType.type
+                or field_type.type == LookupFieldType.type
+            ):
+                formula_type = field.specific.cached_formula_type
                 return formula_type.type in compatible_formula_types
             else:
                 return False
 
         return checker
 
-    @staticmethod
     def _get_field_instance_and_type_from_formula_field(
+        self,
         formula_field_instance: FormulaField,
     ) -> Tuple[Field, FieldType]:
         """
@@ -2084,7 +2129,7 @@ class FormulaFieldType(FieldType):
         :return: The BaserowFormulaType of the formula field instance.
         """
 
-        formula_type = construct_type_from_formula_field(formula_field_instance)
+        formula_type = self.to_baserow_formula_type(formula_field_instance)
         return formula_type.get_baserow_field_instance_and_type()
 
     def get_serializer_field(self, instance: FormulaField, **kwargs):
@@ -2094,21 +2139,22 @@ class FormulaFieldType(FieldType):
         ) = self._get_field_instance_and_type_from_formula_field(instance)
         return field_type.get_serializer_field(field_instance, **kwargs)
 
+    def get_response_serializer_field(self, instance, **kwargs):
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(instance)
+        return field_type.get_response_serializer_field(field_instance, **kwargs)
+
     def get_model_field(self, instance: FormulaField, **kwargs):
-        typed_table: Union[TypedBaserowTable, bool] = kwargs.pop("typed_table")
         # When typed_table is False we are constructing a table model without
         # doing any type checking, we can't know what the expression is in this
         # case but we still want to generate a model field so the model can be
         # used to do SQL operations like dropping fields etc.
-        if typed_table and not (instance.error or instance.trashed):
-            typed_field = typed_table.get_typed_field(instance)
-            expression = typed_field.typed_expression
-            requires_refresh_after_insert = (
-                typed_field.expression_needs_refresh_on_insert
-            )
+        if not (instance.error or instance.trashed):
+            expression = self.to_baserow_formula_expression(instance)
         else:
             expression = None
-            requires_refresh_after_insert = False
 
         (
             field_instance,
@@ -2121,7 +2167,7 @@ class FormulaFieldType(FieldType):
             blank=True,
             expression=expression,
             expression_field=expression_field_type,
-            requires_refresh_after_insert=requires_refresh_after_insert,
+            requires_refresh_after_insert=instance.requires_refresh_after_insert,
             **kwargs,
         )
 
@@ -2168,13 +2214,6 @@ class FormulaFieldType(FieldType):
         ) = self._get_field_instance_and_type_from_formula_field(field)
         return field_type.contains_query(field_name, value, model_field, field_instance)
 
-    def expression_to_update_field_after_related_field_changes(self, field, to_model):
-        if not (field.error or field.trashed):
-            f = to_model._meta.get_field(field.db_column)
-            return baserow_expression_to_django_expression(f.expression, None)
-        else:
-            return None
-
     def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
         (
             field_instance,
@@ -2184,17 +2223,382 @@ class FormulaFieldType(FieldType):
             connection, field_instance, to_field
         )
 
-    def add_related_fields_to_model(
-        self, typed_table, field, already_included_field_names
+    def to_baserow_formula_type(self, field: FormulaField) -> BaserowFormulaType:
+        return field.cached_formula_type
+
+    def to_baserow_formula_expression(
+        self, field: FormulaField
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return FormulaHandler.get_typed_internal_expression_from_field(field)
+
+    def get_field_dependencies(
+        self, field_instance, field_lookup_cache
+    ) -> OptionalFieldDependencies:
+        return FormulaHandler.get_field_dependencies(field_instance, field_lookup_cache)
+
+    def get_human_readable_value(self, value: Any, field_object) -> str:
+        (
+            field_instance,
+            field_type,
+        ) = self._get_field_instance_and_type_from_formula_field(field_object["field"])
+        return field_type.get_human_readable_value(value, field_object)
+
+    def restore_failed(self, field_instance, restore_exception):
+        handleable_exceptions_to_error = {
+            SelfReferenceFieldDependencyError: "After restoring references itself "
+            "which is impossible",
+            CircularFieldDependencyError: "After restoring would causes a circular "
+            "reference between fields",
+        }
+        exception_type = type(restore_exception)
+        if exception_type in handleable_exceptions_to_error:
+            BaserowFormulaInvalidType(
+                handleable_exceptions_to_error[exception_type]
+            ).persist_onto_formula_field(field_instance)
+            field_instance.save(recalculate=False)
+            return True
+        else:
+            return False
+
+    def row_of_dependency_updated(
+        self,
+        field,
+        starting_row,
+        update_collector,
+        via_path_to_starting_table,
     ):
-        # If we are building a model with some formula fields we need to
-        # establish the types fields and whether they depend on any other
-        # child fields to be calculated. These child fields then need to be
-        # included in the django model otherwise we cannot reference them.
-        # Allow passing in typer=False to disable any type checking.
-        if typed_table:
-            return typed_table.get_all_depended_on_fields(
-                field, already_included_field_names
+        self._refresh_row_values(field, update_collector, via_path_to_starting_table)
+        super().row_of_dependency_updated(
+            field,
+            starting_row,
+            update_collector,
+            via_path_to_starting_table,
+        )
+
+    def _refresh_row_values(self, field, update_collector, via_path_to_starting_table):
+        if (
+            via_path_to_starting_table is not None
+            and len(via_path_to_starting_table) > 0
+        ):
+            update_statement = (
+                FormulaHandler.baserow_expression_to_update_django_expression(
+                    field.cached_typed_internal_expression,
+                    update_collector.get_model(field.table),
+                )
+            )
+            update_collector.add_field_with_pending_update_statement(
+                field,
+                update_statement,
+                via_path_to_starting_table=via_path_to_starting_table,
+            )
+
+    def field_dependency_created(
+        self, field, created_field, via_path_to_starting_table, update_collector
+    ):
+        old_field = deepcopy(field)
+        self._update_formula_after_dependency_change(
+            field, old_field, update_collector, via_path_to_starting_table
+        )
+
+    def field_dependency_updated(
+        self,
+        field,
+        updated_field,
+        updated_old_field,
+        via_path_to_starting_table,
+        update_collector,
+    ):
+        old_field = deepcopy(field)
+
+        old_name = updated_old_field.name
+        new_name = updated_field.name
+        rename = old_name != new_name
+        if rename:
+            field.formula = FormulaHandler.rename_field_references_in_formula_string(
+                field.formula, {old_name: new_name}
+            )
+        self._update_formula_after_dependency_change(
+            field,
+            old_field,
+            update_collector,
+            via_path_to_starting_table,
+        )
+
+    # noinspection PyMethodMayBeStatic
+    def _update_formula_after_dependency_change(
+        self,
+        field,
+        old_field,
+        update_collector,
+        via_path_to_starting_table,
+    ):
+        expr = FormulaHandler.recalculate_formula_and_get_update_expression(
+            field, old_field, update_collector
+        )
+        FieldDependencyHandler.rebuild_dependencies(field, update_collector)
+        update_collector.add_field_with_pending_update_statement(
+            field, expr, via_path_to_starting_table=via_path_to_starting_table
+        )
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in field.dependant_fields_with_types(
+            update_collector, via_path_to_starting_table
+        ):
+            dependant_field_type.field_dependency_updated(
+                dependant_field,
+                field,
+                old_field,
+                path_to_starting_table,
+                update_collector,
+            )
+
+    def field_dependency_deleted(
+        self, field, deleted_field, via_path_to_starting_table, update_collector
+    ):
+        old_field = deepcopy(field)
+        self._update_formula_after_dependency_change(
+            field, old_field, update_collector, via_path_to_starting_table
+        )
+
+    def after_create(self, field, model, user, connection, before):
+        """
+        Immediately after the field has been created, we need to populate the values
+        with the already existing source_field_name column.
+        """
+
+        model = field.table.get_model()
+        expr = FormulaHandler.baserow_expression_to_update_django_expression(
+            field.cached_typed_internal_expression, model
+        )
+        model.objects_and_trash.all().update(**{f"{field.db_column}": expr})
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+    ):
+        to_model = to_field.table.get_model()
+        expr = FormulaHandler.baserow_expression_to_update_django_expression(
+            to_field.cached_typed_internal_expression, to_model
+        )
+        to_model.objects_and_trash.all().update(**{f"{to_field.db_column}": expr})
+
+    def after_import_serialized(self, field, field_cache):
+        field.save(recalculate=True, field_lookup_cache=field_cache)
+        super().after_import_serialized(field, field_cache)
+
+    def after_rows_imported(self, field, via_path_to_starting_table, update_collector):
+        self._refresh_row_values(field, update_collector, via_path_to_starting_table)
+        super().after_rows_imported(field, via_path_to_starting_table, update_collector)
+
+
+class LookupFieldType(FormulaFieldType):
+    type = "lookup"
+    model_class = LookupField
+    api_exceptions_map = {
+        **FormulaFieldType.api_exceptions_map,
+        InvalidLookupThroughField: ERROR_INVALID_LOOKUP_THROUGH_FIELD,
+        InvalidLookupTargetField: ERROR_INVALID_LOOKUP_TARGET_FIELD,
+    }
+
+    allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+        "through_field_name",
+        "target_field_id",
+        "target_field_name",
+    ]
+    serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+        "through_field_name",
+        "target_field_id",
+        "target_field_name",
+        "formula_type",
+    ]
+    serializer_field_overrides = {
+        "through_field_name": serializers.CharField(
+            required=False,
+            allow_blank=True,
+            allow_null=True,
+            source="through_field.name",
+            help_text="The name of the link row field to lookup values for.",
+        ),
+        "through_field_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="through_field.id",
+            help_text="The id of the link row field to lookup values for. Will override"
+            " the `through_field_name` parameter if both are provided, however only "
+            "one is required.",
+        ),
+        "target_field_name": serializers.CharField(
+            required=False,
+            allow_blank=True,
+            allow_null=True,
+            source="target_field.name",
+            help_text="The name of the field in the table linked to by the "
+            "through_field to lookup.",
+        ),
+        "target_field_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="target_field.id",
+            help_text="The id of the field in the table linked to by the "
+            "through_field to lookup. Will override the `target_field_id` "
+            "parameter if both are provided, however only one is required.",
+        ),
+    }
+
+    def before_create(self, table, primary, values, order, user):
+        self._validate_through_and_target_field_values(
+            table,
+            values,
+        )
+
+    def before_update(self, from_field, to_field_values, user):
+        if isinstance(from_field, LookupField):
+            through_field_id = (
+                from_field.through_field.id
+                if from_field.through_field is not None
+                else None
+            )
+            target_field_id = (
+                from_field.target_field.id
+                if from_field.target_field is not None
+                else None
+            )
+            self._validate_through_and_target_field_values(
+                from_field.table,
+                to_field_values,
+                through_field_id,
+                target_field_id,
             )
         else:
-            return []
+            self._validate_through_and_target_field_values(
+                from_field.table,
+                to_field_values,
+            )
+
+    def _validate_through_and_target_field_values(
+        self,
+        table,
+        values,
+        default_through_field_id=None,
+        default_target_field_id=None,
+    ):
+        through_field_id = values.get("through_field_id", default_through_field_id)
+        target_field_id = values.get("target_field_id", default_target_field_id)
+        through_field_name = values.get("through_field_name", None)
+        target_field_name = values.get("target_field_name", None)
+
+        if through_field_id is None:
+            try:
+                through_field_id = table.field_set.get(name=through_field_name).id
+            except Field.DoesNotExist:
+                raise InvalidLookupThroughField()
+        try:
+            through_field = FieldHandler().get_field(through_field_id, LinkRowField)
+        except FieldDoesNotExist:
+            # Occurs when the through_field_id points at a non LinkRowField
+            raise InvalidLookupThroughField()
+
+        if through_field.table != table:
+            raise InvalidLookupThroughField()
+
+        values["through_field_id"] = through_field.id
+        values["through_field_name"] = through_field.name
+
+        if target_field_id is None:
+            try:
+                target_field_id = through_field.link_row_table.field_set.get(
+                    name=target_field_name
+                ).id
+            except Field.DoesNotExist:
+                raise InvalidLookupTargetField()
+
+        try:
+            target_field = FieldHandler().get_field(target_field_id)
+        except FieldDoesNotExist:
+            raise InvalidLookupTargetField()
+
+        if target_field.table != through_field.link_row_table:
+            raise InvalidLookupTargetField()
+
+        values["target_field_id"] = target_field.id
+        values["target_field_name"] = target_field.name
+
+    def field_dependency_updated(
+        self,
+        field,
+        updated_field,
+        updated_old_field,
+        via_path_to_starting_table,
+        update_collector,
+    ):
+        self._rebuild_field_from_names(field)
+
+        super().field_dependency_updated(
+            field,
+            updated_field,
+            updated_old_field,
+            via_path_to_starting_table,
+            update_collector,
+        )
+
+    def field_dependency_deleted(
+        self,
+        field,
+        deleted_field,
+        via_path_to_starting_table,
+        update_collector,
+    ):
+        self._rebuild_field_from_names(field)
+
+        super().field_dependency_deleted(
+            field,
+            deleted_field,
+            via_path_to_starting_table,
+            update_collector,
+        )
+
+    def field_dependency_created(
+        self,
+        field,
+        created_field,
+        via_path_to_starting_table,
+        update_collector,
+    ):
+        self._rebuild_field_from_names(field)
+
+        super().field_dependency_created(
+            field,
+            created_field,
+            via_path_to_starting_table,
+            update_collector,
+        )
+
+    def _rebuild_field_from_names(self, field):
+        values = {
+            "through_field_name": field.through_field_name,
+            "through_field_id": None,
+            "target_field_name": field.target_field_name,
+            "target_field_id": None,
+        }
+        try:
+            self._validate_through_and_target_field_values(field.table, values)
+        except (InvalidLookupTargetField, InvalidLookupThroughField):
+            pass
+        for key, value in values.items():
+            setattr(field, key, value)
+        field.save(recalculate=False)
+
+    def after_import_serialized(self, field, field_cache):
+        self._rebuild_field_from_names(field)
+        super().after_import_serialized(field, field_cache)

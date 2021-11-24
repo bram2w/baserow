@@ -71,6 +71,7 @@ export default {
     singleSelect: 'Liste déroulante',
     phoneNumber: 'Téléphone',
     formula: 'Formule',
+    lookup: 'Chercher',
   },
   fieldErrors: {
     invalidNumber: 'Nombre invalide',
@@ -117,6 +118,7 @@ export default {
     formula:
       'Un champ en lecture seule défini par une formule rédigée ' +
       'dans le format spécifique de Baserow.',
+    lookup: '@TODO',
   },
   viewFilter: {
     contains: 'contient',

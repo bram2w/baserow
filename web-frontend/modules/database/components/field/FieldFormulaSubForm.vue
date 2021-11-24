@@ -38,12 +38,6 @@ import FieldFormulaInitialSubForm from '@baserow/modules/database/components/for
 import FormulaAdvancedEditContext from '@baserow/modules/database/components/formula/FormulaAdvancedEditContext'
 import FormulaService from '@baserow/modules/database/services/formula'
 import parseBaserowFormula from '@baserow/modules/database/formula/parser/parser'
-import {
-  FileFieldType,
-  LinkRowFieldType,
-  MultipleSelectFieldType,
-  SingleSelectFieldType,
-} from '@baserow/modules/database/fieldTypes'
 
 export default {
   name: 'FieldFormulaSubForm',
@@ -63,6 +57,7 @@ export default {
       parsingError: null,
       errorFromServer: null,
       localFormulaType: null,
+      localArrayFormulaType: null,
       initialFormula: null,
       refreshingFormula: false,
     }
@@ -73,19 +68,17 @@ export default {
     }),
     localOrServerFormulaType() {
       return this.localFormulaType
-        ? this.localFormulaType
-        : this.defaultValues.formula_type
+        ? this.localArrayFormulaType || this.localFormulaType
+        : this.defaultValues.array_formula_type ||
+            this.defaultValues.formula_type
     },
     fieldsUsableInFormula() {
       return this.rawFields.filter((f) => {
         const isNotThisField = f.id !== this.defaultValues.id
-        const isInvalidFieldType = [
-          LinkRowFieldType.getType(),
-          FileFieldType.getType(),
-          SingleSelectFieldType.getType(),
-          MultipleSelectFieldType.getType(),
-        ].includes(f.type)
-        return isNotThisField && !isInvalidFieldType
+        const canBeReferencedByFormulaField = this.$registry
+          .get('field', f.type)
+          .canBeReferencedByFormulaField()
+        return isNotThisField && canBeReferencedByFormulaField
       })
     },
     localOrServerError() {
@@ -170,7 +163,13 @@ export default {
       return s + '.'
     },
     handleErrorByForm(error) {
-      if (error.handler.code === 'ERROR_WITH_FORMULA') {
+      if (
+        [
+          'ERROR_WITH_FORMULA',
+          'ERROR_FIELD_SELF_REFERENCE',
+          'ERROR_FIELD_CIRCULAR_REFERENCE',
+        ].includes(error.handler.code)
+      ) {
         this.errorFromServer = error.handler.detail
         return true
       } else {
@@ -178,9 +177,11 @@ export default {
       }
     },
     reset() {
+      const formula = this.values.formula
       form.methods.reset.call(this)
       this.errorFromServer = null
-      this.initialFormula = null
+      this.initialFormula = formula
+      this.values.formula = formula
     },
     async refreshFormulaType() {
       try {
@@ -190,7 +191,8 @@ export default {
           this.values.formula
         )
         // eslint-disable-next-line camelcase
-        const { formula_type, error, ...otherTypeOptions } = data
+        const { formula_type, array_formula_type, error, ...otherTypeOptions } =
+          data
 
         this.mergedTypeOptions = Object.assign(
           {},
@@ -204,6 +206,8 @@ export default {
         }
         // eslint-disable-next-line camelcase
         this.localFormulaType = formula_type
+        // eslint-disable-next-line camelcase
+        this.localArrayFormulaType = array_formula_type
       } catch (e) {
         if (!this.handleErrorByForm(e)) {
           notifyIf(e, 'field')

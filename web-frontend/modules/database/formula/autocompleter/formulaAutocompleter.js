@@ -96,6 +96,7 @@ export function _calculateAutocompleteRangeAndType(formula, cursorPosition) {
       const insideFunctionRef = [
         BaserowFormulaLexer.IDENTIFIER,
         BaserowFormulaLexer.FIELD,
+        BaserowFormulaLexer.LOOKUP,
         BaserowFormulaLexer.IDENTIFIER_UNICODE,
       ].includes(token.type)
 

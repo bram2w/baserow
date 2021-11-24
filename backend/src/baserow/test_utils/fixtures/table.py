@@ -1,5 +1,6 @@
 from django.db import connection
 
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.table.models import Table
 
 
@@ -48,3 +49,26 @@ class TableFixtures:
             created_rows.append(model.objects.create(**kwargs))
 
         return table, fields, created_rows
+
+    def create_two_linked_tables(self, user=None, **kwargs):
+        if user is None:
+            user = self.create_user()
+
+        if "database" not in kwargs:
+            database = self.create_database_application(user=user)
+
+        table_a = self.create_database_table(database=database, name="table_a")
+        table_b = self.create_database_table(database=database, name="table_b")
+
+        self.create_text_field(table=table_a, name="primary", primary=True)
+        self.create_text_field(table=table_b, name="primary", primary=True)
+
+        link_field = FieldHandler().create_field(
+            user=user,
+            table=table_a,
+            type_name="link_row",
+            name="link",
+            link_row_table=table_b,
+        )
+
+        return table_a, table_b, link_field

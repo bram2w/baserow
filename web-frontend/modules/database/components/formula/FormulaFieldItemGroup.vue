@@ -17,7 +17,7 @@
         @click.stop="$emit('click-item', item)"
       >
         <i class="fas formula-field__item-icon" :class="[item.icon]" />
-        {{ showOperator ? item.operator : item.value }}
+        {{ showOperator && item.operator ? item.operator : item.value }}
       </a>
     </li>
   </ul>

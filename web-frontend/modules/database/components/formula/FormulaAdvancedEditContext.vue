@@ -4,13 +4,14 @@
       <div class="formula-field__input">
         <AutoExpandableTextarea
           ref="textAreaFormulaInput"
-          v-model="formula"
+          :value="formula"
           class="formula-field__input-formula"
           placeholder="Enter your formula here, use tab to autocomplete"
+          @input="formulaChanged"
           @blur="$emit('blur', $event)"
           @click="recalcAutoComplete"
           @keyup="recalcAutoComplete"
-          @keydown.tab.prevent="doAutoCompleteAfterTab"
+          @keydown.tab="doAutoCompleteAfterTab"
           @keydown.enter.exact.prevent="$refs.editContext.hide()"
         ></AutoExpandableTextarea>
       </div>
@@ -114,8 +115,8 @@ export default {
           f.name,
           this.getFieldIcon(f),
           `A ${f.type} field`,
-          `concat(field('${f.name}'), ' extra text ')`,
-          `field('${f.name}')`,
+          [`concat(field('${f.name}'), ' extra text ')`],
+          [`field('${f.name}')`],
           false,
           f
         )
@@ -132,31 +133,24 @@ export default {
     this.recalcAutoComplete()
   },
   methods: {
+    formulaChanged(newFormula) {
+      this.formula = newFormula
+    },
     getFieldIcon(field) {
       const fieldType = this.$registry.get('field', field.type)
       return `fa-${fieldType.getIconClass()}`
     },
     funcTypeToIconClass(func) {
-      const formulaType = func.getFormulaType()
-      return {
-        text: 'fa-font',
-        char: 'fa-font',
-        number: 'fa-hashtag',
-        boolean: 'fa-check-square',
-        date: 'fa-calendar-alt',
-        date_interval: 'fa-history',
-        special: 'fa-square-root-alt',
-      }[formulaType]
+      const formulaTypeValue = func.getFormulaType()
+      const formulaType = this.$registry.get('formula_type', formulaTypeValue)
+      return `fa-${formulaType.getIconClass()}`
     },
     resetFilters() {
       this.filteredFunctions = this.functions
       this.filteredFields = this.fieldItems
     },
-    selectItem(item, resetFilters = true) {
-      this.selectedItem.isSelected = false
-      this.selectedItem = false
+    selectItem(item) {
       this.selectedItem = item
-      item.isSelected = true
     },
     recalcAutoComplete(event) {
       // Prevent tabs from doing anything as doAutocomplete will handle a tab instead.
@@ -182,13 +176,18 @@ export default {
 
       if (filtered) {
         if (this.filteredFunctions.length > 0) {
-          this.selectItem(filteredFunctions[0], false)
+          this.selectItem(filteredFunctions[0])
         } else if (this.filteredFields.length > 0) {
-          this.selectItem(filteredFields[0], false)
+          this.selectItem(filteredFields[0])
         }
       }
+      return true
     },
-    doAutoCompleteAfterTab() {
+    doAutoCompleteAfterTab(event) {
+      // Prevent tabs from doing anything
+      if (event && event.keyCode === TAB_KEYCODE) {
+        event.preventDefault()
+      }
       this.doAutoComplete(this.filteredFunctions[0], this.filteredFields[0])
     },
     doAutoComplete(functionCandidate, fieldCandidate) {
@@ -232,7 +231,6 @@ export default {
       return {
         value,
         icon,
-        isSelected: false,
         description,
         examples,
         syntaxUsage,
@@ -240,18 +238,38 @@ export default {
         item,
       }
     },
+    sortFunctions(a, b) {
+      const aTypeSort = this.$registry
+        .get('formula_type', a.getFormulaType())
+        .getSortOrder()
+      const bTypeSort = this.$registry
+        .get('formula_type', b.getFormulaType())
+        .getSortOrder()
+      const nameA = `${aTypeSort}_${a.getType()}`
+      const nameB = `${bTypeSort}_${b.getType()}`
+      if (nameA < nameB) {
+        return -1
+      }
+      if (nameA > nameB) {
+        return 1
+      }
+
+      return 0
+    },
     getAndWrapFunctions() {
-      return Object.values(this.$registry.getAll('formula_function')).map((f) =>
-        this.wrapItem(
-          f.getType(),
-          this.funcTypeToIconClass(f),
-          f.getDescription(),
-          f.getExamples(),
-          f.getSyntaxUsage(),
-          f.getOperator(),
-          f
+      return Object.values(this.$registry.getAll('formula_function'))
+        .sort(this.sortFunctions.bind(this))
+        .map((f) =>
+          this.wrapItem(
+            f.getType(),
+            this.funcTypeToIconClass(f),
+            f.getDescription(),
+            f.getExamples(),
+            f.getSyntaxUsage(),
+            f.getOperator(),
+            f
+          )
         )
-      )
     },
   },
 }

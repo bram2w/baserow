@@ -1,7 +1,7 @@
 <template>
   <textarea
     ref="inputTextArea"
-    v-model="innerValue"
+    :value="value"
     :placeholder="placeholder"
     class="input auto-expandable-textarea"
     :style="{
@@ -9,6 +9,7 @@
       overflow: textBoxOverflow,
     }"
     rows="1"
+    @input="$emit('input', $event.target.value)"
     @click="$emit('click', $event)"
     @keyup="$emit('keyup', $event)"
     @keydown="$emit('keydown', $event)"
@@ -55,14 +56,6 @@ export default {
     }
   },
   computed: {
-    innerValue: {
-      get() {
-        return this.value
-      },
-      set(value) {
-        this.$emit('input', value)
-      },
-    },
     textBoxSize() {
       return 22 * Math.min(this.numTextAreaLines, this.maxRows)
     },
@@ -74,6 +67,9 @@ export default {
     value() {
       this.resizeTextArea()
     },
+  },
+  mounted() {
+    this.resizeTextArea()
   },
   methods: {
     resizeTextArea() {

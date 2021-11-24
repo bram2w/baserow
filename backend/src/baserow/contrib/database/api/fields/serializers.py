@@ -85,6 +85,33 @@ class UpdateFieldSerializer(serializers.ModelSerializer):
         }
 
 
+class ArrayValueSerializer(serializers.Serializer):
+    id = serializers.IntegerField(
+        read_only=True,
+        required=False,
+        help_text="The id of the row this value was looked up from.",
+    )
+    ids = serializers.DictField(
+        child=serializers.IntegerField(
+            read_only=True,
+            required=False,
+            help_text="The id of the row the value ultimately came from or the link "
+            "row ids which led to the value.",
+        ),
+        read_only=True,
+        required=False,
+        help_text="If this value is a lookup crossing multiple link fields each link "
+        "row id involved will be set in here.",
+    )
+
+    def __init__(self, child, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["value"] = child
+
+    def to_representation(self, instance):
+        return super().to_representation(instance)
+
+
 class LinkRowValueSerializer(serializers.Serializer):
     id = serializers.IntegerField(
         read_only=True,

@@ -45,6 +45,7 @@ expr
     // FIELDBYID has been depricated and should not be used, it is only included here
     // for backwards compatability.
     | FIELDBYID OPEN_PAREN INTEGER_LITERAL CLOSE_PAREN # FieldByIdReference
+    | LOOKUP OPEN_PAREN field_reference COMMA WHITESPACE? field_reference CLOSE_PAREN # LookupFieldReference
     | func_name OPEN_PAREN (expr (COMMA expr)*)? CLOSE_PAREN # FunctionCall
     ;
 

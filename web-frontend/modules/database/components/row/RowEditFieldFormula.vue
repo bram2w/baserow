@@ -20,15 +20,8 @@ export default {
   mixins: [rowEditField],
   methods: {
     getComponent(field) {
-      return {
-        date: RowEditFieldDateReadOnly,
-        text: RowEditFieldText,
-        boolean: RowEditFieldBoolean,
-        number: RowEditFieldNumber,
-        invalid: RowEditFieldText,
-        char: RowEditFieldText,
-        date_interval: RowEditFieldText,
-      }[field.formula_type]
+      const formulaType = this.$registry.get('formula_type', field.formula_type)
+      return formulaType.getRowEditFieldComponent()
     },
   },
 }

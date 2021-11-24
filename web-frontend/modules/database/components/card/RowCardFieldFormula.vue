@@ -1,7 +1,7 @@
 <template functional>
   <component
-    :is="$options.methods.getComponent(props.field)"
-    v-if="$options.methods.getComponent(props.field)"
+    :is="$options.methods.getComponent(props.field, parent.$registry)"
+    v-if="$options.methods.getComponent(props.field, parent.$registry)"
     :field="props.field"
     :value="props.value"
   ></component>
@@ -9,31 +9,14 @@
 </template>
 
 <script>
-import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
-import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
-import RowCardFieldNumber from '@baserow/modules/database/components/card/RowCardFieldNumber'
-import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
-
 export default {
-  height: 0, // @TODO make this work for the formula
+  height: 22,
   name: 'RowCardFieldFormula',
-  components: {
-    RowCardFieldDate,
-    RowCardFieldBoolean,
-    RowCardFieldNumber,
-    RowCardFieldText,
-  },
+  components: {},
   methods: {
-    getComponent(field) {
-      return {
-        date: RowCardFieldDate,
-        text: RowCardFieldText,
-        boolean: RowCardFieldBoolean,
-        number: RowCardFieldNumber,
-        invalid: RowCardFieldText,
-        char: RowCardFieldText,
-        date_interval: RowCardFieldText,
-      }[field.formula_type]
+    getComponent(field, $registry) {
+      const formulaType = $registry.get('formula_type', field.formula_type)
+      return formulaType.getCardComponent(field)
     },
   },
 }

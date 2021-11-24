@@ -12,12 +12,16 @@
     </div>
     <div class="formula-field__description-heading-2">Syntax</div>
     <pre
+      v-for="usage in selectedItem.syntaxUsage"
+      :key="usage.hashCode()"
       class="formula-field__description-example"
-    ><code>{{ formatList(selectedItem.syntaxUsage) }}</code></pre>
+    ><code>{{ usage }}</code></pre>
     <div class="formula-field__description-heading-2">Examples</div>
     <pre
+      v-for="example in selectedItem.examples"
+      :key="example.hashCode()"
       class="formula-field__description-example"
-    ><code>{{ formatList(selectedItem.examples) }}</code></pre>
+    ><code>{{ example }}</code></pre>
   </div>
 </template>
 <script>
@@ -32,13 +36,6 @@ export default {
   methods: {
     makeHeader(header) {
       return header.replaceAll('_', ' ')
-    },
-    formatList(item) {
-      if (Array.isArray(item)) {
-        return item.join('\n')
-      } else {
-        return item
-      }
     },
   },
 }

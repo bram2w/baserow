@@ -63,6 +63,7 @@ Django backend development server by executing the following commands.
 $ docker exec -it my-baserow-plugin-backend bash
 $ baserow migrate
 $ baserow sync_templates
+$ baserow update_formulas 
 $ baserow runserver 0.0.0.0:8000
 ```
 
