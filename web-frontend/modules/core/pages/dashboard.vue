@@ -171,7 +171,7 @@ export default {
   "en":{
     "dashboard":{
       "alertTitle": "We need your help!",
-      "alertText": "If you find Baserow useful then sponsoring, starring or sharing us is greatly appreciated:",
+      "alertText": "If you find Baserow useful then sponsoring, starring or sharing us is greatly appreciated. By sponsoring us on GitHub you will get early access to the premium features!",
       "tweetContent": "Check out @baserow an open source no-code database tool and Airtable alternative!",
       "redditTitle": "'Baserow - An open source no-code database",
       "noGroupTitle": "No groups found",
