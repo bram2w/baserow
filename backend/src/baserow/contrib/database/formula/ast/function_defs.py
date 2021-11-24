@@ -1,7 +1,8 @@
 from abc import ABC
 from decimal import Decimal
-from typing import List, Optional
+from typing import List, Optional, Type, Dict, Set
 
+from django.contrib.postgres.aggregates import JSONBAgg
 from django.db.models import (
     Expression,
     Value,
@@ -11,6 +12,15 @@ from django.db.models import (
     Func,
     F,
     ExpressionWrapper,
+    Model,
+    Count,
+    Sum,
+    JSONField,
+    Variance,
+    Max,
+    Min,
+    Avg,
+    StdDev,
 )
 from django.db.models.functions import (
     Upper,
@@ -24,6 +34,11 @@ from django.db.models.functions import (
     StrIndex,
     Length,
     Reverse,
+    JSONObject,
+    Least,
+    Left,
+    Right,
+    Repeat,
 )
 
 from baserow.contrib.database.fields.models import (
@@ -36,6 +51,7 @@ from baserow.contrib.database.formula.ast.function import (
     TwoArgumentBaserowFunction,
     ThreeArgumentBaserowFunction,
     ZeroArgumentBaserowFunction,
+    aggregate_wrapper,
 )
 from baserow.contrib.database.formula.ast.tree import (
     BaserowFunctionCall,
@@ -51,6 +67,16 @@ from baserow.contrib.database.formula.expression_generator.django_expressions im
     LessThanEqualOrExpr,
     AndExpr,
     OrExpr,
+    BaserowStringAgg,
+)
+from baserow.contrib.database.formula.expression_generator.exceptions import (
+    BaserowToDjangoExpressionGenerationError,
+)
+from baserow.contrib.database.formula.types.formula_type import (
+    BaserowFormulaType,
+    BaserowFormulaValidType,
+    UnTyped,
+    BaserowArgumentTypeChecker,
 )
 from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaTextType,
@@ -59,14 +85,12 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaBooleanType,
     calculate_number_type,
     BaserowFormulaDateIntervalType,
+    BaserowFormulaArrayType,
+    BaserowFormulaSingleSelectType,
+    BaserowFormulaCharType,
+    literal,
 )
-from baserow.contrib.database.formula.types.formula_type import (
-    BaserowFormulaType,
-    BaserowFormulaValidType,
-    UnTyped,
-    BaserowArgumentTypeChecker,
-)
-from baserow.contrib.database.table.models import GeneratedTableModel
+from baserow.contrib.database.formula.types.type_checkers import OnlyIntegerNumberTypes
 
 
 def register_formula_functions(registry):
@@ -80,11 +104,19 @@ def register_formula_functions(registry):
     registry.register(BaserowSearch())
     registry.register(BaserowLength())
     registry.register(BaserowReverse())
+    registry.register(BaserowContains())
+    registry.register(BaserowLeft())
+    registry.register(BaserowRight())
+    registry.register(BaserowTrim())
+    registry.register(BaserowRegexReplace())
+    registry.register(BaserowRepeat())
     # Number functions
     registry.register(BaserowMultiply())
     registry.register(BaserowDivide())
     registry.register(BaserowToNumber())
     registry.register(BaserowErrorToNan())
+    registry.register(BaserowGreatest())
+    registry.register(BaserowLeast())
     # Boolean functions
     registry.register(BaserowIf())
     registry.register(BaserowEqual())
@@ -100,15 +132,37 @@ def register_formula_functions(registry):
     # Date functions
     registry.register(BaserowDatetimeFormat())
     registry.register(BaserowDay())
+    registry.register(BaserowMonth())
+    registry.register(BaserowYear())
+    registry.register(BaserowSecond())
     registry.register(BaserowToDate())
     registry.register(BaserowDateDiff())
     # Date interval functions
     registry.register(BaserowDateInterval())
-    # Special Functions
+    # Special functions
     registry.register(BaserowAdd())
     registry.register(BaserowMinus())
     registry.register(BaserowErrorToNull())
     registry.register(BaserowRowId())
+    registry.register(BaserowWhenEmpty())
+    # Array functions
+    registry.register(BaserowArrayAgg())
+    registry.register(Baserow2dArrayAgg())
+    registry.register(BaserowAny())
+    registry.register(BaserowEvery())
+    registry.register(BaserowMax())
+    registry.register(BaserowMin())
+    registry.register(BaserowCount())
+    registry.register(BaserowFilter())
+    registry.register(BaserowAggJoin())
+    registry.register(BaserowStdDevPop())
+    registry.register(BaserowStdDevSample())
+    registry.register(BaserowVarianceSample())
+    registry.register(BaserowVariancePop())
+    registry.register(BaserowAvg())
+    registry.register(BaserowSum())
+    # Single Select functions
+    registry.register(BaserowGetSingleSelectValue())
 
 
 class BaserowUpper(OneArgumentBaserowFunction):
@@ -124,7 +178,7 @@ class BaserowUpper(OneArgumentBaserowFunction):
         return func_call.with_valid_type(BaserowFormulaTextType())
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Upper(arg)
+        return Upper(arg, output_field=fields.TextField())
 
 
 class BaserowLower(OneArgumentBaserowFunction):
@@ -139,7 +193,7 @@ class BaserowLower(OneArgumentBaserowFunction):
         return func_call.with_valid_type(BaserowFormulaTextType())
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Lower(arg)
+        return Lower(arg, output_field=fields.TextField())
 
 
 class BaserowDatetimeFormat(TwoArgumentBaserowFunction):
@@ -221,9 +275,9 @@ class BaserowConcat(BaserowFunctionDefinition):
         ).with_valid_type(BaserowFormulaTextType())
 
     def to_django_expression_given_args(
-        self, args: List[Expression], model_instance: Optional[GeneratedTableModel]
+        self, expr_args: List[Expression], *args, **kwargs
     ) -> Expression:
-        return Concat(*args, output_field=fields.TextField())
+        return Concat(*expr_args, output_field=fields.TextField())
 
 
 class BaserowAdd(TwoArgumentBaserowFunction):
@@ -251,6 +305,7 @@ class BaserowAdd(TwoArgumentBaserowFunction):
         return arg1.expression_type.add(func_call, arg1, arg2)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        # todo wrap with expression wrapper and set correct output type
         return arg1 + arg2
 
 
@@ -304,8 +359,8 @@ class BaserowMinus(TwoArgumentBaserowFunction):
         return arg1 - arg2
 
 
-class BaserowMax(TwoArgumentBaserowFunction):
-    type = "max"
+class BaserowGreatest(TwoArgumentBaserowFunction):
+    type = "greatest"
     arg1_type = [BaserowFormulaNumberType]
     arg2_type = [BaserowFormulaNumberType]
 
@@ -321,6 +376,25 @@ class BaserowMax(TwoArgumentBaserowFunction):
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
         return Greatest(arg1, arg2)
+
+
+class BaserowLeast(TwoArgumentBaserowFunction):
+    type = "least"
+    arg1_type = [BaserowFormulaNumberType]
+    arg2_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaNumberType],
+        arg2: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            calculate_number_type([arg1.expression_type, arg2.expression_type])
+        )
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return Least(arg1, arg2)
 
 
 class BaserowDivide(TwoArgumentBaserowFunction):
@@ -523,7 +597,7 @@ class BaserowNot(OneArgumentBaserowFunction):
         return func_call.with_valid_type(BaserowFormulaBooleanType())
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return NotExpr(arg)
+        return NotExpr(arg, output_field=fields.BooleanField())
 
 
 class BaserowNotEqual(BaserowEqual):
@@ -608,8 +682,8 @@ class BaserowLessThanOrEqual(BaseLimitComparableFunction):
 
 class BaserowToDate(TwoArgumentBaserowFunction):
     type = "todate"
-    arg_type1 = [BaserowFormulaTextType]
-    arg_type2 = [BaserowFormulaTextType]
+    arg1_type = [BaserowFormulaTextType]
+    arg2_type = [BaserowFormulaTextType]
 
     def type_function(
         self,
@@ -646,11 +720,28 @@ class BaserowDay(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "day")
+        return Extract(arg, "day", output_field=fields.DecimalField())
+
+
+class BaserowMonth(OneArgumentBaserowFunction):
+    type = "month"
+    arg_type = [BaserowFormulaDateType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Extract(arg, "month", output_field=fields.DecimalField())
 
 
 class BaserowDateDiff(ThreeArgumentBaserowFunction):
-    type = "datediff"
+    type = "date_diff"
 
     arg1_type = [BaserowFormulaTextType]
     arg2_type = [BaserowFormulaDateType]
@@ -693,7 +784,7 @@ class BaserowAnd(TwoArgumentBaserowFunction):
         return func_call.with_valid_type(BaserowFormulaBooleanType())
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return AndExpr(arg1, arg2)
+        return AndExpr(arg1, arg2, output_field=fields.BooleanField())
 
 
 class BaserowOr(TwoArgumentBaserowFunction):
@@ -710,7 +801,7 @@ class BaserowOr(TwoArgumentBaserowFunction):
         return func_call.with_valid_type(BaserowFormulaBooleanType())
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return OrExpr(arg1, arg2)
+        return OrExpr(arg1, arg2, output_field=fields.BooleanField())
 
 
 class BaserowDateInterval(OneArgumentBaserowFunction):
@@ -748,7 +839,7 @@ class BaserowReplace(ThreeArgumentBaserowFunction):
     def to_django_expression(
         self, arg1: Expression, arg2: Expression, arg3: Expression
     ) -> Expression:
-        return Replace(arg1, arg2, arg3)
+        return Replace(arg1, arg2, arg3, output_field=fields.TextField())
 
 
 class BaserowSearch(TwoArgumentBaserowFunction):
@@ -767,7 +858,26 @@ class BaserowSearch(TwoArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return StrIndex(arg1, arg2)
+        return StrIndex(arg1, arg2, output_field=fields.DecimalField())
+
+
+class BaserowContains(TwoArgumentBaserowFunction):
+    type = "contains"
+    arg1_type = [BaserowFormulaTextType]
+    arg2_type = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaBooleanType())
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return NotEqualsExpr(
+            StrIndex(arg1, arg2), Value(0), output_field=fields.BooleanField()
+        )
 
 
 class BaserowRowId(ZeroArgumentBaserowFunction):
@@ -786,7 +896,13 @@ class BaserowRowId(ZeroArgumentBaserowFunction):
         pass
 
     def to_django_expression_given_args(
-        self, args: List[Expression], model_instance: Optional[GeneratedTableModel]
+        self,
+        args: List[Expression],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
     ) -> Expression:
         if model_instance is None:
             return ExpressionWrapper(
@@ -817,7 +933,7 @@ class BaserowLength(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Length(arg)
+        return Length(arg, output_field=fields.DecimalField())
 
 
 class BaserowReverse(OneArgumentBaserowFunction):
@@ -833,4 +949,534 @@ class BaserowReverse(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Reverse(arg)
+        return Reverse(arg, output_field=fields.TextField())
+
+
+class BaserowWhenEmpty(TwoArgumentBaserowFunction):
+
+    type = "when_empty"
+    arg_type = [BaserowFormulaValidType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        if arg1.expression_type.type != arg2.expression_type.type:
+            func_call.with_invalid_type(
+                "both inputs for when_empty must be the same type"
+            )
+        return func_call.with_valid_type(arg1.expression_type)
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return Coalesce(arg1, arg2)
+
+
+def _calculate_aggregate_orders(join_ids):
+    orders = []
+    for join in reversed(join_ids):
+        orders.append(join[0] + "__order")
+        orders.append(join[0] + "__id")
+    return orders
+
+
+class BaserowArrayAgg(OneArgumentBaserowFunction):
+    type = "array_agg"
+    arg_type = [BaserowFormulaValidType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaArrayType(arg.expression_type))
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        pass
+
+    def to_django_expression_given_args(
+        self,
+        args: List[Expression],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
+    ) -> Expression:
+        join_ids = list(join_ids)
+        json_builder_args = {"value": args[0]}
+        if len(join_ids) > 1:
+            json_builder_args["ids"] = JSONObject(
+                **{tbl: F(i + "__id") for i, tbl in join_ids}
+            )
+        else:
+            json_builder_args["id"] = F(join_ids[0][0] + "__id")
+
+        orders = _calculate_aggregate_orders(join_ids)
+
+        expr = JSONBAgg(JSONObject(**json_builder_args), ordering=orders)
+        return Coalesce(
+            aggregate_wrapper(
+                expr, model, pre_annotations, aggregate_filters, join_ids
+            ),
+            Value([], output_field=JSONField()),
+            output_field=JSONField(),
+        )
+
+
+class Baserow2dArrayAgg(OneArgumentBaserowFunction):
+    type = "array_agg_unnesting"
+    arg_type = [BaserowFormulaArrayType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(
+            Func(JSONBAgg(arg), function="jsonb_array_elements"),
+            function="jsonb_array_elements",
+            output_field=JSONField(),
+        )
+
+    def to_django_expression_given_args(
+        self,
+        args: List[Expression],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
+    ) -> Expression:
+        subquery = super().to_django_expression_given_args(
+            args, model, model_instance, pre_annotations, aggregate_filters, join_ids
+        )
+        return Func(Func(subquery, function="array"), function="to_jsonb")
+
+
+class BaserowCount(OneArgumentBaserowFunction):
+    type = "count"
+    arg_type = [BaserowFormulaValidType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Count(arg, output_field=fields.DecimalField())
+
+
+class BaserowFilter(TwoArgumentBaserowFunction):
+    type = "filter"
+    arg1_type = [BaserowFormulaValidType]
+    arg2_type = [BaserowFormulaBooleanType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        if not arg1.many:
+            return func_call.with_invalid_type(
+                "first input to filter must be an expression of many values ("
+                "a lookup function call or a field reference to a lookup/link "
+                "field)"
+            )
+        valid_type = func_call.with_valid_type(arg1.expression_type)
+        # Force all usages of filter to be immediately wrapped by an aggregate call
+        # otherwise formula behaviour when filtering is odd.
+        valid_type.requires_aggregate_wrapper = True
+        return valid_type
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return arg1
+
+    def to_django_expression_given_args(
+        self,
+        args: List[Expression],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
+    ) -> Expression:
+        result = super().to_django_expression_given_args(
+            args, model, model_instance, pre_annotations, aggregate_filters, join_ids
+        )
+        aggregate_filters.append(args[1])
+        return result
+
+
+class BaserowAny(OneArgumentBaserowFunction):
+    type = "any"
+    arg_type = [BaserowFormulaBooleanType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(arg, function="bool_or")
+
+
+class BaserowEvery(OneArgumentBaserowFunction):
+    type = "every"
+    arg_type = [BaserowFormulaBooleanType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(arg, function="every")
+
+
+class BaserowMax(OneArgumentBaserowFunction):
+    type = "max"
+    arg_type = [
+        BaserowFormulaTextType,
+        BaserowFormulaNumberType,
+        BaserowFormulaCharType,
+    ]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Max(arg)
+
+
+class BaserowMin(OneArgumentBaserowFunction):
+    type = "min"
+    arg_type = [
+        BaserowFormulaTextType,
+        BaserowFormulaNumberType,
+        BaserowFormulaCharType,
+    ]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Min(arg)
+
+
+class BaserowAvg(OneArgumentBaserowFunction):
+    type = "avg"
+    arg_type = [
+        BaserowFormulaNumberType,
+    ]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Avg(arg)
+
+
+class BaserowStdDevPop(OneArgumentBaserowFunction):
+    type = "stddev_pop"
+    arg_type = [BaserowFormulaNumberType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return StdDev(arg, sample=False)
+
+
+class BaserowStdDevSample(OneArgumentBaserowFunction):
+    type = "stddev_sample"
+    arg_type = [BaserowFormulaNumberType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return StdDev(arg, sample=True)
+
+
+class BaserowAggJoin(TwoArgumentBaserowFunction):
+    type = "join"
+    arg1_type = [BaserowFormulaTextType]
+    arg2_type = [BaserowFormulaTextType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaTextType())
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        pass
+
+    def to_django_expression_given_args(
+        self,
+        args: List[Expression],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
+    ) -> Expression:
+        join_ids = list(join_ids)
+        orders = _calculate_aggregate_orders(join_ids)
+        join_ids.clear()
+        return aggregate_wrapper(
+            BaserowStringAgg(args[0], args[1], ordering=orders),
+            model,
+            pre_annotations,
+            aggregate_filters,
+            join_ids,
+        )
+
+
+class BaserowSum(OneArgumentBaserowFunction):
+    type = "sum"
+    aggregate = True
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Sum(arg, output_field=fields.DecimalField())
+
+
+class BaserowVarianceSample(OneArgumentBaserowFunction):
+    type = "variance_sample"
+    aggregate = True
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Variance(arg, sample=True)
+
+
+class BaserowVariancePop(OneArgumentBaserowFunction):
+    type = "variance_pop"
+    aggregate = True
+    arg_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg.expression_type)
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Variance(arg, sample=False)
+
+
+class BaserowGetSingleSelectValue(OneArgumentBaserowFunction):
+    type = "get_single_select_value"
+    arg_type = [BaserowFormulaSingleSelectType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaTextType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(
+            arg,
+            Value("value"),
+            function="jsonb_extract_path_text",
+            output_field=fields.TextField(),
+        )
+
+
+class BaserowLeft(TwoArgumentBaserowFunction):
+    type = "left"
+    arg1_type = [BaserowFormulaTextType]
+    arg2_type = [OnlyIntegerNumberTypes()]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg1.expression_type)
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return Left(arg1, arg2, output_field=fields.TextField())
+
+
+class BaserowRight(TwoArgumentBaserowFunction):
+    type = "right"
+    arg1_type = [BaserowFormulaTextType]
+    arg2_type = [OnlyIntegerNumberTypes()]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg1.expression_type)
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return Right(arg1, arg2, output_field=fields.TextField())
+
+
+class BaserowRegexReplace(ThreeArgumentBaserowFunction):
+
+    type = "regex_replace"
+    arg_type1 = [BaserowFormulaTextType]
+    arg_type2 = [BaserowFormulaTextType]
+    arg_type3 = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+        arg3: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg1.expression_type)
+
+    def to_django_expression(
+        self, arg1: Expression, arg2: Expression, arg3: Expression
+    ) -> Expression:
+        return Func(
+            arg1,
+            arg2,
+            arg3,
+            Value("g", output_field=fields.TextField()),
+            function="regexp_replace",
+            output_field=fields.TextField(),
+        )
+
+
+class BaserowTrim(OneArgumentBaserowFunction):
+
+    type = "trim"
+    arg_type = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return BaserowRegexReplace().call_and_type_with(
+            arg, literal("(^\\s+|\\s+$)"), literal("")
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        # This function should always be completely substituted when typing and replaced
+        # with BaserowRegexReplace and hence this should never be called.
+        raise BaserowToDjangoExpressionGenerationError()
+
+
+class BaserowRepeat(TwoArgumentBaserowFunction):
+    type = "repeat"
+    arg1_type = [BaserowFormulaTextType]
+    arg2_type = [OnlyIntegerNumberTypes()]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(arg1.expression_type)
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return Repeat(arg1, arg2, output_field=fields.TextField())
+
+
+class BaserowYear(OneArgumentBaserowFunction):
+    type = "year"
+    arg_type = [BaserowFormulaDateType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Extract(arg, "year", output_field=fields.DecimalField())
+
+
+class BaserowSecond(OneArgumentBaserowFunction):
+    type = "second"
+    arg_type = [BaserowFormulaDateType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Extract(arg, "second", output_field=fields.DecimalField())

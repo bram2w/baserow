@@ -28,6 +28,15 @@ def environ():
 
 
 @pytest.fixture()
+def mutable_field_type_registry():
+    from baserow.contrib.database.fields.registries import field_type_registry
+
+    before = field_type_registry.registry.copy()
+    yield field_type_registry
+    field_type_registry.registry = before
+
+
+@pytest.fixture()
 def migrate_to_latest_at_end():
     yield
     # We need to apply the latest migration otherwise other tests might fail.

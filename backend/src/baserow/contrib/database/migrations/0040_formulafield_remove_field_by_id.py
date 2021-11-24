@@ -4,16 +4,12 @@ from typing import Dict, Optional
 
 from django.db import migrations, models
 
-from baserow.contrib.database.formula.parser.exceptions import (
+from baserow.contrib.database.formula import (
     MaximumFormulaSizeError,
-)
-from baserow.contrib.database.formula.parser.generated.BaserowFormula import (
     BaserowFormula,
-)
-from baserow.contrib.database.formula.parser.generated.BaserowFormulaVisitor import (
     BaserowFormulaVisitor,
+    FormulaHandler,
 )
-from baserow.contrib.database.formula.parser.parser import get_parse_tree_for_formula
 
 
 # Copied from parser.py to ensure future changes to that file dont
@@ -156,7 +152,7 @@ def update_field_names(
     """
 
     try:
-        tree = get_parse_tree_for_formula(formula)
+        tree = FormulaHandler.get_parse_tree_for_formula(formula)
         return UpdateFieldNameFormulaVisitor(
             field_names_to_update,
             field_ids_to_replace_with_name_refs,

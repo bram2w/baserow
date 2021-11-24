@@ -33,6 +33,11 @@ def get_token_stream_for_formula(formula: str) -> BufferedTokenStream:
 
 
 def get_parse_tree_for_formula(formula: str):
+    """
+    WARNING: This function is directly used by migration code. Please ensure
+    backwards compatability .
+    """
+
     lexer = BaserowFormulaLexer(InputStream(formula))
     stream = CommonTokenStream(lexer)
     parser = BaserowFormula(stream)
@@ -41,6 +46,7 @@ def get_parse_tree_for_formula(formula: str):
     return parser.root()
 
 
+# noinspection DuplicatedCode
 def convert_string_literal_token_to_string(string_literal, is_single_q):
     literal_without_outer_quotes = string_literal[1:-1]
     quote = "'" if is_single_q else '"'

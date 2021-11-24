@@ -17,13 +17,14 @@ from baserow.contrib.database.fields.models import (
     LastModifiedField,
     CreatedOnField,
     FormulaField,
+    LookupField,
 )
 
 
 class FieldFixtures:
     def create_model_field(self, table, field):
         with connection.schema_editor() as schema_editor:
-            to_model = table.get_model(field_ids=[field.id])
+            to_model = table.get_model(field_ids=[field.id], add_dependencies=False)
             model_field = to_model._meta.get_field(field.db_column)
             schema_editor.add_field(to_model, model_field)
 
@@ -311,7 +312,36 @@ class FieldFixtures:
         if "formula_type" not in kwargs:
             kwargs["formula_type"] = "text"
 
-        field = FormulaField.objects.create(**kwargs)
+        if "internal_formula" not in kwargs:
+            kwargs["internal_formula"] = kwargs["formula"]
+
+        if "requires_refresh_after_insert" not in kwargs:
+            kwargs["requires_refresh_after_insert"] = False
+
+        recalculate = kwargs.pop("recalculate", True)
+
+        field = FormulaField(**kwargs)
+        field.save(recalculate=recalculate)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_lookup_field(self, user=None, create_field=True, **kwargs):
+        if "table" not in kwargs:
+            kwargs["table"] = self.create_database_table(user=user)
+
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        recalculate = kwargs.pop("recalculate", True)
+
+        field = LookupField(**kwargs)
+        field.save(recalculate=recalculate)
 
         if create_field:
             self.create_model_field(kwargs["table"], field)

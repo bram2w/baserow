@@ -1,6 +1,8 @@
 from decimal import Decimal
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from pyinstrument import Profiler
 from rest_framework.status import HTTP_200_OK
@@ -210,3 +212,156 @@ def test_getting_data_from_normal_table(data_fixture, api_client):
     assert response.status_code == HTTP_200_OK
     assert response_json["count"] == 10001
     print(profiler.output_text(unicode=True, color=True))
+
+
+def add_fan_out_of(
+    api_client,
+    data_fixture,
+    user,
+    token,
+    table,
+    fanout,
+    depth,
+    profiler=None,
+):
+    if depth == 0:
+        return None, None
+    else:
+        kwargs = {}
+        if table is not None:
+            kwargs["database"] = table.database
+        new_table = data_fixture.create_database_table(
+            user=user, name=f"table {depth}", **kwargs
+        )
+        new_table_primary_field = data_fixture.create_text_field(
+            name="p", table=new_table, primary=True
+        )
+        if table is not None:
+            link_row_field = FieldHandler().create_field(
+                user,
+                new_table,
+                "link_row",
+                name="linkrowfield",
+                link_row_table=table,
+            )
+            table_model = table.get_model(attribute_names=True)
+            new_table_model = new_table.get_model(attribute_names=True)
+            for k, row in enumerate(table_model.objects.all()):
+                for i in range(fanout):
+                    new_row = new_table_model.objects.create(
+                        p=f"table {depth} row {k} fanout {i}"
+                    )
+                    new_row.linkrowfield.add(row.id)
+                    new_row.save()
+        else:
+            new_table_model = new_table.get_model(attribute_names=True)
+            link_row_field = None
+            for i in range(fanout):
+                new_row = new_table_model.objects.create(p=f"table {depth} row {i}")
+
+        related_field, nested_lookup_field = add_fan_out_of(
+            api_client,
+            data_fixture,
+            user,
+            token,
+            new_table,
+            fanout,
+            depth - 1,
+            profiler=profiler,
+        )
+        if related_field is not None:
+            if profiler:
+                profiler.start()
+            new_lookup_field = FieldHandler().create_field(
+                user,
+                new_table,
+                type_name="formula",
+                name="formula",
+                formula=f"lookup_by_id({related_field.link_row_related_field.id}, "
+                f"{nested_lookup_field.id})",
+            )
+            if profiler:
+                profiler.stop()
+            return (
+                link_row_field,
+                new_lookup_field,
+            )
+        else:
+            return link_row_field, new_table_primary_field
+
+
+@pytest.mark.django_db
+@pytest.mark.slow
+def test_fanout_one_off(data_fixture, api_client, django_assert_num_queries):
+    user, token = data_fixture.create_user_and_token()
+    p = Profiler()
+    _, lookup_field = add_fan_out_of(
+        api_client, data_fixture, user, token, None, 2, 2, profiler=p
+    )
+    print(p.output_text(unicode=True, color=True))
+    url = reverse("api:database:rows:list", kwargs={"table_id": lookup_field.table.id})
+    profiler = Profiler()
+    profiler.start()
+    with CaptureQueriesContext(connection) as captured:
+        api_client.get(
+            url,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+    # assert response.json() == {}
+    profiler.stop()
+    print(len(captured.captured_queries))
+    print(p.last_session.duration)
+    print(profiler.output_text(unicode=True, color=True))
+
+
+@pytest.mark.django_db
+@pytest.mark.slow
+def test_fanout(data_fixture, api_client, django_assert_num_queries):
+    results = [
+        [
+            "Mode",
+            "Num tables depth",
+            "Row fanout",
+            "Get duration",
+            "Num queries",
+            "Time spent creating lookup fields",
+        ]
+    ]
+    for num_tables in range(1, 4):
+        for fanout in [2, 5, 8, 10]:
+            user, token = data_fixture.create_user_and_token()
+            creation_profiler = Profiler()
+            _, lookup_field = add_fan_out_of(
+                api_client,
+                data_fixture,
+                user,
+                token,
+                None,
+                num_tables,
+                fanout,
+                profiler=creation_profiler,
+            )
+            url = reverse(
+                "api:database:rows:list", kwargs={"table_id": lookup_field.table.id}
+            )
+            profiler = Profiler()
+            profiler.start()
+            with CaptureQueriesContext(connection) as captured:
+                api_client.get(
+                    url,
+                    format="json",
+                    HTTP_AUTHORIZATION=f"JWT {token}",
+                )
+            get_session = profiler.stop()
+            results.append(
+                [
+                    num_tables,
+                    fanout,
+                    get_session.duration,
+                    len(captured.captured_queries),
+                    creation_profiler.last_session.duration,
+                ]
+            )
+            print(profiler.output_text(unicode=True, color=True))
+    print(results)

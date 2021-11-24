@@ -546,6 +546,7 @@ def test_human_readable_values(data_fixture):
         "text": "",
         "url": "",
         "formula": "test FORMULA",
+        "lookup": "",
     }
     assert results == {
         "boolean": "True",
@@ -577,4 +578,58 @@ def test_human_readable_values(data_fixture):
         "text": "text",
         "url": "https://www.google.com",
         "formula": "test FORMULA",
+        "lookup": "linked_row_1, linked_row_2, ",
     }
+
+
+@pytest.mark.django_db
+def test_import_export_lookup_field(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    id_mapping = {}
+
+    target_field = data_fixture.create_text_field(name="target", table=table_b)
+    table_a_model = table_a.get_model(attribute_names=True)
+    table_b_model = table_b.get_model(attribute_names=True)
+    row_1 = table_b_model.objects.create(primary="1", target="target 1")
+    row_2 = table_b_model.objects.create(primary="2", target="target 2")
+
+    row_a = table_a_model.objects.create(primary="a")
+    row_a.link.add(row_1.id)
+    row_a.link.add(row_2.id)
+    row_a.save()
+
+    lookup = FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        name="lookup",
+        through_field_name="link",
+        target_field_name="target",
+    )
+    lookup_field_type = field_type_registry.get_by_model(lookup)
+    lookup_serialized = lookup_field_type.export_serialized(lookup)
+    assert lookup_serialized["target_field_id"] == target_field.id
+    assert lookup_serialized["target_field_name"] == target_field.name
+    assert lookup_serialized["through_field_id"] == link_field.id
+    assert lookup_serialized["through_field_name"] == link_field.name
+
+    lookup.name = "rename to prevent import clash"
+    lookup.save()
+
+    lookup_field_imported = lookup_field_type.import_serialized(
+        table_a,
+        lookup_serialized,
+        id_mapping,
+    )
+    assert lookup.id != lookup_field_imported.id
+    assert lookup_field_imported.name == "lookup"
+    assert lookup_field_imported.order == lookup.order
+    assert lookup_field_imported.primary == lookup.primary
+    assert lookup_field_imported.formula == lookup.formula
+    assert lookup_field_imported.through_field == lookup.through_field
+    assert lookup_field_imported.target_field == lookup.target_field
+    assert lookup_field_imported.through_field_name == lookup.through_field_name
+    assert lookup_field_imported.target_field_name == lookup.target_field_name
+
+    assert id_mapping["database_fields"][lookup.id] == lookup_field_imported.id

@@ -132,10 +132,18 @@ const mockedFields = {
   formula: {
     id: 15,
     name: 'formula',
-    order: 14,
+    order: 16,
     primary: false,
     table_id: 42,
     type: 'formula',
+  },
+  lookup: {
+    id: 16,
+    name: 'lookup',
+    order: 16,
+    primary: false,
+    table_id: 42,
+    type: 'lookup',
   },
 }
 
@@ -165,7 +173,11 @@ describe('FieldType tests', () => {
       for (const [key, value] of fields) {
         const fieldItem = mockedFields[key]
         const t = () => {
-          value.prepareValueForCopy(fieldItem, valueType)
+          value.prepareValueForCopy(
+            fieldItem,
+            valueType,
+            testApp.store.$registry
+          )
         }
         expect(t).not.toThrow(TypeError)
       }

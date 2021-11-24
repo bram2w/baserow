@@ -61,6 +61,11 @@ def test_import_export_database(data_fixture):
     assert getattr(
         imported_row, f'field_{id_mapping["database_fields"][text_field.id]}'
     ) == (getattr(row, f"field_{text_field.id}"))
+    assert (
+        imported_formula_field.internal_formula == f"error_to_null(field('"
+        f"{imported_text_field.db_column}'))"
+    )
+    assert imported_formula_field.formula_type == "text"
     assert getattr(
         imported_row, f'field_{id_mapping["database_fields"][formula_field.id]}'
     ) == (getattr(row, f"field_{formula_field.id}"))

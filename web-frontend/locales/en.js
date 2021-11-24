@@ -71,6 +71,7 @@ export default {
     singleSelect: 'Single select',
     phoneNumber: 'Phone number',
     formula: 'Formula',
+    lookup: 'Lookup',
   },
   fieldErrors: {
     invalidNumber: 'Invalid number',
@@ -115,6 +116,9 @@ export default {
     formula:
       'A read-only field defined by a formula written in the Baserow formula' +
       ' language.',
+    lookup:
+      'A read-only field connected to a link row field which returns an array of' +
+      ' values and row ids from the chosen lookup field in the linked table.',
   },
   viewFilter: {
     contains: 'contains',

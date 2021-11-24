@@ -202,7 +202,7 @@ CREATE OR REPLACE FUNCTION date_diff (units TEXT, start_t TIMESTAMP, end_t TIMES
    $$ LANGUAGE plpgsql;
 """
             ),
-            ("DROP FUNCTION IF EXISTS date_diff(text, text);"),
+            ("DROP FUNCTION IF EXISTS date_diff(text, timestamp, timestamp);"),
         ),
         migrations.RunSQL(
             (

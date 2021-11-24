@@ -2,14 +2,12 @@ from typing import Optional, Any, List
 
 from django.db import connection
 
+from baserow.contrib.database.fields.dependencies.update_collector import (
+    CachingFieldUpdateCollector,
+)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.fields.signals import field_restored
-from baserow.contrib.database.formula.types.typed_field_updater import (
-    type_table_and_update_fields_given_changed_field,
-    type_table_and_update_fields,
-)
 from baserow.contrib.database.rows.signals import row_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
@@ -19,7 +17,6 @@ from baserow.core.trash.registries import TrashableItemType
 
 
 class TableTrashableItemType(TrashableItemType):
-
     type = "table"
     model_class = Table
 
@@ -72,7 +69,6 @@ class TableTrashableItemType(TrashableItemType):
 
 
 class FieldTrashableItemType(TrashableItemType):
-
     type = "field"
     model_class = Field
 
@@ -83,31 +79,7 @@ class FieldTrashableItemType(TrashableItemType):
         return trashed_item.name
 
     def trashed_item_restored(self, trashed_item: Field, trash_entry: TrashEntry):
-        trashed_item.name = FieldHandler().find_next_unused_field_name(
-            trashed_item.table,
-            [trashed_item.name, f"{trashed_item.name} (Restored)"],
-            [trashed_item.id],  # Ignore the field itself from the check.
-        )
-        # We need to set the specific field's name also so when the field_restored
-        # serializer switches to serializing the specific instance it picks up and uses
-        # the new name set here rather than the name currently in the DB.
-        trashed_item = trashed_item.specific
-        trashed_item.name = trashed_item.name
-        trashed_item.trashed = False
-        trashed_item.save()
-        (
-            typed_updated_table,
-            trashed_item,
-        ) = type_table_and_update_fields_given_changed_field(
-            trashed_item.table, initial_field=trashed_item
-        )
-        field_restored.send(
-            self,
-            field=trashed_item,
-            related_fields=typed_updated_table.updated_fields,
-            user=None,
-        )
-        typed_updated_table.update_values_for_all_updated_fields()
+        FieldHandler().restore_field(trashed_item)
 
     def permanently_delete_item(
         self,
@@ -134,9 +106,7 @@ class FieldTrashableItemType(TrashableItemType):
             model_field = from_model._meta.get_field(field.db_column)
             schema_editor.remove_field(from_model, model_field)
 
-        table = field.table
         field.delete()
-        type_table_and_update_fields(table)
 
         # After the field is deleted we are going to to call the after_delete method of
         # the field type because some instance cleanup might need to happen.
@@ -155,7 +125,6 @@ class FieldTrashableItemType(TrashableItemType):
 
 
 class RowTrashableItemType(TrashableItemType):
-
     type = "row"
     model_class = GeneratedTableModel
 
@@ -184,6 +153,24 @@ class RowTrashableItemType(TrashableItemType):
         table = self.get_parent(trashed_item, trash_entry.parent_trash_item_id)
 
         model = table.get_model()
+
+        update_collector = CachingFieldUpdateCollector(
+            table, existing_model=model, starting_row_id=trashed_item.id
+        )
+        updated_fields = [f["field"] for f in model._field_objects.values()]
+        for field in updated_fields:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in field.dependant_fields_with_types(update_collector):
+                dependant_field_type.row_of_dependency_created(
+                    dependant_field,
+                    trashed_item,
+                    update_collector,
+                    path_to_starting_table,
+                )
+        update_collector.apply_updates_returning_updated_fields_in_start_table()
         row_created.send(
             self,
             row=trashed_item,

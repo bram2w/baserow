@@ -82,6 +82,7 @@ import {
 } from '@baserow/modules/database/utils/fieldFilters'
 import GridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula'
 import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
+import FieldLookupSubForm from '@baserow/modules/database/components/field/FieldLookupSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 
 export class FieldType extends Registerable {
@@ -399,10 +400,10 @@ export class FieldType extends Registerable {
    * Converts rowValue to its human readable form first before applying the
    * filter returned from getContainsFilterFunction.
    */
-  containsFilter(rowValue, filterValue, field, $registry) {
+  containsFilter(rowValue, filterValue, field) {
     return (
       filterValue === '' ||
-      this.getContainsFilterFunction(field, $registry)(
+      this.getContainsFilterFunction(field)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
@@ -414,10 +415,10 @@ export class FieldType extends Registerable {
    * Converts rowValue to its human readable form first before applying the field
    * filter returned by getContainsFilterFunction's notted.
    */
-  notContainsFilter(rowValue, filterValue, field, $registry) {
+  notContainsFilter(rowValue, filterValue, field) {
     return (
       filterValue === '' ||
-      !this.getContainsFilterFunction(field, $registry)(
+      !this.getContainsFilterFunction(field)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
@@ -476,6 +477,14 @@ export class FieldType extends Registerable {
    * the value by for example pasting.
    */
   getIsReadOnly() {
+    return false
+  }
+
+  /**
+   * Override and return true if the field type can be referenced by a formula field.
+   * @return {boolean}
+   */
+  canBeReferencedByFormulaField() {
     return false
   }
 }
@@ -544,6 +553,10 @@ export class TextFieldType extends FieldType {
   getContainsFilterFunction() {
     return genericContainsFilter
   }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -605,6 +618,10 @@ export class LongTextFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -719,6 +736,10 @@ export class LinkRowFieldType extends FieldType {
         value: 'string',
       },
     ]
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -878,6 +899,10 @@ export class NumberFieldType extends FieldType {
   getContainsFilterFunction() {
     return genericContainsFilter
   }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -944,6 +969,10 @@ export class BooleanFieldType extends FieldType {
   }
 
   getDocsRequestExample(field) {
+    return true
+  }
+
+  canBeReferencedByFormulaField() {
     return true
   }
 }
@@ -1041,6 +1070,10 @@ class BaseDateFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -1365,6 +1398,10 @@ export class EmailFieldType extends FieldType {
   getContainsFilterFunction() {
     return genericContainsFilter
   }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
 }
 
 export class FileFieldType extends FieldType {
@@ -1615,6 +1652,10 @@ export class SingleSelectFieldType extends FieldType {
   getContainsFilterFunction() {
     return genericContainsFilter
   }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
 }
 
 export class MultipleSelectFieldType extends FieldType {
@@ -1837,6 +1878,10 @@ export class PhoneNumberFieldType extends FieldType {
   getContainsFilterFunction() {
     return genericContainsFilter
   }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
 }
 
 export class FormulaFieldType extends FieldType {
@@ -1847,7 +1892,7 @@ export class FormulaFieldType extends FieldType {
   static compatibleWithFormulaTypes(...formulaTypeStrings) {
     return (field) => {
       return (
-        field.type === this.getType() &&
+        (field.type === this.getType() || field.type === 'lookup') &&
         formulaTypeStrings.includes(field.formula_type)
       )
     }
@@ -1879,25 +1924,19 @@ export class FormulaFieldType extends FieldType {
   }
 
   _mapFormulaTypeToFieldType(formulaType) {
-    return {
-      invalid: TextFieldType.getType(),
-      text: TextFieldType.getType(),
-      char: TextFieldType.getType(),
-      number: NumberFieldType.getType(),
-      date: DateFieldType.getType(),
-      boolean: BooleanFieldType.getType(),
-      date_interval: DateFieldType.getType(),
-    }[formulaType]
+    return this.app.$registry.get('formula_type', formulaType).getFieldType()
   }
 
   getCardValueHeight(field) {
-    return this.app.$registry
-      .get('field', this._mapFormulaTypeToFieldType(field.formula_type))
-      .getCardValueHeight(field)
+    return (
+      this.app.$registry
+        .get('formula_type', field.formula_type)
+        .getCardComponent().height || 0
+    )
   }
 
-  getSort(name, order, field, $registry) {
-    const underlyingFieldType = $registry.get(
+  getSort(name, order, field) {
+    const underlyingFieldType = this.app.$registry.get(
       'field',
       this._mapFormulaTypeToFieldType(field.formula_type)
     )
@@ -1909,7 +1948,9 @@ export class FormulaFieldType extends FieldType {
   }
 
   getDocsDataType(field) {
-    return null
+    return this.app.$registry
+      .get('formula_type', field.formula_type)
+      .getDocsDataType(field)
   }
 
   getDocsDescription(field) {
@@ -1917,19 +1958,38 @@ export class FormulaFieldType extends FieldType {
   }
 
   getDocsRequestExample(field) {
-    return 'Result of a formula calculation'
+    return 'it is invalid to include request data for this field as it is read only'
   }
 
-  getContainsFilterFunction(field, $registry) {
-    const underlyingFieldType = $registry.get(
+  getDocsResponseExample(field) {
+    return this.app.$registry
+      .get('formula_type', field.formula_type)
+      .getDocsResponseExample(field)
+  }
+
+  prepareValueForCopy(field, value) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.prepareValueForCopy(field, value)
+  }
+
+  getContainsFilterFunction(field) {
+    const underlyingFieldType = this.app.$registry.get(
       'field',
       this._mapFormulaTypeToFieldType(field.formula_type)
     )
     return underlyingFieldType.getContainsFilterFunction()
   }
 
-  getSortIndicator(field, $registry) {
-    const underlyingFieldType = $registry.get(
+  toHumanReadableString(field, value) {
+    const underlyingFieldType = this.app.$registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.toHumanReadableString(field, value)
+  }
+
+  getSortIndicator(field) {
+    const underlyingFieldType = this.app.$registry.get(
       'field',
       this._mapFormulaTypeToFieldType(field.formula_type)
     )
@@ -1954,5 +2014,32 @@ export class FormulaFieldType extends FieldType {
 
   getCanBePrimaryField() {
     return false
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
+}
+
+export class LookupFieldType extends FormulaFieldType {
+  static getType() {
+    return 'lookup'
+  }
+
+  getIconClass() {
+    return 'binoculars'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.lookup')
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.lookup')
+  }
+
+  getFormComponent() {
+    return FieldLookupSubForm
   }
 }

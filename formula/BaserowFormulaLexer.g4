@@ -69,6 +69,8 @@ FALSE                                : F A L S E;
 FIELD                                : F I E L D;
 FIELDBYID                            : F I E L D UNDERSCORE B Y UNDERSCORE I D;
 
+LOOKUP : L O O K U P;
+
 // language tokens
 COMMA                                : ',';
 COLON                                : ':';

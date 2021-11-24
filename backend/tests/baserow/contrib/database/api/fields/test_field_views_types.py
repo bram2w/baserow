@@ -8,6 +8,7 @@ from freezegun import freeze_time
 from pytz import timezone
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     CreatedOnField,
     LastModifiedField,
@@ -21,6 +22,7 @@ from baserow.contrib.database.fields.models import (
     NumberField,
     PhoneNumberField,
     FormulaField,
+    LookupField,
 )
 
 
@@ -908,7 +910,7 @@ def test_last_modified_field_type(api_client, data_fixture):
     text_field = data_fixture.create_text_field(user=user, table=table)
 
     with freeze_time(time_under_test):
-        response = api_client.post(
+        api_client.post(
             reverse("api:database:rows:list", kwargs={"table_id": table.id}),
             {f"field_{text_field.id}": "Test Text"},
             format="json",
@@ -952,7 +954,7 @@ def test_last_modified_field_type(api_client, data_fixture):
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
-        response_json = response.json()
+        response.json()
     assert response.status_code == HTTP_200_OK
 
     last_datetime = row.last
@@ -998,7 +1000,7 @@ def test_created_on_field_type(api_client, data_fixture):
     # updated_on and a created_on value
     text_field = data_fixture.create_text_field(user=user, table=table)
 
-    response = api_client.post(
+    api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
         {f"field_{text_field.id}": "Test Text"},
         format="json",
@@ -1040,7 +1042,7 @@ def test_created_on_field_type(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-    response_json = response.json()
+    response.json()
     assert response.status_code == HTTP_200_OK
 
     row = model.objects.all().last()
@@ -1312,7 +1314,7 @@ def test_multiple_select_field_type(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
-    response_json = response.json()
+    response.json()
     assert response.status_code == HTTP_200_OK
 
 
@@ -1409,3 +1411,332 @@ def test_formula_field_type(api_client, data_fixture):
         response_json["detail"]
         == "Error with formula: version is not a valid function."
     )
+
+
+@pytest.mark.django_db
+def test_lookup_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(user=user, database=table.database)
+    table_primary_field = data_fixture.create_text_field(
+        name="p", table=table, primary=True
+    )
+    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+    linkrowfield = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    looked_up_field = data_fixture.create_single_select_field(
+        table=table2, name="lookupfield"
+    )
+    option_a = data_fixture.create_select_option(
+        field=looked_up_field, value="A", color="blue"
+    )
+    option_b = data_fixture.create_select_option(
+        field=looked_up_field, value="B", color="red"
+    )
+    table2_model = table2.get_model(attribute_names=True)
+    table2_model.objects.create(lookupfield=option_a, primaryfield="primary a")
+    table2_model.objects.create(lookupfield=option_b, primaryfield="primary b")
+
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "lookupfield",
+            "type": "lookup",
+            "through_field_name": linkrowfield.name,
+            "target_field_name": looked_up_field.name,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json["type"] == "lookup"
+    assert LookupField.objects.all().count() == 1
+    lookup_field_id = response_json["id"]
+    assert lookup_field_id
+
+    # Create a row
+    api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    # Verify the value is empty as there are no fields to lookup
+    table_model = table.get_model(attribute_names=True)
+    row = table_model.objects.get()
+    assert row.lookupfield == []
+
+    # You cannot modify a lookup field row value
+    response = api_client.patch(
+        reverse(
+            "api:database:rows:item",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        ),
+        {
+            f"field_{lookup_field_id}": [
+                {"value": {"value": "some value", "id": 1, "color": "red"}}
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]
+        == "Field of type lookup is read only and should not be set manually."
+    )
+
+    # You cannot create a row with a lookup field value
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{lookup_field_id}": [
+                {"value": {"value": "some value", "id": 1, "color": "red"}}
+            ],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]
+        == "Field of type lookup is read only and should not be set manually."
+    )
+
+    # You cannot create a lookup field without specifying through values
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "invalid", "type": "lookup"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_THROUGH_FIELD"
+
+    # You cannot create a lookup field without specifying target values
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {"name": "invalid", "type": "lookup", "through_field_id": linkrowfield.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_TARGET_FIELD"
+
+    # You cannot create a lookup field with a link row field in another table
+    other_table_linkrowfield = data_fixture.create_link_row_field()
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_id": other_table_linkrowfield.id,
+            "target_field_id": looked_up_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_THROUGH_FIELD"
+
+    # You cannot create a lookup field with through field which is not a link field
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_id": table_primary_field.id,
+            "target_field_id": looked_up_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_THROUGH_FIELD"
+
+    # You cannot create a lookup field with through field name which is not a link field
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_name": table_primary_field.name,
+            "target_field_id": looked_up_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_THROUGH_FIELD"
+
+    # You cannot create a lookup field with an unknown through field name
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_name": "unknown",
+            "target_field_id": looked_up_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_THROUGH_FIELD"
+
+    # You cannot create a lookup field with an trashed through field id
+    trashed_link_field = data_fixture.create_link_row_field(
+        trashed=True, table=table, name="trashed"
+    )
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_id": trashed_link_field.id,
+            "target_field_id": looked_up_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_THROUGH_FIELD"
+
+    # You cannot create a lookup field with an trashed through field name
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_name": trashed_link_field.name,
+            "target_field_id": looked_up_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_THROUGH_FIELD"
+
+    # You cannot create a lookup field with an unknown target field name
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_name": linkrowfield.name,
+            "target_field_name": "unknown",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_TARGET_FIELD"
+
+    # You cannot create a lookup field with an trashed target field id
+    field_that_cant_be_used = data_fixture.create_text_field(
+        table=table2, trashed=True, name="trashed_looked_up"
+    )
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_name": linkrowfield.name,
+            "target_field_id": field_that_cant_be_used.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_TARGET_FIELD"
+
+    # You cannot create a lookup field with an trashed target field name
+    field_that_cant_be_used = data_fixture.create_text_field(
+        table=table2, trashed=True, name="trashed_looked_up"
+    )
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_name": linkrowfield.name,
+            "target_field_name": field_that_cant_be_used.name,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INVALID_LOOKUP_TARGET_FIELD"
+
+    # You cannot create a lookup field with a target field that cant be used in
+    # formulas
+    field_that_cant_be_used = data_fixture.create_file_field(
+        table=table2, name="trashed_looked_up"
+    )
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_name": linkrowfield.name,
+            "target_field_name": field_that_cant_be_used.name,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_WITH_FORMULA"
+
+    # You cannot create a lookup field with a through field with invalid id
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_id": linkrowfield.name,
+            "target_field_name": looked_up_field.name,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    # You cannot create a lookup field with a through field with invalid id
+    response = api_client.post(
+        reverse("api:database:fields:list", kwargs={"table_id": table.id}),
+        {
+            "name": "invalid",
+            "type": "lookup",
+            "through_field_id": linkrowfield.id,
+            "target_field_id": looked_up_field.name,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"

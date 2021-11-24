@@ -1,0 +1,45 @@
+.card-array__wrapper {
+  overflow: hidden;
+  margin: 0 -16px;
+  height: 22px;
+}
+
+.card-array {
+  overflow: hidden;
+  display: flex;
+  flex-wrap: nowrap;
+  height: 22px + 15px;
+  padding: 0 16px 15px 16px;
+  overflow-x: scroll;
+
+  .array-field__boolean,
+  .array-field__date,
+  .array-field__single-select-option {
+    margin: 0;
+
+    &:not(:last-child) {
+      margin-right: 5px;
+    }
+
+    @include fixed-height(22px, 13px);
+  }
+
+  .array-field__item {
+    white-space: nowrap;
+    display: flex;
+    background-color: $color-primary-100;
+    margin: 0;
+
+    span {
+      @extend %ellipsis;
+
+      max-width: 140px;
+    }
+
+    &:not(:last-child) {
+      margin-right: 5px;
+    }
+
+    @include fixed-height(22px, 13px);
+  }
+}

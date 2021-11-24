@@ -216,6 +216,9 @@ $ baserow migrate
 # Sync the template files with the database
 $ baserow sync_templates
 
+# Ensure formulas are updated to the latest version
+$ baserow update_formulas 
+
 $ deactivate
 ```
 
@@ -375,6 +378,7 @@ $ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST='localhost'
 $ baserow migrate
 $ baserow sync_templates
+$ baserow update_formulas 
 $ deactivate
 $ cd baserow/web-frontend
 $ yarn install
@@ -396,6 +400,7 @@ $ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST='localhost'
 $ baserow migrate
 $ baserow sync_templates
+$ baserow update_formulas 
 $ deactivate
 $ cd web-frontend
 $ yarn install

@@ -1,9 +1,9 @@
 import abc
 from decimal import Decimal
-from typing import List, TypeVar, Generic, Tuple, Optional
+from typing import List, TypeVar, Generic, Tuple, Optional, Type, Dict, Set
 
 from django.conf import settings
-from django.db.models import Expression
+from django.db.models import Expression, Model
 
 from baserow.contrib.database.formula.ast import visitors
 from baserow.contrib.database.formula.ast.exceptions import (
@@ -11,8 +11,13 @@ from baserow.contrib.database.formula.ast.exceptions import (
     TooLargeStringLiteralProvided,
     InvalidIntLiteralProvided,
 )
+from baserow.contrib.database.formula.parser.parser import (
+    convert_string_to_string_literal_token,
+)
 from baserow.contrib.database.formula.types import formula_type
-from baserow.contrib.database.table import models
+from baserow.contrib.database.formula.types.type_checker import (
+    SingleArgumentTypeChecker,
+)
 from baserow.core.registry import Instance
 
 A = TypeVar("A")
@@ -93,8 +98,17 @@ class BaserowExpression(abc.ABC, Generic[A]):
     ```
     """
 
-    def __init__(self, expression_type: A):
+    def __init__(
+        self,
+        expression_type: A,
+        aggregate=False,
+        many=False,
+        requires_aggregate_wrapper=False,
+    ):
         self.expression_type: A = expression_type
+        self.aggregate = aggregate
+        self.many = many
+        self.requires_aggregate_wrapper = requires_aggregate_wrapper
 
     @abc.abstractmethod
     def accept(self, visitor: "visitors.BaserowFormulaASTVisitor[A, T]") -> T:
@@ -133,7 +147,7 @@ class BaserowStringLiteral(BaserowExpression[A]):
         return visitor.visit_string_literal(self)
 
     def __str__(self):
-        return self.literal
+        return convert_string_to_string_literal_token(self.literal, True)
 
 
 class BaserowIntegerLiteral(BaserowExpression[A]):
@@ -187,35 +201,42 @@ class BaserowBooleanLiteral(BaserowExpression[A]):
         return visitor.visit_boolean_literal(self)
 
     def __str__(self):
-        return str(self.literal)
+        return "true" if self.literal else "false"
 
 
 class BaserowFieldReference(BaserowExpression[A]):
     """
     Represents a reference to a field with the same name as the referenced_field_name.
-    If it is a valid reference to a real column then underlying_db_column will contain
-    the name of that column. Otherwise if a reference to an unknown or invalid field
-    underlying_db_column will be None.
     """
 
     def __init__(
         self,
         referenced_field_name: str,
-        underlying_db_column: Optional[str],
+        referenced_lookup_field: Optional[str],
         expression_type: A,
     ):
-        super().__init__(expression_type)
+        many = referenced_lookup_field is not None
+        super().__init__(expression_type, many=many, aggregate=many)
         self.referenced_field_name = referenced_field_name
-        self.underlying_db_column = underlying_db_column
+        self.referenced_lookup_field = referenced_lookup_field
 
     def accept(self, visitor: "visitors.BaserowFormulaASTVisitor[A, T]") -> T:
         return visitor.visit_field_reference(self)
 
-    def is_reference_to_valid_field(self):
-        return self.underlying_db_column is not None
+    def is_lookup(self):
+        return self.referenced_lookup_field is not None
 
     def __str__(self):
-        return f"field({self.referenced_field_name}, {self.underlying_db_column})"
+        escaped_name = convert_string_to_string_literal_token(
+            self.referenced_field_name, True
+        )
+        if self.referenced_lookup_field is None:
+            return f"field({escaped_name})"
+        else:
+            escaped_lookup = convert_string_to_string_literal_token(
+                self.referenced_lookup_field, True
+            )
+            return f"lookup({escaped_name},{escaped_lookup})"
 
 
 class ArgCountSpecifier(abc.ABC):
@@ -260,8 +281,16 @@ class BaserowFunctionCall(BaserowExpression[A]):
         function_def: "BaserowFunctionDefinition",
         args: List[BaserowExpression[A]],
         expression_type: A,
+        requires_aggregate_wrapper=False,
     ):
-        super().__init__(expression_type)
+        many = any(a.many for a in args)
+        aggregate = any(a.aggregate for a in args)
+        super().__init__(
+            expression_type,
+            many=many,
+            aggregate=aggregate,
+            requires_aggregate_wrapper=requires_aggregate_wrapper,
+        )
 
         self.function_def = function_def
         self.args = args
@@ -288,14 +317,20 @@ class BaserowFunctionCall(BaserowExpression[A]):
     def to_django_expression_given_args(
         self,
         args: List[Expression],
-        model_instance: Optional["models.GeneratedTableModel"],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
     ) -> Expression:
-        return self.function_def.to_django_expression_given_args(args, model_instance)
+        return self.function_def.to_django_expression_given_args(
+            args, model, model_instance, pre_annotations, aggregate_filters, join_ids
+        )
 
     def check_arg_type_valid(
         self,
         i: int,
-        typed_arg: "BaserowExpression[" "formula_type.BaserowFormulaType]",
+        typed_arg: "BaserowExpression[formula_type.BaserowFormulaType]",
         all_typed_args: "List[BaserowExpression[formula_type.BaserowFormulaType]]",
     ) -> "BaserowExpression[formula_type.BaserowFormulaType]":
         return self.function_def.check_arg_type_valid(i, typed_arg, all_typed_args)
@@ -310,11 +345,8 @@ class BaserowFunctionCall(BaserowExpression[A]):
         return BaserowFunctionCall(self.function_def, new_args, self.expression_type)
 
     def __str__(self):
-        optional_type_annotation = (
-            f"::{self.expression_type}" if self.expression_type is not None else ""
-        )
         args_string = ",".join([str(a) for a in self.args])
-        return f"{self.function_def.type}({args_string}){optional_type_annotation}"
+        return f"{self.function_def.type}({args_string})"
 
 
 class BaserowFunctionDefinition(Instance, abc.ABC):
@@ -337,6 +369,15 @@ class BaserowFunctionDefinition(Instance, abc.ABC):
         """
 
         pass
+
+    @property
+    def aggregate(self) -> bool:
+        """
+        :return: If this function is an aggregate one which collapses a many expression
+            down to a single value.
+        """
+
+        return False
 
     @property
     def operator(self) -> Optional[str]:
@@ -400,7 +441,11 @@ class BaserowFunctionDefinition(Instance, abc.ABC):
     def to_django_expression_given_args(
         self,
         args: List[Expression],
-        model_instance: Optional["models.GeneratedTableModel"],
+        model: Type[Model],
+        model_instance: Optional[Model],
+        pre_annotations: Dict[str, Expression],
+        aggregate_filters: List[Expression],
+        join_ids: Set[str],
     ) -> Expression:
         """
         Given the args already converted to Django Expressions should return a Django
@@ -409,10 +454,14 @@ class BaserowFunctionDefinition(Instance, abc.ABC):
         Will only be called if all the args have passed the type check and the function
         itself was typed with a BaserowValidType.
 
+        :param model: The model the expression is being generated for.
         :param args: The already converted to Django expression args.
         :param model_instance: If set then the model instance which is being inserted
             or if False then the django expression is for an update statement.
+        :param pre_annotations: Any annotations required by the sub expression.
         :return: A Django Expression which calculates the result of this function.
+        :param join_ids: The set of django field references (field_X__field_Y etc) which
+            are joined to by the args.
         """
 
         pass
@@ -497,10 +546,20 @@ class BaserowFunctionDefinition(Instance, abc.ABC):
             arg_types_for_this_arg = self.arg_types[arg_index]
 
         expression_type = typed_arg.expression_type
+        valid_type_names = []
         for valid_arg_type in arg_types_for_this_arg:
-            if isinstance(expression_type, valid_arg_type):
+            if isinstance(valid_arg_type, SingleArgumentTypeChecker):
+                if valid_arg_type.check(expression_type):
+                    return typed_arg
+                else:
+                    valid_type_names.append(
+                        valid_arg_type.invalid_message(expression_type)
+                    )
+            elif isinstance(expression_type, valid_arg_type):
                 return typed_arg
-        valid_type_names = [str(t.type) for t in arg_types_for_this_arg]
+            else:
+                valid_type_names.append(valid_arg_type.type)
+
         expression_type_name = expression_type.type
         if len(valid_type_names) == 1:
             postfix = f"the only usable type for this argument is {valid_type_names[0]}"

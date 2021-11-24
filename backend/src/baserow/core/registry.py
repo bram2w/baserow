@@ -323,11 +323,27 @@ class ModelRegistryMixin:
         :rtype: Instance
         """
 
+        most_specific_value = None
         for value in self.registry.values():
-            if value.model_class == model_instance or isinstance(
-                model_instance, value.model_class
+            value_model_class = value.model_class
+            if value_model_class == model_instance or isinstance(
+                model_instance, value_model_class
             ):
-                return value
+                if most_specific_value is None:
+                    most_specific_value = value
+                else:
+                    # There might be values where one is a sub type of another. The
+                    # one with the longer mro is the more specific type (it inherits
+                    # from more base classes)
+                    most_specific_num_base_classes = len(
+                        most_specific_value.model_class.mro()
+                    )
+                    value_num_base_classes = len(value_model_class.mro())
+                    if value_num_base_classes > most_specific_num_base_classes:
+                        most_specific_value = value
+
+        if most_specific_value is not None:
+            return most_specific_value
 
         raise self.does_not_exist_exception_class(
             f"The {self.name} model instance {model_instance} does not exist."

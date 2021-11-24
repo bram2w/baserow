@@ -2,7 +2,7 @@
   <div>
     <div class="control">
       <label class="control__label control__label--small">{{
-        $t('fieldNumberSubForm.typeLabel')
+        $t('fieldFormulaNumberSubForm.typeLabel')
       }}</label>
       <div class="control__elements">
         <Dropdown
@@ -12,11 +12,11 @@
           @hide="$v.numberType.$touch()"
         >
           <DropdownItem
-            :name="$t('fieldNumberSubForm.integer') + ' (1)'"
+            :name="$t('fieldFormulaNumberSubForm.integer') + ' (1)'"
             value="INTEGER"
           ></DropdownItem>
           <DropdownItem
-            :name="$t('fieldNumberSubForm.decimal') + ' (1.0)'"
+            :name="$t('fieldFormulaNumberSubForm.decimal') + ' (1.0)'"
             value="DECIMAL"
           ></DropdownItem>
         </Dropdown>
@@ -24,7 +24,7 @@
     </div>
     <div v-show="numberType === 'DECIMAL'" class="control">
       <label class="control__label control__label--small">{{
-        $t('fieldNumberSubForm.decimalPlacesLabel')
+        $t('fieldFormulaNumberSubForm.decimalPlacesLabel')
       }}</label>
       <div class="control__elements">
         <Dropdown
@@ -85,3 +85,25 @@ export default {
   },
 }
 </script>
+<i18n>
+{
+  "en": {
+    "fieldFormulaNumberSubForm": {
+      "typeLabel": "Number type",
+      "integer": "Integer",
+      "decimal": "Decimal",
+      "decimalPlacesLabel": "Decimal places",
+      "allowNegative": "Allow negative"
+    }
+  },
+  "fr": {
+    "fieldFormulaNumberSubForm": {
+      "typeLabel": "Type numérique",
+      "integer": "Entier",
+      "decimal": "Décimal",
+      "decimalPlacesLabel": "Précision",
+      "allowNegative": "Autoriser les nombres négatifs"
+    }
+  }
+}
+</i18n>
