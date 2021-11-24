@@ -118,7 +118,6 @@ import {
   BaserowMonth,
   BaserowLeast,
   BaserowGreatest,
-  BaserowRepeat,
   BaserowRegexReplace,
   BaserowTrim,
   BaserowRight,
@@ -283,7 +282,6 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowRight(context))
   app.$registry.register('formula_function', new BaserowTrim(context))
   app.$registry.register('formula_function', new BaserowRegexReplace(context))
-  app.$registry.register('formula_function', new BaserowRepeat(context))
   app.$registry.register('formula_function', new BaserowGreatest(context))
   app.$registry.register('formula_function', new BaserowLeast(context))
   app.$registry.register('formula_function', new BaserowMonth(context))

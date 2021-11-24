@@ -9,8 +9,9 @@ export default function (base = '@') {
   const baseModules = [
     base + '/modules/core/module.js',
     base + '/modules/database/module.js',
-    base + '/plugins/premium/modules/baserow_premium/module.js',
+    base + '/../premium/web-frontend/modules/baserow_premium/module.js',
   ]
+
   const modules = baseModules.concat(additionalModules)
   return {
     modules,

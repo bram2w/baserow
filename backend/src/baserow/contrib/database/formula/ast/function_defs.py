@@ -38,7 +38,6 @@ from django.db.models.functions import (
     Least,
     Left,
     Right,
-    Repeat,
 )
 
 from baserow.contrib.database.fields.models import (
@@ -109,7 +108,6 @@ def register_formula_functions(registry):
     registry.register(BaserowRight())
     registry.register(BaserowTrim())
     registry.register(BaserowRegexReplace())
-    registry.register(BaserowRepeat())
     # Number functions
     registry.register(BaserowMultiply())
     registry.register(BaserowDivide())
@@ -1429,23 +1427,6 @@ class BaserowTrim(OneArgumentBaserowFunction):
         # This function should always be completely substituted when typing and replaced
         # with BaserowRegexReplace and hence this should never be called.
         raise BaserowToDjangoExpressionGenerationError()
-
-
-class BaserowRepeat(TwoArgumentBaserowFunction):
-    type = "repeat"
-    arg1_type = [BaserowFormulaTextType]
-    arg2_type = [OnlyIntegerNumberTypes()]
-
-    def type_function(
-        self,
-        func_call: BaserowFunctionCall[UnTyped],
-        arg1: BaserowExpression[BaserowFormulaValidType],
-        arg2: BaserowExpression[BaserowFormulaNumberType],
-    ) -> BaserowExpression[BaserowFormulaType]:
-        return func_call.with_valid_type(arg1.expression_type)
-
-    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return Repeat(arg1, arg2, output_field=fields.TextField())
 
 
 class BaserowYear(OneArgumentBaserowFunction):

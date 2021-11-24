@@ -36,7 +36,7 @@ WORKDIR /baserow/web-frontend
 RUN yarn install
 
 COPY --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
-COPY --chown=$UID:$GID ./premium/web-frontend /baserow/web-frontend/plugins/premium
+COPY --chown=$UID:$GID ./premium/web-frontend /baserow/premium/web-frontend/
 
 RUN yarn run build-local
 

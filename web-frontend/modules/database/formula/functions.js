@@ -1049,27 +1049,6 @@ export class BaserowRegexReplace extends BaserowFunctionDefinition {
   }
 }
 
-export class BaserowRepeat extends BaserowFunctionDefinition {
-  static getType() {
-    return 'repeat'
-  }
-
-  getDescription() {
-    return 'Repeats the first input the number of times specified by the second input'
-  }
-
-  getSyntaxUsage() {
-    return ['repeat(text, number)']
-  }
-
-  getExamples() {
-    return ['repeat("a", 3) = "aaa"']
-  }
-
-  getFormulaType() {
-    return 'text'
-  }
-}
 export class BaserowGreatest extends BaserowFunctionDefinition {
   static getType() {
     return 'greatest'

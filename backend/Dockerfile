@@ -34,14 +34,14 @@ RUN pip3 install --no-warn-script-location -r /baserow/requirements/base.txt
 
 COPY --chown=$UID:$GID ./docs /baserow/docs
 COPY --chown=$UID:$GID ./backend /baserow/backend
-COPY --chown=$UID:$GID ./premium/backend /baserow/backend/plugins/premium
+COPY --chown=$UID:$GID ./premium/backend /baserow/premium/backend
 
 WORKDIR /baserow/backend
 
 # Ensure that Python outputs everything that's printed inside
 # the application rather than buffering it.
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/backend/plugins/premium/src
+ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/premium/backend/src
 ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 
 RUN dos2unix /baserow/backend/docker/docker-entrypoint.sh && \

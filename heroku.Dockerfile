@@ -37,7 +37,7 @@ RUN (mkdir -p /baserow/heroku/heroku && \
     touch /baserow/heroku/heroku/__init__.py)
 ADD deploy/heroku/settings.py /baserow/heroku/heroku
 
-ENV PYTHONPATH $PYTHONPATH:/baserow/baserow/backend/src:/baserow/heroku
+ENV PYTHONPATH $PYTHONPATH:/baserow/baserow/backend/src:/baserow/baserow/premium/backend/src:/baserow/heroku
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV TMPDIR=/run/temp
