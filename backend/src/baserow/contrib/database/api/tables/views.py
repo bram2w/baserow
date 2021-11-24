@@ -9,6 +9,7 @@ from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
+from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.contrib.database.api.fields.errors import (
     ERROR_MAX_FIELD_COUNT_EXCEEDED,
     ERROR_MAX_FIELD_NAME_LENGTH_EXCEEDED,
@@ -33,6 +34,7 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.exceptions import UserNotInGroup, ApplicationDoesNotExist
 from baserow.core.handler import CoreHandler
+from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .errors import (
     ERROR_TABLE_DOES_NOT_EXIST,
     ERROR_TABLE_NOT_IN_DATABASE,
@@ -257,7 +259,9 @@ class TableView(APIView):
         ),
         responses={
             204: None,
-            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM"]
+            ),
             404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
         },
     )
@@ -266,6 +270,7 @@ class TableView(APIView):
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
         }
     )
     def delete(self, request, table_id):

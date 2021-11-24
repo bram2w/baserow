@@ -1,6 +1,18 @@
 export default {
   computed: {
+    /**
+     * availableSelectOptions are needed because in the case of a MultipleSelectField
+     * we only want to show the select options inside the dropdown that have not been
+     * added to the field yet.
+     */
     availableSelectOptions() {
+      // When converting from a MultipleSelectField to another field it can happen
+      // that this property is being computed with the value (this.value) of the
+      // converted to field type. It can either be null, or not an array. In both cases
+      // we can safely return an empty array.
+      if (!Array.isArray(this.value)) {
+        return []
+      }
       const ids = this.value.map((item) => item.id)
       return this.field.select_options.filter((item) => !ids.includes(item.id))
     },

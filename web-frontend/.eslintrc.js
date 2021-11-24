@@ -1,3 +1,4 @@
+// Please keep in sync with the premium eslintrc.js
 module.exports = {
   root: true,
   env: {
@@ -28,5 +29,6 @@ module.exports = {
         semi: false,
       },
     ],
+    'import/order': 'off',
   },
 }

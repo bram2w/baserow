@@ -45,6 +45,7 @@
       :style="{ left: leftWidth + 'px' }"
     ></div>
     <GridViewFieldWidthHandle
+      v-if="!readOnly"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
       :grid="view"
@@ -715,7 +716,7 @@ export default {
       "deleteRow": "Delete row",
       "rowCount": "No rows | 1 row | {count} rows"
     }
-  },  
+  },
   "fr": {
     "gridView":{
       "insertRowAbove": "Insérer au dessus",

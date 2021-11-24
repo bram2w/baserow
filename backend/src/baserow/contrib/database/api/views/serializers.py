@@ -1,5 +1,4 @@
 from django.utils.functional import lazy
-from django.utils.translation import gettext_lazy as _
 
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.openapi import OpenApiTypes
@@ -16,8 +15,8 @@ from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
 
 class FieldOptionsField(serializers.Field):
     default_error_messages = {
-        "invalid_key": _("Field option key must be numeric."),
-        "invalid_value": _("Must be valid field options."),
+        "invalid_key": "Field option key must be numeric.",
+        "invalid_value": "Must be valid field options.",
     }
 
     def __init__(self, serializer_class, **kwargs):

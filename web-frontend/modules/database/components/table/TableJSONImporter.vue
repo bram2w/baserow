@@ -1,10 +1,11 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label">Choose JSON file</label>
+      <label class="control__label">{{
+        $t('tableJSONImporter.fileLabel')
+      }}</label>
       <div class="control__description">
-        You can import an existing JSON file by uploading the .json file with
-        tabular data, i.e.:
+        {{ $t('tableJSONImporter.fileDescription') }}
         <pre>
 [
   {
@@ -36,17 +37,19 @@
             @click.prevent="$refs.file.click($event)"
           >
             <i class="fas fa-cloud-upload-alt"></i>
-            Choose JSON file
+            {{ $t('tableJSONImporter.chooseButton') }}
           </a>
           <div class="file-upload__file">{{ filename }}</div>
         </div>
         <div v-if="$v.filename.$error" class="error">
-          This field is required.
+          {{ $t('error.fieldRequired') }}
         </div>
       </div>
     </div>
     <div v-if="filename !== ''" class="control">
-      <label class="control__label">Encoding</label>
+      <label class="control__label">{{
+        $t('tableJSONImporter.encodingLabel')
+      }}</label>
       <div class="control__elements">
         <CharsetDropdown v-model="encoding" @input="reload()"></CharsetDropdown>
       </div>
@@ -55,7 +58,7 @@
       <div class="alert__icon">
         <i class="fas fa-exclamation"></i>
       </div>
-      <div class="alert__title">Something went wrong</div>
+      <div class="alert__title">{{ $t('common.wrong') }}</div>
       <p class="alert__content">
         {{ error }}
       </p>
@@ -117,7 +120,9 @@ export default {
       if (file.size > maxSize) {
         this.filename = ''
         this.values.data = ''
-        this.error = 'The maximum file size is 15MB.'
+        this.error = this.$t('tableJSONImporter.limitFileSize', {
+          limit: 15,
+        })
         this.preview = {}
         this.$emit('input', this.value)
       } else {
@@ -139,21 +144,23 @@ export default {
         json = JSON.parse(decoded)
       } catch (error) {
         this.values.data = ''
-        this.error = `Error occured while parsing JSON: ${error.message}`
+        this.error = this.$t('tableJSONImporter.processingError', {
+          error: error.message,
+        })
         this.preview = {}
         return
       }
 
       if (json.length === 0) {
         this.values.data = ''
-        this.error = 'This JSON file is empty.'
+        this.error = this.$t('tableJSONImporter.emptyError')
         this.preview = {}
         return
       }
 
       if (!Array.isArray(json)) {
         this.values.data = ''
-        this.error = `The JSON file is not an array.`
+        this.error = this.$t('tableJSONImporter.arrayError')
         this.preview = {}
         return
       }
@@ -161,7 +168,9 @@ export default {
       const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
       if (limit !== null && json.length > limit - 1) {
         this.values.data = ''
-        this.error = `It is not possible to import more than ${limit} rows.`
+        this.error = this.error = this.$t('tableJSONImporter.limitError', {
+          limit,
+        })
         this.preview = {}
         return
       }
@@ -198,3 +207,34 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "tableJSONImporter": {
+      "fileLabel": "Choose JSON file",
+      "fileDescription": "You can import an existing JSON file by uploading the .json file with tabular data, i.e.:",
+      "chooseButton": "Choose JSON file",
+      "encodingLabel": "Encoding",
+      "processingError": "Error occurred while parsing JSON: {error}",
+      "arrayError": "The JSON file is not an array.",
+      "emptyError": "This JSON file is empty.",
+      "limitFileSize": "The maximum file size is {limit}MB.",
+      "limitError": "It is not possible to import more than {limit} rows."
+    }
+  },
+  "fr": {
+    "tableJSONImporter": {
+      "fileLabel": "Choisissez un fichier JSON",
+      "fileDescription": "Vous pouvez importer un JSON existant en envoyant un fichier .json contenant des données tabulaires, c'est-à-dire :",
+      "chooseButton": "Choisir un fichier JSON",
+      "encodingLabel": "Encodage",
+      "processingError": "Une erreur est survenue lors du traitement du JSON : {error}",
+      "arrayError": "Ce fichier JSON n'est pas un tableau.",
+      "emptyError": "Ce fichier JSON est vide.",
+      "limitFileSize": "La taille maximum de fichier est de {limit}Mo.",
+      "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
+    }
+  }
+}
+</i18n>

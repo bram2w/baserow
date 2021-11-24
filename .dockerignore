@@ -1,3 +1,5 @@
 **/.nuxt
 **/node_modules
 **/.pytest_cache
+*.iml
+.idea/

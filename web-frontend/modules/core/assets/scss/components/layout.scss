@@ -36,6 +36,10 @@
   @include absolute(0);
 
   overflow: auto;
+
+  &.layout__col-2-scroll--white-background {
+    background-color: $white;
+  }
 }
 
 .layout__col-2-1 {

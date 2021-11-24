@@ -95,6 +95,11 @@ export default {
         // It might be possible that the view also has some stores that need to be
         // filled with initial data so we're going to call the fetch function here.
         const type = app.$registry.get('view', view.type)
+
+        if (type.isDeactivated()) {
+          return error({ statusCode: 400, message: type.getDeactivatedText() })
+        }
+
         await type.fetch({ store }, view, data.fields, data.primary, 'page/')
       } catch (e) {
         // In case of a network error we want to fail hard.

@@ -1,5 +1,7 @@
 from typing import Callable, Union, List
 
+from django.contrib.auth.models import User as DjangoUser
+
 from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
@@ -281,6 +283,30 @@ class ViewType(
         """
 
         return field_options
+
+    def prepare_values(self, values: dict, table, user: DjangoUser):
+        """
+        The prepare_values hook gives the possibility to change the provided values
+        just before they are going to be used to create or update the instance. For
+        example if an ID is provided, it can be converted to a model instance. Or to
+        convert a certain date string to a date object.
+
+        :param values: The provided values.
+        :param table: The table where the view is created in.
+        :type table: Table
+        :param user: The user on whose behalf the change is made.
+        :return: The updates values.
+        :type: dict
+        """
+
+        return values
+
+    def view_created(self, view):
+        """
+        A hook that's called when a new view is created.
+
+        :param view: The newly created view instance.
+        """
 
 
 class ViewTypeRegistry(

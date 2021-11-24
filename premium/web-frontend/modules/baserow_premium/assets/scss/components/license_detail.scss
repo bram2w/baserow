@@ -1,0 +1,138 @@
+.license-yes {
+  color: $color-success-500;
+}
+
+.license-no {
+  color: $color-error-500;
+}
+
+.license-plan {
+  font-size: 12px;
+  line-height: 23px;
+  padding: 0 10px;
+  border-radius: 3px;
+
+  &.license-plan--inline {
+    display: inline-block;
+  }
+
+  &.license-plan--premium {
+    background-color: $color-primary-100;
+  }
+
+  &.license-plan--expired {
+    background-color: $color-error-100;
+  }
+}
+
+.license-detail {
+  padding: 30px;
+}
+
+.license-detail__body {
+  @media screen and (min-width: 800px) {
+    display: flex;
+  }
+}
+
+.license-detail__body-left {
+  flex-basis: 60%;
+}
+
+.license-body__body-right {
+  flex-basis: 40%;
+
+  @media screen and (min-width: 800px) {
+    margin-left: 30px;
+  }
+}
+
+.license-detail__item {
+  display: flex;
+
+  &:not(:last-child) {
+    margin-bottom: 16px;
+  }
+}
+
+.license-detail__item-label {
+  flex: 0 0 50%;
+  max-width: 340px;
+  min-width: 160px;
+  margin-right: 40px;
+}
+
+.license-detail__item-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.license-detail__item-description {
+  font-size: 13px;
+  color: $color-neutral-600;
+  line-height: 160%;
+  margin-top: 12px;
+}
+
+.license-detail__item-value {
+  min-width: 0;
+  width: 100%;
+  line-height: 22px;
+}
+
+.license-detail__users {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: solid 1px $color-neutral-200;
+}
+
+.license-detail__user {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.license-detail__user-number {
+  flex-basis: 30px;
+  font-size: 13px;
+  line-height: 21px;
+}
+
+.license-detail__user-name {
+  font-weight: 600;
+  flex-basis: 180px;
+  font-size: 13px;
+  line-height: 21px;
+}
+
+.license-detail__user-email {
+  flex-basis: 200px;
+  font-size: 12px;
+  color: $color-neutral-500;
+  line-height: 21px;
+}
+
+.license-detail__user-delete {
+  color: $color-neutral-500;
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-700;
+  }
+}
+
+.license-detail__add {
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+}
+
+.license-detail__add-dropdown {
+  position: relative;
+  width: 300px;
+  margin-right: 20px;
+}
+
+.license-detail__actions {
+  margin-top: 20px;
+  height: 20px; // placeholder height for the loading animation when visible.
+}

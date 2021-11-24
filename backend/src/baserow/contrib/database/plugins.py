@@ -1,5 +1,7 @@
 from datetime import date
 
+from django.utils.translation import gettext as _, override
+
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import Plugin
 
@@ -35,9 +37,13 @@ class DatabasePlugin(Plugin):
         view_handler = ViewHandler()
         field_handler = FieldHandler()
 
-        database = core_handler.create_application(
-            user, group, type_name=self.type, name=f"{user.first_name}'s company"
-        )
+        with override(user.profile.language):
+            database = core_handler.create_application(
+                user,
+                group,
+                type_name=self.type,
+                name=_("%(first_name)s's company") % {"first_name": user.first_name},
+            )
 
         # Creating the example customers table.
         table = table_handler.create_table(user, database, name="Customers")
@@ -51,6 +57,7 @@ class DatabasePlugin(Plugin):
         active_field = field_handler.create_field(
             user, table, BooleanFieldType.type, name="Active"
         )
+
         view_handler.update_field_options(
             user,
             customers_view,

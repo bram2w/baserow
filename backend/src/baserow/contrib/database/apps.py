@@ -1,4 +1,8 @@
 from django.apps import AppConfig
+from django.conf import settings
+from django.core.exceptions import FieldDoesNotExist
+from django.db import ProgrammingError
+from django.db.models.signals import post_migrate
 
 from baserow.core.registries import (
     plugin_registry,
@@ -54,6 +58,7 @@ class DatabaseConfig(AppConfig):
         from .formula.registries import (
             formula_function_registry,
         )
+        from .webhooks.registries import webhook_event_type_registry
 
         from .plugins import DatabasePlugin
 
@@ -75,6 +80,7 @@ class DatabaseConfig(AppConfig):
             MultipleSelectFieldType,
             PhoneNumberFieldType,
             FormulaFieldType,
+            LookupFieldType,
         )
 
         field_type_registry.register(TextFieldType())
@@ -92,6 +98,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(MultipleSelectFieldType())
         field_type_registry.register(PhoneNumberFieldType())
         field_type_registry.register(FormulaFieldType())
+        field_type_registry.register(LookupFieldType())
 
         from .fields.field_converters import (
             LinkRowFieldConverter,
@@ -198,6 +205,52 @@ class DatabaseConfig(AppConfig):
 
         register_formula_functions(formula_function_registry)
 
+        from .rows.webhook_event_types import (
+            RowCreatedEventType,
+            RowUpdatedEventType,
+            RowDeletedEventType,
+        )
+
+        webhook_event_type_registry.register(RowCreatedEventType())
+        webhook_event_type_registry.register(RowUpdatedEventType())
+        webhook_event_type_registry.register(RowDeletedEventType())
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow.contrib.database.ws.signals  # noqa: F403, F401
+
+        post_migrate.connect(safely_update_formula_versions, sender=self)
+
+
+# noinspection PyPep8Naming
+def safely_update_formula_versions(sender, **kwargs):
+    apps = kwargs.get("apps", None)
+    # app.ready will be called for management commands also, we only want to
+    # execute the following hook when we are starting the django server as
+    # otherwise backwards migrations etc will crash because of this.
+    if apps is not None and settings.UPDATE_FORMULAS_AFTER_MIGRATION:
+        from baserow.contrib.database.formula import FormulaHandler
+
+        try:
+            FormulaField = apps.get_model("database", "FormulaField")
+            # noinspection PyProtectedMember
+            FormulaField._meta.get_field("version")
+        except (LookupError, FieldDoesNotExist):
+            print(
+                "Skipping formula update as FormulaField does not exist or have "
+                "version column."
+            )
+            # We are starting up a version of baserow before formulas with versions
+            # existed, there is nothing to do.
+            return
+
+        try:
+            FormulaField.objects.exists()
+        except ProgrammingError:
+            print("Skipping formula update as formula field table doesnt exist yet.")
+            # The migrations to create FormulaField and FormulaField.version
+            # exist but they have not yet been applied.
+            return
+
+        print("Checking to see if formulas need updating...")
+        FormulaHandler.recalculate_formulas_according_to_version()

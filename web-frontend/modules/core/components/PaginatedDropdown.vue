@@ -10,7 +10,9 @@
       <template v-if="displayName !== null">
         {{ displayName }}
       </template>
-      <template v-else>{{ $t('action.makeChoice') }}</template>
+      <template v-else>{{
+        notSelectedText === null ? $t('action.makeChoice') : notSelectedText
+      }}</template>
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <div class="dropdown__items" :class="{ hidden: !open }">
@@ -21,7 +23,7 @@
           v-model="query"
           type="text"
           class="select__search-input"
-          :placeholder="searchText"
+          :placeholder="searchText === null ? $t('action.search') : searchText"
           @input="search"
         />
       </div>
@@ -31,7 +33,11 @@
         class="select__items"
         @scroll="scroll"
       >
-        <DropdownItem :name="''" :value="null"></DropdownItem>
+        <DropdownItem
+          v-if="addEmptyItem"
+          :name="''"
+          :value="null"
+        ></DropdownItem>
         <DropdownItem
           v-for="result in results"
           :key="result[idName]"
@@ -74,6 +80,16 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    addEmptyItem: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    notSelectedText: {
+      type: [String, null],
+      required: false,
+      default: null,
     },
   },
   data() {
@@ -170,6 +186,13 @@ export default {
       this.$emit('hide')
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
       document.body.removeEventListener('keydown', this.$el.keydownEvent)
+    },
+    reset() {
+      this.fetched = false
+      this.open = false
+      this.displayName = null
+      this.query = ''
+      this.results = []
     },
   },
 }

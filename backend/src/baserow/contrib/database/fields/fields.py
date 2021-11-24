@@ -8,13 +8,7 @@ from django.db.models.fields.related_descriptors import (
 )
 from django.utils.functional import cached_property
 
-from baserow.contrib.database.formula.ast.tree import BaserowExpression
-from baserow.contrib.database.formula.expression_generator.generator import (
-    baserow_expression_to_django_expression,
-)
-from baserow.contrib.database.formula.types.formula_type import (
-    BaserowFormulaInvalidType,
-)
+from baserow.contrib.database.formula import BaserowExpression, FormulaHandler
 
 
 class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
@@ -151,6 +145,9 @@ class BaserowExpressionField(models.Field):
         # expression field.
         return self.expression_field.__class__
 
+    def get_transform(self, name):
+        return self.expression_field.get_transform(name)
+
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()
         kwargs["expression"] = self.expression
@@ -158,20 +155,28 @@ class BaserowExpressionField(models.Field):
         return name, path, args, kwargs
 
     def db_type(self, connection):
-        if isinstance(self.expression_field, BaserowFormulaInvalidType):
-            return "TEXT"
-        else:
-            return self.expression_field.db_type(connection)
+        return self.expression_field.db_type(connection)
 
     def get_prep_value(self, value):
         return self.expression_field.get_prep_value(value)
 
+    def from_db_value(self, value, expression, connection):
+        if hasattr(self.expression_field, "from_db_value"):
+            return self.expression_field.from_db_value(value, expression, connection)
+        else:
+            return value
+
     def pre_save(self, model_instance, add):
         if self.expression is None:
-            # We need to cast and be super explicit this is a text field so postgres
-            # does not get angry and claim this is an unknown type.
             return Value(None)
         else:
-            return baserow_expression_to_django_expression(
-                self.expression, model_instance
-            )
+            if add:
+                return FormulaHandler.baserow_expression_to_insert_django_expression(
+                    self.expression, model_instance
+                )
+            else:
+                return (
+                    FormulaHandler.baserow_expression_to_row_update_django_expression(
+                        self.expression, model_instance
+                    )
+                )

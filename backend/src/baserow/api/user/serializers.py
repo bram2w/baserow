@@ -4,7 +4,6 @@ from rest_framework_jwt.serializers import JSONWebTokenSerializer
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import update_last_login
 from django.conf import settings
-from django.utils.translation import gettext as _
 
 from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.core.user.utils import normalize_email_address
@@ -72,6 +71,10 @@ class RegisterSerializer(serializers.Serializer):
 
 
 class AccountSerializer(serializers.Serializer):
+    """
+    This serializer must be kept in sync with `UserSerializer`.
+    """
+
     first_name = serializers.CharField(min_length=1, max_length=32)
     language = serializers.CharField(
         source="profile.language",
@@ -129,7 +132,7 @@ class NormalizedEmailWebTokenSerializer(JSONWebTokenSerializer):
 
         user = validated_data["user"]
         if not user.is_active:
-            msg = _("User account is disabled.")
+            msg = "User account is disabled."
             raise serializers.ValidationError(msg)
 
         update_last_login(None, user)

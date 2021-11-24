@@ -12,6 +12,7 @@ from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
+from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.user_files.errors import ERROR_USER_FILE_DOES_NOT_EXIST
 from baserow.api.utils import validate_data
 from baserow.contrib.database.api.fields.errors import (
@@ -47,6 +48,7 @@ from baserow.contrib.database.views.exceptions import (
 )
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from .serializers import (
     ListRowsQueryParamsSerializer,
@@ -606,7 +608,9 @@ class RowView(APIView):
         ),
         responses={
             204: None,
-            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM"]
+            ),
             404: get_error_schema(
                 ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_ROW_DOES_NOT_EXIST"]
             ),
@@ -619,6 +623,7 @@ class RowView(APIView):
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+            CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
         }
     )
     def delete(self, request, table_id, row_id):

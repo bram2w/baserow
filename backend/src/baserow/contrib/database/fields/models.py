@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.functional import cached_property
 
 from baserow.contrib.database.fields.mixins import (
     BaseDateMixin,
@@ -7,8 +8,10 @@ from baserow.contrib.database.fields.mixins import (
     DATE_FORMAT_CHOICES,
     DATE_TIME_FORMAT_CHOICES,
 )
-from baserow.contrib.database.formula.types.formula_types import (
+from baserow.contrib.database.formula import (
     BASEROW_FORMULA_TYPE_CHOICES,
+    FormulaHandler,
+    BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
 )
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 from baserow.core.mixins import (
@@ -56,7 +59,7 @@ class Field(
 
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField(help_text="Lowest first.")
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     primary = models.BooleanField(
         default=False,
         help_text="Indicates if the field is a primary field. If `true` the field "
@@ -67,6 +70,13 @@ class Field(
         verbose_name="content type",
         related_name="database_fields",
         on_delete=models.SET(get_default_field_content_type),
+    )
+    field_dependencies = models.ManyToManyField(
+        "self",
+        related_name="dependant_fields",
+        through="FieldDependency",
+        through_fields=("dependant", "dependency"),
+        symmetrical=False,
     )
 
     class Meta:
@@ -104,6 +114,31 @@ class Field(
             name = f"field_{name}"
 
         return name
+
+    def dependant_fields_with_types(
+        self, field_cache, starting_via_path_to_starting_table=None
+    ):
+        from baserow.contrib.database.fields.registries import field_type_registry
+
+        result = []
+        for field_dependency in self.dependants.select_related("dependant").all():
+            dependant_field = field_cache.lookup_specific(field_dependency.dependant)
+            dependant_field_type = field_type_registry.get_by_model(dependant_field)
+            if field_dependency.via is not None:
+                via_path_to_starting_table = (
+                    starting_via_path_to_starting_table or []
+                ) + [field_dependency.via]
+            else:
+                via_path_to_starting_table = starting_via_path_to_starting_table
+            result.append(
+                (dependant_field, dependant_field_type, via_path_to_starting_table)
+            )
+        return result
+
+    def save(self, *args, **kwargs):
+        kwargs.pop("field_lookup_cache", None)
+        kwargs.pop("raise_if_invalid", None)
+        super().save(*args, **kwargs)
 
 
 class AbstractSelectOption(ParentFieldTrashableModelMixin, models.Model):
@@ -243,6 +278,12 @@ class LinkRowField(Field):
         )
         return last_id + 1
 
+    def get_related_primary_field(self):
+        try:
+            return self.link_row_table.field_set.get(primary=True)
+        except Field.DoesNotExist:
+            return None
+
 
 class EmailField(Field):
     pass
@@ -277,11 +318,20 @@ class PhoneNumberField(Field):
 
 class FormulaField(Field):
     formula = models.TextField()
+    internal_formula = models.TextField()
+    version = models.IntegerField()
+    requires_refresh_after_insert = models.BooleanField()
+    old_formula_with_field_by_id = models.TextField(null=True, blank=True)
     error = models.TextField(null=True, blank=True)
 
     formula_type = models.TextField(
         choices=BASEROW_FORMULA_TYPE_CHOICES,
         default="invalid",
+    )
+    array_formula_type = models.TextField(
+        choices=BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
+        default=None,
+        null=True,
     )
     number_decimal_places = models.IntegerField(
         choices=[(0, "1")] + NUMBER_DECIMAL_PLACES_CHOICES,
@@ -309,22 +359,92 @@ class FormulaField(Field):
         help_text="24 (14:30) or 12 (02:30 PM)",
     )
 
-    def same_as(self, other):
-        return (
-            self.formula == other.formula
-            and self.error == other.error
-            and self.formula_type == other.formula_type
-            and self.number_decimal_places == other.number_decimal_places
-            and self.date_format == other.date_format
-            and self.date_time_format == other.date_time_format
-            and self.date_include_time == other.date_include_time
+    @cached_property
+    def cached_untyped_expression(self):
+        return FormulaHandler.raw_formula_to_untyped_expression(self.formula)
+
+    @cached_property
+    def cached_typed_internal_expression(self):
+        return FormulaHandler.get_typed_internal_expression_from_field(self)
+
+    @cached_property
+    def cached_formula_type(self):
+        return FormulaHandler.get_formula_type_from_field(self)
+
+    def recalculate_internal_fields(
+        self, raise_if_invalid=False, field_lookup_cache=None
+    ):
+        try:
+            # noinspection PyPropertyAccess
+            del self.cached_untyped_expression
+        except AttributeError:
+            # It has not been cached yet so nothing to deleted.
+            pass
+        expression = FormulaHandler.recalculate_formula_field_cached_properties(
+            self, field_lookup_cache
         )
+        expression_type = expression.expression_type
+        # Update the cached properties
+        setattr(self, "cached_typed_internal_expression", expression)
+        setattr(self, "cached_formula_type", expression_type)
+
+        if raise_if_invalid:
+            expression_type.raise_if_invalid()
+
+    def save(self, *args, **kwargs):
+        recalculate = kwargs.pop("recalculate", not self.trashed)
+        field_lookup_cache = kwargs.pop("field_lookup_cache", None)
+        raise_if_invalid = kwargs.pop("raise_if_invalid", False)
+        if recalculate:
+            self.recalculate_internal_fields(
+                field_lookup_cache=field_lookup_cache, raise_if_invalid=raise_if_invalid
+            )
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return (
             "FormulaField(\n"
             + f"formula={self.formula},\n"
+            + f"internal_formula={self.internal_formula},\n"
             + f"formula_type={self.formula_type},\n"
+            + f"error={self.error},\n"
+            + ")"
+        )
+
+
+class LookupField(FormulaField):
+    through_field = models.ForeignKey(
+        Field,
+        on_delete=models.SET_NULL,
+        related_name="lookup_fields_used_by",
+        null=True,
+        blank=True,
+    )
+    target_field = models.ForeignKey(
+        Field,
+        on_delete=models.SET_NULL,
+        related_name="targeting_lookup_fields",
+        null=True,
+        blank=True,
+    )
+    through_field_name = models.CharField(max_length=255)
+    target_field_name = models.CharField(max_length=255)
+
+    def save(self, *args, **kwargs):
+        from baserow.contrib.database.formula.ast.tree import BaserowFieldReference
+
+        expression = str(
+            BaserowFieldReference(self.through_field_name, self.target_field_name, None)
+        )
+        self.formula = expression
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return (
+            "LookupField(\n"
+            + f"through_field={self.through_field_name},\n"
+            + f"target_field={self.target_field_name},\n"
+            + f"array_formula_type={self.array_formula_type},\n"
             + f"error={self.error},\n"
             + ")"
         )

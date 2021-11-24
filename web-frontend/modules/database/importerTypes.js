@@ -35,7 +35,6 @@ export class ImporterType extends Registerable {
     super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
-    this.name = this.getName()
 
     if (this.type === null) {
       throw new Error('The type name of an importer type must be set.')
@@ -46,7 +45,7 @@ export class ImporterType extends Registerable {
     return {
       type: this.type,
       iconClass: this.iconClass,
-      name: this.name,
+      name: this.getName(),
     }
   }
 }
@@ -61,7 +60,8 @@ export class CSVImporterType extends ImporterType {
   }
 
   getName() {
-    return 'Import a CSV file'
+    const { i18n } = this.app
+    return i18n.t('importerType.csv')
   }
 
   getFormComponent() {
@@ -79,7 +79,8 @@ export class PasteImporterType extends ImporterType {
   }
 
   getName() {
-    return 'Paste table data'
+    const { i18n } = this.app
+    return i18n.t('importerType.paste')
   }
 
   getFormComponent() {
@@ -97,7 +98,8 @@ export class XMLImporterType extends ImporterType {
   }
 
   getName() {
-    return 'Import an XML file'
+    const { i18n } = this.app
+    return i18n.t('importerType.xml')
   }
 
   getFormComponent() {
@@ -115,7 +117,8 @@ export class JSONImporterType extends ImporterType {
   }
 
   getName() {
-    return 'Import a JSON file'
+    const { i18n } = this.app
+    return i18n.t('importerType.json')
   }
 
   getFormComponent() {

@@ -2,10 +2,6 @@ from typing import Any, List
 
 from django.db.models import Q
 
-from baserow.contrib.database.formula.types.formula_type import (
-    BaserowFormulaType,
-    BaserowFormulaInvalidType,
-)
 from baserow.core.registry import (
     Instance,
     Registry,
@@ -18,6 +14,7 @@ from baserow.core.registry import (
     APIUrlsInstanceMixin,
     ImportExportMixin,
 )
+from .dependencies.types import OptionalFieldDependencies
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 from .models import SelectOption, Field
 
@@ -72,10 +69,6 @@ class FieldType(
     read_only = False
     """Indicates whether the field allows inserting/updating row values or if it is
     read only."""
-
-    requires_typing = False
-    """Indicates whether the field needs extra typing information to calculate its
-    various methods correctly."""
 
     def prepare_value_for_db(self, instance, value):
         """
@@ -295,7 +288,7 @@ class FieldType(
         """
         The prepare_values hook gives the possibility to change the provided values
         that just before they are going to be used to create or update the instance. For
-        example if an ID is provided it can be converted to a model instance. Or to
+        example if an ID is provided, it can be converted to a model instance. Or to
         convert a certain date string to a date object.
 
         :param values: The provided values.
@@ -556,7 +549,8 @@ class FieldType(
             if self.can_have_select_options
             else []
         )
-        field = self.model_class.objects.create(table=table, **serialized_copy)
+        field = self.model_class(table=table, **serialized_copy)
+        field.save()
 
         id_mapping["database_fields"][field_id] = field.id
 
@@ -572,6 +566,51 @@ class FieldType(
                 ] = select_option_object.id
 
         return field
+
+    def after_import_serialized(self, field, field_cache):
+        """
+        Called on fields in dependency order after all fields for an application have
+        been created for any final tasks that require the field graph to be present.
+
+        :param field: A field instance of this field type.
+        :param field_cache: A cache should be used to lookup fields.
+        """
+
+        from baserow.contrib.database.fields.dependencies.handler import (
+            FieldDependencyHandler,
+        )
+
+        FieldDependencyHandler.rebuild_dependencies(field, field_cache)
+        for (
+            dependant_field,
+            dependant_field_type,
+            _,
+        ) in field.dependant_fields_with_types(field_cache):
+            dependant_field_type.after_import_serialized(dependant_field, field_cache)
+
+    def after_rows_imported(self, field, via_path_to_starting_table, update_collector):
+        """
+        Called on fields in dependency order after all of its rows have been inserted
+        after an import for any row updates required once all rows in all imported
+        tables exist.
+
+        :param field: A field instance of this field type.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table where the first rows were imported.
+        :param update_collector: Any row update statements should be registered into
+            this collector.
+        """
+
+        for (
+            dependant_field,
+            dependant_field_type,
+            dependency_path,
+        ) in field.dependant_fields_with_types(
+            update_collector, via_path_to_starting_table
+        ):
+            dependant_field_type.after_rows_imported(
+                dependant_field, dependency_path, update_collector
+            )
 
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         """
@@ -673,22 +712,7 @@ class FieldType(
 
         return []
 
-    def expression_to_update_field_after_related_field_changes(self, instance, model):
-        """
-        Should return a Django Expression for use in an update query to update the value
-        of this field after a field this field depends on has changed.
-
-        :param instance: The instance of the field to generate the update expression
-            for.
-        :param model: The model of the table that the field is on.
-        :return: A Django Expression for the instance's column in the table which will
-            be executed to update this fields value given a change in one of this fields
-            related fields.
-        """
-
-        return None
-
-    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+    def to_baserow_formula_type(self, field):
         """
         Should return the Baserow Formula Type to use when referencing a field of this
         type in a formula.
@@ -697,6 +721,8 @@ class FieldType(
             be created for.
         :return: The Baserow Formula Type that represents this field in a formula.
         """
+
+        from baserow.contrib.database.formula import BaserowFormulaInvalidType
 
         return BaserowFormulaInvalidType(
             f"A field of type {self.type} cannot be referenced in a Baserow formula."
@@ -716,24 +742,291 @@ class FieldType(
             f"A field of type {self.type} cannot be referenced in a Baserow formula."
         )
 
-    def add_related_fields_to_model(
-        self, typed_table, field, already_included_field_ids
+    def to_baserow_formula_expression(self, field):
+        """
+        Should return a Typed Baserow Formula Expression to use when referencing the
+        field in a formula.
+
+        :param field: The specific instance of the field that a typed formula
+            expression should be created for.
+        :return: A typed baserow formula expression which when evaluated represents a
+            reference to field.
+        """
+
+        from baserow.contrib.database.formula import FormulaHandler
+
+        return FormulaHandler.get_normal_field_reference_expression(
+            field, self.to_baserow_formula_type(field)
+        )
+
+    def get_field_dependencies(
+        self, field_instance, field_lookup_cache
+    ) -> OptionalFieldDependencies:
+        """
+        Should return a list of field dependencies that field_instance has. A field
+        dependency can either be the name of a field in the same table as
+        field_instance, or a tuple where the first value is the name of a link row field
+        in the same table and the second is the name of a field in the linked table.
+
+        If instead None is returned this field_type will be treated as if it cannot have
+        dependencies on other fields.
+
+        :param field_instance: The field_instance to get field dependencies for.
+        :type field_instance: Field
+        :param field_lookup_cache: A cache that can be used to lookup fields.
+        :type field_lookup_cache: FieldCache
+        """
+
+        return None
+
+    def restore_failed(self, field_instance, restore_exception):
+        """
+        Called when restoring field_instance has caused an exception. Return True if
+        the exception should be swallowed and the restore operation should succeed or
+        False if it should fail and rollback.
+
+        :param field_instance: The instance of the field which caused
+            restore_exception on field restore.
+        :type field_instance: Field
+        :param restore_exception: The exception that was raised when restoring the
+            field.
+        :type restore_exception:
+        :return: True to swallow the exception and succeed the restore, false to
+            re-raise and fail the restore.
+        :rtype: bool
+        """
+
+        return False
+
+    def row_of_dependency_created(
+        self,
+        field,
+        starting_row,
+        update_collector,
+        via_path_to_starting_table,
     ):
         """
-        Should return any fields related to this field which are not already present
-        in the already_included_field_ids set.
+        Called when a row is created in a dependency field (a field that the field
+        instance parameter depends on).
+        If as a result row value changes are required by this field type an
+        update expression should be provided to the update_collector.
+        Ensure super is called if this fields rows also change so dependants of this
+        field also get notified.
 
-        :param typed_table: A TypedBaserowTable containing the formula types of all
-            fields in the fields table.
-        :param field: The specific instance of the field we want to know the related
-            fields for.
-        :param already_included_field_ids: A set of already included field ids which
-            should not be included in the returned list.
-        :return: A list of field instances which relate to field but are not present in
-            already_included_field_ids.
+        :param field: The field whose dependency has had a row created.
+        :param starting_row: The row which was created in the dependency field.
+        :param update_collector: Any update statements should be passed to this
+            collector so they are run correctly at the right time. You should not be
+            manually updating row values yourself in this method.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table where the row was created.
         """
 
-        return []
+        self.row_of_dependency_updated(
+            field,
+            starting_row,
+            update_collector,
+            via_path_to_starting_table,
+        )
+
+    def row_of_dependency_updated(
+        self,
+        field,
+        starting_row,
+        update_collector,
+        via_path_to_starting_table,
+    ):
+        """
+        Called when a row or rows are updated in a dependency field (a field that the
+        field instance parameter depends on).
+        If as a result row value changes are required by this field type an
+        update expression should be provided to the update_collector.
+        Ensure super is called if this fields rows also change so dependants of this
+        field also get notified.
+
+        :param field: The field whose dependency has had a row or rows updated.
+        :param starting_row: The very first row which changed triggering this
+            eventual update notification, might not be in the same table as field or
+            a direct dependency row of field.
+        :param update_collector: Any update statements should be passed to this
+            collector so they are run correctly at the right time. You should not be
+            manually updating row values yourself in this method.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table where the first row was changed.
+        """
+
+        for (
+            dependant_field,
+            dependant_field_type,
+            dependant_path_to_starting_table,
+        ) in field.dependant_fields_with_types(
+            update_collector, via_path_to_starting_table
+        ):
+            dependant_field_type.row_of_dependency_updated(
+                dependant_field,
+                starting_row,
+                update_collector,
+                dependant_path_to_starting_table,
+            )
+
+    def row_of_dependency_deleted(
+        self,
+        field,
+        starting_row,
+        update_collector,
+        via_path_to_starting_table,
+    ):
+        """
+        Called when a row is deleted in a dependency field (a field that the
+        field instance parameter depends on).
+        If as a result row value changes are required by this field type an
+        update expression should be provided to the update_collector.
+        Ensure super is called if this fields rows also change so dependants of this
+        field also get notified.
+
+        :param field: The field whose dependency has had a row deleted.
+        :param starting_row: The very row which was deleted.
+        :param update_collector: Any update statements should be passed to this
+            collector so they are run correctly at the right time. You should not be
+            manually updating row values yourself in this method.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table where the row was deleted.
+        """
+
+        self.row_of_dependency_updated(
+            field,
+            starting_row,
+            update_collector,
+            via_path_to_starting_table,
+        )
+
+    def row_of_dependency_moved(
+        self,
+        field,
+        starting_row,
+        update_collector,
+        via_path_to_starting_table,
+    ):
+        """
+        Called when a row is moved in a dependency field (a field that the
+        field instance parameter depends on).
+        If as a result row value changes are required by this field type an
+        update expression should be provided to the update_collector.
+        Ensure super is called if this fields rows also change so dependants of this
+        field also get notified.
+
+        :param field: The field whose dependency has had a row deleted.
+        :param starting_row: The row which was moved.
+        :param update_collector: Any update statements should be passed to this
+            collector so they are run correctly at the right time. You should not be
+            manually updating row values yourself in this method.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table where the row was moved.
+        """
+
+        self.row_of_dependency_updated(
+            field,
+            starting_row,
+            update_collector,
+            via_path_to_starting_table,
+        )
+
+    def field_dependency_created(
+        self, field, created_field, via_path_to_starting_table, update_collector
+    ):
+        """
+        Called when a field is created which the field parameter depends on.
+        If as a result row value changes are required by this field type an
+        update expression should be provided to the update_collector.
+        Ensure super is called if this field also changes so dependants of this
+        field also get notified.
+
+        :param field: The field who has had a new dependency field created.
+        :param created_field: The dependency field which was created.
+        :param update_collector: If this field changes the resulting field should be
+            passed to the update_collector. Additionally if this fields row values
+            should also change has a result an update statement should be passed to
+            this collector which will be run correctly at the right time.
+            You should not be manually updating row values yourself in this method.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table where field was created.
+        """
+
+        self.field_dependency_updated(
+            field, field, field, via_path_to_starting_table, update_collector
+        )
+
+    def field_dependency_updated(
+        self,
+        field,
+        updated_field,
+        updated_old_field,
+        via_path_to_starting_table,
+        update_collector,
+    ):
+        """
+        Called when a field is updated which the field parameter depends on.
+        If as a result row value changes are required by this field type an
+        update expression should be provided to the update_collector.
+        Ensure super is called if this field also changes so dependants of this
+        field also get notified.
+
+        :param field: The field who has had a new dependency field created.
+        :param updated_field: The dependency field which was updated.
+        :param updated_old_field: The instance of the updated field before the update.
+        :param update_collector: If this field changes the resulting field should be
+            passed to the update_collector. Additionally if this fields row values
+            should also change has a result an update statement should be passed to
+            this collector which will be run correctly at the right time.
+            You should not be manually updating row values yourself in this method.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table the first field change occurred.
+        """
+
+        from baserow.contrib.database.fields.dependencies.handler import (
+            FieldDependencyHandler,
+        )
+
+        FieldDependencyHandler.rebuild_dependencies(field, update_collector)
+        for (
+            dependant_field,
+            dependant_field_type,
+            dependant_path_to_starting_table,
+        ) in field.dependant_fields_with_types(
+            update_collector, via_path_to_starting_table
+        ):
+            dependant_field_type.field_dependency_updated(
+                dependant_field,
+                field,
+                field,
+                dependant_path_to_starting_table,
+                update_collector,
+            )
+
+    def field_dependency_deleted(
+        self, field, deleted_field, via_path_to_starting_table, update_collector
+    ):
+        """
+        Called when a field is deleted which the field parameter depends on.
+        If as a result row value changes are required by this field type an
+        update expression should be provided to the update_collector.
+        Ensure super is called if this field also changes so dependants of this
+        field also get notified.
+
+        :param field: The field who has had a new dependency field created.
+        :param deleted_field: The dependency field which was deleted.
+        :param update_collector: If this field changes the resulting field should be
+            passed to the update_collector. Additionally if this fields row values
+            should also change has a result an update statement should be passed to
+            this collector which will be run correctly at the right time.
+            You should not be manually updating row values yourself in this method.
+        :param via_path_to_starting_table: A list of link row fields if any leading
+            back to the starting table the field was deleted.
+        """
+
+        self.field_dependency_updated(
+            field, field, field, via_path_to_starting_table, update_collector
+        )
 
 
 class FieldTypeRegistry(

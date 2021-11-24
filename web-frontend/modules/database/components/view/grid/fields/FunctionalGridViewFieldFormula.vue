@@ -1,7 +1,7 @@
 <template functional>
   <component
-    :is="$options.methods.getComponent(props.field)"
-    v-if="$options.methods.getComponent(props.field)"
+    :is="$options.methods.getComponent(props.field, parent.$registry)"
+    v-if="$options.methods.getComponent(props.field, parent.$registry)"
     :field="props.field"
     :value="props.value"
   ></component>
@@ -22,16 +22,9 @@ export default {
     FunctionalGridViewFieldNumber,
   },
   methods: {
-    getComponent(field) {
-      return {
-        date: FunctionalGridViewFieldDate,
-        text: FunctionalGridViewFieldText,
-        boolean: FunctionalGridViewFieldBoolean,
-        number: FunctionalGridViewFieldNumber,
-        invalid: FunctionalGridViewFieldText,
-        char: FunctionalGridViewFieldText,
-        date_interval: FunctionalGridViewFieldText,
-      }[field.formula_type]
+    getComponent(field, $registry) {
+      const formulaType = $registry.get('formula_type', field.formula_type)
+      return formulaType.getFunctionalGridViewFieldComponent()
     },
   },
 }

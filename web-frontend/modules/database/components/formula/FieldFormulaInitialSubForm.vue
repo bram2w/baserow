@@ -31,18 +31,12 @@
       </div>
     </div>
     <template v-if="showTypeFormattingOptions">
-      <FieldFormulaNumberSubForm
-        v-if="formulaType === 'number'"
+      <FormulaTypeSubForms
         :default-values="defaultValues"
+        :formula-type="formulaType"
         :table="table"
       >
-      </FieldFormulaNumberSubForm>
-      <FieldDateSubForm
-        v-else-if="formulaType === 'date'"
-        :default-values="defaultValues"
-        :table="table"
-      >
-      </FieldDateSubForm>
+      </FormulaTypeSubForms>
     </template>
   </div>
 </template>
@@ -50,14 +44,12 @@
 import form from '@baserow/modules/core/mixins/form'
 
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
-import FieldFormulaNumberSubForm from '@baserow/modules/database/components/field/FieldFormulaNumberSubForm'
-import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
+import FormulaTypeSubForms from '@baserow/modules/database/components/formula/FormulaTypeSubForms'
 
 export default {
   name: 'FieldFormulaInitialSubForm',
   components: {
-    FieldDateSubForm,
-    FieldFormulaNumberSubForm,
+    FormulaTypeSubForms,
   },
   mixins: [form, fieldSubForm],
   props: {

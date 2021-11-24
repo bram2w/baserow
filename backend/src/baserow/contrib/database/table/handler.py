@@ -125,7 +125,8 @@ class TableHandler:
 
         # Create the table schema in the database database.
         with connection.schema_editor() as schema_editor:
-            model = table.get_model()
+            # Django only creates indexes when the model is managed.
+            model = table.get_model(managed=True)
             schema_editor.create_model(model)
 
         if data is not None:
@@ -185,7 +186,7 @@ class TableHandler:
         long_field_names = [x for x in field_name_set if len(x) > max_field_name_length]
 
         if len(long_field_names) > 0:
-            raise MaxFieldNameLengthExceeded()
+            raise MaxFieldNameLengthExceeded(max_field_name_length)
 
         if len(field_name_set.intersection(RESERVED_BASEROW_FIELD_NAMES)) > 0:
             raise ReservedBaserowFieldNameException()

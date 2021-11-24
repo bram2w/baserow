@@ -108,7 +108,9 @@
   border-top: 1px solid $color-neutral-200;
   padding-top: 20px;
   margin-top: 20px;
-  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: right;
 }
 
 .context__alert {

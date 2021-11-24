@@ -6,7 +6,6 @@ from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.registries import row_metadata_registry
-from baserow.core.utils import model_default_values, dict_to_object
 
 logger = logging.getLogger(__name__)
 
@@ -158,13 +157,7 @@ def get_example_row_serializer_class(add_id=False, user_field_names=False):
         )
 
     for i, field_type in enumerate(field_types):
-        # In order to generate a serializer we need a model instance. This method is
-        # called before Django has been loaded so it will result in errors when
-        # creating an instance. Therefore we create an object containing the default
-        # field values of the model. With the object we can generate the example
-        # serializer.
-        defaults = model_default_values(field_type.model_class)
-        instance = dict_to_object(defaults)
+        instance = field_type.model_class()
         kwargs = {
             "help_text": f"This field represents the `{field_type.type}` field. The "
             f"number in field_{i + 1} is in a normal request or response "

@@ -17,7 +17,6 @@
 <script>
 export default {
   name: 'LanguageSwitcherDropdown',
-  props: {},
   computed: {
     language: {
       get() {

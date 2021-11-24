@@ -85,7 +85,6 @@ import { passwordValidation } from '@baserow/modules/core/validators'
 export default {
   components: { PasswordInput },
   mixins: [error],
-  layout: 'login',
   data() {
     return {
       loading: false,

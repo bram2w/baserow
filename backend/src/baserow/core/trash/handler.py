@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import QuerySet
 from django.utils import timezone
 
@@ -18,6 +18,7 @@ from baserow.core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
+    CannotDeleteAlreadyDeletedItem,
 )
 from baserow.core.trash.registries import TrashableItemType, trash_item_type_registry
 from baserow.core.trash.signals import permanently_deleted
@@ -71,22 +72,28 @@ class TrashHandler:
             else:
                 parent_name = None
 
-            return TrashEntry.objects.create(
-                user_who_trashed=requesting_user,
-                group=group,
-                application=application,
-                trash_item_type=trash_item_type.type,
-                trash_item_id=trash_item.id,
-                name=trash_item_type.get_name(trash_item),
-                parent_name=parent_name,
-                parent_trash_item_id=parent_id,
-                # If we ever introduce the ability to trash many rows at once this
-                # call will generate a model per row currently, instead a model cache
-                # should be added so generated models can be shared.
-                extra_description=trash_item_type.get_extra_description(
-                    trash_item, parent
-                ),
-            )
+            try:
+                return TrashEntry.objects.create(
+                    user_who_trashed=requesting_user,
+                    group=group,
+                    application=application,
+                    trash_item_type=trash_item_type.type,
+                    trash_item_id=trash_item.id,
+                    name=trash_item_type.get_name(trash_item),
+                    parent_name=parent_name,
+                    parent_trash_item_id=parent_id,
+                    # If we ever introduce the ability to trash many rows at once this
+                    # call will generate a model per row currently, instead a model
+                    # cache should be added so generated models can be shared.
+                    extra_description=trash_item_type.get_extra_description(
+                        trash_item, parent
+                    ),
+                )
+            except IntegrityError as e:
+                if "unique constraint" in e.args[0]:
+                    raise CannotDeleteAlreadyDeletedItem()
+                else:
+                    raise e
 
     @staticmethod
     def restore_item(user, trash_item_type, trash_item_id, parent_trash_item_id=None):

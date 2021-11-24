@@ -1,6 +1,19 @@
 import { AdminType } from '@baserow/modules/core/adminTypes'
+import { PremiumPlugin } from '@baserow_premium/plugins'
 
-export class DashboardType extends AdminType {
+class PremiumAdminType extends AdminType {
+  getDeactivatedText() {
+    return this.app.i18n.t('premium.deactivated')
+  }
+
+  isDeactivated() {
+    return !PremiumPlugin.hasValidPremiumLicense(
+      this.app.store.getters['auth/getAdditionalUserData']
+    )
+  }
+}
+
+export class DashboardType extends PremiumAdminType {
   static getType() {
     return 'dashboard'
   }
@@ -22,7 +35,7 @@ export class DashboardType extends AdminType {
   }
 }
 
-export class UsersAdminType extends AdminType {
+export class UsersAdminType extends PremiumAdminType {
   static getType() {
     return 'users'
   }
@@ -44,7 +57,7 @@ export class UsersAdminType extends AdminType {
   }
 }
 
-export class GroupsAdminType extends AdminType {
+export class GroupsAdminType extends PremiumAdminType {
   static getType() {
     return 'groups'
   }
@@ -63,5 +76,27 @@ export class GroupsAdminType extends AdminType {
 
   getOrder() {
     return 3
+  }
+}
+
+export class LicensesAdminType extends AdminType {
+  static getType() {
+    return 'licenses'
+  }
+
+  getIconClass() {
+    return 'certificate'
+  }
+
+  getName() {
+    return 'Licenses'
+  }
+
+  getRouteName() {
+    return 'admin-licenses'
+  }
+
+  getOrder() {
+    return 10000
   }
 }

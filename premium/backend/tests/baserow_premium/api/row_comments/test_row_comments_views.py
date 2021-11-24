@@ -1,8 +1,14 @@
 import pytest
 from django.conf import settings
+from django.test.utils import override_settings
 from freezegun import freeze_time
 from rest_framework.reverse import reverse
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_402_PAYMENT_REQUIRED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
@@ -10,9 +16,12 @@ from baserow_premium.row_comments.models import RowComment
 
 
 @pytest.mark.django_db
-def test_row_comments_api_view(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+@override_settings(DEBUG=True)
+def test_row_comments_api_view(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row", "second_row"], user=user
     )
 
@@ -73,8 +82,35 @@ def test_row_comments_api_view(data_fixture, api_client):
 
 
 @pytest.mark.django_db
-def test_row_comments_cant_view_comments_for_invalid_table(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
+@override_settings(DEBUG=True)
+def test_row_comments_api_view_without_premium_license(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(first_name="Test User")
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second_row"], user=user
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_row_comments_cant_view_comments_for_invalid_table(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
 
     response = api_client.get(
         reverse(
@@ -89,11 +125,14 @@ def test_row_comments_cant_view_comments_for_invalid_table(data_fixture, api_cli
 
 
 @pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_row_comments_cant_view_comments_for_invalid_row_in_table(
-    data_fixture, api_client
+    premium_data_fixture, api_client
 ):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
 
@@ -110,12 +149,17 @@ def test_row_comments_cant_view_comments_for_invalid_row_in_table(
 
 
 @pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_row_comments_users_cant_view_comments_for_table_they_are_not_in_group_for(
-    data_fixture, api_client
+    premium_data_fixture, api_client
 ):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    other_user, other_token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    other_user, other_token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
 
@@ -142,8 +186,13 @@ def test_row_comments_users_cant_view_comments_for_table_they_are_not_in_group_f
 
 
 @pytest.mark.django_db
-def test_row_comments_cant_create_comments_in_invalid_table(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
+@override_settings(DEBUG=True)
+def test_row_comments_cant_create_comments_in_invalid_table(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
 
     response = api_client.post(
         reverse(
@@ -159,11 +208,14 @@ def test_row_comments_cant_create_comments_in_invalid_table(data_fixture, api_cl
 
 
 @pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_row_comments_cant_create_comments_in_invalid_row_in_table(
-    data_fixture, api_client
+    premium_data_fixture, api_client
 ):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
 
@@ -181,12 +233,17 @@ def test_row_comments_cant_create_comments_in_invalid_row_in_table(
 
 
 @pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_row_comments_users_cant_create_comments_for_table_they_are_not_in_group_for(
-    data_fixture, api_client
+    premium_data_fixture, api_client
 ):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    other_user, other_token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    other_user, other_token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
 
@@ -215,9 +272,12 @@ def test_row_comments_users_cant_create_comments_for_table_they_are_not_in_group
 
 
 @pytest.mark.django_db
-def test_cant_make_a_blank_row_comment(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+@override_settings(DEBUG=True)
+def test_cant_make_a_blank_row_comment(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
 
@@ -238,9 +298,14 @@ def test_cant_make_a_blank_row_comment(data_fixture, api_client):
 
 
 @pytest.mark.django_db
-def test_cant_make_a_row_comment_greater_than_max_settings(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+@override_settings(DEBUG=True)
+def test_cant_make_a_row_comment_greater_than_max_settings(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
     response = api_client.post(
@@ -277,9 +342,12 @@ def test_cant_make_a_row_comment_greater_than_max_settings(data_fixture, api_cli
 
 
 @pytest.mark.django_db
-def test_cant_make_a_null_row_comment(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+@override_settings(DEBUG=True)
+def test_cant_make_a_null_row_comment(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
 
@@ -300,9 +368,33 @@ def test_cant_make_a_null_row_comment(data_fixture, api_client):
 
 
 @pytest.mark.django_db
-def test_trashing_the_row_returns_404_for_comments(data_fixture, api_client):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+@override_settings(DEBUG=True)
+def test_cant_make_a_row_without_premium_license(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token(first_name="Test User")
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+
+    response = api_client.post(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "row_id": rows[0].id},
+        ),
+        {"comment": "test"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_NO_ACTIVE_PREMIUM_LICENSE"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_trashing_the_row_returns_404_for_comments(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
 
@@ -367,11 +459,14 @@ def test_trashing_the_row_returns_404_for_comments(data_fixture, api_client):
 
 
 @pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
-    data_fixture, api_client
+    premium_data_fixture, api_client
 ):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row", "second row"], user=user
     )
 
@@ -424,14 +519,17 @@ def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
 
 
 @pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
-    data_fixture, api_client
+    premium_data_fixture, api_client
 ):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    table, fields, rows = data_fixture.build_table(
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row", "second row"], user=user
     )
-    other_table, other_fields, other_rows = data_fixture.build_table(
+    other_table, other_fields, other_rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row", "second row"], user=user
     )
 
@@ -483,17 +581,22 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
 
 
 @pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_getting_row_comments_executes_fixed_number_of_queries(
-    data_fixture, api_client, django_assert_num_queries
+    premium_data_fixture, api_client, django_assert_num_queries
 ):
-    user, token = data_fixture.create_user_and_token(first_name="Test User")
-    other_user, other_token = data_fixture.create_user_and_token(first_name="Test User")
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    other_user, other_token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
 
-    table, fields, rows = data_fixture.build_table(
+    table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row", "second row"], user=user
     )
 
-    data_fixture.create_user_group(user=other_user, group=table.database.group)
+    premium_data_fixture.create_user_group(user=other_user, group=table.database.group)
 
     response = api_client.post(
         reverse(
@@ -506,7 +609,7 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
     )
     assert response.status_code == HTTP_200_OK
 
-    expected_num_of_fixed_queries = 6
+    expected_num_of_fixed_queries = 7
     with django_assert_num_queries(expected_num_of_fixed_queries):
         response = api_client.get(
             reverse(

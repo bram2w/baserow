@@ -1,6 +1,5 @@
 import jwt
 from django.apps import apps
-from django.utils.translation import gettext as _
 from drf_spectacular.extensions import OpenApiAuthenticationExtension
 from rest_framework import exceptions
 from rest_framework_jwt.authentication import (
@@ -33,24 +32,24 @@ class JSONWebTokenAuthentication(JWTJSONWebTokenAuthentication):
         try:
             payload = self.jwt_decode_token(token)
         except ExpiredSignature:
-            msg = _("Token has expired.")
+            msg = "Token has expired."
             raise exceptions.AuthenticationFailed(
                 {"detail": msg, "error": "ERROR_SIGNATURE_HAS_EXPIRED"}
             )
         except jwt.DecodeError:
-            msg = _("Error decoding token.")
+            msg = "Error decoding token."
             raise exceptions.AuthenticationFailed(
                 {"detail": msg, "error": "ERROR_DECODING_SIGNATURE"}
             )
         except jwt.InvalidTokenError:
-            msg = _("Invalid token.")
+            msg = "Invalid token."
             raise exceptions.AuthenticationFailed(msg)
 
         if apps.is_installed("rest_framework_jwt.blacklist"):
             from rest_framework_jwt.blacklist.models import BlacklistedToken
 
             if BlacklistedToken.is_blocked(token, payload):
-                msg = _("Token is blacklisted.")
+                msg = "Token is blacklisted."
                 raise exceptions.PermissionDenied(
                     {"detail": msg, "error": "ERROR_SIGNATURE_HAS_EXPIRED"}
                 )

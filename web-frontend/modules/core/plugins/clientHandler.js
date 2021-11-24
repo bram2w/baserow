@@ -9,76 +9,91 @@ export class ResponseErrorMessage {
   }
 }
 
-class ErrorHandler {
-  constructor(store, response, code = null, detail = null) {
-    this.isHandled = false
-    this.store = store
-    this.response = response
-    this.setError(code, detail)
-
-    // A temporary global errorMap containing error messages for certain errors codes.
-    // This must later be replaced by a more dynamic way.
+/**
+ * This class holds all the default error messages and offers the ability to
+ * register new ones. This is stored in a separate class because need to inject
+ * this, so it can be used by other modules.
+ */
+class ClientErrorMap {
+  constructor(app) {
+    // Declare the default error messages.
     this.errorMap = {
       ERROR_USER_NOT_IN_GROUP: new ResponseErrorMessage(
-        'Action not allowed.',
-        "The action couldn't be completed because you aren't a " +
-          'member of the related group.'
+        app.i18n.t('clientHandler.userNotInGroupTitle'),
+        app.i18n.t('clientHandler.userNotInGroupDescription')
       ),
       ERROR_USER_INVALID_GROUP_PERMISSIONS: new ResponseErrorMessage(
-        'Action not allowed.',
-        "The action couldn't be completed because you don't have the right " +
-          'permissions to the related group.'
+        app.i18n.t('clientHandler.invalidGroupPermissionsTitle'),
+        app.i18n.t('clientHandler.invalidGroupPermissionsDescription')
       ),
       // @TODO move these errors to the module.
       ERROR_TABLE_DOES_NOT_EXIST: new ResponseErrorMessage(
-        "Table doesn't exist.",
-        "The action couldn't be completed because the related table doesn't exist" +
-          ' anymore.'
+        app.i18n.t('clientHandler.tableDoesNotExistTitle'),
+        app.i18n.t('clientHandler.tableDoesNotExistDescription')
       ),
       ERROR_ROW_DOES_NOT_EXIST: new ResponseErrorMessage(
-        "Row doesn't exist.",
-        "The action couldn't be completed because the related row doesn't exist" +
-          ' anymore.'
+        app.i18n.t('clientHandler.rowDoesNotExistTitle'),
+        app.i18n.t('clientHandler.rowDoesNotExistDescription')
       ),
       ERROR_FILE_SIZE_TOO_LARGE: new ResponseErrorMessage(
-        'File to large',
-        'The provided file is too large.'
+        app.i18n.t('clientHandler.fileSizeTooLargeTitle'),
+        app.i18n.t('clientHandler.fileSizeTooLargeDescription')
       ),
       ERROR_INVALID_FILE: new ResponseErrorMessage(
-        'Invalid file',
-        'The provided file is not a valid file.'
+        app.i18n.t('clientHandler.invalidFileTitle'),
+        app.i18n.t('clientHandler.invalidFileDescription')
       ),
       ERROR_FILE_URL_COULD_NOT_BE_REACHED: new ResponseErrorMessage(
-        'Invalid URL',
-        'The provided file URL could not be reached.'
+        app.i18n.t('clientHandler.fileUrlCouldNotBeReachedTitle'),
+        app.i18n.t('clientHandler.fileUrlCouldNotBeReachedDescription')
       ),
       ERROR_INVALID_FILE_URL: new ResponseErrorMessage(
-        'Invalid URL',
-        'The provided file URL is invalid or not allowed.'
+        app.i18n.t('clientHandler.invalidFileUrlTitle'),
+        app.i18n.t('clientHandler.invalidFileUrlDescription')
       ),
       USER_ADMIN_CANNOT_DEACTIVATE_SELF: new ResponseErrorMessage(
-        'Action not allowed.',
-        'You cannot de-activate or un-staff yourself.'
+        app.i18n.t('clientHandler.adminCannotDeactivateSelfTitle'),
+        app.i18n.t('clientHandler.adminCannotDeactivateSelfDescription')
       ),
       USER_ADMIN_CANNOT_DELETE_SELF: new ResponseErrorMessage(
-        'Action not allowed.',
-        'You cannot delete yourself.'
+        app.i18n.t('clientHandler.adminCannotDeleteSelfTitle'),
+        app.i18n.t('clientHandler.adminCannotDeleteSelfDescription')
       ),
       ERROR_MAX_FIELD_COUNT_EXCEEDED: new ResponseErrorMessage(
-        "Couldn't create field.",
-        "The action couldn't be completed because the field count exceeds the limit"
+        app.i18n.t('clientHandler.maxFieldCountExceededTitle'),
+        app.i18n.t('clientHandler.maxFieldCountExceededDescription')
       ),
       ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD: new ResponseErrorMessage(
-        'Please restore the parent first.',
-        'You cannot restore this item because it depends on a deleted item.' +
-          ' Please restore the parent item first.'
+        app.i18n.t('clientHandler.cannotRestoreParentBeforeChildTitle'),
+        app.i18n.t('clientHandler.cannotRestoreParentBeforeChildDescription')
       ),
       ERROR_GROUP_USER_IS_LAST_ADMIN: new ResponseErrorMessage(
-        "Can't leave the group",
-        "It's not possible to leave the group because you're the last admin. Please" +
-          ' delete the group or give another user admin permissions.'
+        app.i18n.t('clientHandler.groupUserIsLastAdminTitle'),
+        app.i18n.t('clientHandler.groupUserIsLastAdminDescription')
       ),
     }
+  }
+
+  setError(code, title, description) {
+    this.errorMap[code] = new ResponseErrorMessage(title, description)
+  }
+}
+
+export class ErrorHandler {
+  constructor(
+    store,
+    app,
+    clientErrorMap,
+    response,
+    code = null,
+    detail = null
+  ) {
+    this.isHandled = false
+    this.store = store
+    this.app = app
+    this.response = response
+    this.setError(code, detail)
+    this.errorMap = clientErrorMap.errorMap
 
     // A temporary notFoundMap containing the error messages for when the
     // response contains a 404 error based on the provided context name. Note
@@ -143,9 +158,8 @@ class ErrorHandler {
     }
 
     return new ResponseErrorMessage(
-      'Action not completed.',
-      "The action couldn't be completed because an unknown error has" +
-        ' occured.'
+      this.app.i18n.t('clientHandler.notCompletedTitle'),
+      this.app.i18n.t('clientHandler.notCompletedDescription')
     )
   }
 
@@ -155,8 +169,12 @@ class ErrorHandler {
   getNotFoundMessage(name) {
     if (!Object.prototype.hasOwnProperty.call(this.notFoundMap, name)) {
       return new ResponseErrorMessage(
-        `${upperCaseFirst(name)} not found.`,
-        `The selected ${name.toLowerCase()} wasn't found, maybe it has already been deleted.`
+        this.app.i18n.t('clientHandler.notFoundTitle', {
+          name: upperCaseFirst(name),
+        }),
+        this.app.i18n.t('clientHandler.notFoundTitle', {
+          name: name.toLowerCase(),
+        })
       )
     }
     return this.notFoundMap[name]
@@ -168,8 +186,8 @@ class ErrorHandler {
    */
   getNetworkErrorMessage() {
     return new ResponseErrorMessage(
-      'Network error',
-      'Could not connect to the API server.'
+      this.app.i18n.t('clientHandler.networkErrorTitle'),
+      this.app.i18n.t('clientHandler.networkErrorDescription')
     )
   }
 
@@ -179,8 +197,8 @@ class ErrorHandler {
    */
   getTooManyRequestsError() {
     return new ResponseErrorMessage(
-      'Too many requests',
-      'You are sending too many requests to the server. Please wait a moment.'
+      this.app.i18n.t('clientHandler.tooManyRequestsTitle'),
+      this.app.i18n.t('clientHandler.tooManyRequestsDescription')
     )
   }
 
@@ -243,6 +261,11 @@ class ErrorHandler {
 }
 
 export default function ({ store, app }, inject) {
+  // Create and inject the client error map, so that other modules can also register
+  // default error messages.
+  const clientErrorMap = new ClientErrorMap(app)
+  inject('clientErrorMap', clientErrorMap)
+
   const url =
     (process.client
       ? app.$env.PUBLIC_BACKEND_URL
@@ -277,7 +300,12 @@ export default function ({ store, app }, inject) {
       return response
     },
     (error) => {
-      error.handler = new ErrorHandler(store, error.response)
+      error.handler = new ErrorHandler(
+        store,
+        app,
+        clientErrorMap,
+        error.response
+      )
 
       // Add the error message in the response to the error object.
       if (

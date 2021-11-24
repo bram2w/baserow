@@ -39,6 +39,24 @@ class TemporaryApplication2(ModelInstanceMixin, Instance):
     model_class = FakeModel2
 
 
+class BaseFakeModel(object):
+    pass
+
+
+class SubClassOfBaseFakeModel(BaseFakeModel):
+    pass
+
+
+class BaseFakeModelApplication(ModelInstanceMixin, Instance):
+    type = "temporary_1"
+    model_class = BaseFakeModel
+
+
+class SubClassOfBaseFakeModelApplication(ModelInstanceMixin, Instance):
+    type = "temporary_2"
+    model_class = SubClassOfBaseFakeModel
+
+
 class TemporaryRegistry(ModelRegistryMixin, Registry):
     name = "temporary"
 
@@ -116,6 +134,17 @@ def test_registry_get():
         registry.get_by_model(FakeModel2())
 
     assert registry.get_types() == ["temporary_1"]
+
+
+def test_registry_get_by_model_returns_the_most_specific_value():
+    base_app = BaseFakeModelApplication()
+    subtype_of_base_app = SubClassOfBaseFakeModelApplication()
+    registry = TemporaryRegistry()
+    registry.register(base_app)
+    registry.register(subtype_of_base_app)
+
+    assert registry.get_by_model(BaseFakeModel()) == base_app
+    assert registry.get_by_model(SubClassOfBaseFakeModel()) == subtype_of_base_app
 
 
 def test_api_exceptions_api_mixins():

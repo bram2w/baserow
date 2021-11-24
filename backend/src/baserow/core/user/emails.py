@@ -5,13 +5,15 @@ from baserow.core.emails import BaseEmailMessage
 
 
 class ResetPasswordEmail(BaseEmailMessage):
-    subject = _("Reset password - Baserow")
     template_name = "baserow/core/user/reset_password.html"
 
     def __init__(self, user, reset_url, *args, **kwargs):
         self.reset_url = reset_url
         self.user = user
         super().__init__(*args, **kwargs)
+
+    def get_subject(self):
+        return _("Reset password - Baserow")
 
     def get_context(self):
         context = super().get_context()

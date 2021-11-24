@@ -15,20 +15,20 @@ def forward(apps, schema_editor):
     created because that is allowed.
     """
 
-    Table = apps.get_model('database', 'Table')
-    Field = apps.get_model('database', 'Field')
-    LinkRowField = apps.get_model('database', 'LinkRowField')
-    TextField = apps.get_model('database', 'TextField')
-    ContentType = apps.get_model('contenttypes', 'ContentType')
+    Table = apps.get_model("database", "Table")
+    Field = apps.get_model("database", "Field")
+    LinkRowField = apps.get_model("database", "LinkRowField")
+    TextField = apps.get_model("database", "TextField")
+    ContentType = apps.get_model("contenttypes", "ContentType")
     text_field_content_type = ContentType.objects.get_for_model(TextField)
 
     # Check if there are tables without a primary field or where the primary field is
     # a link row field, which is not allowed.
     tables_without_primary = Table.objects.annotate(
-        has_primary=Exists(Field.objects.filter(table=OuterRef('pk'), primary=True)),
+        has_primary=Exists(Field.objects.filter(table=OuterRef("pk"), primary=True)),
         has_link_row_primary=Exists(
-            LinkRowField.objects.filter(table=OuterRef('pk'), primary=True)
-        )
+            LinkRowField.objects.filter(table=OuterRef("pk"), primary=True)
+        ),
     ).filter(Q(has_primary=False) | Q(has_link_row_primary=True))
     for table in tables_without_primary:
         # If the table has a link row field as primary field it needs to be marked as
@@ -41,20 +41,17 @@ def forward(apps, schema_editor):
         # It might be possible in the future that the get_model or db_column methods
         # are going to disappear. If that is the case then the creation of the field
         # cannot be executed, so we can skip that.
-        if (
-            not hasattr(TableModel, 'get_model') or
-            not hasattr(FieldModel, 'db_column')
-        ):
+        if not hasattr(TableModel, "get_model") or not hasattr(FieldModel, "db_column"):
             continue
 
         # We now know for sure there isn't a primary field in the table, so we can
         # create a new primary text field because the table expects one.
         new_primary = TextField.objects.create(
             table=table,
-            name='Primary (auto created)',
+            name="Primary (auto created)",
             order=0,
             content_type=text_field_content_type,
-            primary=True
+            primary=True,
         )
         with connection.schema_editor() as tables_schema_editor:
             to_model = TableModel.get_model(table, field_ids=[new_primary.id])
@@ -66,7 +63,7 @@ def forward(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0019_filefield'),
+        ("database", "0019_filefield"),
     ]
 
     operations = [

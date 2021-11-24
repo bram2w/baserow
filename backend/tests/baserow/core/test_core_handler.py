@@ -45,6 +45,7 @@ from baserow.core.user_files.models import UserFile
 def test_get_settings():
     settings = CoreHandler().get_settings()
     assert isinstance(settings, Settings)
+    assert len(settings.instance_id) > 32
     assert settings.allow_new_signups is True
 
 
@@ -56,10 +57,14 @@ def test_update_settings(data_fixture):
     with pytest.raises(IsNotAdminError):
         CoreHandler().update_settings(user_2, allow_new_signups=False)
 
-    settings = CoreHandler().update_settings(user_1, allow_new_signups=False)
+    settings = CoreHandler().update_settings(
+        user_1, allow_new_signups=False, instance_id="test"
+    )
     assert settings.allow_new_signups is False
+    assert settings.instance_id != "test"
 
     settings = Settings.objects.all().first()
+    assert settings.instance_id != "test"
     assert settings.allow_new_signups is False
 
 
@@ -467,6 +472,24 @@ def test_send_group_invitation_email(data_fixture, mailoutbox):
 
     invitation_id = signer.loads(token)
     assert invitation_id == group_invitation.id
+
+
+@pytest.mark.django_db(transaction=True)
+def test_send_group_invitation_email_in_different_language(data_fixture, mailoutbox):
+    user = data_fixture.create_user(language="fr")
+    group_invitation = data_fixture.create_group_invitation(invited_by=user)
+
+    handler = CoreHandler()
+    handler.send_group_invitation_email(
+        invitation=group_invitation, base_url="http://localhost:3000/group-invite"
+    )
+
+    assert len(mailoutbox) == 1
+    assert (
+        mailoutbox[0].subject
+        == f"{group_invitation.invited_by.first_name} vous a invité à "
+        f"{group_invitation.group.name} - Baserow"
+    )
 
 
 @pytest.mark.django_db

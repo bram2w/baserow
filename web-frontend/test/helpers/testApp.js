@@ -173,6 +173,7 @@ export class TestApp {
  */
 export const UIHelpers = {
   async performSearch(tableComponent, searchTerm) {
+    await tableComponent.get('i.header__search-icon').trigger('click')
     const searchBox = tableComponent.get(
       'input[placeholder*="viewSearchContext.searchInRows"]'
     )

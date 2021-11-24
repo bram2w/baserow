@@ -1,0 +1,220 @@
+.kanban-view {
+  overflow-x: scroll;
+
+  @include absolute(0);
+}
+
+.kanban-view__stacks {
+  display: flex;
+  flex-wrap: nowrap;
+
+  @include absolute(0, auto, 0, 0);
+}
+
+.kanban-view__stack-wrapper {
+  padding: 20px 0 20px 20px;
+
+  &:last-child {
+    padding-right: 20px;
+  }
+}
+
+.kanban-view__collapsed-stack-wrapper {
+  position: relative;
+  width: 40px;
+  height: 100%;
+}
+
+.kanban-view__collapsed-stack {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 20px;
+  transform: rotate(-90deg) translateX(-100%);
+  transform-origin: left top 0;
+
+  @include absolute(0, auto, auto, 0);
+
+  &:hover {
+    text-decoration: none;
+    background-color: rgba(0, 0, 0, 0.075);
+  }
+}
+
+.kanban-view__stack {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  max-height: 100%;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kanban-view__stack-head {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 20px 20px 10px 20px;
+}
+
+.kanban-view__drag {
+  flex: 0 0 12px;
+  height: 16px;
+  cursor: grab;
+  background-image: radial-gradient($color-neutral-300 40%, transparent 40%);
+  background-size: 4px 4px;
+  background-repeat: repeat;
+  margin-right: 10px;
+}
+
+.kanban-view__uncategorized {
+  @extend %ellipsis;
+
+  min-width: 0;
+  width: 100%;
+  margin-right: 10px;
+  line-height: 120%;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kanban-view__option-wrapper {
+  min-width: 0;
+  width: 100%;
+  margin-right: 10px;
+}
+
+.kanban-view__option {
+  @extend %ellipsis;
+
+  @include select-option-style(inline-block, false);
+}
+
+.kanban-view__count {
+  flex: 0 0;
+  background-color: $color-neutral-200;
+  border-radius: 3px;
+  color: $color-neutral-700;
+  padding: 0 8px;
+  margin-right: 10px;
+
+  @include fixed-height(22px, 12px);
+}
+
+.kanban-view__options {
+  flex: 0 0;
+  font-size: 12px;
+  line-height: 22px;
+  color: $color-primary-900;
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-500;
+  }
+}
+
+.kanban-view__stack-cards {
+  position: relative;
+  max-height: 100%;
+  padding: 0 20px;
+}
+
+.kanban-view__stack-card {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 0;
+  margin-bottom: 10px;
+
+  &:last-child {
+    margin-bottom: 3px;
+  }
+
+  &:not(.kanban-view__stack-card--disabled) * {
+    pointer-events: none;
+    user-select: none;
+  }
+
+  &.kanban-view__stack-card--dragging-copy {
+    pointer-events: none;
+    left: 0;
+    right: 0;
+    opacity: 0.9;
+    transform: none !important;
+  }
+
+  &.kanban-view__stack-card--dragging {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+
+    * {
+      visibility: hidden;
+    }
+  }
+
+  .kanban-view__stack--dragging & {
+    // Must be kept in sync with the timeout of KanbanViewStack.vue::moved
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+    transition-property: transform;
+    transition-delay: 0s;
+  }
+
+  &:not(.kanban-view__stack-card--disabled):not(.kanban-view__stack-card--dragging):hover {
+    cursor: pointer;
+    box-shadow: 0 1px 3px 0 rgba($black, 0.32);
+  }
+}
+
+.kanban-view__stack-foot {
+  padding: 10px 20px 20px 20px;
+}
+
+.kanban-view__stack-new-button {
+  width: 100%;
+}
+
+.kanban-view__add-stack {
+  margin: 20px;
+  background-color: $white;
+  border: solid 1px $color-neutral-400;
+  border-radius: 100%;
+  color: $color-primary-900;
+
+  @include center-text(28px, 12px);
+
+  line-height: 26px;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-50;
+  }
+}
+
+.kanban-view__stacked-by-page {
+  margin: 20px auto;
+  width: 320px;
+  border: solid 1px $color-neutral-200;
+  border-radius: 6px;
+  background-color: $white;
+}
+
+.kanban-view__stacked-by {
+  padding: 20px;
+}
+
+.kanban-view__stacked-by-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.kanban-view__stacked-by-description {
+  font-size: 13px;
+  line-height: 18px;
+  margin-bottom: 16px;
+}

@@ -1,0 +1,194 @@
+from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
+from drf_spectacular.utils import extend_schema
+
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from baserow.api.decorators import (
+    map_exceptions,
+    allowed_includes,
+)
+from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
+from baserow.api.schemas import get_error_schema
+from baserow.contrib.database.api.rows.serializers import (
+    get_row_serializer_class,
+    RowSerializer,
+)
+from baserow.contrib.database.views.exceptions import ViewDoesNotExist
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.registries import view_type_registry
+from baserow.core.exceptions import UserNotInGroup
+
+from baserow_premium.views.models import KanbanView
+from baserow_premium.views.exceptions import KanbanViewHasNoSingleSelectField
+from baserow_premium.license.handler import check_active_premium_license
+from baserow_premium.views.handler import get_rows_grouped_by_single_select_field
+
+from .errors import (
+    ERROR_KANBAN_DOES_NOT_EXIST,
+    ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD,
+    ERROR_INVALID_SELECT_OPTION_PARAMETER,
+)
+from .exceptions import InvalidSelectOptionParameter
+from .serializers import (
+    KanbanViewExampleResponseSerializer,
+)
+
+
+class KanbanViewView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns only rows that belong to the related view's "
+                "table.",
+            ),
+            OpenApiParameter(
+                name="include",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Accepts `field_options` as value if the field options "
+                "must also be included in the response.",
+            ),
+            OpenApiParameter(
+                name="limit",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Defines how many rows should be returned by default. "
+                "This value can be overwritten per select option.",
+            ),
+            OpenApiParameter(
+                name="offset",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Defines from which offset the rows should be returned."
+                "This value can be overwritten per select option.",
+            ),
+            OpenApiParameter(
+                name="select_option",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "Accepts multiple `select_option` parameters. If not provided, the "
+                    "rows of all select options will be returned. If one or more "
+                    "`select_option` parameters are provided, then only the rows of "
+                    "those will be included in the response. "
+                    "`?select_option=1&select_option=null` will only include the rows "
+                    "for both select option with id `1` and `null`. "
+                    "`?select_option=1,10,20` will only include the rows of select "
+                    "option id `1` with a limit of `10` and and offset of `20`."
+                ),
+            ),
+        ],
+        tags=["Database table kanban view"],
+        operation_id="list_database_table_kanban_view_rows",
+        description=(
+            "Responds with serialized rows grouped by the view's single select field "
+            "options if the user is authenticated and has access to the related "
+            "group. Additional query parameters can be provided to control the "
+            "`limit` and `offset` per select option."
+            "\n\nThis is a **premium** feature."
+        ),
+        responses={
+            200: KanbanViewExampleResponseSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD",
+                    "ERROR_INVALID_SELECT_OPTION_PARAMETER",
+                    "ERROR_NO_ACTIVE_PREMIUM_LICENSE",
+                ]
+            ),
+            404: get_error_schema(["ERROR_KANBAN_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDoesNotExist: ERROR_KANBAN_DOES_NOT_EXIST,
+            KanbanViewHasNoSingleSelectField: (
+                ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD
+            ),
+            InvalidSelectOptionParameter: ERROR_INVALID_SELECT_OPTION_PARAMETER,
+        }
+    )
+    @allowed_includes("field_options")
+    def get(self, request, view_id, field_options):
+        """Responds with the rows grouped by the view's select option field value."""
+
+        view_handler = ViewHandler()
+        view = view_handler.get_view(view_id, KanbanView)
+        group = view.table.database.group
+
+        # We don't want to check if there is an active premium license if the group
+        # is a template because that feature must then be available for demo purposes.
+        if not group.has_template():
+            check_active_premium_license(request.user)
+
+        group.has_user(request.user, raise_error=True, allow_if_template=True)
+        single_select_option_field = view.single_select_field
+
+        if not single_select_option_field:
+            raise KanbanViewHasNoSingleSelectField(
+                "The requested kanban view does not have a required single select "
+                "option field."
+            )
+
+        # Parse the provided select options from the query parameters. It's possible
+        # to only fetch the rows of specific field options and also
+        all_select_options = request.GET.getlist("select_option")
+        included_select_options = {}
+        for select_option in all_select_options:
+            splitted = select_option.split(",")
+            try:
+                included_select_options[splitted[0]] = {}
+                if 1 < len(splitted):
+                    included_select_options[splitted[0]]["limit"] = int(splitted[1])
+                if 2 < len(splitted):
+                    included_select_options[splitted[0]]["offset"] = int(splitted[2])
+            except ValueError:
+                raise InvalidSelectOptionParameter(splitted[0])
+
+        default_limit = 40
+        default_offset = 0
+
+        try:
+            default_limit = int(request.GET["limit"])
+        except (KeyError, ValueError):
+            pass
+
+        try:
+            default_offset = int(request.GET["offset"])
+        except (KeyError, ValueError):
+            pass
+
+        model = view.table.get_model()
+        serializer_class = get_row_serializer_class(
+            model, RowSerializer, is_response=True
+        )
+        rows = get_rows_grouped_by_single_select_field(
+            table=view.table,
+            single_select_field=single_select_option_field,
+            option_settings=included_select_options,
+            default_limit=default_limit,
+            default_offset=default_offset,
+            model=model,
+        )
+
+        for key, value in rows.items():
+            rows[key]["results"] = serializer_class(value["results"], many=True).data
+
+        response = {"rows": rows}
+
+        if field_options:
+            view_type = view_type_registry.get_by_model(view)
+            context = {"fields": [o["field"] for o in model._field_objects.values()]}
+            serializer_class = view_type.get_field_options_serializer_class()
+            response.update(**serializer_class(view, context=context).data)
+
+        return Response(response)

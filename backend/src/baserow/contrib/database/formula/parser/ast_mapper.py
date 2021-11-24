@@ -1,14 +1,9 @@
 from decimal import Decimal
-from typing import Set
-
-from antlr4 import InputStream, CommonTokenStream
-from antlr4.error.ErrorListener import ErrorListener
 
 from baserow.contrib.database.formula.ast.tree import (
     BaserowStringLiteral,
     BaserowFunctionCall,
     BaserowIntegerLiteral,
-    BaserowFieldByIdReference,
     BaserowFieldReference,
     BaserowExpression,
     BaserowDecimalLiteral,
@@ -17,48 +12,27 @@ from baserow.contrib.database.formula.ast.tree import (
 from baserow.contrib.database.formula.parser.exceptions import (
     InvalidNumberOfArguments,
     BaserowFormulaSyntaxError,
-    MaximumFormulaSizeError,
     UnknownOperator,
-    UnknownFieldByIdReference,
+    FieldByIdReferencesAreDeprecated,
+    MaximumFormulaSizeError,
 )
 from baserow.contrib.database.formula.parser.generated.BaserowFormula import (
     BaserowFormula,
-)
-from baserow.contrib.database.formula.parser.generated.BaserowFormulaLexer import (
-    BaserowFormulaLexer,
 )
 from baserow.contrib.database.formula.parser.generated.BaserowFormulaVisitor import (
     BaserowFormulaVisitor,
 )
 from baserow.contrib.database.formula.parser.parser import (
     convert_string_literal_token_to_string,
-)
-from baserow.contrib.database.formula.parser.replace_field_by_id_with_field import (
-    replace_field_by_id_with_field,
-)
-from baserow.contrib.database.formula.parser.replace_field_with_field_by_id import (
-    replace_field_with_field_by_id,
+    get_parse_tree_for_formula,
 )
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.formula_type import UnTyped
 from baserow.core.exceptions import InstanceTypeDoesNotExist
 
 
-class BaserowFormulaErrorListener(ErrorListener):
-    """
-    A custom error listener as ANTLR's default error listen does not raise an
-    exception if a syntax error is found in a parse tree.
-    """
-
-    # noinspection PyPep8Naming
-    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        msg = msg.replace("<EOF>", "the end of the formula")
-        message = f"Invalid syntax at line {line}, col {column}: {msg}"
-        raise BaserowFormulaSyntaxError(message)
-
-
 def raw_formula_to_untyped_expression(
-    formula: str, valid_field_ids: Set[int]
+    formula: str,
 ) -> BaserowExpression[UnTyped]:
     """
     Takes a raw user input string, syntax checks it to see if it matches the syntax of
@@ -72,47 +46,9 @@ def raw_formula_to_untyped_expression(
         of the Baserow Formula language.
     """
 
-    lexer = BaserowFormulaLexer(InputStream(formula))
-    stream = CommonTokenStream(lexer)
-    parser = BaserowFormula(stream)
-    parser.removeErrorListeners()
-    parser.addErrorListener(BaserowFormulaErrorListener())
-    tree = parser.root()
-    return BaserowFormulaToBaserowASTMapper(valid_field_ids).visit(tree)
-
-
-def replace_field_refs_according_to_new_or_deleted_fields(
-    formula: str, trash_ids_to_names, new_names_to_id
-) -> str:
-    """
-    Given a raw formula string lexs it into a token stream and goes through and replaces
-    all field_by_id references to a id in the provided trash_ids_to_names with a field
-    reference of the corresponding name. Does the opposite operation with
-    new_names_to_id and so will replace any field references with field_by_id according
-    to the names and ids in the dict.
-
-    This method has to work off the tokens directly as once ANTLR parses a token stream
-    into a parse tree it will throw away all hidden channels, which for us are comments
-    and whitespace. Because we want to directly mutate the formula string and store the
-    result here we need to preserve whitespace and hence need to go off the raw tokens
-    which do still include the whitespace and comments.
-
-    :param formula: A raw formula string to transform.
-    :param trash_ids_to_names: A dict of id to name to replace field_by_id(id) with
-        field(name) references.
-    :param new_names_to_id: A dict of name to id to replace field(name) with
-        field_by_id(id) references.
-    :return: A transformed formula string with field_by_id/field references substituted
-        according to the input dicts. Any whitespace or comments will be preserved and
-        still present in this returned formula string.
-    """
     try:
-        field_names_replaced_with_field_by_id = replace_field_with_field_by_id(
-            formula, new_names_to_id
-        )
-        return replace_field_by_id_with_field(
-            field_names_replaced_with_field_by_id, trash_ids_to_names
-        )
+        tree = get_parse_tree_for_formula(formula)
+        return BaserowFormulaToBaserowASTMapper().visit(tree)
     except RecursionError:
         raise MaximumFormulaSizeError()
 
@@ -123,12 +59,9 @@ class BaserowFormulaToBaserowASTMapper(BaserowFormulaVisitor):
 
     Raises an UnknownBinaryOperator if the formula contains an unknown binary operator.
 
-    Raises an UnknownFunctionDefintion if the formula has a function call to a function
+    Raises an UnknownFunctionDefinition if the formula has a function call to a function
     not in the registry.
     """
-
-    def __init__(self, valid_field_ids: Set[int]):
-        self.valid_field_ids = valid_field_ids
 
     def visitRoot(self, ctx: BaserowFormula.RootContext):
         return ctx.expr().accept(self)
@@ -221,10 +154,30 @@ class BaserowFormulaToBaserowASTMapper(BaserowFormulaVisitor):
         field_name = convert_string_literal_token_to_string(
             reference.getText(), reference.SINGLEQ_STRING_LITERAL()
         )
-        return BaserowFieldReference[UnTyped](field_name, None)
+        return BaserowFieldReference[UnTyped](field_name, None, None)
+
+    def visitLookupFieldReference(
+        self, ctx: BaserowFormula.LookupFieldReferenceContext
+    ):
+        reference = ctx.field_reference(0)
+        field_name = convert_string_literal_token_to_string(
+            reference.getText(), reference.SINGLEQ_STRING_LITERAL()
+        )
+        lookup = ctx.field_reference(1)
+        lookup_name = convert_string_literal_token_to_string(
+            lookup.getText(), reference.SINGLEQ_STRING_LITERAL()
+        )
+        return BaserowFieldReference[UnTyped](field_name, lookup_name, None)
 
     def visitFieldByIdReference(self, ctx: BaserowFormula.FieldByIdReferenceContext):
-        field_id = int(str(ctx.INTEGER_LITERAL()))
-        if field_id not in self.valid_field_ids:
-            raise UnknownFieldByIdReference(field_id)
-        return BaserowFieldByIdReference[UnTyped](field_id, None)
+        raise FieldByIdReferencesAreDeprecated()
+
+    def visitLeftWhitespaceOrComments(
+        self, ctx: BaserowFormula.LeftWhitespaceOrCommentsContext
+    ):
+        return ctx.expr().accept(self)
+
+    def visitRightWhitespaceOrComments(
+        self, ctx: BaserowFormula.RightWhitespaceOrCommentsContext
+    ):
+        return ctx.expr().accept(self)

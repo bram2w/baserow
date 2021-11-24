@@ -56,12 +56,30 @@ BaserowFormulaListener.prototype.exitBooleanLiteral = function(ctx) {
 };
 
 
+// Enter a parse tree produced by BaserowFormula#RightWhitespaceOrComments.
+BaserowFormulaListener.prototype.enterRightWhitespaceOrComments = function(ctx) {
+};
+
+// Exit a parse tree produced by BaserowFormula#RightWhitespaceOrComments.
+BaserowFormulaListener.prototype.exitRightWhitespaceOrComments = function(ctx) {
+};
+
+
 // Enter a parse tree produced by BaserowFormula#DecimalLiteral.
 BaserowFormulaListener.prototype.enterDecimalLiteral = function(ctx) {
 };
 
 // Exit a parse tree produced by BaserowFormula#DecimalLiteral.
 BaserowFormulaListener.prototype.exitDecimalLiteral = function(ctx) {
+};
+
+
+// Enter a parse tree produced by BaserowFormula#LeftWhitespaceOrComments.
+BaserowFormulaListener.prototype.enterLeftWhitespaceOrComments = function(ctx) {
+};
+
+// Exit a parse tree produced by BaserowFormula#LeftWhitespaceOrComments.
+BaserowFormulaListener.prototype.exitLeftWhitespaceOrComments = function(ctx) {
 };
 
 
@@ -83,6 +101,15 @@ BaserowFormulaListener.prototype.exitFieldByIdReference = function(ctx) {
 };
 
 
+// Enter a parse tree produced by BaserowFormula#LookupFieldReference.
+BaserowFormulaListener.prototype.enterLookupFieldReference = function(ctx) {
+};
+
+// Exit a parse tree produced by BaserowFormula#LookupFieldReference.
+BaserowFormulaListener.prototype.exitLookupFieldReference = function(ctx) {
+};
+
+
 // Enter a parse tree produced by BaserowFormula#IntegerLiteral.
 BaserowFormulaListener.prototype.enterIntegerLiteral = function(ctx) {
 };
@@ -98,6 +125,15 @@ BaserowFormulaListener.prototype.enterBinaryOp = function(ctx) {
 
 // Exit a parse tree produced by BaserowFormula#BinaryOp.
 BaserowFormulaListener.prototype.exitBinaryOp = function(ctx) {
+};
+
+
+// Enter a parse tree produced by BaserowFormula#ws_or_comment.
+BaserowFormulaListener.prototype.enterWs_or_comment = function(ctx) {
+};
+
+// Exit a parse tree produced by BaserowFormula#ws_or_comment.
+BaserowFormulaListener.prototype.exitWs_or_comment = function(ctx) {
 };
 
 

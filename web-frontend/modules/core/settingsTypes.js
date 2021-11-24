@@ -1,5 +1,6 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import PasswordSettings from '@baserow/modules/core/components/settings/PasswordSettings'
+import AccountSettings from '@baserow/modules/core/components/settings/AccountSettings'
 
 /**
  * All settings types will be added to the settings modal.
@@ -56,6 +57,25 @@ export class SettingsType extends Registerable {
       iconClass: this.iconClass,
       name: this.getName(),
     }
+  }
+}
+
+export class AccountSettingsType extends SettingsType {
+  static getType() {
+    return 'account'
+  }
+
+  getIconClass() {
+    return 'user'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('settingType.account')
+  }
+
+  getComponent() {
+    return AccountSettings
   }
 }
 

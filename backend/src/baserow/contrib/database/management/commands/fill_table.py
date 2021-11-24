@@ -85,10 +85,11 @@ def create_a_column_for_every_type(table):
     field_handler = FieldHandler()
     all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None)
     for field_type_name, all_possible_kwargs in all_kwargs_per_type.items():
-        if field_type_name == "link_row":
+        if field_type_name in ["link_row", "lookup"]:
             continue
         i = 0
         for kwargs in all_possible_kwargs:
+            kwargs.pop("primary", None)
             i = i + 1
             field_handler.create_field(
                 table.database.group.users.first(), table, field_type_name, **kwargs

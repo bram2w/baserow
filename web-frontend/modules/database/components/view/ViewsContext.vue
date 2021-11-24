@@ -1,5 +1,5 @@
 <template>
-  <Context ref="viewsContext" class="select">
+  <Context ref="viewsContext" class="select" @shown="shown">
     <div class="select__search">
       <i class="select__search-icon fas fa-search"></i>
       <input
@@ -37,25 +37,13 @@
         <div class="select__footer-multiple-label">
           {{ $t('viewsContext.addView') }}
         </div>
-        <a
+        <CreateViewLink
           v-for="(viewType, type) in viewTypes"
           :key="type"
-          :ref="'createViewModalToggle' + type"
-          class="select__footer-multiple-item"
-          @click="toggleCreateViewModal(type)"
-        >
-          <i
-            class="select__footer-multiple-icon fas"
-            :class="'fa-' + viewType.iconClass"
-          ></i>
-          {{ viewType.getName() }}
-          <CreateViewModal
-            :ref="'createViewModal' + type"
-            :table="table"
-            :view-type="viewType"
-            @created="scrollViewDropdownToBottom()"
-          ></CreateViewModal>
-        </a>
+          :table="table"
+          :view-type="viewType"
+          @created="scrollViewDropdownToBottom()"
+        ></CreateViewLink>
       </div>
     </div>
   </Context>
@@ -64,17 +52,18 @@
 <script>
 import { mapState } from 'vuex'
 
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import { escapeRegExp } from '@baserow/modules/core/utils/string'
 import context from '@baserow/modules/core/mixins/context'
 import dropdownHelpers from '@baserow/modules/core/mixins/dropdownHelpers'
-import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewsContextItem from '@baserow/modules/database/components/view/ViewsContextItem'
-import CreateViewModal from '@baserow/modules/database/components/view/CreateViewModal'
+import CreateViewLink from '@baserow/modules/database/components/view/CreateViewLink'
 
 export default {
   name: 'ViewsContext',
   components: {
     ViewsContextItem,
-    CreateViewModal,
+    CreateViewLink,
   },
   mixins: [context, dropdownHelpers],
   props: {
@@ -95,6 +84,7 @@ export default {
   data() {
     return {
       query: '',
+      firstShow: true,
     }
   },
   computed: {
@@ -106,10 +96,15 @@ export default {
       isLoaded: (state) => state.view.loaded,
     }),
   },
-  mounted() {
-    this.scrollViewDropdownIfNeeded()
-  },
   methods: {
+    shown() {
+      if (this.firstShow) {
+        this.$nextTick(() => {
+          this.scrollViewDropdownIfNeeded()
+        })
+        this.firstShow = false
+      }
+    },
     selectedView(view) {
       this.hide()
       this.$emit('selected-view', view)
@@ -118,8 +113,12 @@ export default {
       If the currently selected view is not visible inside the dropdown we need to
       scroll just enough so that the selected view is visible as the last element
       in the dropdown.
+      In case there are no views, we don't need to do anything and can simply return.
     */
     scrollViewDropdownIfNeeded() {
+      if (this.views.length === 0) {
+        return
+      }
       const dropdownElement = this.$refs.dropdown
       const selectedViewItem = this.getSelectedViewItem()
       const dropdownHeight = dropdownElement.clientHeight
@@ -176,16 +175,12 @@ export default {
         parentContainerBeforeHeight
       )
     },
-    toggleCreateViewModal(type) {
-      const target = this.$refs['createViewModalToggle' + type][0]
-      this.$refs['createViewModal' + type][0].toggle(target)
-    },
     searchAndOrder(views) {
       const query = this.query
 
       return views
         .filter(function (view) {
-          const regex = new RegExp('(' + query + ')', 'i')
+          const regex = new RegExp('(' + escapeRegExp(query) + ')', 'i')
           return view.name.match(regex)
         })
         .sort((a, b) => a.order - b.order)

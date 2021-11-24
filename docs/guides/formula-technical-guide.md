@@ -137,22 +137,13 @@ error rather than always returning false or something.
 Renaming a field will rename any references to that field in a formula. This is achieved
 by the following process:
 
-* Transforming all formulas stored in the backend so that a `field('name')`
-  reference is replaced with a `field_by_id(1234)` reference where the number is the id
-  of the field.
-* This way internally a formula directly references fields by id and not by name.
-* So renaming a field does not break any formulas as the id remains the same.
-* The frontend then dynamically does the reverse transformation replacing `field_by_id`
-  references with `field` for the user to see and edit in realtime.
+* Updating all formulas referencing that field to reference the new name 
+* Returning these updated fields to the browser.
 
-Sometimes we do not do the backend transformation or reverse it. For example:
-
-* If a field is deleted we transform any references to it back to the `field('name')`
-  format.
+When deleting a field we:
 * Mark the formulas which referenced it as broken with an error.
 * This then lets the user create a new field called `'name'` which will then fix those
-  broken formulas and be substituted in with that new field's id as a
-  `field_by_id`.
+  broken formulas. 
 
 This also can happen when a field is restored from deletion or a field is renamed.
 

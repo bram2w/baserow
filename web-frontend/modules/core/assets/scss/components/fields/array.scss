@@ -1,0 +1,23 @@
+.row-edit-array-field {
+  overflow: hidden;
+  display: flex;
+  flex-flow: row;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+
+  .array-field__item {
+    height: auto;
+    white-space: normal;
+
+    &:not(:last-child) {
+      margin-right: 4px;
+    }
+  }
+
+  .array-field__date {
+    &:not(:last-child) {
+      margin-right: 4px;
+    }
+  }
+}

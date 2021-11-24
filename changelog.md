@@ -1,6 +1,41 @@
 # Changelog
 
-## Unreleased
+## Released (2021-11-24)
+
+* Fixed a bug where the frontend would fail hard if a table with no views was accessed.
+* Tables can now be opened in new browser tabs.
+* **Breaking Change**: Baserow's `docker-compose.yml` now allows setting the MEDIA_URL 
+  env variable. If using MEDIA_PORT you now need to set MEDIA_URL also.
+* **Breaking Change**: Baserow's `docker-compose.yml` container names have changed to
+  no longer be hardcoded to prevent naming clashes.
+* Added a licensing system for the premium version.
+* Fixed bug where it was possible to create duplicate trash entries. 
+* Fixed propType validation error when converting from a date field to a boolean field.
+* Deprecate internal formula field function field_by_id.
+* Made it possible to change user information.
+* Added table webhooks functionality.
+* Added extra indexes for user tables increasing performance.
+* Add lookup field type.
+* Add aggregate formula functions and the lookup formula function.
+* Fixed date_diff formula function.
+* Fixed a bug where the frontend would fail hard when converting a multiple select field
+  inside the row edit modal.
+* Added the kanban view.
+* New templates:
+    * House Search
+    * Personal Health Log
+    * Job Search
+    * Single Trip Planner
+    * Software Application Bug Tracker
+* Updated templates:
+    * Commercial Property Management
+    * Company Asset Tracker
+    * Wedding Planner
+    * Blog Post Management
+    * Home Inventory
+    * Book Writing Guide
+    * Political Campaign Contributions
+    * Applicant Tracker
 
 ## Released (2021-10-05)
 

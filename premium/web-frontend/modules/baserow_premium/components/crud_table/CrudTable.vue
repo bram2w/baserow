@@ -249,6 +249,9 @@ export default {
 
       this.loading = false
     },
+    async refreshPage() {
+      return await this.fetchPage(this.page)
+    },
     updateRow(updatedRow) {
       const i = this.rows.findIndex(
         (u) => u[this.rowIdKey] === updatedRow[this.rowIdKey]

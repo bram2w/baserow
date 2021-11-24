@@ -2,14 +2,15 @@ from django.core.management.color import no_style
 from django.db import connection
 from django.urls import path, include
 
+from baserow.contrib.database.api.serializers import DatabaseSerializer
+from baserow.contrib.database.fields.dependencies.update_collector import (
+    CachingFieldUpdateCollector,
+)
+from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.models import Database, Table
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.registries import ApplicationType
-from baserow.contrib.database.api.serializers import DatabaseSerializer
-from baserow.contrib.database.formula.types.typed_field_updater import (
-    type_table_and_update_fields,
-)
-from baserow.contrib.database.models import Database, Table
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -69,7 +70,7 @@ class DatabaseApplicationType(ApplicationType):
                     view_type.export_serialized(view, files_zip, storage)
                 )
 
-            model = table.get_model(fields=fields)
+            model = table.get_model(fields=fields, add_dependencies=False)
             serialized_rows = []
             table_cache = {}
             for row in model.objects.all():
@@ -126,6 +127,7 @@ class DatabaseApplicationType(ApplicationType):
 
         # Because view properties might depend on fields, we first want to create all
         # the fields.
+        all_fields = []
         for table in tables:
             for field in table["fields"]:
                 field_type = field_type_registry.get(field["type"])
@@ -135,7 +137,12 @@ class DatabaseApplicationType(ApplicationType):
 
                 if field_object:
                     table["_field_objects"].append(field_object)
+                    all_fields.append((field_type, field_object))
 
+        field_cache = FieldCache()
+        for field_type, field in all_fields:
+            field_type.after_import_serialized(field, field_cache)
+        #
         # Now that the all tables and fields exist, we can create the views and create
         # the table schema in the database.
         for table in tables:
@@ -145,17 +152,14 @@ class DatabaseApplicationType(ApplicationType):
                     table["_object"], view, id_mapping, files_zip, storage
                 )
 
-            # Once all the fields have been deserialized and created we have to ensure
-            # all fields have been typed and their formulas have correctly been changed
-            # from containing field('..') to field_by_id(..).
-            typed_table = type_table_and_update_fields(table["_object"])
             # We don't need to create all the fields individually because the schema
             # editor can handle the creation of the table schema in one go.
             with connection.schema_editor() as schema_editor:
                 model = table["_object"].get_model(
                     fields=table["_field_objects"],
                     field_ids=[],
-                    typed_table=typed_table,
+                    managed=True,
+                    add_dependencies=False,
                 )
                 table["_model"] = model
                 schema_editor.create_model(model)
@@ -203,5 +207,12 @@ class DatabaseApplicationType(ApplicationType):
             sequence_sql = connection.ops.sequence_reset_sql(no_style(), [model])
             with connection.cursor() as cursor:
                 cursor.execute(sequence_sql[0])
+
+        for field_type, field in all_fields:
+            update_collector = CachingFieldUpdateCollector(
+                field.table, existing_field_lookup_cache=field_cache
+            )
+            field_type.after_rows_imported(field, [], update_collector)
+            update_collector.apply_updates_returning_updated_fields_in_start_table()
 
         return database

@@ -30,6 +30,10 @@
   }
 }
 
+.button--tiny {
+  @include button-size(12px, 26px, 12px);
+}
+
 .button--large {
   @include button-size(15px, 44px, 28px);
 }

@@ -26,6 +26,7 @@ from baserow.api.groups.invitations.errors import (
     ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
 )
 from baserow.api.schemas import get_error_schema
+from baserow.api.user.registries import user_data_registry
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch,
@@ -195,6 +196,7 @@ class UserView(APIView):
             payload = jwt_payload_handler(user)
             token = jwt_encode_handler(payload)
             response.update(token=token)
+            response.update(**user_data_registry.get_all_user_data(user, request))
 
         return Response(response)
 
@@ -331,28 +333,9 @@ class AccountView(APIView):
 
     @extend_schema(
         tags=["User"],
-        operation_id="get_account",
-        description=(
-            "Responds with account information of the authenticated user. "
-            "For example the chosen `language` and `name` are included "
-            "in the response."
-        ),
-        responses={
-            200: AccountSerializer,
-        },
-    )
-    @transaction.atomic
-    def get(self, request):
-        """Returns user account."""
-
-        account_serializer = AccountSerializer(request.user)
-        return Response(account_serializer.data)
-
-    @extend_schema(
-        tags=["User"],
         request=AccountSerializer,
         operation_id="update_account",
-        description=("Updates the account information of the authenticated user."),
+        description="Updates the account information of the authenticated user.",
         responses={
             200: AccountSerializer,
             400: get_error_schema(

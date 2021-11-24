@@ -21,14 +21,14 @@ def exists(cursor, table_id):
                     columns.column_name = 'created_on'
             )
         """,
-        [f'database_table_{table_id}']
+        [f"database_table_{table_id}"],
     )
     rows = cursor.fetchall()
     return rows[0][0]
 
 
 def add_to_tables(apps, schema_editor):
-    Table = apps.get_model('database', 'Table')
+    Table = apps.get_model("database", "Table")
 
     cursor = connection.cursor()
     with connection.schema_editor() as tables_schema_editor:
@@ -39,14 +39,14 @@ def add_to_tables(apps, schema_editor):
         for table in Table.objects.all():
             if not exists(cursor, table.id):
                 to_model = TableModel.get_model(table, field_ids=[])
-                created_on = to_model._meta.get_field('created_on')
-                updated_on = to_model._meta.get_field('updated_on')
+                created_on = to_model._meta.get_field("created_on")
+                updated_on = to_model._meta.get_field("updated_on")
                 tables_schema_editor.add_field(to_model, created_on)
                 tables_schema_editor.add_field(to_model, updated_on)
 
 
 def remove_from_tables(apps, schema_editor):
-    Table = apps.get_model('database', 'Table')
+    Table = apps.get_model("database", "Table")
 
     cursor = connection.cursor()
     with connection.schema_editor() as tables_schema_editor:
@@ -55,8 +55,8 @@ def remove_from_tables(apps, schema_editor):
         for table in Table.objects.all():
             if exists(cursor, table.id):
                 to_model = TableModel.get_model(table, field_ids=[])
-                created_on = to_model._meta.get_field('created_on')
-                updated_on = to_model._meta.get_field('updated_on')
+                created_on = to_model._meta.get_field("created_on")
+                updated_on = to_model._meta.get_field("updated_on")
                 tables_schema_editor.remove_field(to_model, created_on)
                 tables_schema_editor.remove_field(to_model, updated_on)
 
@@ -64,51 +64,48 @@ def remove_from_tables(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0020_fix_primary_link_row'),
+        ("database", "0020_fix_primary_link_row"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='field',
-            name='created_on',
+            model_name="field",
+            name="created_on",
             field=models.DateTimeField(
-                auto_now_add=True,
-                default=django.utils.timezone.now
+                auto_now_add=True, default=django.utils.timezone.now
             ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='field',
-            name='updated_on',
+            model_name="field",
+            name="updated_on",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AddField(
-            model_name='table',
-            name='created_on',
+            model_name="table",
+            name="created_on",
             field=models.DateTimeField(
-                auto_now_add=True,
-                default=django.utils.timezone.now
+                auto_now_add=True, default=django.utils.timezone.now
             ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='table',
-            name='updated_on',
+            model_name="table",
+            name="updated_on",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AddField(
-            model_name='view',
-            name='created_on',
+            model_name="view",
+            name="created_on",
             field=models.DateTimeField(
-                auto_now_add=True,
-                default=django.utils.timezone.now
+                auto_now_add=True, default=django.utils.timezone.now
             ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='view',
-            name='updated_on',
+            model_name="view",
+            name="updated_on",
             field=models.DateTimeField(auto_now=True),
         ),
-        migrations.RunPython(add_to_tables, remove_from_tables)
+        migrations.RunPython(add_to_tables, remove_from_tables),
     ]

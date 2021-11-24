@@ -34,8 +34,18 @@ class BaserowFormulaVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BaserowFormula#RightWhitespaceOrComments.
+    def visitRightWhitespaceOrComments(self, ctx:BaserowFormula.RightWhitespaceOrCommentsContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BaserowFormula#DecimalLiteral.
     def visitDecimalLiteral(self, ctx:BaserowFormula.DecimalLiteralContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BaserowFormula#LeftWhitespaceOrComments.
+    def visitLeftWhitespaceOrComments(self, ctx:BaserowFormula.LeftWhitespaceOrCommentsContext):
         return self.visitChildren(ctx)
 
 
@@ -49,6 +59,11 @@ class BaserowFormulaVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by BaserowFormula#LookupFieldReference.
+    def visitLookupFieldReference(self, ctx:BaserowFormula.LookupFieldReferenceContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by BaserowFormula#IntegerLiteral.
     def visitIntegerLiteral(self, ctx:BaserowFormula.IntegerLiteralContext):
         return self.visitChildren(ctx)
@@ -56,6 +71,11 @@ class BaserowFormulaVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by BaserowFormula#BinaryOp.
     def visitBinaryOp(self, ctx:BaserowFormula.BinaryOpContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by BaserowFormula#ws_or_comment.
+    def visitWs_or_comment(self, ctx:BaserowFormula.Ws_or_commentContext):
         return self.visitChildren(ctx)
 
 

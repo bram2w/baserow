@@ -76,7 +76,6 @@ class BaseEmailMessage(EmailMultiAlternatives):
 
 
 class GroupInvitationEmail(BaseEmailMessage):
-    subject = _("Group invitation")
     template_name = "baserow/core/group_invitation.html"
 
     def __init__(self, invitation, public_accept_url, *args, **kwargs):
@@ -85,10 +84,10 @@ class GroupInvitationEmail(BaseEmailMessage):
         super().__init__(*args, **kwargs)
 
     def get_subject(self):
-        return (
-            f"{self.invitation.invited_by.first_name} invited you to "
-            f"{self.invitation.group.name} - Baserow"
-        )
+        return _("%(by)s invited you to %(group_name)s - Baserow",) % {
+            "by": self.invitation.invited_by.first_name,
+            "group_name": self.invitation.group.name,
+        }
 
     def get_context(self):
         context = super().get_context()

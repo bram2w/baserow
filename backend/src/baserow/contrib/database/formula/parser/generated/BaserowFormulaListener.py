@@ -53,12 +53,30 @@ class BaserowFormulaListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by BaserowFormula#RightWhitespaceOrComments.
+    def enterRightWhitespaceOrComments(self, ctx:BaserowFormula.RightWhitespaceOrCommentsContext):
+        pass
+
+    # Exit a parse tree produced by BaserowFormula#RightWhitespaceOrComments.
+    def exitRightWhitespaceOrComments(self, ctx:BaserowFormula.RightWhitespaceOrCommentsContext):
+        pass
+
+
     # Enter a parse tree produced by BaserowFormula#DecimalLiteral.
     def enterDecimalLiteral(self, ctx:BaserowFormula.DecimalLiteralContext):
         pass
 
     # Exit a parse tree produced by BaserowFormula#DecimalLiteral.
     def exitDecimalLiteral(self, ctx:BaserowFormula.DecimalLiteralContext):
+        pass
+
+
+    # Enter a parse tree produced by BaserowFormula#LeftWhitespaceOrComments.
+    def enterLeftWhitespaceOrComments(self, ctx:BaserowFormula.LeftWhitespaceOrCommentsContext):
+        pass
+
+    # Exit a parse tree produced by BaserowFormula#LeftWhitespaceOrComments.
+    def exitLeftWhitespaceOrComments(self, ctx:BaserowFormula.LeftWhitespaceOrCommentsContext):
         pass
 
 
@@ -80,6 +98,15 @@ class BaserowFormulaListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by BaserowFormula#LookupFieldReference.
+    def enterLookupFieldReference(self, ctx:BaserowFormula.LookupFieldReferenceContext):
+        pass
+
+    # Exit a parse tree produced by BaserowFormula#LookupFieldReference.
+    def exitLookupFieldReference(self, ctx:BaserowFormula.LookupFieldReferenceContext):
+        pass
+
+
     # Enter a parse tree produced by BaserowFormula#IntegerLiteral.
     def enterIntegerLiteral(self, ctx:BaserowFormula.IntegerLiteralContext):
         pass
@@ -95,6 +122,15 @@ class BaserowFormulaListener(ParseTreeListener):
 
     # Exit a parse tree produced by BaserowFormula#BinaryOp.
     def exitBinaryOp(self, ctx:BaserowFormula.BinaryOpContext):
+        pass
+
+
+    # Enter a parse tree produced by BaserowFormula#ws_or_comment.
+    def enterWs_or_comment(self, ctx:BaserowFormula.Ws_or_commentContext):
+        pass
+
+    # Exit a parse tree produced by BaserowFormula#ws_or_comment.
+    def exitWs_or_comment(self, ctx:BaserowFormula.Ws_or_commentContext):
         pass
 
 

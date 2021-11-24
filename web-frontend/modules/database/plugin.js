@@ -16,6 +16,7 @@ import {
   PhoneNumberFieldType,
   CreatedOnFieldType,
   FormulaFieldType,
+  LookupFieldType,
 } from '@baserow/modules/database/fieldTypes'
 import {
   EqualViewFilterType,
@@ -49,6 +50,11 @@ import {
   XMLImporterType,
   JSONImporterType,
 } from '@baserow/modules/database/importerTypes'
+import {
+  RowCreatedWebhookEventType,
+  RowUpdatedWebhookEventType,
+  RowDeletedWebhookEventType,
+} from '@baserow/modules/database/webhookEventTypes'
 import { APITokenSettingsType } from '@baserow/modules/database/settingsTypes'
 
 import tableStore from '@baserow/modules/database/store/table'
@@ -56,6 +62,7 @@ import viewStore from '@baserow/modules/database/store/view'
 import fieldStore from '@baserow/modules/database/store/field'
 import gridStore from '@baserow/modules/database/store/view/grid'
 import formStore from '@baserow/modules/database/store/view/form'
+import rowModal from '@baserow/modules/database/store/rowModal'
 
 import { registerRealtimeEvents } from '@baserow/modules/database/realtime'
 import { CSVTableExporterType } from '@baserow/modules/database/exporterTypes'
@@ -92,13 +99,51 @@ import {
   BaserowReverse,
   BaserowLength,
   BaserowNotEqual,
+  BaserowLookup,
+  BaserowSum,
+  BaserowAvg,
+  BaserowVariancePop,
+  BaserowVarianceSample,
+  BaserowStddevSample,
+  BaserowStddevPop,
+  BaserowJoin,
+  BaserowCount,
+  BaserowMin,
+  BaserowMax,
+  BaserowEvery,
+  BaserowAny,
+  BaserowWhenEmpty,
+  BaserowSecond,
+  BaserowYear,
+  BaserowMonth,
+  BaserowLeast,
+  BaserowGreatest,
+  BaserowRegexReplace,
+  BaserowTrim,
+  BaserowRight,
+  BaserowLeft,
+  BaserowContains,
+  BaserowFilter,
 } from '@baserow/modules/database/formula/functions'
+import {
+  BaserowFormulaArrayType,
+  BaserowFormulaBooleanType,
+  BaserowFormulaCharType,
+  BaserowFormulaDateIntervalType,
+  BaserowFormulaDateType,
+  BaserowFormulaInvalidType,
+  BaserowFormulaNumberType,
+  BaserowFormulaSingleSelectType,
+  BaserowFormulaSpecialType,
+  BaserowFormulaTextType,
+} from '@baserow/modules/database/formula/formulaTypes'
 
 export default (context) => {
   const { store, app } = context
   store.registerModule('table', tableStore)
   store.registerModule('view', viewStore)
   store.registerModule('field', fieldStore)
+  store.registerModule('rowModal', rowModal)
   store.registerModule('page/view/grid', gridStore)
   store.registerModule('page/view/form', formStore)
   store.registerModule('template/view/grid', gridStore)
@@ -167,51 +212,113 @@ export default (context) => {
   app.$registry.register('field', new MultipleSelectFieldType(context))
   app.$registry.register('field', new PhoneNumberFieldType(context))
   app.$registry.register('field', new FormulaFieldType(context))
+  app.$registry.register('field', new LookupFieldType(context))
   app.$registry.register('importer', new CSVImporterType(context))
   app.$registry.register('importer', new PasteImporterType(context))
   app.$registry.register('importer', new XMLImporterType(context))
   app.$registry.register('importer', new JSONImporterType(context))
   app.$registry.register('settings', new APITokenSettingsType(context))
   app.$registry.register('exporter', new CSVTableExporterType(context))
+  app.$registry.register(
+    'webhookEvent',
+    new RowCreatedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new RowUpdatedWebhookEventType(context)
+  )
+  app.$registry.register(
+    'webhookEvent',
+    new RowDeletedWebhookEventType(context)
+  )
 
   // Text functions
-  app.$registry.register('formula_function', new BaserowUpper())
-  app.$registry.register('formula_function', new BaserowLower())
-  app.$registry.register('formula_function', new BaserowConcat())
-  app.$registry.register('formula_function', new BaserowToText())
-  app.$registry.register('formula_function', new BaserowT())
-  app.$registry.register('formula_function', new BaserowReplace())
-  app.$registry.register('formula_function', new BaserowSearch())
-  app.$registry.register('formula_function', new BaserowLength())
-  app.$registry.register('formula_function', new BaserowReverse())
+  app.$registry.register('formula_function', new BaserowUpper(context))
+  app.$registry.register('formula_function', new BaserowLower(context))
+  app.$registry.register('formula_function', new BaserowConcat(context))
+  app.$registry.register('formula_function', new BaserowToText(context))
+  app.$registry.register('formula_function', new BaserowT(context))
+  app.$registry.register('formula_function', new BaserowReplace(context))
+  app.$registry.register('formula_function', new BaserowSearch(context))
+  app.$registry.register('formula_function', new BaserowLength(context))
+  app.$registry.register('formula_function', new BaserowReverse(context))
   // Number functions
-  app.$registry.register('formula_function', new BaserowMultiply())
-  app.$registry.register('formula_function', new BaserowDivide())
-  app.$registry.register('formula_function', new BaserowToNumber())
+  app.$registry.register('formula_function', new BaserowMultiply(context))
+  app.$registry.register('formula_function', new BaserowDivide(context))
+  app.$registry.register('formula_function', new BaserowToNumber(context))
   // Boolean functions
-  app.$registry.register('formula_function', new BaserowIf())
-  app.$registry.register('formula_function', new BaserowEqual())
-  app.$registry.register('formula_function', new BaserowIsBlank())
-  app.$registry.register('formula_function', new BaserowNot())
-  app.$registry.register('formula_function', new BaserowNotEqual())
-  app.$registry.register('formula_function', new BaserowGreaterThan())
-  app.$registry.register('formula_function', new BaserowGreaterThanOrEqual())
-  app.$registry.register('formula_function', new BaserowLessThan())
-  app.$registry.register('formula_function', new BaserowLessThanOrEqual())
-  app.$registry.register('formula_function', new BaserowAnd())
-  app.$registry.register('formula_function', new BaserowOr())
+  app.$registry.register('formula_function', new BaserowIf(context))
+  app.$registry.register('formula_function', new BaserowEqual(context))
+  app.$registry.register('formula_function', new BaserowIsBlank(context))
+  app.$registry.register('formula_function', new BaserowNot(context))
+  app.$registry.register('formula_function', new BaserowNotEqual(context))
+  app.$registry.register('formula_function', new BaserowGreaterThan(context))
+  app.$registry.register(
+    'formula_function',
+    new BaserowGreaterThanOrEqual(context)
+  )
+  app.$registry.register('formula_function', new BaserowLessThan(context))
+  app.$registry.register(
+    'formula_function',
+    new BaserowLessThanOrEqual(context)
+  )
+  app.$registry.register('formula_function', new BaserowAnd(context))
+  app.$registry.register('formula_function', new BaserowOr(context))
   // Date functions
-  app.$registry.register('formula_function', new BaserowDatetimeFormat())
-  app.$registry.register('formula_function', new BaserowDay())
-  app.$registry.register('formula_function', new BaserowToDate())
-  app.$registry.register('formula_function', new BaserowDateDiff())
+  app.$registry.register('formula_function', new BaserowDatetimeFormat(context))
+  app.$registry.register('formula_function', new BaserowDay(context))
+  app.$registry.register('formula_function', new BaserowToDate(context))
+  app.$registry.register('formula_function', new BaserowDateDiff(context))
   // Date interval functions
-  app.$registry.register('formula_function', new BaserowDateInterval())
+  app.$registry.register('formula_function', new BaserowDateInterval(context))
   // Special functions
-  app.$registry.register('formula_function', new BaserowAdd())
-  app.$registry.register('formula_function', new BaserowMinus())
-  app.$registry.register('formula_function', new BaserowField())
-  app.$registry.register('formula_function', new BaserowRowId())
+  app.$registry.register('formula_function', new BaserowAdd(context))
+  app.$registry.register('formula_function', new BaserowMinus(context))
+  app.$registry.register('formula_function', new BaserowField(context))
+  app.$registry.register('formula_function', new BaserowLookup(context))
+  app.$registry.register('formula_function', new BaserowRowId(context))
+  app.$registry.register('formula_function', new BaserowContains(context))
+  app.$registry.register('formula_function', new BaserowLeft(context))
+  app.$registry.register('formula_function', new BaserowRight(context))
+  app.$registry.register('formula_function', new BaserowTrim(context))
+  app.$registry.register('formula_function', new BaserowRegexReplace(context))
+  app.$registry.register('formula_function', new BaserowGreatest(context))
+  app.$registry.register('formula_function', new BaserowLeast(context))
+  app.$registry.register('formula_function', new BaserowMonth(context))
+  app.$registry.register('formula_function', new BaserowYear(context))
+  app.$registry.register('formula_function', new BaserowSecond(context))
+  app.$registry.register('formula_function', new BaserowWhenEmpty(context))
+  app.$registry.register('formula_function', new BaserowAny(context))
+  app.$registry.register('formula_function', new BaserowEvery(context))
+  app.$registry.register('formula_function', new BaserowMax(context))
+  app.$registry.register('formula_function', new BaserowMin(context))
+  app.$registry.register('formula_function', new BaserowCount(context))
+  app.$registry.register('formula_function', new BaserowJoin(context))
+  app.$registry.register('formula_function', new BaserowStddevPop(context))
+  app.$registry.register('formula_function', new BaserowStddevSample(context))
+  app.$registry.register('formula_function', new BaserowVarianceSample(context))
+  app.$registry.register('formula_function', new BaserowVariancePop(context))
+  app.$registry.register('formula_function', new BaserowAvg(context))
+  app.$registry.register('formula_function', new BaserowSum(context))
+  app.$registry.register('formula_function', new BaserowFilter(context))
+
+  // Formula Types
+  app.$registry.register('formula_type', new BaserowFormulaTextType(context))
+  app.$registry.register('formula_type', new BaserowFormulaCharType(context))
+  app.$registry.register('formula_type', new BaserowFormulaBooleanType(context))
+  app.$registry.register('formula_type', new BaserowFormulaDateType(context))
+  app.$registry.register(
+    'formula_type',
+    new BaserowFormulaDateIntervalType(context)
+  )
+  app.$registry.register('formula_type', new BaserowFormulaNumberType(context))
+  app.$registry.register('formula_type', new BaserowFormulaArrayType(context))
+  app.$registry.register('formula_type', new BaserowFormulaSpecialType(context))
+  app.$registry.register('formula_type', new BaserowFormulaInvalidType(context))
+  app.$registry.register(
+    'formula_type',
+    new BaserowFormulaSingleSelectType(context)
+  )
 
   registerRealtimeEvents(app.$realtime)
 }

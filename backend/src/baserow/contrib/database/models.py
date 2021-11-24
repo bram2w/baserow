@@ -22,6 +22,15 @@ from .fields.models import (
     PhoneNumberField,
 )
 from .tokens.models import Token, TokenPermission
+from .webhooks.models import (
+    TableWebhook,
+    TableWebhookEvent,
+    TableWebhookCall,
+    TableWebhookHeader,
+)
+from baserow.contrib.database.fields.dependencies.models import (
+    FieldDependency,
+)
 
 __all__ = [
     "Database",
@@ -44,6 +53,11 @@ __all__ = [
     "PhoneNumberField",
     "Token",
     "TokenPermission",
+    "TableWebhook",
+    "TableWebhookEvent",
+    "TableWebhookHeader",
+    "TableWebhookCall",
+    "FieldDependency",
 ]
 
 

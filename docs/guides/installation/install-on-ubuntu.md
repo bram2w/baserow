@@ -129,6 +129,8 @@ $ source env/bin/activate
 
 # Install backend dependencies through pip
 $ pip3 install -e ./baserow/backend
+# Install the premium plugin
+$ pip3 install -e ./baserow/premium/backend
 
 # Deactivate the virtual environment
 $ deactivate
@@ -370,6 +372,7 @@ $ git pull
 $ cd /baserow
 $ source env/bin/activate
 $ pip3 install -e ./baserow/backend
+$ pip3 install -e ./baserow/premium/backend
 $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST='localhost'
@@ -391,6 +394,7 @@ $ cd /baserow
 $ git pull
 $ source backend/env/bin/activate
 $ pip3 install -e ./backend
+$ pip3 install -e ./premium/backend
 $ export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 $ export DATABASE_PASSWORD='yourpassword'
 $ export DATABASE_HOST='localhost'

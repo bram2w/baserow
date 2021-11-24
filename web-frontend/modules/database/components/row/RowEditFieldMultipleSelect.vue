@@ -26,7 +26,7 @@
       @click.prevent="toggleDropdown()"
     >
       <i class="fas fa-plus add__icon"></i>
-      Add another option
+      {{ $t('rowEditFieldMultipleSelect.addOption') }}
     </a>
     <FieldSelectOptionsDropdown
       ref="dropdown"
@@ -56,3 +56,18 @@ export default {
   mixins: [rowEditField, selectOptions, multipleSelectField],
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "rowEditFieldMultipleSelect": {
+      "addOption": "Add another option"
+    }
+  },
+  "fr": {
+    "rowEditFieldMultipleSelect": {
+      "addOption": "Ajouter une option"
+    }
+  }
+}
+</i18n>

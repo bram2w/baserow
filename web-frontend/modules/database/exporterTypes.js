@@ -50,7 +50,6 @@ export class TableExporterType extends Registerable {
     super(...args)
     this.type = this.getType()
     this.iconClass = this.getIconClass()
-    this.name = this.getName()
     this.canExportTable = this.getCanExportTable()
     this.supportedViews = this.getSupportedViews()
 
@@ -63,10 +62,21 @@ export class TableExporterType extends Registerable {
     return {
       type: this.type,
       iconClass: this.iconClass,
-      name: this.name,
       canExportTable: this.canExportTable,
       supportedViews: this.supportedViews,
     }
+  }
+
+  /**
+   * If the exporter type is disabled, this text will be visible explaining why.
+   */
+  getDeactivatedText() {}
+
+  /**
+   * Indicates if the exporter type is disabled.
+   */
+  isDeactivated() {
+    return false
   }
 }
 
@@ -80,7 +90,8 @@ export class CSVTableExporterType extends TableExporterType {
   }
 
   getName() {
-    return 'Export to CSV'
+    const { i18n } = this.app
+    return i18n.t('exporterType.csv')
   }
 
   getFormComponent() {

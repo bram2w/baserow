@@ -30,7 +30,7 @@ RUN (mkdir -p /app/code/cloudron/cloudron && \
     touch /app/code/cloudron/cloudron/__init__.py)
 ADD settings.py /app/code/cloudron/cloudron
 
-ENV PYTHONPATH $PYTHONPATH:/app/code/baserow/backend/src:/app/code/cloudron
+ENV PYTHONPATH $PYTHONPATH:/app/code/baserow/backend/src:/app/code/baserow/premium/backend/src:/app/code/cloudron
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ENV TMPDIR=/run/temp

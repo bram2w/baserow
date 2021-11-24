@@ -3,31 +3,38 @@ from pytz import timezone
 
 from datetime import timedelta, datetime, date
 
+from django.test.utils import override_settings
+
 from baserow.core.models import UserLogEntry
 
 from baserow_premium.admin.dashboard.handler import AdminDashboardHandler
 
 
 @pytest.mark.django_db
-def test_get_new_user_counts(data_fixture):
+@override_settings(DEBUG=True)
+def test_get_new_user_counts(premium_data_fixture):
     tz = timezone("UTC")
 
-    data_fixture.create_user(date_joined=datetime(2020, 12, 30, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 1, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 2, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 3, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 4, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 5, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 10, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 23, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 24, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 25, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 26, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 27, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 28, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 29, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 30, 12, 1, tzinfo=tz))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 30, 15, 1, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2020, 12, 30, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 1, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 2, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 3, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 4, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 5, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 10, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 23, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 24, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 25, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 26, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 27, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 28, tzinfo=tz))
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 29, tzinfo=tz))
+    premium_data_fixture.create_user(
+        date_joined=datetime(2021, 1, 30, 12, 1, tzinfo=tz)
+    )
+    premium_data_fixture.create_user(
+        date_joined=datetime(2021, 1, 30, 15, 1, tzinfo=tz)
+    )
 
     handler = AdminDashboardHandler()
     now = datetime(2021, 1, 30, 23, 59, tzinfo=tz)
@@ -67,12 +74,13 @@ def test_get_new_user_counts(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_active_user_counts(data_fixture):
+@override_settings(DEBUG=True)
+def test_get_active_user_counts(premium_data_fixture):
     tz = timezone("UTC")
 
-    user_1 = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
-    user_3 = data_fixture.create_user()
+    user_1 = premium_data_fixture.create_user()
+    user_2 = premium_data_fixture.create_user()
+    user_3 = premium_data_fixture.create_user()
 
     def create_entries(user, dates):
         for d in dates:
@@ -184,18 +192,33 @@ def test_get_active_user_counts(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_new_users_per_day(data_fixture):
+@override_settings(DEBUG=True)
+def test_get_new_users_per_day(premium_data_fixture):
     utc = timezone("UTC")
     gmt3 = timezone("Etc/GMT+3")
 
-    data_fixture.create_user(date_joined=datetime(2020, 12, 29, 12, 1, tzinfo=utc))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 1, 1, 1, tzinfo=utc))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 1, 12, 1, tzinfo=utc))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 2, 12, 1, tzinfo=utc))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 2, 12, 1, tzinfo=utc))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 2, 12, 1, tzinfo=utc))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 30, 12, 1, tzinfo=utc))
-    data_fixture.create_user(date_joined=datetime(2021, 1, 30, 15, 1, tzinfo=utc))
+    premium_data_fixture.create_user(
+        date_joined=datetime(2020, 12, 29, 12, 1, tzinfo=utc)
+    )
+    premium_data_fixture.create_user(date_joined=datetime(2021, 1, 1, 1, 1, tzinfo=utc))
+    premium_data_fixture.create_user(
+        date_joined=datetime(2021, 1, 1, 12, 1, tzinfo=utc)
+    )
+    premium_data_fixture.create_user(
+        date_joined=datetime(2021, 1, 2, 12, 1, tzinfo=utc)
+    )
+    premium_data_fixture.create_user(
+        date_joined=datetime(2021, 1, 2, 12, 1, tzinfo=utc)
+    )
+    premium_data_fixture.create_user(
+        date_joined=datetime(2021, 1, 2, 12, 1, tzinfo=utc)
+    )
+    premium_data_fixture.create_user(
+        date_joined=datetime(2021, 1, 30, 12, 1, tzinfo=utc)
+    )
+    premium_data_fixture.create_user(
+        date_joined=datetime(2021, 1, 30, 15, 1, tzinfo=utc)
+    )
 
     handler = AdminDashboardHandler()
 
@@ -225,13 +248,14 @@ def test_get_new_users_per_day(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_active_users_per_day(data_fixture):
+@override_settings(DEBUG=True)
+def test_get_active_users_per_day(premium_data_fixture):
     utc = timezone("UTC")
     gmt3 = timezone("Etc/GMT+3")
 
-    user_1 = data_fixture.create_user()
-    user_2 = data_fixture.create_user()
-    user_3 = data_fixture.create_user()
+    user_1 = premium_data_fixture.create_user()
+    user_2 = premium_data_fixture.create_user()
+    user_3 = premium_data_fixture.create_user()
 
     def create_entries(user, dates):
         for d in dates:

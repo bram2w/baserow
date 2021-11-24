@@ -75,7 +75,7 @@ VALID_FORMULA_TESTS = [
     ("todate('blah', 'YYYY')", None),
     ("day(todate('20170103','YYYYMMDD'))", "3"),
     (
-        "datediff("
+        "date_diff("
         "'yy', "
         "todate('20200101', 'YYYYMMDD'), "
         "todate('20100101', 'YYYYMMDD')"
@@ -83,7 +83,7 @@ VALID_FORMULA_TESTS = [
         "-10",
     ),
     (
-        "datediff("
+        "date_diff("
         "'incorrect thingy', "
         "todate('20200101', 'YYYYMMDD'), "
         "todate('20100101', 'YYYYMMDD')"
@@ -127,6 +127,11 @@ VALID_FORMULA_TESTS = [
     ("not(isblank(tonumber('x')))", True),
     ("if(1=1, todate('20200101', 'YYYYMMDD'), 'other')", "2020-01-01"),
     ("not(isblank('')) != false", False),
+    ("contains('a', '')", True),
+    ("contains('a', 'a')", True),
+    ("contains('a', 'x')", False),
+    ("left('a', 2)", "a"),
+    ("left('abc', 2)", "ab"),
 ]
 
 
@@ -228,6 +233,36 @@ COMPLEX_VALID_TESTS = [
         ),
     ),
     a_test_case(
+        "Can use datediff on fields",
+        given_a_table(
+            columns=[
+                (
+                    "date1",
+                    {"type": "date", "date_format": "EU", "date_include_time": True},
+                ),
+                (
+                    "date2",
+                    {"type": "date", "date_format": "EU", "date_include_time": True},
+                ),
+            ],
+            rows=[
+                ["2020-02-01T00:10:00Z", "2020-03-02T00:10:00Z"],
+                ["2020-02-01T02:00:00Z", "2020-10-01T04:00:00Z"],
+                [None, None],
+            ],
+        ),
+        when_a_formula_field_is_added(
+            "date_diff('dd', field('date1'), " "field('date2'))"
+        ),
+        then_expect_the_rows_to_be(
+            [
+                ["2020-02-01T00:10:00Z", "2020-03-02T00:10:00Z", "30"],
+                ["2020-02-01T02:00:00Z", "2020-10-01T04:00:00Z", "243"],
+                [None, None, None],
+            ]
+        ),
+    ),
+    a_test_case(
         "Can use a boolean field in an if",
         given_a_table(
             columns=[("boolean", "boolean")],
@@ -312,6 +347,7 @@ INVALID_FORMULA_TESTS = [
     ("10/LOWER(1)", "ERROR_WITH_FORMULA", None),
     ("'t'/1", "ERROR_WITH_FORMULA", None),
     ("1/'t'", "ERROR_WITH_FORMULA", None),
+    ("field(9999)", "ERROR_WITH_FORMULA", None),
     ("field_by_id(9999)", "ERROR_WITH_FORMULA", None),
     (
         "upper(1)",
@@ -356,6 +392,13 @@ INVALID_FORMULA_TESTS = [
         "ERROR_WITH_FORMULA",
         "Error with formula: argument number 2 given to operator - was of type date "
         "but the only usable type for this argument is date_interval.",
+    ),
+    (
+        'left("aa", 2.0)',
+        "ERROR_WITH_FORMULA",
+        "Error with formula: argument number 2 given to function left was of type "
+        "number but the only usable type for this argument is a whole number with no "
+        "decimal places.",
     ),
 ]
 

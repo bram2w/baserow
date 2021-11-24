@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "baserow.api",
     "baserow.ws",
     "baserow.contrib.database",
+    "baserow_premium",
 ]
 
 ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", None)
@@ -217,7 +218,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.6.0",
+    "VERSION": "1.7.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -235,8 +236,10 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table view sortings"},
         {"name": "Database table grid view"},
         {"name": "Database table form view"},
+        {"name": "Database table kanban view"},
         {"name": "Database table rows"},
         {"name": "Database table export"},
+        {"name": "Database table webhooks"},
         {"name": "Database tokens"},
         {"name": "Admin"},
     ],
@@ -352,3 +355,13 @@ FILE_UPLOAD_PERMISSIONS = None
 
 
 MAX_FORMULA_STRING_LENGTH = 10000
+MAX_FIELD_REFERENCE_DEPTH = 1000
+UPDATE_FORMULAS_AFTER_MIGRATION = bool(
+    os.getenv("UPDATE_FORMULAS_AFTER_MIGRATION", "yes")
+)
+
+WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES = 8
+WEBHOOKS_MAX_RETRIES_PER_CALL = 8
+WEBHOOKS_MAX_PER_TABLE = 20
+WEBHOOKS_MAX_CALL_LOG_ENTRIES = 10
+WEBHOOKS_REQUEST_TIMEOUT_SECONDS = 5

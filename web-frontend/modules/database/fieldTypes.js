@@ -56,6 +56,19 @@ import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/R
 import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row/RowEditFieldMultipleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 
+import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
+import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
+import RowCardFieldEmail from '@baserow/modules/database/components/card/RowCardFieldEmail'
+import RowCardFieldFile from '@baserow/modules/database/components/card/RowCardFieldFile'
+import RowCardFieldFormula from '@baserow/modules/database/components/card/RowCardFieldFormula'
+import RowCardFieldLinkRow from '@baserow/modules/database/components/card/RowCardFieldLinkRow'
+import RowCardFieldMultipleSelect from '@baserow/modules/database/components/card/RowCardFieldMultipleSelect'
+import RowCardFieldNumber from '@baserow/modules/database/components/card/RowCardFieldNumber'
+import RowCardFieldPhoneNumber from '@baserow/modules/database/components/card/RowCardFieldPhoneNumber'
+import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/RowCardFieldSingleSelect'
+import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
+import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
+
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
@@ -69,6 +82,7 @@ import {
 } from '@baserow/modules/database/utils/fieldFilters'
 import GridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula'
 import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
+import FieldLookupSubForm from '@baserow/modules/database/components/field/FieldLookupSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 
 export class FieldType extends Registerable {
@@ -142,6 +156,26 @@ export class FieldType extends Registerable {
    */
   getFormViewFieldComponent() {
     return this.getRowEditFieldComponent()
+  }
+
+  /**
+   * This component should represent the field's value in a row card display. To
+   * improve performance, this component should be a functional component.
+   */
+  getCardComponent() {
+    throw new Error(
+      'Not implement error. This method should return a component.'
+    )
+  }
+
+  /**
+   * In some cases, for example with the kanban view or the gallery view, we want to
+   * only show the visible cards. In order to calculate the correct position of
+   * those cards, we need to know the height. Because every field could have a
+   * different height in the card, it must be returned here.
+   */
+  getCardValueHeight(field) {
+    return this.getCardComponent().height || 0
   }
 
   /**
@@ -366,10 +400,10 @@ export class FieldType extends Registerable {
    * Converts rowValue to its human readable form first before applying the
    * filter returned from getContainsFilterFunction.
    */
-  containsFilter(rowValue, filterValue, field, $registry) {
+  containsFilter(rowValue, filterValue, field) {
     return (
       filterValue === '' ||
-      this.getContainsFilterFunction(field, $registry)(
+      this.getContainsFilterFunction(field)(
         rowValue,
         this.toHumanReadableString(field, rowValue),
         filterValue
@@ -445,6 +479,14 @@ export class FieldType extends Registerable {
   getIsReadOnly() {
     return false
   }
+
+  /**
+   * Override and return true if the field type can be referenced by a formula field.
+   * @return {boolean}
+   */
+  canBeReferencedByFormulaField() {
+    return false
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -477,6 +519,10 @@ export class TextFieldType extends FieldType {
     return RowEditFieldText
   }
 
+  getCardComponent() {
+    return RowCardFieldText
+  }
+
   getEmptyValue(field) {
     return field.text_default
   }
@@ -497,7 +543,7 @@ export class TextFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts single line text.'
+    return this.app.i18n.t('fieldDocs.text')
   }
 
   getDocsRequestExample(field) {
@@ -506,6 +552,10 @@ export class TextFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -535,6 +585,10 @@ export class LongTextFieldType extends FieldType {
     return RowEditFieldLongText
   }
 
+  getCardComponent() {
+    return RowCardFieldText
+  }
+
   getEmptyValue(field) {
     return ''
   }
@@ -555,7 +609,7 @@ export class LongTextFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts multi line text.'
+    return this.app.i18n.t('fieldDocs.longText')
   }
 
   getDocsRequestExample(field) {
@@ -564,6 +618,10 @@ export class LongTextFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -599,6 +657,10 @@ export class LinkRowFieldType extends FieldType {
 
   getFormViewFieldComponent() {
     return FormViewFieldLinkRow
+  }
+
+  getCardComponent() {
+    return RowCardFieldLinkRow
   }
 
   getEmptyValue(field) {
@@ -660,12 +722,7 @@ export class LinkRowFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return (
-      `Accepts an array containing the identifiers of the related rows from table ` +
-      `${field.link_row_table}. All identifiers must be provided every time the ` +
-      `relations are updated. If an empty array is provided all relations will be ` +
-      `deleted.`
-    )
+    return this.app.i18n.t('fieldDocs.linkRow', { table: field.link_row_table })
   }
 
   getDocsRequestExample(field) {
@@ -679,6 +736,10 @@ export class LinkRowFieldType extends FieldType {
         value: 'string',
       },
     ]
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -714,6 +775,10 @@ export class NumberFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldNumber
+  }
+
+  getCardComponent() {
+    return RowCardFieldNumber
   }
 
   getSortIndicator() {
@@ -758,13 +823,15 @@ export class NumberFieldType extends FieldType {
       return null
     }
     if (isNaN(parseFloat(value)) || !isFinite(value)) {
-      return 'Invalid number'
+      return this.app.i18n.t('fieldErrors.invalidNumber')
     }
     if (
       value.split('.')[0].replace('-', '').length >
       NumberFieldType.getMaxNumberLength()
     ) {
-      return `Max ${NumberFieldType.getMaxNumberLength()} digits allowed.`
+      return this.app.i18n.t('fieldErrors.maxDigits', {
+        max: NumberFieldType.getMaxNumberLength(),
+      })
     }
     return null
   }
@@ -809,18 +876,13 @@ export class NumberFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    let description = 'Accepts a '
-
+    let t = field.number_type === 'INTEGER' ? 'number' : 'decimal'
     if (!field.number_negative) {
-      description += 'positive '
+      t += 'Positive'
     }
-
-    description +=
-      field.number_type === 'DECIMAL'
-        ? `decimal with ${field.number_decimal_places} places after the dot.`
-        : 'number.'
-
-    return description
+    return this.app.i18n.t(`fieldDocs.${t}`, {
+      places: field.number_decimal_places,
+    })
   }
 
   getDocsRequestExample(field) {
@@ -836,6 +898,10 @@ export class NumberFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -863,6 +929,10 @@ export class BooleanFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldBoolean
+  }
+
+  getCardComponent() {
+    return RowCardFieldBoolean
   }
 
   getEmptyValue(field) {
@@ -895,10 +965,14 @@ export class BooleanFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts a boolean.'
+    return this.app.i18n.t('fieldDocs.boolean')
   }
 
   getDocsRequestExample(field) {
+    return true
+  }
+
+  canBeReferencedByFormulaField() {
     return true
   }
 }
@@ -914,6 +988,10 @@ class BaseDateFieldType extends FieldType {
 
   getFormComponent() {
     return FieldDateSubForm
+  }
+
+  getCardComponent() {
+    return RowCardFieldDate
   }
 
   getSort(name, order) {
@@ -982,8 +1060,8 @@ class BaseDateFieldType extends FieldType {
 
   getDocsDescription(field) {
     return field.date_include_time
-      ? 'Accepts a date time in ISO format.'
-      : 'Accepts a date in ISO format.'
+      ? this.app.i18n.t('fieldDocs.dateTime')
+      : this.app.i18n.t('fieldDocs.date')
   }
 
   getDocsRequestExample(field) {
@@ -992,6 +1070,10 @@ class BaseDateFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -1082,10 +1164,11 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
   }
 
   getDocsDescription(field, firstPartOverwrite) {
-    const firstPart = firstPartOverwrite || 'This is a read only field.'
+    const firstPart =
+      firstPartOverwrite || this.app.i18n.t('fieldDocs.readOnly')
     return field.date_include_time
-      ? `${firstPart} The response will be a datetime in ISO format.`
-      : `${firstPart} The response will be a date in ISO format.`
+      ? `${firstPart} ${this.app.i18n.t('fieldDocs.dateTimeResponse')}`
+      : `${firstPart} ${this.app.i18n.t('fieldDocs.dateResponse')}`
   }
 
   getDocsRequestExample(field) {
@@ -1114,7 +1197,7 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
   getDocsDescription(field) {
     return super.getDocsDescription(
       field,
-      'The last modified field is a read only field.'
+      this.app.i18n.t('fieldDocs.lastModifiedReadOnly')
     )
   }
 
@@ -1150,7 +1233,7 @@ export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
   getDocsDescription(field) {
     return super.getDocsDescription(
       field,
-      'The created on field is a read only field.'
+      this.app.i18n.t('fieldDocs.createdOnReadOnly')
     )
   }
 
@@ -1186,6 +1269,10 @@ export class URLFieldType extends FieldType {
     return RowEditFieldURL
   }
 
+  getCardComponent() {
+    return RowCardFieldURL
+  }
+
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
     return isValidURL(value) ? value : ''
@@ -1211,7 +1298,7 @@ export class URLFieldType extends FieldType {
       return null
     }
     if (!isValidURL(value)) {
-      return 'Invalid URL'
+      return this.app.i18n.t('fieldErrors.invalidUrl')
     }
     return null
   }
@@ -1221,7 +1308,7 @@ export class URLFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts a string that must be a URL.'
+    return this.app.i18n.t('fieldDocs.url')
   }
 
   getDocsRequestExample(field) {
@@ -1259,6 +1346,10 @@ export class EmailFieldType extends FieldType {
     return RowEditFieldEmail
   }
 
+  getCardComponent() {
+    return RowCardFieldEmail
+  }
+
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
     return isValidEmail(value) ? value : ''
@@ -1284,10 +1375,10 @@ export class EmailFieldType extends FieldType {
       return null
     }
     if (value.length > 254) {
-      return 'Max 254 chars'
+      return this.app.i18n.t('fieldErrors.max254Chars')
     }
     if (!isValidEmail(value)) {
-      return 'Invalid email'
+      return this.app.i18n.t('fieldErrors.invalidEmail')
     }
     return null
   }
@@ -1297,7 +1388,7 @@ export class EmailFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return 'Accepts a string that must be an email address.'
+    return this.app.i18n.t('fieldDocs.email')
   }
 
   getDocsRequestExample(field) {
@@ -1306,6 +1397,10 @@ export class EmailFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -1333,6 +1428,10 @@ export class FileFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldFile
+  }
+
+  getCardComponent() {
+    return RowCardFieldFile
   }
 
   getFormViewFieldComponent() {
@@ -1381,7 +1480,7 @@ export class FileFieldType extends FieldType {
   }
 
   getDocsDescription() {
-    return 'Accepts an array of objects containing at least the name of the user file.'
+    return this.app.i18n.t('fieldDocs.file')
   }
 
   getDocsRequestExample() {
@@ -1452,6 +1551,10 @@ export class SingleSelectFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldSingleSelect
+  }
+
+  getCardComponent() {
+    return RowCardFieldSingleSelect
   }
 
   getSort(name, order) {
@@ -1528,7 +1631,7 @@ export class SingleSelectFieldType extends FieldType {
       .join('\n')
 
     return `
-      Accepts an integer representing the chosen select option id or null if none is selected.
+      ${this.app.i18n.t('fieldDocs.singleSelect')}
       <br />
       ${options}
     `
@@ -1548,6 +1651,10 @@ export class SingleSelectFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -1578,6 +1685,10 @@ export class MultipleSelectFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldMultipleSelect
+  }
+
+  getCardComponent() {
+    return RowCardFieldMultipleSelect
   }
 
   getSort(name, order) {
@@ -1659,7 +1770,7 @@ export class MultipleSelectFieldType extends FieldType {
       .join('\n')
 
     return `
-      Accepts an array of integers each representing the chosen select option id or null if none is selected.
+      ${this.app.i18n.t('fieldDocs.multipleSelect')}
       <br />
       ${options}
     `
@@ -1714,6 +1825,10 @@ export class PhoneNumberFieldType extends FieldType {
     return RowEditFieldPhoneNumber
   }
 
+  getCardComponent() {
+    return RowCardFieldPhoneNumber
+  }
+
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text')
     return isSimplePhoneNumber(value) ? value : ''
@@ -1739,7 +1854,7 @@ export class PhoneNumberFieldType extends FieldType {
       return null
     }
     if (!isSimplePhoneNumber(value)) {
-      return 'Invalid Phone Number'
+      return this.app.i18n.t('fieldErrors.invalidPhoneNumber')
     }
     return null
   }
@@ -1753,11 +1868,7 @@ export class PhoneNumberFieldType extends FieldType {
   }
 
   getDocsDescription(field) {
-    return (
-      'Accepts a phone number which has a maximum length of 100 characters' +
-      ' consisting solely of digits, spaces and the following characters: ' +
-      'Nx,._+*()#=;/- .'
-    )
+    return this.app.i18n.t('fieldDocs.phoneNumber')
   }
 
   getDocsRequestExample(field) {
@@ -1766,6 +1877,10 @@ export class PhoneNumberFieldType extends FieldType {
 
   getContainsFilterFunction() {
     return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }
 
@@ -1777,7 +1892,7 @@ export class FormulaFieldType extends FieldType {
   static compatibleWithFormulaTypes(...formulaTypeStrings) {
     return (field) => {
       return (
-        field.type === this.getType() &&
+        (field.type === this.getType() || field.type === 'lookup') &&
         formulaTypeStrings.includes(field.formula_type)
       )
     }
@@ -1804,20 +1919,24 @@ export class FormulaFieldType extends FieldType {
     return RowEditFieldFormula
   }
 
-  _mapFormulaTypeToFieldType(formulaType) {
-    return {
-      invalid: TextFieldType.getType(),
-      text: TextFieldType.getType(),
-      char: TextFieldType.getType(),
-      number: NumberFieldType.getType(),
-      date: DateFieldType.getType(),
-      boolean: BooleanFieldType.getType(),
-      date_interval: DateFieldType.getType(),
-    }[formulaType]
+  getCardComponent() {
+    return RowCardFieldFormula
   }
 
-  getSort(name, order, field, $registry) {
-    const underlyingFieldType = $registry.get(
+  _mapFormulaTypeToFieldType(formulaType) {
+    return this.app.$registry.get('formula_type', formulaType).getFieldType()
+  }
+
+  getCardValueHeight(field) {
+    return (
+      this.app.$registry
+        .get('formula_type', field.formula_type)
+        .getCardComponent().height || 0
+    )
+  }
+
+  getSort(name, order, field) {
+    const underlyingFieldType = this.app.$registry.get(
       'field',
       this._mapFormulaTypeToFieldType(field.formula_type)
     )
@@ -1829,30 +1948,48 @@ export class FormulaFieldType extends FieldType {
   }
 
   getDocsDataType(field) {
-    return null
+    return this.app.$registry
+      .get('formula_type', field.formula_type)
+      .getDocsDataType(field)
   }
 
   getDocsDescription(field) {
-    return (
-      'A read-only field defined by a formula written in the Baserow formula' +
-      ' language.'
-    )
+    return this.app.i18n.t('fieldDocs.formula')
   }
 
   getDocsRequestExample(field) {
-    return 'Result of a formula calculation'
+    return 'it is invalid to include request data for this field as it is read only'
   }
 
-  getContainsFilterFunction(field, $registry) {
-    const underlyingFieldType = $registry.get(
+  getDocsResponseExample(field) {
+    return this.app.$registry
+      .get('formula_type', field.formula_type)
+      .getDocsResponseExample(field)
+  }
+
+  prepareValueForCopy(field, value) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.prepareValueForCopy(field, value)
+  }
+
+  getContainsFilterFunction(field) {
+    const underlyingFieldType = this.app.$registry.get(
       'field',
       this._mapFormulaTypeToFieldType(field.formula_type)
     )
     return underlyingFieldType.getContainsFilterFunction()
   }
 
-  getSortIndicator(field, $registry) {
-    const underlyingFieldType = $registry.get(
+  toHumanReadableString(field, value) {
+    const underlyingFieldType = this.app.$registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.toHumanReadableString(field, value)
+  }
+
+  getSortIndicator(field) {
+    const underlyingFieldType = this.app.$registry.get(
       'field',
       this._mapFormulaTypeToFieldType(field.formula_type)
     )
@@ -1877,5 +2014,32 @@ export class FormulaFieldType extends FieldType {
 
   getCanBePrimaryField() {
     return false
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
+}
+
+export class LookupFieldType extends FormulaFieldType {
+  static getType() {
+    return 'lookup'
+  }
+
+  getIconClass() {
+    return 'binoculars'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.lookup')
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.lookup')
+  }
+
+  getFormComponent() {
+    return FieldLookupSubForm
   }
 }

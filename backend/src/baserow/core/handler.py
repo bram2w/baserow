@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Q, Count
 from django.core.files.storage import default_storage
+from django.utils import translation
 
 from baserow.core.user.utils import normalize_email_address
 
@@ -95,8 +96,9 @@ class CoreHandler:
         if not settings_instance:
             settings_instance = self.get_settings()
 
-        for name, value in kwargs.items():
-            setattr(settings_instance, name, value)
+        settings_instance = set_allowed_attrs(
+            kwargs, ["allow_new_signups"], settings_instance
+        )
 
         settings_instance.save()
         return settings_instance
@@ -370,10 +372,12 @@ class CoreHandler:
 
         public_accept_url = urljoin(base_url, signed_invitation_id)
 
-        email = GroupInvitationEmail(
-            invitation, public_accept_url, to=[invitation.email]
-        )
-        email.send()
+        # Send the email in the language of the user that has send the invitation.
+        with translation.override(invitation.invited_by.profile.language):
+            email = GroupInvitationEmail(
+                invitation, public_accept_url, to=[invitation.email]
+            )
+            email.send()
 
     def get_group_invitation_by_token(self, token, base_queryset=None):
         """

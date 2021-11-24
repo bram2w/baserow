@@ -5,8 +5,8 @@ import {
   isValidURL,
   isValidEmail,
   isSecureURL,
-} from '@/modules/core/utils/string'
-import { isNumeric } from '@baserow/modules/core/utils/string'
+  isNumeric,
+} from '@baserow/modules/core/utils/string'
 
 describe('test string utils', () => {
   test('test uuid', () => {

@@ -26,7 +26,7 @@
           v-model="query"
           type="text"
           class="select__search-input"
-          :placeholder="searchText"
+          :placeholder="searchText === null ? $t('action.search') : searchText"
           @keyup="search(query)"
         />
       </div>

@@ -168,6 +168,8 @@
 </template>
 
 <script>
+import { notifyIf } from '@baserow/modules/core/utils/error'
+
 import ActiveUsers from '@baserow_premium/components/admin/dashboard/charts/ActiveUsers'
 import AdminDashboardService from '@baserow_premium/services/admin/dashboard'
 
@@ -245,10 +247,16 @@ export default {
    */
   async mounted() {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-    const { data } = await AdminDashboardService(this.$client).dashboard(
-      timezone
-    )
-    this.data = data
+
+    try {
+      const { data } = await AdminDashboardService(this.$client).dashboard(
+        timezone
+      )
+      this.data = data
+    } catch (error) {
+      notifyIf(error)
+    }
+
     this.loading = false
   },
   methods: {

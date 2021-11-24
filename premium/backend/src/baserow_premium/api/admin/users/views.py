@@ -27,6 +27,7 @@ from baserow_premium.admin.users.handler import UserAdminHandler
 from django.contrib.auth import get_user_model
 
 from baserow_premium.api.admin.views import AdminListingView
+from baserow_premium.license.handler import check_active_premium_license
 
 
 User = get_user_model()
@@ -58,8 +59,9 @@ class UsersAdminView(AdminListingView):
             "users", serializer_class, search_fields, sort_field_mapping
         ),
     )
-    def get(self, *args, **kwargs):
-        return super().get(*args, **kwargs)
+    def get(self, request):
+        check_active_premium_license(request.user)
+        return super().get(request)
 
 
 class UserAdminView(APIView):
@@ -87,6 +89,7 @@ class UserAdminView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "USER_ADMIN_CANNOT_DEACTIVATE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
+                    "ERROR_NO_ACTIVE_PREMIUM_LICENSE",
                 ]
             ),
             401: None,
@@ -132,6 +135,7 @@ class UserAdminView(APIView):
                 [
                     "USER_ADMIN_CANNOT_DELETE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
+                    "ERROR_NO_ACTIVE_PREMIUM_LICENSE",
                 ]
             ),
             401: None,

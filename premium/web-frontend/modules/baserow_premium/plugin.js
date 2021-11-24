@@ -7,21 +7,35 @@ import {
   DashboardType,
   GroupsAdminType,
   UsersAdminType,
+  LicensesAdminType,
 } from '@baserow_premium/adminTypes'
 import rowCommentsStore from '@baserow_premium/store/row_comments'
+import kanbanStore from '@baserow_premium/store/view/kanban'
 import { PremiumDatabaseApplicationType } from '@baserow_premium/applicationTypes'
 import { registerRealtimeEvents } from '@baserow_premium/realtime'
+import { KanbanViewType } from '@baserow_premium/viewTypes'
 
 export default (context) => {
   const { store, app } = context
+
+  app.$clientErrorMap.setError(
+    'ERROR_NO_ACTIVE_PREMIUM_LICENSE',
+    'License required',
+    'This functionality requires an active premium license. Please refresh the page.'
+  )
+
   store.registerModule('row_comments', rowCommentsStore)
+  store.registerModule('page/view/kanban', kanbanStore)
+  store.registerModule('template/view/kanban', kanbanStore)
 
   app.$registry.register('plugin', new PremiumPlugin(context))
   app.$registry.register('admin', new DashboardType(context))
   app.$registry.register('admin', new UsersAdminType(context))
   app.$registry.register('admin', new GroupsAdminType(context))
+  app.$registry.register('admin', new LicensesAdminType(context))
   app.$registry.register('exporter', new JSONTableExporter(context))
   app.$registry.register('exporter', new XMLTableExporter(context))
+  app.$registry.register('view', new KanbanViewType(context))
 
   registerRealtimeEvents(app.$realtime)
 

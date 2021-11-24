@@ -1,12 +1,19 @@
 import os
 import pytest
+from unittest.mock import patch
 from freezegun import freeze_time
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_201_CREATED,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+)
 
 from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
 from django.conf import settings
 
+from baserow.api.user.registries import user_data_registry, UserDataType
 from baserow.contrib.database.models import Database, Table
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GroupUser
@@ -174,16 +181,6 @@ def test_user_account(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token(
         email="test@localhost.nl", language="en", first_name="Nikolas"
     )
-
-    response = api_client.get(
-        reverse("api:user:account"),
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-
-    response_json = response.json()
-    assert response.status_code == HTTP_200_OK
-    assert response_json["first_name"] == "Nikolas"
-    assert response_json["language"] == "en"
 
     response = api_client.patch(
         reverse("api:user:account"),
@@ -642,3 +639,46 @@ def test_dashboard(data_fixture, client):
     assert response_json["group_invitations"][0]["group"] == "Test1"
     assert response_json["group_invitations"][0]["message"] == invitation_1.message
     assert "created_on" in response_json["group_invitations"][0]
+
+
+@pytest.mark.django_db
+def test_additional_user_data(api_client, data_fixture):
+    class TmpUserDataType(UserDataType):
+        type = "type"
+
+        def get_user_data(self, user, request) -> dict:
+            return True
+
+    plugin_mock = TmpUserDataType()
+    with patch.dict(user_data_registry.registry, {"tmp": plugin_mock}):
+        response = api_client.post(
+            reverse("api:user:index"),
+            {
+                "name": "Test1",
+                "email": "test@test.nl",
+                "password": "thisIsAValidPassword",
+                "authenticate": True,
+            },
+            format="json",
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK
+        assert response_json["tmp"] is True
+
+        response = api_client.post(
+            reverse("api:user:token_auth"),
+            {"username": "test@test.nl", "password": "thisIsAValidPassword"},
+            format="json",
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_201_CREATED
+        assert response_json["tmp"] is True
+
+        response = api_client.post(
+            reverse("api:user:token_refresh"),
+            {"token": response_json["token"]},
+            format="json",
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_201_CREATED
+        assert response_json["tmp"] is True

@@ -9,7 +9,6 @@ from typing import (
 
 from django.utils.functional import classproperty
 
-from baserow.contrib.database.fields import models
 from baserow.contrib.database.formula.ast import tree
 from baserow.contrib.database.formula.types.exceptions import (
     InvalidFormulaType,
@@ -114,9 +113,7 @@ class BaserowFormulaType(abc.ABC):
         pass
 
     @classmethod
-    def construct_type_from_formula_field(
-        cls: Type[T], formula_field: "models.FormulaField"
-    ) -> T:
+    def construct_type_from_formula_field(cls: Type[T], formula_field) -> T:
         """
         Creates a BaserowFormulaType instance based on what is set on the formula field.
         :param formula_field: The formula field to get type info from.
@@ -128,9 +125,7 @@ class BaserowFormulaType(abc.ABC):
             kwargs[field_name] = getattr(formula_field, field_name)
         return cls(**kwargs)
 
-    def new_type_with_user_and_calculated_options_merged(
-        self: T, formula_field: "models.FormulaField"
-    ):
+    def new_type_with_user_and_calculated_options_merged(self: T, formula_field):
         """
         Generates a new merged BaserowFormulaType instance from what has been set on the
         formula field and this instance of the type. Fields which are set on
@@ -155,7 +150,7 @@ class BaserowFormulaType(abc.ABC):
             kwargs[field_name] = getattr(self, field_name)
         return self.__class__(**kwargs)
 
-    def persist_onto_formula_field(self, formula_field: "models.FormulaField"):
+    def persist_onto_formula_field(self, formula_field):
         """
         Saves this type onto the provided formula_field instance for later retrieval.
         Sets the attributes on the formula_field required
@@ -165,15 +160,21 @@ class BaserowFormulaType(abc.ABC):
         :param formula_field: The formula field to store the type information onto.
         """
 
-        formula_field.formula_type = self.type
-        for field_name in self.user_overridable_formatting_option_fields:
-            # Only set the calculated type formatting options if the user has not
-            # already set them.
-            if getattr(formula_field, field_name) is None:
-                setattr(formula_field, field_name, getattr(self, field_name))
+        from baserow.contrib.database.formula.types.formula_types import (
+            BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
+        )
 
-        for field_name in self.internal_fields:
-            setattr(formula_field, field_name, getattr(self, field_name))
+        formula_field.formula_type = self.type
+        for attr in BASEROW_FORMULA_TYPE_ALLOWED_FIELDS:
+            if attr in self.user_overridable_formatting_option_fields:
+                # Only set the calculated type formatting options if the user has not
+                # already set them.
+                if getattr(formula_field, attr) is None:
+                    setattr(formula_field, attr, getattr(self, attr))
+            elif attr in self.internal_fields:
+                setattr(formula_field, attr, getattr(self, attr))
+            else:
+                setattr(formula_field, attr, None)
 
     def get_baserow_field_instance_and_type(self):
         from baserow.contrib.database.fields.registries import field_type_registry
@@ -199,6 +200,30 @@ class BaserowFormulaType(abc.ABC):
         :param expr: The calculated and typed expression of this type.
         :return: A new expression with any required extra calculations done at the top
             field level.
+        """
+
+        return expr
+
+    def unwrap_at_field_level(self, expr: "tree.BaserowExpression[BaserowFormulaType]"):
+        """
+        If a field of this formula type requires any unwrapping when referenced then
+        do it here.
+
+        :param expr: The calculated and typed expression of this type.
+        :return: A new expression with any required extra calculations undone at the top
+            field level.
+        """
+
+        return expr
+
+    def collapse_many(self, expr: "tree.BaserowExpression[BaserowFormulaType]"):
+        """
+        Should return an expression which collapses the given expression into a single
+        non aggregate value.
+
+        :param expr: An expression containing many rows which needs to be aggregated.
+        :return: An expression which collapses the provided aggregate expr into a single
+            value.
         """
 
         return expr
@@ -243,6 +268,9 @@ class BaserowFormulaInvalidType(BaserowFormulaType):
     def raise_if_invalid(self):
         raise InvalidFormulaType(self.error)
 
+    def should_recreate_when_old_type_was(self, old_type: "BaserowFormulaType") -> bool:
+        return False
+
     def __init__(self, error: str):
         self.error = error
 
@@ -254,6 +282,14 @@ class BaserowFormulaValidType(BaserowFormulaType, abc.ABC):
     @abc.abstractmethod
     def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         pass
+
+    def collapse_many(self, expr: "tree.BaserowExpression[BaserowFormulaType]"):
+        from baserow.contrib.database.formula.registries import (
+            formula_function_registry,
+        )
+
+        func = formula_function_registry.get("array_agg")
+        return func.call_and_type_with(expr)
 
     def raise_if_invalid(self):
         pass
@@ -290,6 +326,9 @@ class BaserowFormulaValidType(BaserowFormulaType, abc.ABC):
         )
 
         return formula_function_registry.get("error_to_null").call_and_type_with(expr)
+
+    def unwrap_at_field_level(self, expr: "tree.BaserowExpression[BaserowFormulaType]"):
+        return expr.args[0].with_valid_type(expr.expression_type)
 
 
 UnTyped = type(None)

@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from baserow.api.decorators import validate_body_custom_fields, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
+from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
 from baserow.contrib.database.api.fields.errors import (
@@ -19,6 +20,8 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_RESERVED_BASEROW_FIELD_NAME,
     ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
     ERROR_INVALID_BASEROW_FIELD_NAME,
+    ERROR_FIELD_SELF_REFERENCE,
+    ERROR_FIELD_CIRCULAR_REFERENCE,
 )
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
@@ -40,12 +43,17 @@ from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.exceptions import UserNotInGroup
+from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .serializers import (
     FieldSerializer,
     CreateFieldSerializer,
     UpdateFieldSerializer,
     FieldSerializerWithRelatedFields,
     RelatedFieldsSerializer,
+)
+from baserow.contrib.database.fields.dependencies.exceptions import (
+    SelfReferenceFieldDependencyError,
+    CircularFieldDependencyError,
 )
 
 
@@ -155,6 +163,8 @@ class FieldsView(APIView):
                     "ERROR_RESERVED_BASEROW_FIELD_NAME",
                     "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS",
                     "ERROR_INVALID_BASEROW_FIELD_NAME",
+                    "ERROR_FIELD_SELF_REFERENCE",
+                    "ERROR_FIELD_CIRCULAR_REFERENCE",
                 ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
@@ -174,6 +184,8 @@ class FieldsView(APIView):
             FieldWithSameNameAlreadyExists: ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
             ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
             InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
+            SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
+            CircularFieldDependencyError: ERROR_FIELD_CIRCULAR_REFERENCE,
         }
     )
     def post(self, request, data, table_id):
@@ -281,6 +293,8 @@ class FieldView(APIView):
                     "ERROR_RESERVED_BASEROW_FIELD_NAME",
                     "ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS",
                     "ERROR_INVALID_BASEROW_FIELD_NAME",
+                    "ERROR_FIELD_SELF_REFERENCE",
+                    "ERROR_FIELD_CIRCULAR_REFERENCE",
                 ]
             ),
             404: get_error_schema(["ERROR_FIELD_DOES_NOT_EXIST"]),
@@ -295,6 +309,8 @@ class FieldView(APIView):
             FieldWithSameNameAlreadyExists: ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
             ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
             InvalidBaserowFieldName: ERROR_INVALID_BASEROW_FIELD_NAME,
+            SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
+            CircularFieldDependencyError: ERROR_FIELD_CIRCULAR_REFERENCE,
         }
     )
     def patch(self, request, field_id):
@@ -350,7 +366,11 @@ class FieldView(APIView):
         responses={
             200: RelatedFieldsSerializer,
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_CANNOT_DELETE_PRIMARY_FIELD"]
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_CANNOT_DELETE_PRIMARY_FIELD",
+                    "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM",
+                ]
             ),
             404: get_error_schema(["ERROR_FIELD_DOES_NOT_EXIST"]),
         },
@@ -361,6 +381,7 @@ class FieldView(APIView):
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             CannotDeletePrimaryField: ERROR_CANNOT_DELETE_PRIMARY_FIELD,
+            CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
         }
     )
     def delete(self, request, field_id):

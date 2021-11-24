@@ -13,7 +13,7 @@ def construct_all_possible_field_kwargs(
     kwarg dicts, one for each interesting possible 'subtype' of the field.
     """
     all_interesting_field_kwargs = {
-        "text": [{"name": "text"}],
+        "text": [{"name": "text", "primary": True}],
         "long_text": [{"name": "long_text"}],
         "url": [{"name": "url"}],
         "email": [{"name": "email"}],
@@ -122,6 +122,13 @@ def construct_all_possible_field_kwargs(
         "phone_number": [{"name": "phone_number"}],
         "formula": [
             {"name": "formula", "formula": "CONCAT('test ', UPPER('formula'))"}
+        ],
+        "lookup": [
+            {
+                "name": "lookup",
+                "through_field_name": "link_row",
+                "target_field_name": "text_field",
+            }
         ],
     }
     # If you have added a new field please add an entry into the dict above with any

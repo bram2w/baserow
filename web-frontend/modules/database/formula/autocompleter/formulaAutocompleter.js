@@ -96,6 +96,7 @@ export function _calculateAutocompleteRangeAndType(formula, cursorPosition) {
       const insideFunctionRef = [
         BaserowFormulaLexer.IDENTIFIER,
         BaserowFormulaLexer.FIELD,
+        BaserowFormulaLexer.LOOKUP,
         BaserowFormulaLexer.IDENTIFIER_UNICODE,
       ].includes(token.type)
 
@@ -392,7 +393,7 @@ function _fieldNameToStringLiteral(doubleQuote, fieldName) {
  * @param fieldCandidate The best autocomplete candidate for a field.
  * @returns {{newCursorPosition: *, autocompletedFormula: string}|{newCursorPosition, autocompletedFormula}}
  *    Returns a formula which has had an autocompletion done if one made sense and a
- *    new location to move the cursor to in the formula. If no autocompletion occured
+ *    new location to move the cursor to in the formula. If no autocompletion occurred
  *    then the same formula and location will be returned.
  */
 export function autocompleteFormula(

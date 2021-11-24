@@ -3,7 +3,9 @@
     <div class="row">
       <div class="col col-12">
         <div class="control">
-          <label class="control__label">Select the view to export:</label>
+          <label class="control__label">{{
+            $t('exportTableForm.viewLabel')
+          }}</label>
           <div class="control__elements">
             <ExportTableDropdown
               v-model="values.view_id"
@@ -19,8 +21,7 @@
           :loading="loading"
         ></ExporterTypeChoices>
         <div v-if="$v.values.exporter_type.$error" class="error">
-          No exporter type available please select a different view or entire
-          table.
+          {{ $t('exportTableForm.typeError') }}
         </div>
       </div>
     </div>
@@ -126,3 +127,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "exportTableForm": {
+      "viewLabel": "Select the view to export:",
+      "typeError": "No exporter type available please select a different view or entire table."
+    }
+  },
+  "fr": {
+    "exportTableForm": {
+      "viewLabel": "Sélectionnez la vue à exporter :",
+      "typeError": "Aucun export disponible, veuillez sélectionner une autre vue ou la table complète."
+    }
+  }
+}
+</i18n>

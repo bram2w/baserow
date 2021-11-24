@@ -85,7 +85,9 @@ def test_multi_select_field_type(data_fixture):
         user=user, table=table, values={field_id: [select_options[0].id]}
     )
     assert row.id
-    row_multi_select_field_list = getattr(row, f"field_{field.id}").all()
+    row_multi_select_field_list = (
+        getattr(row, f"field_{field.id}").order_by("order").all()
+    )
     assert len(row_multi_select_field_list) == 1
     assert row_multi_select_field_list[0].id == select_options[0].id
     assert row_multi_select_field_list[0].value == select_options[0].value
@@ -113,7 +115,9 @@ def test_multi_select_field_type(data_fixture):
     )
 
     assert row_2.id
-    row_multi_select_field_list = getattr(row_2, f"field_{field.id}").all()
+    row_multi_select_field_list = (
+        getattr(row_2, f"field_{field.id}").order_by("order").all()
+    )
     assert len(row_multi_select_field_list) == 2
     assert row_multi_select_field_list[0].id == select_options[0].id
     assert row_multi_select_field_list[0].value == select_options[0].value
@@ -553,7 +557,9 @@ def test_import_export_multiple_select_field(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_set_export_serialized_value_multiple_select_field(data_fixture):
+def test_get_set_export_serialized_value_multiple_select_field(
+    data_fixture, django_assert_num_queries
+):
     user = data_fixture.create_user()
     group = data_fixture.create_group(user=user)
     imported_group = data_fixture.create_group(user=user)
@@ -621,11 +627,19 @@ def test_get_set_export_serialized_value_multiple_select_field(data_fixture):
     all = imported_model.objects.all()
     assert len(all) == 3
     imported_row_1 = all[0]
-    imported_row_1_field = getattr(imported_row_1, f"field_{imported_field.id}").all()
+    imported_row_1_field = (
+        getattr(imported_row_1, f"field_" f"{imported_field.id}")
+        .order_by("order")
+        .all()
+    )
     imported_row_2 = all[1]
-    imported_row_2_field = getattr(imported_row_2, f"field_{imported_field.id}").all()
+    imported_row_2_field = (
+        getattr(imported_row_2, f"field_{imported_field.id}").order_by("order").all()
+    )
     imported_row_3 = all[2]
-    imported_row_3_field = getattr(imported_row_3, f"field_{imported_field.id}").all()
+    imported_row_3_field = (
+        getattr(imported_row_3, f"field_{imported_field.id}").order_by("order").all()
+    )
 
     assert len(imported_row_1_field) == 0
 

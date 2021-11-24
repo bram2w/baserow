@@ -31,14 +31,7 @@
         <div class="context__menu-title">{{ name }}</div>
         <ul class="context__menu">
           <li>
-            <a
-              @click="
-                ;[
-                  $refs.settingsModal.show('password'),
-                  $refs.userContext.hide(),
-                ]
-              "
-            >
+            <a @click=";[$refs.settingsModal.show(), $refs.userContext.hide()]">
               <i class="context__menu-icon fas fa-fw fa-cogs"></i>
               {{ $t('sidebar.settings') }}
             </a>
@@ -97,31 +90,12 @@
               </a>
             </div>
             <ul v-show="isAdminPage" class="tree sidebar__tree">
-              <li
+              <SidebarAdminItem
                 v-for="adminType in sortedAdminTypes"
                 :key="adminType.type"
-                class="tree__item"
-                :class="{
-                  active: $route.matched.some(
-                    ({ name }) => name === adminType.routeName
-                  ),
-                }"
+                :admin-type="adminType"
               >
-                <div class="tree__action sidebar__action">
-                  <nuxt-link
-                    :to="{ name: adminType.routeName }"
-                    class="tree__link"
-                  >
-                    <i
-                      class="tree__icon fas"
-                      :class="'fa-' + adminType.iconClass"
-                    ></i>
-                    <span class="sidebar__item-name">{{
-                      adminType.getName()
-                    }}</span>
-                  </nuxt-link>
-                </div>
-              </li>
+              </SidebarAdminItem>
             </ul>
           </li>
           <template v-if="hasSelectedGroup && !isCollapsed">
@@ -249,6 +223,7 @@ import { mapGetters, mapState } from 'vuex'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SettingsModal from '@baserow/modules/core/components/settings/SettingsModal'
+import SidebarAdminItem from '@baserow/modules/core/components/sidebar/SidebarAdminItem'
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
 import CreateApplicationContext from '@baserow/modules/core/components/application/CreateApplicationContext'
 import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
@@ -261,6 +236,7 @@ export default {
   components: {
     SettingsModal,
     CreateApplicationContext,
+    SidebarAdminItem,
     SidebarApplication,
     GroupsContext,
     CreateGroupModal,
@@ -330,8 +306,14 @@ export default {
         return
       }
 
-      if (this.sortedAdminTypes.length > 0) {
-        this.$nuxt.$router.push({ name: this.sortedAdminTypes[0].routeName })
+      // We only want to autoselect the first active admin type because the other ones
+      // can't be selected.
+      const activated = this.sortedAdminTypes.filter((adminType) => {
+        return !this.$registry.get('admin', adminType.type).isDeactivated()
+      })
+
+      if (activated.length > 0) {
+        this.$nuxt.$router.push({ name: activated[0].routeName })
       }
     },
     async orderApplications(order, oldOrder) {
@@ -372,7 +354,7 @@ export default {
       "admin": "Administration",
       "dashboard": "Accueil",
       "trash": "Corbeille",
-      "settings": "Profil"
+      "settings": "Mon compte"
     }
   }
 }

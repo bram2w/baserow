@@ -55,7 +55,7 @@ export const registerRealtimeEvents = (realtime) => {
         await store.dispatch('field/forceCreate', {
           table,
           values: data.field,
-          related_fields: relatedFields,
+          relatedFields,
         })
       }
       if (
@@ -152,10 +152,10 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
-  realtime.registerEvent('row_updated', (context, data) => {
+  realtime.registerEvent('row_updated', async (context, data) => {
     const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
-      viewType.rowUpdated(
+      await viewType.rowUpdated(
         context,
         data.table_id,
         store.getters['field/getAll'],
@@ -166,6 +166,8 @@ export const registerRealtimeEvents = (realtime) => {
         'page/'
       )
     }
+
+    store.dispatch('rowModal/updated', { values: data.row })
   })
 
   realtime.registerEvent('row_deleted', (context, data) => {
@@ -188,20 +190,25 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
-  realtime.registerEvent('view_updated', ({ store, app }, data) => {
+  realtime.registerEvent('view_updated', (context, data) => {
+    const { store, app } = context
     const view = store.getters['view/get'](data.view.id)
     if (view !== undefined) {
-      const filterType = view.filter_type
-      const filtersDisabled = view.filters_disabled
+      const oldView = clone(view)
       store.dispatch('view/forceUpdate', { view, values: data.view })
-      if (
-        store.getters['view/getSelectedId'] === view.id &&
-        (filterType !== data.view.filter_type ||
-          filtersDisabled !== data.view.filters_disabled)
-      ) {
-        app.$bus.$emit('table-refresh', {
-          tableId: store.getters['table/getSelectedId'],
-        })
+
+      if (view.id === store.getters['view/getSelectedId']) {
+        const viewType = app.$registry.get('view', view.type)
+        const refresh = viewType.updated(context, view, oldView, 'page/')
+        if (
+          refresh ||
+          view.filter_type !== oldView.filter_type ||
+          view.filters_disabled !== oldView.filters_disabled
+        ) {
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
+        }
       }
     }
   })
@@ -323,7 +330,7 @@ export const registerRealtimeEvents = (realtime) => {
   realtime.registerEvent('view_field_options_updated', (context, data) => {
     const { store, app } = context
     const view = store.getters['view/get'](data.view_id)
-    if (view !== null && view.id === store.getters['view/getSelectedId']) {
+    if (view !== undefined && view.id === store.getters['view/getSelectedId']) {
       const viewType = app.$registry.get('view', view.type)
       viewType.fieldOptionsUpdated(context, view, data.field_options, 'page/')
     }

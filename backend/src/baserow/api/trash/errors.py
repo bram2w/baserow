@@ -24,3 +24,9 @@ ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED = (
     HTTP_400_BAD_REQUEST,
     "A parent id must NOT be provided when using this trashable item type.",
 )
+
+ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM = (
+    "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM",
+    HTTP_400_BAD_REQUEST,
+    "This item has already been deleted.",
+)

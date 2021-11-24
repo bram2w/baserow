@@ -134,11 +134,13 @@ export default {
         }
         if (this.jobHasFailed) {
           const title =
-            this.job.status === 'failed' ? 'Export Failed' : 'Export Cancelled'
+            this.job.status === 'failed'
+              ? this.$t('exportTableModal.failedTitle')
+              : this.$t('exportTableModal.cancelledTitle')
           const message =
             this.job.status === 'failed'
-              ? 'The export failed due to a server error.'
-              : 'The export was cancelled.'
+              ? this.$t('exportTableModal.failedDescription')
+              : this.$t('exportTableModal.cancelledDescription')
           this.showError(title, message)
         }
       } catch (error) {
@@ -162,3 +164,24 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "exportTableModal": {
+      "failedTitle": "Export Failed",
+      "failedDescription": "The export failed due to a server error.",
+      "cancelledTitle": "Export Cancelled",
+      "cancelledDescription": "The export was cancelled."
+    }
+  },
+  "fr": {
+    "exportTableModal": {
+      "failedTitle": "L'export a échoué",
+      "failedDescription": "L'export n'a pas pu aboutir en raison d'une erreur serveur.",
+      "cancelledTitle": "Export annulé",
+      "cancelledDescription": "L'export a été annulé."
+    }
+  }
+}
+</i18n>

@@ -1,6 +1,11 @@
 <template>
   <li class="tree__sub" :class="{ active: table._.selected }">
-    <a class="tree__sub-link" @click="selectTable(database, table)">
+    <a
+      class="tree__sub-link"
+      :href="resolveTableHref(database, table)"
+      @mousedown.prevent
+      @click.prevent="selectTable(database, table)"
+    >
       <Editable
         ref="rename"
         :value="table.name"
@@ -25,6 +30,12 @@
           </a>
         </li>
         <li>
+          <a @click="openWebhookModal()">
+            <i class="context__menu-icon fas fa-fw fa-globe"></i>
+            Webhooks
+          </a>
+        </li>
+        <li>
           <a @click="enableRename()">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
             {{ $t('action.rename') }}
@@ -41,6 +52,7 @@
         </li>
       </ul>
       <ExportTableModal ref="exportTableModal" :table="table" />
+      <WebhookModal ref="webhookModal" :table="table" />
     </Context>
   </li>
 </template>
@@ -48,10 +60,11 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
+import WebhookModal from '@baserow/modules/database/components/webhook/WebhookModal'
 
 export default {
   name: 'SidebarItem',
-  components: { ExportTableModal },
+  components: { ExportTableModal, WebhookModal },
   props: {
     database: {
       type: Object,
@@ -97,6 +110,10 @@ export default {
       this.$refs.context.hide()
       this.$refs.exportTableModal.show()
     },
+    openWebhookModal() {
+      this.$refs.context.hide()
+      this.$refs.webhookModal.show()
+    },
     enableRename() {
       this.$refs.context.hide()
       this.$refs.rename.edit()
@@ -136,6 +153,17 @@ export default {
       }
 
       this.deleteLoading = false
+    },
+    resolveTableHref(database, table) {
+      const props = this.$nuxt.$router.resolve({
+        name: 'database-table',
+        params: {
+          databaseId: database.id,
+          tableId: table.id,
+        },
+      })
+
+      return props.href
     },
   },
 }

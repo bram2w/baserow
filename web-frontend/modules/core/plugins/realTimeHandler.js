@@ -192,6 +192,10 @@ export class RealTimeHandler {
       this.authenticationSuccess = data.success
     })
 
+    this.registerEvent('user_data_updated', ({ store }, data) => {
+      store.dispatch('auth/forceUpdateUserData', data.user_data)
+    })
+
     this.registerEvent('group_created', ({ store }, data) => {
       store.dispatch('group/forceCreate', data.group)
     })

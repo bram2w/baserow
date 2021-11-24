@@ -6,6 +6,7 @@ import Editable from '@baserow/modules/core/components/Editable'
 import Dropdown from '@baserow/modules/core/components/Dropdown'
 import DropdownItem from '@baserow/modules/core/components/DropdownItem'
 import Checkbox from '@baserow/modules/core/components/Checkbox'
+import Radio from '@baserow/modules/core/components/Radio'
 import Scrollbars from '@baserow/modules/core/components/Scrollbars'
 import Error from '@baserow/modules/core/components/Error'
 import SwitchInput from '@baserow/modules/core/components/SwitchInput'
@@ -22,6 +23,7 @@ import tooltip from '@baserow/modules/core/directives/tooltip'
 import sortable from '@baserow/modules/core/directives/sortable'
 import autoOverflowScroll from '@baserow/modules/core/directives/autoOverflowScroll'
 import userFileUpload from '@baserow/modules/core/directives/userFileUpload'
+import autoScroll from '@baserow/modules/core/directives/autoScroll'
 
 Vue.component('Context', Context)
 Vue.component('Modal', Modal)
@@ -29,6 +31,7 @@ Vue.component('Editable', Editable)
 Vue.component('Dropdown', Dropdown)
 Vue.component('DropdownItem', DropdownItem)
 Vue.component('Checkbox', Checkbox)
+Vue.component('Radio', Radio)
 Vue.component('Scrollbars', Scrollbars)
 Vue.component('Error', Error)
 Vue.component('SwitchInput', SwitchInput)
@@ -45,3 +48,4 @@ Vue.directive('tooltip', tooltip)
 Vue.directive('sortable', sortable)
 Vue.directive('autoOverflowScroll', autoOverflowScroll)
 Vue.directive('userFileUpload', userFileUpload)
+Vue.directive('autoScroll', autoScroll)

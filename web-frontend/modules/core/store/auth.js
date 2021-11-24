@@ -8,14 +8,25 @@ export const state = () => ({
   refreshing: false,
   token: null,
   user: null,
+  additional: {},
   webSocketId: null,
 })
 
 export const mutations = {
-  SET_USER_DATA(state, { token, user }) {
+  SET_USER_DATA(state, { token, user, ...additional }) {
     state.token = token
     state.token_data = jwtDecode(token)
     state.user = user
+    // Additional entries in the response payload could have been added via the
+    // backend user data registry. We want to store them in the `additional` state so
+    // that it can be used by other modules.
+    state.additional = additional
+  },
+  UPDATE_USER_DATA(state, { user, ...data }) {
+    if (user !== undefined) {
+      Object.assign(state.user, user)
+    }
+    Object.assign(state.additional, data)
   },
   CLEAR_USER_DATA(state) {
     state.token = null
@@ -39,6 +50,7 @@ export const actions = {
     setToken(data.token, this.app)
     commit('SET_USER_DATA', data)
     dispatch('startRefreshTimeout')
+    return data.user
   },
   /**
    * Register a new user and immediately authenticate. If successful commit the
@@ -133,6 +145,17 @@ export const actions = {
   setWebSocketId({ commit }, webSocketId) {
     commit('SET_WEB_SOCKET_ID', webSocketId)
   },
+  /**
+   * Updates the account information is the authenticated user.
+   */
+  async update({ commit }, values) {
+    const { data } = await AuthService(this.$client).update(values)
+    commit('UPDATE_USER_DATA', { user: data })
+    return data
+  },
+  forceUpdateUserData({ commit }, data) {
+    commit('UPDATE_USER_DATA', data)
+  },
 }
 
 export const getters = {
@@ -147,6 +170,9 @@ export const getters = {
   },
   webSocketId(state) {
     return state.webSocketId
+  },
+  getUserObject(state) {
+    return state.user
   },
   getName(state) {
     return state.user ? state.user.first_name : ''
@@ -168,6 +194,9 @@ export const getters = {
   tokenExpireSeconds(state) {
     const now = Math.ceil(new Date().getTime() / 1000)
     return state.token_data.exp - now
+  },
+  getAdditionalUserData(state) {
+    return state.additional
   },
 }
 
