@@ -19,7 +19,6 @@ services:
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
-      - /baserow/backend/plugins
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
@@ -38,7 +37,6 @@ services:
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
-      - /baserow/backend/plugins
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
@@ -57,7 +55,6 @@ services:
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
-      - /baserow/backend/plugins
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
@@ -76,7 +73,6 @@ services:
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
-      - /baserow/backend/plugins
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
@@ -97,9 +93,6 @@ services:
       # directly into the image instead of whatever is on your local filesystem.
       - /baserow/web-frontend/node_modules
       - ./premium/web-frontend/:/baserow/premium/web-frontend
-      # Dont copy the plugins folder back to the repo as the premium should never be
-      # committed into the web-frontend/ root folder.
-      - /baserow/web-frontend/plugins
 
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
