@@ -1,4 +1,7 @@
-export default function (base = '@') {
+export default function (
+  base = '@',
+  premiumBase = '@/../premium/web-frontend'
+) {
   // Support adding in extra modules say from a plugin using the ADDITIONAL_MODULES
   // env variable which is a comma separated list of absolute module paths.
   const additionalModulesCsv = process.env.ADDITIONAL_MODULES
@@ -9,7 +12,7 @@ export default function (base = '@') {
   const baseModules = [
     base + '/modules/core/module.js',
     base + '/modules/database/module.js',
-    base + '/../premium/web-frontend/modules/baserow_premium/module.js',
+    premiumBase + '/modules/baserow_premium/module.js',
   ]
 
   const modules = baseModules.concat(additionalModules)
