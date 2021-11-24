@@ -18,6 +18,10 @@
         </li>
         <li class="licenses__feature">
           <i class="fas fa-fw fa-check licenses__feature-icon"></i>
+          Kanban view
+        </li>
+        <li class="licenses__feature">
+          <i class="fas fa-fw fa-check licenses__feature-icon"></i>
           JSON and XML export
         </li>
         <li class="licenses__feature">
