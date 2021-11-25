@@ -222,9 +222,7 @@ class FieldHandler:
                 update_collector,
             )
 
-        updated_fields = (
-            update_collector.apply_updates_returning_updated_fields_in_start_table()
-        )
+        updated_fields = update_collector.apply_updates_and_get_updated_fields()
         field_created.send(
             self,
             field=instance,
@@ -425,9 +423,7 @@ class FieldHandler:
                 update_collector,
             )
 
-        updated_fields = (
-            update_collector.apply_updates_returning_updated_fields_in_start_table()
-        )
+        updated_fields = update_collector.apply_updates_and_get_updated_fields()
         field_updated.send(
             self,
             field=field,
@@ -441,7 +437,15 @@ class FieldHandler:
         else:
             return field
 
-    def delete_field(self, user, field):
+    def delete_field(
+        self,
+        user,
+        field,
+        create_separate_trash_entry=True,
+        update_collector=None,
+        apply_and_send_updates=True,
+        allow_deleting_primary=False,
+    ):
         """
         Deletes an existing field if it is not a primary field.
 
@@ -449,6 +453,18 @@ class FieldHandler:
         :type user: User
         :param field: The field instance that needs to be deleted.
         :type field: Field
+        :param create_separate_trash_entry: True if this deletion should create a trash
+            entry just for this one field. This should be false only when this field is
+            being deleted as part of a parent item whose trash entry will restore
+            this field.
+        :type create_separate_trash_entry: bool
+        :param update_collector: An optional update collector which will be used to
+            store related field updates in.
+        :param apply_and_send_updates: Set to False to disable related field updates
+            being applied and any signals from being sent.
+        :type apply_and_send_updates: bool
+        :param allow_deleting_primary: Set to true if its OK for a primary field to be
+            deleted.
         :raises ValueError: When the provided field is not an instance of Field.
         :raises CannotDeletePrimaryField: When we try to delete the primary field
             which cannot be deleted.
@@ -460,42 +476,56 @@ class FieldHandler:
         group = field.table.database.group
         group.has_user(user, raise_error=True)
 
-        if field.primary:
+        if field.primary and not allow_deleting_primary:
             raise CannotDeletePrimaryField(
-                "Cannot delete the primary field of a " "table."
+                "Cannot delete the primary field of a table."
             )
 
         field = field.specific
 
-        update_collector = CachingFieldUpdateCollector(field.table)
+        if update_collector is None:
+            update_collector = CachingFieldUpdateCollector(field.table)
+
         dependant_fields = field.dependant_fields_with_types(
             field_cache=update_collector
         )
-        TrashHandler.trash(user, group, field.table.database, field)
-        FieldDependencyHandler.rebuild_dependencies(field, update_collector)
+
+        TrashHandler.trash(
+            user,
+            group,
+            field.table.database,
+            field,
+            create_trash_entry=create_separate_trash_entry,
+        )
+
+        FieldDependencyHandler.break_dependencies_delete_dependants(field)
+
         for (
             dependant_field,
             dependant_field_type,
             via_path_to_starting_table,
         ) in dependant_fields:
+            print(f"Telling {dependant_field.name} that {field.name} was deleted")
             dependant_field_type.field_dependency_deleted(
                 dependant_field,
                 field,
                 via_path_to_starting_table,
                 update_collector,
             )
-        updated_fields = (
-            update_collector.apply_updates_returning_updated_fields_in_start_table()
-        )
-        field_deleted.send(
-            self,
-            field_id=field.id,
-            field=field,
-            related_fields=updated_fields,
-            user=user,
-        )
-        update_collector.send_additional_field_updated_signals()
-        return updated_fields
+
+        if apply_and_send_updates:
+            updated_fields = update_collector.apply_updates_and_get_updated_fields()
+            field_deleted.send(
+                self,
+                field_id=field.id,
+                field=field,
+                related_fields=updated_fields,
+                user=user,
+            )
+            update_collector.send_additional_field_updated_signals()
+            return updated_fields
+        else:
+            return []
 
     def update_field_select_options(self, user, field, select_options):
         """
@@ -653,7 +683,12 @@ class FieldHandler:
             if field_name not in existing_field_name_collisions:
                 return field_name
 
-    def restore_field(self, field):
+    def restore_field(
+        self,
+        field,
+        update_collector=None,
+        apply_and_send_updates=True,
+    ):
         field_type = field_type_registry.get_by_model(field)
         try:
             field.name = self.find_next_unused_field_name(
@@ -667,7 +702,8 @@ class FieldHandler:
             field = field.specific
             field.name = field.name
             field.trashed = False
-            update_collector = CachingFieldUpdateCollector(field.table)
+            if update_collector is None:
+                update_collector = CachingFieldUpdateCollector(field.table)
             field.save(field_lookup_cache=update_collector)
             FieldDependencyHandler.rebuild_dependencies(field, update_collector)
             for (
@@ -681,13 +717,18 @@ class FieldHandler:
                     via_path_to_starting_table,
                     update_collector,
                 )
-            updated_fields = (
-                update_collector.apply_updates_returning_updated_fields_in_start_table()
-            )
-            field_restored.send(
-                self, field=field, user=None, related_fields=updated_fields
-            )
-            update_collector.send_additional_field_updated_signals()
+            if apply_and_send_updates:
+                updated_fields = update_collector.apply_updates_and_get_updated_fields()
+                field_restored.send(
+                    self, field=field, user=None, related_fields=updated_fields
+                )
+                update_collector.send_additional_field_updated_signals()
+
+            for related_field in field_type.get_related_fields_to_trash_and_restore(
+                field
+            ):
+                if related_field.trashed:
+                    self.restore_field(related_field)
         except Exception as e:
             # Restoring a field could result in various errors such as a circular
             # dependency appearing in the field dep graph. Allow the field type to

@@ -5,6 +5,7 @@ from django.db import connection
 from django.conf import settings
 from decimal import Decimal
 
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
@@ -24,6 +25,7 @@ from baserow.contrib.database.fields.models import (
     BooleanField,
 )
 from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
+from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -380,3 +382,117 @@ def test_delete_database_table(send_mock, data_fixture):
     assert Table.objects.all().count() == 0
     assert Table.trash.all().count() == 1
     assert f"database_table_{table.id}" in connection.introspection.table_names()
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.fields.signals.field_updated.send")
+@patch("baserow.contrib.database.table.signals.table_deleted.send")
+def test_deleting_table_trashes_all_fields_and_any_related_links(
+    table_deleted_send_mock, field_updated_send_mock, data_fixture
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user)
+    target_field = data_fixture.create_text_field(user, table=table_b, name="target")
+
+    dependant_field = FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        through_field_id=link_field.id,
+        target_field_id=target_field.id,
+        name="lookup",
+    )
+    other_dependant_field = FieldHandler().create_field(
+        user, table_a, "formula", name="formula", formula=f'field("{link_field.name}")'
+    )
+    assert dependant_field.formula_type == "array"
+    assert other_dependant_field.formula_type == "array"
+
+    handler = TableHandler()
+    handler.delete_table(user, table_b)
+
+    dependant_field.refresh_from_db()
+    other_dependant_field.refresh_from_db()
+    assert dependant_field.formula_type == "invalid"
+    assert other_dependant_field.formula_type == "invalid"
+
+    table_deleted_send_mock.assert_called_once()
+    assert table_deleted_send_mock.call_args[1]["table_id"] == table_b.id
+    assert table_deleted_send_mock.call_args[1]["user"].id == user.id
+
+    field_updated_send_mock.assert_called_once()
+    assert field_updated_send_mock.call_args[1]["field"].id == dependant_field.id
+    assert field_updated_send_mock.call_args[1]["user"] is None
+    assert field_updated_send_mock.call_args[1]["related_fields"] == [
+        other_dependant_field
+    ]
+
+
+@pytest.mark.django_db
+def test_deleting_a_table_breaks_dependant_fields_and_sends_updates_for_them(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user)
+
+    other_table_b_field = data_fixture.create_long_text_field(
+        user, table=table_b, name="other"
+    )
+
+    handler = TableHandler()
+    handler.delete_table(user, table_b)
+
+    other_table_b_field.refresh_from_db()
+    link_field.refresh_from_db()
+    assert other_table_b_field.trashed
+    assert link_field.trashed
+    assert link_field.link_row_related_field.trashed
+
+
+@pytest.mark.django_db
+def test_restoring_a_table_restores_fields_and_related_fields(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user)
+
+    other_table_b_field = data_fixture.create_long_text_field(
+        user, table=table_b, name="other"
+    )
+
+    handler = TableHandler()
+    handler.delete_table(user, table_b)
+
+    TrashHandler.restore_item(user, "table", table_b.id)
+
+    other_table_b_field.refresh_from_db()
+    link_field.refresh_from_db()
+    assert not other_table_b_field.trashed
+    assert not link_field.trashed
+    assert not link_field.trashed
+    assert not link_field.link_row_related_field.trashed
+
+
+@pytest.mark.django_db
+def test_restoring_table_with_a_previously_trashed_field_leaves_the_field_trashed(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user)
+
+    other_table_b_field = data_fixture.create_long_text_field(
+        user, table=table_b, name="other"
+    )
+
+    FieldHandler().delete_field(user, other_table_b_field)
+    TableHandler().delete_table(user, table_b)
+
+    TrashHandler.restore_item(user, "table", table_b.id)
+
+    other_table_b_field.refresh_from_db()
+    link_field.refresh_from_db()
+    assert other_table_b_field.trashed
+    assert TrashEntry.objects.get(
+        trash_item_type="field", trash_item_id=other_table_b_field.id
+    )
+    assert not link_field.trashed
+    assert not link_field.trashed
+    assert not link_field.link_row_related_field.trashed

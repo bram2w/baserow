@@ -8,6 +8,7 @@ import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components
 import FunctionalGridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldSingleSelect'
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
+import FunctionalGridViewFieldBlank from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBlank'
 import FunctionalGridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldArray'
 import GridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/GridViewFieldArray'
 import RowEditFieldSingleSelectReadOnly from '@baserow/modules/database/components/row/RowEditFieldSingleSelectReadOnly'
@@ -17,6 +18,8 @@ import FunctionalFormulaBooleanArrayItem from '@baserow/modules/database/compone
 import FunctionalFormulaDateArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaDateArrayItem'
 import FunctionalFormulaSingleSelectArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaSingleSelectArrayItem'
 import RowCardFieldArray from '@baserow/modules/database/components/card/RowCardFieldArray'
+import RowEditFieldBlank from '@baserow/modules/database/components/row/RowEditFieldBlank'
+import RowCardFieldBlank from '@baserow/modules/database/components/card/RowCardFieldBlank'
 
 export class BaserowFormulaTypeDefinition extends Registerable {
   getIconClass() {
@@ -290,12 +293,16 @@ export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
     return 'fa-exclamation-triangle'
   }
 
+  getCardComponent() {
+    return RowCardFieldBlank
+  }
+
   getRowEditFieldComponent() {
-    return RowEditFieldText
+    return RowEditFieldBlank
   }
 
   getFunctionalGridViewFieldComponent() {
-    return FunctionalGridViewFieldText
+    return FunctionalGridViewFieldBlank
   }
 
   getSortOrder() {

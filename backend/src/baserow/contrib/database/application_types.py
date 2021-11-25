@@ -213,6 +213,6 @@ class DatabaseApplicationType(ApplicationType):
                 field.table, existing_field_lookup_cache=field_cache
             )
             field_type.after_rows_imported(field, [], update_collector)
-            update_collector.apply_updates_returning_updated_fields_in_start_table()
+            update_collector.apply_updates_and_get_updated_fields()
 
         return database

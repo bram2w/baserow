@@ -110,28 +110,29 @@ def _construct_dependency(field_instance, dependency, field_lookup_cache):
                 # we get notified
                 return [FieldDependency(dependant=field_instance, dependency=via_field)]
             else:
+                deps = []
+                if field_instance.id != via_field.id:
+                    # Depend directly on the via field also so if it is renamed or
+                    # changes we get notified.
+                    deps.append(
+                        FieldDependency(
+                            dependant=field_instance, dependency=via_field, via=None
+                        )
+                    )
+
                 target_table = via_field.link_row_table
                 target_field = field_lookup_cache.lookup_by_name(
                     target_table, dependency
                 )
                 if target_field is None:
-                    return [
+                    deps.append(
                         FieldDependency(
                             dependant=field_instance,
                             broken_reference_field_name=dependency,
                             via=via_field,
                         )
-                    ]
+                    )
                 else:
-                    deps = []
-                    if field_instance.id != via_field.id:
-                        # Depend directly on the via field also so if it is renamed or
-                        # changes we get notified.
-                        deps.append(
-                            FieldDependency(
-                                dependant=field_instance, dependency=via_field, via=None
-                            )
-                        )
                     deps.append(
                         FieldDependency(
                             dependant=field_instance,
@@ -139,7 +140,7 @@ def _construct_dependency(field_instance, dependency, field_lookup_cache):
                             via=via_field,
                         )
                     )
-                    return deps
+                return deps
 
 
 def rebuild_field_dependencies(

@@ -190,7 +190,7 @@ class BaserowExpressionToDjangoExpressionGenerator(
 
     # noinspection PyProtectedMember
     def _setup_lookup_expression(self, field_reference):
-        path_to_lookup_from_lookup_table = field_reference.referenced_lookup_field
+        path_to_lookup_from_lookup_table = field_reference.target_field
         m2m_to_lookup_table = field_reference.referenced_field_name
 
         lookup_table_model = self._get_remote_model(m2m_to_lookup_table, self.model)

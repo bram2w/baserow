@@ -212,29 +212,31 @@ class BaserowFieldReference(BaserowExpression[A]):
     def __init__(
         self,
         referenced_field_name: str,
-        referenced_lookup_field: Optional[str],
+        target_field: Optional[str],
         expression_type: A,
     ):
-        many = referenced_lookup_field is not None
+        many = target_field is not None
         super().__init__(expression_type, many=many, aggregate=many)
         self.referenced_field_name = referenced_field_name
-        self.referenced_lookup_field = referenced_lookup_field
+        # If set target_field is a field in another table to lookup via the
+        # referenced_field_name.
+        self.target_field = target_field
 
     def accept(self, visitor: "visitors.BaserowFormulaASTVisitor[A, T]") -> T:
         return visitor.visit_field_reference(self)
 
     def is_lookup(self):
-        return self.referenced_lookup_field is not None
+        return self.target_field is not None
 
     def __str__(self):
         escaped_name = convert_string_to_string_literal_token(
             self.referenced_field_name, True
         )
-        if self.referenced_lookup_field is None:
+        if self.target_field is None:
             return f"field({escaped_name})"
         else:
             escaped_lookup = convert_string_to_string_literal_token(
-                self.referenced_lookup_field, True
+                self.target_field, True
             )
             return f"lookup({escaped_name},{escaped_lookup})"
 
