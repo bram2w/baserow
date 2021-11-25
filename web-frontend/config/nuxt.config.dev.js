@@ -20,6 +20,9 @@ export default Object.assign(base(), {
           test: /\.(js|vue)$/,
           loader: 'eslint-loader',
           exclude: /(node_modules)/,
+          options: {
+            configFile: '/baserow/web-frontend/.eslintrc.js',
+          },
         })
       }
       config.node = { fs: 'empty' }
