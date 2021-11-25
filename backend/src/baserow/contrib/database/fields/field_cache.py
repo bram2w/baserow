@@ -48,6 +48,11 @@ class FieldCache:
             self._model_cache[table_id] = table.get_model()
         return self._model_cache[table_id]
 
+    def uncache_field(self, field):
+        return self._cached_field_by_name_per_table[field.table_id].pop(
+            field.name, None
+        )
+
     def cache_field(self, field):
         if not field.trashed:
             cached_fields = self._cached_field_by_name_per_table[field.table_id]

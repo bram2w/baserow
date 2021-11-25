@@ -123,7 +123,7 @@ class CachingFieldUpdateCollector(FieldCache):
             field, update_statement, via_path_to_starting_table
         )
 
-    def apply_updates_returning_updated_fields_in_start_table(self):
+    def apply_updates_and_get_updated_fields(self):
         """
         Triggers all update statements to be executed in the correct order in as few
         update queries as possible.

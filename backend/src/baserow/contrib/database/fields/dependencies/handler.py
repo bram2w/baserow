@@ -51,16 +51,22 @@ class FieldDependencyHandler:
     @classmethod
     def rebuild_dependencies(cls, field, field_cache: FieldCache):
         """
-        Deletes all existing dependencies for field and rebuilds them based off its
-        field_type.get_field_dependencies. If the field is trashed will instead break
-        any dependant relationships to the field.
+        Rebuilds this fields dependencies based off field_type.get_field_dependencies.
 
         :param field: The field to rebuild its field dependencies for.
         :param field_cache: A field cache which will be used to lookup fields.
         """
 
-        if field.trashed:
-            break_dependencies_for_field(field)
-        else:
-            update_fields_with_broken_references(field)
-            rebuild_field_dependencies(field, field_cache)
+        update_fields_with_broken_references(field)
+        rebuild_field_dependencies(field, field_cache)
+
+    @classmethod
+    def break_dependencies_delete_dependants(cls, field):
+        """
+        Breaks any dependant relationships to the field.
+
+        :param field: The field to break all dependant relations onto the field and all
+           dependencies
+        """
+
+        break_dependencies_for_field(field)

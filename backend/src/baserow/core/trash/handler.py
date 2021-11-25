@@ -35,6 +35,7 @@ class TrashHandler:
         application: Optional[Application],
         trash_item,
         parent_id=None,
+        create_trash_entry=True,
     ) -> TrashEntry:
         """
         Marks the provided trashable item as trashed meaning it will no longer be
@@ -48,6 +49,9 @@ class TrashHandler:
         :param group: The group the trashed item is in.
         :param application: If the item is in an application the application.
         :param trash_item: The item to be trashed.
+        :param create_trash_entry: Set to False to not create a trash entry for this
+            trashed item. Useful when a parent has been trashed and you want to trash
+            the children under the parents single trash entry.
         :return: A newly created entry in the TrashEntry table for this item.
         """
 
@@ -60,40 +64,39 @@ class TrashHandler:
 
             _check_parent_id_valid(parent_id, trash_item_type)
 
-            items_to_trash = trash_item_type.get_items_to_trash(trash_item)
-            for item in items_to_trash:
-                item.trashed = True
-                item.save()
+            trash_item_type.trash(trash_item, requesting_user)
 
-            parent = trash_item_type.get_parent(trash_item, parent_id)
-            if parent is not None:
-                parent_type = trash_item_type_registry.get_by_model(parent)
-                parent_name = parent_type.get_name(parent)
-            else:
-                parent_name = None
-
-            try:
-                return TrashEntry.objects.create(
-                    user_who_trashed=requesting_user,
-                    group=group,
-                    application=application,
-                    trash_item_type=trash_item_type.type,
-                    trash_item_id=trash_item.id,
-                    name=trash_item_type.get_name(trash_item),
-                    parent_name=parent_name,
-                    parent_trash_item_id=parent_id,
-                    # If we ever introduce the ability to trash many rows at once this
-                    # call will generate a model per row currently, instead a model
-                    # cache should be added so generated models can be shared.
-                    extra_description=trash_item_type.get_extra_description(
-                        trash_item, parent
-                    ),
-                )
-            except IntegrityError as e:
-                if "unique constraint" in e.args[0]:
-                    raise CannotDeleteAlreadyDeletedItem()
+            if create_trash_entry:
+                parent = trash_item_type.get_parent(trash_item, parent_id)
+                if parent is not None:
+                    parent_type = trash_item_type_registry.get_by_model(parent)
+                    parent_name = parent_type.get_name(parent)
                 else:
-                    raise e
+                    parent_name = None
+
+                try:
+                    return TrashEntry.objects.create(
+                        user_who_trashed=requesting_user,
+                        group=group,
+                        application=application,
+                        trash_item_type=trash_item_type.type,
+                        trash_item_id=trash_item.id,
+                        name=trash_item_type.get_name(trash_item),
+                        parent_name=parent_name,
+                        parent_trash_item_id=parent_id,
+                        # If we ever introduce the ability to trash many rows at once
+                        # this call will generate a model per row currently, instead
+                        # a model cache should be added so generated models can be
+                        # shared.
+                        extra_description=trash_item_type.get_extra_description(
+                            trash_item, parent
+                        ),
+                    )
+                except IntegrityError as e:
+                    if "unique constraint" in e.args[0]:
+                        raise CannotDeleteAlreadyDeletedItem()
+                    else:
+                        raise e
 
     @staticmethod
     def restore_item(user, trash_item_type, trash_item_id, parent_trash_item_id=None):
@@ -119,8 +122,6 @@ class TrashHandler:
 
             trash_item = trashable_item_type.lookup_trashed_item(trash_entry, {})
 
-            items_to_restore = trashable_item_type.get_items_to_trash(trash_item)
-
             if TrashHandler.item_has_a_trashed_parent(
                 trash_item,
                 parent_id=trash_entry.parent_trash_item_id,
@@ -129,16 +130,8 @@ class TrashHandler:
 
             trash_entry.delete()
 
-            # Restore everything in the database first before we run any restored
-            # hooks otherwise signals etc might try to be sent when dependent items are
-            # still trashed in the database.
-            for item in items_to_restore:
-                item.trashed = False
-                item.save()
-
-            for item in items_to_restore:
-                restore_type = trash_item_type_registry.get_by_model(item)
-                restore_type.trashed_item_restored(item, trash_entry)
+            restore_type = trash_item_type_registry.get_by_model(trash_item)
+            restore_type.restore(trash_item, trash_entry)
 
     @staticmethod
     def get_trash_structure(user: User) -> Dict[str, Any]:
