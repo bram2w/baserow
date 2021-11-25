@@ -694,7 +694,7 @@ class FieldType(
             return str(human_readable_value)
 
     # noinspection PyMethodMayBeStatic
-    def get_related_items_to_trash(self, field) -> List[Any]:
+    def get_related_fields_to_trash_and_restore(self, field) -> List[Any]:
         """
         When a field of this type is trashed/restored, or the table it is in
         trashed/restored, this method should return any other trashable items that

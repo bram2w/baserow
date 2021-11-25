@@ -949,7 +949,7 @@ def test_row_dependency_update_functions_do_no_row_updates_for_same_table(
         formula_field, row, update_collector, []
     )
     with django_assert_num_queries(0):
-        update_collector.apply_updates_returning_updated_fields_in_start_table()
+        update_collector.apply_updates_and_get_updated_fields()
 
 
 @pytest.mark.django_db

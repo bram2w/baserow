@@ -390,7 +390,7 @@ def test_import_export_lookup_field_trashed_target_field(data_fixture, api_clien
     assert lookup_field_imported.formula_type == BaserowFormulaInvalidType.type
     assert (
         lookup_field_imported.error
-        == "references the deleted or unknown lookup field target in table table_b"
+        == "references the deleted or unknown field target in table table_b"
     )
 
 
@@ -912,7 +912,7 @@ def test_deleting_restoring_lookup_target_works(
     assert lookup_field.formula_type == "invalid"
     assert (
         lookup_field.error
-        == "references the deleted or unknown lookup field lookupfield in table table 2"
+        == "references the deleted or unknown field lookupfield in table table 2"
     )
     assert lookup_field.target_field is None
     assert lookup_field.target_field_name == looked_up_field.name
@@ -922,7 +922,7 @@ def test_deleting_restoring_lookup_target_works(
     assert string_agg.formula_type == "invalid"
     assert (
         string_agg.error
-        == "references the deleted or unknown lookup field lookupfield in table table 2"
+        == "references the deleted or unknown field lookupfield in table table 2"
     )
 
     response = api_client.patch(
@@ -975,3 +975,553 @@ def test_deleting_restoring_lookup_target_works(
     string_agg.refresh_from_db()
     assert string_agg.formula_type == "text"
     assert string_agg.error is None
+
+
+@pytest.mark.django_db
+def test_deleting_related_link_row_field_dep_breaks_deps(
+    data_fixture, api_client, django_assert_num_queries
+):
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(
+        user=user, database=table.database, name="table 2"
+    )
+    table_primary_field = data_fixture.create_text_field(
+        name="p", table=table, primary=True
+    )
+    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+    looked_up_field = data_fixture.create_date_field(
+        name="lookupfield",
+        table=table2,
+        date_include_time=False,
+        date_format="US",
+    )
+    linkrowfield = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    depends_on_related_field = FieldHandler().create_field(
+        user,
+        table2,
+        "formula",
+        name="depends on related",
+        formula=f"field('{linkrowfield.link_row_related_field.name}')",
+    )
+
+    table2_model = table2.get_model(attribute_names=True)
+    a = table2_model.objects.create(
+        lookupfield=f"2021-02-01", primaryfield="primary " "a", order=0
+    )
+    b = table2_model.objects.create(
+        lookupfield=f"2022-02-03", primaryfield="primary " "b", order=1
+    )
+
+    table_model = table.get_model(attribute_names=True)
+
+    table_row = table_model.objects.create()
+    table_row.linkrowfield.add(a.id)
+    table_row.linkrowfield.add(b.id)
+    table_row.save()
+
+    lookup_field = FieldHandler().create_field(
+        user,
+        table,
+        "lookup",
+        name="lookup_field",
+        through_field_id=linkrowfield.id,
+        target_field_id=looked_up_field.id,
+    )
+    string_agg = FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="string_agg",
+        formula='join(totext(field("lookup_field")), ", ")',
+    )
+
+    response = api_client.delete(
+        reverse(
+            "api:database:fields:item",
+            kwargs={"field_id": linkrowfield.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    new_row = RowHandler().create_row(
+        user,
+        table,
+        values={f"field_{table_primary_field.id}": "bbb"},
+    )
+    RowHandler().create_row(user, table2, values={})
+
+    depends_on_related_field.refresh_from_db()
+    assert depends_on_related_field.formula_type == "invalid"
+    assert "references the deleted or unknown field" in depends_on_related_field.error
+
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"field_{table_primary_field.id}": None,
+                f"field_{lookup_field.id}": None,
+                f"field_{string_agg.id}": None,
+                "id": table_row.id,
+                "order": "1.00000000000000000000",
+            },
+            {
+                f"field_{table_primary_field.id}": "bbb",
+                f"field_{lookup_field.id}": None,
+                f"field_{string_agg.id}": None,
+                "id": new_row.id,
+                "order": "2.00000000000000000000",
+            },
+        ],
+    }
+    lookup_field.refresh_from_db()
+    assert lookup_field.formula_type == "invalid"
+    assert lookup_field.error == "references the deleted or unknown field linkrowfield"
+    assert lookup_field.target_field is None
+    assert lookup_field.target_field_name == looked_up_field.name
+    assert lookup_field.through_field is None
+    assert lookup_field.through_field_name == linkrowfield.name
+
+    string_agg.refresh_from_db()
+    assert string_agg.formula_type == "invalid"
+    assert string_agg.error == "references the deleted or unknown field linkrowfield"
+
+    response = api_client.patch(
+        reverse(
+            "api:trash:restore",
+        ),
+        {
+            "trash_item_type": "field",
+            "trash_item_id": linkrowfield.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"field_{table_primary_field.id}": None,
+                f"field_{linkrowfield.id}": [
+                    {"id": a.id, "value": "primary a"},
+                    {"id": b.id, "value": "primary b"},
+                ],
+                f"field_{lookup_field.id}": [
+                    {"id": a.id, "value": "2021-02-01"},
+                    {"id": b.id, "value": "2022-02-03"},
+                ],
+                f"field_{string_agg.id}": "02/01/2021, 02/03/2022",
+                "id": table_row.id,
+                "order": "1.00000000000000000000",
+            },
+            {
+                f"field_{table_primary_field.id}": "bbb",
+                f"field_{linkrowfield.id}": [],
+                f"field_{lookup_field.id}": [],
+                f"field_{string_agg.id}": None,
+                "id": new_row.id,
+                "order": "2.00000000000000000000",
+            },
+        ],
+    }
+    lookup_field.refresh_from_db()
+    assert lookup_field.formula_type == "array"
+    assert lookup_field.array_formula_type == "date"
+    assert lookup_field.error is None
+    assert lookup_field.target_field.id == looked_up_field.id
+    assert lookup_field.target_field_name == looked_up_field.name
+    assert lookup_field.through_field.id == linkrowfield.id
+
+    string_agg.refresh_from_db()
+    assert string_agg.formula_type == "text"
+    assert string_agg.error is None
+
+
+@pytest.mark.django_db
+def test_deleting_table_with_dependants_works(
+    data_fixture, api_client, django_assert_num_queries
+):
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user, name="table 1")
+    table2 = data_fixture.create_database_table(
+        user=user, database=table.database, name="table 2"
+    )
+    table_primary_field = data_fixture.create_text_field(
+        name="p", table=table, primary=True
+    )
+    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+    looked_up_field = data_fixture.create_date_field(
+        name="lookupfield",
+        table=table2,
+        date_include_time=False,
+        date_format="US",
+    )
+    linkrowfield = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    depends_on_related_field = FieldHandler().create_field(
+        user,
+        table2,
+        "formula",
+        name="depends on related",
+        formula=f"field('{linkrowfield.link_row_related_field.name}')",
+    )
+
+    table2_model = table2.get_model(attribute_names=True)
+    a = table2_model.objects.create(
+        lookupfield=f"2021-02-01", primaryfield="primary " "a", order=0
+    )
+    b = table2_model.objects.create(
+        lookupfield=f"2022-02-03", primaryfield="primary " "b", order=1
+    )
+
+    table_model = table.get_model(attribute_names=True)
+
+    table_row = table_model.objects.create()
+    table_row.linkrowfield.add(a.id)
+    table_row.linkrowfield.add(b.id)
+    table_row.save()
+
+    lookup_field = FieldHandler().create_field(
+        user,
+        table,
+        "lookup",
+        name="lookup_field",
+        through_field_id=linkrowfield.id,
+        target_field_id=looked_up_field.id,
+    )
+    string_agg = FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="string_agg",
+        formula='join(totext(field("lookup_field")), ", ")',
+    )
+
+    response = api_client.delete(
+        reverse(
+            "api:database:tables:item",
+            kwargs={"table_id": table2.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    new_row = RowHandler().create_row(
+        user,
+        table,
+        values={f"field_{table_primary_field.id}": "bbb"},
+    )
+
+    assert not depends_on_related_field.dependencies.exists()
+    assert not depends_on_related_field.dependants.exists()
+
+    lookup_field.refresh_from_db()
+    assert lookup_field.formula_type == "invalid"
+    assert "references the deleted or unknown" in lookup_field.error
+    assert lookup_field.target_field is None
+    assert lookup_field.target_field_name == looked_up_field.name
+    assert lookup_field.through_field is None
+    assert lookup_field.through_field_name == linkrowfield.name
+
+    string_agg.refresh_from_db()
+    assert string_agg.formula_type == "invalid"
+    assert "references the deleted or unknown" in string_agg.error
+
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"field_{table_primary_field.id}": None,
+                f"field_{lookup_field.id}": None,
+                f"field_{string_agg.id}": None,
+                "id": table_row.id,
+                "order": "1.00000000000000000000",
+            },
+            {
+                f"field_{table_primary_field.id}": "bbb",
+                f"field_{lookup_field.id}": None,
+                f"field_{string_agg.id}": None,
+                "id": new_row.id,
+                "order": "2.00000000000000000000",
+            },
+        ],
+    }
+
+    response = api_client.patch(
+        reverse(
+            "api:trash:restore",
+        ),
+        {
+            "trash_item_type": "table",
+            "trash_item_id": table2.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    assert depends_on_related_field.dependencies.exists()
+
+    lookup_field.refresh_from_db()
+    assert lookup_field.formula_type == "array"
+    assert lookup_field.target_field.id == looked_up_field.id
+    assert lookup_field.target_field_name == looked_up_field.name
+    assert lookup_field.through_field.id == linkrowfield.id
+    assert lookup_field.through_field_name == linkrowfield.name
+
+    string_agg.refresh_from_db()
+    assert string_agg.formula_type == "text"
+
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"field_{table_primary_field.id}": None,
+                f"field_{linkrowfield.id}": [
+                    {"id": a.id, "value": "primary a"},
+                    {"id": b.id, "value": "primary b"},
+                ],
+                f"field_{lookup_field.id}": [
+                    {"id": a.id, "value": "2021-02-01"},
+                    {"id": b.id, "value": "2022-02-03"},
+                ],
+                f"field_{string_agg.id}": "02/01/2021, 02/03/2022",
+                "id": table_row.id,
+                "order": "1.00000000000000000000",
+            },
+            {
+                f"field_{table_primary_field.id}": "bbb",
+                f"field_{linkrowfield.id}": [],
+                f"field_{lookup_field.id}": [],
+                f"field_{string_agg.id}": None,
+                "id": new_row.id,
+                "order": "2.00000000000000000000",
+            },
+        ],
+    }
+    lookup_field.refresh_from_db()
+    assert lookup_field.formula_type == "array"
+    assert lookup_field.array_formula_type == "date"
+    assert lookup_field.error is None
+    assert lookup_field.target_field.id == looked_up_field.id
+    assert lookup_field.target_field_name == looked_up_field.name
+    assert lookup_field.through_field.id == linkrowfield.id
+
+    string_agg.refresh_from_db()
+    assert string_agg.formula_type == "text"
+    assert string_agg.error is None
+
+
+@pytest.mark.django_db
+def test_deleting_related_link_row_field_still_lets_you_create_edit_rows(
+    data_fixture, api_client, django_assert_num_queries
+):
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(
+        user=user, database=table.database, name="table 2"
+    )
+    table_primary_field = data_fixture.create_text_field(
+        name="p", table=table, primary=True
+    )
+    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+    looked_up_field = data_fixture.create_date_field(
+        name="lookupfield",
+        table=table2,
+        date_include_time=False,
+        date_format="US",
+    )
+    linkrowfield = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    FieldHandler().create_field(
+        user,
+        table2,
+        "formula",
+        name="depends on related",
+        formula=f"field('{linkrowfield.link_row_related_field.name}')",
+    )
+
+    table2_model = table2.get_model(attribute_names=True)
+    a = table2_model.objects.create(
+        lookupfield=f"2021-02-01", primaryfield="primary " "a", order=0
+    )
+    b = table2_model.objects.create(
+        lookupfield=f"2022-02-03", primaryfield="primary " "b", order=1
+    )
+
+    table_model = table.get_model(attribute_names=True)
+
+    table_row = table_model.objects.create()
+    table_row.linkrowfield.add(a.id)
+    table_row.linkrowfield.add(b.id)
+    table_row.save()
+
+    FieldHandler().create_field(
+        user,
+        table,
+        "lookup",
+        name="lookup_field",
+        through_field_id=linkrowfield.id,
+        target_field_id=looked_up_field.id,
+    )
+    FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="string_agg",
+        formula='join(totext(field("lookup_field")), ", ")',
+    )
+
+    response = api_client.delete(
+        reverse(
+            "api:database:fields:item",
+            kwargs={"field_id": linkrowfield.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    RowHandler().create_row(
+        user,
+        table,
+        values={f"field_{table_primary_field.id}": "bbb"},
+    )
+    RowHandler().create_row(user, table2, values={})
+    RowHandler().update_row(user, table, row_id=table_row.id, values={})
+
+
+@pytest.mark.django_db
+def test_deleting_related_table_still_lets_you_create_edit_rows(
+    data_fixture, api_client, django_assert_num_queries
+):
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(
+        user=user, database=table.database, name="table 2"
+    )
+    table_primary_field = data_fixture.create_text_field(
+        name="p", table=table, primary=True
+    )
+    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+    looked_up_field = data_fixture.create_date_field(
+        name="lookupfield",
+        table=table2,
+        date_include_time=False,
+        date_format="US",
+    )
+    linkrowfield = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    FieldHandler().create_field(
+        user,
+        table2,
+        "formula",
+        name="depends on related",
+        formula=f"field('{linkrowfield.link_row_related_field.name}')",
+    )
+
+    table2_model = table2.get_model(attribute_names=True)
+    a = table2_model.objects.create(
+        lookupfield=f"2021-02-01", primaryfield="primary " "a", order=0
+    )
+    b = table2_model.objects.create(
+        lookupfield=f"2022-02-03", primaryfield="primary " "b", order=1
+    )
+
+    table_model = table.get_model(attribute_names=True)
+
+    table_row = table_model.objects.create()
+    table_row.linkrowfield.add(a.id)
+    table_row.linkrowfield.add(b.id)
+    table_row.save()
+
+    FieldHandler().create_field(
+        user,
+        table,
+        "lookup",
+        name="lookup_field",
+        through_field_id=linkrowfield.id,
+        target_field_id=looked_up_field.id,
+    )
+    FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="string_agg",
+        formula='join(totext(field("lookup_field")), ", ")',
+    )
+
+    response = api_client.delete(
+        reverse(
+            "api:database:tables:item",
+            kwargs={"table_id": table2.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    RowHandler().create_row(
+        user,
+        table,
+        values={f"field_{table_primary_field.id}": "bbb"},
+    )
+    RowHandler().update_row(user, table, row_id=table_row.id, values={})

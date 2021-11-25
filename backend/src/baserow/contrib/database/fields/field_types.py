@@ -1294,18 +1294,22 @@ class LinkRowFieldType(FieldType):
     ):
         getattr(row, field_name).set(value)
 
-    def get_related_items_to_trash(self, field) -> List[Any]:
+    def get_related_fields_to_trash_and_restore(self, field) -> List[Any]:
         return [field.link_row_related_field]
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
-        primary_field = field.get_related_primary_field().specific
-        related_field_type = field_type_registry.get_by_model(primary_field)
-        return related_field_type.to_baserow_formula_type(primary_field)
+        primary_field = field.get_related_primary_field()
+        if primary_field is None:
+            return BaserowFormulaInvalidType("references unknown or deleted table")
+        else:
+            primary_field = primary_field.specific
+            related_field_type = field_type_registry.get_by_model(primary_field)
+            return related_field_type.to_baserow_formula_type(primary_field)
 
     def to_baserow_formula_expression(
         self, field
     ) -> BaserowExpression[BaserowFormulaType]:
-        primary_field = field.get_related_primary_field().specific
+        primary_field = field.get_related_primary_field()
         return FormulaHandler.get_lookup_field_reference_expression(
             field, primary_field, self.to_baserow_formula_type(field)
         )

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, Dict
 
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.registry import (
@@ -58,6 +58,7 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         :returns True if this trash type requires a parent id to lookup a specific item,
             false if only the trash_item_id is required to perform a lookup.
         """
+
         return False
 
     @abstractmethod
@@ -68,19 +69,22 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         :param trashed_item: The item to lookup a parent for.
         :returns Either the parent item or None if this item has no parent.
         """
+
         pass
 
     @abstractmethod
-    def trashed_item_restored(self, trashed_item: Any, trash_entry):
+    def restore(self, trashed_item: Any, trash_entry):
         """
-        Called when a trashed item is restored, should perform any extra operations
-        such as sending web socket signals which occur when an item is "created" in
-        baserow.
+        Called when a trashed item should be restored. Will set trashed to true and
+        save. Should be overridden if additional actions such as restoring related
+        items or web socket signals are needed.
 
         :param trash_entry: The trash entry that was restored from.
-        :param trashed_item: The item that has been restored.
+        :param trashed_item: The item that to be restored.
         """
-        pass
+
+        trashed_item.trashed = False
+        trashed_item.save()
 
     @abstractmethod
     def get_name(self, trashed_item: Any) -> str:
@@ -91,20 +95,19 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         :param trashed_item: The item to be named.
         :return The name of the trashed_group
         """
+
         pass
 
-    # noinspection PyMethodMayBeStatic
-    def get_items_to_trash(self, trashed_item: Any) -> List[Any]:
+    def trash(self, item_to_trash, requesting_user):
         """
-        When trashing some items you might also need to mark other related items also
-        as trashed. Override this method and return instances of trashable models
-        which should also be marked as trashed. Each of these instances will not
-        however be given their own unique trash entry, but instead be restored
-        all together from a single trash entry made for trashed_item only.
+        Saves trashed=True on the provided item and should be overriden to perform any
+        other cleanup and trashing other items related to item_to_trash.
 
         :return  An iterable of trashable model instances.
         """
-        return [trashed_item]
+
+        item_to_trash.trashed = True
+        item_to_trash.save()
 
     # noinspection PyMethodMayBeStatic
     def get_extra_description(

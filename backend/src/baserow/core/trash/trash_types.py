@@ -17,7 +17,8 @@ class ApplicationTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item: Application) -> str:
         return trashed_item.name
 
-    def trashed_item_restored(self, trashed_item: Application, trash_entry: TrashEntry):
+    def restore(self, trashed_item: Application, trash_entry: TrashEntry):
+        super().restore(trashed_item, trash_entry)
         application_created.send(
             self,
             application=trashed_item,
@@ -49,11 +50,12 @@ class GroupTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item: Group) -> str:
         return trashed_item.name
 
-    def trashed_item_restored(self, trashed_item: Group, trash_entry: TrashEntry):
+    def restore(self, trashed_item: Group, trash_entry: TrashEntry):
         """
         Informs any clients that the group exists again.
         """
 
+        super().restore(trashed_item, trash_entry)
         for group_user in trashed_item.groupuser_set.all():
             group_restored.send(self, group_user=group_user, user=None)
 

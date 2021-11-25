@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fix trashing tables and related link fields causing the field dependency graph to 
+  become invalid. 
 * Fixed not executing premium tests.
 
 ## Released (2021-11-24)

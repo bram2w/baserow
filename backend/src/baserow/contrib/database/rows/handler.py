@@ -390,7 +390,7 @@ class RowHandler:
                 dependant_field_type.row_of_dependency_created(
                     dependant_field, instance, update_collector, path_to_starting_table
                 )
-        update_collector.apply_updates_returning_updated_fields_in_start_table()
+        update_collector.apply_updates_and_get_updated_fields()
 
         return instance
 
@@ -495,7 +495,7 @@ class RowHandler:
                     dependant_field_type.row_of_dependency_updated(
                         dependant_field, row, update_collector, path_to_starting_table
                     )
-            update_collector.apply_updates_returning_updated_fields_in_start_table()
+            update_collector.apply_updates_and_get_updated_fields()
             # We need to refresh here as ExpressionFields might have had their values
             # updated. Django does not support UPDATE .... RETURNING and so we need to
             # query for the rows updated values instead.
@@ -565,7 +565,7 @@ class RowHandler:
                 dependant_field_type.row_of_dependency_moved(
                     dependant_field, row, update_collector, path_to_starting_table
                 )
-        update_collector.apply_updates_returning_updated_fields_in_start_table()
+        update_collector.apply_updates_and_get_updated_fields()
 
         row_updated.send(
             self,
@@ -624,7 +624,7 @@ class RowHandler:
                 dependant_field_type.row_of_dependency_deleted(
                     dependant_field, row, update_collector, path_to_starting_table
                 )
-        update_collector.apply_updates_returning_updated_fields_in_start_table()
+        update_collector.apply_updates_and_get_updated_fields()
 
         row_deleted.send(
             self,

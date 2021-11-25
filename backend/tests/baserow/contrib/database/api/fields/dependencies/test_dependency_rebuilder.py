@@ -139,7 +139,7 @@ def test_trashing_a_link_row_field_breaks_vias(
 
     link_row_field.trashed = True
     link_row_field.save()
-    FieldDependencyHandler.rebuild_dependencies(link_row_field, cache)
+    FieldDependencyHandler.break_dependencies_delete_dependants(link_row_field)
 
     # The trashed field is no longer part of the graph
     assert not link_row_field.dependencies.exists()
@@ -157,7 +157,54 @@ def test_trashing_a_link_row_field_breaks_vias(
     assert direct_dep.broken_reference_field_name == "link"
     assert direct_dep.via is None
 
-    _assert_rebuilding_changes_nothing(cache, link_row_field)
+
+@pytest.mark.django_db
+def trashing_a_lookup_target_still_has_the_dep_depend_on_the_through_field(
+    data_fixture,
+):
+    table = data_fixture.create_database_table()
+    other_table = data_fixture.create_database_table()
+    data_fixture.create_text_field(primary=True, name="primary", table=table)
+    data_fixture.create_text_field(name="field", table=table)
+    data_fixture.create_text_field(primary=True, name="primary", table=other_table)
+    target_field = data_fixture.create_text_field(name="target", table=other_table)
+    link_row_field = data_fixture.create_link_row_field(
+        name="link", table=table, link_row_table=other_table
+    )
+    lookup_field = data_fixture.create_lookup_field(
+        table=table,
+        through_field_id=link_row_field.id,
+        target_field=target_field.id,
+    )
+
+    cache = FieldCache()
+    FieldDependencyHandler.rebuild_dependencies(link_row_field, cache)
+    FieldDependencyHandler.rebuild_dependencies(lookup_field, cache)
+
+    target_field.trashed = True
+    target_field.save()
+    FieldDependencyHandler.break_dependencies_delete_dependants(target_field)
+
+    # The trashed field is no longer part of the graph
+    assert not target_field.dependencies.exists()
+    assert not target_field.vias.exists()
+    assert not target_field.dependants.exists()
+
+    # The lookup still has two deps, one to the link row field, the other to the broken
+    # target
+    assert lookup_field.dependencies.count() == 2
+    assert FieldDependency.objects.count() == 2
+    assert lookup_field.dependent_fields.get().specific == link_row_field
+    assert FieldDependency.objects.filter(
+        broken_reference_field_name=target_field.name,
+        dependency__isnull=True,
+        via=link_row_field,
+        dependant=lookup_field,
+    ).get()
+    assert FieldDependency.objects.filter(
+        dependency=link_row_field,
+        dependant=lookup_field,
+    ).get()
 
 
 @pytest.mark.django_db
