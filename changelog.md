@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* Fixed not executing premium tests.
+
 ## Released (2021-11-24)
 
 * Fixed a bug where the frontend would fail hard if a table with no views was accessed.

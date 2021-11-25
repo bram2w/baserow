@@ -12,7 +12,7 @@ lint: eslint stylelint
 lint-javascript: lint
 
 jest:
-	yarn run jest-all || exit;
+	yarn run jest || exit;
 
 test: jest
 
