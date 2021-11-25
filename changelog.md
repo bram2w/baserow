@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Released (2021-11-25)
 
 * Fix trashing tables and related link fields causing the field dependency graph to 
   become invalid. 
