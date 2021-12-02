@@ -303,8 +303,14 @@ class BaserowAdd(TwoArgumentBaserowFunction):
         return arg1.expression_type.add(func_call, arg1, arg2)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        # todo wrap with expression wrapper and set correct output type
-        return arg1 + arg2
+        # date + interval = date
+        # non date/interval types + non date/interval types = first arg type always
+        output_field = arg1.output_field
+        if isinstance(arg1.output_field, fields.DurationField):
+            # interval + interval = interval
+            # interval + date = date
+            output_field = arg2.output_field
+        return ExpressionWrapper(arg1 + arg2, output_field=output_field)
 
 
 class BaserowMultiply(TwoArgumentBaserowFunction):
@@ -324,7 +330,7 @@ class BaserowMultiply(TwoArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return arg1 * arg2
+        return ExpressionWrapper(arg1 * arg2, output_field=arg1.output_field)
 
 
 class BaserowMinus(TwoArgumentBaserowFunction):
@@ -354,7 +360,12 @@ class BaserowMinus(TwoArgumentBaserowFunction):
         return arg1.expression_type.minus(func_call, arg1, arg2)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return arg1 - arg2
+        output_field = arg1.output_field
+        if isinstance(arg1.output_field, fields.DateField) and isinstance(
+            arg2.output_field, fields.DateField
+        ):
+            output_field = fields.DurationField()
+        return ExpressionWrapper(arg1 - arg2, output_field=output_field)
 
 
 class BaserowGreatest(TwoArgumentBaserowFunction):
@@ -373,7 +384,7 @@ class BaserowGreatest(TwoArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return Greatest(arg1, arg2)
+        return Greatest(arg1, arg2, output_field=arg1.output_field)
 
 
 class BaserowLeast(TwoArgumentBaserowFunction):
@@ -392,7 +403,7 @@ class BaserowLeast(TwoArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return Least(arg1, arg2)
+        return Least(arg1, arg2, output_field=arg1.output_field)
 
 
 class BaserowDivide(TwoArgumentBaserowFunction):
@@ -418,12 +429,16 @@ class BaserowDivide(TwoArgumentBaserowFunction):
         # Prevent divide by zero's by swapping 0 for NaN causing the entire expression
         # to evaluate to NaN. The front-end then treats NaN values as a per cell error
         # to display to the user.
-        return arg1 / Case(
-            When(
-                condition=(EqualsExpr(arg2, 0, output_field=fields.BooleanField())),
-                then=Value(Decimal("NaN")),
+        return ExpressionWrapper(
+            arg1
+            / Case(
+                When(
+                    condition=(EqualsExpr(arg2, 0, output_field=fields.BooleanField())),
+                    then=Value(Decimal("NaN")),
+                ),
+                default=arg2,
             ),
-            default=arg2,
+            output_field=fields.DecimalField(decimal_places=NUMBER_MAX_DECIMAL_PLACES),
         )
 
 
@@ -505,7 +520,11 @@ class BaserowIf(ThreeArgumentBaserowFunction):
     def to_django_expression(
         self, arg1: Expression, arg2: Expression, arg3: Expression
     ) -> Expression:
-        return Case(When(condition=arg1, then=arg2), default=arg3)
+        return Case(
+            When(condition=arg1, then=arg2),
+            default=arg3,
+            output_field=arg1.output_field,
+        )
 
 
 class BaserowToNumber(OneArgumentBaserowFunction):
@@ -525,7 +544,7 @@ class BaserowToNumber(OneArgumentBaserowFunction):
         return Func(
             arg,
             function="try_cast_to_numeric",
-            output_field=fields.DecimalField(),
+            output_field=fields.DecimalField(decimal_places=0),
         )
 
 
@@ -541,7 +560,9 @@ class BaserowErrorToNan(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Func(arg, function="replace_errors_with_nan")
+        return Func(
+            arg, function="replace_errors_with_nan", output_field=arg.output_field
+        )
 
 
 class BaserowErrorToNull(OneArgumentBaserowFunction):
@@ -556,7 +577,9 @@ class BaserowErrorToNull(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Func(arg, function="replace_errors_with_null")
+        return Func(
+            arg, function="replace_errors_with_null", output_field=arg.output_field
+        )
 
 
 class BaserowIsBlank(OneArgumentBaserowFunction):
@@ -718,7 +741,7 @@ class BaserowDay(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "day", output_field=fields.DecimalField())
+        return Extract(arg, "day", output_field=fields.DecimalField(decimal_places=0))
 
 
 class BaserowMonth(OneArgumentBaserowFunction):
@@ -735,7 +758,7 @@ class BaserowMonth(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "month", output_field=fields.DecimalField())
+        return Extract(arg, "month", output_field=fields.DecimalField(decimal_places=0))
 
 
 class BaserowDateDiff(ThreeArgumentBaserowFunction):
@@ -764,7 +787,7 @@ class BaserowDateDiff(ThreeArgumentBaserowFunction):
             arg2,
             arg3,
             function="date_diff",
-            output_field=fields.DecimalField(),
+            output_field=fields.DecimalField(decimal_places=0),
         )
 
 
@@ -856,7 +879,7 @@ class BaserowSearch(TwoArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return StrIndex(arg1, arg2, output_field=fields.DecimalField())
+        return StrIndex(arg1, arg2, output_field=fields.DecimalField(decimal_places=0))
 
 
 class BaserowContains(TwoArgumentBaserowFunction):
@@ -931,7 +954,7 @@ class BaserowLength(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Length(arg, output_field=fields.DecimalField())
+        return Length(arg, output_field=fields.DecimalField(decimal_places=0))
 
 
 class BaserowReverse(OneArgumentBaserowFunction):
@@ -968,7 +991,7 @@ class BaserowWhenEmpty(TwoArgumentBaserowFunction):
         return func_call.with_valid_type(arg1.expression_type)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        return Coalesce(arg1, arg2)
+        return Coalesce(arg1, arg2, output_field=arg1.output_field)
 
 
 def _calculate_aggregate_orders(join_ids):
@@ -1073,7 +1096,7 @@ class BaserowCount(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Count(arg, output_field=fields.DecimalField())
+        return Count(arg, output_field=fields.DecimalField(decimal_places=0))
 
 
 class BaserowFilter(TwoArgumentBaserowFunction):
@@ -1131,7 +1154,7 @@ class BaserowAny(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Func(arg, function="bool_or")
+        return Func(arg, function="bool_or", output_field=fields.BooleanField())
 
 
 class BaserowEvery(OneArgumentBaserowFunction):
@@ -1147,7 +1170,7 @@ class BaserowEvery(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Func(arg, function="every")
+        return Func(arg, function="every", output_field=fields.BooleanField())
 
 
 class BaserowMax(OneArgumentBaserowFunction):
@@ -1167,7 +1190,7 @@ class BaserowMax(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Max(arg)
+        return Max(arg, output_field=arg.output_field)
 
 
 class BaserowMin(OneArgumentBaserowFunction):
@@ -1187,7 +1210,7 @@ class BaserowMin(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Min(arg)
+        return Min(arg, output_field=arg.output_field)
 
 
 class BaserowAvg(OneArgumentBaserowFunction):
@@ -1205,7 +1228,7 @@ class BaserowAvg(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Avg(arg)
+        return Avg(arg, output_field=arg.output_field)
 
 
 class BaserowStdDevPop(OneArgumentBaserowFunction):
@@ -1221,7 +1244,7 @@ class BaserowStdDevPop(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return StdDev(arg, sample=False)
+        return StdDev(arg, sample=False, output_field=arg.output_field)
 
 
 class BaserowStdDevSample(OneArgumentBaserowFunction):
@@ -1237,7 +1260,7 @@ class BaserowStdDevSample(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return StdDev(arg, sample=True)
+        return StdDev(arg, sample=True, output_field=arg.output_field)
 
 
 class BaserowAggJoin(TwoArgumentBaserowFunction):
@@ -1270,7 +1293,9 @@ class BaserowAggJoin(TwoArgumentBaserowFunction):
         orders = _calculate_aggregate_orders(join_ids)
         join_ids.clear()
         return aggregate_wrapper(
-            BaserowStringAgg(args[0], args[1], ordering=orders),
+            BaserowStringAgg(
+                args[0], args[1], ordering=orders, output_field=fields.TextField()
+            ),
             model,
             pre_annotations,
             aggregate_filters,
@@ -1291,7 +1316,7 @@ class BaserowSum(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Sum(arg, output_field=fields.DecimalField())
+        return Sum(arg, output_field=arg.output_field)
 
 
 class BaserowVarianceSample(OneArgumentBaserowFunction):
@@ -1307,7 +1332,7 @@ class BaserowVarianceSample(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Variance(arg, sample=True)
+        return Variance(arg, sample=True, output_field=arg.output_field)
 
 
 class BaserowVariancePop(OneArgumentBaserowFunction):
@@ -1323,7 +1348,7 @@ class BaserowVariancePop(OneArgumentBaserowFunction):
         return func_call.with_valid_type(arg.expression_type)
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Variance(arg, sample=False)
+        return Variance(arg, sample=False, output_field=arg.output_field)
 
 
 class BaserowGetSingleSelectValue(OneArgumentBaserowFunction):
@@ -1443,7 +1468,7 @@ class BaserowYear(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "year", output_field=fields.DecimalField())
+        return Extract(arg, "year", output_field=fields.DecimalField(decimal_places=0))
 
 
 class BaserowSecond(OneArgumentBaserowFunction):
@@ -1460,4 +1485,6 @@ class BaserowSecond(OneArgumentBaserowFunction):
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
-        return Extract(arg, "second", output_field=fields.DecimalField())
+        return Extract(
+            arg, "second", output_field=fields.DecimalField(decimal_places=0)
+        )
