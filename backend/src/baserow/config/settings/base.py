@@ -365,3 +365,15 @@ WEBHOOKS_MAX_RETRIES_PER_CALL = 8
 WEBHOOKS_MAX_PER_TABLE = 20
 WEBHOOKS_MAX_CALL_LOG_ENTRIES = 10
 WEBHOOKS_REQUEST_TIMEOUT_SECONDS = 5
+
+# ======== WARNING ========
+# Please read and understand everything at:
+# https://docs.djangoproject.com/en/3.2/ref/settings/#secure-proxy-ssl-header
+# before enabling this setting otherwise you can compromise your site’s security.
+# This setting will ensure the "next" urls provided by the various paginated API
+# endpoints will be returned with https when appropriate.
+# If using gunicorn also behind the proxy you might also need to set
+# --forwarded-allow-ips='*'. See the following link for more information:
+# https://stackoverflow.com/questions/62337379/how-to-append-nginx-ip-to-x-forwarded
+# -for-in-kubernetes-nginx-ingress-controller
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
