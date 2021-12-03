@@ -883,7 +883,9 @@ def test_conversion_multiple_select_to_single_select_field(data_fixture):
 
 
 @pytest.mark.django_db
-def test_converting_multiple_select_field_value(data_fixture):
+def test_converting_multiple_select_field_value(
+    data_fixture, django_assert_num_queries
+):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
 
@@ -899,10 +901,18 @@ def test_converting_multiple_select_field_value(data_fixture):
     )
 
     assert len(SelectOption.objects.all()) == 2
-
-    row_handler.create_row(
+    row = row_handler.create_row(
         user=user,
         table=table,
+        values={f"field_{multiple_select_field.id}": [option_1.id]},
+    )
+    # We have to add option_2 in a separate request so we have the guarantee that the
+    # m2m through table id for option_2 is greater than option_1 for the ordering
+    # assertion to be correct later.
+    row_handler.update_row(
+        user=user,
+        table=table,
+        row_id=row.id,
         values={f"field_{multiple_select_field.id}": [option_1.id, option_2.id]},
     )
 
