@@ -18,6 +18,7 @@ def test_valid_urls(valid_url):
         "https://192.168.172.1:4000",
         "http://localhost",
         "http://localhost:4000/endpoint",
+        "http://google.de:8a",
     ],
 )
 def test_invalid_urls(invalid_url):
