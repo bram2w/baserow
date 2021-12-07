@@ -32,8 +32,9 @@ class TableWebhookCreateRequestSerializer(serializers.ModelSerializer):
         "the value the value.",
     )
     url = serializers.URLField(
+        max_length=2000,
         validators=[url_validation],
-        help_text="The URL that must call when the webhook is triggered.",
+        help_text="The URL that must be called when the webhook is triggered.",
     )
 
     class Meta:
@@ -63,8 +64,9 @@ class TableWebhookUpdateRequestSerializer(serializers.ModelSerializer):
     )
     url = serializers.URLField(
         required=False,
+        max_length=2000,
         validators=[url_validation],
-        help_text="The URL that must call when the webhook is triggered.",
+        help_text="The URL that must be called when the webhook is triggered.",
     )
 
     class Meta:

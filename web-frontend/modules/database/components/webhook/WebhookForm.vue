@@ -72,12 +72,29 @@
           <div class="control__elements">
             <input
               v-model="values.url"
+              :placeholder="$t('webhookForm.inputLabels.url')"
               class="input"
               :class="{ 'input--error': $v.values.url.$error }"
               @blur="$v.values.url.$touch()"
             />
-            <div v-if="$v.values.url.$error" class="error">
+            <div
+              v-if="
+                $v.values.url.$error &&
+                (!$v.values.url.required || !$v.values.url.url)
+              "
+              class="error"
+            >
               {{ $t('webhookForm.errors.urlField') }}
+            </div>
+            <div
+              v-else-if="$v.values.url.$error && !$v.values.url.maxLength"
+              class="error"
+            >
+              {{
+                $t('error.maxLength', {
+                  max: $v.values.url.$params.maxLength.max,
+                })
+              }}
             </div>
           </div>
         </div>
@@ -204,7 +221,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { required } from 'vuelidate/lib/validators'
+import { required, maxLength, url } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
@@ -306,7 +323,7 @@ export default {
   validations: {
     values: {
       name: { required },
-      url: { required },
+      url: { required, maxLength: maxLength(2000), url },
     },
     headers: {
       $each: {

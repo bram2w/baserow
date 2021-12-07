@@ -141,7 +141,7 @@ class WebhookHandler:
         values = extract_allowed(kwargs, allowed_fields)
         webhook = TableWebhook.objects.create(table_id=table.id, **values)
 
-        if events is not None and not values["include_all_events"]:
+        if events is not None and not values.get("include_all_events"):
             event_headers = []
             for event in events:
                 event_object = TableWebhookEvent(

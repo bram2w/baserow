@@ -192,6 +192,39 @@ def test_create_webhooks(api_client, data_fixture):
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert response_json["detail"]["events"]["0"][0]["code"] == "invalid_choice"
 
+    response = api_client.post(
+        reverse("api:database:webhooks:list", kwargs={"table_id": table.id}),
+        {
+            "url": "https://mydomain.com:8a/endpoint",
+            "name": "My Webhook 2",
+            "events": ["row.created"],
+            "request_method": "PATCH",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["url"][0]["code"] == "invalid_url"
+
+    # Testing too long URL
+    response = api_client.post(
+        reverse("api:database:webhooks:list", kwargs={"table_id": table.id}),
+        {
+            "url": "https://md.com/" + (2001 - len("https://md.com/")) * "a",
+            "name": "My Webhook 2",
+            "events": ["row.created"],
+            "request_method": "PATCH",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["url"][0]["code"] == "max_length"
+
 
 @pytest.mark.django_db
 def test_get_webhook(api_client, data_fixture):
