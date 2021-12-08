@@ -223,8 +223,8 @@ export default {
   "fr": {
     "fieldLookupSubForm": {
       "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
-      "selectThroughFieldLabel": "#TODO",
-      "selectTargetFieldLabel": "#TODO"
+      "selectThroughFieldLabel": "Sélectionnez le lien vers la table",
+      "selectTargetFieldLabel": "Sélectionnez le champ à rapporter"
     }
   }
 }

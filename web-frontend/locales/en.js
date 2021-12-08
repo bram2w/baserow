@@ -12,6 +12,7 @@ export default {
     signIn: 'Sign in',
     createNew: 'Create new',
     create: 'Create',
+    edit: 'Edit',
     change: 'Change',
     delete: 'Delete',
     rename: 'Rename',
