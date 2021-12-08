@@ -109,9 +109,9 @@ export default {
   },
   "fr": {
     "webhookModal": {
-      "title": "@TODO",
-      "createWebhook": "@TODO",
-      "backToList": "@TODO"
+      "title": "Webhooks de {name}",
+      "createWebhook": "Ajouter un webhook",
+      "backToList": "Retour à la liste"
     }
   }
 }

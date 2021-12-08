@@ -12,14 +12,15 @@ export default {
     signIn: "S'identifier",
     createNew: 'Nouveau',
     create: 'Créer',
+    edit: 'Modifier',
     change: 'Changer',
     delete: 'Supprimer',
-    rename: 'Renomer',
+    rename: 'Renommer',
     add: 'Ajouter',
     makeChoice: 'Choisissez',
     cancel: 'Annuler',
-    save: '@TODO',
-    retry: '@TODO',
+    save: 'Enregistrer',
+    retry: 'Réessayer',
     search: 'Chercher',
     copy: 'Copier',
   },
@@ -71,7 +72,7 @@ export default {
     singleSelect: 'Liste déroulante',
     phoneNumber: 'Téléphone',
     formula: 'Formule',
-    lookup: 'Chercher',
+    lookup: 'Champ rapporté',
   },
   fieldErrors: {
     invalidNumber: 'Nombre invalide',
@@ -104,7 +105,7 @@ export default {
     createdOnReadOnly: 'La date de modification de la ligne en lecture seule.',
     url: 'Accept une URL valide.',
     email: 'Accepte une adresse email valide.',
-    file: "Accept un tableau d'objet contenant au moins le nom du fichier utilisateur.",
+    file: "Accepte un tableau d'objet contenant au moins le nom du fichier utilisateur.",
     singleSelect:
       "Accepte un entier correspondant à l'identifiant de l'option sélectionnée " +
       'ou null si vide.',
@@ -118,7 +119,9 @@ export default {
     formula:
       'Un champ en lecture seule défini par une formule rédigée ' +
       'dans le format spécifique de Baserow.',
-    lookup: '@TODO',
+    lookup:
+      'Un champ en lecture seule associé à un champ de type « lien vers une table » qui retourne un tableau' +
+      " de valeurs et d'identifiants de ligne provenant du champ choisi dans la table liée.",
   },
   viewFilter: {
     contains: 'contient',
@@ -155,18 +158,18 @@ export default {
     row: 'ligne',
   },
   webhook: {
-    request: '@TODO',
-    response: '@TODO',
-    successfullyUpdated: '@TODO',
+    request: 'Requête',
+    response: 'Réponse',
+    successfullyUpdated: 'Le webhook a été mis à jour.',
     status: {
-      noStatus: '@TODO',
-      statusOK: '@TODO',
-      statusNotOK: '@TODO',
+      noStatus: "PAS D'ÉTAT",
+      statusOK: 'OK',
+      statusNotOK: 'NON OK',
     },
     eventType: {
-      rowCreated: '@TODO',
-      rowUpdated: '@TODO',
-      rowDeleted: '@TODO',
+      rowCreated: "Création d'une ligne",
+      rowUpdated: "Modification d'une ligne",
+      rowDeleted: "Suppression d'une ligne",
     },
   },
   clientHandler: {

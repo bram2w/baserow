@@ -130,8 +130,8 @@ export default {
   },
   "fr": {
     "testWebhookModal": {
-      "title": "@TODO",
-      "unreachable": "@TODO"
+      "title": "Test du webhook",
+      "unreachable": "Serveur inacessible"
     }
   }
 }

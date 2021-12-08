@@ -44,7 +44,7 @@ export default {
   },
   "fr": {
     "webhookList": {
-      "noWebhooksMessage": "@TODO"
+      "noWebhooksMessage": "Vous n'avez pas encore créé de webhook. Les webhooks peuvent être utilisés afin d'informer un système tiers quand une ligne a été créée, modifiée, supprimée dans Baserow."
     }
   }
 }

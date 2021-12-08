@@ -151,7 +151,7 @@
                 'input--error':
                   !lastHeader(index) && $v.headers.$each[index].name.$error,
               }"
-              placeholder="Name"
+              :placeholder="$t('webhookForm.inputLabels.name')"
               @input="lastHeader(index) && addHeader(header.name, header.value)"
               @blur="
                 !lastHeader(index) && $v.headers.$each[index].name.$touch()
@@ -164,7 +164,7 @@
                 'input--error':
                   !lastHeader(index) && $v.headers.$each[index].value.$error,
               }"
-              placeholder="Value"
+              :placeholder="$t('webhookForm.inputLabels.value')"
               @input="lastHeader(index) && addHeader(header.name, header.value)"
               @blur="
                 !lastHeader(index) && $v.headers.$each[index].value.$touch()
@@ -386,6 +386,7 @@ export default {
     "webhookForm": {
       "inputLabels": {
         "name": "Name",
+        "value":"Value",
         "requestMethod": "Method",
         "url": "URL",
         "userFieldNames": "User field names",
@@ -415,30 +416,31 @@ export default {
   "fr": {
     "webhookForm": {
       "inputLabels": {
-        "name": "@TODO",
-        "requestMethod": "@TODO",
-        "url": "@TODO",
-        "userFieldNames": "@TODO",
-        "events": "@TODO",
-        "headers": "@TODO",
-        "example": "@TODO"
+        "name": "Nom",
+        "value":"Valeur",
+        "requestMethod": "Méthode",
+        "url": "URL",
+        "userFieldNames": "Noms des champs",
+        "events": "Quels événements déclenchent ce webhook",
+        "headers": "Entêtes additionels",
+        "example": "Example de requête"
       },
       "errors": {
-        "urlField": "@TODO",
-        "invalidHeaders": "@TODO"
+        "urlField": "Ce champ est requis est doit être une URL valide.",
+        "invalidHeaders": "Un des entête est invalide."
       },
       "checkbox": {
-        "sendUserFieldNames": "@TODO"
+        "sendUserFieldNames": "Utiliser les noms de champ plutôt que les identifiants"
       },
       "radio": {
-        "allEvents": "@TODO",
-        "customEvents": "@TODO"
+        "allEvents": "Tous les événements",
+        "customEvents": "Choisir les événements"
       },
-      "triggerButton": "@TODO",
+      "triggerButton": "Tester le webhook",
       "deactivated": {
-        "title": "@TODO",
-        "content": "@TODO",
-        "activate": "@TODO"
+        "title": "Le webhook est désactivé",
+        "content": "Ce webhook a été désactivé car il y avait trop échecs consécutifs. Veuillez vérifier l'historique des appels pour plus d'information. Cliquez sur le bouton ci-dessous pour l'activer de nouveau. Pensez à enregistrer le webhook avant de l'activer.",
+        "activate": "Activer"
       }
     }
   }
