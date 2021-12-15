@@ -2025,6 +2025,23 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         return AnnotatedOrder(annotation=annotation, order=order)
 
+    def before_field_options_update(
+        self, field, to_create=None, to_update=None, to_delete=None
+    ):
+        """
+        Before removing the select options, we want to delete the link beetwen
+        the row and the options.
+        """
+
+        through_model = (
+            field.table.get_model(fields=[field], field_ids=[])
+            ._meta.get_field(field.db_column)
+            .remote_field.through
+        )
+        through_model_fields = through_model._meta.get_fields()
+        option_field_name = through_model_fields[2].name
+        through_model.objects.filter(**{f"{option_field_name}__in": to_delete}).delete()
+
 
 class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
     """

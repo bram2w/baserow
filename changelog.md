@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Fix deleted options that appear in the command line JSON file export.
 * Fix subtracting date intervals from dates in formulas in some situations not working.
 
 ## Released (2021-11-25)

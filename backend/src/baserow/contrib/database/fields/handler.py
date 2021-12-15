@@ -548,44 +548,44 @@ class FieldHandler:
         group = field.table.database.group
         group.has_user(user, raise_error=True)
 
-        existing_select_options = field.select_options.all()
+        field_type = field_type_registry.get_by_model(field)
 
-        # Checks which option ids must be selected by comparing the existing ids with
+        existing_option_ids = [existing.id for existing in field.select_options.all()]
+
+        to_update = []
+        to_create = []
+        for select_option in select_options:
+            if "id" in select_option:
+                to_update.append(select_option["id"])
+            else:
+                to_create.append(select_option)
+
+        # Checks which option ids must be deleted by comparing the existing ids with
         # the provided ids.
         to_delete = [
-            existing.id
-            for existing in existing_select_options
-            if existing.id
-            not in [desired["id"] for desired in select_options if "id" in desired]
+            existing for existing in existing_option_ids if existing not in to_update
         ]
 
-        if len(to_delete) > 0:
+        # Call field_type hook before applying modifications
+        field_type.before_field_options_update(
+            field,
+            to_create=to_create,
+            to_update=to_update,
+            to_delete=to_delete,
+        )
+
+        if to_delete:
             SelectOption.objects.filter(field=field, id__in=to_delete).delete()
 
-        # Checks which existing instances must be fetched using a single query.
-        to_select = [
-            select_option["id"]
-            for select_option in select_options
-            if "id" in select_option
-        ]
-
-        if len(to_select) > 0:
-            for existing in field.select_options.filter(id__in=to_select):
-                for select_option in select_options:
-                    if select_option.get("id") == existing.id:
-                        select_option["instance"] = existing
-
-        to_create = []
-
+        instance_to_create = []
         for order, select_option in enumerate(select_options):
-            if "instance" in select_option:
-                instance = select_option["instance"]
-                instance.order = order
-                instance.value = select_option["value"]
-                instance.color = select_option["color"]
-                instance.save()
+            id = select_option.pop("id", None)
+            if id in existing_option_ids:
+                # Update existing options
+                field.select_options.filter(id=id).update(**select_option, order=order)
             else:
-                to_create.append(
+                # Create new instance
+                instance_to_create.append(
                     SelectOption(
                         field=field,
                         order=order,
@@ -594,8 +594,8 @@ class FieldHandler:
                     )
                 )
 
-        if len(to_create) > 0:
-            SelectOption.objects.bulk_create(to_create)
+        if instance_to_create:
+            SelectOption.objects.bulk_create(instance_to_create)
 
     # noinspection PyMethodMayBeStatic
     def find_next_unused_field_name(
