@@ -1,6 +1,6 @@
 #!/bin/bash
 # Bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
-set -euo pipefail
+set -eo pipefail
 
 
 tabname() {
@@ -197,15 +197,15 @@ fi
 
 # Set various env variables to sensible defaults if they have not already been set by
 # the user.
-if [[ -z "${UID:-}" ]]; then
+if [[ -z "$UID" ]]; then
 UID=$(id -u)
-export UID
 fi
+export UID
 
-if [[ -z "${GID:-}" ]]; then
-export GID
+if [[ -z "$GID" ]]; then
 GID=$(id -g)
 fi
+export GID
 
 
 if [[ -z "${MIGRATE_ON_STARTUP:-}" ]]; then
@@ -250,7 +250,7 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml build "$@"
 fi
 
 if [ "$delete_db_volume" = true ] ; then
-  docker volume rm baserow_pgdata
+docker volume rm baserow_pgdata
 fi
 
 if [ "$up" = true ] ; then
