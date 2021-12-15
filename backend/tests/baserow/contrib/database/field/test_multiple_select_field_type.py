@@ -68,7 +68,7 @@ def test_multi_select_field_type(data_fixture):
         name="Multiple Select",
         select_options=select_options_initial,
     )
-    field_id = f"field_{field.id}"
+    field_id = field.db_column
 
     assert MultipleSelectField.objects.all().first().id == field.id
     assert SelectOption.objects.all().count() == 1
@@ -85,9 +85,7 @@ def test_multi_select_field_type(data_fixture):
         user=user, table=table, values={field_id: [select_options[0].id]}
     )
     assert row.id
-    row_multi_select_field_list = (
-        getattr(row, f"field_{field.id}").order_by("order").all()
-    )
+    row_multi_select_field_list = getattr(row, field_id).order_by("order").all()
     assert len(row_multi_select_field_list) == 1
     assert row_multi_select_field_list[0].id == select_options[0].id
     assert row_multi_select_field_list[0].value == select_options[0].value
@@ -99,10 +97,13 @@ def test_multi_select_field_type(data_fixture):
         field=field,
         table=table,
         select_options=[
-            {"value": "Option 1", "color": "blue"},
+            {"id": select_options[0].id, "value": "Option 1", "color": "blue"},
             {"value": "Option 2", "color": "green"},
         ],
     )
+
+    row_multi_select_field_list = getattr(row, field_id).order_by("order").all()
+    assert len(row_multi_select_field_list) == 1
 
     select_options = field.select_options.all()
     assert len(select_options) == 2
@@ -115,9 +116,7 @@ def test_multi_select_field_type(data_fixture):
     )
 
     assert row_2.id
-    row_multi_select_field_list = (
-        getattr(row_2, f"field_{field.id}").order_by("order").all()
-    )
+    row_multi_select_field_list = getattr(row_2, field_id).order_by("order").all()
     assert len(row_multi_select_field_list) == 2
     assert row_multi_select_field_list[0].id == select_options[0].id
     assert row_multi_select_field_list[0].value == select_options[0].value
@@ -127,6 +126,32 @@ def test_multi_select_field_type(data_fixture):
     assert row_multi_select_field_list[1].value == select_options[1].value
     assert row_multi_select_field_list[1].color == select_options[1].color
     assert row_multi_select_field_list[1].field_id == select_options[1].field_id
+
+    through_model = row_2._meta.get_field(field_id).remote_field.through
+    through_model_fields = through_model._meta.get_fields()
+    row_field_name = through_model_fields[1].name
+
+    assert len(through_model.objects.filter(**{row_field_name: row_2.id})) == 2
+
+    # Test option removal behaviour
+    field_handler.update_field(
+        user=user,
+        field=field,
+        table=table,
+        select_options=[
+            {"id": select_options[0].id, "value": "Option 1", "color": "blue"},
+        ],
+    )
+
+    select_options = field.select_options.all()
+    assert len(select_options) == 1
+    assert SelectOption.objects.all().count() == 1
+
+    row_multi_select_field_list = getattr(row_2, field_id).order_by("order").all()
+    assert len(row_multi_select_field_list) == 1
+    # Check that no link exist anymore with the deleted option
+    assert len(through_model.objects.filter(**{row_field_name: row.id})) == 1
+    assert len(through_model.objects.filter(**{row_field_name: row_2.id})) == 1
 
 
 @pytest.mark.django_db

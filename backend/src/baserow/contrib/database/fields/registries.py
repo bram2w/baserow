@@ -1028,6 +1028,26 @@ class FieldType(
             field, field, field, via_path_to_starting_table, update_collector
         )
 
+    def before_field_options_update(
+        self,
+        field: Field,
+        to_create: List[int] = None,
+        to_update: List[dict] = None,
+        to_delete: List[int] = None,
+    ):
+        """
+        Called from `FieldHandler.update_field_select_options()` just before
+        the select options of a field are updated in database.
+
+        :param field: The field instance whose options are updated.
+        :param to_create: A list of dict containing data for each new option
+            added to the field.
+        :param to_update: A list of option ids that already exists and are going
+            to be associated with this field.
+        :param to_delete: A list of option ids that are removed from the field
+            option list.
+        """
+
 
 class FieldTypeRegistry(
     APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
