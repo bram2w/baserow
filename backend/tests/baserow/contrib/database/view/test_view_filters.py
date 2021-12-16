@@ -3325,3 +3325,103 @@ def test_multiple_select_has_not_filter_type(data_fixture):
     assert len(ids) == 2
     assert row_1.id in ids
     assert row_3.id in ids
+
+
+@pytest.mark.django_db
+def test_length_is_lower_than_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    long_text_field = data_fixture.create_long_text_field(table=table)
+    url_field = data_fixture.create_url_field(table=table)
+    email_field = data_fixture.create_email_field(table=table)
+    phone_number_field = data_fixture.create_phone_number_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "t",
+            f"field_{long_text_field.id}": "t",
+            f"field_{url_field.id}": "t@test.com",
+            f"field_{email_field.id}": "t@baserow.com",
+            f"field_{phone_number_field.id}": "+44 1",
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "te",
+            f"field_{long_text_field.id}": "te",
+            f"field_{url_field.id}": "te@test.com",
+            f"field_{email_field.id}": "te@baserow.com",
+            f"field_{phone_number_field.id}": "+44 12",
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "tes",
+            f"field_{long_text_field.id}": "tes",
+            f"field_{url_field.id}": "tes@test.com",
+            f"field_{email_field.id}": "te@baserow.com",
+            f"field_{phone_number_field.id}": "+44 123",
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="length_is_lower_than", value=12
+    )
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = 2
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = 3
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_2.id in ids
+
+    view_filter.value = 4
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "a"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.value = 2
+    view_filter.field = long_text_field
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = 11
+    view_filter.field = url_field
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = 6
+    view_filter.field = phone_number_field
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids

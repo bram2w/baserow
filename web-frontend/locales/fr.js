@@ -142,6 +142,7 @@ export default {
     inThisMonth: 'ce mois-ci',
     inThisYear: 'cette année',
     lowerThan: 'plus petit que',
+    lengthIsLowerThan: 'longueur inférieure à',
   },
   viewType: {
     grid: 'Tableau',
