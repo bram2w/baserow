@@ -1,9 +1,11 @@
 import sys
+from collections import defaultdict
 from decimal import Decimal
 from math import ceil
 
 from django.core.management.base import BaseCommand
 from django.db.models import Max
+from django.db.models.fields.related import ForeignKey
 from faker import Faker
 
 from baserow.contrib.database.fields.field_helpers import (
@@ -58,6 +60,8 @@ def fill_table(limit, table, add_columns=False):
     model = table.get_model()
     # Find out what the highest order is because we want to append the new rows.
     order = ceil(model.objects.aggregate(max=Max("order")).get("max") or Decimal("0"))
+
+    rows = []
     for i in range(0, limit):
         # Based on the random_value function we have for each type we can
         # build a dict with a random value for each field.
@@ -72,13 +76,54 @@ def fill_table(limit, table, add_columns=False):
         order += Decimal("1")
         values["order"] = order
 
-        # Insert the row with the randomly created values.
-        instance = model.objects.create(**values)
+        # Prepare an array of objects that can later be inserted all at once.
+        instance = model(**values)
+        relations = {
+            field_name: value
+            for field_name, value in manytomany_values.items()
+            if value and len(value) > 0
+        }
+        rows.append((instance, relations))
 
-        # Changes the set of the manytomany values.
-        for field_name, value in manytomany_values.items():
-            if value and len(value) > 0:
-                getattr(instance, field_name).set(value)
+    # First create the rows in bulk because that's more efficient than creating them
+    # one by one.
+    model.objects.bulk_create([row for (row, relations) in rows])
+
+    # Construct an object where the key is the field name of the many to many field
+    # that must be populated. The value contains the objects that must be inserted in
+    # bulk.
+    many_to_many = defaultdict(list)
+    for (row, relations) in rows:
+        for field_name, value in relations.items():
+            through = getattr(model, field_name).through
+            through_fields = through._meta.get_fields()
+            value_column = None
+            row_column = None
+
+            # Figure out which field in the many to many through table holds the row
+            # value and which on contains the value.
+            for field in through_fields:
+                if type(field) is not ForeignKey:
+                    continue
+
+                if field.remote_field.model == model:
+                    row_column = field.get_attname_column()[1]
+                else:
+                    value_column = field.get_attname_column()[1]
+
+            for i in value:
+                many_to_many[field_name].append(
+                    getattr(model, field_name).through(
+                        **{
+                            row_column: row.id,
+                            value_column: i,
+                        }
+                    )
+                )
+
+    for field_name, values in many_to_many.items():
+        through = getattr(model, field_name).through
+        through.objects.bulk_create(values)
 
 
 def create_a_column_for_every_type(table):
