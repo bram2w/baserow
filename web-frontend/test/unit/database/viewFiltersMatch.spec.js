@@ -9,6 +9,7 @@ import {
   MultipleSelectHasFilterType,
   MultipleSelectHasNotFilterType,
   HasFileTypeViewFilterType,
+  LengthIsLowerThanViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 
 const dateBeforeCasesWithTimezone = [
@@ -347,6 +348,34 @@ const multipleSelectValuesHasNot = [
   },
 ]
 
+const lengthIsLowerThanCases = [
+  {
+    rowValue: 'bill',
+    filterValue: 0,
+    expected: true,
+  },
+  {
+    rowValue: 'bill',
+    filterValue: 1,
+    expected: false,
+  },
+  {
+    rowValue: 'bill',
+    filterValue: 4,
+    expected: false,
+  },
+  {
+    rowValue: 'bill',
+    filterValue: 5,
+    expected: true,
+  },
+  {
+    rowValue: 'bill',
+    filterValue: 'a',
+    expected: true,
+  },
+]
+
 describe('All Tests', () => {
   let testApp = null
 
@@ -475,6 +504,17 @@ describe('All Tests', () => {
     )
     expect(result).toBe(values.expected)
   })
+
+  test.each(lengthIsLowerThanCases)(
+    'LengthIsLowerThanViewFilterType',
+    (values) => {
+      const result = new LengthIsLowerThanViewFilterType().matches(
+        values.rowValue,
+        values.filterValue
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
 
   test('HasFileType contains image', () => {
     expect(new HasFileTypeViewFilterType().matches([], '', {})).toBe(true)

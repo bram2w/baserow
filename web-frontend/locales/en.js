@@ -140,6 +140,7 @@ export default {
     inThisMonth: 'in this month',
     inThisYear: 'in this year',
     lowerThan: 'lower than',
+    lengthIsLowerThan: 'length is lower than',
   },
   viewType: {
     grid: 'Grid',

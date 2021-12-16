@@ -341,6 +341,38 @@ export class ContainsNotViewFilterType extends ViewFilterType {
   }
 }
 
+export class LengthIsLowerThanViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'length_is_lower_than'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.lengthIsLowerThan')
+  }
+
+  getExample() {
+    return '5'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumber
+  }
+
+  getCompatibleFieldTypes() {
+    return ['text', 'long_text', 'url', 'email', 'phone_number']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return (
+      isNaN(filterValue) ||
+      rowValue === null ||
+      filterValue === 0 ||
+      rowValue.toString().length < filterValue
+    )
+  }
+}
+
 export class DateEqualViewFilterType extends ViewFilterType {
   static getType() {
     return 'date_equal'

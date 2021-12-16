@@ -7,7 +7,7 @@ from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db.models import Q, IntegerField, BooleanField, DateTimeField, DurationField
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, Length
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
 
@@ -168,6 +168,36 @@ class ContainsViewFilterType(ViewFilterType):
 
 class ContainsNotViewFilterType(NotViewFilterTypeMixin, ContainsViewFilterType):
     type = "contains_not"
+
+
+class LengthIsLowerThanViewFilterType(ViewFilterType):
+    """
+    The length is lower than filter checks if the fields character
+    length is less than x
+    """
+
+    type = "length_is_lower_than"
+    compatible_field_types = [
+        TextFieldType.type,
+        LongTextFieldType.type,
+        URLFieldType.type,
+        EmailFieldType.type,
+        PhoneNumberFieldType.type,
+    ]
+
+    def get_filter(self, field_name, value, model_field, field):
+        if value == 0:
+            return Q()
+
+        try:
+            return AnnotatedQ(
+                annotation={f"{field_name}_len": Length(field_name)},
+                q={f"{field_name}_len__lt": int(value)},
+            )
+        except Exception:
+            pass
+
+        return Q()
 
 
 class HigherThanViewFilterType(ViewFilterType):
