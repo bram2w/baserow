@@ -1208,20 +1208,18 @@ class LinkRowFieldType(FieldType):
         count_name = f"table_{instance.link_row_table.id}_count"
 
         if model_name not in cache:
-            cache[model_name] = instance.link_row_table.get_model()
+            cache[model_name] = instance.link_row_table.get_model(field_ids=[])
             cache[count_name] = cache[model_name].objects.all().count()
 
         model = cache[model_name]
         count = cache[count_name]
-        values = []
 
         if count == 0:
-            return values
+            return []
 
-        for i in range(0, randrange(0, 3)):
-            instance = model.objects.all()[randint(0, count - 1)]
-            values.append(instance.id)
-
+        values = model.objects.order_by("?")[0 : randrange(0, 3)].values_list(
+            "id", flat=True
+        )
         return values
 
     def export_serialized(self, field):
