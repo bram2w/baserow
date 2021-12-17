@@ -1,10 +1,11 @@
 <template>
-  <div class="card" v-on="$listeners">
+  <div class="card" :class="{ 'card--loading': loading }" v-on="$listeners">
     <div v-for="field in fields" :key="field.id" class="card__field">
       <div class="card__field-name">{{ field.name }}</div>
       <div class="card__field-value">
         <component
           :is="getCardComponent(field)"
+          v-if="!loading"
           :field="field"
           :value="row['field_' + field.id]"
         />
@@ -23,7 +24,13 @@ export default {
     },
     row: {
       type: Object,
-      required: true,
+      required: false,
+      default: () => {},
+    },
+    loading: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   methods: {

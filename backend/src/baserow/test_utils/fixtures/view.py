@@ -2,6 +2,8 @@ from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.views.models import (
     GridView,
     GridViewFieldOptions,
+    GalleryView,
+    GalleryViewFieldOptions,
     FormView,
     FormViewFieldOptions,
     ViewFilter,
@@ -33,6 +35,31 @@ class ViewFixtures:
     def create_grid_view_field_option(self, grid_view, field, **kwargs):
         return GridViewFieldOptions.objects.create(
             grid_view=grid_view, field=field, **kwargs
+        )
+
+    def create_gallery_view(self, user=None, **kwargs):
+        if "table" not in kwargs:
+            kwargs["table"] = self.create_database_table(user=user)
+
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        gallery_view = GalleryView.objects.create(**kwargs)
+        self.create_gallery_view_field_options(gallery_view)
+        return gallery_view
+
+    def create_gallery_view_field_options(self, gallery_view, **kwargs):
+        return [
+            self.create_gallery_view_field_option(gallery_view, field, **kwargs)
+            for field in Field.objects.filter(table=gallery_view.table)
+        ]
+
+    def create_gallery_view_field_option(self, gallery_view, field, **kwargs):
+        return GalleryViewFieldOptions.objects.create(
+            gallery_view=gallery_view, field=field, **kwargs
         )
 
     def create_form_view(self, user=None, **kwargs):

@@ -122,9 +122,10 @@ class DatabaseConfig(AppConfig):
         )
         field_converter_registry.register(FormulaFieldConverter())
 
-        from .views.view_types import GridViewType, FormViewType
+        from .views.view_types import GridViewType, GalleryViewType, FormViewType
 
         view_type_registry.register(GridViewType())
+        view_type_registry.register(GalleryViewType())
         view_type_registry.register(FormViewType())
 
         from .views.view_filters import (

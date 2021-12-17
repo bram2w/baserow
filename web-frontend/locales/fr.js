@@ -146,6 +146,7 @@ export default {
   },
   viewType: {
     grid: 'Tableau',
+    gallery: 'Gallerie',
     form: 'Formulaire',
   },
   premium: {

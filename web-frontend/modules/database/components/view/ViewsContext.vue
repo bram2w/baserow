@@ -22,7 +22,12 @@
         v-for="view in searchAndOrder(views)"
         :ref="'view-' + view.id"
         :key="view.id"
-        v-sortable="{ id: view.id, update: order, marginTop: -1.5 }"
+        v-sortable="{
+          enabled: !readOnly,
+          id: view.id,
+          update: order,
+          marginTop: -1.5,
+        }"
         :view="view"
         :table="table"
         :read-only="readOnly"
@@ -33,10 +38,7 @@
       {{ $t('viewsContext.noViews') }}
     </div>
     <div v-if="!readOnly" class="select__footer">
-      <div class="select__footer-multiple">
-        <div class="select__footer-multiple-label">
-          {{ $t('viewsContext.addView') }}
-        </div>
+      <div class="select__footer-create">
         <CreateViewLink
           v-for="(viewType, type) in viewTypes"
           :key="type"
@@ -205,15 +207,13 @@ export default {
   "en": {
     "viewsContext": {
       "searchView": "Search views",
-      "noViews": "No views found",
-      "addView": "Add a view:"
+      "noViews": "No views found"
     }
   },
   "fr": {
     "viewsContext": {
       "searchView": "Recherche",
-      "noViews": "Aucune vue trouvée",
-      "addView": "Ajouter une vue:"
+      "noViews": "Aucune vue trouvée"
     }
   }
 }

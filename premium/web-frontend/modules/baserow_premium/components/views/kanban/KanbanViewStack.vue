@@ -135,6 +135,7 @@ import RowCard from '@baserow/modules/database/components/card/RowCard'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
 import { populateRow } from '@baserow_premium/store/view/kanban'
 import KanbanViewStackContext from '@baserow_premium/components/views/kanban/KanbanViewStackContext'
+import { getCardHeight } from '@baserow/modules/database/utils/card'
 
 export default {
   name: 'KanbanViewStack',
@@ -200,27 +201,8 @@ export default {
      * the card is to correctly position it.
      */
     cardHeight() {
-      // margin-bottom of card.scss.card__field, that we don't have to compensate for
-      // if there aren't any fields in the card.
-      const fieldMarginBottom = this.cardFields.length === 0 ? 0 : 10
-
-      return (
-        // Some of these values must be kep in sync with card.scss
-        this.cardFields.reduce((accumulator, field) => {
-          const fieldType = this.$registry.get('field', field._.type.type)
-          return (
-            accumulator +
-            fieldType.getCardValueHeight(field) +
-            6 + // margin-bottom of card.scss.card__field-name
-            14 + // line-height of card.scss.card__field-name
-            10 // margin-bottom of card.scss.card__field
-          )
-        }, 0) +
-        16 + // padding-top of card.scss.card
-        16 - // padding-bottom of card.scss.card
-        fieldMarginBottom +
-        10 // margin-bottom of kanban.scss.kanban-view__stack-card
-      )
+      // 10 = margin-bottom of kanban.scss.kanban-view__stack-card
+      return getCardHeight(this.cardFields, this.$registry) + 10
     },
     /**
      * Figure out what the stack id that's used in the store is. The representation is

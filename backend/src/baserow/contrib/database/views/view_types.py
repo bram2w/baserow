@@ -11,12 +11,22 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
+from baserow.contrib.database.api.views.gallery.serializers import (
+    GalleryViewFieldOptionsSerializer,
+)
 from baserow.contrib.database.api.views.form.serializers import (
     FormViewFieldOptionsSerializer,
 )
 
 from .handler import ViewHandler
-from .models import GridView, GridViewFieldOptions, FormView, FormViewFieldOptions
+from .models import (
+    GridView,
+    GridViewFieldOptions,
+    GalleryView,
+    GalleryViewFieldOptions,
+    FormView,
+    FormViewFieldOptions,
+)
 from .registries import ViewType
 from .exceptions import FormViewFieldTypeIsNotSupported
 
@@ -110,6 +120,86 @@ class GridViewType(ViewType):
         for field_id in ordered_visible_fields:
             ordered_field_objects.append(model._field_objects[field_id])
         return ordered_field_objects, model
+
+
+class GalleryViewType(ViewType):
+    type = "gallery"
+    model_class = GalleryView
+    field_options_model_class = GalleryViewFieldOptions
+    field_options_serializer_class = GalleryViewFieldOptionsSerializer
+
+    def get_api_urls(self):
+        from baserow.contrib.database.api.views.gallery import urls as api_urls
+
+        return [
+            path("gallery/", include(api_urls, namespace=self.type)),
+        ]
+
+    def export_serialized(self, gallery, files_zip, storage):
+        """
+        Adds the serialized gallery view options to the exported dict.
+        """
+
+        serialized = super().export_serialized(gallery, files_zip, storage)
+        serialized_field_options = []
+        for field_option in gallery.get_field_options():
+            serialized_field_options.append(
+                {
+                    "id": field_option.id,
+                    "field_id": field_option.field_id,
+                    "hidden": field_option.hidden,
+                    "order": field_option.order,
+                }
+            )
+
+        serialized["field_options"] = serialized_field_options
+        return serialized
+
+    def import_serialized(
+        self, table, serialized_values, id_mapping, files_zip, storage
+    ):
+        """
+        Imports the serialized gallery view field options.
+        """
+
+        serialized_copy = serialized_values.copy()
+        field_options = serialized_copy.pop("field_options")
+        gallery_view = super().import_serialized(
+            table, serialized_copy, id_mapping, files_zip, storage
+        )
+
+        if "database_gallery_view_field_options" not in id_mapping:
+            id_mapping["database_gallery_view_field_options"] = {}
+
+        for field_option in field_options:
+            field_option_copy = field_option.copy()
+            field_option_id = field_option_copy.pop("id")
+            field_option_copy["field_id"] = id_mapping["database_fields"][
+                field_option["field_id"]
+            ]
+            field_option_object = GalleryViewFieldOptions.objects.create(
+                gallery_view=gallery_view, **field_option_copy
+            )
+            id_mapping["database_gallery_view_field_options"][
+                field_option_id
+            ] = field_option_object.id
+
+        return gallery_view
+
+    def view_created(self, view):
+        """
+        When a gallery view is created, we want to set the first three fields as
+        visible.
+        """
+
+        field_options = view.get_field_options(create_if_not_exists=True)
+        field_options.sort(key=lambda x: x.field_id)
+        ids_to_update = [f.id for f in field_options[0:3]]
+
+        if ids_to_update:
+            GalleryViewFieldOptions.objects.filter(id__in=ids_to_update).update(
+                hidden=False
+            )
 
 
 class FormViewType(ViewType):

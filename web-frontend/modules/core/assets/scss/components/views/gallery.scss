@@ -1,0 +1,37 @@
+.gallery-view {
+  overflow: hidden;
+
+  @include absolute(0);
+}
+
+.gallery-view__add {
+  border: solid 1px $color-neutral-400;
+  background: $white;
+  border-radius: 100%;
+  color: $color-primary-900;
+  box-shadow: 3px 0 6px 0 rgba($black, 0.16);
+  z-index: 2;
+
+  @include center-text(40px, 18px);
+  @include absolute(auto, 20px, 20px, auto);
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+  }
+}
+
+.gallery-view__scroll {
+  overflow-y: auto;
+  z-index: 1;
+
+  @include absolute(0);
+}
+
+.gallery-view__cards {
+  position: relative;
+}
+
+.gallery-view__card {
+  @include absolute(0, auto, auto, 0);
+}

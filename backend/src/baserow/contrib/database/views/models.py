@@ -220,6 +220,31 @@ class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
         ordering = ("field_id",)
 
 
+class GalleryView(View):
+    field_options = models.ManyToManyField(Field, through="GalleryViewFieldOptions")
+
+
+class GalleryViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
+    gallery_view = models.ForeignKey(GalleryView, on_delete=models.CASCADE)
+    field = models.ForeignKey(Field, on_delete=models.CASCADE)
+    hidden = models.BooleanField(
+        default=True,
+        help_text="Whether or not the field should be hidden in the card.",
+    )
+    # The default value is the maximum value of the small integer field because a newly
+    # created field must always be last.
+    order = models.SmallIntegerField(
+        default=32767,
+        help_text="The order that the field has in the form. Lower value is first.",
+    )
+
+    class Meta:
+        ordering = (
+            "order",
+            "field_id",
+        )
+
+
 class FormView(View):
     field_options = models.ManyToManyField(Field, through="FormViewFieldOptions")
     slug = models.SlugField(
