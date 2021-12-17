@@ -144,6 +144,7 @@ export default {
   },
   viewType: {
     grid: 'Grid',
+    gallery: 'Gallery',
     form: 'Form',
   },
   premium: {

@@ -1,5 +1,9 @@
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
-import { GridViewType, FormViewType } from '@baserow/modules/database/viewTypes'
+import {
+  GridViewType,
+  GalleryViewType,
+  FormViewType,
+} from '@baserow/modules/database/viewTypes'
 import {
   TextFieldType,
   LongTextFieldType,
@@ -62,6 +66,7 @@ import tableStore from '@baserow/modules/database/store/table'
 import viewStore from '@baserow/modules/database/store/view'
 import fieldStore from '@baserow/modules/database/store/field'
 import gridStore from '@baserow/modules/database/store/view/grid'
+import galleryStore from '@baserow/modules/database/store/view/gallery'
 import formStore from '@baserow/modules/database/store/view/form'
 import rowModal from '@baserow/modules/database/store/rowModal'
 
@@ -146,12 +151,15 @@ export default (context) => {
   store.registerModule('field', fieldStore)
   store.registerModule('rowModal', rowModal)
   store.registerModule('page/view/grid', gridStore)
+  store.registerModule('page/view/gallery', galleryStore)
   store.registerModule('page/view/form', formStore)
   store.registerModule('template/view/grid', gridStore)
+  store.registerModule('template/view/gallery', galleryStore)
   store.registerModule('template/view/form', formStore)
 
   app.$registry.register('application', new DatabaseApplicationType(context))
   app.$registry.register('view', new GridViewType(context))
+  app.$registry.register('view', new GalleryViewType(context))
   app.$registry.register('view', new FormViewType(context))
   app.$registry.register('viewFilter', new EqualViewFilterType(context))
   app.$registry.register('viewFilter', new NotEqualViewFilterType(context))

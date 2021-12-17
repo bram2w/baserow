@@ -1,14 +1,41 @@
-// Some of the properties must be kept in sync with `KanbanViewStack.vue::cardHeight`.
-// This is because the kanban view needs to know the height of each card in order to
-// paginate correctly. If properties that influence the height and added or changed, we
-// most likely need to make a change in the KanbanView.vue::cardHeight method. These
-// are properties like margin-top, margin-bottom, padding-top, padding-bottom, height,
-// line-height, etc
+@keyframes card-loading-animation {
+  0% {
+    transform: translate3d(-30%, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(30%, 0, 0);
+  }
+}
+
+// Some of the properties must be kept in sync with
+// `modules/database/utils/card.js::cardHeight`. This is because the kanban and gallery
+// view needs to know the height of each card in order to paginate correctly. If
+// properties that influence the height and added or changed, we most likely need to
+// make a change in the KanbanView.vue::cardHeight method. These are properties like
+// margin-top, margin-bottom, padding-top, padding-bottom, height, line-height, etc
 .card {
+  position: relative;
   background-color: $white;
   box-shadow: 0 1px 3px 0 rgba($black, 0.16);
   border-radius: 3px;
   padding: 16px 0;
+
+  &--loading {
+    overflow: hidden;
+
+    &::before {
+      z-index: 1;
+      width: 500%;
+      margin-left: -250%;
+      background: linear-gradient(to right, rgba(255, 255, 255, 0) 46%, rgba(255, 255, 255, 0.35) 50%, rgba(255, 255, 255, 0) 54%) 50% 50%;
+      animation: card-loading-animation 0.8s linear infinite;
+      content: " ";
+      pointer-events: none;
+
+      @include absolute(0, 0, 0, 50%);
+    }
+  }
 }
 
 .card__field {
@@ -24,8 +51,19 @@
   line-height: 14px;
   font-weight: 600;
   margin-bottom: 6px;
+
+  .card--loading & {
+    color: $color-neutral-100;
+    background-color: $color-neutral-100;
+  }
 }
 
 .card__field-value {
   width: 100%;
+
+  .card--loading & {
+    width: 50%;
+    background-color: $color-neutral-100;
+    height: 13px;
+  }
 }
