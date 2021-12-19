@@ -651,6 +651,53 @@ export class DateEqualsCurrentYearViewFilterType extends DateEqualsTodayViewFilt
   }
 }
 
+export class DateEqualsDayOfMonthViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_equals_day_of_month'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isDayOfMonth')
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumber
+  }
+
+  getCompatibleFieldTypes() {
+    return ['date', 'last_modified', 'created_on']
+  }
+
+  matches(rowValue, filterValue, field) {
+    // Check if the filter value is empty and immediately return true
+    if (filterValue === '') {
+      return true
+    }
+
+    let rowDate = moment.utc(rowValue)
+
+    if (field.timezone) {
+      rowDate = rowDate.tz(field.timezone)
+    }
+
+    // Check if the row's date matches the filter value
+    // in either the D (1) or DD (01) format for the day of month
+    if (
+      rowDate.format('D') === filterValue ||
+      rowDate.format('DD') === filterValue
+    ) {
+      return true
+    }
+
+    return false
+  }
+}
+
 export class HigherThanViewFilterType extends ViewFilterType {
   static getType() {
     return 'higher_than'

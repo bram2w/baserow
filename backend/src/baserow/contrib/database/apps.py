@@ -142,6 +142,7 @@ class DatabaseConfig(AppConfig):
             DateEqualsCurrentYearViewFilterType,
             HigherThanViewFilterType,
             LowerThanViewFilterType,
+            DateEqualsDayOfMonthViewFilterType,
             ContainsViewFilterType,
             FilenameContainsViewFilterType,
             HasFileTypeViewFilterType,
@@ -171,6 +172,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateNotEqualViewFilterType())
         view_filter_type_registry.register(DateEqualsTodayViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())
+        view_filter_type_registry.register(DateEqualsDayOfMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
