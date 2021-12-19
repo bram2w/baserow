@@ -357,6 +357,7 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
 
     type = "base_date_field_lookup_type"
     query_field_lookup = ""
+    query_date_lookup = ""
     compatible_field_types = [
         DateFieldType.type,
         LastModifiedFieldType.type,
@@ -389,14 +390,13 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
         # we need to verify that we are in fact dealing with a datetime field
         # if so the django query lookup '__date' gets appended to the field_name
         # otherwise (i.e. it is a date field) nothing gets appended
-        query_date_lookup = ""
-        if isinstance(model_field, DateTimeField):
+        query_date_lookup = self.query_date_lookup
+        if isinstance(model_field, DateTimeField) and not query_date_lookup:
             query_date_lookup = "__date"
         try:
             parsed_date = self.parse_date(value)
             has_timezone = hasattr(field, "timezone")
             field_key = f"{field_name}{query_date_lookup}{self.query_field_lookup}"
-
             if has_timezone:
                 timezone_string = field.get_timezone()
                 tmp_field_name = f"{field_name}_timezone_{timezone_string}"
@@ -511,6 +511,28 @@ class DateEqualsCurrentYearViewFilterType(DateEqualsTodayViewFilterType):
 
 class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType):
     type = "date_not_equal"
+
+
+class DateEqualsDayOfMonthViewFilterType(BaseDateFieldLookupFilterType):
+    """
+    The day of month filter checks if the field number value
+    matches the date's day of the month value.
+    """
+
+    type = "date_equals_day_of_month"
+    query_date_lookup = "__day"
+
+    @staticmethod
+    def parse_date(value: str) -> str:
+        # Check if the value is a positive number
+        if not value.isdigit():
+            raise ValueError
+
+        # Check if the value is a valid day of the month
+        if int(value) < 1 or int(value) > 31:
+            raise ValueError
+
+        return value
 
 
 class SingleSelectEqualViewFilterType(ViewFilterType):

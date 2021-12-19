@@ -135,6 +135,7 @@ export default {
     isEmpty: 'est vide',
     isNotEmpty: "n'est pas vide",
     isDate: 'est égal',
+    isDayOfMonth: 'est jour du mois',
     isBeforeDate: 'est avant',
     isAfterDate: 'est après',
     isNotDate: 'est différent',

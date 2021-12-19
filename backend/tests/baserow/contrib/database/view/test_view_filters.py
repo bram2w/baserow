@@ -3425,3 +3425,90 @@ def test_length_is_lower_than_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 1
     assert row_1.id in ids
+
+
+@pytest.mark.django_db
+def test_date_equals_day_of_month_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+    last_modified_field_datetime_berlin = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/Berlin"
+    )
+    last_modified_field_datetime_london = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/London"
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 8, 11),
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2020, 1, 1),
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2019, 11, 1),
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{date_field.id}": None,
+        }
+    )
+
+    # Date Field (No timezone)
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=date_field, type="date_equals_day_of_month", value="1"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "11"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = "-1"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    # Datetime (With timezone)
+
+    # Jan 1st UTC, Jan 1st Germany, Jan 1st London
+    with freeze_time("2020-1-01 22:01"):
+        row_2_tz = model.objects.create(**{})
+
+    # Jan 1st UTC, Jan 2nd Germany, Jan 1st London
+    with freeze_time("2019-1-01 23:01"):
+        row_3_tz = model.objects.create(**{})
+
+    # Testing with Berlin time, only one row should be accepted
+    view_filter.field = last_modified_field_datetime_berlin
+    view_filter.value = "1"
+    view_filter.save()
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_2_tz.id in ids
+    assert row_3_tz.id not in ids
+
+    # Testing with London time, both rows should be accepted
+    view_filter.field = last_modified_field_datetime_london
+    view_filter.save()
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2_tz.id in ids
+    assert row_3_tz.id in ids

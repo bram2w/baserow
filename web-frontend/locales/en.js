@@ -133,6 +133,7 @@ export default {
     isEmpty: 'is empty',
     isNotEmpty: 'is not empty',
     isDate: 'is date',
+    isDayOfMonth: 'day of month is',
     isBeforeDate: 'is before date',
     isAfterDate: 'is after date',
     isNotDate: 'is not date',
