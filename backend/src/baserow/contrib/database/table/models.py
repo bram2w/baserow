@@ -383,6 +383,9 @@ class Table(
                 "db_table": self.get_database_table_name(),
                 "app_label": app_label,
                 "ordering": ["order", "id"],
+                "indexes": [
+                    models.Index(fields=["order", "id"]),
+                ],
             },
         )
 
@@ -422,7 +425,6 @@ class Table(
                 max_digits=40,
                 decimal_places=20,
                 editable=False,
-                db_index=True,
                 default=1,
             ),
             "__str__": __str__,
