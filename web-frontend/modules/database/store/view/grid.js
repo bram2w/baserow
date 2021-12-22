@@ -341,12 +341,15 @@ export const mutations = {
   },
 }
 
-// Contains the timeout needed for the delayed delayed scroll top action.
-let fireTimeout = null
-// Contains a timestamp of the last fire of the related actions to the delayed
-// scroll top action.
-let lastFire = null
-// Contains the
+// Contains the info needed for the delayed scroll top action.
+const fireScrollTop = {
+  last: Date.now(),
+  timeout: null,
+  processing: false,
+  distance: 0,
+}
+
+// Contains the last row request to be able to cancel it.
 let lastRequest = null
 let lastRequestOffset = null
 let lastRequestLimit = null
@@ -450,6 +453,7 @@ export const actions = {
       requestLimit > 0 &&
       (lastRequestOffset !== requestOffset || lastRequestLimit !== requestLimit)
     ) {
+      fireScrollTop.processing = true
       // If another request is runnig we need to cancel that one because it won't
       // what we need at the moment.
       if (lastRequest !== null) {
@@ -484,12 +488,14 @@ export const actions = {
           dispatch('visibleByScrollTop')
           dispatch('updateSearch', { fields, primary })
           lastRequest = null
+          fireScrollTop.processing = false
         })
         .catch((error) => {
           if (!axios.isCancel(error)) {
             lastRequest = null
             throw error
           }
+          fireScrollTop.processing = false
         })
     }
   },
@@ -566,8 +572,11 @@ export const actions = {
    * milliseconds to prevent calling the actions who do a lot of calculating a lot.
    */
   fetchByScrollTopDelayed({ dispatch }, { scrollTop, fields, primary }) {
+    const now = Date.now()
+
     const fire = (scrollTop) => {
-      lastFire = new Date().getTime()
+      fireScrollTop.distance = scrollTop
+      fireScrollTop.last = now
       dispatch('fetchByScrollTop', {
         scrollTop,
         fields,
@@ -576,13 +585,21 @@ export const actions = {
       dispatch('visibleByScrollTop', scrollTop)
     }
 
-    const difference = new Date().getTime() - lastFire
-    if (difference > 100) {
-      clearTimeout(fireTimeout)
+    const distance = Math.abs(scrollTop - fireScrollTop.distance)
+    const timeDelta = now - fireScrollTop.last
+    const velocity = distance / timeDelta
+
+    if (!fireScrollTop.processing && timeDelta > 100 && velocity < 2.5) {
+      clearTimeout(fireScrollTop.timeout)
       fire(scrollTop)
     } else {
-      clearTimeout(fireTimeout)
-      fireTimeout = setTimeout(() => {
+      // Allow velocity calculation on last ~100 ms
+      if (timeDelta > 100) {
+        fireScrollTop.distance = scrollTop
+        fireScrollTop.last = now
+      }
+      clearTimeout(fireScrollTop.timeout)
+      fireScrollTop.timeout = setTimeout(() => {
         fire(scrollTop)
       }, 100)
     }
@@ -594,6 +611,11 @@ export const actions = {
     { dispatch, commit, getters },
     { gridId, fields, primary }
   ) {
+    // Reset scrollTop when switching table
+    fireScrollTop.distance = 0
+    fireScrollTop.last = Date.now()
+    fireScrollTop.processing = false
+
     commit('SET_SEARCH', {
       activeSearchTerm: '',
       hideRowsNotMatchingSearch: true,
