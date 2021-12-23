@@ -1,7 +1,7 @@
 import pytest
 from pyinstrument import Profiler
 
-from baserow.contrib.database.management.commands.fill_table import fill_table
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
 from baserow.test_utils.helpers import setup_interesting_test_table
@@ -15,7 +15,7 @@ def test_deleting_many_of_rows_is_fast(data_fixture):
 
     table, user, row, _ = setup_interesting_test_table(data_fixture)
     count = 1000
-    fill_table(count, table)
+    fill_table_rows(count, table)
 
     model = table.get_model()
     for row in model.objects.all():

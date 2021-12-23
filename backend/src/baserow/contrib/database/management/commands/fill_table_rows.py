@@ -8,10 +8,6 @@ from django.db.models import Max
 from django.db.models.fields.related import ForeignKey
 from faker import Faker
 
-from baserow.contrib.database.fields.field_helpers import (
-    construct_all_possible_field_kwargs,
-)
-from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
 
@@ -21,42 +17,33 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "table_id", type=int, help="The table that needs to be " "filled."
+            "table_id", type=int, help="The table that needs to be filled."
         )
         parser.add_argument(
-            "limit", type=int, help="Amount of rows that need to be " "inserted."
-        )
-        parser.add_argument(
-            "--add-columns",
-            action="store_true",
-            help="Add a column for every field type other than link row to the table "
-            "before populating it.",
+            "limit", type=int, help="Amount of rows that need to be inserted."
         )
 
     def handle(self, *args, **options):
         table_id = options["table_id"]
         limit = options["limit"]
-        add_columns = "add_columns" in options and options["add_columns"]
 
         try:
             table = Table.objects.get(pk=table_id)
         except Table.DoesNotExist:
             self.stdout.write(
-                self.style.ERROR(f"The table with id {table_id} was not " f"found.")
+                self.style.ERROR(f"The table with id {table_id} was not found.")
             )
             sys.exit(1)
 
-        fill_table(limit, table, add_columns=add_columns)
+        fill_table_rows(limit, table)
 
         self.stdout.write(self.style.SUCCESS(f"{limit} rows have been inserted."))
 
 
-def fill_table(limit, table, add_columns=False):
+def fill_table_rows(limit, table):
     fake = Faker()
     row_handler = RowHandler()
     cache = {}
-    if add_columns:
-        create_a_column_for_every_type(table)
     model = table.get_model()
     # Find out what the highest order is because we want to append the new rows.
     order = ceil(model.objects.aggregate(max=Max("order")).get("max") or Decimal("0"))
@@ -124,18 +111,3 @@ def fill_table(limit, table, add_columns=False):
     for field_name, values in many_to_many.items():
         through = getattr(model, field_name).through
         through.objects.bulk_create(values)
-
-
-def create_a_column_for_every_type(table):
-    field_handler = FieldHandler()
-    all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None)
-    for field_type_name, all_possible_kwargs in all_kwargs_per_type.items():
-        if field_type_name in ["link_row", "lookup"]:
-            continue
-        i = 0
-        for kwargs in all_possible_kwargs:
-            kwargs.pop("primary", None)
-            i = i + 1
-            field_handler.create_field(
-                table.database.group.users.first(), table, field_type_name, **kwargs
-            )
