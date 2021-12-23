@@ -8,7 +8,7 @@ from pyinstrument import Profiler
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.management.commands.fill_table import fill_table
+from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.trash.handler import TrashHandler
 from baserow.test_utils.helpers import setup_interesting_test_table
@@ -22,7 +22,7 @@ def test_adding_a_formula_field_compared_to_normal_field_isnt_slow(data_fixture)
 
     table, user, row, _ = setup_interesting_test_table(data_fixture)
     count = 1000
-    fill_table(count, table)
+    fill_table_rows(count, table)
 
     profiler = Profiler()
     profiler.start()
@@ -96,7 +96,7 @@ def test_creating_very_nested_formula_field(data_fixture):
     table, fields, rows = data_fixture.build_table(
         columns=[("perf_formula0", "number")], rows=[["0"]], user=user
     )
-    fill_table(10000, table)
+    fill_table_rows(10000, table)
     num_formulas = 100
     profiler = Profiler()
     profiler.start()
@@ -118,12 +118,11 @@ def test_creating_very_nested_formula_field(data_fixture):
 # You must add --runslow -s to pytest to run this test, you can do this in intellij by
 # editing the run config for this test and adding --runslow -s to additional args.
 def test_altering_very_nested_formula_field(data_fixture, django_assert_num_queries):
-
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         columns=[("perf_formula0", "number")], rows=[["0"]], user=user
     )
-    fill_table(10000, table)
+    fill_table_rows(10000, table)
     num_formulas = 100
     first_field = None
     for i in range(1, num_formulas):
@@ -160,7 +159,7 @@ def test_getting_data_from_a_very_nested_formula_field(data_fixture, api_client)
         columns=[("perf_formula0", "number")], rows=[["0"]], user=user
     )
     grid = data_fixture.create_grid_view(table=table)
-    fill_table(10000, table)
+    fill_table_rows(10000, table)
     num_formulas = 100
     for i in range(1, num_formulas):
         print(f"Making formula field {i}")
@@ -193,7 +192,7 @@ def test_getting_data_from_normal_table(data_fixture, api_client):
         columns=[("perf_formula0", "number")], rows=[["0"]], user=user
     )
     grid = data_fixture.create_grid_view(table=table)
-    fill_table(10000, table)
+    fill_table_rows(10000, table)
     num_fields = 100
     for i in range(1, num_fields):
         print(f"Making field {i}")
