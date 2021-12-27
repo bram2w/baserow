@@ -70,6 +70,19 @@ class View(
         help_text="Allows users to see results unfiltered while still keeping "
         "the filters saved for the view.",
     )
+    slug = models.SlugField(
+        default=secrets.token_urlsafe,
+        help_text="The unique slug where the view can be accessed publicly on.",
+        unique=True,
+        db_index=True,
+    )
+    public = models.BooleanField(
+        default=False,
+        help_text="Indicates whether the view is publicly accessible to visitors.",
+    )
+
+    def rotate_slug(self):
+        self.slug = secrets.token_urlsafe()
 
     class Meta:
         ordering = ("order",)
@@ -247,17 +260,6 @@ class GalleryViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
 
 class FormView(View):
     field_options = models.ManyToManyField(Field, through="FormViewFieldOptions")
-    slug = models.SlugField(
-        default=secrets.token_urlsafe,
-        help_text="The unique slug where the form can be accessed publicly on.",
-        unique=True,
-        db_index=True,
-    )
-    public = models.BooleanField(
-        default=False,
-        help_text="Indicates whether the form is publicly accessible to visitors and "
-        "if they can fill it out.",
-    )
     title = models.TextField(
         blank=True,
         help_text="The title that is displayed at the beginning of the form.",
@@ -300,9 +302,6 @@ class FormView(View):
         f"then the visitors will be redirected to the this URL after submitting the "
         f"form.",
     )
-
-    def rotate_slug(self):
-        self.slug = secrets.token_urlsafe()
 
     @property
     def active_field_options(self):

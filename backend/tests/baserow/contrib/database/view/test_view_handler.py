@@ -32,6 +32,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
     FormViewFieldTypeIsNotSupported,
+    CannotShareViewTypeError,
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -1263,22 +1264,23 @@ def test_delete_sort(send_mock, data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.view_updated.send")
-def test_rotate_form_view_slug(send_mock, data_fixture):
+def test_rotate_view_slug(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     form = data_fixture.create_form_view(table=table)
+    grid = data_fixture.create_grid_view(table=table)
     old_slug = str(form.slug)
 
     handler = ViewHandler()
 
     with pytest.raises(UserNotInGroup):
-        handler.rotate_form_view_slug(user=user_2, form=form)
+        handler.rotate_view_slug(user=user_2, view=form)
 
-    with pytest.raises(ValueError):
-        handler.rotate_form_view_slug(user=user, form=object())
+    with pytest.raises(CannotShareViewTypeError):
+        handler.rotate_view_slug(user=user, view=grid)
 
-    handler.rotate_form_view_slug(user=user, form=form)
+    handler.rotate_view_slug(user=user, view=form)
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["view"].id == form.id
@@ -1290,7 +1292,7 @@ def test_rotate_form_view_slug(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_public_form_view_by_slug(data_fixture):
+def test_get_public_view_by_slug(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     form = data_fixture.create_form_view(user=user)
@@ -1298,24 +1300,26 @@ def test_get_public_form_view_by_slug(data_fixture):
     handler = ViewHandler()
 
     with pytest.raises(ViewDoesNotExist):
-        handler.get_public_form_view_by_slug(user_2, "not_existing")
+        handler.get_public_view_by_slug(user_2, "not_existing")
 
     with pytest.raises(ViewDoesNotExist):
-        handler.get_public_form_view_by_slug(
-            user_2, "a3f1493a-9229-4889-8531-6a65e745602e"
-        )
+        handler.get_public_view_by_slug(user_2, "a3f1493a-9229-4889-8531-6a65e745602e")
 
     with pytest.raises(ViewDoesNotExist):
-        handler.get_public_form_view_by_slug(user_2, form.slug)
+        handler.get_public_view_by_slug(user_2, form.slug)
 
-    form2 = handler.get_public_form_view_by_slug(user, form.slug)
+    form2 = handler.get_public_view_by_slug(user, form.slug)
     assert form.id == form2.id
 
     form.public = True
     form.save()
 
-    form2 = handler.get_public_form_view_by_slug(user_2, form.slug)
+    form2 = handler.get_public_view_by_slug(user_2, form.slug)
     assert form.id == form2.id
+
+    form3 = handler.get_public_view_by_slug(user_2, form.slug, view_model=FormView)
+    assert form.id == form3.id
+    assert isinstance(form3, FormView)
 
 
 @pytest.mark.django_db

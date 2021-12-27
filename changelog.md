@@ -10,6 +10,8 @@
 * **dev.sh users** Fixed bug in dev.sh where UID/GID were not being set correctly, 
   please rebuild any dev images you are using.
 * Replaced the table `order` index with an `order, id` index to improve performance.
+* **breaking change** The API endpoint to rotate a form views slug has been moved to
+  `/database/views/${viewId}/rotate-slug/`.
 
 ## Released (2021-11-25)
 

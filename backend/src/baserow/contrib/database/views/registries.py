@@ -1,6 +1,7 @@
 from typing import Callable, Union, List
 
 from django.contrib.auth.models import User as DjangoUser
+from rest_framework.fields import CharField
 
 from rest_framework.serializers import Serializer
 
@@ -81,6 +82,11 @@ class ViewType(
     sort to the view.
     """
 
+    can_share = False
+    """
+    Indicates if the view supports being shared via a public link.
+    """
+
     field_options_model_class = None
     """
     The model class of the through table that contains the field options. The model
@@ -93,6 +99,23 @@ class ViewType(
     API to update and list the field option, but it is also used to broadcast field
     option changes.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.can_share:
+            self.allowed_fields = self.allowed_fields + ["public"]
+            self.serializer_field_names = self.serializer_field_names + [
+                "public",
+                "slug",
+            ]
+            self.serializer_field_overrides = {
+                **self.serializer_field_overrides,
+                "slug": CharField(
+                    read_only=True,
+                    help_text="The unique slug that can be used to construct a public "
+                    "URL.",
+                ),
+            }
 
     def export_serialized(self, view, files_zip, storage):
         """
@@ -137,6 +160,9 @@ class ViewType(
                 {"id": sort.id, "field_id": sort.field_id, "order": sort.order}
                 for sort in view.viewsort_set.all()
             ]
+
+        if self.can_share:
+            serialized["public"] = view.public
 
         return serialized
 

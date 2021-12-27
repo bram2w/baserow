@@ -11,6 +11,7 @@ from .views import (
     ViewSortingsView,
     ViewSortView,
     ViewFieldOptionsView,
+    RotateViewSlugView,
 )
 
 
@@ -42,5 +43,10 @@ urlpatterns = view_type_registry.api_urls + [
         r"(?P<view_id>[0-9]+)/field-options/$",
         ViewFieldOptionsView.as_view(),
         name="field_options",
+    ),
+    re_path(
+        r"(?P<view_id>[0-9]+)/rotate-slug/$",
+        RotateViewSlugView.as_view(),
+        name="rotate_slug",
     ),
 ]

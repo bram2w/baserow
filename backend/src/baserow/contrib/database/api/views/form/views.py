@@ -1,6 +1,6 @@
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.fields import empty
@@ -9,12 +9,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 
 from baserow.api.decorators import map_exceptions
-from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
 from baserow.api.utils import validate_data
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.serializers import get_example_pagination_serializer_class
-from baserow.contrib.database.api.views.errors import ERROR_VIEW_DOES_NOT_EXIST
 from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
     get_example_row_serializer_class,
@@ -25,59 +23,11 @@ from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.models import FormView, FormViewFieldOptions
-from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.models import FormViewFieldOptions, FormView
 from baserow.contrib.database.views.validators import required_validator
-from baserow.core.exceptions import UserNotInGroup
 
 from .errors import ERROR_FORM_DOES_NOT_EXIST
 from .serializers import PublicFormViewSerializer, FormViewSubmittedSerializer
-
-form_view_serializer_class = view_type_registry.get("form").get_serializer_class()
-
-
-class RotateFormViewSlugView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="view_id",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                required=True,
-                description="Rotates the slug of the form view related to the provided "
-                "value.",
-            )
-        ],
-        tags=["Database table form view"],
-        operation_id="rotate_database_table_form_view_slug",
-        description=(
-            "Rotates the unique slug of the form view by replacing it with a new "
-            "value. This would mean that the publicly shared URL of the form will "
-            "change. Everyone that knew the URL won't have access to the form anymore."
-        ),
-        request=None,
-        responses={
-            200: form_view_serializer_class(many=True),
-            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
-            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
-        },
-    )
-    @map_exceptions(
-        {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-        }
-    )
-    @transaction.atomic
-    def post(self, request, view_id):
-        """Rotates the slug of a form view."""
-
-        handler = ViewHandler()
-        form = ViewHandler().get_view(view_id, FormView)
-        form = handler.rotate_form_view_slug(request.user, form)
-        return Response(form_view_serializer_class(form).data)
 
 
 class SubmitFormViewView(APIView):
@@ -111,7 +61,9 @@ class SubmitFormViewView(APIView):
         }
     )
     def get(self, request, slug):
-        form = ViewHandler().get_public_form_view_by_slug(request.user, slug)
+        form = ViewHandler().get_public_view_by_slug(
+            request.user, slug, view_model=FormView
+        )
         serializer = PublicFormViewSerializer(form)
         return Response(serializer.data)
 
@@ -147,7 +99,7 @@ class SubmitFormViewView(APIView):
     @transaction.atomic
     def post(self, request, slug):
         handler = ViewHandler()
-        form = handler.get_public_form_view_by_slug(request.user, slug)
+        form = handler.get_public_view_by_slug(request.user, slug, view_model=FormView)
         model = form.table.get_model()
 
         options = form.active_field_options
@@ -215,7 +167,7 @@ class FormViewLinkRowFieldLookupView(APIView):
     )
     def get(self, request, slug, field_id):
         handler = ViewHandler()
-        form = handler.get_public_form_view_by_slug(request.user, slug)
+        form = handler.get_public_view_by_slug(request.user, slug, view_model=FormView)
         link_row_field_content_type = ContentType.objects.get_for_model(LinkRowField)
 
         try:

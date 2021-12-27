@@ -1,19 +1,19 @@
-from django.db.models import F
 from django.core.exceptions import FieldDoesNotExist, ValidationError
+from django.db.models import F
 
+from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.field_filters import FilterBuilder
+from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
+from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.signals import row_created
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     extract_allowed,
     set_allowed_attrs,
     get_model_reference_field_name,
 )
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
-from baserow.contrib.database.fields.field_filters import FilterBuilder
-from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
-from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.rows.signals import row_created
 from .exceptions import (
     ViewDoesNotExist,
     ViewNotInTable,
@@ -26,9 +26,9 @@ from .exceptions import (
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
+    CannotShareViewTypeError,
 )
-from .validators import EMPTY_VALUES
-from .models import View, ViewFilter, ViewSort, FormView
+from .models import View, ViewFilter, ViewSort
 from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
     view_created,
@@ -43,6 +43,7 @@ from .signals import (
     view_sort_deleted,
     view_field_options_updated,
 )
+from .validators import EMPTY_VALUES
 
 
 class ViewHandler:
@@ -782,55 +783,65 @@ class ViewHandler:
             queryset = queryset.search_all_fields(search)
         return queryset
 
-    def rotate_form_view_slug(self, user, form):
+    def rotate_view_slug(self, user, view):
         """
-        Rotates the slug of the provided form view.
+        Rotates the slug of the provided view.
 
-        :param user: The user on whose behalf the form view is updated.
+        :param user: The user on whose behalf the view is updated.
         :type user: User
-        :param form: The form view instance that needs to be updated.
-        :type form: View
+        :param view: The form view instance that needs to be updated.
+        :type view: View
         :return: The updated view instance.
+        :rtype: View
+        :raises CannotShareViewTypeError: Raised if called for a view which does not
+            support sharing.
+        """
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        if not view_type.can_share:
+            raise CannotShareViewTypeError()
+
+        group = view.table.database.group
+        group.has_user(user, raise_error=True)
+
+        view.rotate_slug()
+        view.save()
+
+        view_updated.send(self, view=view, user=user)
+
+        return view
+
+    def get_public_view_by_slug(self, user, slug, view_model=None):
+        """
+        Returns the view with the provided slug if it is public or if the user has
+        access to the views group.
+
+        :param user: The user on whose behalf the view is requested.
+        :type user: User
+        :param slug: The slug of the view.
+        :type slug: str
+        :param view_model: If provided that models objects are used to select the
+            view. This can for example be useful when you want to select a GridView or
+            other child of the View model.
+        :type view_model: Type[View]
+        :return: The requested view with matching slug.
         :rtype: View
         """
 
-        if not isinstance(form, FormView):
-            raise ValueError("The provided form is not an instance of FormView.")
-
-        group = form.table.database.group
-        group.has_user(user, raise_error=True)
-
-        form.rotate_slug()
-        form.save()
-
-        view_updated.send(self, view=form, user=user)
-
-        return form
-
-    def get_public_form_view_by_slug(self, user, slug):
-        """
-        Returns the form view related to the provided slug if the form related to the
-        slug is public or if the user has access to the related group.
-
-        :param user: The user on whose behalf the form is requested.
-        :type user: User
-        :param slug: The slug of the form view.
-        :type slug: str
-        :return: The requested form view that belongs to the form with the slug.
-        :rtype: FormView
-        """
+        if not view_model:
+            view_model = View
 
         try:
-            form = FormView.objects.get(slug=slug)
-        except (FormView.DoesNotExist, ValidationError):
-            raise ViewDoesNotExist("The form does not exist.")
+            view = view_model.objects.get(slug=slug)
+        except (view_model.DoesNotExist, ValidationError):
+            raise ViewDoesNotExist("The view does not exist.")
 
-        if not form.public and (
-            not user or not form.table.database.group.has_user(user)
+        if not view.public and (
+            not user or not view.table.database.group.has_user(user)
         ):
-            raise ViewDoesNotExist("The form does not exist.")
+            raise ViewDoesNotExist("The view does not exist.")
 
-        return form
+        return view
 
     def submit_form_view(self, form, values, model=None, enabled_field_options=None):
         """

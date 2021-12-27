@@ -58,5 +58,8 @@ export default (client) => {
     updateFieldOptions({ viewId, values }) {
       return client.patch(`/database/views/${viewId}/field-options/`, values)
     },
+    rotateSlug(viewId) {
+      return client.post(`/database/views/${viewId}/rotate-slug/`)
+    },
   }
 }

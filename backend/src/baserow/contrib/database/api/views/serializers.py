@@ -171,7 +171,10 @@ class ViewSerializer(serializers.ModelSerializer):
             "sortings",
             "filters_disabled",
         )
-        extra_kwargs = {"id": {"read_only": True}, "table_id": {"read_only": True}}
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "table_id": {"read_only": True},
+        }
 
     def __init__(self, *args, **kwargs):
         context = kwargs.setdefault("context", {})
