@@ -46,6 +46,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortFieldNotSupported,
     UnrelatedFieldError,
     ViewDoesNotSupportFieldOptions,
+    CannotShareViewTypeError,
 )
 
 from .serializers import (
@@ -72,6 +73,7 @@ from .errors import (
     ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED,
     ERROR_UNRELATED_FIELD,
     ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
+    ERROR_CANNOT_SHARE_VIEW_TYPE,
 )
 
 
@@ -1039,4 +1041,56 @@ class ViewFieldOptionsView(APIView):
             handler.update_field_options(request.user, view, data["field_options"])
 
         serializer = serializer_class(view)
+        return Response(serializer.data)
+
+
+class RotateViewSlugView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                required=True,
+                description="Rotates the slug of the view related to the provided "
+                "value.",
+            )
+        ],
+        tags=["Database table views"],
+        operation_id="rotate_database_view_slug",
+        description=(
+            "Rotates the unique slug of the view by replacing it with a new "
+            "value. This would mean that the publicly shared URL of the view will "
+            "change. Anyone with the old URL won't be able to access the view"
+            "anymore. Only view types which are sharable can have their slugs rotated."
+        ),
+        request=None,
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                view_type_registry,
+                ViewSerializer,
+            ),
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_CANNOT_SHARE_VIEW_TYPE"]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            CannotShareViewTypeError: ERROR_CANNOT_SHARE_VIEW_TYPE,
+        }
+    )
+    @transaction.atomic
+    def post(self, request, view_id):
+        """Rotates the slug of a view."""
+
+        handler = ViewHandler()
+        view = ViewHandler().get_view(view_id)
+        view = handler.rotate_view_slug(request.user, view)
+        serializer = view_type_registry.get_serializer(view, ViewSerializer)
         return Response(serializer.data)

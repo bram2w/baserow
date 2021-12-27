@@ -54,7 +54,7 @@ def test_view_get_field_options(data_fixture):
 
 
 @pytest.mark.django_db
-def test_rotate_form_view_slug(data_fixture):
+def test_rotate_view_slug(data_fixture):
     form_view = data_fixture.create_form_view()
     old_slug = str(form_view.slug)
     form_view.rotate_slug()

@@ -193,35 +193,6 @@ def test_update_form_view(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_rotate_slug(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    view = data_fixture.create_form_view(table=table)
-    view_2 = data_fixture.create_form_view()
-    old_slug = str(view.slug)
-
-    url = reverse("api:database:views:form:rotate_slug", kwargs={"view_id": view_2.id})
-    response = api_client.post(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
-
-    url = reverse("api:database:views:form:rotate_slug", kwargs={"view_id": 99999})
-    response = api_client.post(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_404_NOT_FOUND
-
-    url = reverse("api:database:views:form:rotate_slug", kwargs={"view_id": view.id})
-    response = api_client.post(
-        url,
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_200_OK
-    assert response_json["slug"] != old_slug
-    assert len(response_json["slug"]) == 43
-
-
-@pytest.mark.django_db
 def test_meta_submit_form_view(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()

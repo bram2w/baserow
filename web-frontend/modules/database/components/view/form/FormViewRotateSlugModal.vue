@@ -29,7 +29,7 @@
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import formViewHelpers from '@baserow/modules/database/mixins/formViewHelpers'
-import FormService from '@baserow/modules/database/services/view/form'
+import ViewService from '@baserow/modules/database/services/view'
 
 export default {
   name: 'FormViewRotateSlugModal',
@@ -51,7 +51,7 @@ export default {
       this.loading = true
 
       try {
-        const { data } = await FormService(this.$client).rotateSlug(
+        const { data } = await ViewService(this.$client).rotateSlug(
           this.view.id
         )
         await this.$store.dispatch('view/forceUpdate', {

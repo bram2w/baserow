@@ -646,6 +646,18 @@ def test_create_grid_view(api_client, data_fixture):
     assert "filters" not in response_json
     assert "sortings" not in response_json
 
+    # Can't create a public non sharable view.
+    response = api_client.post(
+        reverse("api:database:views:list", kwargs={"table_id": table.id}),
+        {"name": "Test 1", "type": "grid", "public": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "public" not in response_json
+    assert "slug" not in response_json
+
 
 @pytest.mark.django_db
 def test_update_grid_view(api_client, data_fixture):
@@ -733,3 +745,15 @@ def test_update_grid_view(api_client, data_fixture):
     assert response_json["filters_disabled"] is True
     assert response_json["filters"][0]["id"] == filter_1.id
     assert response_json["sortings"] == []
+
+    # Can't make a non sharable view public.
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": view.id}),
+        {"public": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "public" not in response_json
+    assert "slug" not in response_json
