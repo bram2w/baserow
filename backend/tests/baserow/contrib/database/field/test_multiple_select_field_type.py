@@ -1340,11 +1340,11 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
         assert field_type.type == "multiple_select"
         assert len(select_options) == 1
 
-    model = table.get_model()
+    model = table.get_model(attribute_names=True)
     rows = list(model.objects.all().enhance_by_fields())
 
     for index, field in enumerate(all_fields):
-        cell = getattr(rows[0], f"field_{field.id}").all()
+        cell = getattr(rows[0], field.model_attribute_name).all()
         assert len(cell) == 1
         assert cell[0].value == all_results[index]
 
@@ -1354,11 +1354,20 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
     new_select_option = data_fixture.create_select_option(
         field=date_field_eu, value="01/09/2021", color="green"
     )
-    select_options = date_field_eu.select_options.all()
+    select_options = list(date_field_eu.select_options.all())
 
-    row_handler.create_row(
+    row = row_handler.create_row(
         user=user,
         table=table,
+        values={
+            f"field_{date_field_eu.id}": [select_options[0].id],
+        },
+    )
+
+    row_handler.update_row(
+        user=user,
+        table=table,
+        row_id=row.id,
         values={
             f"field_{date_field_eu.id}": [getattr(x, "id") for x in select_options],
         },
@@ -1377,18 +1386,14 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
         field=date_field_eu,
         new_type_name="date",
         date_format="EU",
-        name="date_field_eu",
     )
 
-    model = table.get_model()
+    model = table.get_model(attribute_names=True)
     rows = list(model.objects.all().enhance_by_fields())
 
-    field_cell_row_0 = getattr(rows[0], f"field_{date_field_eu.id}")
-    field_cell_row_1 = getattr(rows[1], f"field_{date_field_eu.id}")
-    field_cell_row_2 = getattr(rows[2], f"field_{date_field_eu.id}")
-    assert field_cell_row_0 == date(2021, 8, 31)
-    assert field_cell_row_1 == date(2021, 8, 31)
-    assert field_cell_row_2 == date(2021, 9, 1)
+    assert rows[0].datefieldeu == date(2021, 8, 31)
+    assert rows[1].datefieldeu == date(2021, 8, 31)
+    assert rows[2].datefieldeu == date(2021, 9, 1)
 
 
 @pytest.mark.django_db

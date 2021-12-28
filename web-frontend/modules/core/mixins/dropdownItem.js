@@ -47,6 +47,9 @@ export default {
       return this.isVisible(query)
     },
     isVisible(query) {
+      if (!query) {
+        return true
+      }
       const regex = new RegExp('(' + escapeRegExp(query) + ')', 'i')
       return this.name.match(regex)
     },

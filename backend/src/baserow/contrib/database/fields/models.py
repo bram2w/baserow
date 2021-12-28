@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.functional import cached_property
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 from baserow.contrib.database.fields.mixins import (
     BaseDateMixin,
@@ -37,6 +38,14 @@ NUMBER_DECIMAL_PLACES_CHOICES = [
     (3, "1.000"),
     (4, "1.0000"),
     (NUMBER_MAX_DECIMAL_PLACES, "1.00000"),
+]
+
+RATING_STYLE_CHOICES = [
+    ("star", "Star"),
+    ("heart", "Heart"),
+    ("thumbs-up", "Thumbs-up"),
+    ("flag", "Flags"),
+    ("smile", "Smile"),
 ]
 
 
@@ -212,6 +221,47 @@ class NumberField(Field):
         ):
             raise ValueError(f"{self.number_decimal_places} is not a valid choice.")
         super(NumberField, self).save(*args, **kwargs)
+
+
+class RatingField(Field):
+    max_value = models.PositiveSmallIntegerField(
+        default=5,
+        help_text="Maximum value the rating can take.",
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+    )
+    color = models.CharField(
+        max_length=50,
+        blank=False,
+        help_text="Color of the symbols.",
+        default="dark-orange",
+    )
+    style = models.CharField(
+        choices=RATING_STYLE_CHOICES,
+        default="star",
+        max_length=50,
+        blank=False,
+        help_text=(
+            "Rating style. Allowed values: "
+            f"{', '.join([value for (value, _) in RATING_STYLE_CHOICES])}."
+        ),
+    )
+
+    def save(self, *args, **kwargs):
+        """
+        Check if the max_value, color and style have a valid value.
+        """
+
+        if not any(self.style in _tuple for _tuple in RATING_STYLE_CHOICES):
+            raise ValueError(f"{self.style} is not a valid choice.")
+        if not self.color:
+            raise ValueError(f"color should be defined.")
+
+        if self.max_value < 1:
+            raise ValueError("Ensure this value is greater than or equal to 1.")
+        if self.max_value > 10:
+            raise ValueError(f"Ensure this value is less than or equal to 10.")
+
+        super().save(*args, **kwargs)
 
 
 class BooleanField(Field):

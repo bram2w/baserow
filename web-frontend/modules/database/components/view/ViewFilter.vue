@@ -15,23 +15,28 @@
         })
       }}</span>
     </a>
-    <ViewFilterContext
+    <Context
       ref="context"
-      :view="view"
-      :fields="fields"
-      :primary="primary"
-      :read-only="readOnly"
-      @changed="$emit('changed')"
-    ></ViewFilterContext>
+      class="filters"
+      :class="{ 'context--loading-overlay': view._.loading }"
+    >
+      <ViewFilterForm
+        :primary="primary"
+        :fields="fields"
+        :view="view"
+        :read-only="readOnly"
+        @changed="$emit('changed')"
+      />
+    </Context>
   </div>
 </template>
 
 <script>
-import ViewFilterContext from '@baserow/modules/database/components/view/ViewFilterContext'
+import ViewFilterForm from '@baserow/modules/database/components/view/ViewFilterForm'
 
 export default {
   name: 'ViewFilter',
-  components: { ViewFilterContext },
+  components: { ViewFilterForm },
   props: {
     primary: {
       type: Object,

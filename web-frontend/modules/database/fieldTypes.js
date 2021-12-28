@@ -10,6 +10,7 @@ import {
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
+import FieldRatingSubForm from '@baserow/modules/database/components/field/FieldRatingSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 import FieldCreatedOnLastModifiedSubForm from '@baserow/modules/database/components/field/FieldCreatedOnLastModifiedSubForm'
@@ -22,6 +23,7 @@ import GridViewFieldURL from '@baserow/modules/database/components/view/grid/fie
 import GridViewFieldEmail from '@baserow/modules/database/components/view/grid/fields/GridViewFieldEmail'
 import GridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkRow'
 import GridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldNumber'
+import GridViewFieldRating from '@baserow/modules/database/components/view/grid/fields/GridViewFieldRating'
 import GridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/GridViewFieldBoolean'
 import GridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDate'
 import GridViewFieldDateReadOnly from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDateReadOnly'
@@ -34,6 +36,7 @@ import FunctionalGridViewFieldText from '@baserow/modules/database/components/vi
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
 import FunctionalGridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkRow'
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
+import FunctionalGridViewFieldRating from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldRating'
 import FunctionalGridViewFieldBoolean from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldBoolean'
 import FunctionalGridViewFieldDate from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDate'
 import FunctionalGridViewFieldFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFile'
@@ -48,6 +51,7 @@ import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFie
 import RowEditFieldEmail from '@baserow/modules/database/components/row/RowEditFieldEmail'
 import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
+import RowEditFieldRating from '@baserow/modules/database/components/row/RowEditFieldRating'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
 import RowEditFieldDateReadOnly from '@baserow/modules/database/components/row/RowEditFieldDateReadOnly'
@@ -64,6 +68,7 @@ import RowCardFieldFormula from '@baserow/modules/database/components/card/RowCa
 import RowCardFieldLinkRow from '@baserow/modules/database/components/card/RowCardFieldLinkRow'
 import RowCardFieldMultipleSelect from '@baserow/modules/database/components/card/RowCardFieldMultipleSelect'
 import RowCardFieldNumber from '@baserow/modules/database/components/card/RowCardFieldNumber'
+import RowCardFieldRating from '@baserow/modules/database/components/card/RowCardFieldRating'
 import RowCardFieldPhoneNumber from '@baserow/modules/database/components/card/RowCardFieldPhoneNumber'
 import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/RowCardFieldSingleSelect'
 import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
@@ -855,7 +860,7 @@ export class NumberFieldType extends FieldType {
 
   /**
    * Formats the value based on the field's settings. The number will be rounded
-   * if to much decimal places are provided and if negative numbers aren't allowed
+   * if too much decimal places are provided and if negative numbers aren't allowed
    * they will be set to 0.
    */
   static formatNumber(field, value) {
@@ -894,6 +899,114 @@ export class NumberFieldType extends FieldType {
       return number
     }
     return 0
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
+}
+
+export class RatingFieldType extends FieldType {
+  static getMaxNumberLength() {
+    return 2
+  }
+
+  static getType() {
+    return 'rating'
+  }
+
+  getIconClass() {
+    return 'star'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.rating')
+  }
+
+  getFormComponent() {
+    return FieldRatingSubForm
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldRating
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldRating
+  }
+
+  getRowEditFieldComponent() {
+    return RowEditFieldRating
+  }
+
+  getCardComponent() {
+    return RowCardFieldRating
+  }
+
+  getSortIndicator() {
+    return ['text', '1', '9']
+  }
+
+  getEmptyValue(field) {
+    return 0
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      if (a[name] === b[name]) {
+        return 0
+      }
+
+      const numberA = a[name]
+      const numberB = b[name]
+
+      return order === 'ASC'
+        ? numberA < numberB
+          ? -1
+          : 1
+        : numberB < numberA
+        ? -1
+        : 1
+    }
+  }
+
+  /**
+   * First checks if the value is numeric, if that is the case, the number is going
+   * to be formatted.
+   */
+  prepareValueForPaste(field, clipboardData) {
+    const pastedValue = clipboardData.getData('text')
+    const value = parseInt(pastedValue, 10)
+
+    if (isNaN(value) || !isFinite(value)) {
+      return
+    }
+
+    // Clamp the value
+    if (value < 0) {
+      return 0
+    }
+    if (value > field.max_value) {
+      return field.max_value
+    }
+    return value
+  }
+
+  getDocsDataType(field) {
+    return 'number'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t(`fieldDocs.rating`)
+  }
+
+  getDocsRequestExample(field) {
+    return 3
   }
 
   getContainsFilterFunction() {

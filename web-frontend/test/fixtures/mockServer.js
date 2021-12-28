@@ -74,6 +74,12 @@ export class MockServer {
     this.mock.onPost(`/database/rows/table/${table.id}/`).reply(200, result)
   }
 
+  updateViewFilter(filterId, newValue) {
+    this.mock
+      .onPatch(`/database/views/filter/${filterId}/`, { value: newValue })
+      .reply(200)
+  }
+
   resetMockEndpoints() {
     this.mock.reset()
   }

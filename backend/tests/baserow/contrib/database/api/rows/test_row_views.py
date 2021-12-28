@@ -13,6 +13,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -620,6 +621,25 @@ def test_create_row(api_client, data_fixture):
         "id": 7,
         "order": "6.00000000000000000000",
     }
+
+
+@pytest.mark.django_db
+def test_create_empty_row_for_interesting_fields(api_client, data_fixture):
+    """
+    Test a common case: create a row with empty values.
+    """
+
+    table, user, row, _ = setup_interesting_test_table(data_fixture)
+    jwt_token = data_fixture.generate_token(user)
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db

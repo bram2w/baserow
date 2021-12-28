@@ -1,9 +1,5 @@
 <template>
-  <Context
-    ref="context"
-    class="filters"
-    :class="{ 'context--loading-overlay': view._.loading }"
-  >
+  <div>
     <div v-show="view.filters.length === 0">
       <div class="filters__none">
         <div class="filters__none-title">
@@ -104,7 +100,7 @@
       </div>
       <div class="filters__value">
         <component
-          :is="getInputComponent(filter.type)"
+          :is="getInputComponent(filter.type, filter.field)"
           :ref="'filter-' + filter.id + '-value'"
           :filter="filter"
           :fields="fields"
@@ -116,9 +112,8 @@
     </div>
     <div v-if="!readOnly" class="filters_footer">
       <a class="filters__add" @click.prevent="addFilter()">
-        <i class="fas fa-plus"></i>
-        {{ $t('viewFilterContext.addFilter') }}
-      </a>
+        <i class="fas fa-plus"></i>{{ $t('viewFilterContext.addFilter') }}</a
+      >
       <div v-if="view.filters.length > 0">
         <SwitchInput
           :value="view.filters_disabled"
@@ -127,16 +122,14 @@
         >
       </div>
     </div>
-  </Context>
+  </div>
 </template>
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import context from '@baserow/modules/core/mixins/context'
 
 export default {
-  name: 'ViewFilterContext',
-  mixins: [context],
+  name: 'ViewFilterForm',
   props: {
     primary: {
       type: Object,
@@ -308,8 +301,9 @@ export default {
      * Returns the input component related to the filter type. This component is
      * responsible for updating the filter value.
      */
-    getInputComponent(type) {
-      return this.$registry.get('viewFilter', type).getInputComponent()
+    getInputComponent(type, fieldId) {
+      const field = this.fields.find(({ id }) => id === fieldId)
+      return this.$registry.get('viewFilter', type).getInputComponent(field)
     },
   },
 }

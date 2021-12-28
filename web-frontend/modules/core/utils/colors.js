@@ -15,3 +15,7 @@ export const colors = [
   'dark-red',
   'dark-gray',
 ]
+
+export const randomColor = () => {
+  return colors[Math.floor(Math.random() * colors.length)]
+}

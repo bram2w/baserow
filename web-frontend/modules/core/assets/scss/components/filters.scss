@@ -104,6 +104,12 @@
   width: 130px;
 }
 
+.filters__value-rating {
+  border: solid 1px $color-neutral-400;
+  border-radius: 3px;
+  padding: 6px 12px;
+}
+
 .filters__value-link-row {
   @extend %ellipsis;
 

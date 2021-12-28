@@ -35,6 +35,9 @@ def construct_all_possible_field_kwargs(
                 "number_negative": False,
             },
         ],
+        "rating": [
+            {"name": "rating", "max_value": 5, "color": "blue", "style": "star"}
+        ],
         "boolean": [{"name": "boolean"}],
         "date": [
             {"name": "datetime_us", "date_include_time": True, "date_format": "US"},

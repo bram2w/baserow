@@ -1,0 +1,26 @@
+.rating-field-form {
+  display: flex;
+  justify-content: space-between;
+}
+
+.rating-field-form__dropdown-style .select__item-name {
+  color: $color-neutral-600;
+}
+
+.rating-field__color {
+  padding: 10px;
+  text-align: center;
+  color: $color-primary-900;
+  border-radius: 3px;
+  font-size: 14px;
+  display: block;
+}
+
+.field-rating {
+  @extend %ellipsis;
+
+  @include fixed-height(32px, 13px);
+
+  padding-left: 5px;
+  user-select: none;
+}

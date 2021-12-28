@@ -3,6 +3,7 @@ export default {
     yes: 'yes',
     no: 'no',
     wrong: 'Something went wrong',
+    none: 'None',
   },
   action: {
     upload: 'Upload',
@@ -62,6 +63,7 @@ export default {
     longText: 'Long text',
     linkToTable: 'Link to table',
     number: 'Number',
+    rating: 'Rating',
     boolean: 'Boolean',
     date: 'Date',
     lastModified: 'Last modified',
@@ -95,6 +97,7 @@ export default {
     decimal: 'Accepts a decimal with {places} decimal places after the dot.',
     decimalPositive:
       'Accepts a positive decimal with {places} decimal places after the dot.',
+    rating: 'Accepts a number.',
     boolean: 'Accepts a boolean.',
     date: 'Accepts a date time in ISO format.',
     dateTime: 'Accepts a date in ISO format.',

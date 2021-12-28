@@ -5,6 +5,7 @@ from baserow.contrib.database.fields.models import (
     TextField,
     LongTextField,
     NumberField,
+    RatingField,
     BooleanField,
     DateField,
     LinkRowField,
@@ -88,6 +89,23 @@ class FieldFixtures:
             kwargs["order"] = 0
 
         field = NumberField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_rating_field(self, user=None, create_field=True, **kwargs):
+        if "table" not in kwargs:
+            kwargs["table"] = self.create_database_table(user=user)
+
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        field = RatingField.objects.create(**kwargs)
 
         if create_field:
             self.create_model_field(kwargs["table"], field)

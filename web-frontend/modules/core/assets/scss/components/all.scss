@@ -14,8 +14,10 @@
 @import 'select';
 @import 'dropdown';
 @import 'tooltip';
+@import 'rating';
 @import 'fields/boolean';
 @import 'fields/number';
+@import 'fields/rating';
 @import 'fields/long_text';
 @import 'fields/date';
 @import 'fields/link_row';
@@ -27,8 +29,9 @@
 @import 'views/grid';
 @import 'views/grid/text';
 @import 'views/grid/long_text';
-@import 'views/grid/boolean';
 @import 'views/grid/number';
+@import 'views/grid/rating';
+@import 'views/grid/boolean';
 @import 'views/grid/date';
 @import 'views/grid/link_row';
 @import 'views/grid/file';
