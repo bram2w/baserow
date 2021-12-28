@@ -3,6 +3,7 @@ export default {
     yes: 'oui',
     no: 'non',
     wrong: 'Une erreur est survenue',
+    none: 'Aucun(e)',
   },
   action: {
     upload: 'Envoyer',
@@ -62,6 +63,7 @@ export default {
     longText: 'Texte long',
     linkToTable: 'Lien vers une table',
     number: 'Nombre',
+    rating: 'Classement',
     boolean: 'Booléen',
     date: 'Date',
     lastModified: 'Dernière modification',
@@ -95,6 +97,7 @@ export default {
     numberPositive: 'Accepte un entier positive.',
     decimal: 'Accepte un nombre décimal.',
     decimalPositive: 'Accepte un nombre décimal positif.',
+    rating: 'Accepte un nombre entier',
     boolean: 'Accepte une valeur booléenne.',
     date: 'Accepte une date au format ISO.',
     dateTime: 'Accepte une date/heure au format ISO.',

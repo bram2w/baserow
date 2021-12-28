@@ -90,6 +90,7 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
         "positive_int": 1,
         "negative_decimal": Decimal("-1.2"),
         "positive_decimal": Decimal("1.2"),
+        "rating": 3,
         "boolean": "True",
         "datetime_us": datetime,
         "date_us": date,

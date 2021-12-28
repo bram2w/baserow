@@ -11,6 +11,7 @@ import {
   EmailFieldType,
   LinkRowFieldType,
   NumberFieldType,
+  RatingFieldType,
   BooleanFieldType,
   DateFieldType,
   LastModifiedFieldType,
@@ -219,6 +220,7 @@ export default (context) => {
   app.$registry.register('field', new LongTextFieldType(context))
   app.$registry.register('field', new LinkRowFieldType(context))
   app.$registry.register('field', new NumberFieldType(context))
+  app.$registry.register('field', new RatingFieldType(context))
   app.$registry.register('field', new BooleanFieldType(context))
   app.$registry.register('field', new DateFieldType(context))
   app.$registry.register('field', new LastModifiedFieldType(context))

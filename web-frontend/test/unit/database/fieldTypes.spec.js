@@ -38,6 +38,14 @@ const mockedFields = {
     number_negative: false,
     number_type: 'INTEGER',
   },
+  rating: {
+    id: 16,
+    name: 'rating',
+    order: 4,
+    primary: false,
+    table_id: 42,
+    type: 'rating',
+  },
   boolean: {
     id: 5,
     name: 'boolean',

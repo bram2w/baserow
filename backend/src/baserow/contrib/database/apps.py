@@ -69,6 +69,7 @@ class DatabaseConfig(AppConfig):
             LongTextFieldType,
             URLFieldType,
             NumberFieldType,
+            RatingFieldType,
             BooleanFieldType,
             DateFieldType,
             LastModifiedFieldType,
@@ -88,6 +89,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(URLFieldType())
         field_type_registry.register(EmailFieldType())
         field_type_registry.register(NumberFieldType())
+        field_type_registry.register(RatingFieldType())
         field_type_registry.register(BooleanFieldType())
         field_type_registry.register(DateFieldType())
         field_type_registry.register(LastModifiedFieldType())

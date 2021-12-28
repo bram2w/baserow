@@ -1,23 +1,21 @@
-.color-select-context {
-  width: 212px;
-}
-
 .color-select-context__colors {
   display: flex;
-  flex-wrap: wrap;
-  padding: 6px;
+  flex-direction: column;
+  padding: 12px;
+  gap: 12px;
+}
+
+.color-select-context__row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
 }
 
 .color-select-context__color {
   position: relative;
-  flex: 0 0 28px;
   height: 28px;
-  margin: 6px;
+  width: 28px;
   border-radius: 3px;
-
-  &:nth-child(5n+5) {
-    margin-right: 0;
-  }
 
   &:not(.active):hover {
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.08);

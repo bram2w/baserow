@@ -30,5 +30,6 @@ module.exports = {
       },
     ],
     'import/order': 'off',
+    'vue/html-self-closing': 'off',
   },
 }

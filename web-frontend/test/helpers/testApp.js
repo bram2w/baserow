@@ -148,7 +148,11 @@ export class TestApp {
       attachTo: rootDiv,
       ...kwargs,
     })
-    await this.callFetchOnChildren(wrapper.vm)
+
+    // The vm property doesn't alway exist. See https://vue-test-utils.vuejs.org/api/wrapper/#properties
+    if (wrapper.vm) {
+      await this.callFetchOnChildren(wrapper.vm)
+    }
     return wrapper
   }
 

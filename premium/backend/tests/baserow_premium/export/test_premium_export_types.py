@@ -47,6 +47,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "positive_int": "",
     "negative_decimal": "",
     "positive_decimal": "",
+    "rating": 0,
     "boolean": false,
     "datetime_us": "",
     "date_us": "",
@@ -80,6 +81,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "positive_int": 1,
     "negative_decimal": "-1.2",
     "positive_decimal": "1.2",
+    "rating": 3,
     "boolean": true,
     "datetime_us": "02/01/2020 01:23",
     "date_us": "02/01/2020",
@@ -208,6 +210,7 @@ def test_can_export_every_interesting_different_field_to_xml(
     <positive-int/>
     <negative-decimal/>
     <positive-decimal/>
+    <rating>0</rating>
     <boolean>false</boolean>
     <datetime-us/>
     <date-us/>
@@ -241,6 +244,7 @@ def test_can_export_every_interesting_different_field_to_xml(
     <positive-int>1</positive-int>
     <negative-decimal>-1.2</negative-decimal>
     <positive-decimal>1.2</positive-decimal>
+    <rating>3</rating>
     <boolean>true</boolean>
     <datetime-us>02/01/2020 01:23</datetime-us>
     <date-us>02/01/2020</date-us>

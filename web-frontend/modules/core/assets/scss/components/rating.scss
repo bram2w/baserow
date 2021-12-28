@@ -1,0 +1,51 @@
+.rating__star {
+  font-size: 18px;
+  padding-left: 2px;
+  pointer-events: initial;
+}
+
+.rating {
+  @extend %ellipsis;
+
+  display: block;
+  min-height: 18px;
+  user-select: none;
+  pointer-events: none;
+
+  & > .rating__star:first-child {
+    padding-left: 0;
+  }
+
+  &.editing {
+    & > .rating__star {
+      color: $color-neutral-200;
+      cursor: pointer;
+    }
+
+    // If we hover the rating, all stars should be colored and semi-transparent
+    // by default
+    &:hover > .rating__star {
+      color: inherit;
+      opacity: 0.6;
+    }
+
+    // but selected stars should have full opacity.
+    & > .rating__star.rating__star--selected {
+      color: inherit;
+      opacity: 1;
+    }
+
+    // stars after the hovered one should be grey and have full opacity
+    & > .rating__star:hover ~ .rating__star {
+      color: $color-neutral-200;
+      opacity: 1;
+    }
+
+    // selected star after the hovered star should be colored and be
+    // semi-transparent
+    & > .rating__star:hover ~ .rating__star.rating__star--selected {
+      color: inherit;
+      opacity: 0.6;
+    }
+  }
+}

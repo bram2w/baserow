@@ -45,7 +45,7 @@
 <script>
 import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
-import { colors } from '@baserow/modules/core/utils/colors'
+import { randomColor } from '@baserow/modules/core/utils/colors'
 import ColorSelectContext from '@baserow/modules/core/components/ColorSelectContext'
 
 export default {
@@ -56,7 +56,7 @@ export default {
     return {
       allowedValues: ['color', 'value'],
       values: {
-        color: colors[Math.floor(Math.random() * colors.length)],
+        color: randomColor(),
         value: '',
       },
     }

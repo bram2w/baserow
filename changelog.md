@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added rating field type.
 * Fix deleted options that appear in the command line JSON file export.
 * Fix subtracting date intervals from dates in formulas in some situations not working.
 * Added day of month filter to date field.
@@ -24,12 +25,12 @@
 
 * Fixed a bug where the frontend would fail hard if a table with no views was accessed.
 * Tables can now be opened in new browser tabs.
-* **Breaking Change**: Baserow's `docker-compose.yml` now allows setting the MEDIA_URL 
+* **Breaking Change**: Baserow's `docker-compose.yml` now allows setting the MEDIA_URL
   env variable. If using MEDIA_PORT you now need to set MEDIA_URL also.
 * **Breaking Change**: Baserow's `docker-compose.yml` container names have changed to
   no longer be hardcoded to prevent naming clashes.
 * Added a licensing system for the premium version.
-* Fixed bug where it was possible to create duplicate trash entries. 
+* Fixed bug where it was possible to create duplicate trash entries.
 * Fixed propType validation error when converting from a date field to a boolean field.
 * Deprecate internal formula field function field_by_id.
 * Made it possible to change user information.

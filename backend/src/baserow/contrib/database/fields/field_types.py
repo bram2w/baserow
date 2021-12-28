@@ -18,6 +18,7 @@ from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
+
 from pytz import timezone
 from rest_framework import serializers
 
@@ -85,6 +86,7 @@ from .models import (
     LongTextField,
     URLField,
     NumberField,
+    RatingField,
     BooleanField,
     DateField,
     LastModifiedField,
@@ -436,6 +438,111 @@ class NumberFieldType(FieldType):
         )
 
 
+class RatingFieldType(FieldType):
+    type = "rating"
+    model_class = RatingField
+    allowed_fields = ["max_value", "color", "style"]
+    serializer_field_names = ["max_value", "color", "style"]
+
+    def prepare_value_for_db(self, instance, value):
+        if not value:
+            return 0
+
+        if value < 0:
+            raise ValidationError("Ensure this value is greater than or equal to 0.")
+        if value > instance.max_value:
+            raise ValidationError(
+                f"Ensure this value is less than or equal to {instance.max_value}."
+            )
+
+        return value
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.IntegerField(
+            **{
+                "required": False,
+                "allow_null": False,
+                "min_value": 0,
+                "default": 0,
+                "max_value": instance.max_value,
+                **kwargs,
+            }
+        )
+
+    def force_same_type_alter_column(self, from_field, to_field):
+        """
+        Force field alter column hook to be called when chaging max_value.
+        """
+
+        return to_field.max_value != from_field.max_value
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        """
+        Prepare value for Rating field. Clamp between 0 and field max_value.
+        Also convert Null value to 0.
+        """
+
+        if connection.vendor == "postgresql":
+            from_field_type = field_type_registry.get_by_model(from_field)
+
+            if from_field_type.type in ["number", "text", "rating"]:
+                # Convert and clamp values on field conversion
+                return (
+                    f"p_in = least(greatest(round(p_in::numeric), 0)"
+                    f", {to_field.max_value});"
+                )
+
+            if from_field_type.type == "boolean":
+                return """
+                    IF p_in THEN
+                        p_in = 1;
+                    ELSE
+                        p_in = 0;
+                    END IF;
+                """
+
+        return super().get_alter_column_prepare_new_value(
+            connection, from_field, to_field
+        )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        Prepare value from Rating field.
+        """
+
+        if connection.vendor == "postgresql":
+            to_field_type = field_type_registry.get_by_model(to_field)
+
+            if to_field_type.type == "boolean":
+                return "p_in = least(p_in::numeric, 1);"
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return models.PositiveSmallIntegerField(
+            blank=False,
+            null=False,
+            default=0,
+            **kwargs,
+        )
+
+    def random_value(self, instance, fake, cache):
+        return fake.random_int(0, instance.max_value)
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaNumberType(0)
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaNumberType
+    ) -> "RatingField":
+        return RatingField()
+
+
 class BooleanFieldType(FieldType):
     type = "boolean"
     model_class = BooleanField
@@ -769,7 +876,7 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
         before,
     ):
         """
-        If the field type has changed, we need to update the values from the from
+        If the field type has changed, we need to update the values from
         the source_field_name column.
         """
 
@@ -1705,7 +1812,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
                 variables,
             )
 
-        return super().get_alter_column_prepare_old_value(
+        return super().get_alter_column_prepare_new_value(
             connection, from_field, to_field
         )
 
