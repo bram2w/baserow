@@ -16,16 +16,19 @@
       >
         <RowCard
           v-for="slot in buffer"
-          v-show="slot.left != -1"
+          v-show="slot.position !== undefined"
           :key="'card-' + slot.id"
           :fields="cardFields"
-          :row="slot.row === null ? {} : slot.row"
-          :loading="slot.row === null"
+          :row="slot.item === null || slot.item === undefined ? {} : slot.item"
+          :loading="slot.item === null"
           class="gallery-view__card"
           :style="{
             width: cardWidth + 'px',
-            height: slot.row === null ? cardHeight + 'px' : undefined,
-            transform: `translateX(${slot.left}px) translateY(${slot.top}px)`,
+            height: slot.item === null ? cardHeight + 'px' : undefined,
+            transform:
+              slot.position !== undefined
+                ? `translateX(${slot.position.left}px) translateY(${slot.position.top}px)`
+                : false,
           }"
         ></RowCard>
       </div>
@@ -49,6 +52,10 @@ import { mapGetters } from 'vuex'
 import ResizeObserver from 'resize-observer-polyfill'
 
 import { getCardHeight } from '@baserow/modules/database/utils/card'
+import {
+  recycleSlots,
+  orderSlots,
+} from '@baserow/modules/database/utils/virtualScrolling'
 import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 import RowCard from '@baserow/modules/database/components/card/RowCard'
 import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
@@ -174,10 +181,18 @@ export default {
     // `dispatchVisibleRows` parameter to true when the user immediately stops
     // scrolling fast.
     const updateBufferDebounced = debounce(() => {
-      this.updateBuffer(true)
+      this.updateBuffer(true, false)
     }, 100)
 
+    // This debounced function is called when the user stops scrolling.
+    const updateOrderDebounced = debounce(() => {
+      this.updateBuffer(false, true)
+    }, 110)
+
     this.$el.scrollEvent = (event) => {
+      // Call the update order debounce function to simulate a stop scrolling event.
+      updateOrderDebounced()
+
       const now = Date.now()
       const { scrollTop } = event.target
 
@@ -194,18 +209,18 @@ export default {
           // When scrolling "slow", the dispatchVisibleRows parameter is true so that
           // the visible rows are fetched if needed.
           updateBufferDebounced.cancel()
-          this.updateBuffer(true)
+          this.updateBuffer(true, false)
         } else {
           // Check if the user is scrolling super fast because in that case we don't
           // fetch the rows when they're not needed.
           updateBufferDebounced()
-          this.updateBuffer(false)
+          this.updateBuffer(false, false)
         }
       } else {
         // If scroll stopped within the 100ms we still want to have a last
         // updateBuffer(true) call.
         updateBufferDebounced()
-        this.updateBuffer(false)
+        this.updateBuffer(false, false)
       }
     }
     this.$refs.scroll.addEventListener('scroll', this.$el.scrollEvent)
@@ -233,16 +248,12 @@ export default {
      * visible and what their position is without rendering all the rows in the store
      * at once.
      *
-     * @TODO make this really virtual scrolling by letting the row persist in the same
-     *   slot, even when it changes position. Currently, it updates all the cards when
-     *   a new row of cards must be displayed.
-     *
      * @param dispatchVisibleRows Indicates whether we want to dispatch the visibleRows
      *  action in the store. In some cases, when scrolling really fast through data we
      *  might want to wait a small moment before calling the action, which will make a
      *  request to the backend if needed.
      */
-    updateBuffer(dispatchVisibleRows = true) {
+    updateBuffer(dispatchVisibleRows = true, updateOrder = true) {
       const el = this.$refs.scroll
 
       const gutterSize = this.gutterSize
@@ -270,23 +281,22 @@ export default {
       const endIndex = startIndex + minimumCardsToRender
       const visibleRows = this.allRows.slice(startIndex, endIndex)
 
-      // Calculate an array containing only the rows that must be displayed and their
-      // position in the gallery as if all the rows are there.
-      this.buffer = visibleRows.map((row, positionInVisible) => {
+      const getPosition = (row, positionInVisible) => {
         const positionInAll = startIndex + positionInVisible
-        const left =
-          gutterSize + (positionInAll % cardsPerRow) * (gutterSize + cardWidth)
-        const top =
-          gutterSize +
-          Math.floor(positionInAll / cardsPerRow) * (gutterSize + cardHeight)
-
         return {
-          id: positionInVisible,
-          row,
-          left,
-          top,
+          left:
+            gutterSize +
+            (positionInAll % cardsPerRow) * (gutterSize + cardWidth),
+          top:
+            gutterSize +
+            Math.floor(positionInAll / cardsPerRow) * (gutterSize + cardHeight),
         }
-      })
+      }
+      recycleSlots(this.buffer, visibleRows, getPosition, minimumCardsToRender)
+
+      if (updateOrder) {
+        orderSlots(this.buffer, visibleRows)
+      }
 
       if (dispatchVisibleRows) {
         // Tell the store which rows/cards are visible so that it can fetch the missing
