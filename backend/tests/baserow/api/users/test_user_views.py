@@ -175,6 +175,36 @@ def test_create_user(client, data_fixture):
         f"valid: {','.join([l[0] for l in settings.LANGUAGES])}"
     )
 
+    # Test username with maximum length
+    long_username = "x" * 150
+    response = client.post(
+        reverse("api:user:index"),
+        {
+            "name": long_username,
+            "email": "longusername@email.com",
+            "password": "password",
+        },
+        format="json",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    user = User.objects.get(email="longusername@email.com")
+    assert user.first_name == long_username
+
+    # Test username with length exceeding the maximum
+    even_longer_username = "x" * 200
+    response = client.post(
+        reverse("api:user:index"),
+        {
+            "name": even_longer_username,
+            "email": "evenlongerusername@email.com",
+            "password": "password",
+        },
+        format="json",
+    )
+    response_json = response.json()
+    assert response_failed.status_code == 400
+
 
 @pytest.mark.django_db
 def test_user_account(data_fixture, api_client):
