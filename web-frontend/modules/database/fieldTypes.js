@@ -1135,7 +1135,7 @@ class BaseDateFieldType extends FieldType {
   }
 
   toHumanReadableString(field, value) {
-    const date = moment.utc(value)
+    const date = moment.tz(value, field.timezone)
 
     if (date.isValid()) {
       const dateFormat = getDateMomentFormat(field.date_format)
@@ -1152,13 +1152,37 @@ class BaseDateFieldType extends FieldType {
     }
   }
 
+  prepareValueForCopy(field, value) {
+    return this.toHumanReadableString(field, value)
+  }
+
   /**
    * Tries to parse the clipboard text value with moment and returns the date in the
    * correct format for the field. If it can't be parsed null is returned.
    */
   prepareValueForPaste(field, clipboardData) {
     const value = clipboardData.getData('text').toUpperCase()
-    const date = moment.utc(value)
+
+    // Formats for ISO dates
+    let formats = [
+      moment.ISO_8601,
+      'YYYY-MM-DD',
+      'YYYY-MM-DD hh:mm A',
+      'YYYY-MM-DD HH:mm',
+    ]
+    // Formats for EU dates
+    const EUFormat = ['DD/MM/YYYY', 'DD/MM/YYYY hh:mm A', 'DD/MM/YYYY HH:mm']
+    // Formats for US dates
+    const USFormat = ['MM/DD/YYYY', 'MM/DD/YYYY hh:mm A', 'MM/DD/YYYY HH:mm']
+
+    // Interpret the pasted date based on the field's current date format
+    if (field.date_format === 'EU') {
+      formats = formats.concat(EUFormat).concat(USFormat)
+    } else if (field.date_format === 'US') {
+      formats = formats.concat(USFormat).concat(EUFormat)
+    }
+
+    const date = moment.utc(value, formats)
 
     if (date.isValid()) {
       return field.date_include_time ? date.format() : date.format('YYYY-MM-DD')
@@ -1248,28 +1272,6 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
 
   shouldRefreshWhenAdded() {
     return true
-  }
-
-  toHumanReadableString(field, value) {
-    const date = moment.tz(value, field.timezone)
-
-    if (date.isValid()) {
-      const dateFormat = getDateMomentFormat(field.date_format)
-      let dateString = date.format(dateFormat)
-
-      if (field.date_include_time) {
-        const timeFormat = getTimeMomentFormat(field.date_time_format)
-        dateString = `${dateString} ${date.format(timeFormat)}`
-      }
-
-      return dateString
-    } else {
-      return ''
-    }
-  }
-
-  prepareValueForCopy(field, value) {
-    return this.toHumanReadableString(field, value)
   }
 
   getDocsDataType(field) {
