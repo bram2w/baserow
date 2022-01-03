@@ -14,6 +14,7 @@
 * **breaking change** The API endpoint to rotate a form views slug has been moved to
   `/database/views/${viewId}/rotate-slug/`.
 * Increased maximum length of application name to 160 characters.
+* Fixed copying/pasting for date field.
 
 ## Released (2021-11-25)
 
