@@ -82,7 +82,7 @@ class UserProfile(models.Model):
 
 
 class Group(TrashableModelMixin, CreatedAndUpdatedOnMixin):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=160)
     users = models.ManyToManyField(User, through="GroupUser")
 
     def application_set_including_trash(self):
@@ -242,7 +242,7 @@ class Application(
     models.Model,
 ):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=160)
     order = models.PositiveIntegerField()
     content_type = models.ForeignKey(
         ContentType,
