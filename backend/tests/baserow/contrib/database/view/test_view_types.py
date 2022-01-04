@@ -151,6 +151,7 @@ def test_import_export_form_view(data_fixture, tmpdir):
         description="Description",
         cover_image=user_file,
         logo_image=user_file,
+        submit_text="My Submit",
         submit_action="REDIRECT",
         submit_action_message="TEst message",
         submit_action_redirect_url="https://localhost",
@@ -190,6 +191,7 @@ def test_import_export_form_view(data_fixture, tmpdir):
         "name": form_view.logo_image.name,
         "original_name": form_view.logo_image.original_name,
     }
+    assert serialized["submit_text"] == form_view.submit_text
     assert serialized["submit_action"] == form_view.submit_action
     assert serialized["submit_action_message"] == form_view.submit_action_message
     assert (
@@ -224,6 +226,7 @@ def test_import_export_form_view(data_fixture, tmpdir):
     assert form_view.description == imported_form_view.description
     assert form_view.cover_image_id == imported_form_view.cover_image_id
     assert form_view.logo_image_id == imported_form_view.logo_image_id
+    assert form_view.submit_text == imported_form_view.submit_text
     assert form_view.submit_action == imported_form_view.submit_action
     assert form_view.submit_action_message == imported_form_view.submit_action_message
     assert (

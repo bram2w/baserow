@@ -463,6 +463,15 @@
   justify-content: center;
 }
 
+.form-view__submit-button-editing {
+  cursor: inherit;
+
+  &:hover,
+  &:focus {
+    box-shadow: none;
+  }
+}
+
 .form-view__powered-by-logo {
   max-width: 92px;
   margin-left: 8px;

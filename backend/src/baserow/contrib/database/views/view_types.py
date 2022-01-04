@@ -212,6 +212,7 @@ class FormViewType(ViewType):
         "description",
         "cover_image",
         "logo_image",
+        "submit_text",
         "submit_action",
         "submit_action_message",
         "submit_action_redirect_url",
@@ -221,6 +222,7 @@ class FormViewType(ViewType):
         "description",
         "cover_image",
         "logo_image",
+        "submit_text",
         "submit_action",
         "submit_action_message",
         "submit_action_redirect_url",
@@ -286,6 +288,7 @@ class FormViewType(ViewType):
         serialized["description"] = form.description
         serialized["cover_image"] = add_user_file(form.cover_image)
         serialized["logo_image"] = add_user_file(form.logo_image)
+        serialized["submit_text"] = form.submit_text
         serialized["submit_action"] = form.submit_action
         serialized["submit_action_message"] = form.submit_action_message
         serialized["submit_action_redirect_url"] = form.submit_action_redirect_url

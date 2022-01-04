@@ -106,7 +106,20 @@
         <div class="form-view__actions">
           <FormViewPoweredBy></FormViewPoweredBy>
           <div class="form-view__submit">
-            <a class="button button--primary button--large">Submit</a>
+            <Editable
+              ref="submit_text"
+              class="button button--primary button--large"
+              :class="{ 'form-view__submit-button-editing': editingSubmitText }"
+              :value="view.submit_text"
+              @change="updateForm({ submit_text: $event.value })"
+              @editing="editingSubmitText = $event"
+            ></Editable>
+            <a
+              v-if="!readOnly"
+              class="form-view__edit"
+              :class="{ 'form-view__edit--hidden': editingSubmitText }"
+              @click="$refs.submit_text.edit()"
+            ></a>
           </div>
         </div>
       </div>
@@ -156,6 +169,7 @@ export default {
   data() {
     return {
       editingTitle: false,
+      editingSubmitText: false,
       editingDescription: false,
     }
   },

@@ -40,7 +40,7 @@
               :class="{ 'button--loading': loading }"
               :disabled="loading"
             >
-              Submit
+              {{ submit_text }}
             </button>
           </div>
         </div>
@@ -123,6 +123,7 @@ export default {
       description: data.description,
       coverImage: data.cover_image,
       logoImage: data.logo_image,
+      submit_text: data.submit_text,
       fields: data.fields,
       values,
     }
