@@ -103,7 +103,11 @@ export const recycleSlots = (slots, items, getPosition, min = items.length) => {
     }
 
     const slotPosition = getPosition(item, position)
-    Object.assign(slots[index].position, slotPosition)
+    if (
+      JSON.stringify(slotPosition) !== JSON.stringify(slots[index].position)
+    ) {
+      slots[index].position = slotPosition
+    }
   })
 
   // The remaining empty slots must be cleared because they could contain old items.

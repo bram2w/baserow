@@ -34,4 +34,14 @@
 
 .gallery-view__card {
   @include absolute(0, auto, auto, 0);
+
+  & * {
+    pointer-events: none;
+    user-select: none;
+  }
+
+  &:not(.card--loading):hover {
+    cursor: pointer;
+    box-shadow: 0 1px 3px 0 rgba($black, 0.32);
+  }
 }

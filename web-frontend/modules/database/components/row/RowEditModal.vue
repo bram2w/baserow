@@ -112,7 +112,7 @@ export default {
      * switch to that version to maintain reactivity between the two.
      */
     rows(value) {
-      const row = value.find((r) => r.id === this.rowId)
+      const row = value.find((r) => r !== null && r.id === this.rowId)
       if (row === undefined && this.rowExists) {
         this.$store.dispatch('rowModal/doesNotExist')
       } else if (row !== undefined && !this.rowExists) {
@@ -122,7 +122,7 @@ export default {
   },
   methods: {
     show(rowId, ...args) {
-      const row = this.rows.find((r) => r.id === rowId)
+      const row = this.rows.find((r) => r !== null && r.id === rowId)
       this.$store.dispatch('rowModal/open', {
         id: rowId,
         row: row || {},
