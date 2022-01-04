@@ -2,7 +2,25 @@ import path from 'path'
 
 import { routes } from './routes'
 
+import en from './locales/en'
+import fr from './locales/fr'
+
 export default function () {
+  this.nuxt.hook('i18n:extend-messages', function (additionalMessages) {
+    additionalMessages.push({
+      en: {
+        premium: {
+          ...en,
+        },
+      },
+      fr: {
+        premium: {
+          ...fr,
+        },
+      },
+    })
+  })
+
   // Register new alias to the web-frontend directory.
   this.options.alias['@baserow_premium'] = path.resolve(__dirname, './')
 

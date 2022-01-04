@@ -18,7 +18,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.3",
     "@nuxtjs/axios": "^5.13.6",
-    "@nuxtjs/i18n": "^7.0.1",
+    "@nuxtjs/i18n": "^7.2.0",
     "antlr4": "4.8.0",
     "async-mutex": "^0.3.1",
     "axios": "^0.21.0",

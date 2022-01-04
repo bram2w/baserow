@@ -1,33 +1,43 @@
 <template>
   <div class="layout__col-2-scroll">
     <div class="admin-dashboard">
-      <h1>Dashboard</h1>
+      <h1>{{ $t('dashboard.title') }}</h1>
       <div class="row margin-bottom-3">
         <div class="col col-4">
           <div class="admin-dashboard__box">
             <div v-if="loading" class="loading-overlay"></div>
-            <div class="admin-dashboard__box-title">Totals</div>
+            <div class="admin-dashboard__box-title">
+              {{ $t('dashboard.totals') }}
+            </div>
             <div class="admin-dashboard__numbers">
-              <div class="admin-dashboard__numbers-name">Total users</div>
+              <div class="admin-dashboard__numbers-name">
+                {{ $t('dashboard.totalUsers') }}
+              </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.total_users }}
               </div>
               <div class="admin-dashboard__numbers-percentage">
-                <nuxt-link :to="{ name: 'admin-users' }">view all</nuxt-link>
-              </div>
-            </div>
-            <div class="admin-dashboard__numbers">
-              <div class="admin-dashboard__numbers-name">Total groups</div>
-              <div class="admin-dashboard__numbers-value">
-                {{ data.total_groups }}
-              </div>
-              <div class="admin-dashboard__numbers-percentage">
-                <nuxt-link :to="{ name: 'admin-groups' }">view all</nuxt-link>
+                <nuxt-link :to="{ name: 'admin-users' }">{{
+                  $t('dashboard.viewAll')
+                }}</nuxt-link>
               </div>
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                Total applications
+                {{ $t('dashboard.totalGroups') }}
+              </div>
+              <div class="admin-dashboard__numbers-value">
+                {{ data.total_groups }}
+              </div>
+              <div class="admin-dashboard__numbers-percentage">
+                <nuxt-link :to="{ name: 'admin-groups' }">{{
+                  $t('dashboard.viewAll')
+                }}</nuxt-link>
+              </div>
+            </div>
+            <div class="admin-dashboard__numbers">
+              <div class="admin-dashboard__numbers-name">
+                {{ $t('dashboard.totalApplications') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.total_applications }}
@@ -38,10 +48,12 @@
         <div class="col col-4">
           <div class="admin-dashboard__box">
             <div v-if="loading" class="loading-overlay"></div>
-            <div class="admin-dashboard__box-title">New users</div>
+            <div class="admin-dashboard__box-title">
+              {{ $t('dashboard.newUsers') }}
+            </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                New users last 24 hours
+                {{ $t('dashboard.newUsers24h') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.new_users_last_24_hours }}
@@ -59,7 +71,7 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                New users last 7 days
+                {{ $t('dashboard.newUsers7days') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.new_users_last_7_days }}
@@ -77,7 +89,7 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                New users last 30 days
+                {{ $t('dashboard.newUsers30days') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.new_users_last_30_days }}
@@ -98,10 +110,12 @@
         <div class="col col-4">
           <div class="admin-dashboard__box">
             <div v-if="loading" class="loading-overlay"></div>
-            <div class="admin-dashboard__box-title">Active users</div>
+            <div class="admin-dashboard__box-title">
+              {{ $t('dashboard.activeUsers') }}
+            </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                Active users last 24 hours
+                {{ $t('dashboard.activeUsers24h') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.active_users_last_24_hours }}
@@ -119,7 +133,7 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                Active users last 7 days
+                {{ $t('dashboard.activeUsers7days') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.active_users_last_7_days }}
@@ -137,7 +151,7 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                Active users last 30 days
+                {{ $t('dashboard.activeUsers30days') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.active_users_last_30_days }}
@@ -266,3 +280,44 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "dashboard": {
+      "title": "Dashboard",
+      "totals": "Totals",
+      "totalUsers": "Total users",
+      "totalGroups": "Total groups",
+      "totalApplications": "Total applications",
+      "newUsers": "New users",
+      "newUsers24h": "New users last 24 hours",
+      "newUsers7days": "New users last 7 days",
+      "newUsers30days": "New users last 30 days",
+      "activeUsers": "Active users",
+      "activeUsers24h": "Active users last 24 hours",
+      "activeUsers7days": "Active users last 7 days",
+      "activeUsers30days": "Active users last 30 days",
+      "viewAll": "View all"
+    }
+  },
+  "fr": {
+    "dashboard": {
+      "title": "Statistiques",
+      "totals": "Résumé",
+      "totalUsers": "Nombre d'utilisateur",
+      "totalGroups": "Nombre de groupe",
+      "totalApplications": "Nombre d'application",
+      "newUsers": "Nouveaux utilisateurs",
+      "newUsers24h": "Sur les dernières 24h",
+      "newUsers7days": "sur les 7 derniers jours",
+      "newUsers30days": "Sur les 30 derniers jours",
+      "activeUsers": "Utilisateurs actifs",
+      "activeUsers24h": "Sur les dernières 24h",
+      "activeUsers7days": "sur les 7 derniers jours",
+      "activeUsers30days": "Sur les 30 derniers jours",
+      "viewAll": "Consulter"
+    }
+  }
+}
+</i18n>

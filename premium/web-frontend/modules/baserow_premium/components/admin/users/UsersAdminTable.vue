@@ -9,7 +9,9 @@
     @row-context="onRowContext"
   >
     <template #header>
-      <div class="crudtable__header-title">All users</div>
+      <div class="crudtable__header-title">
+        {{ $t('usersAdminTable.allUsers') }}
+      </div>
     </template>
     <template #menus="slotProps">
       <EditUserContext
@@ -50,7 +52,7 @@ export default {
     this.leftColumns = [
       new CrudTableColumn(
         'id',
-        'ID',
+        () => this.$t('usersAdminTable.id'),
         SimpleField,
         'min-content',
         'max-content',
@@ -58,7 +60,7 @@ export default {
       ),
       new CrudTableColumn(
         'username',
-        'Username',
+        () => this.$t('usersAdminTable.username'),
         UsernameField,
         '200px',
         'max-content',
@@ -66,17 +68,24 @@ export default {
       ),
     ]
     this.rightColumns = [
-      new CrudTableColumn('name', 'Name', SimpleField, '100px', '200px', true),
+      new CrudTableColumn(
+        'name',
+        () => this.$t('usersAdminTable.name'),
+        SimpleField,
+        '100px',
+        '200px',
+        true
+      ),
       new CrudTableColumn(
         'groups',
-        'Groups',
+        () => this.$t('usersAdminTable.groups'),
         UserGroupsField,
         '100px',
         '500px'
       ),
       new CrudTableColumn(
         'last_login',
-        'Last Login',
+        () => this.$t('usersAdminTable.lastLogin'),
         LocalDateField,
         'min-content',
         '200px',
@@ -84,7 +93,7 @@ export default {
       ),
       new CrudTableColumn(
         'date_joined',
-        'Signed Up',
+        () => this.$t('usersAdminTable.dateJoined'),
         LocalDateField,
         'min-content',
         '200px',
@@ -92,7 +101,7 @@ export default {
       ),
       new CrudTableColumn(
         'is_active',
-        'Active',
+        () => this.$t('premium.user.active'),
         ActiveField,
         'min-content',
         '200px',
@@ -129,3 +138,32 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "usersAdminTable": {
+      "allUsers": "All users",
+      "id": "ID",
+      "username": "Username",
+      "name": "Name",
+      "groups": "Groups",
+      "lastLogin": "Last login",
+      "dateJoined": "Signed up",
+      "active": "Active"
+    }
+  },
+  "fr": {
+    "usersAdminTable": {
+      "allUsers": "Liste des utilisateurs",
+      "id": "ID",
+      "username": "Identifiant",
+      "name": "Nom",
+      "groups": "Groupes",
+      "lastLogin": "Dernière connexion",
+      "dateJoined": "Date d'inscription",
+      "active": "Actif"
+    }
+  }
+}
+</i18n>

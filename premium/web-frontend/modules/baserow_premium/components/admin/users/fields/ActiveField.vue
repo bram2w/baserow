@@ -8,7 +8,7 @@
           user-admin-active__icon user-admin-active__icon--activated
         "
       ></i>
-      Active
+      {{ parent.$t('premium.user.active') }}
     </div>
     <div v-else>
       <i
@@ -18,7 +18,7 @@
           user-admin-active__icon user-admin-active__icon--deactivated
         "
       ></i>
-      Deactivated
+      {{ parent.$t('premium.user.deactivated') }}
     </div>
   </div>
 </template>

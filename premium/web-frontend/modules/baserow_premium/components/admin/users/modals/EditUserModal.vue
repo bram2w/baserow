@@ -1,6 +1,8 @@
 <template>
   <Modal>
-    <h2 class="box__title">Edit {{ user.username }}</h2>
+    <h2 class="box__title">
+      {{ $t('editUserModal.edit', { username: user.username }) }}
+    </h2>
     <Error :error="error"></Error>
     <UserForm
       ref="form"
@@ -14,7 +16,7 @@
           class="user-admin-edit__delete"
           @click="$refs.deleteUserModal.show()"
         >
-          Delete User
+          {{ $t('editUserModal.delete') }}
         </a>
       </div>
     </UserForm>
@@ -69,3 +71,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "editUserModal": {
+      "delete": "Delete user",
+      "edit": "Edit { username }"
+    }
+  },
+  "fr": {
+    "editUserModal": {
+      "delete": "Supprimer l'utilisateur",
+      "edit": "Modifier {username}"
+    }
+  }
+}
+</i18n>
