@@ -8,7 +8,7 @@
     </div>
     <i
       v-if="props.row.is_staff"
-      v-tooltip="'is staff'"
+      v-tooltip="parent.$t('premium.user.isStaff')"
       class="user-admin-username__icon fas fa-users"
     ></i>
     <a

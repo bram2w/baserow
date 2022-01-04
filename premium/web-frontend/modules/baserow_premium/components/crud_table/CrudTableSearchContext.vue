@@ -11,7 +11,7 @@
               ref="activeSearchTermInput"
               v-model="activeSearchTerm"
               type="text"
-              placeholder="Search usernames"
+              :placeholder="$t('crudTableSearchContext.search')"
               class="input"
               @keyup="searchIfChanged"
             />
@@ -59,3 +59,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "crudTableSearchContext": {
+      "search": "Search"
+    }
+  },
+  "fr": {
+    "crudTableSearchContext": {
+      "search": "Recherche"
+    }
+  }
+}
+</i18n>

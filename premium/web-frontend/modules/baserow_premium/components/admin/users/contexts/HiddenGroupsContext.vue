@@ -9,7 +9,7 @@
         {{ group[nameKey] }}
         <i
           v-if="group.permissions == 'ADMIN'"
-          v-tooltip="'is group admin'"
+          v-tooltip="$t('premium.user.isGroupAdmin')"
           class="user-admin-group__icon fas fa-users-cog"
         ></i>
       </li>

@@ -24,6 +24,8 @@ export default {
     retry: 'Retry',
     search: 'Search',
     copy: 'Copy',
+    activate: 'Activate',
+    deactivate: 'Deactivate',
   },
   adminType: {
     settings: 'Settings',

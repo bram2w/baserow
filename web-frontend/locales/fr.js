@@ -24,6 +24,8 @@ export default {
     retry: 'Réessayer',
     search: 'Chercher',
     copy: 'Copier',
+    activate: 'Activer',
+    deactivate: 'Désactiver',
   },
   adminType: {
     settings: 'Paramètres',
@@ -214,7 +216,7 @@ export default {
       "L'URL fournie n'est pas valide ou est protégée.",
     adminCannotDeactivateSelfTitle: 'Action interdite',
     adminCannotDeactivateSelfDescription:
-      "Vous ne pouvez pas désactiver votre compte ou modifier votre appartenance à l'équipe staff.",
+      'Vous ne pouvez pas désactiver votre compte ou modifier votre statut de collaborateur.',
     adminCannotDeleteSelfTitle: 'Action interdite',
     adminCannotDeleteSelfDescription:
       'Vous ne pouvez pas supprimer votre propre compte utilisateur.',
