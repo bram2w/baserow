@@ -9,12 +9,14 @@
           >{{ userFieldNames ? name : visibleName }}</span
         >
       </div>
-      <div v-if="optional" class="api-docs__parameter-optional">optional</div>
+      <div v-if="optional" class="api-docs__parameter-optional">
+        {{ $t('apiDocsParameter.optional') }}
+      </div>
     </div>
     <div class="api-docs__parameter-description">
       <code class="api-docs__code">{{ type }}</code>
       <div v-if="standard !== ''" class="api-docs__parameter-default">
-        Default: {{ standard }}
+        {{ $t('apiDocsParameter.defaultValue', { value: standard }) }}
       </div>
       <div class="api-docs__parameter-content">
         <slot></slot>
@@ -58,3 +60,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "apiDocsParameter": {
+      "optional": "optional",
+      "defaultValue": "Default: {value}"
+    }
+  },
+  "fr": {
+    "apiDocsParameter": {
+      "optional": "optionnel",
+      "defaultValue": "Valeur par défaut : {value}"
+    }
+  }
+}
+</i18n>

@@ -9,12 +9,8 @@
       ></APIDocsSelectDatabaseGroup>
     </template>
     <p v-else>
-      You need to have at least one database to view the API documentation.
+      {{ $t('apiDocsSelectDatabase') }}
     </p>
-    <nuxt-link :to="{ name: 'dashboard' }" class="select-application__back">
-      <i class="fas fa-arrow-left"></i>
-      Back to dashboard
-    </nuxt-link>
   </div>
 </template>
 
@@ -49,3 +45,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "apiDocsSelectDatabase": {
+      "needOneDatabase": "You need to have at least one database to view the API documentation."
+    }
+  },
+  "fr": {
+    "apiDocsSelectDatabase": {
+      "needOneDatabase": "Vous devez avoir au moins une base de données afin de consulter la documentation de l'API."
+    }
+  }
+}
+</i18n>
