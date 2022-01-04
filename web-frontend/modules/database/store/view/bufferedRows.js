@@ -169,6 +169,14 @@ export default ({ service, populateRow }) => {
     MOVE_ROW(state, { oldIndex, newIndex }) {
       state.rows.splice(newIndex, 0, state.rows.splice(oldIndex, 1)[0])
     },
+    UPDATE_ROW(state, { row, values }) {
+      const index = state.rows.findIndex(
+        (item) => item !== null && item.id === row.id
+      )
+      if (index !== -1) {
+        Object.assign(state.rows[index], values)
+      }
+    },
     UPDATE_ROW_AT_INDEX(state, { index, values }) {
       Object.assign(state.rows[index], values)
     },
@@ -569,6 +577,71 @@ export default ({ service, populateRow }) => {
       }
 
       commit('INSERT_ROW_AT_INDEX', { index, row })
+    },
+    /**
+     * Updates the value of a row and make the updates to the store accordingly.
+     */
+    async updateRowValue(
+      { commit, dispatch },
+      { table, view, row, field, fields, primary, value, oldValue }
+    ) {
+      const fieldType = this.$registry.get('field', field._.type.type)
+      const allFields = [primary].concat(fields)
+      const newValues = {}
+      const newValuesForUpdate = {}
+      const oldValues = {}
+      const fieldName = `field_${field.id}`
+      newValues[fieldName] = value
+      newValuesForUpdate[fieldName] = fieldType.prepareValueForUpdate(
+        field,
+        value
+      )
+      oldValues[fieldName] = oldValue
+
+      allFields.forEach((fieldToCall) => {
+        const fieldType = this.$registry.get('field', fieldToCall._.type.type)
+        const fieldToCallName = `field_${fieldToCall.id}`
+        const currentFieldValue = row[fieldToCallName]
+        const optimisticFieldValue = fieldType.onRowChange(
+          row,
+          field,
+          value,
+          oldValue,
+          fieldToCall,
+          currentFieldValue
+        )
+
+        if (currentFieldValue !== optimisticFieldValue) {
+          newValues[fieldToCallName] = optimisticFieldValue
+          oldValues[fieldToCallName] = currentFieldValue
+        }
+      })
+
+      await dispatch('afterExistingRowUpdated', {
+        view,
+        fields,
+        primary,
+        row,
+        values: newValues,
+      })
+
+      try {
+        const { data } = await RowService(this.$client).update(
+          table.id,
+          row.id,
+          newValuesForUpdate
+        )
+        commit('UPDATE_ROW', { row, values: data })
+      } catch (error) {
+        dispatch('updatedExistingRow', {
+          view,
+          fields,
+          primary,
+          row,
+          values: oldValues,
+        })
+        throw error
+      }
     },
     /**
      * When an existing row is updated, the state in the store must also be updated.

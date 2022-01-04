@@ -1,5 +1,11 @@
 <template>
-  <div class="card" :class="{ 'card--loading': loading }" v-on="$listeners">
+  <div
+    class="card"
+    :class="{ 'card--loading': loading }"
+    @click="$emit('click', $event)"
+    @mousedown="$emit('mousedown', $event)"
+    @mousemove="$emit('mousemove', $event)"
+  >
     <div v-for="field in fields" :key="field.id" class="card__field">
       <div class="card__field-name">{{ field.name }}</div>
       <div class="card__field-value">
