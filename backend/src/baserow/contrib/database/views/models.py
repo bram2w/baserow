@@ -30,6 +30,7 @@ SORT_ORDER_ASC = "ASC"
 SORT_ORDER_DESC = "DESC"
 SORT_ORDER_CHOICES = ((SORT_ORDER_ASC, "Ascending"), (SORT_ORDER_DESC, "Descending"))
 
+FORM_VIEW_SUBMIT_TEXT = "Submit"
 FORM_VIEW_SUBMIT_ACTION_MESSAGE = "MESSAGE"
 FORM_VIEW_SUBMIT_ACTION_REDIRECT = "REDIRECT"
 FORM_VIEW_SUBMIT_ACTION_CHOICES = (
@@ -283,6 +284,10 @@ class FormView(View):
         on_delete=models.SET_NULL,
         related_name="form_view_logo_image",
         help_text="The user file logo image that is displayed at the top of the form.",
+    )
+    submit_text = models.TextField(
+        default=FORM_VIEW_SUBMIT_TEXT,
+        help_text="The text displayed on the submit button.",
     )
     submit_action = models.CharField(
         max_length=32,
