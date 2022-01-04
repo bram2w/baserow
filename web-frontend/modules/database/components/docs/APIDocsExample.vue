@@ -8,7 +8,7 @@
         class="api-docs__copy"
         @click.prevent=";[copyToClipboard(url), $refs.urlCopied.show()]"
       >
-        Copy
+        {{ $t('action.copy') }}
         <Copied ref="urlCopied"></Copied>
       </a>
       <div class="api-docs__example-request">
@@ -32,7 +32,9 @@
         </div>
       </div>
     </div>
-    <div class="api-docs__example-title">Request sample</div>
+    <div class="api-docs__example-title">
+      {{ $t('apiDocsExample.requestSample') }}
+    </div>
     <div class="api-docs__example">
       <a
         class="api-docs__copy"
@@ -43,7 +45,7 @@
           ]
         "
       >
-        Copy
+        {{ $t('action.copy') }}
         <Copied ref="requestCopied"></Copied>
       </a>
       <div class="api-docs__example-type">
@@ -70,7 +72,7 @@
           :value="value.userFieldNames"
           class="api-docs__example-type-item"
           @input="$emit('input', { userFieldNames: $event, type: value.type })"
-          >User field names</Checkbox
+          >{{ $t('apiDocsExample.userFieldNames') }}</Checkbox
         >
       </div>
       <div class="api-docs__example-content-container">
@@ -98,7 +100,9 @@
       </div>
     </div>
     <template v-if="response !== false">
-      <div class="api-docs__example-title">Response sample</div>
+      <div class="api-docs__example-title">
+        {{ $t('apiDocsExample.responseSample') }}
+      </div>
       <div class="api-docs__example">
         <a
           class="api-docs__copy"
@@ -109,7 +113,7 @@
             ]
           "
         >
-          Copy
+          {{ $t('action.copy') }}
           <Copied ref="responseCopied"></Copied>
         </a>
         <div class="api-docs__example-content-container">
@@ -329,3 +333,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "apiDocsExample": {
+      "requestSample": "Request sample",
+      "responseSample": "Response sample",
+      "userFieldNames": "User field names"
+    }
+  },
+  "fr": {
+    "apiDocsExample": {
+      "requestSample": "Example de requête",
+      "responseSample": "Example de réponse",
+      "userFieldNames": "Nom des champs utilisateur"
+    }
+  }
+}
+</i18n>
