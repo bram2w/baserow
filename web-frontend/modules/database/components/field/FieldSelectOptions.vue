@@ -61,6 +61,7 @@ export default {
   data() {
     return {
       colorContextSelected: -1,
+      lastSeenId: -1,
     }
   },
   methods: {
@@ -73,8 +74,10 @@ export default {
       this.value.push({
         value: '',
         color: randomColor(),
+        id: this.lastSeenId,
       })
       this.$emit('input', this.value)
+      this.lastSeenId -= 1
     },
     openColor(index) {
       this.colorContextSelected = index

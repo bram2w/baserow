@@ -16,6 +16,7 @@
 * Increased maximum length of application name to 160 characters.
 * Fixed copying/pasting for date field.
 * Allow changing the text of the submit button in the form view.
+* Fixed reordering of single select options when initially creating the field.
 
 ## Released (2021-11-25)
 
