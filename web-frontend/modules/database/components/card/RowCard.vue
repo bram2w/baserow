@@ -2,9 +2,9 @@
   <div
     class="card"
     :class="{ 'card--loading': loading }"
-    @click="$emit('click', $event)"
     @mousedown="$emit('mousedown', $event)"
     @mousemove="$emit('mousemove', $event)"
+    @mouseenter="$emit('mouseenter', $event)"
   >
     <div v-for="field in fields" :key="field.id" class="card__field">
       <div class="card__field-name">{{ field.name }}</div>

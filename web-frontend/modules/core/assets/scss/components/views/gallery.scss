@@ -35,12 +35,32 @@
 .gallery-view__card {
   @include absolute(0, auto, auto, 0);
 
-  & * {
+  &:not(.gallery-view__card--disabled) * {
     pointer-events: none;
     user-select: none;
   }
 
-  &:not(.card--loading):hover {
+  &--dragging-clone {
+    pointer-events: none;
+    left: 0;
+    right: 0;
+    opacity: 0.9;
+    transform: none !important;
+  }
+
+  &.gallery-view__card--dragging {
+    visibility: hidden;
+  }
+
+  .gallery-view__cards--dragging & {
+    // Must be kept in sync with the timeout of bufferedRowsDragAndDrop.js::rowMoved
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+    transition-property: transform;
+    transition-delay: 0s;
+  }
+
+  &:not(.card--loading):not(.gallery-view__card--disabled):not(.gallery-view__card--dragging):hover {
     cursor: pointer;
     box-shadow: 0 1px 3px 0 rgba($black, 0.32);
   }
