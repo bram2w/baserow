@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import (
@@ -1265,6 +1266,9 @@ def test_delete_sort(send_mock, data_fixture):
 @pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.view_updated.send")
 def test_rotate_view_slug(send_mock, data_fixture):
+    class UnShareableViewType(GridViewType):
+        can_share = False
+
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -1277,8 +1281,9 @@ def test_rotate_view_slug(send_mock, data_fixture):
     with pytest.raises(UserNotInGroup):
         handler.rotate_view_slug(user=user_2, view=form)
 
-    with pytest.raises(CannotShareViewTypeError):
-        handler.rotate_view_slug(user=user, view=grid)
+    with patch.dict(view_type_registry.registry, {"grid": UnShareableViewType()}):
+        with pytest.raises(CannotShareViewTypeError):
+            handler.rotate_view_slug(user=user, view=grid)
 
     handler.rotate_view_slug(user=user, view=form)
 

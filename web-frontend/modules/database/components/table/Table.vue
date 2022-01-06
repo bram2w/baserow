@@ -92,6 +92,12 @@
             @changed="refresh()"
           ></ViewSort>
         </li>
+        <li
+          v-if="hasSelectedView && view._.type.canShare && !readOnly"
+          class="header__filter-item"
+        >
+          <ShareViewLink :view="view" :read-only="readOnly"></ShareViewLink>
+        </li>
       </ul>
       <component
         :is="getViewHeaderComponent(view)"
@@ -136,6 +142,7 @@ import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
+import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLink'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -143,6 +150,7 @@ import EditableViewName from '@baserow/modules/database/components/view/Editable
  */
 export default {
   components: {
+    ShareViewLink,
     EditableViewName,
     ViewsContext,
     ViewFilter,

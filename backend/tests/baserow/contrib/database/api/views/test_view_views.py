@@ -1317,6 +1317,9 @@ def test_patch_view_field_options(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_rotate_slug(api_client, data_fixture):
+    class UnShareableViewType(GridViewType):
+        can_share = False
+
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     view = data_fixture.create_form_view(table=table)
@@ -1329,10 +1332,15 @@ def test_rotate_slug(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
 
-    url = reverse("api:database:views:rotate_slug", kwargs={"view_id": grid_view.id})
-    response = api_client.post(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_CANNOT_SHARE_VIEW_TYPE"
+    with patch.dict(view_type_registry.registry, {"grid": UnShareableViewType()}):
+        url = reverse(
+            "api:database:views:rotate_slug", kwargs={"view_id": grid_view.id}
+        )
+        response = api_client.post(
+            url, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+        )
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response.json()["error"] == "ERROR_CANNOT_SHARE_VIEW_TYPE"
 
     url = reverse("api:database:views:rotate_slug", kwargs={"view_id": 99999})
     response = api_client.post(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")

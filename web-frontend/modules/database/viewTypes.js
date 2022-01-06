@@ -5,7 +5,6 @@ import GridViewHeader from '@baserow/modules/database/components/view/grid/GridV
 import GalleryView from '@baserow/modules/database/components/view/gallery/GalleryView'
 import GalleryViewHeader from '@baserow/modules/database/components/view/gallery/GalleryViewHeader'
 import FormView from '@baserow/modules/database/components/view/form/FormView'
-import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
 
 export const maxPossibleOrderValue = 32767
 
@@ -50,6 +49,13 @@ export class ViewType extends Registerable {
     return true
   }
 
+  /**
+   * Indicates whether it is possible to share this view via an url publically.
+   */
+  canShare() {
+    return false
+  }
+
   constructor(...args) {
     super(...args)
     this.type = this.getType()
@@ -57,6 +63,7 @@ export class ViewType extends Registerable {
     this.colorClass = this.getColorClass()
     this.canFilter = this.canFilter()
     this.canSort = this.canSort()
+    this.canShare = this.canShare()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -83,7 +90,30 @@ export class ViewType extends Registerable {
    * Should return the component that will actually display the view.
    */
   getComponent() {
-    throw new Error('Not implement error. This view should return a component.')
+    throw new Error(
+      'Not implemented error. This view should return a component.'
+    )
+  }
+
+  /**
+   * Should return a route name that will display the view when it has been
+   * publicly shared.
+   */
+  getPublicRoute() {
+    throw new Error(
+      'Not implemented error. This method should be implemented to return a route' +
+        ' name to a public page where the view can be seen.'
+    )
+  }
+
+  /**
+   * A human readable name of the view type to be used in the ShareViewLink and
+   * related components. For example the link to share to view will have the text:
+   * `Share {this.getSharingLinkName()}`
+   */
+  getSharingLinkName() {
+    const { i18n } = this.app
+    return i18n.t('viewType.sharing.linkName')
   }
 
   /**
@@ -245,6 +275,7 @@ export class ViewType extends Registerable {
       name: this.getName(),
       canFilter: this.canFilter,
       canSort: this.canSort,
+      canShare: this.canShare,
     }
   }
 
@@ -281,6 +312,14 @@ export class GridViewType extends ViewType {
 
   getComponent() {
     return GridView
+  }
+
+  canShare() {
+    return true
+  }
+
+  getPublicRoute() {
+    return 'database-public-grid-view'
   }
 
   async fetch({ store }, view, fields, primary, storePrefix = '') {
@@ -680,8 +719,17 @@ export class FormViewType extends ViewType {
     return false
   }
 
-  getHeaderComponent() {
-    return FormViewHeader
+  canShare() {
+    return true
+  }
+
+  getPublicRoute() {
+    return 'database-table-form'
+  }
+
+  getSharingLinkName() {
+    const { i18n } = this.app
+    return i18n.t('viewType.sharing.formLinkName')
   }
 
   getComponent() {

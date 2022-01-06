@@ -1,13 +1,15 @@
 <template>
   <Modal>
-    <h2 class="box__title">Refresh URL</h2>
+    <h2 class="box__title">{{ $t('viewRotateSlugModal.title') }}</h2>
     <Error :error="error"></Error>
     <div>
       <p>
-        Are you sure that you want to refresh the URL of {{ view.name }}? After
-        refreshing, a new URL will be generated and it will not be possible to
-        access the form via the old URL. Everyone that you have shared the URL
-        with, won't be able to access the form.
+        {{
+          $t('viewRotateSlugModal.refreshWarning', {
+            viewName: view.name,
+            viewTypeSharingLinkName,
+          })
+        }}
       </p>
       <div class="actions">
         <div class="align-right">
@@ -17,7 +19,7 @@
             :disabled="loading"
             @click="rotateSlug()"
           >
-            Generate new URL
+            {{ $t('viewRotateSlugModal.generateNewURL') }}
           </button>
         </div>
       </div>
@@ -28,12 +30,11 @@
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
-import formViewHelpers from '@baserow/modules/database/mixins/formViewHelpers'
 import ViewService from '@baserow/modules/database/services/view'
 
 export default {
-  name: 'FormViewRotateSlugModal',
-  mixins: [modal, error, formViewHelpers],
+  name: 'ViewRotateSlugModal',
+  mixins: [modal, error],
   props: {
     view: {
       type: Object,
@@ -44,6 +45,11 @@ export default {
     return {
       loading: false,
     }
+  },
+  computed: {
+    viewTypeSharingLinkName() {
+      return this.$registry.get('view', this.view.type).getSharingLinkName()
+    },
   },
   methods: {
     async rotateSlug() {
@@ -68,3 +74,23 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "viewRotateSlugModal": {
+      "title": "Refresh URL",
+      "refreshWarning": "Are you sure that you want to refresh the URL of {viewName}? After refreshing, a new URL will be generated and it will not be possible to access the {viewTypeSharingLinkName} via the old URL. Everyone that you have shared the URL with, won't be able to access the {viewTypeSharingLinkName}.",
+      "generateNewURL": "Generate new URL"
+
+    }
+  },
+  "fr": {
+    "viewRotateSlugModal": {
+      "title": "@todo",
+      "refreshWarning": "@todo",
+      "generateNewURL": "@todo"
+    }
+  }
+}
+</i18n>

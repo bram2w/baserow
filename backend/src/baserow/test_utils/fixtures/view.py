@@ -12,7 +12,7 @@ from baserow.contrib.database.views.models import (
 
 
 class ViewFixtures:
-    def create_grid_view(self, user=None, **kwargs):
+    def create_grid_view(self, user=None, create_options=True, **kwargs):
         if "table" not in kwargs:
             kwargs["table"] = self.create_database_table(user=user)
 
@@ -23,7 +23,8 @@ class ViewFixtures:
             kwargs["order"] = 0
 
         grid_view = GridView.objects.create(**kwargs)
-        self.create_grid_view_field_options(grid_view)
+        if create_options:
+            self.create_grid_view_field_options(grid_view)
         return grid_view
 
     def create_grid_view_field_options(self, grid_view, **kwargs):

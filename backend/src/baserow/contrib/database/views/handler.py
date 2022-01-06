@@ -507,7 +507,7 @@ class ViewHandler:
             self, view_filter_id=view_filter_id, view_filter=view_filter, user=user
         )
 
-    def apply_sorting(self, view, queryset):
+    def apply_sorting(self, view, queryset, restrict_to_field_ids=None):
         """
         Applies the view's sorting to the given queryset. The first sort, which for now
         is the first created, will always be applied first. Secondary sortings are
@@ -529,6 +529,9 @@ class ViewHandler:
         :type queryset: QuerySet
         :raises ValueError: When the queryset's model is not a table model or if the
             table model does not contain the one of the fields.
+        :param restrict_to_field_ids: Only field ids in this iterable will have their
+            view sorts applied in the resulting queryset.
+        :type restrict_to_field_ids: Optional[Iterable[int]]
         :return: The queryset where the sorting has been applied to.
         :type: QuerySet
         """
@@ -542,7 +545,10 @@ class ViewHandler:
 
         order_by = []
 
-        for view_sort in view.viewsort_set.all():
+        qs = view.viewsort_set
+        if restrict_to_field_ids is not None:
+            qs = qs.filter(field_id__in=restrict_to_field_ids)
+        for view_sort in qs.all():
             # If the to be sort field is not present in the `_field_objects` we
             # cannot filter so we raise a ValueError.
             if view_sort.field_id not in model._field_objects:
@@ -755,7 +761,14 @@ class ViewHandler:
             self, view_sort_id=view_sort_id, view_sort=view_sort, user=user
         )
 
-    def get_queryset(self, view, search=None, model=None):
+    def get_queryset(
+        self,
+        view,
+        search=None,
+        model=None,
+        only_sort_by_field_ids=None,
+        only_search_by_field_ids=None,
+    ):
         """
         Returns a queryset for the provided view which is appropriately sorted,
         filtered and searched according to the view type and its settings.
@@ -765,7 +778,17 @@ class ViewHandler:
             not specified then the model will be generated automatically.
         :param view: The view to get the export queryset and fields for.
         :type view: View
-        :return: The export queryset.
+        :param only_sort_by_field_ids: To only sort the queryset by some fields
+            provide those field ids in this optional iterable. Other fields not
+            present in the iterable will not have their view sorts applied even if they
+            have one.
+        :type only_sort_by_field_ids: Optional[Iterable[int]]
+        :param only_search_by_field_ids: To only apply the search term to some
+            fields provide those field ids in this optional iterable. Other fields
+             not present in the iterable will not be searched and filtered down by the
+             search term.
+        :type only_search_by_field_ids: Optional[Iterable[int]]
+        :return: The appropriate queryset for the provided view.
         :rtype: QuerySet
         """
 
@@ -778,9 +801,9 @@ class ViewHandler:
         if view_type.can_filter:
             queryset = self.apply_filters(view, queryset)
         if view_type.can_sort:
-            queryset = self.apply_sorting(view, queryset)
+            queryset = self.apply_sorting(view, queryset, only_sort_by_field_ids)
         if search is not None:
-            queryset = queryset.search_all_fields(search)
+            queryset = queryset.search_all_fields(search, only_search_by_field_ids)
         return queryset
 
     def rotate_view_slug(self, user, view):
@@ -834,6 +857,9 @@ class ViewHandler:
         try:
             view = view_model.objects.get(slug=slug)
         except (view_model.DoesNotExist, ValidationError):
+            raise ViewDoesNotExist("The view does not exist.")
+
+        if TrashHandler.item_has_a_trashed_parent(view.table, check_item_also=True):
             raise ViewDoesNotExist("The view does not exist.")
 
         if not view.public and (

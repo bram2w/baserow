@@ -83,6 +83,7 @@ export const state = () => ({
   // entirely out. When false no server filter will be applied and rows which do not
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
+  public: false,
 })
 
 export const mutations = {
@@ -99,6 +100,9 @@ export const mutations = {
     state.addRowHover = false
     state.activeSearchTerm = ''
     state.hideRowsNotMatchingSearch = true
+  },
+  SET_PUBLIC(state, newPublicValue) {
+    state.public = newPublicValue
   },
   SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
     state.activeSearchTerm = activeSearchTerm
@@ -475,6 +479,7 @@ export const actions = {
           limit: requestLimit,
           cancelToken: lastSource.token,
           search: getters.getServerSearchTerm,
+          publicUrl: getters.isPublic,
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
@@ -632,6 +637,7 @@ export const actions = {
       limit,
       includeFieldOptions: true,
       search: getters.getServerSearchTerm,
+      publicUrl: getters.isPublic,
     })
     data.results.forEach((part, index) => {
       extractMetadataAndPopulateRow(data, index)
@@ -675,6 +681,7 @@ export const actions = {
         gridId,
         search: getters.getServerSearchTerm,
         cancelToken: lastRefreshRequestSource.token,
+        publicUrl: getters.isPublic,
       })
       .then((response) => {
         const count = response.data.count
@@ -696,6 +703,7 @@ export const actions = {
             includeFieldOptions,
             cancelToken: lastRefreshRequestSource.token,
             search: getters.getServerSearchTerm,
+            publicUrl: getters.isPublic,
           })
           .then(({ data }) => ({
             data,
@@ -1528,11 +1536,17 @@ export const actions = {
       commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
     }
   },
+  setPublic({ commit }, newPublicValue) {
+    commit('SET_PUBLIC', newPublicValue)
+  },
 }
 
 export const getters = {
   isLoaded(state) {
     return state.loaded
+  },
+  isPublic(state) {
+    return state.public
   },
   getLastGridId(state) {
     return state.lastGridId

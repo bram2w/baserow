@@ -178,7 +178,7 @@ class QuerysetSerializer(abc.ABC):
         """
 
         view_type = view_type_registry.get_by_model(view.specific_class)
-        fields, model = view_type.get_fields_and_model(view)
+        fields, model = view_type.get_visible_fields_and_model(view)
         qs = ViewHandler().get_queryset(view, model=model)
         return cls(qs, fields)
 

@@ -1,8 +1,14 @@
 import { createApplication } from '@baserow/test/fixtures/applications'
 import { createGroup } from '@baserow/test/fixtures/groups'
-import { createGridView } from '@baserow/test/fixtures/view'
+import {
+  createGridView,
+  createPublicGridView,
+} from '@baserow/test/fixtures/view'
 import { createFields } from '@baserow/test/fixtures/fields'
-import { createRows } from '@baserow/test/fixtures/grid'
+import {
+  createPublicGridViewRows,
+  createRows,
+} from '@baserow/test/fixtures/grid'
 
 /**
  * MockServer is responsible for being the single place where we mock out calls to the
@@ -30,10 +36,19 @@ export class MockServer {
     return { id: 1, name: 'Test Table 1' }
   }
 
-  createGridView(application, table, filters = []) {
+  createGridView(application, table, { filters = [], sortings = [] }) {
     return createGridView(this.mock, application, table, {
       filters,
+      sortings,
     })
+  }
+
+  createPublicGridView(viewSlug, { name, fields = [], sortings = [] }) {
+    return createPublicGridView(this.mock, viewSlug, { name, fields, sortings })
+  }
+
+  createPublicGridViewRows(viewSlug, fields, rows) {
+    return createPublicGridViewRows(this.mock, viewSlug, fields, rows)
   }
 
   createFields(application, table, fields) {
