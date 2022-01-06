@@ -238,7 +238,7 @@ class ViewType(
 
         return view
 
-    def get_fields_and_model(self, view):
+    def get_visible_fields_and_model(self, view):
         """
         Returns the field objects for the provided view. Depending on the view type this
         will only return the visible or appropriate fields as different view types can

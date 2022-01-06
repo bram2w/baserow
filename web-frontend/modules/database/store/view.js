@@ -245,6 +245,7 @@ export const actions = {
   forceCreate({ commit }, { data }) {
     populateView(data, this.$registry)
     commit('ADD_ITEM', data)
+    return { view: data }
   },
   /**
    * Updates the values of the view with the provided id.

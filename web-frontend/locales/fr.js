@@ -154,6 +154,10 @@ export default {
     grid: 'Tableau',
     gallery: 'Gallerie',
     form: 'Formulaire',
+    sharing: {
+      linkName: '@todo',
+      formLinkName: '@todo',
+    },
   },
   premium: {
     deactivated: 'Désactivé',

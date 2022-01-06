@@ -71,7 +71,7 @@ class CustomFieldsInstanceMixin:
             **kwargs,
         )
 
-    def get_serializer(self, model_instance, base_class=None, **kwargs):
+    def get_serializer(self, model_instance, base_class=None, context=None, **kwargs):
         """
         Returns an instantiated model serializer based on this type field names and
         overrides. The provided model instance will be used instantiate the serializer.
@@ -81,16 +81,21 @@ class CustomFieldsInstanceMixin:
         :param base_class: The base serializer class that must be extended. For example
             common fields could be stored here.
         :type base_class: ModelSerializer
+        :param context: Extra context arguments to pass to the serializers context.
+        :type kwargs: dict
         :param kwargs: The kwargs are used to initialize the serializer class.
         :type kwargs: dict
         :return: The instantiated generated model serializer.
         :rtype: ModelSerializer
         """
 
+        if context is None:
+            context = {}
+
         model_instance = model_instance.specific
         serializer_class = self.get_serializer_class(base_class=base_class)
         return serializer_class(
-            model_instance, context={"instance_type": self}, **kwargs
+            model_instance, context={"instance_type": self, **context}, **kwargs
         )
 
 
@@ -351,7 +356,7 @@ class ModelRegistryMixin:
 
 
 class CustomFieldsRegistryMixin:
-    def get_serializer(self, model_instance, base_class=None, **kwargs):
+    def get_serializer(self, model_instance, base_class=None, context=None, **kwargs):
         """
         Based on the provided model_instance and base_class a unique serializer
         containing the correct field type is generated.
@@ -361,6 +366,8 @@ class CustomFieldsRegistryMixin:
         :param base_class: The base serializer class that must be extended. For example
             common fields could be stored here.
         :type base_class: ModelSerializer
+        :param context: Extra context arguments to pass to the serializers context.
+        :type kwargs: dict
         :param kwargs: The kwargs are used to initialize the serializer class.
         :type kwargs: dict
         :raises ValueError: When the `get_by_model` method was not found, which could
@@ -379,7 +386,7 @@ class CustomFieldsRegistryMixin:
 
         instance_type = self.get_by_model(model_instance.specific_class)
         return instance_type.get_serializer(
-            model_instance, base_class=base_class, **kwargs
+            model_instance, base_class=base_class, context=context, **kwargs
         )
 
 

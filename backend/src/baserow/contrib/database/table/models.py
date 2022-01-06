@@ -47,7 +47,7 @@ class TableModelQuerySet(models.QuerySet):
             )
         return self
 
-    def search_all_fields(self, search):
+    def search_all_fields(self, search, only_search_by_field_ids=None):
         """
         Performs a very broad search across all supported fields with the given search
         query. If the primary key value matches then that result will be returned
@@ -56,6 +56,10 @@ class TableModelQuerySet(models.QuerySet):
 
         :param search: The search query.
         :type search: str
+        :param only_search_by_field_ids: Only field ids in this iterable will be
+            filtered by the search term. Other fields not in the iterable will be
+            ignored and not be filtered.
+        :type only_search_by_field_ids: Optional[Iterable[int]]
         :return: The queryset containing the search queries.
         :rtype: QuerySet
         """
@@ -64,6 +68,11 @@ class TableModelQuerySet(models.QuerySet):
             Q(id__contains=search)
         )
         for field_object in self.model._field_objects.values():
+            if (
+                only_search_by_field_ids is not None
+                and field_object["field"].id not in only_search_by_field_ids
+            ):
+                continue
             field_name = field_object["name"]
             model_field = self.model._meta.get_field(field_name)
 

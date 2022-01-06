@@ -8,6 +8,7 @@ export default (client) => {
       includeFieldOptions = false,
       includeRowMetadata = true,
       search = false,
+      publicUrl = false,
     }) {
       const config = {
         params: {
@@ -40,9 +41,11 @@ export default (client) => {
         config.params.search = search
       }
 
-      return client.get(`/database/views/grid/${gridId}/`, config)
+      const url = publicUrl ? 'public/rows/' : ''
+
+      return client.get(`/database/views/grid/${gridId}/${url}`, config)
     },
-    fetchCount({ gridId, search, cancelToken = null }) {
+    fetchCount({ gridId, search, cancelToken = null, publicUrl = false }) {
       const config = {
         params: {
           count: true,
@@ -56,7 +59,9 @@ export default (client) => {
         config.params.search = search
       }
 
-      return client.get(`/database/views/grid/${gridId}/`, config)
+      const url = publicUrl ? 'public/rows/' : ''
+
+      return client.get(`/database/views/grid/${gridId}/${url}`, config)
     },
     filterRows({ gridId, rowIds, fieldIds = null }) {
       const data = { row_ids: rowIds }
@@ -66,6 +71,9 @@ export default (client) => {
       }
 
       return client.post(`/database/views/grid/${gridId}/`, data)
+    },
+    fetchPublicViewInfo(viewSlug) {
+      return client.get(`/database/views/grid/${viewSlug}/public/info/`)
     },
   }
 }

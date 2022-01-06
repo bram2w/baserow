@@ -505,7 +505,6 @@ class FieldHandler:
             dependant_field_type,
             via_path_to_starting_table,
         ) in dependant_fields:
-            print(f"Telling {dependant_field.name} that {field.name} was deleted")
             dependant_field_type.field_dependency_deleted(
                 dependant_field,
                 field,

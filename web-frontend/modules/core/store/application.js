@@ -94,23 +94,27 @@ export const actions = {
   /**
    * Fetches all the applications for the authenticated user.
    */
-  async fetchAll({ commit }) {
+  async fetchAll({ commit, dispatch }) {
     commit('SET_LOADING', true)
 
     try {
       const { data } = await ApplicationService(this.$client).fetchAll()
-      data.forEach((part, index, d) => {
-        populateApplication(data[index], this.$registry)
-      })
-      commit('SET_ITEMS', data)
-      commit('SET_LOADING', false)
-      commit('SET_LOADED', true)
+      await dispatch('forceSetAll', { applications: data })
     } catch (error) {
       commit('SET_ITEMS', [])
       commit('SET_LOADING', false)
 
       throw error
     }
+  },
+  forceSetAll({ commit }, { applications }) {
+    applications.forEach((part, index) => {
+      populateApplication(applications[index], this.$registry)
+    })
+    commit('SET_ITEMS', applications)
+    commit('SET_LOADING', false)
+    commit('SET_LOADED', true)
+    return { applications }
   },
   /**
    * Clears all the currently selected applications, this could be called when

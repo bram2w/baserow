@@ -152,6 +152,10 @@ export default {
     grid: 'Grid',
     gallery: 'Gallery',
     form: 'Form',
+    sharing: {
+      linkName: 'view',
+      formLinkName: 'form',
+    },
   },
   premium: {
     deactivated: 'Available in premium version',
