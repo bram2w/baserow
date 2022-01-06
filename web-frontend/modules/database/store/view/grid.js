@@ -113,6 +113,9 @@ export const mutations = {
   SET_WINDOW_HEIGHT(state, value) {
     state.windowHeight = value
   },
+  SET_ROW_PADDING(state, value) {
+    state.rowPadding = value
+  },
   SET_BUFFER_START_INDEX(state, value) {
     state.bufferStartIndex = value
   },
@@ -833,8 +836,10 @@ export const actions = {
   forceDeleteFieldOptions({ commit }, fieldId) {
     commit('DELETE_FIELD_OPTIONS', fieldId)
   },
-  setWindowHeight({ commit }, value) {
+  setWindowHeight({ dispatch, commit, getters }, value) {
     commit('SET_WINDOW_HEIGHT', value)
+    commit('SET_ROW_PADDING', Math.ceil(value / getters.getRowHeight / 2))
+    dispatch('visibleByScrollTop')
   },
   setAddRowHover({ commit }, value) {
     commit('SET_ADD_ROW_HOVER', value)
