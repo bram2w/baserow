@@ -18,6 +18,7 @@
 * Allow changing the text of the submit button in the form view.
 * Fixed reordering of single select options when initially creating the field.
 * Improved performance by not rendering cells that are out of the view port.
+* Fix bug where field options in rare situations could have been duplicated.
 
 ## Released (2021-11-25)
 

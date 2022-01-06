@@ -19,8 +19,9 @@ class FieldOptionsField(serializers.Field):
         "invalid_value": "Must be valid field options.",
     }
 
-    def __init__(self, serializer_class, **kwargs):
+    def __init__(self, serializer_class, create_if_missing=True, **kwargs):
         self.serializer_class = serializer_class
+        self.create_if_missing = create_if_missing
         self._spectacular_annotation = {
             "field": serializers.DictField(
                 child=serializer_class(),
@@ -83,7 +84,9 @@ class FieldOptionsField(serializers.Field):
             fields = self.context.get("fields")
             return {
                 field_options.field_id: self.serializer_class(field_options).data
-                for field_options in value.get_field_options(True, fields)
+                for field_options in value.get_field_options(
+                    self.create_if_missing, fields
+                )
             }
         else:
             return value

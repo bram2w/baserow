@@ -102,13 +102,11 @@ class GridViewType(ViewType):
 
         grid_view = ViewHandler().get_view(view.id, view_model=GridView)
 
-        # Ensure all fields have options created before we then query directly off the
-        # options table below.
-        grid_view.get_field_options(create_if_not_exists=True)
-
         ordered_field_objects = []
         ordered_visible_fields = (
-            grid_view.get_field_options()
+            # Ensure all fields have options created before we then query directly off
+            # the options table below.
+            grid_view.get_field_options(create_if_not_exists=True)
             .filter(hidden=False)
             .order_by("-field__primary", "order", "field__id")
             .values_list("field__id", flat=True)
@@ -189,8 +187,9 @@ class GalleryViewType(ViewType):
         visible.
         """
 
-        field_options = view.get_field_options(create_if_not_exists=True)
-        field_options.sort(key=lambda x: x.field_id)
+        field_options = view.get_field_options(create_if_not_exists=True).order_by(
+            "field__id"
+        )
         ids_to_update = [f.id for f in field_options[0:3]]
 
         if ids_to_update:
