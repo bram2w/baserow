@@ -112,7 +112,8 @@
     </div>
     <div v-if="!readOnly" class="filters_footer">
       <a class="filters__add" @click.prevent="addFilter()">
-        <i class="fas fa-plus"></i>{{ $t('viewFilterContext.addFilter') }}</a
+        <i class="fas fa-plus"></i>
+        {{ $t('viewFilterContext.addFilter') }}</a
       >
       <div v-if="view.filters.length > 0">
         <SwitchInput
