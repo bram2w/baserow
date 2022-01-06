@@ -7,9 +7,20 @@
     >
       <i class="fas fa-plus"></i>
     </a>
-    <div ref="scroll" class="gallery-view__scroll">
+    <div
+      ref="scroll"
+      v-auto-scroll="{
+        enabled: () => dragAndDropDraggingRow !== null,
+        speed: 5,
+        padding: 20,
+      }"
+      class="gallery-view__scroll"
+    >
       <div
         class="gallery-view__cards"
+        :class="{
+          'gallery-view__cards--dragging': dragAndDropDraggingRow !== null,
+        }"
         :style="{
           height: height + 'px',
         }"
@@ -29,7 +40,13 @@
               slot.position.top || 0
             }px)`,
           }"
-          @click="slot.item && $refs.rowEditModal.show(slot.item.id)"
+          :class="{
+            'gallery-view__card--dragging': slot.item && slot.item._.dragging,
+            'gallery-view__card--disabled': readOnly,
+          }"
+          @mousedown="rowDown($event, slot.item)"
+          @mousemove="rowMoveOver($event, slot.item)"
+          @mouseenter="rowMoveOver($event, slot.item)"
         ></RowCard>
       </div>
     </div>
@@ -62,6 +79,7 @@ import debounce from 'lodash/debounce'
 import { mapGetters } from 'vuex'
 import ResizeObserver from 'resize-observer-polyfill'
 
+import { notifyIf } from '@baserow/modules/core/utils/error'
 import { getCardHeight } from '@baserow/modules/database/utils/card'
 import {
   recycleSlots,
@@ -71,11 +89,12 @@ import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 import RowCard from '@baserow/modules/database/components/card/RowCard'
 import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
-import { notifyIf } from '@baserow/modules/core/utils/error'
+import bufferedRowsDragAndDrop from '@baserow/modules/database/mixins/bufferedRowsDragAndDrop'
 
 export default {
   name: 'GalleryView',
   components: { RowCard, RowCreateModal, RowEditModal },
+  mixins: [bufferedRowsDragAndDrop],
   props: {
     primary: {
       type: Object,
@@ -113,6 +132,7 @@ export default {
       height: 0,
       cardWidth: 0,
       buffer: [],
+      dragAndDropCloneClass: 'gallery-view__card--dragging-clone',
     }
   },
   computed: {
@@ -168,12 +188,12 @@ export default {
   watch: {
     cardHeight() {
       this.$nextTick(() => {
-        this.updateBuffer()
+        this.updateBuffer(true, false)
       })
     },
     allRows() {
       this.$nextTick(() => {
-        this.updateBuffer()
+        this.updateBuffer(true, false)
       })
     },
   },
@@ -254,6 +274,9 @@ export default {
     }
   },
   methods: {
+    getDragAndDropStoreName(props) {
+      return `${props.storePrefix}view/gallery`
+    },
     /**
      * This method makes sure that the correct cards/rows are shown based on the
      * scroll offset, viewport width, viewport height and card height. Based on these
@@ -358,6 +381,13 @@ export default {
       } catch (error) {
         notifyIf(error, 'field')
       }
+    },
+    /**
+     * Is called when the user clicks on the card but did not move it to another
+     * position.
+     */
+    rowClick(row) {
+      this.$refs.rowEditModal.show(row.id)
     },
   },
 }

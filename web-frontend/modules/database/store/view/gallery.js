@@ -3,7 +3,9 @@ import fieldOptions from '@baserow/modules/database/store/view/fieldOptions'
 import GalleryService from '@baserow/modules/database/services/view/gallery'
 
 export function populateRow(row) {
-  row._ = {}
+  row._ = {
+    dragging: false,
+  }
   return row
 }
 
