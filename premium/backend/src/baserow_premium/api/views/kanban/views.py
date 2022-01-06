@@ -188,7 +188,9 @@ class KanbanViewView(APIView):
         if field_options:
             view_type = view_type_registry.get_by_model(view)
             context = {"fields": [o["field"] for o in model._field_objects.values()]}
-            serializer_class = view_type.get_field_options_serializer_class()
+            serializer_class = view_type.get_field_options_serializer_class(
+                create_if_missing=True
+            )
             response.update(**serializer_class(view, context=context).data)
 
         return Response(response)

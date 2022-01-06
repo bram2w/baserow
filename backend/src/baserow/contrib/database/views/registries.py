@@ -254,12 +254,15 @@ class ViewType(
         model = view.table.get_model()
         return model._field_objects.values(), model
 
-    def get_field_options_serializer_class(self):
+    def get_field_options_serializer_class(self, create_if_missing):
         """
         Generates a serializer that has the `field_options` property as a
         `FieldOptionsField`. This serializer can be used by the API to validate or list
         the field options.
 
+         :param create_if_missing: Whether or not to create any missing field options
+            when looking them up during serialization.
+        :type create_if_missing: bool
         :raises ValueError: When the related view type does not have a field options
             serializer class.
         :return: The generated serializer.
@@ -283,7 +286,8 @@ class ViewType(
         attrs = {
             "Meta": meta,
             "field_options": FieldOptionsField(
-                serializer_class=self.field_options_serializer_class
+                serializer_class=self.field_options_serializer_class,
+                create_if_missing=create_if_missing,
             ),
         }
 
@@ -350,7 +354,9 @@ class ViewTypeRegistry(
 
     def get_field_options_serializer_map(self):
         return {
-            view_type.type: view_type.get_field_options_serializer_class()
+            view_type.type: view_type.get_field_options_serializer_class(
+                create_if_missing=False
+            )
             for view_type in self.registry.values()
         }
 

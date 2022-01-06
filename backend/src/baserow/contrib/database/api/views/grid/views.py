@@ -186,7 +186,9 @@ class GridViewView(APIView):
 
         if field_options:
             context = {"fields": [o["field"] for o in model._field_objects.values()]}
-            serializer_class = view_type.get_field_options_serializer_class()
+            serializer_class = view_type.get_field_options_serializer_class(
+                create_if_missing=True
+            )
             response.data.update(**serializer_class(view, context=context).data)
 
         if row_metadata:

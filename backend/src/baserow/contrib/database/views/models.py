@@ -1,7 +1,7 @@
 import secrets
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import models, transaction
 
 from baserow.core.utils import get_model_reference_field_name
 from baserow.core.models import UserFile
@@ -110,8 +110,8 @@ class View(
             them for a second time. This is only needed if `create_if_not_exists` is
             True.
         :type fields: list
-        :return: A list of field options instances related to this grid view.
-        :rtype: list or QuerySet
+        :return: A queryset containing all the field options of view.
+        :rtype: QuerySet
         """
 
         view_type = view_type_registry.get_by_model(self.specific_class)
@@ -130,20 +130,49 @@ class View(
                 "any descendants."
             )
 
-        field_options = through_model.objects.filter(**{field_name: self})
+        def get_queryset():
+            return through_model.objects.filter(**{field_name: self})
+
+        field_options = get_queryset()
 
         if create_if_not_exists:
-            field_options = list(field_options)
-            if not fields:
-                fields = Field.objects.filter(table=self.table)
+            fields_queryset = Field.objects.filter(table_id=self.table.id)
 
-            existing_field_ids = [options.field_id for options in field_options]
-            for field in fields:
-                if field.id not in existing_field_ids:
-                    field_option = through_model.objects.create(
-                        **{field_name: self, "field": field}
+            if fields is None:
+                field_count = fields_queryset.count()
+            else:
+                field_count = len(fields)
+
+            # The check there are missing field options must be as efficient as
+            # possible because this is being done a lot.
+            if len(field_options) < field_count:
+                if fields is None:
+                    fields = fields_queryset
+
+                with transaction.atomic():
+                    # Lock the view so concurrent calls to this method wont create
+                    # duplicate field options.
+                    View.objects.filter(id=self.id).select_for_update().first()
+
+                    # Invalidate the field options because they could have been
+                    # changed concurrently.
+                    field_options = get_queryset()
+
+                    # In the case when field options are missing, we can be more
+                    # in-efficient because this rarely happens. The most important part
+                    # is that the check is fast.
+                    existing_field_ids = [options.field_id for options in field_options]
+                    through_model.objects.bulk_create(
+                        [
+                            through_model(**{field_name: self, "field": field})
+                            for field in fields
+                            if field.id not in existing_field_ids
+                        ]
                     )
-                    field_options.append(field_option)
+
+                # Invalidate the field options because new ones have been created and
+                # we always want to return a queryset.
+                field_options = get_queryset()
 
         return field_options
 

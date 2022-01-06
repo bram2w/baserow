@@ -126,13 +126,10 @@ class KanbanViewType(ViewType):
         When a kanban view is created, we want to set the first three fields as visible.
         """
 
-        field_options = view.get_field_options(create_if_not_exists=True)
-        field_options.sort(key=lambda x: x.field_id)
-        ids_to_update = [
-            field_option.id
-            for index, field_option in enumerate(field_options)
-            if index < 3
-        ]
+        field_options = view.get_field_options(create_if_not_exists=True).order_by(
+            "field__id"
+        )
+        ids_to_update = [f.id for f in field_options[0:3]]
 
         if len(ids_to_update) > 0:
             KanbanViewFieldOptions.objects.filter(id__in=ids_to_update).update(

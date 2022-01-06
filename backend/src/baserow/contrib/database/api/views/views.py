@@ -985,7 +985,9 @@ class ViewFieldOptionsView(APIView):
         view_type = view_type_registry.get_by_model(view)
 
         try:
-            serializer_class = view_type.get_field_options_serializer_class()
+            serializer_class = view_type.get_field_options_serializer_class(
+                create_if_missing=True
+            )
         except ValueError:
             raise ViewDoesNotSupportFieldOptions(
                 "The view type does not have a `field_options_serializer_class`"
@@ -1034,7 +1036,9 @@ class ViewFieldOptionsView(APIView):
         handler = ViewHandler()
         view = handler.get_view(view_id).specific
         view_type = view_type_registry.get_by_model(view)
-        serializer_class = view_type.get_field_options_serializer_class()
+        serializer_class = view_type.get_field_options_serializer_class(
+            create_if_missing=True
+        )
         data = validate_data(serializer_class, request.data)
 
         with view_type.map_api_exceptions():
