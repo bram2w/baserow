@@ -219,8 +219,8 @@ def test_list_rows(api_client, data_fixture):
     )
 
     number_field_type = field_type_registry.get("number")
-    old_can_order_by = number_field_type.can_order_by
-    number_field_type.can_order_by = False
+    old_can_order_by = number_field_type._can_order_by
+    number_field_type._can_order_by = False
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
         f"{url}?order_by=-field_{field_2.id}",
@@ -234,7 +234,7 @@ def test_list_rows(api_client, data_fixture):
         f"It is not possible to order by field_{field_2.id} because the field type "
         f"number does not support filtering."
     )
-    number_field_type.can_order_by = old_can_order_by
+    number_field_type._can_order_by = old_can_order_by
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(

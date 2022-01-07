@@ -630,7 +630,7 @@ export const actions = {
 
     // Remove all the field sortings because the new field does not support sortings
     // at all.
-    if (!fieldType.canSortInView) {
+    if (!fieldType.getCanSortInView(field)) {
       dispatch('deleteFieldSortings', { field })
     }
   },

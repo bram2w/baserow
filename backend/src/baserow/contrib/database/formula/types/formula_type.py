@@ -102,6 +102,15 @@ class BaserowFormulaType(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def can_order_by(self) -> bool:
+        """
+        Return True if a formula field of this type can be ordered or False if not.
+        """
+
+        pass
+
+    @property
+    @abc.abstractmethod
     def is_valid(self) -> bool:
         pass
 
@@ -257,6 +266,7 @@ class BaserowFormulaType(abc.ABC):
 class BaserowFormulaInvalidType(BaserowFormulaType):
 
     is_valid = False
+    can_order_by = False
     comparable_types = []
     limit_comparable_types = []
     type = "invalid"
@@ -277,6 +287,7 @@ class BaserowFormulaInvalidType(BaserowFormulaType):
 
 class BaserowFormulaValidType(BaserowFormulaType, abc.ABC):
     is_valid = True
+    can_order_by = True
 
     @property
     @abc.abstractmethod

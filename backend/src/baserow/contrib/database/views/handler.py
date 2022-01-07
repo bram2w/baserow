@@ -280,7 +280,7 @@ class ViewHandler:
 
         # If the new field type does not support sorting then all sortings will be
         # removed.
-        if not field_type.can_order_by:
+        if not field_type.check_can_order_by(field):
             field.viewsort_set.all().delete()
 
         # Check which filters are not compatible anymore and remove those.
@@ -660,7 +660,7 @@ class ViewHandler:
 
         # Check if the field supports sorting.
         field_type = field_type_registry.get_by_model(field.specific_class)
-        if not field_type.can_order_by:
+        if not field_type.check_can_order_by(field):
             raise ViewSortFieldNotSupported(
                 f"The field {field.pk} does not support " f"sorting."
             )
@@ -718,7 +718,7 @@ class ViewHandler:
         # If the field has changed we need to check if the new field type supports
         # sorting.
         field_type = field_type_registry.get_by_model(field.specific_class)
-        if field.id != view_sort.field_id and not field_type.can_order_by:
+        if field.id != view_sort.field_id and not field_type.check_can_order_by(field):
             raise ViewSortFieldNotSupported(
                 f"The field {field.pk} does not support " f"sorting."
             )

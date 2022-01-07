@@ -23,6 +23,7 @@
 * Improved performance by not rendering cells that are out of the view port.
 * Fix bug where field options in rare situations could have been duplicated.
 * Fixed order of fields in form preview.
+* Fix the ability to make filters and sorts on invalid formula and lookup fields.
 
 ## Released (2021-11-25)
 
