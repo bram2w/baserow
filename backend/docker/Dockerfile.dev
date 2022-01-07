@@ -29,6 +29,8 @@ RUN apt-get update && \
 USER $UID:$GID
 
 COPY --chown=$UID:$GID ./backend/requirements /baserow/requirements
+# In slim docker images, mime.types is removed and we need it for mimetypes guessing
+COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
 # Disable the path warn as we set the correct path in the entrypoint when it is easy
 # to know the users $HOME/.local/bin location. Changing path in the docker image does
 # not work as we do not know where $HOME when using an ENV command.

@@ -251,4 +251,11 @@ export default {
   exporterType: {
     csv: 'Export to CSV',
   },
+  previewType: {
+    imageBrowser: 'Open in browser',
+    videoBrowser: 'Open in browser',
+    AudioBrowser: 'Open in browser',
+    pdfBrowser: 'Open in browser',
+    googleDocs: 'Open with Google Docs',
+  },
 }

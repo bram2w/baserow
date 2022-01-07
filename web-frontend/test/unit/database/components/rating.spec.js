@@ -12,7 +12,7 @@ describe('Rating component', () => {
     testApp.afterEach()
   })
 
-  const mountWebhookForm = (
+  const mountComponent = (
     props = { value: 3, maxValue: 5, readOnly: true },
     listeners = {}
   ) => {
@@ -26,12 +26,12 @@ describe('Rating component', () => {
   }
 
   test('Default rating component', async () => {
-    const wrapper = await mountWebhookForm()
+    const wrapper = await mountComponent()
     expect(wrapper.element).toMatchSnapshot()
   })
 
   test('Customized rating component', async () => {
-    const wrapper = await mountWebhookForm({
+    const wrapper = await mountComponent({
       value: 3,
       maxValue: 5,
       readOnly: false,
@@ -43,7 +43,7 @@ describe('Rating component', () => {
 
   test('Test interactions with rating component', async () => {
     const onUpdate = jest.fn()
-    const wrapper = await mountWebhookForm(
+    const wrapper = await mountComponent(
       {
         value: 3,
         maxValue: 5,
