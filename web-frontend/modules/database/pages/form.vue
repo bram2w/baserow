@@ -109,9 +109,9 @@ export default {
       }
 
       // Then by id.
-      if (a.id < b.id) {
+      if (a.field.id < b.field.id) {
         return -1
-      } else if (a.id > b.id) {
+      } else if (a.field.id > b.field.id) {
         return 1
       } else {
         return 0
