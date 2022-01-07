@@ -1,4 +1,5 @@
 from django.urls import path, include
+from rest_framework.serializers import PrimaryKeyRelatedField
 
 from baserow.api.user_files.serializers import UserFileField
 from baserow.contrib.database.api.views.form.errors import (
@@ -13,6 +14,9 @@ from baserow.contrib.database.api.views.gallery.serializers import (
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
 )
+from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
+from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.core.user_files.handler import UserFileHandler
 from .exceptions import FormViewFieldTypeIsNotSupported
@@ -125,6 +129,21 @@ class GalleryViewType(ViewType):
     model_class = GalleryView
     field_options_model_class = GalleryViewFieldOptions
     field_options_serializer_class = GalleryViewFieldOptionsSerializer
+    allowed_fields = ["card_cover_image_field"]
+    serializer_field_names = ["card_cover_image_field"]
+    serializer_field_overrides = {
+        "card_cover_image_field": PrimaryKeyRelatedField(
+            queryset=FileField.objects.all(),
+            required=False,
+            default=None,
+            allow_null=True,
+            help_text="References a file field of which the first image must be shown "
+            "as card cover image.",
+        )
+    }
+    api_exceptions_map = {
+        FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
+    }
 
     def get_api_urls(self):
         from baserow.contrib.database.api.views.gallery import urls as api_urls
@@ -132,6 +151,28 @@ class GalleryViewType(ViewType):
         return [
             path("gallery/", include(api_urls, namespace=self.type)),
         ]
+
+    def prepare_values(self, values, table, user):
+        """
+        Check if the provided card cover image field belongs to the same table.
+        """
+
+        name = "card_cover_image_field"
+
+        if name in values:
+            if isinstance(values[name], int):
+                values[name] = FileField.objects.get(pk=values[name])
+
+            if (
+                isinstance(values[name], FileField)
+                and values[name].table_id != table.id
+            ):
+                raise FieldNotInTable(
+                    "The provided file select field id does not belong to the gallery "
+                    "view's table."
+                )
+
+        return values
 
     def export_serialized(self, gallery, files_zip, storage):
         """

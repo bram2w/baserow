@@ -32,6 +32,7 @@
           :fields="cardFields"
           :row="slot.item || {}"
           :loading="slot.item === null"
+          :cover-image-field="coverImageField"
           class="gallery-view__card"
           :style="{
             width: cardWidth + 'px',
@@ -144,7 +145,11 @@ export default {
      * the card is to correctly position it.
      */
     cardHeight() {
-      return getCardHeight(this.cardFields, this.$registry)
+      return getCardHeight(
+        this.cardFields,
+        this.coverImageField,
+        this.$registry
+      )
     },
     /**
      * Returns the visible field objects in the right order.
@@ -183,6 +188,14 @@ export default {
             return 0
           }
         })
+    },
+    coverImageField() {
+      const fieldId = this.view.card_cover_image_field
+      return (
+        [this.primary]
+          .concat(this.fields)
+          .find((field) => field.id === fieldId) || null
+      )
     },
   },
   watch: {

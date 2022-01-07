@@ -202,7 +202,7 @@ export default {
      */
     cardHeight() {
       // 10 = margin-bottom of kanban.scss.kanban-view__stack-card
-      return getCardHeight(this.cardFields, this.$registry) + 10
+      return getCardHeight(this.cardFields, null, this.$registry) + 10
     },
     /**
      * Figure out what the stack id that's used in the store is. The representation is

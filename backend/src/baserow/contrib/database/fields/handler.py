@@ -427,6 +427,7 @@ class FieldHandler:
         field_updated.send(
             self,
             field=field,
+            old_field=old_field,
             related_fields=updated_fields,
             user=user,
         )

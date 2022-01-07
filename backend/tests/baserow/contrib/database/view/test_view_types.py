@@ -10,6 +10,7 @@ from baserow.core.user_files.handler import UserFileHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GalleryViewFieldOptions
+from baserow.contrib.database.fields.handler import FieldHandler
 
 
 @pytest.mark.django_db
@@ -130,6 +131,32 @@ def test_newly_created_gallery_view(data_fixture):
         .values_list("hidden", flat=True)
     )
     assert list(all_field_options) == [False, False, False, True]
+
+
+@pytest.mark.django_db
+def test_convert_card_cover_image_field_to_another(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(table=table)
+    gallery_view = data_fixture.create_gallery_view(
+        table=table, card_cover_image_field=file_field
+    )
+    FieldHandler().update_field(user=user, field=file_field, new_type_name="text")
+    gallery_view.refresh_from_db()
+    assert gallery_view.card_cover_image_field_id is None
+
+
+@pytest.mark.django_db
+def test_convert_card_cover_image_field_deleted(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(table=table)
+    gallery_view = data_fixture.create_gallery_view(
+        table=table, card_cover_image_field=file_field
+    )
+    FieldHandler().delete_field(user=user, field=file_field)
+    gallery_view.refresh_from_db()
+    assert gallery_view.card_cover_image_field_id is None
 
 
 @pytest.mark.django_db

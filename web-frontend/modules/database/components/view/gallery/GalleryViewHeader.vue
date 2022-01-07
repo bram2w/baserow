@@ -23,9 +23,12 @@
         :fields="allFields"
         :read-only="readOnly"
         :field-options="fieldOptions"
+        :cover-image-field="view.card_cover_image_field"
+        :allow-cover-image-field="true"
         @update-all-field-options="updateAllFieldOptions"
         @update-field-options-of-field="updateFieldOptionsOfField"
         @update-order="orderFieldOptions"
+        @update-cover-image-field="updateCoverImageField"
       ></ViewFieldsContext>
     </li>
   </ul>
@@ -124,6 +127,16 @@ export default {
             order,
           }
         )
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+    },
+    async updateCoverImageField(value) {
+      try {
+        await this.$store.dispatch('view/update', {
+          view: this.view,
+          values: { card_cover_image_field: value },
+        })
       } catch (error) {
         notifyIf(error, 'view')
       }

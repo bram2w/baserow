@@ -184,6 +184,7 @@ def test_patch_gallery_view_field_options(api_client, data_fixture):
 def test_create_gallery_view(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(table=table)
 
     response = api_client.post(
         reverse("api:database:views:list", kwargs={"table_id": table.id}),
@@ -192,6 +193,7 @@ def test_create_gallery_view(api_client, data_fixture):
             "type": "gallery",
             "filter_type": "AND",
             "filters_disabled": False,
+            "card_cover_image_field": file_field.id,
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -202,6 +204,40 @@ def test_create_gallery_view(api_client, data_fixture):
     assert response_json["type"] == "gallery"
     assert response_json["filter_type"] == "AND"
     assert response_json["filters_disabled"] is False
+    assert response_json["card_cover_image_field"] == file_field.id
+
+
+@pytest.mark.django_db
+def test_create_gallery_view_invalid_card_card_cover_image_field(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text = data_fixture.create_text_field(table=table)
+    file_field = data_fixture.create_file_field()
+
+    response = api_client.post(
+        reverse("api:database:views:list", kwargs={"table_id": table.id}),
+        {"name": "Test 2", "type": "gallery", "card_cover_image_field": text.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]["card_cover_image_field"][0]["code"] == "does_not_exist"
+    )
+
+    response = api_client.post(
+        reverse("api:database:views:list", kwargs={"table_id": table.id}),
+        {"name": "Test 2", "type": "gallery", "card_cover_image_field": file_field.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FIELD_NOT_IN_TABLE"
 
 
 @pytest.mark.django_db

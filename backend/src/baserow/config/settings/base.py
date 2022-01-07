@@ -326,7 +326,7 @@ else:
 
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
-USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48]}
+USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [None, 160]}
 
 # The directory that contains the all the templates in JSON format. When for example
 # the `sync_templates` management command is called, then the templates in the
