@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added Video, Audio, PDF and some Office file preview.
 * Added rating field type.
 * Fix deleted options that appear in the command line JSON file export.
 * Fix subtracting date intervals from dates in formulas in some situations not working.

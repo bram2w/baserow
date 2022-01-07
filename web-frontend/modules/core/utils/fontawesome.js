@@ -29,6 +29,7 @@ const mapping = [
     'file-powerpoint',
     [
       /ms-?powerpoint/,
+      'application/vnd.oasis.opendocument.presentation',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     ],
   ],
@@ -36,6 +37,7 @@ const mapping = [
     'file-excel',
     [
       /ms-?excel/,
+      'application/vnd.oasis.opendocument.spreadsheet',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ],
   ],
