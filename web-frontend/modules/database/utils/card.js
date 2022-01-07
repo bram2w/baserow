@@ -1,4 +1,4 @@
-export const getCardHeight = (fields, registry) => {
+export const getCardHeight = (fields, coverImageField, registry) => {
   // margin-bottom of card.scss.card__field, that we don't have to compensate for
   // if there aren't any fields in the card.
   const fieldMarginBottom = fields.length === 0 ? 0 : 10
@@ -15,6 +15,7 @@ export const getCardHeight = (fields, registry) => {
         10 // margin-bottom of card.scss.card__field
       )
     }, 0) +
+    (coverImageField === null ? 0 : 160) + // height of card.scss.card__cover
     16 + // padding-top of card.scss.card
     16 - // padding-bottom of card.scss.card
     fieldMarginBottom

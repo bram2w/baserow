@@ -7,6 +7,7 @@
 * Fix subtracting date intervals from dates in formulas in some situations not working.
 * Added day of month filter to date field.
 * Added gallery view.
+  * Added cover field to the gallery view.
 * Added length is lower than filter.
 * **dev.sh users** Fixed bug in dev.sh where UID/GID were not being set correctly, 
   please rebuild any dev images you are using.

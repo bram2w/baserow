@@ -5,6 +5,7 @@ import GridViewHeader from '@baserow/modules/database/components/view/grid/GridV
 import GalleryView from '@baserow/modules/database/components/view/gallery/GalleryView'
 import GalleryViewHeader from '@baserow/modules/database/components/view/gallery/GalleryViewHeader'
 import FormView from '@baserow/modules/database/components/view/form/FormView'
+import { FileFieldType } from '@baserow/modules/database/fieldTypes'
 
 export const maxPossibleOrderValue = 32767
 
@@ -690,6 +691,40 @@ export class GalleryViewType extends BaseBufferedRowView {
       hidden: true,
       order: maxPossibleOrderValue,
     }
+  }
+
+  _setCardCoverImageFieldToNull({ rootGetters, dispatch }, field) {
+    rootGetters['view/getAll']
+      .filter((view) => view.type === this.type)
+      .forEach((view) => {
+        if (view.card_cover_image_field === field.id) {
+          dispatch(
+            'view/forceUpdate',
+            {
+              view,
+              values: { card_cover_image_field: null },
+            },
+            { root: true }
+          )
+        }
+      })
+  }
+
+  fieldUpdated(context, field, oldField, fieldType, storePrefix) {
+    // If the field type has changed from a file field to something else, it could
+    // be that there are gallery views that depending on that field. So we need to
+    // change to type to null if that's the case.
+    const type = FileFieldType.getType()
+    if (oldField.type === type && field.type !== type) {
+      this._setCardCoverImageFieldToNull(context, field)
+    }
+  }
+
+  fieldDeleted(context, field, fieldType, storePrefix = '') {
+    // We want to loop over all gallery views that we have in the store and check if
+    // they were depending on this deleted field. If that's case, we can set it to null
+    // because it doesn't exist anymore.
+    this._setCardCoverImageFieldToNull(context, field)
   }
 }
 

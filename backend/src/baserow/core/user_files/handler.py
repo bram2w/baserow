@@ -99,7 +99,9 @@ class UserFileHandler:
             ).exists():
                 return unique
 
-    def generate_and_save_image_thumbnails(self, image, user_file, storage=None):
+    def generate_and_save_image_thumbnails(
+        self, image, user_file, storage=None, only_with_name=None
+    ):
         """
         Generates the thumbnails based on the current settings and saves them to the
         provided storage. Note that existing files with the same name will be
@@ -113,6 +115,9 @@ class UserFileHandler:
         :type user_file: UserFile
         :param storage: The storage where the thumbnails must be saved to.
         :type storage: Storage or None
+        :param only_with_name: If provided, then only thumbnail types with that name
+            will be regenerated.
+        :type only_with_name: None or String
         :raises ValueError: If the provided user file is not a valid image.
         """
 
@@ -124,6 +129,9 @@ class UserFileHandler:
         image_height = user_file.image_height
 
         for name, size in settings.USER_THUMBNAILS.items():
+            if only_with_name and only_with_name != name:
+                continue
+
             size_copy = size.copy()
 
             # If the width or height is None we want to keep the aspect ratio.
