@@ -86,6 +86,10 @@ export class BaserowFormulaTypeDefinition extends Registerable {
   getFunctionalGridViewFieldArrayComponent() {
     return FunctionalFormulaArrayItem
   }
+
+  getCanSortInView() {
+    return true
+  }
 }
 
 export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
@@ -308,6 +312,10 @@ export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
   getSortOrder() {
     return 9
   }
+
+  getCanSortInView() {
+    return false
+  }
 }
 
 export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
@@ -369,6 +377,10 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
   getDocsDataType(field) {
     return 'array'
   }
+
+  getCanSortInView() {
+    return false
+  }
 }
 
 export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition {
@@ -398,5 +410,9 @@ export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition
 
   getSortOrder() {
     return 8
+  }
+
+  getCanSortInView() {
+    return false
   }
 }

@@ -937,7 +937,7 @@ class LinkRowFieldType(FieldType):
         LinkRowTableNotInSameDatabase: ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
         IncompatiblePrimaryFieldTypeError: ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
     }
-    can_order_by = False
+    _can_order_by = False
     can_be_primary_field = False
 
     def enhance_queryset(self, queryset, field, name):
@@ -2232,10 +2232,7 @@ class FormulaFieldType(FieldType):
             from baserow.contrib.database.fields.registries import field_type_registry
 
             field_type = field_type_registry.get_by_model(field.specific_class)
-            if (
-                field_type.type == FormulaFieldType.type
-                or field_type.type == LookupFieldType.type
-            ):
+            if isinstance(field_type, FormulaFieldType):
                 formula_type = field.specific.cached_formula_type
                 return formula_type.type in compatible_formula_types
             else:
@@ -2524,6 +2521,9 @@ class FormulaFieldType(FieldType):
     def after_rows_imported(self, field, via_path_to_starting_table, update_collector):
         self._refresh_row_values(field, update_collector, via_path_to_starting_table)
         super().after_rows_imported(field, via_path_to_starting_table, update_collector)
+
+    def check_can_order_by(self, field):
+        return self.to_baserow_formula_type(field.specific).can_order_by
 
 
 class LookupFieldType(FormulaFieldType):

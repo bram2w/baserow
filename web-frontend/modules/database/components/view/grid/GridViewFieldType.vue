@@ -47,7 +47,7 @@
             {{ $t('gridViewFieldType.createFilter') }}
           </a>
         </li>
-        <li v-if="field._.type.canSortInView">
+        <li v-if="getCanSortInView(field)">
           <a @click="createSort($event, view, field, 'ASC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down-alt"></i>
             {{ $t('gridViewFieldType.sortField') }}
@@ -70,7 +70,7 @@
             ></i>
           </a>
         </li>
-        <li v-if="field._.type.canSortInView">
+        <li v-if="getCanSortInView(field)">
           <a @click="createSort($event, view, field, 'DESC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down"></i>
             {{ $t('gridViewFieldType.sortField') }}
@@ -255,6 +255,9 @@ export default {
       return this.$registry
         .get('field', field.type)
         .getSortIndicator(field, this.$registry)[index]
+    },
+    getCanSortInView(field) {
+      return this.$registry.get('field', field.type).getCanSortInView(field)
     },
   },
 }

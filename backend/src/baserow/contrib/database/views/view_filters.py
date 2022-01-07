@@ -743,7 +743,13 @@ class EmptyViewFilterType(ViewFilterType):
         SingleSelectFieldType.type,
         PhoneNumberFieldType.type,
         MultipleSelectFieldType.type,
-        FormulaFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaTextType.type,
+            BaserowFormulaCharType.type,
+            BaserowFormulaNumberType.type,
+            BaserowFormulaDateType.type,
+            BaserowFormulaBooleanType.type,
+        ),
     ]
 
     def get_filter(self, field_name, value, model_field, field):

@@ -1,5 +1,5 @@
 <template functional>
-  <div ref="cell" class="grid-view__cell">
+  <div ref="cell" class="grid-view__cell" :class="data.staticClass || ''">
     <div class="grid-field-single-select">
       <div
         v-if="props.value"

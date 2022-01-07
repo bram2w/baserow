@@ -174,7 +174,7 @@ class TableModelQuerySet(models.QuerySet):
             user_field_name = field_object["field"].name
             error_display_name = user_field_name if user_field_names else field_name
 
-            if not field_object["type"].can_order_by:
+            if not field_object["type"].check_can_order_by(field_object["field"]):
                 raise OrderByFieldNotPossible(
                     error_display_name,
                     field_type.type,

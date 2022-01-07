@@ -363,6 +363,7 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
     user_overridable_formatting_option_fields = [
         "array_formula_type",
     ]
+    can_order_by = False
 
     def __init__(self, sub_type: BaserowFormulaValidType):
         self.array_formula_type = sub_type.type
@@ -500,6 +501,7 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
 class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
     type = "single_select"
     baserow_field_type = "single_select"
+    can_order_by = False
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:

@@ -196,14 +196,17 @@ export default {
      * Calculates the total amount of available fields.
      */
     availableFieldsLength() {
-      const fields = this.fields.filter(
-        (field) => field._.type.canSortInView
+      const fields = this.fields.filter((field) =>
+        this.getCanSortInView(field)
       ).length
-      const primary = this.primary._.type.canSortInView ? 1 : 0
+      const primary = this.getCanSortInView(this.primary) ? 1 : 0
       return fields + primary
     },
   },
   methods: {
+    getCanSortInView(field) {
+      return this.$registry.get('field', field.type).getCanSortInView(field)
+    },
     getField(fieldId) {
       if (this.primary.id === fieldId) {
         return this.primary
@@ -217,7 +220,7 @@ export default {
     },
     isFieldAvailable(field) {
       const allFieldIds = this.view.sortings.map((sort) => sort.field)
-      return field._.type.canSortInView && !allFieldIds.includes(field.id)
+      return this.getCanSortInView(field) && !allFieldIds.includes(field.id)
     },
     async addSort(field) {
       this.$refs.addContext.hide()

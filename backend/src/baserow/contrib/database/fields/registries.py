@@ -54,7 +54,7 @@ class FieldType(
         field_type_registry.register(ExampleFieldType())
     """
 
-    can_order_by = True
+    _can_order_by = True
     """Indicates whether it is possible to order by this field type."""
 
     can_be_primary_field = True
@@ -1027,6 +1027,20 @@ class FieldType(
         self.field_dependency_updated(
             field, field, field, via_path_to_starting_table, update_collector
         )
+
+    def check_can_order_by(self, field):
+        """
+        Override this method if this field type can sometimes be ordered or sometimes
+        cannot be ordered depending on the individual field state. By default will just
+        return the bool property _can_order_by so if your field type doesn't depend
+        on the field state and is always just True or False just set _can_order_by
+        to the desired value.
+
+        :param field: The field to check to see if it can be ordered by or not.
+        :return: True if a view can be ordered by this field, False otherwise.
+        """
+
+        return self._can_order_by
 
     def before_field_options_update(
         self,
