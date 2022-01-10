@@ -49,7 +49,7 @@ will be field_{id}. The fields can be created, modified and deleted via the
 `baserow.contrib.database.fields.handler.FieldHandler` and via the REST API. Several 
 field types have been included by default.
 
-> Field types can be added via a plugins. More about that on the 
+> Field types can be added via plugins. More about that on the 
 > [field type plugin page](../plugins/field-type.md).
 
 * `text`: Single line text.
@@ -69,7 +69,7 @@ width of a column in grid A, then it only changes for grid A and not for grid B.
 views can be created, modified and deleted via the 
 `baserow.contrib.database.views.handler.ViewHandler` and via the REST API.
 
-> View types can be added via a plugins. More about that on the 
+> View types can be added via plugins. More about that on the 
 > [view type plugin page](../plugins/view-type.md).
 
 ### Rows
