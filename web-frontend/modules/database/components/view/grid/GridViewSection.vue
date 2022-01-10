@@ -156,8 +156,11 @@ export default {
         this.updateVisibleFieldsInRow()
       },
     },
-    fields() {
-      this.updateVisibleFieldsInRow()
+    fields: {
+      deep: true,
+      handler() {
+        this.updateVisibleFieldsInRow()
+      },
     },
   },
   mounted() {
@@ -240,11 +243,9 @@ export default {
         return visible
       })
 
-      // A simple way to compare if there are new fields that must be rendered. We want
-      // to do this to avoid unnecessary vue updates.
-      const existingIds = this.fieldsToRender.map((f) => f.id)
-      const newIds = fieldsToRender.map((f) => f.id)
-      if (JSON.stringify(existingIds) !== JSON.stringify(newIds)) {
+      if (
+        JSON.stringify(this.fieldsToRender) !== JSON.stringify(fieldsToRender)
+      ) {
         this.fieldsToRender = fieldsToRender
       }
 
