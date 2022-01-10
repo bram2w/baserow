@@ -11,6 +11,7 @@
       <div class="select-row-modal__search">
         <i class="fas fa-search select-row-modal__search-icon"></i>
         <input
+          ref="search"
           v-model="visibleSearch"
           type="text"
           :placeholder="$t('selectRowContent.search')"
@@ -159,6 +160,11 @@ export default {
     // state as loaded after that. Only a loading animation is shown if there isn't any
     // data.
     this.loaded = true
+
+    // Focus the search field so the user may begin typing immediately.
+    this.$nextTick(() => {
+      this.focusSearch()
+    })
   },
   methods: {
     /**
@@ -265,6 +271,12 @@ export default {
       }
 
       this.$emit('selected', { row, primary, fields })
+    },
+    /**
+     * Focuses the search field when the component mounts.
+     */
+    focusSearch() {
+      this.$refs.search.focus()
     },
   },
 }
