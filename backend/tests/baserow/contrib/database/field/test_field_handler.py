@@ -35,12 +35,16 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.models import Table
 from baserow.core.exceptions import UserNotInGroup
-
 
 # You must add --runslow to pytest to run this test, you can do this in intellij by
 # editing the run config for this test and adding --runslow to additional args.
-@pytest.mark.django_db
+from baserow.core.trash.handler import TrashHandler
+from baserow.test_utils.helpers import setup_interesting_test_table
+
+
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.slow
 def test_can_convert_between_all_fields(data_fixture):
     """
@@ -51,46 +55,22 @@ def test_can_convert_between_all_fields(data_fixture):
     raise any exceptions.
     """
 
-    user = data_fixture.create_user()
-    database = data_fixture.create_database_application(user=user)
-    table = data_fixture.create_database_table(database=database, user=user)
-    # Link tables
-    link_table = data_fixture.create_database_table(database=database, user=user)
-    data_fixture.create_text_field(table=link_table, name="text_field", primary=True)
-    decimal_link_table = data_fixture.create_database_table(
-        database=database, user=user
-    )
-    data_fixture.create_number_field(
-        table=decimal_link_table,
-        name="text_field",
-        primary=True,
-        number_type="DECIMAL",
-        number_decimal_places=3,
-        number_negative=True,
-    )
-    file_link_table = data_fixture.create_database_table(database=database, user=user)
-    data_fixture.create_file_field(
-        table=file_link_table,
-        name="file_field",
-        primary=True,
-    )
+    table, user, row, blank_row = setup_interesting_test_table(data_fixture)
 
     handler = FieldHandler()
     row_handler = RowHandler()
     fake = Faker()
 
-    model = table.get_model()
     cache = {}
-    # Make a blank row to test empty field conversion also.
-    model.objects.create(**{})
-    second_row_with_values = model.objects.create(**{})
 
     # Some baserow field types have multiple different 'modes' which result in
     # different conversion behaviour or entirely different database columns being
     # created. Here the kwargs which control these modes are enumerated so we can then
     # generate every possible type of conversion.
     all_possible_kwargs_per_type = construct_all_possible_field_kwargs(
-        link_table, decimal_link_table, file_link_table
+        Table.objects.get(name="link_table"),
+        Table.objects.get(name="decimal_link_table"),
+        Table.objects.get(name="file_link_table"),
     )
 
     i = 1
@@ -99,10 +79,17 @@ def test_can_convert_between_all_fields(data_fixture):
             name = kwargs.pop("name")
             for inner_field_type_name in field_type_registry.get_types():
                 for inner_kwargs in all_possible_kwargs_per_type[inner_field_type_name]:
+                    print(
+                        f"Converting num {i} from {field_type_name} to"
+                        f" {inner_field_type_name}",
+                        flush=True,
+                    )
                     copy = dict(inner_kwargs)
                     copy.pop("name", None)
                     field_type = field_type_registry.get(field_type_name)
                     new_name = f"{name}_to_{inner_field_type_name}_{i}"
+                    kwargs["primary"] = False
+
                     from_field = handler.create_field(
                         user=user,
                         table=table,
@@ -119,7 +106,7 @@ def test_can_convert_between_all_fields(data_fixture):
                         row_handler.update_row(
                             user=user,
                             table=table,
-                            row_id=second_row_with_values.id,
+                            row_id=row.id,
                             values={f"field_{from_field.id}": random_value},
                         )
                     handler.update_field(
@@ -129,6 +116,20 @@ def test_can_convert_between_all_fields(data_fixture):
                         **copy,
                     )
                     i = i + 1
+                    # Check the field metadata is as expected
+                    new_field_type = field_type_registry.get(inner_field_type_name)
+                    if not isinstance(new_field_type, type(field_type)):
+                        assert not field_type.model_class.objects.filter(
+                            id=from_field.id
+                        ).exists()
+                    assert new_field_type.model_class.objects.filter(
+                        id=from_field.id
+                    ).exists()
+                    # Ensure we can still delete the field afterwards, also by deleting
+                    # we speedup the test overall by not having a table with 900+
+                    # fields.
+                    handler.delete_field(user, from_field)
+                    TrashHandler.permanently_delete(from_field)
 
 
 @pytest.mark.django_db

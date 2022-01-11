@@ -25,6 +25,8 @@
 * Focused the search field when opening the modal to link a table row.
 * Fixed order of fields in form preview.
 * Fix the ability to make filters and sorts on invalid formula and lookup fields.
+* Fixed bug preventing trash cleanup job from running after a lookup field was converted
+  to another field type.
 
 ## Released (2021-11-25)
 

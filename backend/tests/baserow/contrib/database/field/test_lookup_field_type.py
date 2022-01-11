@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import FormulaField, LookupField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.formula import (
     BaserowFormulaInvalidType,
@@ -1525,3 +1526,70 @@ def test_deleting_related_table_still_lets_you_create_edit_rows(
         values={f"field_{table_primary_field.id}": "bbb"},
     )
     RowHandler().update_row(user, table, row_id=table_row.id, values={})
+
+
+@pytest.mark.django_db
+def test_converting_away_from_lookup_field_deletes_parent_formula_field(
+    data_fixture, api_client, django_assert_num_queries
+):
+
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(
+        user=user, database=table.database, name="table 2"
+    )
+    data_fixture.create_text_field(name="p", table=table, primary=True)
+    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+    looked_up_field = data_fixture.create_date_field(
+        name="lookupfield",
+        table=table2,
+        date_include_time=False,
+        date_format="US",
+    )
+    linkrowfield = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    table2_model = table2.get_model(attribute_names=True)
+    a = table2_model.objects.create(
+        lookupfield=f"2021-02-01", primaryfield="primary " "a", order=0
+    )
+    b = table2_model.objects.create(
+        lookupfield=f"2022-02-03", primaryfield="primary " "b", order=1
+    )
+
+    table_model = table.get_model(attribute_names=True)
+
+    table_row = table_model.objects.create()
+    table_row.linkrowfield.add(a.id)
+    table_row.linkrowfield.add(b.id)
+    table_row.save()
+
+    lookup_field = FieldHandler().create_field(
+        user,
+        table,
+        "lookup",
+        name="lookup_field",
+        through_field_id=linkrowfield.id,
+        target_field_id=looked_up_field.id,
+    )
+
+    assert FormulaField.objects.count() == 1
+    assert LookupField.objects.count() == 1
+
+    response = api_client.patch(
+        reverse(
+            "api:database:fields:item",
+            kwargs={"field_id": lookup_field.id},
+        ),
+        {"type": "boolean"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    assert LookupField.objects.count() == 0
+    assert FormulaField.objects.count() == 0
