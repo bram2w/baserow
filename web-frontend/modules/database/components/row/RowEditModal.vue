@@ -170,7 +170,7 @@ export default {
   },
   "fr": {
     "rowEditModal": {
-      "addField": "Ajouter une colonne"
+      "addField": "Ajouter un champ"
     }
   }
 }

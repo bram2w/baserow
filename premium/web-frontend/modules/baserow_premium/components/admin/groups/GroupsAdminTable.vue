@@ -9,7 +9,9 @@
     @row-context="onRowContext"
   >
     <template #header>
-      <div class="crudtable__header-title">All groups</div>
+      <div class="crudtable__header-title">
+        {{ $t('groupsAdminTable.allGroups') }}
+      </div>
     </template>
     <template #menus="slotProps">
       <EditGroupContext
@@ -48,7 +50,7 @@ export default {
     this.leftColumns = [
       new CrudTableColumn(
         'id',
-        'ID',
+        () => this.$t('groupsAdminTable.id'),
         SimpleField,
         'min-content',
         'max-content',
@@ -56,7 +58,7 @@ export default {
       ),
       new CrudTableColumn(
         'name',
-        'Name',
+        () => this.$t('groupsAdminTable.name'),
         GroupNameField,
         '200px',
         'max-content',
@@ -66,14 +68,14 @@ export default {
     this.rightColumns = [
       new CrudTableColumn(
         'users',
-        'Members',
+        () => this.$t('groupsAdminTable.members'),
         GroupUsersField,
         '100px',
         '500px'
       ),
       new CrudTableColumn(
         'application_count',
-        'Applications',
+        () => this.$t('groupsAdminTable.applications'),
         SimpleField,
         'min-content',
         'max-content',
@@ -81,7 +83,7 @@ export default {
       ),
       new CrudTableColumn(
         'created_on',
-        'Created',
+        () => this.$t('groupsAdminTable.created'),
         LocalDateField,
         'min-content',
         '200px',
@@ -117,3 +119,28 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "groupsAdminTable": {
+      "allGroups": "All groups",
+      "id": "ID",
+      "name":"Name",
+      "members": "Members",
+      "applications": "Applications",
+      "created": "Created"
+    }
+  },
+  "fr": {
+    "groupsAdminTable": {
+      "allGroups": "Liste des groupes",
+      "id": "ID",
+      "name":"Nom",
+      "members": "Membres",
+      "applications": "Applications",
+      "created": "Créé le"
+    }
+  }
+}
+</i18n>

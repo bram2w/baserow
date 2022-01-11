@@ -15,8 +15,14 @@
       >
         <i class="header__filter-icon fas fa-chevron-circle-down"></i>
         <span class="header__filter-name">
-          <template v-if="view.single_select_field === null">Stack by</template
-          ><template v-else>Stacked by {{ stackedByFieldName }}</template></span
+          <template v-if="view.single_select_field === null">{{
+            $t('kanbanViewHeader.stackBy')
+          }}</template
+          ><template v-else>{{
+            $t('kanbanViewHeader.stackedBy', {
+              fieldName: stackedByFieldName,
+            })
+          }}</template></span
         >
       </a>
       <Context ref="stackedContext">
@@ -45,7 +51,9 @@
         "
       >
         <i class="header__filter-icon fas fa-cog"></i>
-        <span class="header__filter-name">Customize cards</span>
+        <span class="header__filter-name">{{
+          $t('kanbanViewHeader.customizeCards')
+        }}</span>
       </a>
       <ViewFieldsContext
         ref="customizeContext"
@@ -168,3 +176,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "kanbanViewHeader": {
+      "stackBy": "Stack by",
+      "stackedBy": "Stacked by {fieldName}",
+      "customizeCards": "Customize cards"
+    }
+  },
+  "fr": {
+    "kanbanViewHeader": {
+      "stackBy": "Regrouper par",
+      "stackedBy": "Regroupé par {fieldName}",
+      "customizeCards": "Configurer les cartes"
+    }
+  }
+}
+</i18n>

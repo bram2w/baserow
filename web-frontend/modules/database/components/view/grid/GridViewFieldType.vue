@@ -276,7 +276,7 @@ export default {
     "gridViewFieldType":{
       "createFilter": "Définir un filtre",
       "sortField": "Trier",
-      "hideField":"Cacher la colonne"
+      "hideField":"Cacher un champ"
     }
   }
 }

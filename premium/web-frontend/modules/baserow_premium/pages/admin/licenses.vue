@@ -4,45 +4,44 @@
       <div class="placeholder__icon">
         <i class="fas fa-certificate"></i>
       </div>
-      <h1 class="placeholder__title">No licenses found</h1>
+      <h1 class="placeholder__title">
+        {{ $t('licenses.titleNoLicenses') }}
+      </h1>
       <p class="placeholder__content">
-        Your Baserow instance doesn’t have any licenses registered. A premium
-        license gives you immediate access to all of the additional features. If
-        you already have a license, you can register it here. Alternatively you
-        can get one by clicking on the button below.
+        {{ $t('licenses.noLicensesDescription') }}
       </p>
       <ul class="licenses__features">
         <li class="licenses__feature">
           <i class="fas fa-fw fa-check licenses__feature-icon"></i>
-          Row comments
+          {{ $t('licenses.rowComments') }}
         </li>
         <li class="licenses__feature">
           <i class="fas fa-fw fa-check licenses__feature-icon"></i>
-          Kanban view
+          {{ $t('licenses.kanbanView') }}
         </li>
         <li class="licenses__feature">
           <i class="fas fa-fw fa-check licenses__feature-icon"></i>
-          JSON and XML export
+          {{ $t('licenses.exports') }}
         </li>
         <li class="licenses__feature">
           <i class="fas fa-fw fa-check licenses__feature-icon"></i>
-          Admin functionality
+          {{ $t('licenses.admin') }}
         </li>
       </ul>
       <div class="placeholder__action">
         <a class="button button--large" @click="$refs.registerModal.show()">
           <i class="fas fa-plus"></i>
-          Register license
+          {{ $t('licenses.registerLicense') }}
         </a>
         <a
           :href="'https://baserow.io/get-license/' + instanceId + '/'"
           class="button button--large button--ghost margin-left-2"
           target="_blank"
-          >Get a license</a
+          >{{ $t('licenses.getLicense') }}</a
         >
       </div>
       <p>
-        Your Baserow instance ID is:
+        {{ $t('licenses.baserowInstanceId') }}
         <br />
         <span class="licenses__instance-id">{{ instanceId }}</span>
         <a
@@ -51,32 +50,34 @@
             ;[copyToClipboard(instanceId), $refs.instanceIdCopied.show()]
           "
         >
-          Copy
+          {{ $t('action.copy') }}
           <Copied ref="instanceIdCopied"></Copied>
         </a>
       </p>
     </div>
     <div v-else class="licenses">
       <div class="licenses__head">
-        <h1 class="margin-bottom-0">Licenses</h1>
+        <h1 class="margin-bottom-0">
+          {{ $t('licenses.titleLicenses') }}
+        </h1>
         <div>
           <a
             class="button button--primary margin-right-1"
             @click="$refs.registerModal.show()"
           >
             <i class="fas fa-plus"></i>
-            Register a license
+            {{ $t('licenses.registerLicense') }}
           </a>
           <a
             :href="'https://baserow.io/get-license/' + instanceId + '/'"
             class="button button--ghost"
             target="_blank"
-            >Get a license</a
+            >{{ $t('licenses.getLicense') }}</a
           >
         </div>
       </div>
       <p>
-        Your Baserow instance ID is:
+        {{ $t('licenses.baserowInstanceId') }}
         <span class="licenses__instance-id">{{ instanceId }}</span>
         <a
           class="licenses__instance-id-copy"
@@ -84,7 +85,7 @@
             ;[copyToClipboard(instanceId), $refs.instanceIdCopied.show()]
           "
         >
-          Copy
+          {{ $t('action.copy') }}
           <Copied ref="instanceIdCopied"></Copied>
         </a>
       </p>
@@ -97,7 +98,7 @@
         >
           <div class="licenses__item-head">
             <div class="licenses__item-title">
-              License ID
+              {{ $t('licenses.licenceId') }}
               <span class="licenses__item-title-license">{{
                 license.license_id
               }}</span>
@@ -108,25 +109,32 @@
                 'license-plan--premium': license.product_code === 'premium',
               }"
             >
-              <template v-if="license.product_code === 'premium'"
-                >Premium</template
-              >
+              <template v-if="license.product_code === 'premium'">{{
+                $t('licenses.premium')
+              }}</template>
             </div>
             <div
               v-if="!license.is_active"
               class="license-plan license-plan--expired"
             >
-              Expired
+              {{ $t('licenses.expired') }}
             </div>
           </div>
           <div class="licenses__item-validity">
-            Valid from {{ localDate(license.valid_from) }} through
-            {{ localDate(license.valid_through) }}
+            {{
+              $t('licenses.validity', {
+                start: localDate(license.valid_from),
+                end: localDate(license.valid_through),
+              })
+            }}
           </div>
           <ul class="licenses__item-details">
-            <li>{{ license.seats_taken }} / {{ license.seats }} seats</li>
             <li>
-              Premium features
+              {{ license.seats_taken }} / {{ license.seats }}
+              {{ $t('licenses.seats') }}
+            </li>
+            <li>
+              {{ $t('licenses.premiumFeatures') }}
               <i
                 class="fas margin-left-1"
                 :class="
@@ -195,3 +203,48 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "licenses": {
+      "titleNoLicenses": "No licenses found",
+      "titleLicenses": "Licenses",
+      "noLicensesDescription": "Your Baserow instance doesn’t have any licenses registered. A premium license gives you immediate access to all of the additional features. If you already have a license, you can register it here. Alternatively you can get one by clicking on the button below.",
+      "rowComments": "Row comments",
+      "kanbanView": "Kanban view",
+      "exports": "JSON and XML export",
+      "admin": "Admin functionality",
+      "getLicense": "Get a license",
+      "baserowInstanceId": "Your Baserow instance ID is:",
+      "registerLicense": "Register license",
+      "licenceId": "License ID",
+      "premium": "Premium",
+      "expired": "Expired",
+      "validity": "Valid from {start} through {end}",
+      "seats": "seats",
+      "premiumFeatures": "Premium features"
+    }
+  },
+  "fr": {
+    "licenses": {
+      "titleNoLicenses": "Aucune licences trouvée",
+      "titleLicenses": "Licences",
+      "noLicensesDescription": "Votre instance de Baserow n'a aucune licence enregistrée. Une licence premium vous donne immédiatement accés à plusieurs fonctionnalités additionnelles. Si vous avez déjà une licence, vous pouvez l'enregistrée ici. Vous pouvez également en obtenir une en cliquant sur le bouton ci-dessous.",
+      "rowComments": "Commentaires par lignes",
+      "kanbanView": "Vue Kanban",
+      "exports": "Export JSON et XML",
+      "admin": "Interface d'administration",
+      "getLicense": "Obtenir une licence",
+      "baserowInstanceId": "Votre identifiant d'instance Baserow est :",
+      "registerLicense": "Activer une licence",
+      "licenceId": "Numéro de licence",
+      "premium": "Premium",
+      "expired": "Expirée",
+      "validity": "Valide du {start} au {end}",
+      "seats": "places",
+      "premiumFeatures": "Fonctionalités premium"
+    }
+  }
+}
+</i18n>

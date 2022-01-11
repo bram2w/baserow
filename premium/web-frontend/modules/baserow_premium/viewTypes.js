@@ -33,7 +33,8 @@ export class KanbanViewType extends PremiumViewType {
   }
 
   getName() {
-    return 'Kanban'
+    const { i18n } = this.app
+    return i18n.t('premium.viewType.kanban')
   }
 
   canFilter() {

@@ -1781,7 +1781,8 @@ export class MultipleSelectFieldType extends FieldType {
   }
 
   getName() {
-    return 'Multiple select'
+    const { i18n } = this.app
+    return i18n.t('fieldType.multipleSelect')
   }
 
   getFormComponent() {

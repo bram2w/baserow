@@ -1,17 +1,17 @@
 <template>
   <Modal>
-    <h2 class="box__title">Disconnect license</h2>
+    <h2 class="box__title">
+      {{ $t('disconnectLicenseModal.disconnectLicense') }}
+    </h2>
     <Error :error="error"></Error>
     <div>
-      <p>
-        Are you sure that you want to disconnect this license? If the license is
-        active, all the users that have a seat will lose access. It will
-        effectively be removed. Please contact our support team at
-        <a href="https://baserow.io/contact" target="_blank"
-          >baserow.io/contact</a
-        >
-        if you want to use this license in another self hosted instance.
-      </p>
+      <i18n path="disconnectLicenseModal.disconnectDescription" tag="p">
+        <template #contact>
+          <a href="https://baserow.io/contact" target="_blank"
+            >baserow.io/contact</a
+          >
+        </template>
+      </i18n>
       <div class="actions">
         <div class="align-right">
           <button
@@ -20,7 +20,7 @@
             :disabled="loading"
             @click="disconnectLicense()"
           >
-            Disconnect license
+            {{ $t('disconnectLicenseModal.disconnectLicense') }}
           </button>
         </div>
       </div>
@@ -64,3 +64,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "disconnectLicenseModal": {
+      "disconnectLicense": "Disconnect license",
+      "disconnectDescription": "Are you sure that you want to disconnect this license? If you disconnect this license while it's active, the related users won’t have access to the plan anymore. It will effectively remove the license. Please contact our support team at {contact} if you want to use this license in another self hosted instance."
+    }
+  },
+  "fr": {
+    "disconnectLicenseModal": {
+      "disconnectLicense": "Déconnecter la licence",
+      "disconnectDescription": "Êtes-vous sur·e de vouloir déconnecter la licence ? Si vous deconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
+    }
+  }
+}
+</i18n>
