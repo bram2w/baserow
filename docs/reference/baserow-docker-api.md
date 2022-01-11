@@ -140,6 +140,7 @@ for what these variables do.
 - `EMAIL_SMTP_USER`
 - `EMAIL_SMTP_PASSWORD`
 - `FROM_EMAIL`
+- `DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS`
 
 ### Dev Only Variables
 

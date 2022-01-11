@@ -118,10 +118,13 @@ class GridViewType(ViewType):
 
     def get_visible_field_options_in_order(self, grid_view):
         return (
-            grid_view.get_field_options(create_if_not_exists=True)
+            grid_view.get_field_options(create_if_missing=True)
             .filter(hidden=False)
             .order_by("-field__primary", "order", "field__id")
         )
+
+    def get_hidden_field_options(self, grid_view):
+        return grid_view.get_field_options(create_if_missing=False).filter(hidden=True)
 
 
 class GalleryViewType(ViewType):
@@ -231,7 +234,7 @@ class GalleryViewType(ViewType):
         visible.
         """
 
-        field_options = view.get_field_options(create_if_not_exists=True).order_by(
+        field_options = view.get_field_options(create_if_missing=True).order_by(
             "field__id"
         )
         ids_to_update = [f.id for f in field_options[0:3]]

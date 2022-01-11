@@ -70,7 +70,7 @@ class PageType(Instance):
         :type payload:  dict
         :param ignore_web_socket_id: If provided then the payload will not be broad
             casted to that web socket id. This is often the sender.
-        :type ignore_web_socket_id: str
+        :type ignore_web_socket_id: Optional[str]
         :param kwargs: The additional parameters including their provided values.
         :type kwargs: dict
         """

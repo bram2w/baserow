@@ -338,6 +338,35 @@ class ViewType(
         :param view: The newly created view instance.
         """
 
+    def get_visible_field_options_in_order(self, view):
+        """
+        Should return a queryset of all field options which are visible in the
+        provided view and in the order they appear in the view.
+
+        :param view: The view to query.
+        :type view: View
+        :return: A queryset of the views specific view options which are 'visible'
+            and in order.
+        """
+
+        raise NotImplementedError(
+            "An exportable or publicly sharable view must " "implement this"
+        )
+
+    def get_hidden_field_options(self, view):
+        """
+        Should return a queryset of all field options which are hidden in the
+        provided view.
+
+        :param view: The view to query.
+        :type view: View
+        :return: A queryset of the views specific view options which are 'hidden'.
+        """
+
+        raise NotImplementedError(
+            "An exportable or publicly sharable view must " "implement this"
+        )
+
 
 class ViewTypeRegistry(
     APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
