@@ -6,7 +6,7 @@
         <div class="admin-settings__item">
           <div class="admin-settings__label">
             <div class="admin-settings__name">
-              {{ $t('settings.instanceIdName') }}
+              {{ $t('settings.baserowInstanceId') }}
             </div>
             <div class="admin-settings__description">
               {{ $t('settings.instanceIdDescription') }}
@@ -92,7 +92,7 @@ export default {
   "en":{
     "settings":{
       "settingsTitle": "Admin settings",
-      "instanceIdName": "Instance ID",
+      "baserowInstanceId": "Instance ID",
       "instanceIdDescription": "The instance ID is the unique identifier of your Baserow copy.",
       "groupSignupRestrictions": "Signup restrictions",
       "settingAllowNewAccountsName": "Allow creating new accounts",
@@ -103,7 +103,7 @@ export default {
   "fr":{
     "settings":{
       "settingsTitle": "Paramètres",
-      "instanceIdName": "Identifiant de l'instance",
+      "baserowInstanceId": "Identifiant de l'instance de Baserow",
       "instanceIdDescription": "Cet identifiant permet de désigner de manière unique votre instance de Baserow.",
       "groupSignupRestrictions": "Restriction de création de compte",
       "settingAllowNewAccountsName": "Autoriser la création de compte",

@@ -74,6 +74,7 @@ export default {
     email: 'Email',
     file: 'Fichier',
     singleSelect: 'Liste déroulante',
+    multipleSelect: 'Selection multiple',
     phoneNumber: 'Téléphone',
     formula: 'Formule',
     lookup: 'Champ rapporté',
@@ -224,9 +225,9 @@ export default {
     adminCannotDeleteSelfTitle: 'Action interdite',
     adminCannotDeleteSelfDescription:
       'Vous ne pouvez pas supprimer votre propre compte utilisateur.',
-    maxFieldCountExceededTitle: 'Impossible de créer une colonne',
+    maxFieldCountExceededTitle: 'Impossible de créer un nouveau champ',
     maxFieldCountExceededDescription:
-      "L'action n'a pas pu aboutir car vous avez atteint le nombre maximum de colonne pour cette table.",
+      "L'action n'a pas pu aboutir car vous avez atteint le nombre maximum de champ pour cette table.",
     cannotRestoreParentBeforeChildTitle:
       "Veuillez restaurer l'élément parent d'abord",
     cannotRestoreParentBeforeChildDescription:

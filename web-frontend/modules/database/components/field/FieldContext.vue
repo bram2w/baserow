@@ -106,8 +106,8 @@ export default {
   },  
   "fr": {
     "fieldContext":{
-      "editField": "Modifier la colonne",
-      "deleteField": "Supprimer la colonne"
+      "editField": "Modifier le champ",
+      "deleteField": "Supprimer le champ"
     }
   }
 }

@@ -1,13 +1,13 @@
 <template>
   <div class="layout__col-2-scroll layout__col-2-scroll--white-background">
     <div class="license-detail">
-      <h1>{{ license.product_code }} plan</h1>
+      <h1>
+        {{ $t('license.title', license) }}
+      </h1>
       <div class="license-detail__users">
-        <h2>Users</h2>
+        <h2>{{ $t('license.users') }}</h2>
         <p>
-          Choose the users that can use the {{ license.product_code }} plan.
-          This license allows you to grant {{ license.product_code }} to a
-          maximum of {{ license.seats }} users.
+          {{ $t('license.description', license) }}
         </p>
         <div class="license-detail__add">
           <div
@@ -19,16 +19,16 @@
               ref="add"
               :value="null"
               :fetch-page="fetchUsers"
-              :not-selected-text="'Add a user'"
+              :not-selected-text="$t('license.addUser')"
               :add-empty-item="false"
               @input="addUser"
             ></PaginatedDropdown>
           </div>
-          You have {{ license.seats - license.seats_taken }} seat<template
-            v-if="license.seats - license.seats_taken !== 1"
-            >s</template
-          >
-          left
+          {{
+            $tc('license.seatLeft', leftSeats, {
+              count: leftSeats,
+            })
+          }}
         </div>
         <div
           v-for="(licenseUser, index) in license.users"
@@ -58,13 +58,13 @@
               v-show="license.seats - license.seats_taken > 0"
               class="margin-right-2"
               @click="fillSeats()"
-              >Fill seats with users that are not on the plan</a
+              >{{ $t('license.fillSeats') }}</a
             >
             <a
               v-show="license.seats - license.seats_taken < license.seats"
               class="color-error"
               @click="removeAllUsers()"
-              >Remove all users</a
+              >{{ $t('license.removeAll') }}</a
             >
           </template>
         </div>
@@ -73,7 +73,9 @@
         <div class="license-detail__body-left">
           <div class="license-detail__item">
             <div class="license-detail__item-label">
-              <div class="license-detail__item-name">License ID</div>
+              <div class="license-detail__item-name">
+                {{ $t('license.licenseId') }}
+              </div>
             </div>
             <div class="license-detail__item-value">
               {{ license.license_id }}
@@ -81,7 +83,9 @@
           </div>
           <div class="license-detail__item">
             <div class="license-detail__item-label">
-              <div class="license-detail__item-name">Plan</div>
+              <div class="license-detail__item-name">
+                {{ $t('license.plan') }}
+              </div>
             </div>
             <div class="license-detail__item-value">
               <div
@@ -90,21 +94,23 @@
                   'license-plan--premium': license.product_code === 'premium',
                 }"
               >
-                <template v-if="license.product_code === 'premium'"
-                  >Premium</template
-                >
+                <template v-if="license.product_code === 'premium'">{{
+                  $t('license.premium')
+                }}</template>
               </div>
               <div
                 v-if="!license.is_active"
                 class="license-plan license-plan--inline license-plan--expired"
               >
-                Expired
+                {{ $t('license.expired') }}
               </div>
             </div>
           </div>
           <div class="license-detail__item">
             <div class="license-detail__item-label">
-              <div class="license-detail__item-name">Valid from</div>
+              <div class="license-detail__item-name">
+                {{ $t('license.validFrom') }}
+              </div>
             </div>
             <div class="license-detail__item-value">
               {{ localDateTime(license.valid_from) }}
@@ -112,11 +118,11 @@
           </div>
           <div class="license-detail__item">
             <div class="license-detail__item-label">
-              <div class="license-detail__item-name">Valid through</div>
+              <div class="license-detail__item-name">
+                {{ $t('license.validThrough') }}
+              </div>
               <div class="license-detail__item-description">
-                After your license has expired, you and any assigned users will
-                no longer be able to use the extra functionality granted by the
-                license.
+                {{ $t('license.validThroughDescription') }}
               </div>
             </div>
             <div class="license-detail__item-value">
@@ -125,25 +131,25 @@
           </div>
           <div class="license-detail__item">
             <div class="license-detail__item-label">
-              <div class="license-detail__item-name">Last check</div>
+              <div class="license-detail__item-name">
+                {{ $t('license.lastCheck') }}
+              </div>
               <div class="license-detail__item-description">
-                The license is periodically checked for changes. If you for
-                example renewed or upgraded your license, the changes become
-                active after the check.
+                {{ $t('license.lastCheckDescription') }}
               </div>
             </div>
             <div class="license-detail__item-value">
               <div v-if="checkLoading" class="loading"></div>
               <template v-else>
                 {{ localDateTime(license.last_check) }}
-                <a @click="check()">check now</a>
+                <a @click="check()">{{ $t('license.checkNow') }}</a>
               </template>
             </div>
           </div>
           <div class="license-detail__item">
             <div class="license-detail__item-label">
               <div class="license-detail__item-name">
-                Seats (amount of users)
+                {{ $t('license.seats') }}
               </div>
             </div>
             <div class="license-detail__item-value">
@@ -152,7 +158,9 @@
           </div>
           <div class="license-detail__item">
             <div class="license-detail__item-label">
-              <div class="license-detail__item-name">Licensed to</div>
+              <div class="license-detail__item-name">
+                {{ $t('license.licensedTo') }}
+              </div>
             </div>
             <div class="license-detail__item-value">
               {{ license.issued_to_name }} ({{ license.issued_to_email }})
@@ -160,7 +168,9 @@
           </div>
           <div class="license-detail__item">
             <div class="license-detail__item-label">
-              <div class="license-detail__item-name">Premium features</div>
+              <div class="license-detail__item-name">
+                {{ $t('license.premiumFeatures') }}
+              </div>
             </div>
             <div class="license-detail__item-value">
               <i
@@ -176,22 +186,32 @@
           <div class="license-detail__item">
             <div class="license-detail__item-label">
               <div class="license-detail__item-name">
-                Applications / databases
+                {{ $t('license.applications') }}
               </div>
             </div>
-            <div class="license-detail__item-value">Unlimited</div>
+            <div class="license-detail__item-value">
+              {{ $t('license.unlimited') }}
+            </div>
           </div>
           <div class="license-detail__item">
             <div class="license-detail__item-label">
-              <div class="license-detail__item-name">Row usage</div>
+              <div class="license-detail__item-name">
+                {{ $t('license.rowUsage') }}
+              </div>
             </div>
-            <div class="license-detail__item-value">Unlimited</div>
+            <div class="license-detail__item-value">
+              {{ $t('license.unlimited') }}
+            </div>
           </div>
           <div class="license-detail__item">
             <div class="license-detail__item-label">
-              <div class="license-detail__item-name">Storage usage</div>
+              <div class="license-detail__item-name">
+                {{ $t('license.storeUsage') }}
+              </div>
             </div>
-            <div class="license-detail__item-value">Unlimited</div>
+            <div class="license-detail__item-value">
+              {{ $t('license.unlimited') }}
+            </div>
           </div>
         </div>
         <div class="license-body__body-right">
@@ -200,21 +220,19 @@
               <div class="delete-section__label-icon">
                 <i class="fas fa-exclamation"></i>
               </div>
-              Disconnect license
+              {{ $t('license.disconnectLicense') }}
             </div>
-            <p>
-              If you disconnect this license while it's active, the related
-              users won’t have access to the plan anymore. It will effectively
-              remove the license. Please contact our support team at
-              <a href="https://baserow.io/contact" target="_blank"
-                >baserow.io/contact</a
-              >
-              if you want to use this license in another self hosted instance.
-            </p>
+            <i18n path="license.disconnectDescription" tag="p">
+              <template #contact>
+                <a href="https://baserow.io/contact" target="_blank"
+                  >baserow.io/contact</a
+                >
+              </template>
+            </i18n>
             <a
               class="button button--error"
               @click="$refs.disconnectModal.show()"
-              >Disconnect license</a
+              >{{ $t('license.disconnectLicense') }}</a
             >
             <DisconnectLicenseModal
               ref="disconnectModal"
@@ -257,6 +275,11 @@ export default {
       checkLoading: false,
       removingUser: -1,
     }
+  },
+  computed: {
+    leftSeats() {
+      return this.license.seats - this.license.seats_taken
+    },
   },
   methods: {
     localDateTime(timestamp) {
@@ -360,3 +383,68 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "license": {
+      "title": "{product_code} plan",
+      "users": "Users",
+      "description": "Choose the users that can use the {product_code} plan. This license allows you to grant {product_code} to a maximum of {seats} users.",
+      "seatLeft": "You have no seats left|You have one seat left|You have {count} seats left",
+      "fillSeats": "Fill seats with users that are not on the plan",
+      "removeAll": "Remove all users",
+      "licenseId": "License ID",
+      "addUser": "Add a user",
+      "plan": "Plan",
+      "premium": "premium",
+      "expired": "Expired",
+      "validFrom": "Valid from",
+      "validThrough": "Valid through",
+      "validThroughDescription": "After your license has expired, you and any assigned users will no longer be able to use the extra functionality granted by the license.",
+      "lastCheck": "Last check",
+      "lastCheckDescription": "The license is periodically checked for changes. If you for example renewed or upgraded your license, the changes become active after the check.",
+      "checkNow": "check now",
+      "seats": "Seats (amount of users)",
+      "licensedTo": "Licensed to",
+      "premiumFeatures": "Premium features",
+      "applications": "Applications / databases",
+      "unlimited": "Unlimited",
+      "rowUsage": "Row usage",
+      "storeUsage": "Storage usage",
+      "disconnectLicense": "Disconnect license",
+      "disconnectDescription": "If you disconnect this license while it's active, the related users won’t have access to the plan anymore. It will effectively remove the license. Please contact our support team at {contact} if you want to use this license in another self hosted instance."
+    }
+  },
+  "fr": {
+    "license": {
+      "title": "Plan {product_code}",
+      "users": "Utilisateurs",
+      "description": "Choisissez les utilisateurs qui peuvent utiliser les fonctionalités du plan {product_code}. Cette licence vous permet de distribuer le plan {product_code} à un maximum de {seats} utilisateurs.",
+      "seatLeft": "Vous n'avez plus de place disponible|Il reste une seule place|Il reste {count} places",
+      "fillSeats": "Distribuer les places aux utilisateurs restant",
+      "removeAll": "Enlever tous les utilisateurs",
+      "licenseId": "Numéro de licence",
+      "addUser": "Ajouter un utilisateur",
+      "plan": "Plan",
+      "premium": "premium",
+      "expired": "Expirée",
+      "validFrom": "Début de validité",
+      "validThrough": "Fin de validité",
+      "validThroughDescription": "Quand la licence expire, tous les utilisateurs associés ne serons plus en mesure d'utiliser les fonctionnalités offertes par la licence.",
+      "lastCheck": "Dernière vérification",
+      "lastCheckDescription": "La licence est vérifiée réguliérement. Si vous avez, par exemple, renouvellé ou mis à jour votre licence, les changements ne deviennent actifs qu'après la vérification.",
+      "checkNow": "Vérifier maintenant",
+      "seats": "Places (nombre d'utilisateur max.)",
+      "licensedTo": "Attribuée à",
+      "premiumFeatures": "Fonctionnalités premium",
+      "applications": "Applications / Bases de données",
+      "unlimited": "Illimité",
+      "rowUsage": "Nombre de ligne",
+      "storeUsage": "Espace disponible",
+      "disconnectLicense": "Déconnecter la licence",
+      "disconnectDescription": "Si vous deconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
+    }
+  }
+}
+</i18n>

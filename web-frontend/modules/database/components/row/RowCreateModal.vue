@@ -24,7 +24,7 @@
             :class="{ 'button--loading': loading }"
             :disabled="loading"
           >
-            Create
+            {{ $t('action.create') }}
           </button>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default {
   },
   "fr": {
     "rowCreateModal": {
-      "addField": "Ajouter une colonne"
+      "addField": "Ajouter un champ"
     }
   }
 }

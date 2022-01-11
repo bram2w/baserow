@@ -9,7 +9,7 @@
       </div>
       <div class="row-comments__comment-head-details">
         <div class="row-comments__comment-head-name">
-          {{ ownComment ? 'You' : comment.first_name }}
+          {{ ownComment ? $t('rowComment.you') : comment.first_name }}
         </div>
         <div :title="localTimestamp" class="row-comments__comment-head-time">
           {{ timeAgo }}
@@ -49,3 +49,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "rowComment": {
+      "you": "You"
+    }
+  },
+  "fr": {
+    "rowComment": {
+      "you": "Vous"
+    }
+  }
+}
+</i18n>

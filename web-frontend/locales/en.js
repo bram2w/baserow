@@ -74,6 +74,7 @@ export default {
     email: 'Email',
     file: 'File',
     singleSelect: 'Single select',
+    multipleSelect: 'Multiple select',
     phoneNumber: 'Phone number',
     formula: 'Formula',
     lookup: 'Lookup',

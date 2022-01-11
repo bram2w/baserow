@@ -33,7 +33,7 @@
           ref="search"
           v-model="query"
           type="text"
-          placeholder="Search fields"
+          :placeholder="$t('viewFieldsContext.search')"
           class="hidings__search-input"
         />
       </div>
@@ -227,6 +227,7 @@ export default {
     "viewFieldsContext": {
       "coverField": "Cover field",
       "noCover": "No cover",
+      "search": "Search fields",
       "hideAll": "Hide all",
       "showAll": "Show all"
     }
@@ -234,7 +235,8 @@ export default {
   "fr":{
     "viewFieldsContext": {
       "coverField": "Image d'en-tête",
-      "noCover": "Pas d'entête",
+      "noCover": "Pas d'en-tête",
+      "search": "Chercher un champ",
       "hideAll": "Masquer tout",
       "showAll": "Afficher tout"
     }

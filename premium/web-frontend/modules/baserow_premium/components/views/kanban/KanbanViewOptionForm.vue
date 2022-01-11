@@ -1,7 +1,9 @@
 <template>
   <form class="context__form" @submit.prevent="submit">
     <div class="control">
-      <label class="control__label">Select option</label>
+      <label class="control__label">{{
+        $t('kanbanViewOptionForm.selectOption')
+      }}</label>
       <div class="control__elements">
         <div class="select-options">
           <div class="select-options__item">
@@ -68,3 +70,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "kanbanViewOptionForm": {
+      "selectOption": "Select option"
+    }
+  },
+  "fr": {
+    "kanbanViewOptionForm": {
+      "selectOption": "Nom de la colonne"
+    }
+  }
+}
+</i18n>

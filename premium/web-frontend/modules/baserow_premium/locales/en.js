@@ -11,4 +11,11 @@ export default {
     groups: 'Groups',
     licenses: 'Licenses',
   },
+  viewType: {
+    kanban: 'Kanban',
+  },
+  exporterType: {
+    json: 'Export to JSON',
+    xml: 'Export to XML',
+  },
 }

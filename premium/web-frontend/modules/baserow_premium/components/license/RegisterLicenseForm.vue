@@ -1,7 +1,9 @@
 <template>
   <form @submit.prevent="submit">
     <div class="control">
-      <label class="control__label">License key</label>
+      <label class="control__label">{{
+        $t('registerLicenseForm.licenseKey')
+      }}</label>
       <div class="control__elements">
         <textarea
           ref="license"
@@ -12,7 +14,7 @@
           @blur="$v.values.license.$touch()"
         />
         <div v-if="$v.values.license.$error" class="error">
-          This field is required.
+          {{ $t('error.requiredField') }}
         </div>
       </div>
     </div>
@@ -45,3 +47,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "registerLicenseForm": {
+      "licenseKey": "License key"
+    }
+  },
+  "fr": {
+    "registerLicenseForm": {
+      "licenseKey": "Clé de licence"
+    }
+  }
+}
+</i18n>
