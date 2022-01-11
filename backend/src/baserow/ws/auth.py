@@ -4,11 +4,14 @@ from urllib.parse import parse_qs
 import jwt
 from channels.db import database_sync_to_async
 from channels.middleware import BaseMiddleware
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from rest_framework_jwt.settings import api_settings
 
 jwt_get_username_from_payload = api_settings.JWT_PAYLOAD_GET_USERNAME_HANDLER
 jwt_decode_token = api_settings.JWT_DECODE_HANDLER
+
+ANONYMOUS_USER_TOKEN = "anonymous"
 
 
 @database_sync_to_async
@@ -23,26 +26,35 @@ def get_user(token):
     :rtype: User or None
     """
 
-    try:
-        payload = jwt_decode_token(token)
-    except jwt.InvalidTokenError:
-        return
+    anonymous = token == ANONYMOUS_USER_TOKEN
+    if anonymous:
+        if settings.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
+            return
+        else:
+            from django.contrib.auth.models import AnonymousUser
 
-    User = get_user_model()
-    username = jwt_get_username_from_payload(payload)
+            return AnonymousUser()
+    else:
+        try:
+            payload = jwt_decode_token(token)
+        except jwt.InvalidTokenError:
+            return
 
-    if not username:
-        return
+        User = get_user_model()
+        username = jwt_get_username_from_payload(payload)
 
-    try:
-        user = User.objects.get_by_natural_key(username)
-    except User.DoesNotExist:
-        return
+        if not username:
+            return
 
-    if not user.is_active:
-        return
+        try:
+            user = User.objects.get_by_natural_key(username)
+        except User.DoesNotExist:
+            return
 
-    return user
+        if not user.is_active:
+            return
+
+        return user
 
 
 class JWTTokenAuthMiddleware(BaseMiddleware):

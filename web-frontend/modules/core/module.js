@@ -61,6 +61,10 @@ export default function CoreModule(options) {
           key: 'HOURS_UNTIL_TRASH_PERMANENTLY_DELETED',
           default: 24 * 3,
         },
+        {
+          key: 'DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS',
+          default: false,
+        },
       ],
     },
   ])

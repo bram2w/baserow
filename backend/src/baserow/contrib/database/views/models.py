@@ -80,6 +80,7 @@ class View(
     public = models.BooleanField(
         default=False,
         help_text="Indicates whether the view is publicly accessible to visitors.",
+        db_index=True,
     )
 
     def rotate_slug(self):
@@ -93,22 +94,21 @@ class View(
         queryset = View.objects.filter(table=table)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
-    def get_field_options(self, create_if_not_exists=False, fields=None):
+    def get_field_options(self, create_if_missing=False, fields=None):
         """
         Each field can have unique options per view. This method returns those
         options per field type and can optionally create the missing ones. This method
         only works if the `field_options` property is a ManyToManyField with a relation
         to a field options model.
 
-        :param create_if_not_exists: If true the missing GridViewFieldOptions are
+        :param create_if_missing: If true the missing GridViewFieldOptions are
             going to be created. If a fields has been created at a later moment it
             could be possible that they don't exist yet. If this value is True, the
             missing relationships are created in that case.
-        :type create_if_not_exists: bool
+        :type create_if_missing: bool
         :param fields: If all the fields related to the table of this grid view have
             already been fetched, they can be provided here to avoid having to fetch
-            them for a second time. This is only needed if `create_if_not_exists` is
-            True.
+            them for a second time. This is only needed if `create_if_missing` is True.
         :type fields: list
         :return: A queryset containing all the field options of view.
         :rtype: QuerySet
@@ -135,7 +135,7 @@ class View(
 
         field_options = get_queryset()
 
-        if create_if_not_exists:
+        if create_if_missing:
             fields_queryset = Field.objects.filter(table_id=self.table.id)
 
             if fields is None:

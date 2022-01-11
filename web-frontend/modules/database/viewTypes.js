@@ -347,17 +347,23 @@ export class GridViewType extends ViewType {
   }
 
   async fieldRestored(
-    { dispatch },
+    { dispatch, rootGetters },
     table,
     selectedView,
     field,
     fieldType,
     storePrefix = ''
   ) {
-    // There might be new filters and sorts associated with the restored field,
-    // ensure we fetch them. For now we have to fetch all filters/sorts however in the
-    // future we should instead just fetch them for this particular restored field.
-    await dispatch('view/refreshView', { view: selectedView }, { root: true })
+    // Dont refresh if we are public view as filters wont be exposed and sorts are
+    // treated as defaults from the server so not a big deal if we don't know what
+    // it is for a restored field.
+    const isPublic = rootGetters[storePrefix + 'view/grid/isPublic']
+    if (!isPublic) {
+      // There might be new filters and sorts associated with the restored field,
+      // ensure we fetch them. For now we have to fetch all filters/sorts however in the
+      // future we should instead just fetch them for this particular restored field.
+      await dispatch('view/refreshView', { view: selectedView }, { root: true })
+    }
   }
 
   async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {

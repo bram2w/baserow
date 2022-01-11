@@ -5,8 +5,8 @@
       <Table
         :database="database"
         :table="table"
-        :fields="fields"
-        :primary="primary"
+        :fields="fields || startingFields"
+        :primary="primary || startingPrimary"
         :views="[view]"
         :view="view"
         :read-only="true"
@@ -18,6 +18,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import Notifications from '@baserow/modules/core/components/notifications/Notifications'
 import Table from '@baserow/modules/database/components/table/Table'
 import GridService from '@baserow/modules/database/services/view/grid'
@@ -67,8 +68,8 @@ export default {
         database,
         table,
         view,
-        primary,
-        fields,
+        startingFields: fields,
+        startingPrimary: primary,
       }
     } catch (e) {
       if (e.response && e.response.status === 404) {
@@ -76,6 +77,24 @@ export default {
       } else {
         return error({ statusCode: 500, message: 'Error loading view.' })
       }
+    }
+  },
+  computed: {
+    ...mapGetters({
+      primary: 'field/getPrimary',
+      fields: 'field/getAll',
+    }),
+  },
+  mounted() {
+    if (!this.$env.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS) {
+      this.$realtime.connect(true, true)
+      this.$realtime.subscribe('view', { slug: this.$route.params.slug })
+    }
+  },
+  beforeDestroy() {
+    if (!this.$env.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS) {
+      this.$realtime.subscribe(null)
+      this.$realtime.disconnect()
     }
   },
 }

@@ -25,19 +25,19 @@ def test_view_get_field_options(data_fixture):
     field_options = grid_view.get_field_options()
     assert len(field_options) == 2
 
-    field_options = grid_view.get_field_options(create_if_not_exists=True)
+    field_options = grid_view.get_field_options(create_if_missing=True)
     assert len(field_options) == 3
     assert field_options[0].field_id == field_1.id
     assert field_options[1].field_id == field_2.id
     assert field_options[2].field_id == field_3.id
 
-    field_options = grid_view.get_field_options(create_if_not_exists=False)
+    field_options = grid_view.get_field_options(create_if_missing=False)
     assert len(field_options) == 3
     assert field_options[0].field_id == field_1.id
     assert field_options[1].field_id == field_2.id
     assert field_options[2].field_id == field_3.id
 
-    field_options = form_view.get_field_options(create_if_not_exists=False)
+    field_options = form_view.get_field_options(create_if_missing=False)
     assert len(field_options) == 2
     assert field_options[0].field_id == field_1.id
     assert field_options[0].name == ""
@@ -45,7 +45,7 @@ def test_view_get_field_options(data_fixture):
     assert field_options[0].field_id == field_1.id
     assert field_options[1].field_id == field_2.id
 
-    field_options = form_view.get_field_options(create_if_not_exists=True)
+    field_options = form_view.get_field_options(create_if_missing=True)
     assert len(field_options) == 3
     assert field_options[0].field_id == field_1.id
     assert field_options[0].field_id == field_1.id

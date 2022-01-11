@@ -378,3 +378,7 @@ WEBHOOKS_REQUEST_TIMEOUT_SECONDS = 5
 # https://stackoverflow.com/questions/62337379/how-to-append-nginx-ip-to-x-forwarded
 # -for-in-kubernetes-nginx-ingress-controller
 # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS = bool(
+    os.getenv("DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS", "")
+)

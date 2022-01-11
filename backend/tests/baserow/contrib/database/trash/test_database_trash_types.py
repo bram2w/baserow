@@ -1,10 +1,21 @@
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.db import connection
+from django.urls import reverse
+from django.utils import timezone
+from freezegun import freeze_time
+from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import Field, TextField, LinkRowField
+from baserow.contrib.database.fields.models import (
+    Field,
+    TextField,
+    LinkRowField,
+    LookupField,
+    FormulaField,
+)
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
@@ -1116,3 +1127,82 @@ def test_can_delete_tables_and_rows_in_the_same_perm_delete_batch(
 
     assert TrashEntry.objects.count() == 0
     assert table.get_database_table_name() not in connection.introspection.table_names()
+
+
+@pytest.mark.django_db
+def test_perm_delete_lookup_row_field(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+    cars_table = data_fixture.create_database_table(name="Cars", database=database)
+    data_fixture.create_database_table(name="Unrelated")
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "John"},
+    )
+    row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Jane"},
+    )
+
+    # Create a primary field and some example data for the cars table.
+    cars_primary_field = field_handler.create_field(
+        user=user, table=cars_table, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user, table=cars_table, values={f"field_{cars_primary_field.id}": "BMW"}
+    )
+    row_handler.create_row(
+        user=user, table=cars_table, values={f"field_{cars_primary_field.id}": "Audi"}
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=customers_table,
+    )
+    lookup_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="lookup",
+        name="Lookup",
+        through_field_id=link_field_1.id,
+        target_field_id=customers_primary_field.id,
+    )
+    trashed_at = timezone.now()
+    plus_one_hour_over = timezone.timedelta(
+        hours=settings.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED + 1
+    )
+    with freeze_time(trashed_at):
+        url = reverse(
+            "api:database:fields:item",
+            kwargs={"field_id": link_field_1.link_row_related_field.id},
+        )
+        response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
+        assert response.status_code == HTTP_200_OK
+        url = reverse("api:database:fields:item", kwargs={"field_id": lookup_field.id})
+        response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
+        assert response.status_code == HTTP_200_OK
+    datetime_when_trash_item_old_enough_to_be_deleted = trashed_at + plus_one_hour_over
+    with freeze_time(datetime_when_trash_item_old_enough_to_be_deleted):
+        TrashHandler.mark_old_trash_for_permanent_deletion()
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert LinkRowField.objects_and_trash.all().count() == 0
+    assert LookupField.objects_and_trash.all().count() == 0
+    assert FormulaField.objects_and_trash.all().count() == 0

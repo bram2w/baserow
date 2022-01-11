@@ -66,6 +66,8 @@ export class TestApp {
     this._realtime = {
       registerEvent(e, f) {},
       subscribe(e, f) {},
+      connect(a, b) {},
+      disconnect() {},
     }
     // Various stub and mock attributes which will be injected into components
     // mounted using TestApp.
@@ -80,6 +82,9 @@ export class TestApp {
       i18n: {
         t: (key) => key,
         tc: (key) => key,
+      },
+      $route: {
+        params: {},
       },
     }
     this._vueContext = bootstrapVueContext()

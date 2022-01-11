@@ -460,18 +460,25 @@ class RowHandler:
             except model.DoesNotExist:
                 raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
+            updated_fields = []
+            updated_field_ids = set()
+            for field_id, field in model._field_objects.items():
+                if field_id in values or field["name"] in values:
+                    updated_field_ids.add(field_id)
+                    updated_fields.append(field["field"])
+
             before_return = before_row_update.send(
-                self, row=row, user=user, table=table, model=model
+                self,
+                row=row,
+                user=user,
+                table=table,
+                model=model,
+                updated_field_ids=updated_field_ids,
             )
             if user_field_names:
                 values = self.map_user_field_name_dict_to_internal(
                     model._field_objects, values
                 )
-            updated_fields = [
-                field["field"]
-                for field_id, field in model._field_objects.items()
-                if field_id in values or field["name"] in values
-            ]
             values = self.prepare_values(model._field_objects, values)
             values, manytomany_values = self.extract_manytomany_values(values, model)
 
@@ -508,6 +515,7 @@ class RowHandler:
             table=table,
             model=model,
             before_return=before_return,
+            updated_field_ids=updated_field_ids,
         )
 
         return row
@@ -544,7 +552,7 @@ class RowHandler:
             raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
         before_return = before_row_update.send(
-            self, row=row, user=user, table=table, model=model
+            self, row=row, user=user, table=table, model=model, updated_field_ids=[]
         )
 
         row.order = self.get_order_before_row(before, model)
@@ -574,6 +582,7 @@ class RowHandler:
             table=table,
             model=model,
             before_return=before_return,
+            updated_field_ids=[],
         )
 
         return row

@@ -4,8 +4,6 @@ import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
-
-from baserow.test_utils.fixtures.row import RowFixture
 from baserow.contrib.database.fields.handler import FieldHandler
 
 
@@ -24,9 +22,6 @@ def test_forwards_migration(data_fixture, transactional_db, migrate_to_latest_at
     migrate_to = [("database", "0050_remove_multiselect_missing_options")]
 
     field_handler = FieldHandler()
-    row_fixture = RowFixture()
-
-    migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test.
@@ -44,7 +39,7 @@ def test_forwards_migration(data_fixture, transactional_db, migrate_to_latest_at
     option_b = data_fixture.create_select_option(field=field, value="B", color="blue")
     option_c = data_fixture.create_select_option(field=field, value="C", color="green")
 
-    row_fixture.create_row_for_many_to_many_field(
+    data_fixture.create_row_for_many_to_many_field(
         table=table,
         field=field,
         values=[option_a.id, option_b.id, option_c.id],
@@ -52,6 +47,8 @@ def test_forwards_migration(data_fixture, transactional_db, migrate_to_latest_at
     )
 
     option_c.delete()
+
+    migrate(migrate_from)
 
     # We check that we still have a link with the deleted option
     with connection.cursor() as cursor:
