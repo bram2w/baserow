@@ -7,7 +7,6 @@
         :table="table"
         :fields="fields || startingFields"
         :primary="primary || startingPrimary"
-        :views="[view]"
         :view="view"
         :read-only="true"
         :table-loading="false"
@@ -55,6 +54,11 @@ export default {
       const { primary, fields } = await store.dispatch('field/forceSetFields', {
         fields: data.fields,
       })
+
+      // We must manually set the filters disabled because it should always be false in
+      // this case and it's not provided by the backend.
+      data.view.filters_disabled = false
+      data.view.filter_type = 'AND'
       const { view } = await store.dispatch('view/forceCreate', {
         data: data.view,
       })
@@ -77,6 +81,11 @@ export default {
       } else {
         return error({ statusCode: 500, message: 'Error loading view.' })
       }
+    }
+  },
+  head() {
+    return {
+      title: this.view.name || '',
     }
   },
   computed: {

@@ -38,7 +38,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
             class="header__filter-item header__filter-item--grids"
           >
             <a
-              class="header__filter-link"
+              class="header__filter-link header__filter-link--disabled"
             >
               <i
                 class="header__filter-icon header-filter-icon--view fas fa-fw color-primary fa-bars"
@@ -56,6 +56,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
               </span>
             </a>
              
+            <!---->
           </li>
            
           <!---->
@@ -331,7 +332,10 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
             style="left: 260px;"
           />
            
-          <!---->
+          <div
+            class="grid-view__divider-width"
+            style="left: 260px;"
+          />
            
           <div
             class="grid-view__right"
@@ -376,7 +380,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <!---->
                      
-                    <!---->
+                    <div
+                      class="grid-view__description-width"
+                    />
                   </div>
                 </div>
                 <div
@@ -409,7 +415,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <!---->
                      
-                    <!---->
+                    <div
+                      class="grid-view__description-width"
+                    />
                   </div>
                 </div>
                 <div
@@ -442,7 +450,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                     <!---->
                      
-                    <!---->
+                    <div
+                      class="grid-view__description-width"
+                    />
                   </div>
                 </div>
                  
@@ -519,7 +529,23 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                
               <div
                 class="grid-view__foot"
-              />
+              >
+                <div
+                  class="grid-view__foot-logo"
+                >
+                  <a
+                    href="https://baserow.io"
+                    target="_blank"
+                    title="Baserow - open source no-code database tool and Airtable alternative"
+                  >
+                    <img
+                      alt="Baserow - open source no-code database tool and Airtable alternative"
+                      height="14"
+                      src="@baserow/modules/core/static/img/logo.svg"
+                    />
+                  </a>
+                </div>
+              </div>
             </div>
              
             <div

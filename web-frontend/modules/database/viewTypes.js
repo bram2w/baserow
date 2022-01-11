@@ -5,6 +5,7 @@ import GridViewHeader from '@baserow/modules/database/components/view/grid/GridV
 import GalleryView from '@baserow/modules/database/components/view/gallery/GalleryView'
 import GalleryViewHeader from '@baserow/modules/database/components/view/gallery/GalleryViewHeader'
 import FormView from '@baserow/modules/database/components/view/form/FormView'
+import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
 import { FileFieldType } from '@baserow/modules/database/fieldTypes'
 
 export const maxPossibleOrderValue = 32767
@@ -771,6 +772,10 @@ export class FormViewType extends ViewType {
   getSharingLinkName() {
     const { i18n } = this.app
     return i18n.t('viewType.sharing.formLinkName')
+  }
+
+  getHeaderComponent() {
+    return FormViewHeader
   }
 
   getComponent() {

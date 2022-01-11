@@ -18,7 +18,11 @@
         }"
         :set="(field = getField(sort.field))"
       >
-        <a v-if="!readOnly" class="sortings__remove" @click="deleteSort(sort)">
+        <a
+          v-if="!disableSort"
+          class="sortings__remove"
+          @click.stop="deleteSort(sort)"
+        >
           <i class="fas fa-times"></i>
         </a>
         <div class="sortings__description">
@@ -32,7 +36,7 @@
         <div class="sortings__field">
           <Dropdown
             :value="sort.field"
-            :disabled="readOnly"
+            :disabled="disableSort"
             class="dropdown--floating dropdown--tiny"
             @input="updateSort(sort, { field: $event })"
           >
@@ -55,7 +59,7 @@
         </div>
         <div
           class="sortings__order"
-          :class="{ 'sortings__order--disabled': readOnly }"
+          :class="{ 'sortings__order--disabled': disableSort }"
         >
           <a
             class="sortings__order-item"
@@ -118,7 +122,7 @@
         </div>
       </div>
       <template
-        v-if="view.sortings.length < availableFieldsLength && !readOnly"
+        v-if="view.sortings.length < availableFieldsLength && !disableSort"
       >
         <a
           ref="addContextToggle"
@@ -185,6 +189,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    disableSort: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -232,6 +240,7 @@ export default {
             field: field.id,
             value: 'ASC',
           },
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
       } catch (error) {
@@ -243,6 +252,7 @@ export default {
         await this.$store.dispatch('view/deleteSort', {
           view: this.view,
           sort,
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
       } catch (error) {
@@ -250,7 +260,7 @@ export default {
       }
     },
     async updateSort(sort, values) {
-      if (this.readOnly) {
+      if (this.disableSort) {
         return
       }
 
@@ -258,6 +268,7 @@ export default {
         await this.$store.dispatch('view/updateSort', {
           sort,
           values,
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
       } catch (error) {

@@ -20,6 +20,10 @@ export default {
       type: Number,
       required: true,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
     storePrefix: {
       type: String,
       required: true,
@@ -74,11 +78,12 @@ export default {
 
       try {
         await this.$store.dispatch(
-          this.storePrefix + 'view/grid/updateFieldOptionsOfField',
+          `${this.storePrefix}view/grid/updateFieldOptionsOfField`,
           {
             field: this.field,
             values: { width: newWidth },
             oldValues: { width: this.startWidth },
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {

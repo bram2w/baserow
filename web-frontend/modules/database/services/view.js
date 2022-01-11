@@ -61,5 +61,22 @@ export default (client) => {
     rotateSlug(viewId) {
       return client.post(`/database/views/${viewId}/rotate-slug/`)
     },
+    linkRowFieldLookup(slug, fieldId, page, search = null) {
+      const config = {
+        params: {
+          page,
+          size: 100,
+        },
+      }
+
+      if (search !== null) {
+        config.params.search = search
+      }
+
+      return client.get(
+        `/database/views/${slug}/link-row-field-lookup/${fieldId}/`,
+        config
+      )
+    },
   }
 }

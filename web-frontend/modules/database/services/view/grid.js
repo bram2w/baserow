@@ -9,20 +9,15 @@ export default (client) => {
       includeRowMetadata = true,
       search = false,
       publicUrl = false,
+      orderBy = '',
+      filters = {},
     }) {
-      const config = {
-        params: {
-          limit,
-        },
-      }
       const include = []
+      const params = new URLSearchParams()
+      params.append('limit', limit)
 
       if (offset !== null) {
-        config.params.offset = offset
-      }
-
-      if (cancelToken !== null) {
-        config.cancelToken = cancelToken
+        params.append('offset', offset)
       }
 
       if (includeFieldOptions) {
@@ -34,33 +29,59 @@ export default (client) => {
       }
 
       if (include.length > 0) {
-        config.params.include = include.join(',')
+        params.append('include', include.join(','))
       }
 
       if (search) {
-        config.params.search = search
+        params.append('search', search)
       }
 
-      const url = publicUrl ? 'public/rows/' : ''
-
-      return client.get(`/database/views/grid/${gridId}/${url}`, config)
-    },
-    fetchCount({ gridId, search, cancelToken = null, publicUrl = false }) {
-      const config = {
-        params: {
-          count: true,
-        },
+      if (orderBy) {
+        params.append('order_by', orderBy)
       }
+
+      Object.keys(filters).forEach((key) => {
+        filters[key].forEach((value) => {
+          params.append(key, value)
+        })
+      })
+
+      const config = { params }
+
       if (cancelToken !== null) {
         config.cancelToken = cancelToken
       }
 
+      const url = publicUrl ? 'public/rows/' : ''
+      return client.get(`/database/views/grid/${gridId}/${url}`, config)
+    },
+    fetchCount({
+      gridId,
+      search,
+      cancelToken = null,
+      publicUrl = false,
+      filters = {},
+    }) {
+      const params = new URLSearchParams()
+      params.append('count', true)
+
       if (search) {
-        config.params.search = search
+        params.append('search', search)
+      }
+
+      Object.keys(filters).forEach((key) => {
+        filters[key].forEach((value) => {
+          params.append(key, value)
+        })
+      })
+
+      const config = { params }
+
+      if (cancelToken !== null) {
+        config.cancelToken = cancelToken
       }
 
       const url = publicUrl ? 'public/rows/' : ''
-
       return client.get(`/database/views/grid/${gridId}/${url}`, config)
     },
     filterRows({ gridId, rowIds, fieldIds = null }) {

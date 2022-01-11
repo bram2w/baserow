@@ -384,6 +384,11 @@ def test_order_by_fields_string_queryset(data_fixture):
     with pytest.raises(OrderByFieldNotFound):
         model.objects.all().order_by_fields_string(f"{name_field.name}")
 
+    with pytest.raises(OrderByFieldNotFound):
+        model.objects.all().order_by_fields_string(
+            f"field_{name_field.id}", only_order_by_field_ids=[]
+        )
+
     with pytest.raises(OrderByFieldNotPossible):
         model.objects.all().order_by_fields_string(f"field_{link_field.id}")
 
@@ -581,6 +586,15 @@ def test_filter_by_fields_object_queryset(data_fixture):
                 f"filter__field_999999__equal": ["BMW"],
             },
             filter_type="AND",
+        )
+
+    with pytest.raises(FilterFieldNotFound):
+        model.objects.all().filter_by_fields_object(
+            filter_object={
+                f"filter__field_{name_field.id}__equal": ["BMW"],
+            },
+            filter_type="AND",
+            only_filter_by_field_ids=[],
         )
 
     with pytest.raises(ViewFilterTypeDoesNotExist):

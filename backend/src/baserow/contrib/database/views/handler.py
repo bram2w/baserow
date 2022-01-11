@@ -860,7 +860,9 @@ class ViewHandler:
             view_model = View
 
         try:
-            view = view_model.objects.get(slug=slug)
+            view = view_model.objects.select_related("table__database__group").get(
+                slug=slug
+            )
         except (view_model.DoesNotExist, ValidationError):
             raise ViewDoesNotExist("The view does not exist.")
 

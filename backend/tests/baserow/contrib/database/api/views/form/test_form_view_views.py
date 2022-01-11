@@ -501,25 +501,25 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # Anonymous, not existing slug.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": "NOT_EXISTING", "field_id": link_row_field.id},
     )
     response = api_client.get(url, {})
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
 
     # Anonymous, existing slug, but form is not public.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(url, format="json")
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
 
     # user that doesn't have access to the group, existing slug, but form is not public.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(
@@ -528,11 +528,11 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT" f" {token_2}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
 
     # valid user, existing slug, but invalid wrong field type.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": text_field.id},
     )
     response = api_client.get(
@@ -545,7 +545,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # valid user, existing slug, but invalid wrong field type.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": 0},
     )
     response = api_client.get(
@@ -558,7 +558,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # valid user, existing slug, but disabled link row field.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": disabled_link_row_field.id},
     )
     response = api_client.get(
@@ -571,7 +571,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # valid user, existing slug, but unrelated link row field.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": unrelated_link_row_field.id},
     )
     response = api_client.get(
@@ -587,7 +587,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # anonymous, existing slug, public form, correct link row field.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(
@@ -606,7 +606,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # same as before only now with search.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(
@@ -622,7 +622,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # same as before only now with pagination
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(

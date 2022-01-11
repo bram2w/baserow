@@ -11,13 +11,15 @@
           <a
             ref="viewsSelectToggle"
             class="header__filter-link"
+            :class="{ 'header__filter-link--disabled': views === null }"
             @click="
-              $refs.viewsContext.toggle(
-                $refs.viewsSelectToggle,
-                'bottom',
-                'left',
-                4
-              )
+              views !== null &&
+                $refs.viewsContext.toggle(
+                  $refs.viewsSelectToggle,
+                  'bottom',
+                  'left',
+                  4
+                )
             "
           >
             <template v-if="hasSelectedView">
@@ -29,12 +31,13 @@
                 <EditableViewName ref="rename" :view="view"></EditableViewName>
               </span>
             </template>
-            <span v-else>
+            <span v-else-if="view !== null">
               <i class="header__filter-icon fas fa-caret-square-down"></i>
               Choose view
             </span>
           </a>
           <ViewsContext
+            v-if="views !== null"
             ref="viewsContext"
             :table="table"
             :views="views"
@@ -77,6 +80,7 @@
             :fields="fields"
             :primary="primary"
             :read-only="readOnly"
+            :disable-filter="disableFilter"
             @changed="refresh()"
           ></ViewFilter>
         </li>
@@ -89,6 +93,7 @@
             :fields="fields"
             :primary="primary"
             :read-only="readOnly"
+            :disable-sort="disableSort"
             @changed="refresh()"
           ></ViewSort>
         </li>
@@ -183,8 +188,9 @@ export default {
       required: true,
     },
     views: {
-      type: Array,
-      required: true,
+      required: false,
+      validator: (prop) => typeof prop === 'object' || prop === undefined,
+      default: null,
     },
     view: {
       required: true,
@@ -195,6 +201,16 @@ export default {
       required: true,
     },
     readOnly: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    disableFilter: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    disableSort: {
       type: Boolean,
       required: false,
       default: false,

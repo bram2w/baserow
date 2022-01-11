@@ -235,7 +235,6 @@ export const actions = {
     data = populateField(data, this.$registry)
 
     if (field.primary) {
-      console.log('setting primary in force update')
       commit('SET_PRIMARY', data)
     } else {
       commit('UPDATE_ITEM', { id: field.id, values: data })

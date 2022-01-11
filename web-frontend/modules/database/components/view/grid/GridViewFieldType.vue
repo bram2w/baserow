@@ -101,11 +101,12 @@
         </li>
       </FieldContext>
       <GridViewFieldWidthHandle
-        v-if="includeFieldWidthHandles && !readOnly"
+        v-if="includeFieldWidthHandles"
         class="grid-view__description-width"
         :grid="view"
         :field="field"
         :width="width"
+        :read-only="readOnly"
         :store-prefix="storePrefix"
       ></GridViewFieldWidthHandle>
     </div>
@@ -244,10 +245,6 @@ export default {
       }
     },
     startDragging(event, field) {
-      if (this.readOnly) {
-        return
-      }
-
       event.preventDefault()
       this.$emit('dragging', { field, event })
     },

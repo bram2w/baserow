@@ -81,6 +81,7 @@ export default {
           {
             newFieldOptions,
             oldFieldOptions,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {
@@ -95,6 +96,7 @@ export default {
             field,
             values,
             oldValues,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {
@@ -107,6 +109,7 @@ export default {
           this.storePrefix + 'view/grid/updateFieldOptionsOrder',
           {
             order,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {

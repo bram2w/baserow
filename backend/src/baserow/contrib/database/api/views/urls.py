@@ -12,6 +12,7 @@ from .views import (
     ViewSortView,
     ViewFieldOptionsView,
     RotateViewSlugView,
+    PublicViewLinkRowFieldLookupView,
 )
 
 
@@ -21,6 +22,11 @@ urlpatterns = view_type_registry.api_urls + [
     re_path(r"table/(?P<table_id>[0-9]+)/$", ViewsView.as_view(), name="list"),
     re_path(
         r"table/(?P<table_id>[0-9]+)/order/$", OrderViewsView.as_view(), name="order"
+    ),
+    re_path(
+        r"(?P<slug>[-\w]+)/link-row-field-lookup/(?P<field_id>[0-9]+)/$",
+        PublicViewLinkRowFieldLookupView.as_view(),
+        name="link_row_field_lookup",
     ),
     re_path(
         r"filter/(?P<view_filter_id>[0-9]+)/$",

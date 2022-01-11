@@ -2,7 +2,7 @@
   <Dropdown
     :value="filter.value"
     :show-search="false"
-    :disabled="readOnly"
+    :disabled="disabled"
     class="filters__value-dropdown dropdown--tiny"
     @input="$emit('input', $event)"
   >

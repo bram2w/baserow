@@ -26,7 +26,7 @@ export default {
   },
   methods: {
     delayedUpdate(value, immediately = false) {
-      if (this.readOnly) {
+      if (this.disabled) {
         return
       }
 
