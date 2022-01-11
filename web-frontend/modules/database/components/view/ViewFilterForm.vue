@@ -19,16 +19,16 @@
       }"
     >
       <a
-        v-if="!readOnly"
+        v-if="!disableFilter"
         class="filters__remove"
-        @click.prevent="deleteFilter(filter)"
+        @click.stop.prevent="deleteFilter(filter)"
       >
         <i class="fas fa-times"></i>
       </a>
       <div class="filters__operator">
         <span v-if="index === 0">{{ $t('viewFilterContext.where') }}</span>
         <Dropdown
-          v-if="index === 1 && !readOnly"
+          v-if="index === 1 && !disableFilter"
           :value="view.filter_type"
           :show-search="false"
           class="dropdown--floating dropdown--tiny"
@@ -45,13 +45,15 @@
         </Dropdown>
         <span
           v-if="
-            (index > 1 || (index > 0 && readOnly)) && view.filter_type === 'AND'
+            (index > 1 || (index > 0 && disableFilter)) &&
+            view.filter_type === 'AND'
           "
           >{{ $t('viewFilterContext.and') }}</span
         >
         <span
           v-if="
-            (index > 1 || (index > 0 && readOnly)) && view.filter_type === 'OR'
+            (index > 1 || (index > 0 && disableFilter)) &&
+            view.filter_type === 'OR'
           "
           >{{ $t('viewFilterContext.or') }}</span
         >
@@ -59,7 +61,7 @@
       <div class="filters__field">
         <Dropdown
           :value="filter.field"
-          :disabled="readOnly"
+          :disabled="disableFilter"
           class="dropdown--floating dropdown--tiny"
           @input="updateFilter(filter, { field: $event })"
         >
@@ -80,7 +82,7 @@
       </div>
       <div class="filters__type">
         <Dropdown
-          :disabled="readOnly"
+          :disabled="disableFilter"
           :value="filter.type"
           class="dropdown--floating dropdown--tiny"
           @input="updateFilter(filter, { type: $event })"
@@ -103,14 +105,16 @@
           :is="getInputComponent(filter.type, filter.field)"
           :ref="'filter-' + filter.id + '-value'"
           :filter="filter"
+          :view="view"
           :fields="fields"
           :primary="primary"
+          :disabled="disableFilter"
           :read-only="readOnly"
           @input="updateFilter(filter, { value: $event })"
         />
       </div>
     </div>
-    <div v-if="!readOnly" class="filters_footer">
+    <div v-if="!disableFilter" class="filters_footer">
       <a class="filters__add" @click.prevent="addFilter()">
         <i class="fas fa-plus"></i>
         {{ $t('viewFilterContext.addFilter') }}</a
@@ -145,6 +149,10 @@ export default {
       required: true,
     },
     readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    disableFilter: {
       type: Boolean,
       required: true,
     },
@@ -208,6 +216,7 @@ export default {
             field: this.primary.id,
           },
           emitEvent: false,
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
 
@@ -224,6 +233,7 @@ export default {
         await this.$store.dispatch('view/deleteFilter', {
           view: this.view,
           filter,
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
       } catch (error) {
@@ -273,6 +283,7 @@ export default {
         await this.$store.dispatch('view/updateFilter', {
           filter,
           values,
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
       } catch (error) {
@@ -290,6 +301,7 @@ export default {
         await this.$store.dispatch('view/update', {
           view,
           values,
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
       } catch (error) {

@@ -25,6 +25,7 @@
         :fields="fields"
         :view="view"
         :read-only="readOnly"
+        :disable-filter="disableFilter"
         @changed="$emit('changed')"
       />
     </Context>
@@ -51,6 +52,10 @@ export default {
       required: true,
     },
     readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    disableFilter: {
       type: Boolean,
       required: true,
     },

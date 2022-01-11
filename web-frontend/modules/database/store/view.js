@@ -250,7 +250,7 @@ export const actions = {
   /**
    * Updates the values of the view with the provided id.
    */
-  async update({ commit, dispatch }, { view, values }) {
+  async update({ commit, dispatch }, { view, values, readOnly = false }) {
     const oldValues = {}
     const newValues = {}
     Object.keys(values).forEach((name) => {
@@ -263,7 +263,9 @@ export const actions = {
     dispatch('forceUpdate', { view, values: newValues })
 
     try {
-      await ViewService(this.$client).update(view.id, values)
+      if (!readOnly) {
+        await ViewService(this.$client).update(view.id, values)
+      }
       commit('SET_ITEM_LOADING', { view, value: false })
     } catch (error) {
       dispatch('forceUpdate', { view, values: oldValues })
@@ -380,7 +382,10 @@ export const actions = {
    * Creates a new filter and adds it to the store right away. If the API call succeeds
    * the row ID will be added, but if it fails it will be removed from the store.
    */
-  async createFilter({ commit }, { view, field, values, emitEvent = true }) {
+  async createFilter(
+    { commit },
+    { view, field, values, emitEvent = true, readOnly = false }
+  ) {
     // If the type is not provided we are going to choose the first available type.
     if (!Object.prototype.hasOwnProperty.call(values, 'type')) {
       const viewFilterTypes = this.$registry.getAll('viewFilter')
@@ -413,13 +418,18 @@ export const actions = {
     const filter = Object.assign({}, values)
     populateFilter(filter)
     filter.id = uuid()
-    filter._.loading = true
+    filter._.loading = !readOnly
 
     commit('ADD_FILTER', { view, filter })
 
     try {
-      const { data } = await FilterService(this.$client).create(view.id, values)
-      commit('FINALIZE_FILTER', { view, oldId: filter.id, id: data.id })
+      if (!readOnly) {
+        const { data } = await FilterService(this.$client).create(
+          view.id,
+          values
+        )
+        commit('FINALIZE_FILTER', { view, oldId: filter.id, id: data.id })
+      }
 
       if (emitEvent) {
         this.$bus.$emit('view-filter-created', { view, filter })
@@ -443,7 +453,10 @@ export const actions = {
    * Updates the filter values in the store right away. If the API call fails the
    * changes will be undone.
    */
-  async updateFilter({ dispatch, commit }, { filter, values }) {
+  async updateFilter(
+    { dispatch, commit },
+    { filter, values, readOnly = false }
+  ) {
     commit('SET_FILTER_LOADING', { filter, value: true })
 
     const oldValues = {}
@@ -462,7 +475,9 @@ export const actions = {
     dispatch('forceUpdateFilter', { filter, values: newValues })
 
     try {
-      await FilterService(this.$client).update(filter.id, values)
+      if (!readOnly) {
+        await FilterService(this.$client).update(filter.id, values)
+      }
       commit('SET_FILTER_LOADING', { filter, value: false })
     } catch (error) {
       dispatch('forceUpdateFilter', { filter, values: oldValues })
@@ -480,11 +495,13 @@ export const actions = {
    * Deletes an existing filter. A request to the server will be made first and
    * after that it will be deleted.
    */
-  async deleteFilter({ dispatch, commit }, { view, filter }) {
+  async deleteFilter({ dispatch, commit }, { view, filter, readOnly = false }) {
     commit('SET_FILTER_LOADING', { filter, value: true })
 
     try {
-      await FilterService(this.$client).delete(filter.id)
+      if (!readOnly) {
+        await FilterService(this.$client).delete(filter.id)
+      }
       dispatch('forceDeleteFilter', { view, filter })
     } catch (error) {
       commit('SET_FILTER_LOADING', { filter, value: false })
@@ -516,7 +533,7 @@ export const actions = {
    * Creates a new sort and adds it to the store right away. If the API call succeeds
    * the row ID will be added, but if it fails it will be removed from the store.
    */
-  async createSort({ commit }, { view, values }) {
+  async createSort({ getters, commit }, { view, values, readOnly = false }) {
     // If the order is not provided we are going to choose the ascending order.
     if (!Object.prototype.hasOwnProperty.call(values, 'order')) {
       values.order = 'ASC'
@@ -525,16 +542,18 @@ export const actions = {
     const sort = Object.assign({}, values)
     populateSort(sort)
     sort.id = uuid()
-    sort._.loading = true
+    sort._.loading = !readOnly
 
     commit('ADD_SORT', { view, sort })
 
-    try {
-      const { data } = await SortService(this.$client).create(view.id, values)
-      commit('FINALIZE_SORT', { view, oldId: sort.id, id: data.id })
-    } catch (error) {
-      commit('DELETE_SORT', { view, id: sort.id })
-      throw error
+    if (!readOnly) {
+      try {
+        const { data } = await SortService(this.$client).create(view.id, values)
+        commit('FINALIZE_SORT', { view, oldId: sort.id, id: data.id })
+      } catch (error) {
+        commit('DELETE_SORT', { view, id: sort.id })
+        throw error
+      }
     }
 
     return { sort }
@@ -551,7 +570,7 @@ export const actions = {
    * Updates the sort values in the store right away. If the API call fails the
    * changes will be undone.
    */
-  async updateSort({ dispatch, commit }, { sort, values }) {
+  async updateSort({ dispatch, commit }, { sort, values, readOnly = false }) {
     commit('SET_SORT_LOADING', { sort, value: true })
 
     const oldValues = {}
@@ -566,7 +585,9 @@ export const actions = {
     dispatch('forceUpdateSort', { sort, values: newValues })
 
     try {
-      await SortService(this.$client).update(sort.id, values)
+      if (!readOnly) {
+        await SortService(this.$client).update(sort.id, values)
+      }
       commit('SET_SORT_LOADING', { sort, value: false })
     } catch (error) {
       dispatch('forceUpdateSort', { sort, values: oldValues })
@@ -584,11 +605,13 @@ export const actions = {
    * Deletes an existing sort. A request to the server will be made first and
    * after that it will be deleted.
    */
-  async deleteSort({ dispatch, commit }, { view, sort }) {
+  async deleteSort({ dispatch, commit }, { view, sort, readOnly = false }) {
     commit('SET_SORT_LOADING', { sort, value: true })
 
     try {
-      await SortService(this.$client).delete(sort.id)
+      if (!readOnly) {
+        await SortService(this.$client).delete(sort.id)
+      }
       dispatch('forceDeleteSort', { view, sort })
     } catch (error) {
       commit('SET_SORT_LOADING', { sort, value: false })

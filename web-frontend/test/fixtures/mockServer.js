@@ -62,7 +62,14 @@ export class MockServer {
   nextSearchForTermWillReturn(searchTerm, gridView, results) {
     this.mock
       .onGet(`/database/views/grid/${gridView.id}/`, {
-        params: { count: true, search: searchTerm },
+        params: {
+          asymmetricMatch(actual) {
+            return (
+              actual.get('count') === 'true' &&
+              actual.get('search') === searchTerm
+            )
+          },
+        },
       })
       .reply(200, {
         count: results.length,
@@ -71,10 +78,14 @@ export class MockServer {
     this.mock
       .onGet(`/database/views/grid/${gridView.id}/`, {
         params: {
-          limit: 120,
-          offset: 0,
-          search: searchTerm,
-          include: 'row_metadata',
+          asymmetricMatch(actual) {
+            return (
+              actual.get('limit') === '120' &&
+              actual.get('offset') === '0' &&
+              actual.get('search') === searchTerm &&
+              actual.get('include') === 'row_metadata'
+            )
+          },
         },
       })
       .reply(200, {

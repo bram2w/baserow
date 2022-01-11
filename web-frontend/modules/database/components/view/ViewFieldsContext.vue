@@ -44,21 +44,15 @@
           v-for="field in filteredFields"
           :key="field.id"
           v-sortable="{
-            enabled: !readOnly,
             id: field.id,
             update: order,
             handle: '[data-field-handle]',
           }"
           class="hidings__item"
         >
-          <a
-            v-show="!readOnly"
-            class="hidings__item-handle"
-            data-field-handle
-          ></a>
+          <a class="hidings__item-handle" data-field-handle></a>
           <SwitchInput
             :value="!isHidden(field.id)"
-            :disabled="readOnly"
             @input="updateFieldOptionsOfField(field, { hidden: !$event })"
           >
             <i
@@ -70,7 +64,7 @@
         </li>
       </ul>
     </div>
-    <div v-if="!readOnly" v-show="query === ''" class="hidings__footer">
+    <div v-show="query === ''" class="hidings__footer">
       <button
         class="button button--ghost hidings__footer-button"
         @click="!noneSelected && updateAllFieldOptions({ hidden: true })"

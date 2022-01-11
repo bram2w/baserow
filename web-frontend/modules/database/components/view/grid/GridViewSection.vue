@@ -52,6 +52,7 @@
       :view="view"
       :fields="fields"
       :container-width="width"
+      :read-only="readOnly"
       :store-prefix="storePrefix"
       @scroll="$emit('scroll', $event)"
     ></GridViewFieldDragging>

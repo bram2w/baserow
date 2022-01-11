@@ -21,13 +21,14 @@
       :fields="fields"
       :primary="primary"
       :read-only="readOnly"
+      :disable-sort="disableSort"
       @changed="$emit('changed')"
     ></ViewSortContext>
   </div>
 </template>
 
 <script>
-import ViewSortContext from './ViewSortContext'
+import ViewSortContext from '@baserow/modules/database/components/view/ViewSortContext'
 
 export default {
   name: 'ViewSort',
@@ -48,6 +49,11 @@ export default {
     readOnly: {
       type: Boolean,
       required: true,
+    },
+    disableSort: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 }

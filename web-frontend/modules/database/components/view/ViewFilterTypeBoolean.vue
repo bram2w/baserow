@@ -1,5 +1,5 @@
 <template>
-  <Checkbox :value="copy" :disabled="readOnly" @input="input($event)">
+  <Checkbox :value="copy" :disabled="disabled" @input="input($event)">
     Selected
   </Checkbox>
 </template>

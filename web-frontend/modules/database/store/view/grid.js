@@ -43,6 +43,41 @@ function extractMetadataAndPopulateRow(data, rowIndex) {
   populateRow(row, metadata[row.id])
 }
 
+function getOrderBy(getters, rootGetters) {
+  if (getters.isPublic) {
+    const view = rootGetters['view/get'](getters.getLastGridId)
+    return view.sortings
+      .map((sort) => {
+        return `${sort.order === 'DESC' ? '-' : ''}field_${sort.field}`
+      })
+      .join(',')
+  } else {
+    return ''
+  }
+}
+
+function getFilters(getters, rootGetters) {
+  const filters = {}
+
+  if (getters.isPublic) {
+    const view = rootGetters['view/get'](getters.getLastGridId)
+
+    if (!view.filters_disabled) {
+      view.filters.forEach((filter) => {
+        const name = `filter__field_${filter.field}__${filter.type}`
+        if (!Object.prototype.hasOwnProperty.call(filters, name)) {
+          filters[name] = []
+        }
+        filters[name].push(filter.value)
+      })
+    }
+
+    filters.filter_type = [view.filter_type]
+  }
+
+  return filters
+}
+
 export const state = () => ({
   // The last used grid id.
   lastGridId: -1,
@@ -173,6 +208,30 @@ export const mutations = {
   },
   UPDATE_ALL_FIELD_OPTIONS(state, fieldOptions) {
     state.fieldOptions = _.merge({}, state.fieldOptions, fieldOptions)
+  },
+  /**
+   * Only adds the new field options and removes the deleted ones. The existing ones
+   * will be left untouched.
+   */
+  ADD_MISSING_FIELD_OPTIONS(state, fieldOptions) {
+    // Add the missing field options.
+    Object.keys(fieldOptions).forEach((key) => {
+      const exists = Object.prototype.hasOwnProperty.call(
+        state.fieldOptions,
+        key
+      )
+      if (!exists) {
+        Vue.set(state.fieldOptions, key, fieldOptions[key])
+      }
+    })
+
+    // Remove the deleted ones.
+    Object.keys(state.fieldOptions).forEach((key) => {
+      const exists = Object.prototype.hasOwnProperty.call(fieldOptions, key)
+      if (!exists) {
+        Vue.delete(state.fieldOptions, key)
+      }
+    })
   },
   UPDATE_FIELD_OPTIONS_OF_FIELD(state, { fieldId, values }) {
     if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
@@ -372,7 +431,7 @@ export const actions = {
    * anything other then we already have or waiting for a new request will be made.
    */
   fetchByScrollTop(
-    { commit, getters, dispatch },
+    { commit, getters, rootGetters, dispatch },
     { scrollTop, fields, primary }
   ) {
     const windowHeight = getters.getWindowHeight
@@ -480,6 +539,8 @@ export const actions = {
           cancelToken: lastSource.token,
           search: getters.getServerSearchTerm,
           publicUrl: getters.isPublic,
+          orderBy: getOrderBy(getters, rootGetters),
+          filters: getFilters(getters, rootGetters),
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
@@ -616,7 +677,7 @@ export const actions = {
    * Fetches an initial set of rows and adds that data to the store.
    */
   async fetchInitial(
-    { dispatch, commit, getters },
+    { dispatch, commit, getters, rootGetters },
     { gridId, fields, primary }
   ) {
     // Reset scrollTop when switching table
@@ -638,6 +699,8 @@ export const actions = {
       includeFieldOptions: true,
       search: getters.getServerSearchTerm,
       publicUrl: getters.isPublic,
+      orderBy: getOrderBy(getters, rootGetters),
+      filters: getFilters(getters, rootGetters),
     })
     data.results.forEach((part, index) => {
       extractMetadataAndPopulateRow(data, index)
@@ -668,7 +731,7 @@ export const actions = {
    * are provided in the refreshEvent.
    */
   refresh(
-    { dispatch, commit, getters },
+    { dispatch, commit, getters, rootGetters },
     { fields, primary, includeFieldOptions = false }
   ) {
     const gridId = getters.getLastGridId
@@ -682,6 +745,7 @@ export const actions = {
         search: getters.getServerSearchTerm,
         cancelToken: lastRefreshRequestSource.token,
         publicUrl: getters.isPublic,
+        filters: getFilters(getters, rootGetters),
       })
       .then((response) => {
         const count = response.data.count
@@ -704,6 +768,8 @@ export const actions = {
             cancelToken: lastRefreshRequestSource.token,
             search: getters.getServerSearchTerm,
             publicUrl: getters.isPublic,
+            orderBy: getOrderBy(getters, rootGetters),
+            filters: getFilters(getters, rootGetters),
           })
           .then(({ data }) => ({
             data,
@@ -726,7 +792,14 @@ export const actions = {
         })
         dispatch('updateSearch', { fields, primary })
         if (includeFieldOptions) {
-          commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
+          if (getters.isPublic) {
+            // If the view is public, then we're in read only mode and we want to
+            // keep our existing field options state. So in that case, we only need
+            // to add the missing ones.
+            commit('ADD_MISSING_FIELD_OPTIONS', data.field_options)
+          } else {
+            commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
+          }
         }
         lastRefreshRequest = null
       })
@@ -746,27 +819,30 @@ export const actions = {
    */
   async updateFieldOptionsOfField(
     { commit, getters },
-    { field, values, oldValues }
+    { field, values, oldValues, readOnly = false }
   ) {
-    const gridId = getters.getLastGridId
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
     })
-    const updateValues = { field_options: {} }
-    updateValues.field_options[field.id] = values
 
-    try {
-      await ViewService(this.$client).updateFieldOptions({
-        viewId: gridId,
-        values: updateValues,
-      })
-    } catch (error) {
-      commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
-        fieldId: field.id,
-        values: oldValues,
-      })
-      throw error
+    if (!readOnly) {
+      const gridId = getters.getLastGridId
+      const updateValues = { field_options: {} }
+      updateValues.field_options[field.id] = values
+
+      try {
+        await ViewService(this.$client).updateFieldOptions({
+          viewId: gridId,
+          values: updateValues,
+        })
+      } catch (error) {
+        commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
+          fieldId: field.id,
+          values: oldValues,
+        })
+        throw error
+      }
     }
   },
   /**
@@ -785,20 +861,23 @@ export const actions = {
    */
   async updateAllFieldOptions(
     { dispatch, getters },
-    { newFieldOptions, oldFieldOptions }
+    { newFieldOptions, oldFieldOptions, readOnly = false }
   ) {
-    const gridId = getters.getLastGridId
     dispatch('forceUpdateAllFieldOptions', newFieldOptions)
-    const updateValues = { field_options: newFieldOptions }
 
-    try {
-      await ViewService(this.$client).updateFieldOptions({
-        viewId: gridId,
-        values: updateValues,
-      })
-    } catch (error) {
-      dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
-      throw error
+    if (!readOnly) {
+      const gridId = getters.getLastGridId
+      const updateValues = { field_options: newFieldOptions }
+
+      try {
+        await ViewService(this.$client).updateFieldOptions({
+          viewId: gridId,
+          values: updateValues,
+        })
+      } catch (error) {
+        dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
+        throw error
+      }
     }
   },
   /**
@@ -811,7 +890,10 @@ export const actions = {
    * Updates the order of all the available field options. The provided order parameter
    * should be an array containing the field ids in the correct order.
    */
-  async updateFieldOptionsOrder({ commit, getters, dispatch }, { order }) {
+  async updateFieldOptionsOrder(
+    { commit, getters, dispatch },
+    { order, readOnly = false }
+  ) {
     const oldFieldOptions = clone(getters.getAllFieldOptions)
     const newFieldOptions = clone(getters.getAllFieldOptions)
 
@@ -836,6 +918,7 @@ export const actions = {
     return await dispatch('updateAllFieldOptions', {
       oldFieldOptions,
       newFieldOptions,
+      readOnly,
     })
   },
   /**

@@ -27,11 +27,36 @@ from baserow.contrib.database.api.views.grid.serializers import (
 from baserow.contrib.database.api.views.serializers import (
     FieldOptionsField,
 )
+from baserow.contrib.database.api.views.errors import (
+    ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+    ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+)
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
+    ERROR_ORDER_BY_FIELD_NOT_FOUND,
+    ERROR_FILTER_FIELD_NOT_FOUND,
+)
 from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GridView
-from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.registries import (
+    view_type_registry,
+    view_filter_type_registry,
+)
+from baserow.contrib.database.views.exceptions import (
+    ViewFilterTypeNotAllowedForField,
+    ViewFilterTypeDoesNotExist,
+)
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND,
+    FILTER_TYPE_OR,
+)
+from baserow.contrib.database.fields.exceptions import (
+    OrderByFieldNotFound,
+    OrderByFieldNotPossible,
+    FilterFieldNotFound,
+)
 from baserow.core.exceptions import UserNotInGroup
 from .errors import ERROR_GRID_DOES_NOT_EXIST
 from .serializers import GridViewFilterSerializer
@@ -275,8 +300,7 @@ class PublicGridViewRowsView(APIView):
                 name="slug",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.STR,
-                description="Returns only rows that belong to the related view's "
-                "table.",
+                description="Returns only rows that belong to the related view.",
             ),
             OpenApiParameter(
                 name="count",
@@ -332,6 +356,44 @@ class PublicGridViewRowsView(APIView):
                 description="If provided only rows with data that matches the search "
                 "query are going to be returned.",
             ),
+            OpenApiParameter(
+                name="order_by",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Optionally the rows can be ordered by provided field ids "
+                "separated by comma. By default a field is ordered in ascending (A-Z) "
+                "order, but by prepending the field with a '-' it can be ordered "
+                "descending (Z-A).",
+            ),
+            OpenApiParameter(
+                name="filter__{field}__{filter}",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    f"The rows can optionally be filtered by the same view filters "
+                    f"available for the views. Multiple filters can be provided if "
+                    f"they follow the same format. The field and filter variable "
+                    f"indicate how to filter and the value indicates where to filter "
+                    f"on.\n\n"
+                    f"For example if you provide the following GET parameter "
+                    f"`filter__field_1__equal=test` then only rows where the value of "
+                    f"field_1 is equal to test are going to be returned.\n\n"
+                    f"The following filters are available: "
+                    f'{", ".join(view_filter_type_registry.get_types())}.'
+                ),
+            ),
+            OpenApiParameter(
+                name="filter_type",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "`AND`: Indicates that the rows must match all the provided "
+                    "filters.\n"
+                    "`OR`: Indicates that the rows only have to match one of the "
+                    "filters.\n\n"
+                    "This works only if two or more filters are provided."
+                ),
+            ),
         ],
         tags=["Database table grid view"],
         operation_id="public_list_database_table_grid_view_rows",
@@ -366,6 +428,11 @@ class PublicGridViewRowsView(APIView):
         {
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
+            OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
+            OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
+            FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
+            ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+            ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
         }
     )
     @allowed_includes("field_options")
@@ -380,6 +447,7 @@ class PublicGridViewRowsView(APIView):
         """
 
         search = request.GET.get("search")
+        order_by = request.GET.get("order_by")
 
         view_handler = ViewHandler()
         view = view_handler.get_public_view_by_slug(request.user, slug, GridView)
@@ -395,13 +463,27 @@ class PublicGridViewRowsView(APIView):
         # We have to still make a model with all fields as the public rows should still
         # be filtered by hidden fields.
         model = view.table.get_model()
-        queryset = view_handler.get_queryset(
-            view,
-            search,
-            model,
-            only_sort_by_field_ids=publicly_visible_field_ids,
-            only_search_by_field_ids=publicly_visible_field_ids,
+        queryset = model.objects.all().enhance_by_fields()
+        queryset = view_handler.apply_filters(view, queryset)
+
+        if order_by:
+            queryset = queryset.order_by_fields_string(
+                order_by, False, publicly_visible_field_ids
+            )
+
+        filter_type_query_param = request.GET.get("filter_type", "AND")
+        filter_type = (
+            FILTER_TYPE_OR
+            if filter_type_query_param.upper() == "OR"
+            else FILTER_TYPE_AND
         )
+        filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}
+        queryset = queryset.filter_by_fields_object(
+            filter_object, filter_type, publicly_visible_field_ids
+        )
+
+        if search:
+            queryset = queryset.search_all_fields(search, publicly_visible_field_ids)
 
         if "count" in request.GET:
             return Response({"count": queryset.count()})
@@ -416,7 +498,6 @@ class PublicGridViewRowsView(APIView):
             model, RowSerializer, is_response=True, field_ids=publicly_visible_field_ids
         )
         serializer = serializer_class(page, many=True)
-
         response = paginator.get_paginated_response(serializer.data)
 
         if field_options:

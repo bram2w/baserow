@@ -5,7 +5,7 @@
     type="text"
     class="input filters__value-input"
     :class="{ 'input--error': $v.copy.$error }"
-    :disabled="readOnly"
+    :disabled="disabled"
     @input="delayedUpdate($event.target.value)"
     @keydown.enter="delayedUpdate($event.target.value, true)"
   />

@@ -251,6 +251,7 @@ class FormViewType(ViewType):
     can_filter = False
     can_sort = False
     can_share = True
+    restrict_link_row_public_view_sharing = False
     field_options_model_class = FormViewFieldOptions
     field_options_serializer_class = FormViewFieldOptionsSerializer
     allowed_fields = [
@@ -398,3 +399,10 @@ class FormViewType(ViewType):
             ] = field_option_object.id
 
         return form_view
+
+    def get_visible_field_options_in_order(self, form_view):
+        return (
+            form_view.get_field_options(create_if_missing=True)
+            .filter(enabled=True)
+            .order_by("-field__primary", "order", "field__id")
+        )

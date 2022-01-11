@@ -1,15 +1,25 @@
 <template>
+  <PaginatedDropdown
+    v-if="readOnly && view"
+    :fetch-page="fetchPage"
+    :value="filter.value"
+    :fetch-on-open="true"
+    :disabled="disabled"
+    class="filters__value-dropdown dropdown--tiny"
+    @input="$emit('input', $event)"
+  ></PaginatedDropdown>
   <a
+    v-else
     class="filters__value-link-row"
-    :class="{ 'filters__value-link-row--disabled': readOnly }"
-    @click.prevent="!readOnly && $refs.selectModal.show()"
+    :class="{ 'filters__value-link-row--disabled': disabled }"
+    @click.prevent="!disabled && $refs.selectModal.show()"
   >
     <template v-if="valid">
       {{ name || `unnamed row ${filter.value}` }}
     </template>
     <div v-else class="filters__value-link-row-choose">Choose row</div>
     <SelectRowModal
-      v-if="!readOnly"
+      v-if="!disabled"
       ref="selectModal"
       :table-id="field.link_row_table"
       @selected="setValue"
@@ -19,12 +29,14 @@
 
 <script>
 import { isNumeric } from '@baserow/modules/core/utils/string'
+import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdown'
 import SelectRowModal from '@baserow/modules/database/components/row/SelectRowModal'
 import viewFilter from '@baserow/modules/database/mixins/viewFilter'
+import ViewService from '@baserow/modules/database/services/view'
 
 export default {
   name: 'ViewFilterTypeLinkRow',
-  components: { SelectRowModal },
+  components: { PaginatedDropdown, SelectRowModal },
   mixins: [viewFilter],
   data() {
     return {
@@ -65,6 +77,14 @@ export default {
     setValue({ row, primary }) {
       this.setNameFromRow(row, primary)
       this.$emit('input', row.id.toString())
+    },
+    fetchPage(page, search) {
+      return ViewService(this.$client).linkRowFieldLookup(
+        this.view.id,
+        this.field.id,
+        page,
+        search
+      )
     },
   },
 }

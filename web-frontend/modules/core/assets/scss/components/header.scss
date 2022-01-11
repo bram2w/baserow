@@ -103,6 +103,11 @@
     background-color: $color-neutral-100;
   }
 
+  &--disabled:hover {
+    cursor: inherit;
+    background-color: transparent;
+  }
+
   &.active {
     background-color: $color-success-100;
   }

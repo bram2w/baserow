@@ -99,6 +99,7 @@ export default {
           {
             newFieldOptions,
             oldFieldOptions,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {
@@ -113,6 +114,7 @@ export default {
             field,
             values,
             oldValues,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {
@@ -125,6 +127,7 @@ export default {
           this.storePrefix + 'view/gallery/updateFieldOptionsOrder',
           {
             order,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {
@@ -136,6 +139,7 @@ export default {
         await this.$store.dispatch('view/update', {
           view: this.view,
           values: { card_cover_image_field: value },
+          readOnly: this.readOnly,
         })
       } catch (error) {
         notifyIf(error, 'view')

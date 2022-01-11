@@ -45,27 +45,30 @@ export default () => {
      */
     async updateFieldOptionsOfField(
       { commit, getters },
-      { field, values, oldValues }
+      { field, values, oldValues, readOnly = false }
     ) {
-      const viewId = getters.getViewId
       commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
         fieldId: field.id,
         values,
       })
-      const updateValues = { field_options: {} }
-      updateValues.field_options[field.id] = values
 
-      try {
-        await ViewService(this.$client).updateFieldOptions({
-          viewId,
-          values: updateValues,
-        })
-      } catch (error) {
-        commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
-          fieldId: field.id,
-          values: oldValues,
-        })
-        throw error
+      if (!readOnly) {
+        const viewId = getters.getViewId
+        const updateValues = { field_options: {} }
+        updateValues.field_options[field.id] = values
+
+        try {
+          await ViewService(this.$client).updateFieldOptions({
+            viewId,
+            values: updateValues,
+          })
+        } catch (error) {
+          commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
+            fieldId: field.id,
+            values: oldValues,
+          })
+          throw error
+        }
       }
     },
     /**
@@ -84,20 +87,23 @@ export default () => {
      */
     async updateAllFieldOptions(
       { dispatch, getters },
-      { newFieldOptions, oldFieldOptions }
+      { newFieldOptions, oldFieldOptions, readOnly = false }
     ) {
-      const viewId = getters.getViewId
       dispatch('forceUpdateAllFieldOptions', newFieldOptions)
-      const updateValues = { field_options: newFieldOptions }
 
-      try {
-        await ViewService(this.$client).updateFieldOptions({
-          viewId,
-          values: updateValues,
-        })
-      } catch (error) {
-        dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
-        throw error
+      if (!readOnly) {
+        const viewId = getters.getViewId
+        const updateValues = { field_options: newFieldOptions }
+
+        try {
+          await ViewService(this.$client).updateFieldOptions({
+            viewId,
+            values: updateValues,
+          })
+        } catch (error) {
+          dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
+          throw error
+        }
       }
     },
     /**
@@ -110,7 +116,10 @@ export default () => {
      * Updates the order of all the available field options. The provided order parameter
      * should be an array containing the field ids in the correct order.
      */
-    async updateFieldOptionsOrder({ commit, getters, dispatch }, { order }) {
+    async updateFieldOptionsOrder(
+      { commit, getters, dispatch },
+      { order, readOnly = false }
+    ) {
       const oldFieldOptions = clone(getters.getAllFieldOptions)
       const newFieldOptions = clone(getters.getAllFieldOptions)
 
@@ -135,6 +144,7 @@ export default () => {
       return await dispatch('updateAllFieldOptions', {
         oldFieldOptions,
         newFieldOptions,
+        readOnly,
       })
     },
     /**

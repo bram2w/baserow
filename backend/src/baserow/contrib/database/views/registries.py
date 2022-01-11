@@ -100,6 +100,14 @@ class ViewType(
     option changes.
     """
 
+    restrict_link_row_public_view_sharing = True
+    """
+    If a view is shared publicly, the `PublicViewLinkRowFieldLookupView` exposes all
+    the primary values of every visible `link_row` field in the view. This property
+    indicates whether the values should be restricted to existing relationships to
+    the view.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.can_share:
@@ -350,7 +358,8 @@ class ViewType(
         """
 
         raise NotImplementedError(
-            "An exportable or publicly sharable view must " "implement this"
+            "An exportable or publicly sharable view must implement "
+            "`get_visible_field_options_in_order`"
         )
 
     def get_hidden_field_options(self, view):
@@ -364,7 +373,8 @@ class ViewType(
         """
 
         raise NotImplementedError(
-            "An exportable or publicly sharable view must " "implement this"
+            "An exportable or publicly sharable view must implement "
+            "`get_hidden_field_options`"
         )
 
 
