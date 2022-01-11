@@ -86,6 +86,14 @@ class PolymorphicContentTypeMixin:
                 f"PolymorphicContentTypeMixin."
             )
 
+        if len(self.parent_ptrs()) > 1:
+            raise AttributeError(
+                f"The model "
+                f"{self.__class__.__name__}, has multiple model parents, however "
+                f"PolymorphicContentTypeMixin only allows a single parent and does "
+                f"not support multiple inheritance."
+            )
+
     def save(self, *args, **kwargs):
         self._ensure_content_type_is_set()
         super().save(*args, **kwargs)
@@ -120,6 +128,26 @@ class PolymorphicContentTypeMixin:
         content_type = ContentType.objects.get_for_id(self.content_type_id)
         return content_type.model_class()
 
+    def parent_ptrs(self):
+        model = self.__class__
+        concrete_model = model._meta.concrete_model
+        return [p for p in concrete_model._meta.parents.values() if p]
+
+    def all_parents_and_self(self):
+        parent_ptrs = self.parent_ptrs()
+        if len(parent_ptrs) == 0:
+            return [self]
+        elif len(parent_ptrs) == 1:
+            parent_name = parent_ptrs[0].name
+            return [*getattr(self, parent_name).all_parents_and_self(), self]
+        else:
+            raise AttributeError(
+                f"The model "
+                f"{self.__class__.__name__}, has multiple model parents, however "
+                f"PolymorphicContentTypeMixin only allows a single parent and does "
+                f"not support multiple inheritance."
+            )
+
     def change_polymorphic_type_to(self, new_model_class):
         """
         If you for example have two polymorphic types TypeA and TypeB which both have
@@ -137,7 +165,12 @@ class PolymorphicContentTypeMixin:
         field_names_to_remove = old_fields - new_fields
         field_names_to_add = new_fields - old_fields
 
-        self.delete(keep_parents=True)
+        all_parents_and_self = self.all_parents_and_self()
+        if len(all_parents_and_self) > 1:
+            # Delete the model instance one down from the root parent to preserve the
+            # polymorphic base type whilst ensuring we delete all other sub polymorphic
+            # types and none are left hanging in model hierarchies with multiple levels.
+            all_parents_and_self[1].delete(keep_parents=True)
         self.__class__ = new_model_class
         self.content_type = ContentType.objects.get_for_model(new_model_class)
 
