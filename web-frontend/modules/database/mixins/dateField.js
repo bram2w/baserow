@@ -134,7 +134,9 @@ export default {
      * Returns a human readable date placeholder of the format for the input.
      */
     getDatePlaceholder(field) {
-      return getDateHumanReadableFormat(field.date_format)
+      return this.$t(
+        'humanDateFormat.' + getDateHumanReadableFormat(field.date_format)
+      )
     },
     /**
      * Returns a human readable time placeholder of the format for the input.

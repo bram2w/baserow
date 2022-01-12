@@ -26,6 +26,7 @@
           :monday-first="true"
           :use-utc="true"
           :value="dateObject"
+          :language="datePickerLang[$i18n.locale]"
           class="datepicker"
           @input=";[setCopy($event, 'dateObject'), delayedUpdate(copy, true)]"
         ></date-picker>
@@ -41,6 +42,7 @@ import {
   getDateHumanReadableFormat,
 } from '@baserow/modules/database/utils/date'
 import filterTypeInput from '@baserow/modules/database/mixins/filterTypeInput'
+import { en, fr } from 'vuejs-datepicker/dist/locale'
 
 export default {
   name: 'ViewFilterTypeDate',
@@ -50,6 +52,10 @@ export default {
       copy: '',
       dateString: '',
       dateObject: '',
+      datePickerLang: {
+        en,
+        fr,
+      },
     }
   },
   watch: {
@@ -96,7 +102,9 @@ export default {
       }
     },
     getDatePlaceholder(field) {
-      return getDateHumanReadableFormat(field.date_format)
+      return this.$t(
+        'humanDateFormat.' + getDateHumanReadableFormat(field.date_format)
+      )
     },
     focus() {
       this.$refs.date.focus()
