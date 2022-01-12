@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fixed frontend errors occurring sometimes when mass deleting and restoring sorted 
+  fields
 * Added Video, Audio, PDF and some Office file preview.
 * Added rating field type.
 * Fix deleted options that appear in the command line JSON file export.

@@ -7,6 +7,10 @@ from baserow.api.user_files.serializers import (
     UserFileURLAndThumbnailsSerializerMixin,
 )
 from baserow.api.user_files.validators import user_file_name_validator
+from baserow.contrib.database.api.views.serializers import (
+    ViewSortSerializer,
+    ViewFilterSerializer,
+)
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 
@@ -32,6 +36,17 @@ class FieldSerializer(serializers.ModelSerializer):
             field = field_type_registry.get_by_model(instance.specific_class)
 
         return field.type
+
+
+class FieldWithFiltersAndSortsSerializer(FieldSerializer):
+    filters = ViewFilterSerializer(many=True, source="viewfilter_set")
+    sortings = ViewSortSerializer(many=True, source="viewsort_set")
+
+    class Meta(FieldSerializer.Meta):
+        fields = FieldSerializer.Meta.fields + (
+            "filters",
+            "sortings",
+        )
 
 
 class RelatedFieldsSerializer(serializers.Serializer):

@@ -4,7 +4,10 @@ from django.db import transaction
 from django.dispatch import receiver
 from rest_framework.serializers import Serializer
 
-from baserow.contrib.database.api.fields.serializers import FieldSerializer
+from baserow.contrib.database.api.fields.serializers import (
+    FieldWithFiltersAndSortsSerializer,
+    FieldSerializer,
+)
 from baserow.contrib.database.fields import signals as field_signals
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -122,6 +125,8 @@ class RealtimeFieldMessages:
         related_fields: Iterable[Field],
         field_serializer_class: Optional[Type[Serializer]] = None,
     ):
+        if field_serializer_class is None:
+            field_serializer_class = FieldWithFiltersAndSortsSerializer
         return {
             "type": "field_restored",
             "field": RealtimeFieldMessages.serialize_field_for_websockets(
