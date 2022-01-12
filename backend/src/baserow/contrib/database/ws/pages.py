@@ -3,6 +3,7 @@ from rest_framework.exceptions import NotAuthenticated
 
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.registries import view_type_registry
 from baserow.ws.registries import PageType
 
 from baserow.core.exceptions import UserNotInGroup
@@ -54,7 +55,10 @@ class PublicViewPageType(PageType):
 
         try:
             handler = ViewHandler()
-            handler.get_public_view_by_slug(user, slug)
+            view = handler.get_public_view_by_slug(user, slug)
+            view_type = view_type_registry.get_by_model(view.specific_class)
+            if not view_type.when_shared_publicly_requires_realtime_events:
+                return False
         except ViewDoesNotExist:
             return False
 

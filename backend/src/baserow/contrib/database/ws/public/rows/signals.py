@@ -12,6 +12,7 @@ from baserow.contrib.database.rows import signals as row_signals
 from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.ws.rows.signals import RealtimeRowMessages
 from baserow.ws.registries import page_registry
 
@@ -28,6 +29,10 @@ def _send_row_created_event_to_views(
     view_page_type = page_registry.get("view")
     handler = ViewHandler()
     for public_view in public_views:
+        view_type = view_type_registry.get_by_model(public_view.specific_class)
+        if not view_type.when_shared_publicly_requires_realtime_events:
+            continue
+
         restricted_serialized_row = handler.restrict_row_for_view(
             public_view, serialized_row
         )
@@ -48,6 +53,10 @@ def _send_row_deleted_event_to_views(
     view_page_type = page_registry.get("view")
     handler = ViewHandler()
     for public_view in public_views:
+        view_type = view_type_registry.get_by_model(public_view.specific_class)
+        if not view_type.when_shared_publicly_requires_realtime_events:
+            continue
+
         restricted_serialized_deleted_row = handler.restrict_row_for_view(
             public_view, serialized_deleted_row
         )
@@ -62,7 +71,9 @@ def _send_row_deleted_event_to_views(
 
 @receiver(row_signals.row_created)
 def public_row_created(sender, row, before, user, table, model, **kwargs):
-    row_checker = ViewHandler().get_public_views_row_checker(table, model)
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
     transaction.on_commit(
         lambda: _send_row_created_event_to_views(
             _serialize_row(model, row),
@@ -74,7 +85,9 @@ def public_row_created(sender, row, before, user, table, model, **kwargs):
 
 @receiver(row_signals.before_row_delete)
 def public_before_row_delete(sender, row, user, table, model, **kwargs):
-    row_checker = ViewHandler().get_public_views_row_checker(table, model)
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
     return {
         "deleted_row_public_views": (
             row_checker.get_public_views_where_row_is_visible(row)
@@ -106,7 +119,10 @@ def public_before_row_update(
     # `row_updated` receiver needs this serialized version because it can't serialize
     # the old row after it has been updated.
     row_checker = ViewHandler().get_public_views_row_checker(
-        table, model, updated_field_ids=updated_field_ids
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=updated_field_ids,
     )
     return {
         "old_row": _serialize_row(model, row),

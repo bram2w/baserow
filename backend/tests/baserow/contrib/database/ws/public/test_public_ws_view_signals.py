@@ -19,7 +19,7 @@ def test_when_view_filter_created_for_public_view_force_refresh_sent(
         user=user, view=public_view, type_name="equal", value="test", field=field
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -45,7 +45,7 @@ def test_when_view_filter_updated_for_public_view_force_refresh_event_sent(
     )
     ViewHandler().update_filter(user=user, view_filter=view_filter, value="test2")
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -71,7 +71,7 @@ def test_when_view_filter_deleted_for_public_view_force_refresh_event_sent(
     )
     ViewHandler().delete_filter(user=user, view_filter=view_filter)
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -93,14 +93,26 @@ def test_when_field_hidden_in_public_view_field_force_refresh_sent(
     text_field = data_fixture.create_text_field(table=table)
     public_grid_view = data_fixture.create_grid_view(table=table, public=True)
 
-    ViewHandler().update_field_options(
+    # No public events should be sent to form views
+    public_form_view = data_fixture.create_form_view(
+        user=user, table=table, public=True
+    )
+    handler = ViewHandler()
+    handler.update_field_options(
+        user=user,
+        view=public_form_view,
+        field_options={str(text_field.id): {"hidden": True}},
+    )
+
+    handler.update_field_options(
         user=user,
         view=public_grid_view,
         field_options={str(text_field.id): {"hidden": True}},
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
+            call(f"table-{table.id}", ANY, ANY),
             call(f"table-{table.id}", ANY, ANY),
             call(
                 f"view-{public_grid_view.slug}",
@@ -129,15 +141,26 @@ def test_when_field_unhidden_in_public_view_force_refresh_sent(
     data_fixture.create_grid_view_field_option(
         grid_view=public_grid_view, field=text_field, hidden=True
     )
+    handler = ViewHandler()
 
-    ViewHandler().update_field_options(
+    # No public events should be sent to form views
+    public_form_view = data_fixture.create_form_view(
+        user=user, table=table, public=True
+    )
+    handler.update_field_options(
+        user=user,
+        view=public_form_view,
+        field_options={str(text_field.id): {"hidden": False}},
+    )
+    handler.update_field_options(
         user=user,
         view=public_grid_view,
         field_options={str(text_field.id): {"hidden": False}},
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
+            call(f"table-{table.id}", ANY, ANY),
             call(f"table-{table.id}", ANY, ANY),
             call(
                 f"view-{public_grid_view.slug}",
@@ -180,8 +203,22 @@ def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
     data_fixture.create_grid_view_field_option(
         grid_view=public_grid_view, field=hidden_field, hidden=True
     )
+    handler = ViewHandler()
 
-    ViewHandler().update_field_options(
+    # No public events should be sent to form views
+    public_form_view = data_fixture.create_form_view(
+        user=user, table=table, public=True
+    )
+    handler.update_field_options(
+        user=user,
+        view=public_form_view,
+        field_options={
+            str(visible_field.id): {"width": 100},
+            str(hidden_field.id): {"width": 100},
+        },
+    )
+
+    handler.update_field_options(
         user=user,
         view=public_grid_view,
         field_options={
@@ -190,8 +227,9 @@ def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
         },
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
+            call(f"table-{table.id}", ANY, ANY),
             call(f"table-{table.id}", ANY, ANY),
             call(
                 f"view-{public_grid_view.slug}",

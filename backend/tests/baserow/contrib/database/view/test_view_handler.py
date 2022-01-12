@@ -1406,6 +1406,8 @@ def test_get_public_views_which_include_row(data_fixture, django_assert_num_quer
     public_view3 = data_fixture.create_grid_view(
         user, table=table, public=True, order=2
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view(user, table=table)
     data_fixture.create_grid_view_field_option(public_view1, hidden_field, hidden=True)
     data_fixture.create_grid_view_field_option(public_view2, hidden_field, hidden=True)
@@ -1452,8 +1454,7 @@ def test_get_public_views_which_include_row(data_fixture, django_assert_num_quer
 
     model = table.get_model()
     checker = ViewHandler().get_public_views_row_checker(
-        table,
-        model,
+        table, model, only_include_views_which_want_realtime_events=True
     )
     assert checker.get_public_views_where_row_is_visible(row) == [
         public_view1.view_ptr,
@@ -1478,6 +1479,8 @@ def test_public_view_row_checker_caches_when_only_unfiltered_fields_updated(
         table=table,
         public=True,
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
 
     data_fixture.create_view_filter(
         view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
@@ -1496,7 +1499,10 @@ def test_public_view_row_checker_caches_when_only_unfiltered_fields_updated(
         }
     )
     row_checker = ViewHandler().get_public_views_row_checker(
-        table, model, updated_field_ids=[unfiltered_field.id]
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[unfiltered_field.id],
     )
 
     assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
@@ -1526,6 +1532,8 @@ def test_public_view_row_checker_includes_public_views_with_no_filters_with_no_q
         table=table,
         public=True,
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
 
     model = table.get_model()
     visible_row = model.objects.create(
@@ -1541,7 +1549,10 @@ def test_public_view_row_checker_includes_public_views_with_no_filters_with_no_q
         }
     )
     row_checker = ViewHandler().get_public_views_row_checker(
-        table, model, updated_field_ids=[unfiltered_field.id]
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[unfiltered_field.id],
     )
 
     # It should precalculate that this view is always visible.
@@ -1567,6 +1578,8 @@ def test_public_view_row_checker_does_not_cache_when_any_filtered_fields_updated
         table=table,
         public=True,
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
 
     data_fixture.create_view_filter(
         view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
@@ -1585,7 +1598,10 @@ def test_public_view_row_checker_does_not_cache_when_any_filtered_fields_updated
         }
     )
     row_checker = ViewHandler().get_public_views_row_checker(
-        table, model, updated_field_ids=[filtered_field.id, unfiltered_field.id]
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[filtered_field.id, unfiltered_field.id],
     )
 
     assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
@@ -1617,6 +1633,8 @@ def test_public_view_row_checker_runs_expected_queries_on_init(
     public_grid_view = data_fixture.create_grid_view(
         user, table=table, public=True, order=0
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
 
     data_fixture.create_view_filter(
         view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
@@ -1625,7 +1643,10 @@ def test_public_view_row_checker_runs_expected_queries_on_init(
     with django_assert_num_queries(2):
         # First query to get the public views, second query to get their filters.
         ViewHandler().get_public_views_row_checker(
-            table, model, updated_field_ids=[filtered_field.id, unfiltered_field.id]
+            table,
+            model,
+            only_include_views_which_want_realtime_events=True,
+            updated_field_ids=[filtered_field.id, unfiltered_field.id],
         )
 
     another_public_grid_view = data_fixture.create_grid_view(
@@ -1643,7 +1664,10 @@ def test_public_view_row_checker_runs_expected_queries_on_init(
     with django_assert_num_queries(2):
         # First query to get the public views, second query to get their filters.
         ViewHandler().get_public_views_row_checker(
-            table, model, updated_field_ids=[filtered_field.id, unfiltered_field.id]
+            table,
+            model,
+            only_include_views_which_want_realtime_events=True,
+            updated_field_ids=[filtered_field.id, unfiltered_field.id],
         )
 
 
@@ -1658,6 +1682,8 @@ def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
     public_grid_view = data_fixture.create_grid_view(
         user, table=table, public=True, order=0
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
 
     # Public View 1 has filters which match row 1
     data_fixture.create_view_filter(
@@ -1677,7 +1703,10 @@ def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
         }
     )
     row_checker = ViewHandler().get_public_views_row_checker(
-        table, model, updated_field_ids=[filtered_field.id, unfiltered_field.id]
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[filtered_field.id, unfiltered_field.id],
     )
 
     with django_assert_num_queries(1):
@@ -1702,7 +1731,10 @@ def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
     )
 
     row_checker = ViewHandler().get_public_views_row_checker(
-        table, model, updated_field_ids=[filtered_field.id, unfiltered_field.id]
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[filtered_field.id, unfiltered_field.id],
     )
     with django_assert_num_queries(2):
         # Now should run two queries, one per public view

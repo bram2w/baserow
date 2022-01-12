@@ -108,6 +108,12 @@ class ViewType(
     the view.
     """
 
+    when_shared_publicly_requires_realtime_events = True
+    """
+    If a view is shared publicly, this controls whether or not realtime row, field
+    and view events will be available to subscribe to and sent to said subscribers.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.can_share:

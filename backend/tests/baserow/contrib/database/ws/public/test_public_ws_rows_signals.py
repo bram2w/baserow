@@ -24,6 +24,8 @@ def test_when_row_created_public_views_receive_restricted_row_created_ws_event(
     public_view_showing_all_fields = data_fixture.create_grid_view(
         user, table=table, public=True, order=1
     )
+    # No public events should be sent to this form view
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(
         public_view_only_showing_one_field, hidden_field, hidden=True
     )
@@ -36,7 +38,7 @@ def test_when_row_created_public_views_receive_restricted_row_created_ws_event(
         },
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -92,6 +94,8 @@ def test_when_row_created_public_views_receive_row_created_only_when_filters_mat
     public_view_hiding_row = data_fixture.create_grid_view(
         user, table=table, public=True, order=1
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(
         public_view_showing_row, hidden_field, hidden=True
     )
@@ -126,7 +130,7 @@ def test_when_row_created_public_views_receive_row_created_only_when_filters_mat
         },
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -164,6 +168,8 @@ def test_when_row_deleted_public_views_receive_restricted_row_deleted_ws_event(
     public_view_showing_all_fields = data_fixture.create_grid_view(
         user, table=table, public=True, order=1
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(
         public_view_only_showing_one_field, hidden_field, hidden=True
     )
@@ -176,7 +182,7 @@ def test_when_row_deleted_public_views_receive_restricted_row_deleted_ws_event(
     )
     RowHandler().delete_row(user, table, row.id, model)
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -230,6 +236,8 @@ def test_when_row_deleted_public_views_receive_row_deleted_only_when_filters_mat
     public_view_hiding_row = data_fixture.create_grid_view(
         user, table=table, public=True, order=1
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(
         public_view_showing_row, hidden_field, hidden=True
     )
@@ -264,7 +272,7 @@ def test_when_row_deleted_public_views_receive_row_deleted_only_when_filters_mat
     )
     RowHandler().delete_row(user, table, row.id, model)
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -299,6 +307,8 @@ def test_given_row_not_visible_in_public_view_when_updated_to_be_visible_event_s
     public_view_with_filters_initially_hiding_all_rows = data_fixture.create_grid_view(
         user, create_options=False, table=table, public=True, order=0
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(
         public_view_with_filters_initially_hiding_all_rows, hidden_field, hidden=True
     )
@@ -327,7 +337,9 @@ def test_given_row_not_visible_in_public_view_when_updated_to_be_visible_event_s
     )
 
     # Double check the row isn't visible in any views to begin with
-    row_checker = ViewHandler().get_public_views_row_checker(table, model)
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
     assert row_checker.get_public_views_where_row_is_visible(initially_hidden_row) == []
 
     RowHandler().update_row(
@@ -337,7 +349,7 @@ def test_given_row_not_visible_in_public_view_when_updated_to_be_visible_event_s
         values={f"field_{hidden_field.id}": "ValueWhichMatchesFilter"},
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -375,6 +387,8 @@ def test_given_row_visible_in_public_view_when_updated_to_be_not_visible_event_s
     public_view_with_row_showing = data_fixture.create_grid_view(
         user, create_options=False, table=table, public=True, order=0
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(
         public_view_with_row_showing, hidden_field, hidden=True
     )
@@ -403,7 +417,9 @@ def test_given_row_visible_in_public_view_when_updated_to_be_not_visible_event_s
     )
 
     # Double check the row is visible in the view to start with
-    row_checker = ViewHandler().get_public_views_row_checker(table, model)
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
     assert row_checker.get_public_views_where_row_is_visible(initially_visible_row) == [
         public_view_with_row_showing.view_ptr
     ]
@@ -419,7 +435,7 @@ def test_given_row_visible_in_public_view_when_updated_to_be_not_visible_event_s
         },
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -457,6 +473,8 @@ def test_given_row_visible_in_public_view_when_updated_to_still_be_visible_event
     public_view_with_row_showing = data_fixture.create_grid_view(
         user, create_options=False, table=table, public=True, order=0
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(
         public_view_with_row_showing, hidden_field, hidden=True
     )
@@ -485,7 +503,9 @@ def test_given_row_visible_in_public_view_when_updated_to_still_be_visible_event
     )
 
     # Double check the row is visible in the view to start with
-    row_checker = ViewHandler().get_public_views_row_checker(table, model)
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
     assert row_checker.get_public_views_where_row_is_visible(initially_visible_row) == [
         public_view_with_row_showing.view_ptr
     ]
@@ -501,7 +521,7 @@ def test_given_row_visible_in_public_view_when_updated_to_still_be_visible_event
         },
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -544,6 +564,8 @@ def test_when_row_restored_public_views_receive_restricted_row_created_ws_event(
     public_view_showing_all_fields = data_fixture.create_grid_view(
         user, table=table, public=True, order=1
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(
         public_view_only_showing_one_field, hidden_field, hidden=True
     )
@@ -559,7 +581,7 @@ def test_when_row_restored_public_views_receive_restricted_row_created_ws_event(
     )
     TrashHandler.restore_item(user, "row", row.id, parent_trash_item_id=table.id)
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -615,6 +637,8 @@ def test_when_row_restored_public_views_receive_row_created_only_when_filters_ma
     public_view_hiding_row = data_fixture.create_grid_view(
         user, table=table, public=True, order=1
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(
         public_view_showing_row, hidden_field, hidden=True
     )
@@ -652,7 +676,7 @@ def test_when_row_restored_public_views_receive_row_created_only_when_filters_ma
     )
     TrashHandler.restore_item(user, "row", row.id, parent_trash_item_id=table.id)
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -688,6 +712,8 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
     public_view = data_fixture.create_grid_view(
         user, create_options=False, table=table, public=True, order=0
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(public_view, hidden_field, hidden=True)
 
     # Match the visible field
@@ -720,7 +746,9 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
     )
 
     # Double check the row is visible in the view to start with
-    row_checker = ViewHandler().get_public_views_row_checker(table, model)
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
     assert row_checker.get_public_views_where_row_is_visible(visible_moving_row) == [
         public_view.view_ptr
     ]
@@ -731,7 +759,7 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
             user, table, visible_moving_row.id, before=invisible_row, model=model
         )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -774,6 +802,8 @@ def test_given_row_invisible_in_public_view_when_moved_no_update_sent(
     public_view = data_fixture.create_grid_view(
         user, create_options=False, table=table, public=True, order=0
     )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     data_fixture.create_grid_view_field_option(public_view, hidden_field, hidden=True)
 
     # Match the visible field
@@ -806,7 +836,9 @@ def test_given_row_invisible_in_public_view_when_moved_no_update_sent(
     )
 
     # Double check the row is visible in the view to start with
-    row_checker = ViewHandler().get_public_views_row_checker(table, model)
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
     assert row_checker.get_public_views_where_row_is_visible(invisible_moving_row) == []
 
     # Move the invisible row
@@ -815,7 +847,7 @@ def test_given_row_invisible_in_public_view_when_moved_no_update_sent(
             user, table, invisible_moving_row.id, before=visible_row, model=model
         )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
         ]
