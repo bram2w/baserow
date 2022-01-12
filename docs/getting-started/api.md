@@ -5,7 +5,7 @@ Baserow is divided into two components, the **backend** and the
 contains some documentation about those endpoints and how to use them. These endpoints
 should never be used to show data on your own website because that would mean you have
 to expose your credentials or JWT token. They should only be used the make changes in
-in your data. You can publicly expose your data in a safe way by creating a
+your data. You can publicly expose your data in a safe way by creating a
 [database token](https://api.baserow.io/api/redoc/#operation/create_database_token)
 token, set the permissions and follow the automatically generated api docs at
 https://baserow.io/api-docs.
@@ -24,7 +24,7 @@ https://api.baserow.io/api/schema.json.
 
 In order to use most of the endpoints you need an authorization token and in order to 
 get one you need an account. Below you will find a small example on how to create an 
-account
+account.
 
 ```
 POST /api/user/
@@ -49,7 +49,7 @@ curl -X POST -H 'Content-Type: application/json' -i https://api.baserow.io/api/u
 The server should respond with a `200` status code which means your account has been 
 created. The provided email address will be your username. More information about this 
 endpoint can be found in the API spec at 
-https://api.baserpw.io/api/redoc/#operation/create_user.
+https://api.baserow.io/api/redoc/#operation/create_user.
 
 Now that you have created an account, you need a JWT token to authorize each following
 request. This can be requested using the following example.
