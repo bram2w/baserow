@@ -30,6 +30,7 @@
 * Fixed bug preventing trash cleanup job from running after a lookup field was converted
   to another field type.
 * Added cover field to the Kanban view.
+* Fixed bug where not all rows were displayed on large screens.
 
 ## Released (2021-11-25)
 
