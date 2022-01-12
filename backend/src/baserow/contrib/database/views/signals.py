@@ -1,6 +1,6 @@
 from django.dispatch import Signal, receiver
 
-from baserow.contrib.database.fields.signals import field_deleted
+from baserow.contrib.database.fields import signals as field_signals
 from baserow.contrib.database.fields.models import FileField
 
 from .models import GalleryView
@@ -21,8 +21,8 @@ view_sort_deleted = Signal()
 view_field_options_updated = Signal()
 
 
-@receiver(field_deleted)
-def field_updated(sender, field, **kwargs):
+@receiver(field_signals.field_deleted)
+def field_deleted(sender, field, **kwargs):
     if isinstance(field, FileField):
         GalleryView.objects.filter(card_cover_image_field_id=field.id).update(
             card_cover_image_field_id=None

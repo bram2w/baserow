@@ -29,6 +29,7 @@
 * Fix the ability to make filters and sorts on invalid formula and lookup fields.
 * Fixed bug preventing trash cleanup job from running after a lookup field was converted
   to another field type.
+* Added cover field to the Kanban view.
 
 ## Released (2021-11-25)
 

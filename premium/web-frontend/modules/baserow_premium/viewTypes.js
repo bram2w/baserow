@@ -170,37 +170,20 @@ export class KanbanViewType extends PremiumViewType {
     )
   }
 
-  _setSingleSelectFieldToNull({ rootGetters, dispatch }, field) {
-    rootGetters['view/getAll']
-      .filter((view) => view.type === this.type)
-      .forEach((view) => {
-        if (view.single_select_field === field.id) {
-          dispatch(
-            'view/forceUpdate',
-            {
-              view,
-              values: { single_select_field: null },
-            },
-            { root: true }
-          )
-        }
-      })
-  }
-
   fieldUpdated(context, field, oldField, fieldType, storePrefix) {
-    // If the field type has changed from a single select field to something else,
-    // it could be that there are kanban views that depending on that field. So we
-    // need to change to type to null if that's the case.
+    // Make sure that all Kanban views don't depend on fields that
+    // have been converted to another type
     const type = SingleSelectFieldType.getType()
     if (oldField.type === type && field.type !== type) {
-      this._setSingleSelectFieldToNull(context, field)
+      this._setFieldToNull(context, field, 'single_select_field')
+      this._setFieldToNull(context, field, 'card_cover_image_field')
     }
   }
 
   fieldDeleted(context, field, fieldType, storePrefix = '') {
-    // We want to loop over all kanban views that we have in the store and check if
-    // they were depending on this deleted field. If that's case, we can set it to null
-    // because it doesn't exist anymore.
-    this._setSingleSelectFieldToNull(context, field)
+    // Make sure that all Kanban views don't depend on fields that
+    // have been deleted
+    this._setFieldToNull(context, field, 'single_select_field')
+    this._setFieldToNull(context, field, 'card_cover_image_field')
   }
 }

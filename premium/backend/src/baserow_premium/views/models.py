@@ -1,6 +1,6 @@
 from django.db import models
 
-from baserow.contrib.database.fields.models import Field, SingleSelectField
+from baserow.contrib.database.fields.models import Field, FileField, SingleSelectField
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 
@@ -15,6 +15,15 @@ class KanbanView(View):
         related_name="kanban_view_single_select_field",
         help_text="The single select field related to the options where rows should "
         "be stacked by.",
+    )
+    card_cover_image_field = models.ForeignKey(
+        FileField,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="kanban_view_card_cover_field",
+        help_text="References a file field of which the first image must be shown as "
+        "card cover image.",
     )
 
     class Meta:

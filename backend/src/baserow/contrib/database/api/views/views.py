@@ -219,7 +219,11 @@ class ViewsView(APIView):
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_FIELD_NOT_IN_TABLE",
+                ]
             ),
             404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
         },
@@ -345,7 +349,11 @@ class ViewView(APIView):
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_FIELD_NOT_IN_TABLE",
+                ]
             ),
             404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
         },
