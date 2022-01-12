@@ -46,6 +46,9 @@ def public_view_field_options_updated(sender, view, user, **kwargs):
         view = view.specific
         view_page_type = page_registry.get("view")
         view_type = view_type_registry.get_by_model(view)
+        if not view_type.when_shared_publicly_requires_realtime_events:
+            return
+
         field_options = view_type.get_visible_field_options_in_order(view)
         fields = [
             field_type_registry.get_serializer(o.field, PublicFieldSerializer).data

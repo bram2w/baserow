@@ -39,6 +39,8 @@ def test_when_field_created_public_views_are_sent_field_created_with_restricted_
     field_cache = FieldCache()
     FieldDependencyHandler().rebuild_dependencies(hidden_broken_field, field_cache)
     FieldDependencyHandler().rebuild_dependencies(visible_broken_field, field_cache)
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     public_view = data_fixture.create_grid_view(
         user, create_options=False, table=table, public=True, order=0
     )
@@ -49,7 +51,7 @@ def test_when_field_created_public_views_are_sent_field_created_with_restricted_
         user, table, "text", name="a", order=1
     )
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -96,6 +98,8 @@ def test_when_field_deleted_public_views_are_field_deleted_with_restricted_relat
     field_cache = FieldCache()
     FieldDependencyHandler().rebuild_dependencies(hidden_broken_field, field_cache)
     FieldDependencyHandler().rebuild_dependencies(visible_broken_field, field_cache)
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     public_view = data_fixture.create_grid_view(
         user, create_options=False, table=table, public=True, order=0
     )
@@ -105,7 +109,7 @@ def test_when_field_deleted_public_views_are_field_deleted_with_restricted_relat
     deleted_field_id = visible_field.id
     FieldHandler().delete_field(user, visible_field)
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(
@@ -147,6 +151,8 @@ def test_when_field_restored_public_views_sent_event_with_restricted_related_fie
     field_cache = FieldCache()
     FieldDependencyHandler().rebuild_dependencies(hidden_broken_field, field_cache)
     FieldDependencyHandler().rebuild_dependencies(visible_broken_field, field_cache)
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     public_view = data_fixture.create_grid_view(
         user, create_options=False, table=table, public=True, order=0
     )
@@ -157,7 +163,7 @@ def test_when_field_restored_public_views_sent_event_with_restricted_related_fie
     FieldHandler().delete_field(user, visible_field)
     TrashHandler().restore_item(user, "field", visible_field.id)
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(f"view-{public_view.slug}", ANY, ANY),
@@ -206,6 +212,8 @@ def test_when_field_updated_public_views_are_sent_event_with_restricted_related(
     field_cache = FieldCache()
     FieldDependencyHandler().rebuild_dependencies(hidden_broken_field, field_cache)
     FieldDependencyHandler().rebuild_dependencies(visible_broken_field, field_cache)
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
     public_view = data_fixture.create_grid_view(
         user, create_options=False, table=table, public=True, order=0
     )
@@ -214,7 +222,7 @@ def test_when_field_updated_public_views_are_sent_event_with_restricted_related(
     )
     updated_field = FieldHandler().update_field(user, visible_field, name="a")
 
-    mock_broadcast_to_channel_group.delay.assert_has_calls(
+    assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
             call(f"table-{table.id}", ANY, ANY),
             call(

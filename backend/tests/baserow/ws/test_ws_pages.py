@@ -52,6 +52,9 @@ async def test_join_page_as_anonymous_user(data_fixture):
     non_public_grid_view = data_fixture.create_grid_view(
         user_1, table=table_1, public=False
     )
+    public_form_view_which_cant_be_subbed = data_fixture.create_form_view(
+        user_1, table=table_1, public=True
+    )
 
     communicator_1 = WebsocketCommunicator(
         application,
@@ -80,6 +83,14 @@ async def test_join_page_as_anonymous_user(data_fixture):
     # Can't join a non public grid view page
     await communicator_1.send_json_to(
         {"page": "view", "slug": non_public_grid_view.slug}
+    )
+    assert communicator_1.output_queue.qsize() == 0
+    await communicator_1.disconnect()
+
+    # Can't join a public form view page as it has
+    # `FormViewTypewhen_shared_publicly_requires_realtime_events=False`
+    await communicator_1.send_json_to(
+        {"page": "view", "slug": public_form_view_which_cant_be_subbed.slug}
     )
     assert communicator_1.output_queue.qsize() == 0
     await communicator_1.disconnect()

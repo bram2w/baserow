@@ -38,6 +38,7 @@ class GridViewType(ViewType):
     field_options_model_class = GridViewFieldOptions
     field_options_serializer_class = GridViewFieldOptionsSerializer
     can_share = True
+    when_shared_publicly_requires_realtime_events = True
 
     def get_api_urls(self):
         from baserow.contrib.database.api.views.grid import urls as api_urls
@@ -252,6 +253,7 @@ class FormViewType(ViewType):
     can_sort = False
     can_share = True
     restrict_link_row_public_view_sharing = False
+    when_shared_publicly_requires_realtime_events = False
     field_options_model_class = FormViewFieldOptions
     field_options_serializer_class = FormViewFieldOptionsSerializer
     allowed_fields = [

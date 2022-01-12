@@ -929,7 +929,13 @@ class ViewHandler:
 
         return instance
 
-    def get_public_views_row_checker(self, table, model, updated_field_ids=None):
+    def get_public_views_row_checker(
+        self,
+        table,
+        model,
+        only_include_views_which_want_realtime_events,
+        updated_field_ids=None,
+    ):
         """
         Returns a CachingPublicViewRowChecker object which will have precalculated
         information about the public views in the provided table to aid with quickly
@@ -940,6 +946,9 @@ class ViewHandler:
 
         :param table: The table the row is in.
         :param model: The model of the table including all fields.
+        :param only_include_views_which_want_realtime_events: If True will only look
+            for public views where
+            ViewType.when_shared_publicly_requires_realtime_events is True.
         :param updated_field_ids: An optional iterable of field ids which will be
             updated on rows passed to the checker. If the checker is used on the same
             row multiple times and that row has been updated it will return invalid
@@ -947,7 +956,12 @@ class ViewHandler:
         :return: A list of non-specific public view instances.
         """
 
-        return CachingPublicViewRowChecker(table, model, updated_field_ids)
+        return CachingPublicViewRowChecker(
+            table,
+            model,
+            only_include_views_which_want_realtime_events,
+            updated_field_ids,
+        )
 
     def restrict_row_for_view(
         self, view: View, serialized_row: Dict[str, Any]
@@ -1001,6 +1015,7 @@ class CachingPublicViewRowChecker:
         self,
         table: Table,
         model: GeneratedTableModel,
+        only_include_views_which_want_realtime_events: bool,
         updated_field_ids: Optional[Iterable[int]] = None,
     ):
         self._public_views = (
@@ -1012,6 +1027,11 @@ class CachingPublicViewRowChecker:
         self._view_row_check_cache = defaultdict(dict)
         handler = ViewHandler()
         for view in self._public_views:
+            if only_include_views_which_want_realtime_events:
+                view_type = view_type_registry.get_by_model(view.specific_class)
+                if not view_type.when_shared_publicly_requires_realtime_events:
+                    continue
+
             if len(view.viewfilter_set.all()) == 0:
                 # If there are no view filters for this view then any row must always
                 # be visible in this view

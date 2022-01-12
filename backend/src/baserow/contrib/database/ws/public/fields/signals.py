@@ -66,6 +66,8 @@ def _get_views_where_field_visible_and_hidden_fields_in_view(
     for view in field.table.view_set.filter(public=True):
         view = view.specific
         view_type = view_type_registry.get_by_model(view)
+        if not view_type.when_shared_publicly_requires_realtime_events:
+            continue
 
         hidden_field_options_qs = view_type.get_hidden_field_options(view)
         if hidden_fields_field_ids_filter is not None:
