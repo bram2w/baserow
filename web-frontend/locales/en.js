@@ -269,6 +269,11 @@ export default {
     pdfBrowser: 'Open in browser',
     googleDocs: 'Open with Google Docs',
   },
+  humanDateFormat: {
+    'dd/mm/yyyy': 'dd/mm/yyyy',
+    'mm/dd/yyyy': 'mm/dd/yyyy',
+    'yyyy-mm-dd': 'yyyy-mm-dd',
+  },
   formulaFunctions: {
     upperDescription: 'Returns its argument in upper case',
     lowerDescription: 'Returns its argument in lower case',

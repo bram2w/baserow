@@ -273,6 +273,11 @@ export default {
     pdfBrowser: 'Ouvrir dans le navigateur',
     googleDocs: 'Ouvrir dans Google Docs',
   },
+  humanDateFormat: {
+    'dd/mm/yyyy': 'dd/mm/aaaa',
+    'mm/dd/yyyy': 'mm/dd/aaaa',
+    'yyyy-mm-dd': 'aaaa-mm-dd',
+  },
   formulaFunctions: {
     upperDescription: '@todo',
     lowerDescription: '@todo',
