@@ -10,13 +10,17 @@
     <div class="formula-field__description-text">
       {{ selectedItem.description }}
     </div>
-    <div class="formula-field__description-heading-2">Syntax</div>
+    <div class="formula-field__description-heading-2">
+      {{ $t('formulaFieldItemDescription.syntax') }}
+    </div>
     <pre
       v-for="usage in selectedItem.syntaxUsage"
       :key="usage.hashCode()"
       class="formula-field__description-example"
     ><code>{{ usage }}</code></pre>
-    <div class="formula-field__description-heading-2">Examples</div>
+    <div class="formula-field__description-heading-2">
+      {{ $t('formulaFieldItemDescription.examples') }}
+    </div>
     <pre
       v-for="example in selectedItem.examples"
       :key="example.hashCode()"
@@ -40,3 +44,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "formulaFieldItemDescription" : {
+      "syntax": "Syntax",
+      "examples": "Examples"
+    }
+  },
+  "fr": {
+    "formulaFieldItemDescription" : {
+      "syntax": "@todo",
+      "examples": "@todo"
+    }
+  }
+}
+</i18n>
