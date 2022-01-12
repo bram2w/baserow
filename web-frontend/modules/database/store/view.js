@@ -167,29 +167,6 @@ export const actions = {
     commit('SET_ITEM_LOADING', { view, value })
   },
   /**
-   * Refreshes the provided view from the server.
-   */
-  async refreshView({ commit, getters }, { view }) {
-    commit('SET_LOADING', true)
-
-    try {
-      if (view.id !== 0) {
-        const { data } = await ViewService(this.$client).get(
-          view.id,
-          true,
-          true
-        )
-        populateView(data, this.$registry)
-        commit('UPDATE_ITEM', { id: view.id, values: data })
-      }
-      commit('SET_LOADING', false)
-    } catch (error) {
-      commit('SET_LOADING', false)
-
-      throw error
-    }
-  },
-  /**
    * Fetches all the views of a given table. The is mostly called when the user
    * selects a different table.
    */
@@ -632,6 +609,38 @@ export const actions = {
     getters.getAll.forEach((view) => {
       commit('DELETE_FIELD_SORTINGS', { view, fieldId: field.id })
     })
+  },
+  /**
+   * Is called when a field is restored. Will force create all filters and sortings
+   * provided along with the field.
+   */
+  fieldRestored({ dispatch, commit, getters }, { field, fieldType, view }) {
+    dispatch('resetFieldsFiltersAndSortsInView', { field, view })
+  },
+  /**
+   * Called when a field is restored. Will force create all filters and sortings
+   * provided along with the field.
+   */
+  resetFieldsFiltersAndSortsInView(
+    { dispatch, commit, getters },
+    { field, view }
+  ) {
+    if (field.filters != null) {
+      commit('DELETE_FIELD_FILTERS', { view, fieldId: field.id })
+      field.filters
+        .filter((filter) => filter.view === view.id)
+        .forEach((filter) => {
+          dispatch('forceCreateFilter', { view, values: filter })
+        })
+    }
+    if (field.sortings != null) {
+      commit('DELETE_FIELD_SORTINGS', { view, fieldId: field.id })
+      field.sortings
+        .filter((sorting) => sorting.view === view.id)
+        .forEach((sorting) => {
+          dispatch('forceCreateSort', { view, values: sorting })
+        })
+    }
   },
   /**
    * Is called when a field is updated. It will check if there are filters related
