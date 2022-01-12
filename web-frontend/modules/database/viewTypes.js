@@ -292,6 +292,29 @@ export class ViewType extends Registerable {
   isDeactivated() {
     return false
   }
+
+  /**
+   * Helper function to set a field value to null for all
+   * views of the same type
+   * Used when fields are converted or deleted and should no
+   * longer be set
+   */
+  _setFieldToNull({ rootGetters, dispatch }, field, fieldName) {
+    rootGetters['view/getAll']
+      .filter((view) => view.type === this.type)
+      .forEach((view) => {
+        if (view[fieldName] === field.id) {
+          dispatch(
+            'view/forceUpdate',
+            {
+              view,
+              values: { [fieldName]: null },
+            },
+            { root: true }
+          )
+        }
+      })
+  }
 }
 
 export class GridViewType extends ViewType {
@@ -700,30 +723,13 @@ export class GalleryViewType extends BaseBufferedRowView {
     }
   }
 
-  _setCardCoverImageFieldToNull({ rootGetters, dispatch }, field) {
-    rootGetters['view/getAll']
-      .filter((view) => view.type === this.type)
-      .forEach((view) => {
-        if (view.card_cover_image_field === field.id) {
-          dispatch(
-            'view/forceUpdate',
-            {
-              view,
-              values: { card_cover_image_field: null },
-            },
-            { root: true }
-          )
-        }
-      })
-  }
-
   fieldUpdated(context, field, oldField, fieldType, storePrefix) {
     // If the field type has changed from a file field to something else, it could
     // be that there are gallery views that depending on that field. So we need to
     // change to type to null if that's the case.
     const type = FileFieldType.getType()
     if (oldField.type === type && field.type !== type) {
-      this._setCardCoverImageFieldToNull(context, field)
+      this._setFieldToNull(context, field, 'card_cover_image_field')
     }
   }
 
@@ -731,7 +737,7 @@ export class GalleryViewType extends BaseBufferedRowView {
     // We want to loop over all gallery views that we have in the store and check if
     // they were depending on this deleted field. If that's case, we can set it to null
     // because it doesn't exist anymore.
-    this._setCardCoverImageFieldToNull(context, field)
+    this._setFieldToNull(context, field, 'card_cover_image_field')
   }
 }
 

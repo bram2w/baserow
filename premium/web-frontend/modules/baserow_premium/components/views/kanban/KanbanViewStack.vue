@@ -77,6 +77,7 @@
               :key="'card-' + slot.id"
               :fields="cardFields"
               :row="slot.row"
+              :cover-image-field="coverImageField"
               :style="{
                 transform: `translateY(${
                   slot.position * cardHeight + bufferTop
@@ -203,7 +204,10 @@ export default {
      */
     cardHeight() {
       // 10 = margin-bottom of kanban.scss.kanban-view__stack-card
-      return getCardHeight(this.cardFields, null, this.$registry) + 10
+      return (
+        getCardHeight(this.cardFields, this.coverImageField, this.$registry) +
+        10
+      )
     },
     /**
      * Figure out what the stack id that's used in the store is. The representation is
@@ -219,6 +223,14 @@ export default {
     stack() {
       return this.$store.getters[this.storePrefix + 'view/kanban/getStack'](
         this.id
+      )
+    },
+    coverImageField() {
+      const fieldId = this.view.card_cover_image_field
+      return (
+        [this.primary]
+          .concat(this.fields)
+          .find((field) => field.id === fieldId) || null
       )
     },
   },

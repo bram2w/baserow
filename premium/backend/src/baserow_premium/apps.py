@@ -37,3 +37,4 @@ class BaserowPremiumConfig(AppConfig):
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow_premium.ws.signals  # noqa: F403, F401
+        import baserow_premium.views.signals  # noqa: F403, F401
