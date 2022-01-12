@@ -18,7 +18,7 @@
         </div>
       </div>
     </div>
-    <div v-if="$env.ENABLE_I18N" class="control">
+    <div class="control">
       <label class="control__label">
         <i class="fas fa-globe"></i> {{ $t('accountForm.languageLabel') }}
       </label>
