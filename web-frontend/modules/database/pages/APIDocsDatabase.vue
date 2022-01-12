@@ -60,6 +60,7 @@
         <APIDocsTableListRows
           v-model="exampleData"
           :table="table"
+          :navigate="navigate"
           :get-list-url="getListURL"
           :get-response-item="getResponseItem"
           :get-field-mapping="getFieldMapping"
@@ -160,31 +161,15 @@ export default {
       return error({ statusCode: 404, message: 'Database not found.' })
     }
 
-    const fields = {}
-    const withoutReadOnly = {}
-    const populateField = (field) => {
-      const fieldType = app.$registry.get('field', field.type)
-      field._ = {
-        type: fieldType.getDocsDataType(field),
-        description: fieldType.getDocsDescription(field),
-        requestExample: fieldType.getDocsRequestExample(field),
-        responseExample: fieldType.getDocsResponseExample(field),
-        fieldResponseExample: fieldType.getDocsFieldResponseExample(field),
-        isReadOnly: fieldType.isReadOnly,
-      }
-      return field
-    }
+    const fieldData = {}
 
     for (const i in database.tables) {
       const table = database.tables[i]
       const { data } = await FieldService(app.$client).fetchAll(table.id)
-      fields[table.id] = data.map((field) => populateField(field))
-      withoutReadOnly[table.id] = fields[table.id].filter(
-        (field) => !field._.isReadOnly
-      )
+      fieldData[table.id] = data
     }
 
-    return { database, fields, withoutReadOnly }
+    return { database, fieldData }
   },
   data() {
     return {
@@ -207,6 +192,21 @@ export default {
   computed: {
     userFieldNamesParam() {
       return this.exampleData.userFieldNames ? '?user_field_names=true' : ''
+    },
+    fields() {
+      return Object.fromEntries(
+        Object.entries(this.fieldData).map(([key, fields]) => {
+          return [key, fields.map((field) => this.populateField(field))]
+        })
+      )
+      // return this.fieldData.map((field) => populateField(field))
+    },
+    withoutReadOnly() {
+      return Object.fromEntries(
+        Object.entries(this.fieldData).map(([key, fields]) => {
+          return [key, fields.filter((field) => !field._.isReadOnly)]
+        })
+      )
     },
   },
   mounted() {
@@ -237,6 +237,21 @@ export default {
     window.removeEventListener('resize', this.$el.resizeEvent)
   },
   methods: {
+    /**
+     * Add metadata to fields
+     */
+    populateField(field) {
+      const fieldType = this.$registry.get('field', field.type)
+      field._ = {
+        type: fieldType.getDocsDataType(field),
+        description: fieldType.getDocsDescription(field),
+        requestExample: fieldType.getDocsRequestExample(field),
+        responseExample: fieldType.getDocsResponseExample(field),
+        fieldResponseExample: fieldType.getDocsFieldResponseExample(field),
+        isReadOnly: fieldType.isReadOnly,
+      }
+      return field
+    },
     /**
      * Called when the user scrolls or when the window is resized. It will check which
      * navigation item is active based on the scroll position of the available ids.

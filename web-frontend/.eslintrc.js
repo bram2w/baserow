@@ -25,5 +25,6 @@ module.exports = {
     'prettier/prettier': ['error'],
     'import/order': 'off',
     'vue/html-self-closing': 'off',
+    'vue/no-unused-components': 'warn',
   },
 }

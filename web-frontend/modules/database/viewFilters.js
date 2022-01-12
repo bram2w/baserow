@@ -238,7 +238,8 @@ export class HasFileTypeViewFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'has file type'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.hasFileType')
   }
 
   getExample() {
@@ -608,6 +609,10 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
     return this.getDefaultValue()
   }
 
+  getExample() {
+    return ''
+  }
+
   getSliceLength() {
     // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
     return 10
@@ -857,7 +862,8 @@ export class MultipleSelectHasFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'has'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.has')
   }
 
   getExample() {
@@ -888,7 +894,8 @@ export class MultipleSelectHasNotFilterType extends ViewFilterType {
   }
 
   getName() {
-    return 'has not'
+    const { i18n } = this.app
+    return i18n.t('viewFilter.hasNot')
   }
 
   getExample() {

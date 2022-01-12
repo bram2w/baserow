@@ -148,6 +148,7 @@ export default {
     inThisYear: 'in this year',
     lowerThan: 'lower than',
     lengthIsLowerThan: 'length is lower than',
+    hasFileType: 'has file type',
   },
   viewType: {
     grid: 'Grid',
@@ -252,6 +253,11 @@ export default {
     updateRow: 'Update row',
     moveRow: 'Move row',
     deleteRow: 'Delete row',
+    queryParameters: 'Query parameters',
+    pathParameters: 'Path parameters',
+    requestBodySchema: 'Request body schema',
+    userFieldNamesDescription:
+      'When any value is provided for the `user_field_names` GET param then field names returned by this endpoint will be the actual names of the fields.\n\n If the `user_field_names` GET param is not provided, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`.',
   },
   exporterType: {
     csv: 'Export to CSV',

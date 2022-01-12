@@ -7,34 +7,28 @@
       >
         {{ $t('apiDocs.updateRow') }}
       </h3>
-      <p class="api-docs__content">Updates an existing {{ table.name }} row.</p>
-      <h4 class="api-docs__heading-4">Path parameters</h4>
+      <p class="api-docs__content">
+        {{ $t('apiDocsTableUpdateRow.description', table) }}
+      </p>
+      <h4 class="api-docs__heading-4">{{ $t('apiDocs.pathParameters') }}</h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="row_id" type="integer">
-          The unique identifier of the row that needs to be updated.
+          {{ $t('apiDocsTableUpdateRow.rowId') }}
         </APIDocsParameter>
       </ul>
-      <h4 class="api-docs__heading-4">Query parameters</h4>
+      <h4 class="api-docs__heading-4">{{ $t('apiDocs.queryParameters') }}</h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="user_field_names" :optional="true" type="any">
-          When any value is provided for the
-          <code class="api-docs__code">user_field_names</code> GET param then
-          field names expected and returned by this endpoint will be the actual
-          field names. <br />
-          <br />
-          If the
-          <code class="api-docs__code">user_field_names</code> GET param is not
-          provided, then field names expected and returned will be
-          <code class="api-docs__code">field_</code> followed by the id of the
-          field. For example <code class="api-docs__code">field_1</code> refers
-          to the field with an id of <code class="api-docs__code">1</code>.
+          <MarkdownIt
+            class="api-docs__content"
+            :content="$t('apiDocs.userFieldNamesDescription')"
+          />
         </APIDocsParameter>
         <APIDocsParameter :optional="true" name="before" type="integer">
-          If provided then the newly created row will be positioned before the
-          row with the provided id.
+          {{ $t('apiDocsTableUpdateRow.before') }}
         </APIDocsParameter>
       </ul>
-      <h4 class="api-docs__heading-4">Request body schema</h4>
+      <h4 class="api-docs__heading-4">{{ $t('apiDocs.requestBodySchema') }}</h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter
           v-for="field in withoutReadOnly[table.id]"
@@ -94,10 +88,18 @@ export default {
 <i18n>
 {
   "en": {
-    "APIDocsTableUpdateRow":{
+    "apiDocsTableUpdateRow": {
+      "description": "Updates an existing {name} row.",
+      "rowId": "The unique identifier of the row that needs to be updated.",
+      "before": "If provided then the newly created row will be positioned before the row with the provided id."
     }
   },
   "fr": {
+    "apiDocsTableUpdateRow": {
+      "description": "Modifie une ligne existante de la table {name}.",
+      "rowId": "L'identifiant unique de la ligne a modifier.",
+      "before": "Si un identifiant de ligne est fourni, la ligne sera placée avant la ligne portant cet identifiant."
+    }
   }
 }
 </i18n>
