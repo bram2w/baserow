@@ -7,40 +7,32 @@
       >
         {{ $t('apiDocs.listFields') }}
       </h3>
-      <p class="api-docs__content">
-        To list fields of the {{ table.name }} table a
-        <code class="api-docs__code">GET</code> request has to be made to the
-        {{ table.name }} fields endpoint. It's only possible to list the fields
-        if the token has read, create or update permissions.
-      </p>
-      <h4 class="api-docs__heading-4">Result field properties</h4>
+      <MarkdownIt :content="$t('apiDocsTableListFields.description', table)" />
+      <h4 class="api-docs__heading-4">
+        {{ $t('apiDocsTableListFields.resultFieldProperties') }}
+      </h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="id" :optional="false" type="integer">
-          Field primary key. Can be used to generate the database column name by
-          adding
-          <code class="api-docs__code">field_</code> prefix.
+          <MarkdownIt :content="$t('apiDocsTableListFields.id')" />
         </APIDocsParameter>
         <APIDocsParameter name="name" :optional="false" type="string">
-          Field name.
+          {{ $t('apiDocsTableListFields.name') }}
         </APIDocsParameter>
         <APIDocsParameter name="table_id" :optional="false" type="integer">
-          Related table id.
+          {{ $t('apiDocsTableListFields.tableId') }}
         </APIDocsParameter>
         <APIDocsParameter name="order" :optional="false" type="integer">
-          Field order in table. 0 for the first field.
+          {{ $t('apiDocsTableListFields.order') }}
         </APIDocsParameter>
         <APIDocsParameter name="primary" :optional="false" type="boolean">
-          Indicates if the field is a primary field. If
-          <code class="api-docs__code">true</code> the field cannot be deleted
-          and the value should represent the whole row.
+          <MarkdownIt :content="$t('apiDocsTableListFields.primary')" />
         </APIDocsParameter>
         <APIDocsParameter name="type" :optional="false" type="string">
-          Type defined for this field.
+          {{ $t('apiDocsTableListFields.type') }}
         </APIDocsParameter>
       </ul>
       <p class="api-docs__content">
-        Some extra properties are not described here because they are type
-        specific.
+        {{ $t('apiDocsTableListFields.extraProps') }}
       </p>
     </div>
     <div class="api-docs__right">
@@ -94,9 +86,29 @@ export default {
 {
   "en": {
     "apiDocsTableListFields":{
+      "description": "To list fields of the {name} table a `GET` request has to be made to the {name} fields endpoint. It's only possible to list the fields if the token has read, create or update permissions.",
+      "resultFieldProperties": "Result field properties",
+      "id": "Field primary key. Can be used to generate the database column name by adding `field_` prefix.",
+      "name": "Field name.",
+      "tableId": "Related table id.",
+      "order": "Field order in table. 0 for the first field.",
+      "primary": "Indicates if the field is a primary field. If `true` the field cannot be deleted and the value should represent the whole row.",
+      "type": "Type defined for this field.",
+      "extraProps": "Some extra properties are not described here because they are type specific."
     }
   },
   "fr": {
+    "apiDocsTableListFields":{
+      "description": "Afin de lister les champs de la table {name} une requête de type {get} doit être envoyé auprès du point d'accès des champs de celle-ci. Le jeton d'authentification doit avoir les droits de création, modification et suppression afin de pouvoir lister les champs de la table.",
+      "resultFieldProperties": "Propriétés des champs de la réponse",
+      "id": "Clé primaire du champ. Permet de générer le nom de la colonne en base de données en ajoutant le prefix `field_`.",
+      "name": "Nom du champ.",
+      "tableId": "Clé étrangère de la table.",
+      "order": "Ordre du champ dans la table. 0 est le premier champ.",
+      "primary": "Indique si le champ est une clé primaire. Si la valeur est `true` le champ ne peut être effacé et ses valeurs doivent représenter la ligne entière.",
+      "type": "Type définit pour ce champ.",
+      "extraProps": "Certaines propriétés ne sont pas décrites ici car elles sont spécifiques au type de champ concerné."
+    }
   }
 }
 </i18n>

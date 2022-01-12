@@ -7,11 +7,13 @@
       >
         {{ $t('apiDocs.deleteRow') }}
       </h3>
-      <p class="api-docs__content">Deletes an existing {{ table.name }} row.</p>
-      <h4 class="api-docs__heading-4">Path parameters</h4>
+      <p class="api-docs__content">
+        {{ $t('apiDocsTableDeleteRow.description', table) }}
+      </p>
+      <h4 class="api-docs__heading-4">{{ $t('apiDocs.pathParameters') }}</h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="row_id" type="integer">
-          The unique identifier of the row that needs to be deleted.
+          {{ $t('apiDocsTableDeleteRow.rowId') }}
         </APIDocsParameter>
       </ul>
     </div>
@@ -45,17 +47,22 @@ export default {
     table: { type: Object, required: true },
     getItemUrl: { type: Function, required: true },
   },
-  methods: {},
 }
 </script>
 
 <i18n>
 {
   "en": {
-    "APIDocsTableDeleteRow":{
+    "apiDocsTableDeleteRow":{
+      "description": "Deletes an existing {name} row.",
+      "rowId": "The unique identifier of the row that needs to be deleted."
     }
   },
   "fr": {
+    "apiDocsTableDeleteRow":{
+      "description": "Supprime une ligne de la table *{name}*.",
+      "rowId": "L'identifiant unique de la ligne à supprimer."
+    }
   }
 }
 </i18n>

@@ -7,9 +7,9 @@
       <table class="api-docs__table">
         <thead>
           <tr>
-            <th>Filter</th>
-            <th>Example value</th>
-            <th>Full example</th>
+            <th>{{ $t('apiDocsFilters.filter') }}</th>
+            <th>{{ $t('apiDocsFilters.exampleValue') }}</th>
+            <th>{{ $t('apiDocsFilters.example') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -17,7 +17,7 @@
             <td>{{ filter.type }}</td>
             <td>{{ filter.example }}</td>
             <td>
-              field {{ filter.getName() }}
+              {{ $t('apiDocsFilters.field', { name: filter.getName() }) }}
               <template v-if="filter.example !== ''"
                 >'{{ filter.example }}'</template
               >
@@ -45,9 +45,19 @@ export default {
 {
   "en": {
     "apiDocsFilters":{
+      "filter": "Filter",
+      "exampleValue": "Example value",
+      "example": "Full example",
+      "field": "field {name}"
     }
   },
   "fr": {
+    "apiDocsFilters":{
+      "filter": "Filtre",
+      "exampleValue": "Example",
+      "example": "Example complet",
+      "field": "La valeur {name}"
+    }
   }
 }
 </i18n>

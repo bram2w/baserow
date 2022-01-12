@@ -165,14 +165,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsMenu":{
-    }
-  },
-  "fr": {
-  }
-}
-</i18n>

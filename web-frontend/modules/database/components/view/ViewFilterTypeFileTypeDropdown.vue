@@ -6,8 +6,14 @@
     class="filters__value-dropdown dropdown--tiny"
     @input="$emit('input', $event)"
   >
-    <DropdownItem name="image" value="image"></DropdownItem>
-    <DropdownItem name="document" value="document"></DropdownItem>
+    <DropdownItem
+      :name="$t('viewFilterFileTypeDropdown.image')"
+      value="image"
+    ></DropdownItem>
+    <DropdownItem
+      :name="$t('viewFilterFileTypeDropdown.document')"
+      value="document"
+    ></DropdownItem>
   </Dropdown>
 </template>
 
@@ -34,3 +40,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "viewFilterFileTypeDropdown": {
+      "image": "Image",
+      "document": "Document"
+    }
+  },
+  "fr": {
+    "viewFilterFileTypeDropdown": {
+      "image": "Image",
+      "document": "Document"
+    }
+  }
+}
+</i18n>

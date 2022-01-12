@@ -1,9 +1,11 @@
 <template>
   <div class="item">
     <div class="api-docs__left">
-      <h2 :id="'section-table-' + table.id">{{ table.name }} table</h2>
+      <h2 :id="'section-table-' + table.id">
+        {{ $t('apiDocsTableFields.tableTitle', table) }}
+      </h2>
       <p class="api-docs__content">
-        The ID of this table is:
+        {{ $t('apiDocsTableFields.tableId') }}
         <code class="api-docs__code">{{ table.id }}</code>
       </p>
       <h3
@@ -13,15 +15,17 @@
         {{ $t('apiDocs.fields') }}
       </h3>
       <p class="api-docs__content">
-        Each row in the {{ table.name }} table contains the following fields.
+        {{ $t('apiDocsTableFields.description', table) }}
       </p>
       <table class="api-docs__table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Compatible filters</th>
+            <th>{{ $t('apiDocsTableFields.id') }}</th>
+            <th>{{ $t('apiDocsTableFields.name') }}</th>
+            <th>{{ $t('apiDocsTableFields.type') }}</th>
+            <th>
+              {{ $t('apiDocsTableFields.compatibleFilters') }}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -93,9 +97,25 @@ export default {
 {
   "en": {
     "apiDocsTableFields":{
+      "tableTitle": "{name} table",
+      "tableId": "The ID of this table is:",
+      "description": "Each row in the {name} table contains the following fields.",
+      "id": "ID",
+      "name": "Name",
+      "type": "Type",
+      "compatibleFilters": "Compatible filters"
     }
   },
   "fr": {
+    "apiDocsTableFields":{
+      "tableTitle": "Table {name}",
+      "tableId": "L'identifiant de cette table est :",
+      "description": "Chaque ligne dans la table « {name} » contient les champs décrits ci-dessous.",
+      "id": "ID",
+      "name": "Nom",
+      "type": "Type",
+      "compatibleFilters": "Filtres compatibles"
+    }
   }
 }
 </i18n>

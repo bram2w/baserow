@@ -7,28 +7,26 @@
       >
         {{ $t('apiDocs.createRow') }}
       </h3>
-      <p class="api-docs__content">Create a new {{ table.name }} row.</p>
-      <h4 class="api-docs__heading-4">Query parameters</h4>
+      <p class="api-docs__content">
+        {{ $t('apiDocsTableCreateRow.description', table) }}
+      </p>
+      <h4 class="api-docs__heading-4">
+        {{ $t('apiDocs.queryParameters') }}
+      </h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="user_field_names" :optional="true" type="any">
-          When any value is provided for the
-          <code class="api-docs__code">user_field_names</code> GET param then
-          field names expected and returned by this endpoint will be the actual
-          field names. <br />
-          <br />
-          If the
-          <code class="api-docs__code">user_field_names</code> GET param is not
-          provided, then field names expected and returned will be
-          <code class="api-docs__code">field_</code> followed by the id of the
-          field. For example <code class="api-docs__code">field_1</code> refers
-          to the field with an id of <code class="api-docs__code">1</code>.
+          <MarkdownIt
+            class="api-docs__content"
+            :content="$t('apiDocs.userFieldNamesDescription')"
+          />
         </APIDocsParameter>
         <APIDocsParameter :optional="true" name="before" type="integer">
-          If provided then the newly created row will be positioned before the
-          row with the provided id.
+          {{ $t('apiDocsTableCreateRow.before') }}
         </APIDocsParameter>
       </ul>
-      <h4 class="api-docs__heading-4">Request body schema</h4>
+      <h4 class="api-docs__heading-4">
+        {{ $t('apiDocs.requestBodySchema') }}
+      </h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter
           v-for="field in withoutReadOnly[table.id]"
@@ -81,17 +79,22 @@ export default {
     getFieldMapping: { type: Function, required: true },
     getRequestExample: { type: Function, required: true },
   },
-  methods: {},
 }
 </script>
 
 <i18n>
 {
   "en": {
-    "APIDocsTableCreateRow":{
+    "apiDocsTableCreateRow":{
+      "description": "Create a new {name} row.",
+      "before": "If provided then the newly created row will be positioned before the row with the provided id."
     }
   },
   "fr": {
+    "apiDocsTableCreateRow":{
+      "description": "Créé une nouvelle ligne pour la table {name}.",
+      "before": "Si ce paramètre est fourni, la nouvelle ligne sera positionnée avant la ligne portant l'identifiant fourni."
+    }
   }
 }
 </i18n>

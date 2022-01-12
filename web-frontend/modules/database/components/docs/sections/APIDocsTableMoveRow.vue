@@ -7,36 +7,26 @@
       >
         {{ $t('apiDocs.moveRow') }}
       </h3>
-      <p class="api-docs__content">
-        Moves an existing {{ table.name }} row before another row. If no
-        `before_id` is provided, then the row will be moved to the end of the
-        table.
-      </p>
-      <h4 class="api-docs__heading-4">Path parameters</h4>
+      <MarkdownIt
+        class="api-docs__content"
+        :content="$t('apiDocsTableMoveRow.description', table)"
+      />
+      <h4 class="api-docs__heading-4">{{ $t('apiDocs.pathParameters') }}</h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="row_id" type="integer">
-          Moves the row related to the value.
+          {{ $t('apiDocsTableMoveRow.rowId') }}
         </APIDocsParameter>
       </ul>
-      <h4 class="api-docs__heading-4">Query parameters</h4>
+      <h4 class="api-docs__heading-4">{{ $t('apiDocs.queryParameters') }}</h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="user_field_names" :optional="true" type="any">
-          When any value is provided for the
-          <code class="api-docs__code">user_field_names</code> GET param then
-          field names returned by this endpoint will be the actual names of the
-          fields. <br />
-          <br />
-          If the
-          <code class="api-docs__code">user_field_names</code> GET param is not
-          provided, then all returned field names will be
-          <code class="api-docs__code">field_</code> followed by the id of the
-          field. For example <code class="api-docs__code">field_1</code> refers
-          to the field with an id of <code class="api-docs__code">1</code>.
+          <MarkdownIt
+            class="api-docs__content"
+            :content="$t('apiDocs.userFieldNamesDescription')"
+          />
         </APIDocsParameter>
         <APIDocsParameter name="before_id" type="integer" :optional="true">
-          Moves the row related to the given `row_id` before the row related to
-          the provided value. If not provided, then the row will be moved to the
-          end.
+          {{ $t('apiDocsTableMoveRow.before') }}
         </APIDocsParameter>
       </ul>
     </div>
@@ -85,10 +75,18 @@ export default {
 <i18n>
 {
   "en": {
-    "APIDocsTableMoveRow":{
+    "apiDocsTableMoveRow": {
+      "description": "Moves an existing {name} row before another row. If no `before_id` is provided, then the row will be moved to the end of the table.",
+      "rowId": "Moves the row related to the value.",
+      "before": "Moves the row related to the given `row_id` before the row related to the provided value. If not provided, then the row will be moved to the end."
     }
   },
   "fr": {
+    "apiDocsTableMoveRow": {
+      "description": "Déplace une ligne existante de la table *{name}* avant une autre ligne. Si le paramètre `before_id` n'est pas fourni, la ligne est déplacée à la fin de la table.",
+      "rowId": "Identifiant unique de la ligne à déplacer.",
+      "before": "Permet de définir l'identifiant de la ligne avant laquelle la ligne choisie doit être déplacée. Si aucune valeur n'est fournie, la ligne est déplacée à la fin de la table."
+    }
   }
 }
 </i18n>

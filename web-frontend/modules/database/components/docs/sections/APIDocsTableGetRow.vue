@@ -7,27 +7,23 @@
       >
         {{ $t('apiDocs.getRow') }}
       </h3>
-      <p class="api-docs__content">Fetch a single {{ table.name }} row.</p>
-      <h4 class="api-docs__heading-4">Path parameters</h4>
+      <p class="api-docs__content">
+        {{ $t('apiDocsTableGetRow.description', table) }}
+      </p>
+      <h4 class="api-docs__heading-4">
+        {{ $t('apiDocs.pathParameters') }}
+      </h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="row_id" type="integer">
-          The unique identifier of the row that is requested.
+          {{ $t('apiDocsTableGetRow.rowId') }}
         </APIDocsParameter>
       </ul>
-      <h4 class="api-docs__heading-4">Query parameters</h4>
+      <h4 class="api-docs__heading-4">
+        {{ $t('apiDocs.queryParameters') }}
+      </h4>
       <ul class="api-docs__parameters">
         <APIDocsParameter name="user_field_names" :optional="true" type="any">
-          When any value is provided for the
-          <code class="api-docs__code">user_field_names</code> GET param then
-          field names returned by this endpoint will be the actual names of the
-          fields. <br />
-          <br />
-          If the
-          <code class="api-docs__code">user_field_names</code> GET param is not
-          provided, then all returned field names will be
-          <code class="api-docs__code">field_</code> followed by the id of the
-          field. For example <code class="api-docs__code">field_1</code> refers
-          to the field with an id of <code class="api-docs__code">1</code>.
+          <MarkdownIt :content="$t('apiDocs.userFieldNamesDescription')" />
         </APIDocsParameter>
       </ul>
     </div>
@@ -71,10 +67,16 @@ export default {
 <i18n>
 {
   "en": {
-    "APIDocsTableGetRow":{
+    "apiDocsTableGetRow":{
+      "description": "Fetch a single {name} row.",
+      "rowId": "The unique identifier of the row that is requested."
     }
   },
   "fr": {
+    "apiDocsTableGetRow":{
+      "description": "Retour une ligne de la table {name}.",
+      "rowId": "L'identifiant unique de la ligne demandée."
+    }
   }
 }
 </i18n>

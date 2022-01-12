@@ -157,7 +157,7 @@ export default {
     }
   },
   "fr":{
-    "settings":{
+    "galleryViewHeader":{
       "customizeCards": "Configurer les cartes"
     }
   }
