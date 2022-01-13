@@ -91,6 +91,15 @@
               "name": "Image",
               "order": 7,
               "primary": false
+            },
+            {
+              "id": 209940,
+              "type": "link_row",
+              "name": "Contacts",
+              "order": 8,
+              "primary": false,
+              "link_row_table_id": 38965,
+              "link_row_related_field_id": 209939
             }
           ],
           "views": [
@@ -165,6 +174,13 @@
                   "width": 100,
                   "hidden": false,
                   "order": 0
+                },
+                {
+                  "id": 238687,
+                  "field_id": 209940,
+                  "width": 344,
+                  "hidden": false,
+                  "order": 32767
                 }
               ]
             },
@@ -441,6 +457,12 @@
                   "visible_name": "john hancock center.jpg",
                   "original_name": "john hancock center.jpg"
                 }
+              ],
+              "field_209940": [
+                1,
+                4,
+                5,
+                6
               ]
             },
             {
@@ -467,6 +489,11 @@
                   "visible_name": "staples center.jpg",
                   "original_name": "staples center.jpg"
                 }
+              ],
+              "field_209940": [
+                2,
+                5,
+                6
               ]
             },
             {
@@ -497,6 +524,9 @@
                   "visible_name": "navy pier.jpg",
                   "original_name": "navy pier.jpg"
                 }
+              ],
+              "field_209940": [
+                1
               ]
             },
             {
@@ -522,6 +552,11 @@
                   "visible_name": "wrigley building.jpg",
                   "original_name": "wrigley building.jpg"
                 }
+              ],
+              "field_209940": [
+                2,
+                3,
+                4
               ]
             },
             {
@@ -563,6 +598,10 @@
                   "visible_name": "chrysler building.jpg",
                   "original_name": "chrysler building.jpg"
                 }
+              ],
+              "field_209940": [
+                2,
+                1
               ]
             },
             {
@@ -589,6 +628,9 @@
                   "visible_name": "empire state building.jpg",
                   "original_name": "empire state building.jpg"
                 }
+              ],
+              "field_209940": [
+                3
               ]
             },
             {
@@ -615,6 +657,10 @@
                   "visible_name": "united center.png",
                   "original_name": "united center.png"
                 }
+              ],
+              "field_209940": [
+                3,
+                5
               ]
             },
             {
@@ -660,6 +706,10 @@
                   "visible_name": "willis tower.jpg",
                   "original_name": "willis tower.jpg"
                 }
+              ],
+              "field_209940": [
+                4,
+                6
               ]
             }
           ]
@@ -2678,7 +2728,7 @@
               "id": 6,
               "order": "5.00000000000000000000",
               "field_110839": "A/C issues",
-              "field_110840": "The A/C doesn't seem to cool past 35 degrees Celsius. It will also randomly turn off at times.",
+              "field_110840": "The A/C doesn't seem to cool past 15 degrees Celsius. It will also randomly turn off at times.",
               "field_110841": "true",
               "field_118827": "2021-04-27",
               "field_118888": 7077,
@@ -3254,7 +3304,7 @@
                 {
                   "id": 115788,
                   "field_id": 118824,
-                  "width": 200,
+                  "width": 152,
                   "hidden": false,
                   "order": 5
                 },
@@ -4148,6 +4198,187 @@
                 }
               ],
               "field_121742": "false"
+            }
+          ]
+        },
+        {
+          "id": 38965,
+          "name": "Contacts",
+          "order": 7,
+          "fields": [
+            {
+              "id": 209928,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 209935,
+              "type": "text",
+              "name": "Responsibilities",
+              "order": 3,
+              "primary": false,
+              "text_default": ""
+            },
+            {
+              "id": 209937,
+              "type": "phone_number",
+              "name": "Phone number",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 209938,
+              "type": "email",
+              "name": "Email",
+              "order": 5,
+              "primary": false
+            },
+            {
+              "id": 209939,
+              "type": "link_row",
+              "name": "Buildings",
+              "order": 6,
+              "primary": false,
+              "link_row_table_id": 21114,
+              "link_row_related_field_id": 209940
+            }
+          ],
+          "views": [
+            {
+              "id": 45986,
+              "type": "grid",
+              "name": "All contacts",
+              "order": 1,
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "sortings": [
+                {
+                  "id": 5965,
+                  "field_id": 209928,
+                  "order": "ASC"
+                }
+              ],
+              "field_options": [
+                {
+                  "id": 238678,
+                  "field_id": 209928,
+                  "width": 150,
+                  "hidden": false,
+                  "order": 2
+                },
+                {
+                  "id": 238681,
+                  "field_id": 209935,
+                  "width": 329,
+                  "hidden": false,
+                  "order": 0
+                },
+                {
+                  "id": 238684,
+                  "field_id": 209937,
+                  "width": 156,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 238685,
+                  "field_id": 209938,
+                  "width": 245,
+                  "hidden": false,
+                  "order": 32767
+                },
+                {
+                  "id": 238686,
+                  "field_id": 209939,
+                  "width": 405,
+                  "hidden": false,
+                  "order": 32767
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "field_209928": "Edmund Siv",
+              "field_209935": "Serves as a point of contact for service requests",
+              "field_209937": "773.383.4744",
+              "field_209938": "edmundsiv@company.com",
+              "field_209939": [
+                1,
+                5,
+                7
+              ]
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "field_209928": "Jordyn Jones",
+              "field_209935": "Meets with new tenants to sign leases",
+              "field_209937": "312.453.6345",
+              "field_209938": "jordynjones@company.com",
+              "field_209939": [
+                7,
+                6,
+                3
+              ]
+            },
+            {
+              "id": 3,
+              "order": "3.00000000000000000000",
+              "field_209928": "Kennedy Layman",
+              "field_209935": "Manages the amenities offered by the buildings",
+              "field_209937": "343.356.9074",
+              "field_209938": "kennedylayman@company.com",
+              "field_209939": [
+                10,
+                12,
+                6
+              ]
+            },
+            {
+              "id": 4,
+              "order": "4.00000000000000000000",
+              "field_209928": "Gloria Nguyen",
+              "field_209935": "Applies for any permits required from the city",
+              "field_209937": "893.245.1423",
+              "field_209938": "glorianguyen@company.com",
+              "field_209939": [
+                13,
+                1,
+                6
+              ]
+            },
+            {
+              "id": 5,
+              "order": "5.00000000000000000000",
+              "field_209928": "Beniamin Schwartz",
+              "field_209935": "Handles all new applications for the units.",
+              "field_209937": "194.385.6038",
+              "field_209938": "beniaminschwartz@company.com",
+              "field_209939": [
+                3,
+                1,
+                12
+              ]
+            },
+            {
+              "id": 6,
+              "order": "6.00000000000000000000",
+              "field_209928": "Minnie Poom",
+              "field_209935": "Meets with new tenants to sign leases",
+              "field_209937": "294.385.3850",
+              "field_209938": "minniepoom@company.com",
+              "field_209939": [
+                13,
+                3,
+                1
+              ]
             }
           ]
         }

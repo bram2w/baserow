@@ -32,6 +32,16 @@
   to another field type.
 * Added cover field to the Kanban view.
 * Fixed bug where not all rows were displayed on large screens.
+* New templates:
+    * Car Maintenance Log
+    * Teacher Lesson Plans
+    * Business Conference Event
+    * Restaurant Management
+* Updated templates:
+    * Healthcare Facility Management
+    * Apartment Hunt
+    * Recipe Book
+    * Commercial Property Management
 
 ## Released (2021-11-25)
 

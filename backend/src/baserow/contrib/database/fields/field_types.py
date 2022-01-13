@@ -745,7 +745,12 @@ class DateFieldType(FieldType):
         if not value:
             return value
 
-        setattr(row, field_name, datetime.fromisoformat(value))
+        if isinstance(row._meta.get_field(field_name), models.DateTimeField):
+            value = datetime.fromisoformat(value)
+        else:
+            value = date.fromisoformat(value)
+
+        setattr(row, field_name, value)
 
     def to_baserow_formula_type(self, field: DateField) -> BaserowFormulaType:
         return BaserowFormulaDateType(
@@ -2724,6 +2729,14 @@ class LookupFieldType(FormulaFieldType):
         for key, value in values.items():
             setattr(field, key, value)
         field.save(recalculate=False)
+
+    def import_serialized(self, table, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        # The through field and target field id's must be set to None because we
+        # don't need them. The field is created based on the field name.
+        serialized_copy["through_field_id"] = None
+        serialized_copy["target_field_id"] = None
+        return super().import_serialized(table, serialized_copy, id_mapping)
 
     def after_import_serialized(self, field, field_cache):
         self._rebuild_field_from_names(field)
