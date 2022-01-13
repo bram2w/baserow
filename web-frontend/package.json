@@ -21,7 +21,7 @@
     "@nuxtjs/i18n": "^7.2.0",
     "antlr4": "4.8.0",
     "async-mutex": "^0.3.1",
-    "axios": "^0.21.0",
+    "axios": "^0.21.2",
     "bignumber.js": "^9.0.1",
     "chart.js": "2.9.4",
     "cookie-universal-nuxt": "^2.1.5",
