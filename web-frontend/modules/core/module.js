@@ -48,10 +48,6 @@ export default function CoreModule(options) {
           default: 'http://localhost:3000',
         },
         {
-          key: 'ENABLE_I18N',
-          default: false,
-        },
-        {
           key: 'INITIAL_TABLE_DATA_LIMIT',
           default: null,
         },
@@ -70,10 +66,10 @@ export default function CoreModule(options) {
   ])
 
   // Use feature flag to enable i18n
-  const locales = [{ code: 'en', name: 'English', file: 'en.js' }]
-  if (process.env.ENABLE_I18N) {
-    locales.push({ code: 'fr', name: 'Français', file: 'fr.js' })
-  }
+  const locales = [
+    { code: 'en', name: 'English', file: 'en.js' },
+    { code: 'fr', name: 'Français', file: 'fr.js' },
+  ]
 
   this.requireModule([
     '@nuxtjs/i18n',
