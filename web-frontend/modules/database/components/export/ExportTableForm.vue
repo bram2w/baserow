@@ -50,6 +50,10 @@ export default {
   },
   mixins: [form],
   props: {
+    table: {
+      type: Object,
+      required: true,
+    },
     view: {
       type: Object,
       required: false,
@@ -111,7 +115,7 @@ export default {
       return this.selectedExporter.getFormComponent()
     },
     exportFilename() {
-      return `export - ${this.view.table.name}${
+      return `export - ${this.table.name}${
         this.selectedView ? ` - ${this.selectedView.name}` : ''
       }.${this.selectedExporter?.getType()}`
     },
