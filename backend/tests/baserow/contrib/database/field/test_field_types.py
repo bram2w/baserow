@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
 from faker import Faker
 
+from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.field_types import (
     PhoneNumberFieldType,
 )
@@ -629,6 +630,12 @@ def test_import_export_lookup_field(data_fixture, api_client):
     assert lookup_field_imported.order == lookup.order
     assert lookup_field_imported.primary == lookup.primary
     assert lookup_field_imported.formula == lookup.formula
+    assert lookup_field_imported.through_field is None
+    assert lookup_field_imported.target_field is None
+    assert lookup_field_imported.through_field_name == lookup.through_field_name
+    assert lookup_field_imported.target_field_name == lookup.target_field_name
+
+    lookup_field_type.after_import_serialized(lookup_field_imported, FieldCache())
     assert lookup_field_imported.through_field == lookup.through_field
     assert lookup_field_imported.target_field == lookup.target_field
     assert lookup_field_imported.through_field_name == lookup.through_field_name

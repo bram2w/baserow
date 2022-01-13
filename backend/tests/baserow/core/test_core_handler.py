@@ -940,13 +940,20 @@ def test_export_import_group_application(data_fixture):
 
 
 @pytest.mark.django_db
-def test_sync_all_templates():
+def test_sync_and_install_all_templates(data_fixture, tmpdir):
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
     handler = CoreHandler()
-    handler.sync_templates()
+    handler.sync_templates(storage=storage)
 
     assert Template.objects.count() == len(
         list(Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json"))
     )
+
+    group_user = data_fixture.create_user_group()
+    for template in Template.objects.all():
+        handler.install_template(
+            group_user.user, group_user.group, template, storage=storage
+        )
 
 
 @pytest.mark.django_db

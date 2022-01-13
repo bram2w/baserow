@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 blank=True,
                 help_text=(
-                    "References a file field of which the first image"
+                    "References a file field of which the first image "
                     "must be shown as card cover image."
                 ),
                 null=True,

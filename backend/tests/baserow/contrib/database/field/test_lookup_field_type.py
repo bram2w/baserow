@@ -384,7 +384,7 @@ def test_import_export_lookup_field_trashed_target_field(data_fixture, api_clien
         lookup_serialized,
         id_mapping,
     )
-    assert lookup_field_imported.through_field.id == link_field.id
+    assert lookup_field_imported.through_field is None
     assert lookup_field_imported.through_field_name == link_field.name
     assert lookup_field_imported.target_field is None
     assert lookup_field_imported.target_field_name == lookup.target_field_name
