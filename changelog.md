@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Released (2022-01-13)
+
 * Fixed frontend errors occurring sometimes when mass deleting and restoring sorted 
   fields
 * Added French translation.
