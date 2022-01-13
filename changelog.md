@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## Released (2022-01-13 1.8.2)
+
+* Fix Table Export showing blank modal.
+* Fix vuelidate issues when baserow/web-frontend used as dependency. 
+
 ## Released (2022-01-13 1.8.1)
 
 * Fixed migration failing when upgrading a version of Baserow installed using Postgres 

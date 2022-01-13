@@ -6,6 +6,7 @@
     <ExportTableForm
       ref="form"
       v-slot="{ filename }"
+      :table="table"
       :view="view"
       :views="views"
       :loading="loading"

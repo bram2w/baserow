@@ -1,0 +1,2140 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Preview exportTableModal Modal with no view 1`] = `
+<div
+  class="modal__wrapper"
+>
+  <div
+    class="modal__box"
+  >
+    <!---->
+     
+    <!---->
+     
+    <h2
+      class="box__title"
+    >
+      Export Test Table 1
+    </h2>
+     
+    <!---->
+     
+    <form>
+      <div
+        class="row"
+      >
+        <div
+          class="col col-12"
+        >
+          <div
+            class="control"
+          >
+            <label
+              class="control__label"
+            >
+              exportTableForm.viewLabel
+            </label>
+             
+            <div
+              class="control__elements"
+            >
+              <div
+                class="dropdown"
+              >
+                <a
+                  class="dropdown__selected"
+                >
+                  <!---->
+                  
+        exportTableDropdown.exportEntireTable
+       
+                  <i
+                    class="dropdown__toggle-icon fas fa-caret-down"
+                  />
+                </a>
+                 
+                <div
+                  class="dropdown__items hidden"
+                >
+                  <div
+                    class="select__search"
+                  >
+                    <i
+                      class="select__search-icon fas fa-search"
+                    />
+                     
+                    <input
+                      class="select__search-input"
+                      placeholder="action.search"
+                      type="text"
+                    />
+                  </div>
+                   
+                  <ul
+                    class="select__items"
+                  >
+                    <li
+                      class="select__item active hover"
+                    >
+                      <a
+                        class="select__item-link"
+                      >
+                        <div
+                          class="select__item-name"
+                        >
+                          <!---->
+                          
+        exportTableDropdown.exportEntireTable
+      
+                        </div>
+                         
+                        <!---->
+                      </a>
+                    </li>
+                     
+                    <li
+                      class="select__item"
+                    >
+                      <a
+                        class="select__item-link"
+                      >
+                        <div
+                          class="select__item-name"
+                        >
+                          <i
+                            class="select__item-icon fas fa-fw fa-bars"
+                          />
+                          
+        mock_view_1
+      
+                        </div>
+                         
+                        <!---->
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+           
+          <div>
+            <div
+              class="control"
+            >
+              <label
+                class="control__label"
+              >
+                exporterTypeChoices.formatLabel
+              </label>
+               
+              <div
+                class="control__elements"
+              >
+                <ul
+                  class="choice-items"
+                >
+                  <li>
+                    <a
+                      class="choice-items__link active"
+                    >
+                      <i
+                        class="choice-items__icon fas fa-file-csv"
+                      />
+                      
+    exporterType.csv
+  
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+           
+          <!---->
+        </div>
+      </div>
+       
+      <div>
+        <div
+          class="row"
+        >
+          <div
+            class="col col-4"
+          >
+            <div
+              class="control"
+            >
+              <label
+                class="control__label"
+              >
+                tableCSVExporter.columnSeparatorLabel
+              </label>
+               
+              <div
+                class="control__elements"
+              >
+                <div
+                  class="dropdown"
+                >
+                  <a
+                    class="dropdown__selected"
+                  >
+                    <!---->
+                    
+        ,
+       
+                    <i
+                      class="dropdown__toggle-icon fas fa-caret-down"
+                    />
+                  </a>
+                   
+                  <div
+                    class="dropdown__items hidden"
+                  >
+                    <div
+                      class="select__search"
+                    >
+                      <i
+                        class="select__search-icon fas fa-search"
+                      />
+                       
+                      <input
+                        class="select__search-input"
+                        placeholder="action.search"
+                        type="text"
+                      />
+                    </div>
+                     
+                    <ul
+                      class="select__items"
+                    >
+                      <li
+                        class="select__item active"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        ,
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        ;
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        |
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        &lt;tab&gt;
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        tableCSVExporter.recordSeparator (30)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        tableCSVExporter.unitSeparator (31)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+           
+          <div
+            class="col col-8"
+          >
+            <div
+              class="control"
+            >
+              <label
+                class="control__label"
+              >
+                tableCSVExporter.encodingLabel
+              </label>
+               
+              <div
+                class="control__elements"
+              >
+                <div
+                  class="dropdown"
+                >
+                  <a
+                    class="dropdown__selected"
+                  >
+                    <!---->
+                    
+        Unicode (UTF-8)
+       
+                    <i
+                      class="dropdown__toggle-icon fas fa-caret-down"
+                    />
+                  </a>
+                   
+                  <div
+                    class="dropdown__items hidden"
+                  >
+                    <div
+                      class="select__search"
+                    >
+                      <i
+                        class="select__search-icon fas fa-search"
+                      />
+                       
+                      <input
+                        class="select__search-input"
+                        placeholder="action.search"
+                        type="text"
+                      />
+                    </div>
+                     
+                    <ul
+                      class="select__items"
+                    >
+                      <li
+                        class="select__item active"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Unicode (UTF-8)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Arabic (ISO-8859-6)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Arabic (Windows-1256)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Baltic (ISO-8859-4)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Baltic (windows-1257)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Celtic (ISO-8859-14)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Central European (ISO-8859-2)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Central European (Windows-1250)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Chinese, Simplified (GBK)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Chinese (GB18030)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Chinese Traditional (Big5)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic (KOI8-R)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic (KOI8-U)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic (ISO-8859-5)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic (Windows-1251)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic Mac OS (x-mac-cyrillic)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Greek (ISO-8859-7)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Greek (Windows-1253)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Hebrew (ISO-8859-8)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Hebrew (Windows-1255)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Japanese (EUC-JP)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Japanese (ISO-2022-JP)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Japanese (Shift-JIS)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Korean (EUC-KR)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Macintosh
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Nordic (ISO-8859-10)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        South-Eastern European (ISO-8859-16)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Thai (Windows-874)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Turkish (Windows-1254)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Vietnamese (Windows-1258)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Western European (ISO-8859-1)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Western European (Windows-1252)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Latin 3 (ISO-8859-3)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+        <div
+          class="row"
+        >
+          <div
+            class="col col-6"
+          >
+            <div
+              class="control"
+            >
+              <label
+                class="control__label"
+              >
+                tableCSVExporter.firstRowIsHeaderLabel
+              </label>
+               
+              <div
+                class="control__elements"
+              >
+                <div
+                  class="checkbox checkbox--has-content active"
+                >
+                  common.yes
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+       
+      <div
+        class="export-table-modal__actions"
+      >
+        <!---->
+         
+        <button
+          class="
+      button button--large button--primary
+      export-table-modal__export-button
+    "
+        >
+          
+    exportTableLoadingBar.export
+  
+        </button>
+      </div>
+    </form>
+      
+    <a
+      class="modal__close"
+    >
+      <i
+        class="fas fa-times"
+      />
+    </a>
+  </div>
+</div>
+`;
+
+exports[`Preview exportTableModal Modal with view 1`] = `
+<div
+  class="modal__wrapper"
+>
+  <div
+    class="modal__box"
+  >
+    <!---->
+     
+    <!---->
+     
+    <h2
+      class="box__title"
+    >
+      Export Test Table 1
+    </h2>
+     
+    <!---->
+     
+    <form>
+      <div
+        class="row"
+      >
+        <div
+          class="col col-12"
+        >
+          <div
+            class="control"
+          >
+            <label
+              class="control__label"
+            >
+              exportTableForm.viewLabel
+            </label>
+             
+            <div
+              class="control__elements"
+            >
+              <div
+                class="dropdown"
+              >
+                <a
+                  class="dropdown__selected"
+                >
+                  action.makeChoice 
+                  <i
+                    class="dropdown__toggle-icon fas fa-caret-down"
+                  />
+                </a>
+                 
+                <div
+                  class="dropdown__items hidden"
+                >
+                  <div
+                    class="select__search"
+                  >
+                    <i
+                      class="select__search-icon fas fa-search"
+                    />
+                     
+                    <input
+                      class="select__search-input"
+                      placeholder="action.search"
+                      type="text"
+                    />
+                  </div>
+                   
+                  <ul
+                    class="select__items"
+                  >
+                    <li
+                      class="select__item hover"
+                    >
+                      <a
+                        class="select__item-link"
+                      >
+                        <div
+                          class="select__item-name"
+                        >
+                          <!---->
+                          
+        exportTableDropdown.exportEntireTable
+      
+                        </div>
+                         
+                        <!---->
+                      </a>
+                    </li>
+                     
+                    <li
+                      class="select__item active"
+                    >
+                      <a
+                        class="select__item-link"
+                      >
+                        <div
+                          class="select__item-name"
+                        >
+                          <i
+                            class="select__item-icon fas fa-fw fa-bars"
+                          />
+                          
+        mock_view_1
+      
+                        </div>
+                         
+                        <!---->
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+           
+          <div>
+            <div
+              class="control"
+            >
+              <label
+                class="control__label"
+              >
+                exporterTypeChoices.formatLabel
+              </label>
+               
+              <div
+                class="control__elements"
+              >
+                <ul
+                  class="choice-items"
+                >
+                  <li>
+                    <a
+                      class="choice-items__link active"
+                    >
+                      <i
+                        class="choice-items__icon fas fa-file-csv"
+                      />
+                      
+    exporterType.csv
+  
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+           
+          <!---->
+        </div>
+      </div>
+       
+      <div>
+        <div
+          class="row"
+        >
+          <div
+            class="col col-4"
+          >
+            <div
+              class="control"
+            >
+              <label
+                class="control__label"
+              >
+                tableCSVExporter.columnSeparatorLabel
+              </label>
+               
+              <div
+                class="control__elements"
+              >
+                <div
+                  class="dropdown"
+                >
+                  <a
+                    class="dropdown__selected"
+                  >
+                    <!---->
+                    
+        ,
+       
+                    <i
+                      class="dropdown__toggle-icon fas fa-caret-down"
+                    />
+                  </a>
+                   
+                  <div
+                    class="dropdown__items hidden"
+                  >
+                    <div
+                      class="select__search"
+                    >
+                      <i
+                        class="select__search-icon fas fa-search"
+                      />
+                       
+                      <input
+                        class="select__search-input"
+                        placeholder="action.search"
+                        type="text"
+                      />
+                    </div>
+                     
+                    <ul
+                      class="select__items"
+                    >
+                      <li
+                        class="select__item active"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        ,
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        ;
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        |
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        &lt;tab&gt;
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        tableCSVExporter.recordSeparator (30)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        tableCSVExporter.unitSeparator (31)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+           
+          <div
+            class="col col-8"
+          >
+            <div
+              class="control"
+            >
+              <label
+                class="control__label"
+              >
+                tableCSVExporter.encodingLabel
+              </label>
+               
+              <div
+                class="control__elements"
+              >
+                <div
+                  class="dropdown"
+                >
+                  <a
+                    class="dropdown__selected"
+                  >
+                    <!---->
+                    
+        Unicode (UTF-8)
+       
+                    <i
+                      class="dropdown__toggle-icon fas fa-caret-down"
+                    />
+                  </a>
+                   
+                  <div
+                    class="dropdown__items hidden"
+                  >
+                    <div
+                      class="select__search"
+                    >
+                      <i
+                        class="select__search-icon fas fa-search"
+                      />
+                       
+                      <input
+                        class="select__search-input"
+                        placeholder="action.search"
+                        type="text"
+                      />
+                    </div>
+                     
+                    <ul
+                      class="select__items"
+                    >
+                      <li
+                        class="select__item active"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Unicode (UTF-8)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Arabic (ISO-8859-6)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Arabic (Windows-1256)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Baltic (ISO-8859-4)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Baltic (windows-1257)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Celtic (ISO-8859-14)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Central European (ISO-8859-2)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Central European (Windows-1250)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Chinese, Simplified (GBK)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Chinese (GB18030)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Chinese Traditional (Big5)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic (KOI8-R)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic (KOI8-U)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic (ISO-8859-5)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic (Windows-1251)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Cyrillic Mac OS (x-mac-cyrillic)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Greek (ISO-8859-7)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Greek (Windows-1253)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Hebrew (ISO-8859-8)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Hebrew (Windows-1255)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Japanese (EUC-JP)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Japanese (ISO-2022-JP)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Japanese (Shift-JIS)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Korean (EUC-KR)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Macintosh
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Nordic (ISO-8859-10)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        South-Eastern European (ISO-8859-16)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Thai (Windows-874)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Turkish (Windows-1254)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Vietnamese (Windows-1258)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Western European (ISO-8859-1)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Western European (Windows-1252)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                       
+                      <li
+                        class="select__item"
+                      >
+                        <a
+                          class="select__item-link"
+                        >
+                          <div
+                            class="select__item-name"
+                          >
+                            <!---->
+                            
+        Latin 3 (ISO-8859-3)
+      
+                          </div>
+                           
+                          <!---->
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+         
+        <div
+          class="row"
+        >
+          <div
+            class="col col-6"
+          >
+            <div
+              class="control"
+            >
+              <label
+                class="control__label"
+              >
+                tableCSVExporter.firstRowIsHeaderLabel
+              </label>
+               
+              <div
+                class="control__elements"
+              >
+                <div
+                  class="checkbox checkbox--has-content active"
+                >
+                  common.yes
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+       
+      <div
+        class="export-table-modal__actions"
+      >
+        <!---->
+         
+        <button
+          class="
+      button button--large button--primary
+      export-table-modal__export-button
+    "
+        >
+          
+    exportTableLoadingBar.export
+  
+        </button>
+      </div>
+    </form>
+      
+    <a
+      class="modal__close"
+    >
+      <i
+        class="fas fa-times"
+      />
+    </a>
+  </div>
+</div>
+`;
