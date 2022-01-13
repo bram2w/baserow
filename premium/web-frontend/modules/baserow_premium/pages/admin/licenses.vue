@@ -230,7 +230,7 @@ export default {
     "licenses": {
       "titleNoLicenses": "Aucune licences trouvée",
       "titleLicenses": "Licences",
-      "noLicensesDescription": "Votre instance de Baserow n'a aucune licence enregistrée. Une licence premium vous donne immédiatement accés à plusieurs fonctionnalités additionnelles. Si vous avez déjà une licence, vous pouvez l'enregistrée ici. Vous pouvez également en obtenir une en cliquant sur le bouton ci-dessous.",
+      "noLicensesDescription": "Votre instance de Baserow n'a aucune licence enregistrée. Une licence premium vous donne immédiatement accés à plusieurs fonctionnalités additionnelles. Si vous avez déjà une licence, vous pouvez l'enregistrer ici. Vous pouvez également en obtenir une en cliquant sur le bouton ci-dessous.",
       "rowComments": "Commentaires par lignes",
       "kanbanView": "Vue Kanban",
       "exports": "Export JSON et XML",

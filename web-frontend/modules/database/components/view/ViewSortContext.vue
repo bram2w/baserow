@@ -297,7 +297,7 @@ export default {
   },
   "fr":{
     "viewSortContext":{
-      "noSortTitle": "Vous n'avez configuré aucun filtre",
+      "noSortTitle": "Vous n'avez configuré aucun tri",
       "noSortText": "Le tri vous permet d'ordonner les lignes selon la valeur d'un champ.",
       "sortBy": "Trier par",
       "thenBy": "Puis par",

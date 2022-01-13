@@ -106,7 +106,7 @@ export default {
       "tableId": "Clé étrangère de la table.",
       "order": "Ordre du champ dans la table. 0 est le premier champ.",
       "primary": "Indique si le champ est une clé primaire. Si la valeur est `true` le champ ne peut être effacé et ses valeurs doivent représenter la ligne entière.",
-      "type": "Type définit pour ce champ.",
+      "type": "Type défini pour ce champ.",
       "extraProps": "Certaines propriétés ne sont pas décrites ici car elles sont spécifiques au type de champ concerné."
     }
   }

@@ -69,7 +69,7 @@ export default {
   },
   "fr": {
     "crudTableSearchContext": {
-      "search": "Recherche"
+      "search": "Chercher"
     }
   }
 }

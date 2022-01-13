@@ -133,7 +133,7 @@ export default {
       "requestEntityTooLargeDescription": "La taille du contenu de la requête dépasse la taille maximale autorisée.",
       "internalErrorDescription": "Le serveur a rencontré une erreur interne inatendue.",
       "badGatewayDescription": "Baserow est en cours de démarrage ou une interruption du service est en cours.",
-      "unavailableDescription": "Le serveur n'a pas répondu dans le délais imparti."
+      "unavailableDescription": "Le serveur n'a pas répondu dans les délais impartis."
     }
   }
 }

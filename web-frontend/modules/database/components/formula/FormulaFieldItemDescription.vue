@@ -55,8 +55,8 @@ export default {
   },
   "fr": {
     "formulaFieldItemDescription" : {
-      "syntax": "@todo",
-      "examples": "@todo"
+      "syntax": "Syntaxe",
+      "examples": "Exemples"
     }
   }
 }

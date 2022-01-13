@@ -149,7 +149,7 @@ export default {
     "rowEditFieldFile": {
       "addFile": "Ajouter un fichier",
       "sizes": {
-        "0": "Octets",
+        "0": "Octet(s)",
         "1": "Ko",
         "2": "Mo",
         "3": "Go",

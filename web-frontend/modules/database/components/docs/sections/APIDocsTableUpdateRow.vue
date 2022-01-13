@@ -97,7 +97,7 @@ export default {
   "fr": {
     "apiDocsTableUpdateRow": {
       "description": "Modifie une ligne existante de la table {name}.",
-      "rowId": "L'identifiant unique de la ligne a modifier.",
+      "rowId": "L'identifiant unique de la ligne à modifier.",
       "before": "Si un identifiant de ligne est fourni, la ligne sera placée avant la ligne portant cet identifiant."
     }
   }

@@ -32,6 +32,10 @@ export default {
   },
   applicationType: {
     database: 'Database',
+    cantSelectTableTitle: "Couldn't select the database.",
+    cantSelectTableDescription:
+      "The database couldn't be selected because it doesn't have any tables. Use the" +
+      ' sidebar to create one.',
   },
   settingType: {
     account: 'Account',
@@ -275,69 +279,70 @@ export default {
     'yyyy-mm-dd': 'yyyy-mm-dd',
   },
   formulaFunctions: {
-    upperDescription: 'Returns its argument in upper case',
-    lowerDescription: 'Returns its argument in lower case',
+    upperDescription: 'Returns its argument in upper case.',
+    lowerDescription: 'Returns its argument in lower case.',
     concatDescription:
-      'Returns its arguments joined together as a single piece of text',
-    addDescription: 'Returns its two arguments added together',
-    minusDescription: 'Returns its two arguments subtracted',
-    multiplyDescription: 'Returns its two arguments multiplied together',
+      'Returns its arguments joined together as a single piece of text.',
+    addDescription: 'Returns its two arguments added together.',
+    minusDescription: 'Returns its two arguments subtracted.',
+    multiplyDescription: 'Returns its two arguments multiplied together.',
     divideDescription:
-      'Returns its two arguments divided, the first divided by the second',
+      'Returns its two arguments divided, the first divided by the second.',
     equalDescription: 'Returns if its two arguments have the same value.',
     ifDescription:
       'If the first argument is true then returns the second argument, otherwise returns the third.',
-    toTextDescription: 'Converts the input to text',
+    toTextDescription: 'Converts the input to text.',
     datetimeFormatDescription:
-      'Converts the date to text given a way of formatting the date',
-    toNumberDescription: 'Converts the input to a number if possible',
-    fieldDescription: 'Returns the field named by the single text argument',
+      'Converts the date to text given a way of formatting the date.',
+    toNumberDescription: 'Converts the input to a number if possible.',
+    fieldDescription: 'Returns the field named by the single text argument.',
     lookupDescription:
       'Looks up the values from a field in another table for rows in a link row' +
       ' field. The first argument should be the name of a link row field in the' +
       ' current table and the second should be the name of a field in the linked' +
       ' table.',
     isBlankDescription:
-      'Returns true if the argument is empty or blank, false otherwise',
-    tDescription: 'Returns the arguments value if it is text, but otherwise ',
+      'Returns true if the argument is empty or blank, false otherwise.',
+    tDescription:
+      "Returns the arguments value if it is text, but otherwise ''.",
     notDescription:
-      'Returns false if the argument is true and true if the argument is false',
+      'Returns false if the argument is true and true if the argument is false.',
     greaterThanDescription:
-      'Returns true if the first argument greater than the second, otherwise false',
+      'Returns true if the first argument greater than the second, otherwise false.',
     greaterThanOrEqualDescription:
-      'Returns true if the first argument is greater than or equal to the second, otherwise false',
+      'Returns true if the first argument is greater than or equal to the second, otherwise false.',
     lessThanDescription:
-      'Returns true if the first argument less than the second, otherwise false',
+      'Returns true if the first argument less than the second, otherwise false.',
     lessThanOrEqualDescription:
-      'Returns true if the first argument less than or equal to the second, otherwise false',
+      'Returns true if the first argument less than or equal to the second, otherwise false.',
     toDateDescription:
-      'Returns the first argument converted into a date given a date format string as the second argument',
+      'Returns the first argument converted into a date given a date format string as the second argument.',
     dayDescription:
-      'Returns the day of the month as a number between 1 to 31 from the argument',
+      'Returns the day of the month as a number between 1 to 31 from the argument.',
     dateDiffDescription:
       "Given a date unit to measure in as the first argument ('year', " +
       "'month', 'week', 'day', 'hour', 'minute', 'seconds') calculates and returns " +
       'the number of units from the second argument to the third.',
     andDescription:
       'Returns the logical and of the first and second argument, so if they are both' +
-      'true then the result is true, otherwise it is false',
+      'true then the result is true, otherwise it is false.',
     orDescription:
       'Returns the logical or of the first and second argument, so if either are ' +
-      'true then the result is true, otherwise it is false',
+      'true then the result is true, otherwise it is false.',
     dateIntervalDescription:
-      'Returns the day of the month as a number between 1 to 31 from the argument',
+      'Returns the date interval corresponding to the provided argument.',
     replaceDescription:
       'Replaces all instances of the second argument in the first argument with ' +
-      'the third argument',
+      'the third argument.',
     searchDescription:
       'Returns a positive integer starting from 1 for the first ' +
       'occurrence of the second argument inside the first, or 0 if no ' +
       'occurrence is found.',
-    rowIdDescription: 'Returns the rows unique identifying number',
+    rowIdDescription: 'Returns the rows unique identifying number.',
     lengthDescription:
-      'Returns the number of characters in the first argument provided',
+      'Returns the number of characters in the first argument provided.',
     reverseDescription:
-      'Returns the reversed text of the provided first argument',
+      'Returns the reversed text of the provided first argument.',
     notEqualDescription: 'Returns if its two arguments have different values.',
     countDescription: 'Returns the number of items in its first argument.',
     containsDescription:
@@ -369,12 +374,12 @@ export default {
       'Returns true if every one of the provided looked up values is true,' +
       ' false otherwise.',
     maxDescription:
-      'Returns the largest number from all the looked up values provided',
+      'Returns the largest number from all the looked up values provided.',
     minDescription:
-      'Returns the smallest number from all the looked up values provided',
+      'Returns the smallest number from all the looked up values provided.',
     joinDescription:
       'Concats all of the values from the first input together using the values' +
-      ' from the second input',
+      ' from the second input.',
     stddevPopDescription:
       'Calculates the population standard deviation of the values and returns the' +
       ' result. ' +
@@ -394,10 +399,13 @@ export default {
       'Calculates the population variance of the values and returns the result. ' +
       'The population variance should be used when the provided values contain a ' +
       ' value for every single piece of data in the population.',
-    avgDescription: 'Averages all of the values and returns the result',
-    sumDescription: 'Sums all of the values and returns the result',
+    avgDescription: 'Averages all of the values and returns the result.',
+    sumDescription: 'Sums all of the values and returns the result.',
     filterDescription:
       'Filters down an expression involving a lookup/link field reference or a' +
       ' lookup function call.',
+  },
+  functionnalGridViewFieldLinkRow: {
+    unnamed: 'unnamed row {value}',
   },
 }

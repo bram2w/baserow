@@ -93,7 +93,7 @@ export class DatabaseApplicationType extends ApplicationType {
     }
   }
 
-  select(application, { $router, $store }) {
+  select(application, { $router, $store, $i18n }) {
     const tables = application.tables
       .map((t) => t)
       .sort((a, b) => a.order - b.order)
@@ -108,10 +108,8 @@ export class DatabaseApplicationType extends ApplicationType {
       })
     } else {
       $store.dispatch('notification/error', {
-        title: "Couldn't select the database.",
-        message:
-          "The database couldn't be selected because it doesn't have any tables. Use " +
-          'the sidebar to create one.',
+        title: $i18n.t('applicationType.cantSelectTableTitle'),
+        message: $i18n.t('applicationType.cantSelectTableDescription'),
       })
     }
   }

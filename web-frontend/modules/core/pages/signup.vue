@@ -50,7 +50,7 @@ export default {
   layout: 'login',
   head() {
     return {
-      title: 'Create new account',
+      title: this.$t('signup.headTitle'),
     }
   },
   computed: {
@@ -70,6 +70,7 @@ export default {
 {
   "en":{
     "signup": {
+      "headTitle": "Create new account",
       "title": "Sign up",
       "disabled": "Sign up is disabled",
       "disabledMessage": "It's not possible to create an account because it has been disabled."
@@ -77,6 +78,7 @@ export default {
   },
   "fr":{
     "signup": {
+      "headTitle": "Création d'un nouveau compte",
       "title": "Création de compte",
       "disabled": "Création de compte desactivée",
       "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée."

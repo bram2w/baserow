@@ -105,7 +105,7 @@ export default {
       "settingsTitle": "Paramètres",
       "baserowInstanceId": "Identifiant de l'instance de Baserow",
       "instanceIdDescription": "Cet identifiant permet de désigner de manière unique votre instance de Baserow.",
-      "groupSignupRestrictions": "Restriction de création de compte",
+      "groupSignupRestrictions": "Restriction de création des comptes",
       "settingAllowNewAccountsName": "Autoriser la création de compte",
       "settingAllowNewAccountsDescription": "Par défaut, tout les visiteurs peuvent créer un compte sur votre instance de Baserow.",
       "enabled": "Autoriser"

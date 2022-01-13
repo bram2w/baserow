@@ -104,8 +104,8 @@ export default {
   },
   "fr": {
     "fieldFormulaInitialSubForm" : {
-      "formulaInputPlaceholder": "@todo",
-      "refreshFormulaOptions": "@todo"
+      "formulaInputPlaceholder": "Cliquez pour éditer la formule",
+      "refreshFormulaOptions": "Rafraichir les options"
     }
   }
 }

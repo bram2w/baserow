@@ -94,15 +94,28 @@ export default {
     },
   },
   data() {
-    const functions = this.getAndWrapFunctions()
     return {
-      functions,
-      selectedItem: functions[0],
-      filteredFunctions: functions,
+      selectedItem: null,
+      filteredFunctions: [],
       filteredFields: [],
     }
   },
   computed: {
+    functions() {
+      return Object.values(this.$registry.getAll('formula_function'))
+        .sort(this.sortFunctions.bind(this))
+        .map((f) =>
+          this.wrapItem(
+            f.getType(),
+            this.funcTypeToIconClass(f),
+            f.getDescription(),
+            f.getExamples(),
+            f.getSyntaxUsage(),
+            f.getOperator(),
+            f
+          )
+        )
+    },
     formula: {
       get() {
         return this.value
@@ -131,7 +144,14 @@ export default {
       return this.filteredFunctions.filter((f) => f.operator)
     },
   },
+  watch: {
+    functions() {
+      this.selectedItem = this.functions[0]
+      this.recalcAutoComplete()
+    },
+  },
   mounted() {
+    this.selectedItem = this.functions[0]
     this.recalcAutoComplete()
   },
   methods: {
@@ -258,21 +278,6 @@ export default {
 
       return 0
     },
-    getAndWrapFunctions() {
-      return Object.values(this.$registry.getAll('formula_function'))
-        .sort(this.sortFunctions.bind(this))
-        .map((f) =>
-          this.wrapItem(
-            f.getType(),
-            this.funcTypeToIconClass(f),
-            f.getDescription(),
-            f.getExamples(),
-            f.getSyntaxUsage(),
-            f.getOperator(),
-            f
-          )
-        )
-    },
   },
 }
 </script>
@@ -290,11 +295,11 @@ export default {
   },
   "fr": {
     "formulaAdvancedEditContext" : {
-      "textAreaFormulaInputPlaceholder": "@todo",
-      "fields": "@todo",
-      "functions": "@todo",
-      "operators": "@todo",
-      "fieldType": "@todo"
+      "textAreaFormulaInputPlaceholder": "Cliquez pour éditer la formule",
+      "fields": "Champs",
+      "functions": "Fonctions",
+      "operators": "Operateurs",
+      "fieldType": "Un champ de type {type}"
     }
   }
 }

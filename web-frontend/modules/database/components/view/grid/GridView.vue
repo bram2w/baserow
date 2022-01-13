@@ -739,7 +739,7 @@ export default {
       "insertRowBelow": "Insérer en dessous",
       "enlargeRow": "Afficher la ligne",
       "deleteRow": "Supprimer la ligne",
-      "rowCount": "Acunne ligne | 1 ligne | {count} lignes"
+      "rowCount": "Acune ligne | 1 ligne | {count} lignes"
     }
   }
 }

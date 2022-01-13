@@ -1,13 +1,15 @@
 <template>
   <Modal>
-    <h2 class="box__title">Delete {{ view.name }}</h2>
+    <h2 class="box__title">
+      {{ $t('deleteViewModal.title', { name: view.name }) }}
+    </h2>
     <Error :error="error"></Error>
     <div>
-      <p>
-        Are you sure you want to delete the view <strong>{{ view.name }}</strong
-        >? The table data will be preserved, but the filters, sortings and field
-        widths related to the view will be deleted.
-      </p>
+      <i18n path="deleteViewModal.description" tag="p">
+        <template #name>
+          <strong>{{ view.name }}</strong>
+        </template>
+      </i18n>
       <div class="actions">
         <div class="align-right">
           <button
@@ -16,7 +18,7 @@
             :disabled="loading"
             @click="deleteView()"
           >
-            Delete view
+            {{ $t('deleteViewModal.delete') }}
           </button>
         </div>
       </div>
@@ -59,3 +61,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "deleteViewModal": {
+      "title": "Delete {name}",
+      "description": "Are you sure you want to delete the view {name}? The table data will be preserved, but the filters, sortings and field widths related to the view will be deleted.",
+      "delete": "Delete view"
+    }
+  },
+  "fr": {
+    "deleteViewModal": {
+      "title": "Supprimer la vue {name}",
+      "description": "Êtes-vous sur·e de vouloir supprimer la vue {name} ? Les données seront préservées, mais les filtres, tris et largeurs des champs associés à la vue seront supprimés.",
+      "delete": "Supprimer la vue"
+    }
+  }
+}
+</i18n>

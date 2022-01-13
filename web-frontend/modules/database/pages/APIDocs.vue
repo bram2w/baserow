@@ -78,7 +78,7 @@ export default {
   "fr": {
     "apiDocs": {
       "title": "API REST",
-      "intro":  "Après avoir créé votre base de données et une clef d'API dans votre {settingsLink} Baserow fourni ses propres API REST pour créer, lire, mettre à jour et supprimer des lignes.",
+      "intro":  "Après avoir créé votre base de données et une clé d'API dans votre {settingsLink} Baserow fourni ses propres API REST pour créer, lire, mettre à jour et supprimer des lignes.",
       "settings": "compte",
       "selectApplicationTitle": "Choisissez une base de donnée :",
       "signIn": "S'identifier"

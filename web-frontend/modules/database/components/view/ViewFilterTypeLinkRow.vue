@@ -15,9 +15,11 @@
     @click.prevent="!disabled && $refs.selectModal.show()"
   >
     <template v-if="valid">
-      {{ name || `unnamed row ${filter.value}` }}
+      {{ name || $t('viewFilterTypeLinkRow.unnamed', { value: filter.value }) }}
     </template>
-    <div v-else class="filters__value-link-row-choose">Choose row</div>
+    <div v-else class="filters__value-link-row-choose">
+      {{ $t('viewFilterTypeLinkRow.choose') }}
+    </div>
     <SelectRowModal
       v-if="!disabled"
       ref="selectModal"
@@ -89,3 +91,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "viewFilterTypeLinkRow": {
+      "unnamed": "unnamed row {value}",
+      "choose": "Choose row"
+    }
+  },
+  "fr": {
+    "viewFilterTypeLinkRow": {
+      "unnamed": "Ligne sans nom {value}",
+      "choose": "Choisissez une ligne"
+    }
+  }
+}
+</i18n>
