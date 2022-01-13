@@ -11,7 +11,7 @@ django-mjml==0.11.0
 requests==2.26.0
 itsdangerous==2.0.1
 drf-spectacular==0.13.1
-Pillow==8.3.1
+Pillow==9.0.0
 asgiref==3.4.1
 channels==3.0.4
 channels-redis==3.3.0
