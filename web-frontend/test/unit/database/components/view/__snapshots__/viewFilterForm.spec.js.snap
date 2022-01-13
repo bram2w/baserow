@@ -1,0 +1,1357 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ViewFilterForm component Default view filter component 1`] = `
+<div>
+  <div
+    style="display: none;"
+  >
+    <div
+      class="filters__none"
+    >
+      <div
+        class="filters__none-title"
+      >
+        
+        viewFilterContext.noFilterTitle
+      
+      </div>
+       
+      <div
+        class="filters__none-description"
+      >
+        
+        viewFilterContext.noFilterText
+      
+      </div>
+    </div>
+  </div>
+    
+  <div
+    class="filters_footer"
+  >
+    <a
+      class="filters__add"
+    >
+      <i
+        class="fas fa-plus"
+      />
+      
+      viewFilterContext.addFilter
+    </a>
+     
+    <!---->
+  </div>
+</div>
+`;
+
+exports[`ViewFilterForm component Full view filter component 1`] = `
+<div>
+  <div
+    style="display: none;"
+  >
+    <div
+      class="filters__none"
+    >
+      <div
+        class="filters__none-title"
+      >
+        
+        viewFilterContext.noFilterTitle
+      
+      </div>
+       
+      <div
+        class="filters__none-description"
+      >
+        
+        viewFilterContext.noFilterText
+      
+      </div>
+    </div>
+  </div>
+   
+  <div
+    class="filters__item"
+  >
+    <a
+      class="filters__remove"
+    >
+      <i
+        class="fas fa-times"
+      />
+    </a>
+     
+    <div
+      class="filters__operator"
+    >
+      <span>
+        viewFilterContext.where
+      </span>
+       
+      <!---->
+       
+      <!---->
+       
+      <!---->
+    </div>
+     
+    <div
+      class="filters__field"
+    >
+      <div
+        class="dropdown dropdown--floating dropdown--tiny"
+      >
+        <a
+          class="dropdown__selected"
+        >
+          <!---->
+          
+        Name
+       
+          <i
+            class="dropdown__toggle-icon fas fa-caret-down"
+          />
+        </a>
+         
+        <div
+          class="dropdown__items hidden"
+        >
+          <div
+            class="select__search"
+          >
+            <i
+              class="select__search-icon fas fa-search"
+            />
+             
+            <input
+              class="select__search-input"
+              placeholder="action.search"
+              type="text"
+            />
+          </div>
+           
+          <ul
+            class="select__items"
+          >
+            <li
+              class="select__item active"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Name
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+             
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Stars
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Flag
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+     
+    <div
+      class="filters__type"
+    >
+      <div
+        class="dropdown dropdown--floating dropdown--tiny"
+      >
+        <a
+          class="dropdown__selected"
+        >
+          <!---->
+          
+        viewFilter.is
+       
+          <i
+            class="dropdown__toggle-icon fas fa-caret-down"
+          />
+        </a>
+         
+        <div
+          class="dropdown__items hidden"
+        >
+          <div
+            class="select__search"
+          >
+            <i
+              class="select__search-icon fas fa-search"
+            />
+             
+            <input
+              class="select__search-input"
+              placeholder="action.search"
+              type="text"
+            />
+          </div>
+           
+          <ul
+            class="select__items"
+          >
+            <li
+              class="select__item active"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.is
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.isNot
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.contains
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.containsNot
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.lengthIsLowerThan
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.isEmpty
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.isNotEmpty
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+     
+    <div
+      class="filters__value"
+    >
+      <input
+        class="input filters__value-input"
+        type="text"
+      />
+    </div>
+  </div>
+  <div
+    class="filters__item"
+  >
+    <a
+      class="filters__remove"
+    >
+      <i
+        class="fas fa-times"
+      />
+    </a>
+     
+    <div
+      class="filters__operator"
+    >
+      <!---->
+       
+      <div
+        class="dropdown dropdown--floating dropdown--tiny"
+      >
+        <a
+          class="dropdown__selected"
+        >
+          <!---->
+          
+        viewFilterContext.and
+       
+          <i
+            class="dropdown__toggle-icon fas fa-caret-down"
+          />
+        </a>
+         
+        <div
+          class="dropdown__items hidden"
+        >
+          <!---->
+           
+          <ul
+            class="select__items"
+          >
+            <li
+              class="select__item active"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilterContext.and
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+             
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilterContext.or
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+       
+      <!---->
+       
+      <!---->
+    </div>
+     
+    <div
+      class="filters__field"
+    >
+      <div
+        class="dropdown dropdown--floating dropdown--tiny"
+      >
+        <a
+          class="dropdown__selected"
+        >
+          <!---->
+          
+        Stars
+       
+          <i
+            class="dropdown__toggle-icon fas fa-caret-down"
+          />
+        </a>
+         
+        <div
+          class="dropdown__items hidden"
+        >
+          <div
+            class="select__search"
+          >
+            <i
+              class="select__search-icon fas fa-search"
+            />
+             
+            <input
+              class="select__search-input"
+              placeholder="action.search"
+              type="text"
+            />
+          </div>
+           
+          <ul
+            class="select__items"
+          >
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Name
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+             
+            <li
+              class="select__item active"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Stars
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Flag
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+     
+    <div
+      class="filters__type"
+    >
+      <div
+        class="dropdown dropdown--floating dropdown--tiny"
+      >
+        <a
+          class="dropdown__selected"
+        >
+          <!---->
+          
+        viewFilter.is
+       
+          <i
+            class="dropdown__toggle-icon fas fa-caret-down"
+          />
+        </a>
+         
+        <div
+          class="dropdown__items hidden"
+        >
+          <div
+            class="select__search"
+          >
+            <i
+              class="select__search-icon fas fa-search"
+            />
+             
+            <input
+              class="select__search-input"
+              placeholder="action.search"
+              type="text"
+            />
+          </div>
+           
+          <ul
+            class="select__items"
+          >
+            <li
+              class="select__item active"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.is
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.isNot
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.higherThan
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.lowerThan
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+     
+    <div
+      class="filters__value"
+    >
+      <div
+        class="filters__value-rating"
+      >
+        <div
+          class="rating color--dark-orange editing"
+        >
+          <i
+            class="fas rating__star fa-star rating__star--selected"
+          />
+          <i
+            class="fas rating__star fa-star rating__star--selected"
+          />
+          <i
+            class="fas rating__star fa-star"
+          />
+          <i
+            class="fas rating__star fa-star"
+          />
+          <i
+            class="fas rating__star fa-star"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+   
+  <div
+    class="filters_footer"
+  >
+    <a
+      class="filters__add"
+    >
+      <i
+        class="fas fa-plus"
+      />
+      
+      viewFilterContext.addFilter
+    </a>
+     
+    <div>
+      <div
+        class="switch switch--has-content"
+      >
+        viewFilterContext.disableAllFilters
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ViewFilterForm component Test rating filter 1`] = `
+<div>
+  <div
+    style="display: none;"
+  >
+    <div
+      class="filters__none"
+    >
+      <div
+        class="filters__none-title"
+      >
+        
+        viewFilterContext.noFilterTitle
+      
+      </div>
+       
+      <div
+        class="filters__none-description"
+      >
+        
+        viewFilterContext.noFilterText
+      
+      </div>
+    </div>
+  </div>
+   
+  <div
+    class="filters__item"
+  >
+    <a
+      class="filters__remove"
+    >
+      <i
+        class="fas fa-times"
+      />
+    </a>
+     
+    <div
+      class="filters__operator"
+    >
+      <span>
+        viewFilterContext.where
+      </span>
+       
+      <!---->
+       
+      <!---->
+       
+      <!---->
+    </div>
+     
+    <div
+      class="filters__field"
+    >
+      <div
+        class="dropdown dropdown--floating dropdown--tiny"
+      >
+        <a
+          class="dropdown__selected"
+        >
+          <!---->
+          
+        Stars
+       
+          <i
+            class="dropdown__toggle-icon fas fa-caret-down"
+          />
+        </a>
+         
+        <div
+          class="dropdown__items hidden"
+        >
+          <div
+            class="select__search"
+          >
+            <i
+              class="select__search-icon fas fa-search"
+            />
+             
+            <input
+              class="select__search-input"
+              placeholder="action.search"
+              type="text"
+            />
+          </div>
+           
+          <ul
+            class="select__items"
+          >
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Name
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+             
+            <li
+              class="select__item active"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Stars
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Flag
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+     
+    <div
+      class="filters__type"
+    >
+      <div
+        class="dropdown dropdown--floating dropdown--tiny"
+      >
+        <a
+          class="dropdown__selected"
+        >
+          <!---->
+          
+        viewFilter.is
+       
+          <i
+            class="dropdown__toggle-icon fas fa-caret-down"
+          />
+        </a>
+         
+        <div
+          class="dropdown__items"
+        >
+          <div
+            class="select__search"
+          >
+            <i
+              class="select__search-icon fas fa-search"
+            />
+             
+            <input
+              class="select__search-input"
+              placeholder="action.search"
+              type="text"
+            />
+          </div>
+           
+          <ul
+            class="select__items"
+          >
+            <li
+              class="select__item active hover"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.is
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.isNot
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.higherThan
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.lowerThan
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+     
+    <div
+      class="filters__value"
+    >
+      <div
+        class="filters__value-rating"
+      >
+        <div
+          class="rating color--dark-orange editing"
+        >
+          <i
+            class="fas rating__star fa-star rating__star--selected"
+          />
+          <i
+            class="fas rating__star fa-star rating__star--selected"
+          />
+          <i
+            class="fas rating__star fa-star"
+          />
+          <i
+            class="fas rating__star fa-star"
+          />
+          <i
+            class="fas rating__star fa-star"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+   
+  <div
+    class="filters_footer"
+  >
+    <a
+      class="filters__add"
+    >
+      <i
+        class="fas fa-plus"
+      />
+      
+      viewFilterContext.addFilter
+    </a>
+     
+    <div>
+      <div
+        class="switch switch--has-content"
+      >
+        viewFilterContext.disableAllFilters
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ViewFilterForm component Test rating filter 2`] = `
+<div>
+  <div
+    style="display: none;"
+  >
+    <div
+      class="filters__none"
+    >
+      <div
+        class="filters__none-title"
+      >
+        
+        viewFilterContext.noFilterTitle
+      
+      </div>
+       
+      <div
+        class="filters__none-description"
+      >
+        
+        viewFilterContext.noFilterText
+      
+      </div>
+    </div>
+  </div>
+   
+  <div
+    class="filters__item"
+  >
+    <a
+      class="filters__remove"
+    >
+      <i
+        class="fas fa-times"
+      />
+    </a>
+     
+    <div
+      class="filters__operator"
+    >
+      <span>
+        viewFilterContext.where
+      </span>
+       
+      <!---->
+       
+      <!---->
+       
+      <!---->
+    </div>
+     
+    <div
+      class="filters__field"
+    >
+      <div
+        class="dropdown dropdown--floating dropdown--tiny"
+      >
+        <a
+          class="dropdown__selected"
+        >
+          <!---->
+          
+        Stars
+       
+          <i
+            class="dropdown__toggle-icon fas fa-caret-down"
+          />
+        </a>
+         
+        <div
+          class="dropdown__items hidden"
+        >
+          <div
+            class="select__search"
+          >
+            <i
+              class="select__search-icon fas fa-search"
+            />
+             
+            <input
+              class="select__search-input"
+              placeholder="action.search"
+              type="text"
+            />
+          </div>
+           
+          <ul
+            class="select__items"
+          >
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Name
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+             
+            <li
+              class="select__item active"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Stars
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        Flag
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+     
+    <div
+      class="filters__type"
+    >
+      <div
+        class="dropdown dropdown--floating dropdown--tiny"
+      >
+        <a
+          class="dropdown__selected"
+        >
+          <!---->
+          
+        viewFilter.is
+       
+          <i
+            class="dropdown__toggle-icon fas fa-caret-down"
+          />
+        </a>
+         
+        <div
+          class="dropdown__items hidden"
+        >
+          <div
+            class="select__search"
+          >
+            <i
+              class="select__search-icon fas fa-search"
+            />
+             
+            <input
+              class="select__search-input"
+              placeholder="action.search"
+              type="text"
+            />
+          </div>
+           
+          <ul
+            class="select__items"
+          >
+            <li
+              class="select__item active hover"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.is
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.isNot
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.higherThan
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+            <li
+              class="select__item"
+            >
+              <a
+                class="select__item-link"
+              >
+                <div
+                  class="select__item-name"
+                >
+                  <!---->
+                  
+        viewFilter.lowerThan
+      
+                </div>
+                 
+                <!---->
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+     
+    <div
+      class="filters__value"
+    >
+      <div
+        class="filters__value-rating"
+      >
+        <div
+          class="rating color--dark-orange editing"
+        >
+          <i
+            class="fas rating__star fa-star rating__star--selected"
+          />
+          <i
+            class="fas rating__star fa-star rating__star--selected"
+          />
+          <i
+            class="fas rating__star fa-star rating__star--selected"
+          />
+          <i
+            class="fas rating__star fa-star rating__star--selected"
+          />
+          <i
+            class="fas rating__star fa-star rating__star--selected"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+   
+  <div
+    class="filters_footer"
+  >
+    <a
+      class="filters__add"
+    >
+      <i
+        class="fas fa-plus"
+      />
+      
+      viewFilterContext.addFilter
+    </a>
+     
+    <div>
+      <div
+        class="switch switch--has-content"
+      >
+        viewFilterContext.disableAllFilters
+      </div>
+    </div>
+  </div>
+</div>
+`;

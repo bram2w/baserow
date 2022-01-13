@@ -13,6 +13,16 @@ class Command(BaseCommand):
         "Existing files will be overwritten."
     )
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "name",
+            type=str,
+            nargs="?",
+            help="The id of the group where the newly created applications must be "
+            "added to.",
+            default=None,
+        )
+
     def handle(self, *args, **options):
         """
         Regenerates the thumbnails of all image user files. If the USER_THUMBNAILS
@@ -36,7 +46,10 @@ class Command(BaseCommand):
                 try:
                     image = Image.open(stream)
                     handler.generate_and_save_image_thumbnails(
-                        image, user_file, storage=default_storage
+                        image,
+                        user_file,
+                        storage=default_storage,
+                        only_with_name=options["name"],
                     )
                     image.close()
                 except IOError:

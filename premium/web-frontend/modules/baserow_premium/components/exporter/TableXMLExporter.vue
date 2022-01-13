@@ -3,7 +3,9 @@
     <div class="row">
       <div class="col col-12">
         <div class="control">
-          <label class="control__label">Encoding</label>
+          <label class="control__label">{{
+            $t('tableXMLExporter.encoding')
+          }}</label>
           <div class="control__elements">
             <CharsetDropdown
               v-model="values.export_charset"
@@ -40,3 +42,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "tableXMLExporter": {
+      "encoding": "Encoding"
+    }
+  },
+  "fr": {
+    "tableXMLExporter": {
+      "encoding": "Encodage"
+    }
+  }
+}
+</i18n>

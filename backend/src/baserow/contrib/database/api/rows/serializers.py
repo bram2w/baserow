@@ -47,7 +47,7 @@ def get_row_serializer_class(
         included in the serializer. By default all the fields of the model are going
         to be included. Note that the field id must exist in the model in
         order to work.
-    :type field_ids: list or None
+    :type field_ids: Optional[Iterable[int]]
     :param field_names_to_include: If provided only the field names in the list will be
         included in the serializer. By default all the fields of the model are going
         to be included. Note that the field name must exist in the model in

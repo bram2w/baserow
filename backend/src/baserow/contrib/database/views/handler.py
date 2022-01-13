@@ -1,19 +1,23 @@
-from django.db.models import F
-from django.core.exceptions import FieldDoesNotExist, ValidationError
+from collections import defaultdict
+from copy import deepcopy
+from typing import Dict, Any, List, Optional, Iterable
 
+from django.core.exceptions import FieldDoesNotExist, ValidationError
+from django.db.models import F
+
+from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.field_filters import FilterBuilder
+from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
+from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.signals import row_created
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     extract_allowed,
     set_allowed_attrs,
     get_model_reference_field_name,
 )
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
-from baserow.contrib.database.fields.field_filters import FilterBuilder
-from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
-from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.rows.signals import row_created
 from .exceptions import (
     ViewDoesNotExist,
     ViewNotInTable,
@@ -26,9 +30,9 @@ from .exceptions import (
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
+    CannotShareViewTypeError,
 )
-from .validators import EMPTY_VALUES
-from .models import View, ViewFilter, ViewSort, FormView
+from .models import View, ViewFilter, ViewSort
 from .registries import view_type_registry, view_filter_type_registry
 from .signals import (
     view_created,
@@ -43,6 +47,8 @@ from .signals import (
     view_sort_deleted,
     view_field_options_updated,
 )
+from .validators import EMPTY_VALUES
+from ..table.models import Table, GeneratedTableModel
 
 
 class ViewHandler:
@@ -279,7 +285,7 @@ class ViewHandler:
 
         # If the new field type does not support sorting then all sortings will be
         # removed.
-        if not field_type.can_order_by:
+        if not field_type.check_can_order_by(field):
             field.viewsort_set.all().delete()
 
         # Check which filters are not compatible anymore and remove those.
@@ -506,7 +512,7 @@ class ViewHandler:
             self, view_filter_id=view_filter_id, view_filter=view_filter, user=user
         )
 
-    def apply_sorting(self, view, queryset):
+    def apply_sorting(self, view, queryset, restrict_to_field_ids=None):
         """
         Applies the view's sorting to the given queryset. The first sort, which for now
         is the first created, will always be applied first. Secondary sortings are
@@ -528,6 +534,9 @@ class ViewHandler:
         :type queryset: QuerySet
         :raises ValueError: When the queryset's model is not a table model or if the
             table model does not contain the one of the fields.
+        :param restrict_to_field_ids: Only field ids in this iterable will have their
+            view sorts applied in the resulting queryset.
+        :type restrict_to_field_ids: Optional[Iterable[int]]
         :return: The queryset where the sorting has been applied to.
         :type: QuerySet
         """
@@ -541,7 +550,10 @@ class ViewHandler:
 
         order_by = []
 
-        for view_sort in view.viewsort_set.all():
+        qs = view.viewsort_set
+        if restrict_to_field_ids is not None:
+            qs = qs.filter(field_id__in=restrict_to_field_ids)
+        for view_sort in qs.all():
             # If the to be sort field is not present in the `_field_objects` we
             # cannot filter so we raise a ValueError.
             if view_sort.field_id not in model._field_objects:
@@ -653,7 +665,7 @@ class ViewHandler:
 
         # Check if the field supports sorting.
         field_type = field_type_registry.get_by_model(field.specific_class)
-        if not field_type.can_order_by:
+        if not field_type.check_can_order_by(field):
             raise ViewSortFieldNotSupported(
                 f"The field {field.pk} does not support " f"sorting."
             )
@@ -711,7 +723,7 @@ class ViewHandler:
         # If the field has changed we need to check if the new field type supports
         # sorting.
         field_type = field_type_registry.get_by_model(field.specific_class)
-        if field.id != view_sort.field_id and not field_type.can_order_by:
+        if field.id != view_sort.field_id and not field_type.check_can_order_by(field):
             raise ViewSortFieldNotSupported(
                 f"The field {field.pk} does not support " f"sorting."
             )
@@ -754,7 +766,14 @@ class ViewHandler:
             self, view_sort_id=view_sort_id, view_sort=view_sort, user=user
         )
 
-    def get_queryset(self, view, search=None, model=None):
+    def get_queryset(
+        self,
+        view,
+        search=None,
+        model=None,
+        only_sort_by_field_ids=None,
+        only_search_by_field_ids=None,
+    ):
         """
         Returns a queryset for the provided view which is appropriately sorted,
         filtered and searched according to the view type and its settings.
@@ -764,7 +783,17 @@ class ViewHandler:
             not specified then the model will be generated automatically.
         :param view: The view to get the export queryset and fields for.
         :type view: View
-        :return: The export queryset.
+        :param only_sort_by_field_ids: To only sort the queryset by some fields
+            provide those field ids in this optional iterable. Other fields not
+            present in the iterable will not have their view sorts applied even if they
+            have one.
+        :type only_sort_by_field_ids: Optional[Iterable[int]]
+        :param only_search_by_field_ids: To only apply the search term to some
+            fields provide those field ids in this optional iterable. Other fields
+             not present in the iterable will not be searched and filtered down by the
+             search term.
+        :type only_search_by_field_ids: Optional[Iterable[int]]
+        :return: The appropriate queryset for the provided view.
         :rtype: QuerySet
         """
 
@@ -777,60 +806,75 @@ class ViewHandler:
         if view_type.can_filter:
             queryset = self.apply_filters(view, queryset)
         if view_type.can_sort:
-            queryset = self.apply_sorting(view, queryset)
+            queryset = self.apply_sorting(view, queryset, only_sort_by_field_ids)
         if search is not None:
-            queryset = queryset.search_all_fields(search)
+            queryset = queryset.search_all_fields(search, only_search_by_field_ids)
         return queryset
 
-    def rotate_form_view_slug(self, user, form):
+    def rotate_view_slug(self, user, view):
         """
-        Rotates the slug of the provided form view.
+        Rotates the slug of the provided view.
 
-        :param user: The user on whose behalf the form view is updated.
+        :param user: The user on whose behalf the view is updated.
         :type user: User
-        :param form: The form view instance that needs to be updated.
-        :type form: View
+        :param view: The form view instance that needs to be updated.
+        :type view: View
         :return: The updated view instance.
+        :rtype: View
+        :raises CannotShareViewTypeError: Raised if called for a view which does not
+            support sharing.
+        """
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        if not view_type.can_share:
+            raise CannotShareViewTypeError()
+
+        group = view.table.database.group
+        group.has_user(user, raise_error=True)
+
+        view.rotate_slug()
+        view.save()
+
+        view_updated.send(self, view=view, user=user)
+
+        return view
+
+    def get_public_view_by_slug(self, user, slug, view_model=None):
+        """
+        Returns the view with the provided slug if it is public or if the user has
+        access to the views group.
+
+        :param user: The user on whose behalf the view is requested.
+        :type user: User
+        :param slug: The slug of the view.
+        :type slug: str
+        :param view_model: If provided that models objects are used to select the
+            view. This can for example be useful when you want to select a GridView or
+            other child of the View model.
+        :type view_model: Type[View]
+        :return: The requested view with matching slug.
         :rtype: View
         """
 
-        if not isinstance(form, FormView):
-            raise ValueError("The provided form is not an instance of FormView.")
-
-        group = form.table.database.group
-        group.has_user(user, raise_error=True)
-
-        form.rotate_slug()
-        form.save()
-
-        view_updated.send(self, view=form, user=user)
-
-        return form
-
-    def get_public_form_view_by_slug(self, user, slug):
-        """
-        Returns the form view related to the provided slug if the form related to the
-        slug is public or if the user has access to the related group.
-
-        :param user: The user on whose behalf the form is requested.
-        :type user: User
-        :param slug: The slug of the form view.
-        :type slug: str
-        :return: The requested form view that belongs to the form with the slug.
-        :rtype: FormView
-        """
+        if not view_model:
+            view_model = View
 
         try:
-            form = FormView.objects.get(slug=slug)
-        except (FormView.DoesNotExist, ValidationError):
-            raise ViewDoesNotExist("The form does not exist.")
+            view = view_model.objects.select_related("table__database__group").get(
+                slug=slug
+            )
+        except (view_model.DoesNotExist, ValidationError):
+            raise ViewDoesNotExist("The view does not exist.")
 
-        if not form.public and (
-            not user or not form.table.database.group.has_user(user)
+        if TrashHandler.item_has_a_trashed_parent(view.table, check_item_also=True):
+            raise ViewDoesNotExist("The view does not exist.")
+
+        if not view.public and (
+            not user or not view.table.database.group.has_user(user)
         ):
-            raise ViewDoesNotExist("The form does not exist.")
+            raise ViewDoesNotExist("The view does not exist.")
 
-        return form
+        return view
 
     def submit_form_view(self, form, values, model=None, enabled_field_options=None):
         """
@@ -884,3 +928,167 @@ class ViewHandler:
         )
 
         return instance
+
+    def get_public_views_row_checker(
+        self,
+        table,
+        model,
+        only_include_views_which_want_realtime_events,
+        updated_field_ids=None,
+    ):
+        """
+        Returns a CachingPublicViewRowChecker object which will have precalculated
+        information about the public views in the provided table to aid with quickly
+        checking which views a row in that table is visible in. If you will be updating
+        the row and reusing the checker you must provide an iterable of the field ids
+        that you will be updating in the row, otherwise the checker will cache the
+        first check per view/row.
+
+        :param table: The table the row is in.
+        :param model: The model of the table including all fields.
+        :param only_include_views_which_want_realtime_events: If True will only look
+            for public views where
+            ViewType.when_shared_publicly_requires_realtime_events is True.
+        :param updated_field_ids: An optional iterable of field ids which will be
+            updated on rows passed to the checker. If the checker is used on the same
+            row multiple times and that row has been updated it will return invalid
+            results unless you have correctly populated this argument.
+        :return: A list of non-specific public view instances.
+        """
+
+        return CachingPublicViewRowChecker(
+            table,
+            model,
+            only_include_views_which_want_realtime_events,
+            updated_field_ids,
+        )
+
+    def restrict_row_for_view(
+        self, view: View, serialized_row: Dict[str, Any]
+    ) -> Dict[Any, Any]:
+        """
+        Removes any fields which are hidden in the view from the provided serialized
+        row ensuring no data is leaked according to the views field options.
+
+        :param view: The view to restrict the row by.
+        :param serialized_row: A python dictionary which is the result of serializing
+            the row containing `field_XXX` keys per field value. It must not be a
+            serialized using user_field_names=True.
+        :return: A copy of the serialized_row with all hidden fields removed.
+        """
+        return self.restrict_rows_for_view(view, [serialized_row])[0]
+
+    def restrict_rows_for_view(
+        self, view: View, serialized_rows: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Removes any fields which are hidden in the view from the provided serialized
+        row ensuring no data is leaked according to the views field options.
+
+        :param view: The view to restrict the row by.
+        :param serialized_rows: A list of python dictionaries which are the result of
+            serializing the rows containing `field_XXX` keys per field value. They
+            must not be serialized using user_field_names=True.
+        :return: A copy of the serialized_row with all hidden fields removed.
+        """
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        hidden_field_options = view_type.get_hidden_field_options(view)
+        restricted_rows = []
+        for serialized_row in serialized_rows:
+            row_copy = deepcopy(serialized_row)
+            for hidden_field_option in hidden_field_options:
+                row_copy.pop(f"field_{hidden_field_option.field_id}", None)
+            restricted_rows.append(row_copy)
+        return restricted_rows
+
+
+class CachingPublicViewRowChecker:
+    """
+    A helper class to check which public views a row is visible in. Will pre-calculate
+    upfront for a specific table which public views are always visible, which public
+    views can have row check results cached for and finally will pre-construct and
+    reuse querysets for performance reasons.
+    """
+
+    def __init__(
+        self,
+        table: Table,
+        model: GeneratedTableModel,
+        only_include_views_which_want_realtime_events: bool,
+        updated_field_ids: Optional[Iterable[int]] = None,
+    ):
+        self._public_views = (
+            table.view_set.filter(public=True).prefetch_related("viewfilter_set").all()
+        )
+        self._updated_field_ids = updated_field_ids
+        self._views_with_filters = []
+        self._always_visible_views = []
+        self._view_row_check_cache = defaultdict(dict)
+        handler = ViewHandler()
+        for view in self._public_views:
+            if only_include_views_which_want_realtime_events:
+                view_type = view_type_registry.get_by_model(view.specific_class)
+                if not view_type.when_shared_publicly_requires_realtime_events:
+                    continue
+
+            if len(view.viewfilter_set.all()) == 0:
+                # If there are no view filters for this view then any row must always
+                # be visible in this view
+                self._always_visible_views.append(view)
+            else:
+                filter_qs = handler.apply_filters(view, model.objects)
+                self._views_with_filters.append(
+                    (
+                        view,
+                        filter_qs,
+                        self._view_row_checks_can_be_cached(view),
+                    )
+                )
+
+    def get_public_views_where_row_is_visible(self, row):
+        """
+        WARNING: If you are reusing the same checker and calling this method with the
+        same row multiple times you must have correctly set which fields in the row
+        might be updated in the checkers initials `updated_field_ids` attribute. This
+        is because for a given view, if we know none of the fields it filters on
+        will be updated we can cache the first check of if that row exists as any
+        further changes to the row wont be affecting filtered fields. Hence
+        `updated_field_ids` needs to be set if you are ever changing the row and
+        reusing the same CachingPublicViewRowChecker instance.
+
+        :param row: A row in the checkers table.
+        :return: A list of views where the row is visible for this checkers table.
+        """
+        views = []
+        for view, filter_qs, can_use_cache in self._views_with_filters:
+            if can_use_cache:
+                if row.id not in self._view_row_check_cache[view.id]:
+                    self._view_row_check_cache[view.id][
+                        row.id
+                    ] = self._check_row_visible(filter_qs, row)
+                if self._view_row_check_cache[view.id][row.id]:
+                    views.append(view)
+            elif self._check_row_visible(filter_qs, row):
+                views.append(view)
+
+        return views + self._always_visible_views
+
+    # noinspection PyMethodMayBeStatic
+    def _check_row_visible(self, filter_qs, row):
+        return filter_qs.filter(id=row.id).exists()
+
+    def _view_row_checks_can_be_cached(self, view):
+        if self._updated_field_ids is None:
+            return True
+        for view_filter in view.viewfilter_set.all():
+            if view_filter.field_id in self._updated_field_ids:
+                # We found a view filter for a field which will be updated hence we
+                # need to check both before and after a row update occurs
+                return False
+        # Every single updated field does not have a filter on it, hence
+        # we only need to check if a given row is visible in the view once
+        # as any changes to the fields in said row wont be for fields with
+        # filters and so the result of the first check will be still
+        # valid for any subsequent checks.
+        return True

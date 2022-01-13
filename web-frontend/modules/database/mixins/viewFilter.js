@@ -5,6 +5,11 @@
  */
 export default {
   props: {
+    view: {
+      type: Object,
+      required: false,
+      default: undefined,
+    },
     filter: {
       type: Object,
       required: true,
@@ -15,6 +20,10 @@ export default {
     },
     fields: {
       type: Array,
+      required: true,
+    },
+    disabled: {
+      type: Boolean,
       required: true,
     },
     readOnly: {

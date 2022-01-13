@@ -5,13 +5,13 @@
         <li>
           <a @click.prevent="showEditModal">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
-            Edit
+            {{ $t('action.edit') }}
           </a>
         </li>
         <li>
           <a @click.prevent="showChangePasswordModal">
             <i class="context__menu-icon fas fa-fw fa-key"></i>
-            Change password
+            {{ $t('editUserContext.changePassword') }}
           </a>
         </li>
         <li>
@@ -23,7 +23,7 @@
             @click.prevent="deactivate"
           >
             <i class="context__menu-icon fas fa-fw fa-times"></i>
-            Deactivate
+            {{ $t('action.deactivate') }}
           </a>
           <a
             v-else
@@ -33,13 +33,13 @@
             @click.prevent="activate"
           >
             <i class="context__menu-icon fas fa-fw fa-check"></i>
-            Activate
+            {{ $t('action.activate') }}
           </a>
         </li>
         <li>
           <a @click.prevent="showDeleteModal">
             <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
-            Permanently delete
+            {{ $t('editUserContext.delete') }}
           </a>
         </li>
       </ul>
@@ -131,3 +131,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "editUserContext": {
+      "changePassword": "Change password",
+      "delete": "Permanently delete"
+    }
+  },
+  "fr": {
+    "editUserContext": {
+      "changePassword": "Modifier le mot de passe",
+      "delete": "Supprimer définitivement"
+    }
+  }
+}
+</i18n>

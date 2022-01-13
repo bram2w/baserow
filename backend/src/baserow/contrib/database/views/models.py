@@ -1,7 +1,7 @@
 import secrets
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import models, transaction
 
 from baserow.core.utils import get_model_reference_field_name
 from baserow.core.models import UserFile
@@ -14,7 +14,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
-from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.models import Field, FileField
 from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_filter_type_registry,
@@ -30,6 +30,7 @@ SORT_ORDER_ASC = "ASC"
 SORT_ORDER_DESC = "DESC"
 SORT_ORDER_CHOICES = ((SORT_ORDER_ASC, "Ascending"), (SORT_ORDER_DESC, "Descending"))
 
+FORM_VIEW_SUBMIT_TEXT = "Submit"
 FORM_VIEW_SUBMIT_ACTION_MESSAGE = "MESSAGE"
 FORM_VIEW_SUBMIT_ACTION_REDIRECT = "REDIRECT"
 FORM_VIEW_SUBMIT_ACTION_CHOICES = (
@@ -70,6 +71,20 @@ class View(
         help_text="Allows users to see results unfiltered while still keeping "
         "the filters saved for the view.",
     )
+    slug = models.SlugField(
+        default=secrets.token_urlsafe,
+        help_text="The unique slug where the view can be accessed publicly on.",
+        unique=True,
+        db_index=True,
+    )
+    public = models.BooleanField(
+        default=False,
+        help_text="Indicates whether the view is publicly accessible to visitors.",
+        db_index=True,
+    )
+
+    def rotate_slug(self):
+        self.slug = secrets.token_urlsafe()
 
     class Meta:
         ordering = ("order",)
@@ -79,25 +94,24 @@ class View(
         queryset = View.objects.filter(table=table)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
-    def get_field_options(self, create_if_not_exists=False, fields=None):
+    def get_field_options(self, create_if_missing=False, fields=None):
         """
         Each field can have unique options per view. This method returns those
         options per field type and can optionally create the missing ones. This method
         only works if the `field_options` property is a ManyToManyField with a relation
         to a field options model.
 
-        :param create_if_not_exists: If true the missing GridViewFieldOptions are
+        :param create_if_missing: If true the missing GridViewFieldOptions are
             going to be created. If a fields has been created at a later moment it
             could be possible that they don't exist yet. If this value is True, the
             missing relationships are created in that case.
-        :type create_if_not_exists: bool
+        :type create_if_missing: bool
         :param fields: If all the fields related to the table of this grid view have
             already been fetched, they can be provided here to avoid having to fetch
-            them for a second time. This is only needed if `create_if_not_exists` is
-            True.
+            them for a second time. This is only needed if `create_if_missing` is True.
         :type fields: list
-        :return: A list of field options instances related to this grid view.
-        :rtype: list or QuerySet
+        :return: A queryset containing all the field options of view.
+        :rtype: QuerySet
         """
 
         view_type = view_type_registry.get_by_model(self.specific_class)
@@ -116,20 +130,49 @@ class View(
                 "any descendants."
             )
 
-        field_options = through_model.objects.filter(**{field_name: self})
+        def get_queryset():
+            return through_model.objects.filter(**{field_name: self})
 
-        if create_if_not_exists:
-            field_options = list(field_options)
-            if not fields:
-                fields = Field.objects.filter(table=self.table)
+        field_options = get_queryset()
 
-            existing_field_ids = [options.field_id for options in field_options]
-            for field in fields:
-                if field.id not in existing_field_ids:
-                    field_option = through_model.objects.create(
-                        **{field_name: self, "field": field}
+        if create_if_missing:
+            fields_queryset = Field.objects.filter(table_id=self.table.id)
+
+            if fields is None:
+                field_count = fields_queryset.count()
+            else:
+                field_count = len(fields)
+
+            # The check there are missing field options must be as efficient as
+            # possible because this is being done a lot.
+            if len(field_options) < field_count:
+                if fields is None:
+                    fields = fields_queryset
+
+                with transaction.atomic():
+                    # Lock the view so concurrent calls to this method wont create
+                    # duplicate field options.
+                    View.objects.filter(id=self.id).select_for_update().first()
+
+                    # Invalidate the field options because they could have been
+                    # changed concurrently.
+                    field_options = get_queryset()
+
+                    # In the case when field options are missing, we can be more
+                    # in-efficient because this rarely happens. The most important part
+                    # is that the check is fast.
+                    existing_field_ids = [options.field_id for options in field_options]
+                    through_model.objects.bulk_create(
+                        [
+                            through_model(**{field_name: self, "field": field})
+                            for field in fields
+                            if field.id not in existing_field_ids
+                        ]
                     )
-                    field_options.append(field_option)
+
+                # Invalidate the field options because new ones have been created and
+                # we always want to return a queryset.
+                field_options = get_queryset()
 
         return field_options
 
@@ -220,19 +263,42 @@ class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
         ordering = ("field_id",)
 
 
+class GalleryView(View):
+    field_options = models.ManyToManyField(Field, through="GalleryViewFieldOptions")
+    card_cover_image_field = models.ForeignKey(
+        FileField,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="gallery_view_card_cover_field",
+        help_text="References a file field of which the first image must be shown as "
+        "card cover image.",
+    )
+
+
+class GalleryViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
+    gallery_view = models.ForeignKey(GalleryView, on_delete=models.CASCADE)
+    field = models.ForeignKey(Field, on_delete=models.CASCADE)
+    hidden = models.BooleanField(
+        default=True,
+        help_text="Whether or not the field should be hidden in the card.",
+    )
+    # The default value is the maximum value of the small integer field because a newly
+    # created field must always be last.
+    order = models.SmallIntegerField(
+        default=32767,
+        help_text="The order that the field has in the form. Lower value is first.",
+    )
+
+    class Meta:
+        ordering = (
+            "order",
+            "field_id",
+        )
+
+
 class FormView(View):
     field_options = models.ManyToManyField(Field, through="FormViewFieldOptions")
-    slug = models.SlugField(
-        default=secrets.token_urlsafe,
-        help_text="The unique slug where the form can be accessed publicly on.",
-        unique=True,
-        db_index=True,
-    )
-    public = models.BooleanField(
-        default=False,
-        help_text="Indicates whether the form is publicly accessible to visitors and "
-        "if they can fill it out.",
-    )
     title = models.TextField(
         blank=True,
         help_text="The title that is displayed at the beginning of the form.",
@@ -257,6 +323,10 @@ class FormView(View):
         related_name="form_view_logo_image",
         help_text="The user file logo image that is displayed at the top of the form.",
     )
+    submit_text = models.TextField(
+        default=FORM_VIEW_SUBMIT_TEXT,
+        help_text="The text displayed on the submit button.",
+    )
     submit_action = models.CharField(
         max_length=32,
         choices=FORM_VIEW_SUBMIT_ACTION_CHOICES,
@@ -275,9 +345,6 @@ class FormView(View):
         f"then the visitors will be redirected to the this URL after submitting the "
         f"form.",
     )
-
-    def rotate_slug(self):
-        self.slug = secrets.token_urlsafe()
 
     @property
     def active_field_options(self):

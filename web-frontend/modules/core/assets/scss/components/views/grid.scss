@@ -122,6 +122,17 @@
   padding: 10px;
 }
 
+.grid-view__foot-logo {
+  position: fixed;
+  right: 12px;
+  bottom: 16px;
+
+  img {
+    display: block;
+    max-height: 100%;
+  }
+}
+
 .grid-view__placeholder {
   position: relative;
   background-color: $white;
@@ -560,4 +571,9 @@
   @include absolute(auto, auto, auto, 0);
 
   border-top: solid 1px $color-primary-900;
+}
+
+.grid-view__public-shared-page {
+  min-height: 100%;
+  background-color: $white;
 }

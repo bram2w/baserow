@@ -8,6 +8,10 @@ class ViewDoesNotExist(Exception):
     """Raised when trying to get a view that doesn't exist."""
 
 
+class CannotShareViewTypeError(Exception):
+    """Raised when trying to a share a view that cannot be shared"""
+
+
 class ViewNotInTable(Exception):
     """Raised when a provided view does not belong to a table."""
 

@@ -106,6 +106,15 @@ VALID_FORMULA_TESTS = [
     ("date_interval('1 year') + todate('20200101', 'YYYYMMDD')", "2021-01-01"),
     ("todate('20200101', 'YYYYMMDD') + date_interval('1 second')", "2020-01-01"),
     ("todate('20200101', 'YYYYMMDD') - date_interval('1 year')", "2019-01-01"),
+    ("month(todate('20200601', 'YYYYMMDD') - date_interval('1 year'))", "6"),
+    (
+        "month(todate('20200601', 'YYYYMMDD') "
+        "+ ("
+        "   todate('20200601', 'YYYYMMDD') "
+        "   - todate('20100601', 'YYYYMMDD'))"
+        ")",
+        "6",
+    ),
     (
         "todate('20200101', 'YYYYMMDD') - todate('20210101', 'YYYYMMDD')",
         duration_string(-timedelta(days=366)),

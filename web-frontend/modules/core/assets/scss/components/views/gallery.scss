@@ -1,0 +1,67 @@
+.gallery-view {
+  overflow: hidden;
+
+  @include absolute(0);
+}
+
+.gallery-view__add {
+  border: solid 1px $color-neutral-400;
+  background: $white;
+  border-radius: 100%;
+  color: $color-primary-900;
+  box-shadow: 3px 0 6px 0 rgba($black, 0.16);
+  z-index: 2;
+
+  @include center-text(40px, 18px);
+  @include absolute(auto, 20px, 20px, auto);
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+  }
+}
+
+.gallery-view__scroll {
+  overflow-y: auto;
+  z-index: 1;
+
+  @include absolute(0);
+}
+
+.gallery-view__cards {
+  position: relative;
+}
+
+.gallery-view__card {
+  @include absolute(0, auto, auto, 0);
+
+  &:not(.gallery-view__card--disabled) * {
+    pointer-events: none;
+    user-select: none;
+  }
+
+  &--dragging-clone {
+    pointer-events: none;
+    left: 0;
+    right: 0;
+    opacity: 0.9;
+    transform: none !important;
+  }
+
+  &.gallery-view__card--dragging {
+    visibility: hidden;
+  }
+
+  .gallery-view__cards--dragging & {
+    // Must be kept in sync with the timeout of bufferedRowsDragAndDrop.js::rowMoved
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+    transition-property: transform;
+    transition-delay: 0s;
+  }
+
+  &:not(.card--loading):not(.gallery-view__card--disabled):not(.gallery-view__card--dragging):hover {
+    cursor: pointer;
+    box-shadow: 0 1px 3px 0 rgba($black, 0.32);
+  }
+}

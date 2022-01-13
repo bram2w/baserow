@@ -1,21 +1,67 @@
 # Changelog
 
+## Unreleased
+
+## Released (2022-01-13)
+
+* Fixed frontend errors occurring sometimes when mass deleting and restoring sorted 
+  fields
+* Added French translation.
+* Added Video, Audio, PDF and some Office file preview.
+* Added rating field type.
+* Fix deleted options that appear in the command line JSON file export.
+* Fix subtracting date intervals from dates in formulas in some situations not working.
+* Added day of month filter to date field.
+* Added gallery view.
+  * Added cover field to the gallery view.
+* Added length is lower than filter.
+* **dev.sh users** Fixed bug in dev.sh where UID/GID were not being set correctly, 
+  please rebuild any dev images you are using.
+* Replaced the table `order` index with an `order, id` index to improve performance.
+* **breaking change** The API endpoint to rotate a form views slug has been moved to
+  `/database/views/${viewId}/rotate-slug/`.
+* Increased maximum length of application name to 160 characters.
+* Fixed copying/pasting for date field.
+* Added ability to share grid views publicly.
+* Allow changing the text of the submit button in the form view.
+* Fixed reordering of single select options when initially creating the field.
+* Improved performance by not rendering cells that are out of the view port.
+* Fix bug where field options in rare situations could have been duplicated.
+* Focused the search field when opening the modal to link a table row.
+* Fixed order of fields in form preview.
+* Fix the ability to make filters and sorts on invalid formula and lookup fields.
+* Fixed bug preventing trash cleanup job from running after a lookup field was converted
+  to another field type.
+* Added cover field to the Kanban view.
+* Fixed bug where not all rows were displayed on large screens.
+* New templates:
+    * Car Maintenance Log
+    * Teacher Lesson Plans
+    * Business Conference Event
+    * Restaurant Management
+* Updated templates:
+    * Healthcare Facility Management
+    * Apartment Hunt
+    * Recipe Book
+    * Commercial Property Management
+
 ## Released (2021-11-25)
 
-* Fix trashing tables and related link fields causing the field dependency graph to 
-  become invalid. 
+* Increase Webhook URL max length to 2000.
+* Fix trashing tables and related link fields causing the field dependency graph to
+  become invalid.
 * Fixed not executing premium tests.
 
 ## Released (2021-11-24)
 
 * Fixed a bug where the frontend would fail hard if a table with no views was accessed.
 * Tables can now be opened in new browser tabs.
-* **Breaking Change**: Baserow's `docker-compose.yml` now allows setting the MEDIA_URL 
+* **Breaking Change**: Baserow's `docker-compose.yml` now allows setting the MEDIA_URL
   env variable. If using MEDIA_PORT you now need to set MEDIA_URL also.
 * **Breaking Change**: Baserow's `docker-compose.yml` container names have changed to
   no longer be hardcoded to prevent naming clashes.
 * Added a licensing system for the premium version.
-* Fixed bug where it was possible to create duplicate trash entries. 
+* Fixed bug where it was possible to create duplicate trash entries.
 * Fixed propType validation error when converting from a date field to a boolean field.
 * Deprecate internal formula field function field_by_id.
 * Made it possible to change user information.

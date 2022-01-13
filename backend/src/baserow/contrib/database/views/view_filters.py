@@ -7,7 +7,7 @@ from dateutil.parser import ParserError
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db.models import Q, IntegerField, BooleanField, DateTimeField, DurationField
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, Length
 from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
 
@@ -23,6 +23,7 @@ from baserow.contrib.database.fields.field_types import (
     LongTextFieldType,
     URLFieldType,
     NumberFieldType,
+    RatingFieldType,
     DateFieldType,
     LastModifiedFieldType,
     LinkRowFieldType,
@@ -64,6 +65,7 @@ class EqualViewFilterType(ViewFilterType):
         LongTextFieldType.type,
         URLFieldType.type,
         NumberFieldType.type,
+        RatingFieldType.type,
         EmailFieldType.type,
         PhoneNumberFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
@@ -170,6 +172,36 @@ class ContainsNotViewFilterType(NotViewFilterTypeMixin, ContainsViewFilterType):
     type = "contains_not"
 
 
+class LengthIsLowerThanViewFilterType(ViewFilterType):
+    """
+    The length is lower than filter checks if the fields character
+    length is less than x
+    """
+
+    type = "length_is_lower_than"
+    compatible_field_types = [
+        TextFieldType.type,
+        LongTextFieldType.type,
+        URLFieldType.type,
+        EmailFieldType.type,
+        PhoneNumberFieldType.type,
+    ]
+
+    def get_filter(self, field_name, value, model_field, field):
+        if value == 0:
+            return Q()
+
+        try:
+            return AnnotatedQ(
+                annotation={f"{field_name}_len": Length(field_name)},
+                q={f"{field_name}_len__lt": int(value)},
+            )
+        except Exception:
+            pass
+
+        return Q()
+
+
 class HigherThanViewFilterType(ViewFilterType):
     """
     The higher than filter checks if the field value is higher than the filter value.
@@ -180,6 +212,7 @@ class HigherThanViewFilterType(ViewFilterType):
     type = "higher_than"
     compatible_field_types = [
         NumberFieldType.type,
+        RatingFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),
@@ -216,6 +249,7 @@ class LowerThanViewFilterType(ViewFilterType):
     type = "lower_than"
     compatible_field_types = [
         NumberFieldType.type,
+        RatingFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),
@@ -327,6 +361,7 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
 
     type = "base_date_field_lookup_type"
     query_field_lookup = ""
+    query_date_lookup = ""
     compatible_field_types = [
         DateFieldType.type,
         LastModifiedFieldType.type,
@@ -359,14 +394,13 @@ class BaseDateFieldLookupFilterType(ViewFilterType):
         # we need to verify that we are in fact dealing with a datetime field
         # if so the django query lookup '__date' gets appended to the field_name
         # otherwise (i.e. it is a date field) nothing gets appended
-        query_date_lookup = ""
-        if isinstance(model_field, DateTimeField):
+        query_date_lookup = self.query_date_lookup
+        if isinstance(model_field, DateTimeField) and not query_date_lookup:
             query_date_lookup = "__date"
         try:
             parsed_date = self.parse_date(value)
             has_timezone = hasattr(field, "timezone")
             field_key = f"{field_name}{query_date_lookup}{self.query_field_lookup}"
-
             if has_timezone:
                 timezone_string = field.get_timezone()
                 tmp_field_name = f"{field_name}_timezone_{timezone_string}"
@@ -481,6 +515,28 @@ class DateEqualsCurrentYearViewFilterType(DateEqualsTodayViewFilterType):
 
 class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType):
     type = "date_not_equal"
+
+
+class DateEqualsDayOfMonthViewFilterType(BaseDateFieldLookupFilterType):
+    """
+    The day of month filter checks if the field number value
+    matches the date's day of the month value.
+    """
+
+    type = "date_equals_day_of_month"
+    query_date_lookup = "__day"
+
+    @staticmethod
+    def parse_date(value: str) -> str:
+        # Check if the value is a positive number
+        if not value.isdigit():
+            raise ValueError
+
+        # Check if the value is a valid day of the month
+        if int(value) < 1 or int(value) > 31:
+            raise ValueError
+
+        return value
 
 
 class SingleSelectEqualViewFilterType(ViewFilterType):
@@ -676,6 +732,7 @@ class EmptyViewFilterType(ViewFilterType):
         LongTextFieldType.type,
         URLFieldType.type,
         NumberFieldType.type,
+        RatingFieldType.type,
         BooleanFieldType.type,
         DateFieldType.type,
         LastModifiedFieldType.type,
@@ -686,7 +743,13 @@ class EmptyViewFilterType(ViewFilterType):
         SingleSelectFieldType.type,
         PhoneNumberFieldType.type,
         MultipleSelectFieldType.type,
-        FormulaFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaTextType.type,
+            BaserowFormulaCharType.type,
+            BaserowFormulaNumberType.type,
+            BaserowFormulaDateType.type,
+            BaserowFormulaBooleanType.type,
+        ),
     ]
 
     def get_filter(self, field_name, value, model_field, field):

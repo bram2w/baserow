@@ -11,13 +11,15 @@
           <a
             ref="viewsSelectToggle"
             class="header__filter-link"
+            :class="{ 'header__filter-link--disabled': views === null }"
             @click="
-              $refs.viewsContext.toggle(
-                $refs.viewsSelectToggle,
-                'bottom',
-                'left',
-                4
-              )
+              views !== null &&
+                $refs.viewsContext.toggle(
+                  $refs.viewsSelectToggle,
+                  'bottom',
+                  'left',
+                  4
+                )
             "
           >
             <template v-if="hasSelectedView">
@@ -29,12 +31,13 @@
                 <EditableViewName ref="rename" :view="view"></EditableViewName>
               </span>
             </template>
-            <span v-else>
+            <span v-else-if="view !== null">
               <i class="header__filter-icon fas fa-caret-square-down"></i>
               Choose view
             </span>
           </a>
           <ViewsContext
+            v-if="views !== null"
             ref="viewsContext"
             :table="table"
             :views="views"
@@ -77,6 +80,7 @@
             :fields="fields"
             :primary="primary"
             :read-only="readOnly"
+            :disable-filter="disableFilter"
             @changed="refresh()"
           ></ViewFilter>
         </li>
@@ -89,8 +93,15 @@
             :fields="fields"
             :primary="primary"
             :read-only="readOnly"
+            :disable-sort="disableSort"
             @changed="refresh()"
           ></ViewSort>
+        </li>
+        <li
+          v-if="hasSelectedView && view._.type.canShare && !readOnly"
+          class="header__filter-item"
+        >
+          <ShareViewLink :view="view" :read-only="readOnly"></ShareViewLink>
         </li>
       </ul>
       <component
@@ -136,6 +147,7 @@ import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
+import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLink'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -143,6 +155,7 @@ import EditableViewName from '@baserow/modules/database/components/view/Editable
  */
 export default {
   components: {
+    ShareViewLink,
     EditableViewName,
     ViewsContext,
     ViewFilter,
@@ -175,8 +188,9 @@ export default {
       required: true,
     },
     views: {
-      type: Array,
-      required: true,
+      required: false,
+      validator: (prop) => typeof prop === 'object' || prop === undefined,
+      default: null,
     },
     view: {
       required: true,
@@ -187,6 +201,16 @@ export default {
       required: true,
     },
     readOnly: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    disableFilter: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    disableSort: {
       type: Boolean,
       required: false,
       default: false,

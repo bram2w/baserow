@@ -178,7 +178,9 @@ def view_sort_deleted(sender, view_sort_id, view_sort, user, **kwargs):
 def view_field_options_updated(sender, view, user, **kwargs):
     table_page_type = page_registry.get("table")
     view_type = view_type_registry.get_by_model(view.specific_class)
-    serializer_class = view_type.get_field_options_serializer_class()
+    serializer_class = view_type.get_field_options_serializer_class(
+        create_if_missing=False
+    )
     transaction.on_commit(
         lambda: table_page_type.broadcast(
             {

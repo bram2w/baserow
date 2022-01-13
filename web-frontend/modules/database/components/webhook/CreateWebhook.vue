@@ -70,13 +70,13 @@ export default {
   "en": {
     "createWebhook": {
       "errorTableWebhookMaxLimitExceededTitle": "Max webhooks exceeded",
-      "errorTableWebhookMaxLimitExceededDescription": "Can't create the webhook becuase the maximum amount of webhooks per table has been exceeded."
+      "errorTableWebhookMaxLimitExceededDescription": "Can't create the webhook because the maximum amount of webhooks per table has been exceeded."
     }
   },
   "fr": {
     "createWebhook": {
-      "errorTableWebhookMaxLimitExceededTitle": "@TODO",
-      "errorTableWebhookMaxLimitExceededDescription": "@TODO"
+      "errorTableWebhookMaxLimitExceededTitle": "Nombre maximum de webhook dépassé",
+      "errorTableWebhookMaxLimitExceededDescription": "Vous ne pouvez pas créer de webhook car le nombre maximum de webhook par table a été atteint."
     }
   }
 }

@@ -115,7 +115,7 @@ export default {
   "fr": {
     "trashSidebar": {
       "title": "Corbeille",
-      "unnamedGroup": "Groupe anonyme {id}"
+      "unnamedGroup": "Groupe sans nom {id}"
     }
   }
 }

@@ -1,5 +1,9 @@
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
-import { GridViewType, FormViewType } from '@baserow/modules/database/viewTypes'
+import {
+  GridViewType,
+  GalleryViewType,
+  FormViewType,
+} from '@baserow/modules/database/viewTypes'
 import {
   TextFieldType,
   LongTextFieldType,
@@ -7,6 +11,7 @@ import {
   EmailFieldType,
   LinkRowFieldType,
   NumberFieldType,
+  RatingFieldType,
   BooleanFieldType,
   DateFieldType,
   LastModifiedFieldType,
@@ -27,6 +32,7 @@ import {
   FilenameContainsViewFilterType,
   HasFileTypeViewFilterType,
   ContainsNotViewFilterType,
+  LengthIsLowerThanViewFilterType,
   HigherThanViewFilterType,
   LowerThanViewFilterType,
   SingleSelectEqualViewFilterType,
@@ -39,6 +45,7 @@ import {
   DateEqualsCurrentYearViewFilterType,
   DateBeforeViewFilterType,
   DateAfterViewFilterType,
+  DateEqualsDayOfMonthViewFilterType,
   LinkRowHasFilterType,
   LinkRowHasNotFilterType,
   MultipleSelectHasFilterType,
@@ -55,12 +62,20 @@ import {
   RowUpdatedWebhookEventType,
   RowDeletedWebhookEventType,
 } from '@baserow/modules/database/webhookEventTypes'
+import {
+  ImageFilePreview,
+  AudioFilePreview,
+  VideoFilePreview,
+  PDFBrowserFilePreview,
+  GoogleDocFilePreview,
+} from '@baserow/modules/database/filePreviewTypes'
 import { APITokenSettingsType } from '@baserow/modules/database/settingsTypes'
 
 import tableStore from '@baserow/modules/database/store/table'
 import viewStore from '@baserow/modules/database/store/view'
 import fieldStore from '@baserow/modules/database/store/field'
 import gridStore from '@baserow/modules/database/store/view/grid'
+import galleryStore from '@baserow/modules/database/store/view/gallery'
 import formStore from '@baserow/modules/database/store/view/form'
 import rowModal from '@baserow/modules/database/store/rowModal'
 
@@ -145,12 +160,15 @@ export default (context) => {
   store.registerModule('field', fieldStore)
   store.registerModule('rowModal', rowModal)
   store.registerModule('page/view/grid', gridStore)
+  store.registerModule('page/view/gallery', galleryStore)
   store.registerModule('page/view/form', formStore)
   store.registerModule('template/view/grid', gridStore)
+  store.registerModule('template/view/gallery', galleryStore)
   store.registerModule('template/view/form', formStore)
 
   app.$registry.register('application', new DatabaseApplicationType(context))
   app.$registry.register('view', new GridViewType(context))
+  app.$registry.register('view', new GalleryViewType(context))
   app.$registry.register('view', new FormViewType(context))
   app.$registry.register('viewFilter', new EqualViewFilterType(context))
   app.$registry.register('viewFilter', new NotEqualViewFilterType(context))
@@ -168,6 +186,10 @@ export default (context) => {
     'viewFilter',
     new DateEqualsCurrentYearViewFilterType(context)
   )
+  app.$registry.register(
+    'viewFilter',
+    new DateEqualsDayOfMonthViewFilterType(context)
+  )
   app.$registry.register('viewFilter', new DateBeforeViewFilterType(context))
   app.$registry.register('viewFilter', new DateAfterViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsViewFilterType(context))
@@ -177,6 +199,10 @@ export default (context) => {
   )
   app.$registry.register('viewFilter', new HasFileTypeViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new LengthIsLowerThanViewFilterType(context)
+  )
   app.$registry.register('viewFilter', new HigherThanViewFilterType(context))
   app.$registry.register('viewFilter', new LowerThanViewFilterType(context))
   app.$registry.register(
@@ -201,6 +227,7 @@ export default (context) => {
   app.$registry.register('field', new LongTextFieldType(context))
   app.$registry.register('field', new LinkRowFieldType(context))
   app.$registry.register('field', new NumberFieldType(context))
+  app.$registry.register('field', new RatingFieldType(context))
   app.$registry.register('field', new BooleanFieldType(context))
   app.$registry.register('field', new DateFieldType(context))
   app.$registry.register('field', new LastModifiedFieldType(context))
@@ -319,6 +346,13 @@ export default (context) => {
     'formula_type',
     new BaserowFormulaSingleSelectType(context)
   )
+
+  // File preview types
+  app.$registry.register('preview', new ImageFilePreview(context))
+  app.$registry.register('preview', new AudioFilePreview(context))
+  app.$registry.register('preview', new VideoFilePreview(context))
+  app.$registry.register('preview', new PDFBrowserFilePreview(context))
+  app.$registry.register('preview', new GoogleDocFilePreview(context))
 
   registerRealtimeEvents(app.$realtime)
 }

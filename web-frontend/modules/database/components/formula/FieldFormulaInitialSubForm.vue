@@ -1,14 +1,18 @@
 <template>
   <div>
     <div class="control">
-      <label class="control__label control__label--small">Formula</label>
+      <label class="control__label control__label--small">{{
+        $t('fieldType.formula')
+      }}</label>
       <div class="control__elements">
         <input
           ref="formulaInput"
           :value="formula"
           type="text"
           class="input input--monospace"
-          placeholder="Click to edit the formula"
+          :placeholder="
+            $t('fieldFormulaInitialSubForm.formulaInputPlaceholder')
+          "
           @click="$emit('open-advanced-context', $refs.formulaInput)"
           @input="$emit('open-advanced-context', $refs.formulaInput)"
         />
@@ -24,7 +28,7 @@
               @click.stop="$emit('refresh-formula-type')"
             >
               <i class="fas fa-sync-alt"></i>
-              Refresh formula options
+              {{ $t('fieldFormulaInitialSubForm.refreshFormulaOptions') }}
             </a>
           </div>
         </template>
@@ -89,3 +93,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "fieldFormulaInitialSubForm" : {
+      "formulaInputPlaceholder": "Click to edit the formula",
+      "refreshFormulaOptions": "Refresh formula options"
+    }
+  },
+  "fr": {
+    "fieldFormulaInitialSubForm" : {
+      "formulaInputPlaceholder": "Cliquez pour éditer la formule",
+      "refreshFormulaOptions": "Rafraichir les options"
+    }
+  }
+}
+</i18n>

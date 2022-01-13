@@ -3325,3 +3325,190 @@ def test_multiple_select_has_not_filter_type(data_fixture):
     assert len(ids) == 2
     assert row_1.id in ids
     assert row_3.id in ids
+
+
+@pytest.mark.django_db
+def test_length_is_lower_than_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    long_text_field = data_fixture.create_long_text_field(table=table)
+    url_field = data_fixture.create_url_field(table=table)
+    email_field = data_fixture.create_email_field(table=table)
+    phone_number_field = data_fixture.create_phone_number_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "t",
+            f"field_{long_text_field.id}": "t",
+            f"field_{url_field.id}": "t@test.com",
+            f"field_{email_field.id}": "t@baserow.com",
+            f"field_{phone_number_field.id}": "+44 1",
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "te",
+            f"field_{long_text_field.id}": "te",
+            f"field_{url_field.id}": "te@test.com",
+            f"field_{email_field.id}": "te@baserow.com",
+            f"field_{phone_number_field.id}": "+44 12",
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "tes",
+            f"field_{long_text_field.id}": "tes",
+            f"field_{url_field.id}": "tes@test.com",
+            f"field_{email_field.id}": "te@baserow.com",
+            f"field_{phone_number_field.id}": "+44 123",
+        }
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=text_field, type="length_is_lower_than", value=12
+    )
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = 2
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = 3
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_1.id in ids
+    assert row_2.id in ids
+
+    view_filter.value = 4
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+    assert row_1.id in ids
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "a"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 3
+
+    view_filter.value = 2
+    view_filter.field = long_text_field
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = 11
+    view_filter.field = url_field
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = 6
+    view_filter.field = phone_number_field
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+
+@pytest.mark.django_db
+def test_date_equals_day_of_month_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+    last_modified_field_datetime_berlin = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/Berlin"
+    )
+    last_modified_field_datetime_london = data_fixture.create_last_modified_field(
+        table=table, date_include_time=True, timezone="Europe/London"
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_1 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2021, 8, 11),
+        }
+    )
+    row_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2020, 1, 1),
+        }
+    )
+    row_3 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2019, 11, 1),
+        }
+    )
+    model.objects.create(
+        **{
+            f"field_{date_field.id}": None,
+        }
+    )
+
+    # Date Field (No timezone)
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=date_field, type="date_equals_day_of_month", value="1"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2.id in ids
+    assert row_3.id in ids
+
+    view_filter.value = "11"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_1.id in ids
+
+    view_filter.value = "-1"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+
+    # Datetime (With timezone)
+
+    # Jan 1st UTC, Jan 1st Germany, Jan 1st London
+    with freeze_time("2020-1-01 22:01"):
+        row_2_tz = model.objects.create(**{})
+
+    # Jan 1st UTC, Jan 2nd Germany, Jan 1st London
+    with freeze_time("2019-1-01 23:01"):
+        row_3_tz = model.objects.create(**{})
+
+    # Testing with Berlin time, only one row should be accepted
+    view_filter.field = last_modified_field_datetime_berlin
+    view_filter.value = "1"
+    view_filter.save()
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 1
+    assert row_2_tz.id in ids
+    assert row_3_tz.id not in ids
+
+    # Testing with London time, both rows should be accepted
+    view_filter.field = last_modified_field_datetime_london
+    view_filter.save()
+
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_2_tz.id in ids
+    assert row_3_tz.id in ids

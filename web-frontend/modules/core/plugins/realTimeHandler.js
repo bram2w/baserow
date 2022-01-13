@@ -6,6 +6,7 @@ export class RealTimeHandler {
     this.socket = null
     this.connected = false
     this.reconnect = false
+    this.anonymous = false
     this.reconnectTimeout = null
     this.attempts = 0
     this.events = {}
@@ -21,10 +22,13 @@ export class RealTimeHandler {
    * Creates a new connection with to the web socket so that real time updates can be
    * received.
    */
-  connect(reconnect = true) {
+  connect(reconnect = true, anonymous = false) {
     this.reconnect = reconnect
+    this.anonymous = anonymous
 
-    const token = this.context.store.getters['auth/token']
+    const token = anonymous
+      ? 'anonymous'
+      : this.context.store.getters['auth/token']
 
     // If the user is already connected to the web socket, we don't have to do
     // anything.
@@ -115,7 +119,7 @@ export class RealTimeHandler {
 
     this.reconnectTimeout = setTimeout(
       () => {
-        this.connect(true)
+        this.connect(true, this.anonymous)
       },
       // After the first try, we want to try again every 5 seconds.
       this.attempts > 1 ? 5000 : 0

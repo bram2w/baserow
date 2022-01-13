@@ -78,33 +78,14 @@
   @include absolute(0, $file-field-modal-body-nav-width, 0, $file-field-modal-body-nav-width);
 }
 
-.file-field-modal__preview-image-wrapper {
-  display: contents;
-}
-
-.file-field-modal__preview-image-loading {
-  margin-top: -7px;
-  margin-left: -7px;
-
-  @include loading(14px);
-  @include absolute(50%, auto, auto, 50%);
-}
-
-.file-field-modal__preview-image {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-
-  &.file-field-modal__preview-image--hidden {
-    visibility: hidden;
-
-    @include absolute(-99999px, -99999px);
-  }
-}
-
 .file-field-modal__preview-icon {
   font-size: 40vmin;
   color: $white;
+  line-height: 1em;
+
+  .preview-select & {
+    font-size: 28vmin;
+  }
 }
 
 .file-field-modal__foot {

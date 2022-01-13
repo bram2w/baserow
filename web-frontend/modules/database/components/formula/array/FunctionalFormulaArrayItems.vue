@@ -5,7 +5,7 @@
       v-for="(item, index) in props.value || []"
       :key="index"
       :field="props.field"
-      :value="item.value"
+      :value="item && item.value"
     ></component>
   </div>
 </template>

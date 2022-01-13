@@ -5,7 +5,7 @@
         <li>
           <a @click.prevent="showDeleteModal">
             <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
-            Permanently delete
+            {{ $t('editGroupContext.delete') }}
           </a>
         </li>
       </ul>
@@ -40,3 +40,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "editGroupContext": {
+      "delete": "Permanently delete"
+    }
+  },
+  "fr": {
+    "editGroupContext": {
+      "delete": "Supprimer définitivement"
+    }
+  }
+}
+</i18n>

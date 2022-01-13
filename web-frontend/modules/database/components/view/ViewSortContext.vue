@@ -18,7 +18,11 @@
         }"
         :set="(field = getField(sort.field))"
       >
-        <a v-if="!readOnly" class="sortings__remove" @click="deleteSort(sort)">
+        <a
+          v-if="!disableSort"
+          class="sortings__remove"
+          @click.stop="deleteSort(sort)"
+        >
           <i class="fas fa-times"></i>
         </a>
         <div class="sortings__description">
@@ -32,7 +36,7 @@
         <div class="sortings__field">
           <Dropdown
             :value="sort.field"
-            :disabled="readOnly"
+            :disabled="disableSort"
             class="dropdown--floating dropdown--tiny"
             @input="updateSort(sort, { field: $event })"
           >
@@ -55,7 +59,7 @@
         </div>
         <div
           class="sortings__order"
-          :class="{ 'sortings__order--disabled': readOnly }"
+          :class="{ 'sortings__order--disabled': disableSort }"
         >
           <a
             class="sortings__order-item"
@@ -118,7 +122,7 @@
         </div>
       </div>
       <template
-        v-if="view.sortings.length < availableFieldsLength && !readOnly"
+        v-if="view.sortings.length < availableFieldsLength && !disableSort"
       >
         <a
           ref="addContextToggle"
@@ -185,6 +189,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    disableSort: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -196,14 +204,17 @@ export default {
      * Calculates the total amount of available fields.
      */
     availableFieldsLength() {
-      const fields = this.fields.filter(
-        (field) => field._.type.canSortInView
+      const fields = this.fields.filter((field) =>
+        this.getCanSortInView(field)
       ).length
-      const primary = this.primary._.type.canSortInView ? 1 : 0
+      const primary = this.getCanSortInView(this.primary) ? 1 : 0
       return fields + primary
     },
   },
   methods: {
+    getCanSortInView(field) {
+      return this.$registry.get('field', field.type).getCanSortInView(field)
+    },
     getField(fieldId) {
       if (this.primary.id === fieldId) {
         return this.primary
@@ -217,7 +228,7 @@ export default {
     },
     isFieldAvailable(field) {
       const allFieldIds = this.view.sortings.map((sort) => sort.field)
-      return field._.type.canSortInView && !allFieldIds.includes(field.id)
+      return this.getCanSortInView(field) && !allFieldIds.includes(field.id)
     },
     async addSort(field) {
       this.$refs.addContext.hide()
@@ -229,6 +240,7 @@ export default {
             field: field.id,
             value: 'ASC',
           },
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
       } catch (error) {
@@ -240,6 +252,7 @@ export default {
         await this.$store.dispatch('view/deleteSort', {
           view: this.view,
           sort,
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
       } catch (error) {
@@ -247,7 +260,7 @@ export default {
       }
     },
     async updateSort(sort, values) {
-      if (this.readOnly) {
+      if (this.disableSort) {
         return
       }
 
@@ -255,6 +268,7 @@ export default {
         await this.$store.dispatch('view/updateSort', {
           sort,
           values,
+          readOnly: this.readOnly,
         })
         this.$emit('changed')
       } catch (error) {
@@ -283,7 +297,7 @@ export default {
   },
   "fr":{
     "viewSortContext":{
-      "noSortTitle": "Vous n'avez configuré aucun filtre",
+      "noSortTitle": "Vous n'avez configuré aucun tri",
       "noSortText": "Le tri vous permet d'ordonner les lignes selon la valeur d'un champ.",
       "sortBy": "Trier par",
       "thenBy": "Puis par",

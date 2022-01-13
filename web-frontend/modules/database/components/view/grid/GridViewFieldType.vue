@@ -47,7 +47,7 @@
             {{ $t('gridViewFieldType.createFilter') }}
           </a>
         </li>
-        <li v-if="field._.type.canSortInView">
+        <li v-if="getCanSortInView(field)">
           <a @click="createSort($event, view, field, 'ASC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down-alt"></i>
             {{ $t('gridViewFieldType.sortField') }}
@@ -70,7 +70,7 @@
             ></i>
           </a>
         </li>
-        <li v-if="field._.type.canSortInView">
+        <li v-if="getCanSortInView(field)">
           <a @click="createSort($event, view, field, 'DESC')">
             <i class="context__menu-icon fas fa-fw fa-sort-amount-down"></i>
             {{ $t('gridViewFieldType.sortField') }}
@@ -101,11 +101,12 @@
         </li>
       </FieldContext>
       <GridViewFieldWidthHandle
-        v-if="includeFieldWidthHandles && !readOnly"
+        v-if="includeFieldWidthHandles"
         class="grid-view__description-width"
         :grid="view"
         :field="field"
         :width="width"
+        :read-only="readOnly"
         :store-prefix="storePrefix"
       ></GridViewFieldWidthHandle>
     </div>
@@ -244,10 +245,6 @@ export default {
       }
     },
     startDragging(event, field) {
-      if (this.readOnly) {
-        return
-      }
-
       event.preventDefault()
       this.$emit('dragging', { field, event })
     },
@@ -255,6 +252,9 @@ export default {
       return this.$registry
         .get('field', field.type)
         .getSortIndicator(field, this.$registry)[index]
+    },
+    getCanSortInView(field) {
+      return this.$registry.get('field', field.type).getCanSortInView(field)
     },
   },
 }
@@ -273,7 +273,7 @@ export default {
     "gridViewFieldType":{
       "createFilter": "Définir un filtre",
       "sortField": "Trier",
-      "hideField":"Cacher la colonne"
+      "hideField":"Cacher un champ"
     }
   }
 }

@@ -1,7 +1,9 @@
 <template>
   <form @submit.prevent="submit">
     <div class="control">
-      <label class="control__label">New password</label>
+      <label class="control__label">{{
+        $t('changePasswordForm.newPassword')
+      }}</label>
       <div class="control__elements">
         <PasswordInput
           v-model="values.password"
@@ -10,7 +12,9 @@
       </div>
     </div>
     <div class="control">
-      <label class="control__label">Repeat password</label>
+      <label class="control__label">{{
+        $t('changePasswordForm.repeatPassword')
+      }}</label>
       <div class="control__elements">
         <input
           v-model="values.passwordConfirm"
@@ -20,7 +24,7 @@
           @blur="$v.values.passwordConfirm.$touch()"
         />
         <div v-if="$v.values.passwordConfirm.$error" class="error">
-          This field must match your password field.
+          {{ $t('changePasswordForm.error.doesntMatch') }}
         </div>
       </div>
     </div>
@@ -31,7 +35,7 @@
           :class="{ 'button--loading': loading }"
           :disabled="loading"
         >
-          Change password
+          {{ $t('changePasswordForm.changePassword') }}
         </button>
       </div>
     </div>
@@ -74,3 +78,28 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "changePasswordForm": {
+      "newPassword": "New password",
+      "repeatPassword": "Repeat password",
+      "changePassword": "Change password",
+      "error":{
+        "doesntMatch": "This field must match your password field."
+      }
+    }
+  },
+  "fr": {
+    "changePasswordForm": {
+      "newPassword": "Nouveau mot de passe",
+      "repeatPassword": "Répétez le mot de passe",
+      "changePassword": "Mettre à jour le mot de passe",
+      "error":{
+        "doesntMatch": "Les deux mots de passe ne correspondent pas."
+      }
+    }
+  }
+}
+</i18n>

@@ -177,8 +177,11 @@ export const actions = {
       dispatch('field/fetchAll', table, { root: true }),
     ])
     await dispatch('application/clearChildrenSelected', null, { root: true })
-    commit('SET_SELECTED', { database, table })
+    await dispatch('forceSelect', { database, table })
     return { database, table }
+  },
+  forceSelect({ commit }, { database, table }) {
+    commit('SET_SELECTED', { database, table })
   },
   /**
    * Selects a table based on the provided database (application) and table id. The

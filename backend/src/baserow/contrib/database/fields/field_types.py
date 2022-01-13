@@ -18,6 +18,7 @@ from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
+
 from pytz import timezone
 from rest_framework import serializers
 
@@ -85,6 +86,7 @@ from .models import (
     LongTextField,
     URLField,
     NumberField,
+    RatingField,
     BooleanField,
     DateField,
     LastModifiedField,
@@ -436,6 +438,111 @@ class NumberFieldType(FieldType):
         )
 
 
+class RatingFieldType(FieldType):
+    type = "rating"
+    model_class = RatingField
+    allowed_fields = ["max_value", "color", "style"]
+    serializer_field_names = ["max_value", "color", "style"]
+
+    def prepare_value_for_db(self, instance, value):
+        if not value:
+            return 0
+
+        if value < 0:
+            raise ValidationError("Ensure this value is greater than or equal to 0.")
+        if value > instance.max_value:
+            raise ValidationError(
+                f"Ensure this value is less than or equal to {instance.max_value}."
+            )
+
+        return value
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.IntegerField(
+            **{
+                "required": False,
+                "allow_null": False,
+                "min_value": 0,
+                "default": 0,
+                "max_value": instance.max_value,
+                **kwargs,
+            }
+        )
+
+    def force_same_type_alter_column(self, from_field, to_field):
+        """
+        Force field alter column hook to be called when chaging max_value.
+        """
+
+        return to_field.max_value != from_field.max_value
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        """
+        Prepare value for Rating field. Clamp between 0 and field max_value.
+        Also convert Null value to 0.
+        """
+
+        if connection.vendor == "postgresql":
+            from_field_type = field_type_registry.get_by_model(from_field)
+
+            if from_field_type.type in ["number", "text", "rating"]:
+                # Convert and clamp values on field conversion
+                return (
+                    f"p_in = least(greatest(round(p_in::numeric), 0)"
+                    f", {to_field.max_value});"
+                )
+
+            if from_field_type.type == "boolean":
+                return """
+                    IF p_in THEN
+                        p_in = 1;
+                    ELSE
+                        p_in = 0;
+                    END IF;
+                """
+
+        return super().get_alter_column_prepare_new_value(
+            connection, from_field, to_field
+        )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        Prepare value from Rating field.
+        """
+
+        if connection.vendor == "postgresql":
+            to_field_type = field_type_registry.get_by_model(to_field)
+
+            if to_field_type.type == "boolean":
+                return "p_in = least(p_in::numeric, 1);"
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return models.PositiveSmallIntegerField(
+            blank=False,
+            null=False,
+            default=0,
+            **kwargs,
+        )
+
+    def random_value(self, instance, fake, cache):
+        return fake.random_int(0, instance.max_value)
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaNumberType(0)
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaNumberType
+    ) -> "RatingField":
+        return RatingField()
+
+
 class BooleanFieldType(FieldType):
     type = "boolean"
     model_class = BooleanField
@@ -638,7 +745,12 @@ class DateFieldType(FieldType):
         if not value:
             return value
 
-        setattr(row, field_name, datetime.fromisoformat(value))
+        if isinstance(row._meta.get_field(field_name), models.DateTimeField):
+            value = datetime.fromisoformat(value)
+        else:
+            value = date.fromisoformat(value)
+
+        setattr(row, field_name, value)
 
     def to_baserow_formula_type(self, field: DateField) -> BaserowFormulaType:
         return BaserowFormulaDateType(
@@ -769,7 +881,7 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
         before,
     ):
         """
-        If the field type has changed, we need to update the values from the from
+        If the field type has changed, we need to update the values from
         the source_field_name column.
         """
 
@@ -830,7 +942,7 @@ class LinkRowFieldType(FieldType):
         LinkRowTableNotInSameDatabase: ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
         IncompatiblePrimaryFieldTypeError: ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
     }
-    can_order_by = False
+    _can_order_by = False
     can_be_primary_field = False
 
     def enhance_queryset(self, queryset, field, name):
@@ -1208,20 +1320,18 @@ class LinkRowFieldType(FieldType):
         count_name = f"table_{instance.link_row_table.id}_count"
 
         if model_name not in cache:
-            cache[model_name] = instance.link_row_table.get_model()
+            cache[model_name] = instance.link_row_table.get_model(field_ids=[])
             cache[count_name] = cache[model_name].objects.all().count()
 
         model = cache[model_name]
         count = cache[count_name]
-        values = []
 
         if count == 0:
-            return values
+            return []
 
-        for i in range(0, randrange(0, 3)):
-            instance = model.objects.all()[randint(0, count - 1)]
-            values.append(instance.id)
-
+        values = model.objects.order_by("?")[0 : randrange(0, 3)].values_list(
+            "id", flat=True
+        )
         return values
 
     def export_serialized(self, field):
@@ -1707,7 +1817,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
                 variables,
             )
 
-        return super().get_alter_column_prepare_old_value(
+        return super().get_alter_column_prepare_new_value(
             connection, from_field, to_field
         )
 
@@ -2025,6 +2135,23 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         return AnnotatedOrder(annotation=annotation, order=order)
 
+    def before_field_options_update(
+        self, field, to_create=None, to_update=None, to_delete=None
+    ):
+        """
+        Before removing the select options, we want to delete the link beetwen
+        the row and the options.
+        """
+
+        through_model = (
+            field.table.get_model(fields=[field], field_ids=[])
+            ._meta.get_field(field.db_column)
+            .remote_field.through
+        )
+        through_model_fields = through_model._meta.get_fields()
+        option_field_name = through_model_fields[2].name
+        through_model.objects.filter(**{f"{option_field_name}__in": to_delete}).delete()
+
 
 class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
     """
@@ -2110,10 +2237,7 @@ class FormulaFieldType(FieldType):
             from baserow.contrib.database.fields.registries import field_type_registry
 
             field_type = field_type_registry.get_by_model(field.specific_class)
-            if (
-                field_type.type == FormulaFieldType.type
-                or field_type.type == LookupFieldType.type
-            ):
+            if isinstance(field_type, FormulaFieldType):
                 formula_type = field.specific.cached_formula_type
                 return formula_type.type in compatible_formula_types
             else:
@@ -2403,6 +2527,9 @@ class FormulaFieldType(FieldType):
         self._refresh_row_values(field, update_collector, via_path_to_starting_table)
         super().after_rows_imported(field, via_path_to_starting_table, update_collector)
 
+    def check_can_order_by(self, field):
+        return self.to_baserow_formula_type(field.specific).can_order_by
+
 
 class LookupFieldType(FormulaFieldType):
     type = "lookup"
@@ -2602,6 +2729,14 @@ class LookupFieldType(FormulaFieldType):
         for key, value in values.items():
             setattr(field, key, value)
         field.save(recalculate=False)
+
+    def import_serialized(self, table, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        # The through field and target field id's must be set to None because we
+        # don't need them. The field is created based on the field name.
+        serialized_copy["through_field_id"] = None
+        serialized_copy["target_field_id"] = None
+        return super().import_serialized(table, serialized_copy, id_mapping)
 
     def after_import_serialized(self, field, field_cache):
         self._rebuild_field_from_names(field)

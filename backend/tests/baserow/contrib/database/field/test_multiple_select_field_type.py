@@ -68,7 +68,7 @@ def test_multi_select_field_type(data_fixture):
         name="Multiple Select",
         select_options=select_options_initial,
     )
-    field_id = f"field_{field.id}"
+    field_id = field.db_column
 
     assert MultipleSelectField.objects.all().first().id == field.id
     assert SelectOption.objects.all().count() == 1
@@ -85,9 +85,7 @@ def test_multi_select_field_type(data_fixture):
         user=user, table=table, values={field_id: [select_options[0].id]}
     )
     assert row.id
-    row_multi_select_field_list = (
-        getattr(row, f"field_{field.id}").order_by("order").all()
-    )
+    row_multi_select_field_list = getattr(row, field_id).order_by("order").all()
     assert len(row_multi_select_field_list) == 1
     assert row_multi_select_field_list[0].id == select_options[0].id
     assert row_multi_select_field_list[0].value == select_options[0].value
@@ -99,10 +97,13 @@ def test_multi_select_field_type(data_fixture):
         field=field,
         table=table,
         select_options=[
-            {"value": "Option 1", "color": "blue"},
+            {"id": select_options[0].id, "value": "Option 1", "color": "blue"},
             {"value": "Option 2", "color": "green"},
         ],
     )
+
+    row_multi_select_field_list = getattr(row, field_id).order_by("order").all()
+    assert len(row_multi_select_field_list) == 1
 
     select_options = field.select_options.all()
     assert len(select_options) == 2
@@ -115,9 +116,7 @@ def test_multi_select_field_type(data_fixture):
     )
 
     assert row_2.id
-    row_multi_select_field_list = (
-        getattr(row_2, f"field_{field.id}").order_by("order").all()
-    )
+    row_multi_select_field_list = getattr(row_2, field_id).order_by("order").all()
     assert len(row_multi_select_field_list) == 2
     assert row_multi_select_field_list[0].id == select_options[0].id
     assert row_multi_select_field_list[0].value == select_options[0].value
@@ -127,6 +126,32 @@ def test_multi_select_field_type(data_fixture):
     assert row_multi_select_field_list[1].value == select_options[1].value
     assert row_multi_select_field_list[1].color == select_options[1].color
     assert row_multi_select_field_list[1].field_id == select_options[1].field_id
+
+    through_model = row_2._meta.get_field(field_id).remote_field.through
+    through_model_fields = through_model._meta.get_fields()
+    row_field_name = through_model_fields[1].name
+
+    assert len(through_model.objects.filter(**{row_field_name: row_2.id})) == 2
+
+    # Test option removal behaviour
+    field_handler.update_field(
+        user=user,
+        field=field,
+        table=table,
+        select_options=[
+            {"id": select_options[0].id, "value": "Option 1", "color": "blue"},
+        ],
+    )
+
+    select_options = field.select_options.all()
+    assert len(select_options) == 1
+    assert SelectOption.objects.all().count() == 1
+
+    row_multi_select_field_list = getattr(row_2, field_id).order_by("order").all()
+    assert len(row_multi_select_field_list) == 1
+    # Check that no link exist anymore with the deleted option
+    assert len(through_model.objects.filter(**{row_field_name: row.id})) == 1
+    assert len(through_model.objects.filter(**{row_field_name: row_2.id})) == 1
 
 
 @pytest.mark.django_db
@@ -883,7 +908,9 @@ def test_conversion_multiple_select_to_single_select_field(data_fixture):
 
 
 @pytest.mark.django_db
-def test_converting_multiple_select_field_value(data_fixture):
+def test_converting_multiple_select_field_value(
+    data_fixture, django_assert_num_queries
+):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
 
@@ -899,10 +926,18 @@ def test_converting_multiple_select_field_value(data_fixture):
     )
 
     assert len(SelectOption.objects.all()) == 2
-
-    row_handler.create_row(
+    row = row_handler.create_row(
         user=user,
         table=table,
+        values={f"field_{multiple_select_field.id}": [option_1.id]},
+    )
+    # We have to add option_2 in a separate request so we have the guarantee that the
+    # m2m through table id for option_2 is greater than option_1 for the ordering
+    # assertion to be correct later.
+    row_handler.update_row(
+        user=user,
+        table=table,
+        row_id=row.id,
         values={f"field_{multiple_select_field.id}": [option_1.id, option_2.id]},
     )
 
@@ -1305,11 +1340,11 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
         assert field_type.type == "multiple_select"
         assert len(select_options) == 1
 
-    model = table.get_model()
+    model = table.get_model(attribute_names=True)
     rows = list(model.objects.all().enhance_by_fields())
 
     for index, field in enumerate(all_fields):
-        cell = getattr(rows[0], f"field_{field.id}").all()
+        cell = getattr(rows[0], field.model_attribute_name).all()
         assert len(cell) == 1
         assert cell[0].value == all_results[index]
 
@@ -1319,11 +1354,20 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
     new_select_option = data_fixture.create_select_option(
         field=date_field_eu, value="01/09/2021", color="green"
     )
-    select_options = date_field_eu.select_options.all()
+    select_options = list(date_field_eu.select_options.all())
 
-    row_handler.create_row(
+    row = row_handler.create_row(
         user=user,
         table=table,
+        values={
+            f"field_{date_field_eu.id}": [select_options[0].id],
+        },
+    )
+
+    row_handler.update_row(
+        user=user,
+        table=table,
+        row_id=row.id,
         values={
             f"field_{date_field_eu.id}": [getattr(x, "id") for x in select_options],
         },
@@ -1342,18 +1386,14 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
         field=date_field_eu,
         new_type_name="date",
         date_format="EU",
-        name="date_field_eu",
     )
 
-    model = table.get_model()
+    model = table.get_model(attribute_names=True)
     rows = list(model.objects.all().enhance_by_fields())
 
-    field_cell_row_0 = getattr(rows[0], f"field_{date_field_eu.id}")
-    field_cell_row_1 = getattr(rows[1], f"field_{date_field_eu.id}")
-    field_cell_row_2 = getattr(rows[2], f"field_{date_field_eu.id}")
-    assert field_cell_row_0 == date(2021, 8, 31)
-    assert field_cell_row_1 == date(2021, 8, 31)
-    assert field_cell_row_2 == date(2021, 9, 1)
+    assert rows[0].datefieldeu == date(2021, 8, 31)
+    assert rows[1].datefieldeu == date(2021, 8, 31)
+    assert rows[2].datefieldeu == date(2021, 9, 1)
 
 
 @pytest.mark.django_db

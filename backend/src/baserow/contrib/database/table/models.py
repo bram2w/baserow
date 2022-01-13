@@ -47,7 +47,7 @@ class TableModelQuerySet(models.QuerySet):
             )
         return self
 
-    def search_all_fields(self, search):
+    def search_all_fields(self, search, only_search_by_field_ids=None):
         """
         Performs a very broad search across all supported fields with the given search
         query. If the primary key value matches then that result will be returned
@@ -56,6 +56,10 @@ class TableModelQuerySet(models.QuerySet):
 
         :param search: The search query.
         :type search: str
+        :param only_search_by_field_ids: Only field ids in this iterable will be
+            filtered by the search term. Other fields not in the iterable will be
+            ignored and not be filtered.
+        :type only_search_by_field_ids: Optional[Iterable[int]]
         :return: The queryset containing the search queries.
         :rtype: QuerySet
         """
@@ -64,6 +68,11 @@ class TableModelQuerySet(models.QuerySet):
             Q(id__contains=search)
         )
         for field_object in self.model._field_objects.values():
+            if (
+                only_search_by_field_ids is not None
+                and field_object["field"].id not in only_search_by_field_ids
+            ):
+                continue
             field_name = field_object["name"]
             model_field = self.model._meta.get_field(field_name)
 
@@ -110,7 +119,9 @@ class TableModelQuerySet(models.QuerySet):
 
         return field_id
 
-    def order_by_fields_string(self, order_string, user_field_names=False):
+    def order_by_fields_string(
+        self, order_string, user_field_names=False, only_order_by_field_ids=None
+    ):
         """
         Orders the query by the given field order string. This string is often
         directly forwarded from a GET, POST or other user provided parameter.
@@ -128,6 +139,10 @@ class TableModelQuerySet(models.QuerySet):
         :param user_field_names: If true then the order_string is instead treated as
         a comma separated list of actual field names and not field ids.
         :type user_field_names: bool
+        :param only_order_by_field_ids: Only field ids in this iterable will be
+            ordered by. Other fields not in the iterable will be ignored and not be
+            filtered.
+        :type only_order_by_field_ids: Optional[Iterable[int]]
         :raises OrderByFieldNotFound: when the provided field id is not found in the
             model.
         :raises OrderByFieldNotPossible: when it is not possible to order by the
@@ -154,7 +169,10 @@ class TableModelQuerySet(models.QuerySet):
             else:
                 field_name_or_id = self._get_field_id(order)
 
-            if field_name_or_id not in field_object_dict:
+            if field_name_or_id not in field_object_dict or (
+                only_order_by_field_ids is not None
+                and field_name_or_id not in only_order_by_field_ids
+            ):
                 raise OrderByFieldNotFound(order)
 
             order_direction = "DESC" if order[:1] == "-" else "ASC"
@@ -165,7 +183,7 @@ class TableModelQuerySet(models.QuerySet):
             user_field_name = field_object["field"].name
             error_display_name = user_field_name if user_field_names else field_name
 
-            if not field_object["type"].can_order_by:
+            if not field_object["type"].check_can_order_by(field_object["field"]):
                 raise OrderByFieldNotPossible(
                     error_display_name,
                     field_type.type,
@@ -199,7 +217,9 @@ class TableModelQuerySet(models.QuerySet):
         else:
             return self.order_by(*order_by)
 
-    def filter_by_fields_object(self, filter_object, filter_type=FILTER_TYPE_AND):
+    def filter_by_fields_object(
+        self, filter_object, filter_type=FILTER_TYPE_AND, only_filter_by_field_ids=None
+    ):
         """
         Filters the query by the provided filters in the filter_object. The following
         format `filter__field_{id}__{view_filter_type}` is expected as key and multiple
@@ -216,6 +236,10 @@ class TableModelQuerySet(models.QuerySet):
         :param filter_type: Indicates if the provided filters are in an AND or OR
             statement.
         :type filter_type: str
+        :param only_filter_by_field_ids: Only field ids in this iterable will be
+            filtered by. Other fields not in the iterable will be ignored and not be
+            filtered.
+        :type only_filter_by_field_ids: Optional[Iterable[int]]
         :raises ValueError: Raised when the provided filer_type isn't AND or OR.
         :raises FilterFieldNotFound: Raised when the provided field isn't found in
             the model.
@@ -239,7 +263,10 @@ class TableModelQuerySet(models.QuerySet):
 
             field_id = int(matches[1])
 
-            if field_id not in self.model._field_objects:
+            if field_id not in self.model._field_objects or (
+                only_filter_by_field_ids is not None
+                and field_id not in only_filter_by_field_ids
+            ):
                 raise FilterFieldNotFound(field_id, f"Field {field_id} does not exist.")
 
             field_object = self.model._field_objects[field_id]
@@ -383,6 +410,9 @@ class Table(
                 "db_table": self.get_database_table_name(),
                 "app_label": app_label,
                 "ordering": ["order", "id"],
+                "indexes": [
+                    models.Index(fields=["order", "id"]),
+                ],
             },
         )
 
@@ -422,7 +452,6 @@ class Table(
                 max_digits=40,
                 decimal_places=20,
                 editable=False,
-                db_index=True,
                 default=1,
             ),
             "__str__": __str__,

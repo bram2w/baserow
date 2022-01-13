@@ -1,16 +1,17 @@
 <template>
   <Modal>
-    <h2 class="box__title">Delete {{ group.name }}</h2>
+    <h2 class="box__title">
+      {{ $t('deleteGroupModal.title', group) }}
+    </h2>
     <Error :error="error"></Error>
     <div>
+      <i18n path="deleteGroupModal.confirmation" tag="p">
+        <template #name>
+          <strong>{{ group.name }}</strong>
+        </template>
+      </i18n>
       <p>
-        Are you sure you want to delete the group:
-        <strong>{{ group.name }}</strong
-        >?
-      </p>
-      <p>
-        The group will be permanently deleted, including the related
-        applications. It is not possible to undo this action.
+        {{ $t('deleteGroupModal.comment') }}
       </p>
       <div class="actions">
         <div class="align-right">
@@ -21,7 +22,7 @@
             :title="group.name"
             @click.prevent="deleteGroup()"
           >
-            Delete group {{ group.name }}
+            {{ $t('deleteGroupModal.delete', group) }}
           </a>
         </div>
       </div>
@@ -66,3 +67,24 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "deleteGroupModal": {
+      "title": "Delete {name}",
+      "confirmation": "Are you sure you want to delete the group: {name}?",
+      "comment":"The group will be permanently deleted, including the related applications. It is not possible to undo this action.",
+      "delete": "Delete group {name}"
+    }
+  },
+  "fr": {
+    "deleteGroupModal": {
+      "title": "Supprimer {name}",
+      "confirmation": "Êtes-vous sûr·e de vouloir supprimer le groupe : {name} ?",
+      "comment":"Le groupe va être supprimé définitivement ainsi que ses applications liées. Il est impossible d'annuler cette action.",
+      "delete": "Supprimer le groupe {name}"
+    }
+  }
+}
+</i18n>

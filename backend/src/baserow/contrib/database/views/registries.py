@@ -1,6 +1,7 @@
 from typing import Callable, Union, List
 
 from django.contrib.auth.models import User as DjangoUser
+from rest_framework.fields import CharField
 
 from rest_framework.serializers import Serializer
 
@@ -81,6 +82,11 @@ class ViewType(
     sort to the view.
     """
 
+    can_share = False
+    """
+    Indicates if the view supports being shared via a public link.
+    """
+
     field_options_model_class = None
     """
     The model class of the through table that contains the field options. The model
@@ -93,6 +99,37 @@ class ViewType(
     API to update and list the field option, but it is also used to broadcast field
     option changes.
     """
+
+    restrict_link_row_public_view_sharing = True
+    """
+    If a view is shared publicly, the `PublicViewLinkRowFieldLookupView` exposes all
+    the primary values of every visible `link_row` field in the view. This property
+    indicates whether the values should be restricted to existing relationships to
+    the view.
+    """
+
+    when_shared_publicly_requires_realtime_events = True
+    """
+    If a view is shared publicly, this controls whether or not realtime row, field
+    and view events will be available to subscribe to and sent to said subscribers.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.can_share:
+            self.allowed_fields = self.allowed_fields + ["public"]
+            self.serializer_field_names = self.serializer_field_names + [
+                "public",
+                "slug",
+            ]
+            self.serializer_field_overrides = {
+                **self.serializer_field_overrides,
+                "slug": CharField(
+                    read_only=True,
+                    help_text="The unique slug that can be used to construct a public "
+                    "URL.",
+                ),
+            }
 
     def export_serialized(self, view, files_zip, storage):
         """
@@ -137,6 +174,9 @@ class ViewType(
                 {"id": sort.id, "field_id": sort.field_id, "order": sort.order}
                 for sort in view.viewsort_set.all()
             ]
+
+        if self.can_share:
+            serialized["public"] = view.public
 
         return serialized
 
@@ -212,7 +252,7 @@ class ViewType(
 
         return view
 
-    def get_fields_and_model(self, view):
+    def get_visible_fields_and_model(self, view):
         """
         Returns the field objects for the provided view. Depending on the view type this
         will only return the visible or appropriate fields as different view types can
@@ -228,12 +268,15 @@ class ViewType(
         model = view.table.get_model()
         return model._field_objects.values(), model
 
-    def get_field_options_serializer_class(self):
+    def get_field_options_serializer_class(self, create_if_missing):
         """
         Generates a serializer that has the `field_options` property as a
         `FieldOptionsField`. This serializer can be used by the API to validate or list
         the field options.
 
+         :param create_if_missing: Whether or not to create any missing field options
+            when looking them up during serialization.
+        :type create_if_missing: bool
         :raises ValueError: When the related view type does not have a field options
             serializer class.
         :return: The generated serializer.
@@ -257,7 +300,8 @@ class ViewType(
         attrs = {
             "Meta": meta,
             "field_options": FieldOptionsField(
-                serializer_class=self.field_options_serializer_class
+                serializer_class=self.field_options_serializer_class,
+                create_if_missing=create_if_missing,
             ),
         }
 
@@ -308,6 +352,37 @@ class ViewType(
         :param view: The newly created view instance.
         """
 
+    def get_visible_field_options_in_order(self, view):
+        """
+        Should return a queryset of all field options which are visible in the
+        provided view and in the order they appear in the view.
+
+        :param view: The view to query.
+        :type view: View
+        :return: A queryset of the views specific view options which are 'visible'
+            and in order.
+        """
+
+        raise NotImplementedError(
+            "An exportable or publicly sharable view must implement "
+            "`get_visible_field_options_in_order`"
+        )
+
+    def get_hidden_field_options(self, view):
+        """
+        Should return a queryset of all field options which are hidden in the
+        provided view.
+
+        :param view: The view to query.
+        :type view: View
+        :return: A queryset of the views specific view options which are 'hidden'.
+        """
+
+        raise NotImplementedError(
+            "An exportable or publicly sharable view must implement "
+            "`get_hidden_field_options`"
+        )
+
 
 class ViewTypeRegistry(
     APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
@@ -324,7 +399,9 @@ class ViewTypeRegistry(
 
     def get_field_options_serializer_map(self):
         return {
-            view_type.type: view_type.get_field_options_serializer_class()
+            view_type.type: view_type.get_field_options_serializer_class(
+                create_if_missing=False
+            )
             for view_type in self.registry.values()
         }
 

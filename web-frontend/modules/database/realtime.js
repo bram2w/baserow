@@ -227,6 +227,34 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('force_view_rows_refresh', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_id)
+    if (view !== undefined) {
+      if (store.getters['view/getSelectedId'] === view.id) {
+        app.$bus.$emit('table-refresh', {
+          tableId: store.getters['table/getSelectedId'],
+        })
+      }
+    }
+  })
+
+  realtime.registerEvent('force_view_refresh', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_id)
+    if (view !== undefined) {
+      if (store.getters['view/getSelectedId'] === view.id) {
+        app.$bus.$emit('table-refresh', {
+          tableId: store.getters['table/getSelectedId'],
+          includeFieldOptions: true,
+          async callback() {
+            await store.dispatch('field/forceSetFields', {
+              fields: data.fields,
+            })
+          },
+        })
+      }
+    }
+  })
+
   realtime.registerEvent('view_filter_created', ({ store, app }, data) => {
     const view = store.getters['view/get'](data.view_filter.view)
     if (view !== undefined) {

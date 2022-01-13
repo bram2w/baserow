@@ -1,6 +1,8 @@
 <template>
   <Modal>
-    <h2 class="box__title">Change password for {{ user.username }}</h2>
+    <h2 class="box__title">
+      {{ $t('changeUserPasswordModal.changePassword', user) }}
+    </h2>
     <Error :error="error"></Error>
     <ChangePasswordForm
       :loading="loading"
@@ -49,3 +51,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "changeUserPasswordModal": {
+      "changePassword": "Change password for {username}"
+    }
+  },
+  "fr": {
+    "changeUserPasswordModal": {
+      "changePassword": "Changer le mot de passe pour {username}"
+    }
+  }
+}
+</i18n>

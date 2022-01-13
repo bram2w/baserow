@@ -3,6 +3,7 @@ export default {
     yes: 'yes',
     no: 'no',
     wrong: 'Something went wrong',
+    none: 'None',
   },
   action: {
     upload: 'Upload',
@@ -12,6 +13,7 @@ export default {
     signIn: 'Sign in',
     createNew: 'Create new',
     create: 'Create',
+    edit: 'Edit',
     change: 'Change',
     delete: 'Delete',
     rename: 'Rename',
@@ -22,12 +24,18 @@ export default {
     retry: 'Retry',
     search: 'Search',
     copy: 'Copy',
+    activate: 'Activate',
+    deactivate: 'Deactivate',
   },
   adminType: {
     settings: 'Settings',
   },
   applicationType: {
     database: 'Database',
+    cantSelectTableTitle: "Couldn't select the database.",
+    cantSelectTableDescription:
+      "The database couldn't be selected because it doesn't have any tables. Use the" +
+      ' sidebar to create one.',
   },
   settingType: {
     account: 'Account',
@@ -61,6 +69,7 @@ export default {
     longText: 'Long text',
     linkToTable: 'Link to table',
     number: 'Number',
+    rating: 'Rating',
     boolean: 'Boolean',
     date: 'Date',
     lastModified: 'Last modified',
@@ -69,6 +78,7 @@ export default {
     email: 'Email',
     file: 'File',
     singleSelect: 'Single select',
+    multipleSelect: 'Multiple select',
     phoneNumber: 'Phone number',
     formula: 'Formula',
     lookup: 'Lookup',
@@ -94,6 +104,7 @@ export default {
     decimal: 'Accepts a decimal with {places} decimal places after the dot.',
     decimalPositive:
       'Accepts a positive decimal with {places} decimal places after the dot.',
+    rating: 'Accepts a number.',
     boolean: 'Accepts a boolean.',
     date: 'Accepts a date time in ISO format.',
     dateTime: 'Accepts a date in ISO format.',
@@ -132,6 +143,7 @@ export default {
     isEmpty: 'is empty',
     isNotEmpty: 'is not empty',
     isDate: 'is date',
+    isDayOfMonth: 'day of month is',
     isBeforeDate: 'is before date',
     isAfterDate: 'is after date',
     isNotDate: 'is not date',
@@ -139,10 +151,17 @@ export default {
     inThisMonth: 'in this month',
     inThisYear: 'in this year',
     lowerThan: 'lower than',
+    lengthIsLowerThan: 'length is lower than',
+    hasFileType: 'has file type',
   },
   viewType: {
     grid: 'Grid',
+    gallery: 'Gallery',
     form: 'Form',
+    sharing: {
+      linkName: 'view',
+      formLinkName: 'form',
+    },
   },
   premium: {
     deactivated: 'Available in premium version',
@@ -224,7 +243,169 @@ export default {
     xml: 'Import an XML file',
     json: 'Import a JSON file',
   },
+  apiDocs: {
+    intro: 'Introduction',
+    authent: 'Authentication',
+    table: '{name} table',
+    filters: 'Filters',
+    errors: 'HTTP Errors',
+    fields: 'Fields',
+    listFields: 'List fields',
+    listRows: 'List rows',
+    getRow: 'Get row',
+    createRow: 'Create row',
+    updateRow: 'Update row',
+    moveRow: 'Move row',
+    deleteRow: 'Delete row',
+    queryParameters: 'Query parameters',
+    pathParameters: 'Path parameters',
+    requestBodySchema: 'Request body schema',
+    userFieldNamesDescription:
+      'When any value is provided for the `user_field_names` GET param then field names returned by this endpoint will be the actual names of the fields.\n\n If the `user_field_names` GET param is not provided, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`.',
+  },
   exporterType: {
     csv: 'Export to CSV',
+  },
+  previewType: {
+    imageBrowser: 'Open in browser',
+    videoBrowser: 'Open in browser',
+    AudioBrowser: 'Open in browser',
+    pdfBrowser: 'Open in browser',
+    googleDocs: 'Open with Google Docs',
+  },
+  humanDateFormat: {
+    'dd/mm/yyyy': 'dd/mm/yyyy',
+    'mm/dd/yyyy': 'mm/dd/yyyy',
+    'yyyy-mm-dd': 'yyyy-mm-dd',
+  },
+  formulaFunctions: {
+    upperDescription: 'Returns its argument in upper case.',
+    lowerDescription: 'Returns its argument in lower case.',
+    concatDescription:
+      'Returns its arguments joined together as a single piece of text.',
+    addDescription: 'Returns its two arguments added together.',
+    minusDescription: 'Returns its two arguments subtracted.',
+    multiplyDescription: 'Returns its two arguments multiplied together.',
+    divideDescription:
+      'Returns its two arguments divided, the first divided by the second.',
+    equalDescription: 'Returns if its two arguments have the same value.',
+    ifDescription:
+      'If the first argument is true then returns the second argument, otherwise returns the third.',
+    toTextDescription: 'Converts the input to text.',
+    datetimeFormatDescription:
+      'Converts the date to text given a way of formatting the date.',
+    toNumberDescription: 'Converts the input to a number if possible.',
+    fieldDescription: 'Returns the field named by the single text argument.',
+    lookupDescription:
+      'Looks up the values from a field in another table for rows in a link row' +
+      ' field. The first argument should be the name of a link row field in the' +
+      ' current table and the second should be the name of a field in the linked' +
+      ' table.',
+    isBlankDescription:
+      'Returns true if the argument is empty or blank, false otherwise.',
+    tDescription:
+      "Returns the arguments value if it is text, but otherwise ''.",
+    notDescription:
+      'Returns false if the argument is true and true if the argument is false.',
+    greaterThanDescription:
+      'Returns true if the first argument greater than the second, otherwise false.',
+    greaterThanOrEqualDescription:
+      'Returns true if the first argument is greater than or equal to the second, otherwise false.',
+    lessThanDescription:
+      'Returns true if the first argument less than the second, otherwise false.',
+    lessThanOrEqualDescription:
+      'Returns true if the first argument less than or equal to the second, otherwise false.',
+    toDateDescription:
+      'Returns the first argument converted into a date given a date format string as the second argument.',
+    dayDescription:
+      'Returns the day of the month as a number between 1 to 31 from the argument.',
+    dateDiffDescription:
+      "Given a date unit to measure in as the first argument ('year', " +
+      "'month', 'week', 'day', 'hour', 'minute', 'seconds') calculates and returns " +
+      'the number of units from the second argument to the third.',
+    andDescription:
+      'Returns the logical and of the first and second argument, so if they are both' +
+      'true then the result is true, otherwise it is false.',
+    orDescription:
+      'Returns the logical or of the first and second argument, so if either are ' +
+      'true then the result is true, otherwise it is false.',
+    dateIntervalDescription:
+      'Returns the date interval corresponding to the provided argument.',
+    replaceDescription:
+      'Replaces all instances of the second argument in the first argument with ' +
+      'the third argument.',
+    searchDescription:
+      'Returns a positive integer starting from 1 for the first ' +
+      'occurrence of the second argument inside the first, or 0 if no ' +
+      'occurrence is found.',
+    rowIdDescription: 'Returns the rows unique identifying number.',
+    lengthDescription:
+      'Returns the number of characters in the first argument provided.',
+    reverseDescription:
+      'Returns the reversed text of the provided first argument.',
+    notEqualDescription: 'Returns if its two arguments have different values.',
+    countDescription: 'Returns the number of items in its first argument.',
+    containsDescription:
+      'Returns true if the first piece of text contains at least once the second.',
+    leftDescription:
+      'Extracts the left most characters from the first input, stops when it has' +
+      ' extracted the number of characters specified by the second input.',
+    rightDescription:
+      'Extracts the right most characters from the first input, stops when it has' +
+      ' extracted the number of characters specified by the second input.',
+    trimDescription:
+      'Removes all whitespace from the left and right sides of the input.',
+    regexReplaceDescription:
+      'Replaces any text in the first input which matches the regex specified by' +
+      ' the second input with the text in the third input.',
+    greatestDescription: 'Returns the greatest value of the two inputs.',
+    leastDescription: 'Returns the smallest of the two inputs.',
+    monthDescription: 'Returns the number of months in the provided date.',
+    yearDescription: 'Returns the number of years in the provided date.',
+    secondDescription: 'Returns the number of seconds in the provided date.',
+    whenEmptyDescription:
+      'If the first input is calculated to be empty the ' +
+      'second input will be returned instead, otherwise if the first input is not' +
+      ' empty the first will be returned.',
+    anyDescription:
+      'Returns true if any one of the provided looked up values is true,' +
+      ' false if they are all false.',
+    everyDescription:
+      'Returns true if every one of the provided looked up values is true,' +
+      ' false otherwise.',
+    maxDescription:
+      'Returns the largest number from all the looked up values provided.',
+    minDescription:
+      'Returns the smallest number from all the looked up values provided.',
+    joinDescription:
+      'Concats all of the values from the first input together using the values' +
+      ' from the second input.',
+    stddevPopDescription:
+      'Calculates the population standard deviation of the values and returns the' +
+      ' result. ' +
+      'The population standard deviation should be used when the provided values' +
+      ' contain a ' +
+      ' value for every single piece of data in the population.',
+    stddevSampleDescription:
+      'Calculates the sample standard deviation of the values and returns the' +
+      ' result. ' +
+      'The sample deviation should be used when the provided values are only for a' +
+      ' sample or subset  of values for an underlying population.',
+    varianceSampleDescription:
+      'Calculates the sample variance of the values and returns the result. ' +
+      'The sample variance should be used when the provided values are only for a' +
+      ' sample or subset of values for an underlying population.',
+    variancePopDescription:
+      'Calculates the population variance of the values and returns the result. ' +
+      'The population variance should be used when the provided values contain a ' +
+      ' value for every single piece of data in the population.',
+    avgDescription: 'Averages all of the values and returns the result.',
+    sumDescription: 'Sums all of the values and returns the result.',
+    filterDescription:
+      'Filters down an expression involving a lookup/link field reference or a' +
+      ' lookup function call.',
+  },
+  functionnalGridViewFieldLinkRow: {
+    unnamed: 'unnamed row {value}',
   },
 }

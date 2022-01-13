@@ -82,24 +82,28 @@ export const actions = {
 
     try {
       const { data } = await FieldService(this.$client).fetchAll(table.id)
-      data.forEach((part, index, d) => {
-        populateField(data[index], this.$registry)
-      })
-
-      const primaryIndex = data.findIndex((item) => item.primary === true)
-      const primary =
-        primaryIndex !== -1 ? data.splice(primaryIndex, 1)[0] : null
-      commit('SET_PRIMARY', primary)
-
-      commit('SET_ITEMS', data)
-      commit('SET_LOADING', false)
-      commit('SET_LOADED', true)
+      await dispatch('forceSetFields', { fields: data })
     } catch (error) {
       commit('SET_ITEMS', [])
       commit('SET_LOADING', false)
 
       throw error
     }
+  },
+  forceSetFields({ commit }, { fields }) {
+    fields.forEach((part, index) => {
+      populateField(fields[index], this.$registry)
+    })
+
+    const primaryIndex = fields.findIndex((item) => item.primary === true)
+    const primary =
+      primaryIndex !== -1 ? fields.splice(primaryIndex, 1)[0] : null
+    commit('SET_PRIMARY', primary)
+    commit('SET_ITEMS', fields)
+    commit('SET_LOADING', false)
+    commit('SET_LOADED', true)
+
+    return { primary, fields }
   },
   /**
    * Creates a new field with the provided type for the given table.
@@ -172,7 +176,11 @@ export const actions = {
     const { commit, dispatch } = context
     const fieldType = this.$registry.get('field', values.type)
     const data = populateField(values, this.$registry)
-    commit('ADD_ITEM', data)
+    if (data.primary) {
+      commit('SET_PRIMARY', data)
+    } else {
+      commit('ADD_ITEM', data)
+    }
 
     // Call the field created event on all the registered views because they might
     // need to change things in loaded data. For example the grid field will add the

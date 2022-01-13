@@ -8,6 +8,8 @@
     :view="view"
     :table-loading="tableLoading"
     :read-only="true"
+    :disable-filter="true"
+    :disable-sort="true"
     store-prefix="template/"
     @selected-view="selectView({ viewId: $event.id })"
   ></Table>

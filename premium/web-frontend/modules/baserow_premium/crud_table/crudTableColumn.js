@@ -21,10 +21,17 @@
 export default class CrudTableColumn {
   constructor(key, header, cellComponent, minWidth, maxWidth, sortable) {
     this.key = key
-    this.header = header
+    this._header = header
     this.cellComponent = cellComponent
     this.minWidth = minWidth
     this.maxWidth = maxWidth
     this.sortable = sortable
+  }
+
+  get header() {
+    if (typeof this._header === 'function') {
+      return this._header()
+    }
+    return this._header
   }
 }

@@ -13,8 +13,8 @@ services:
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
-        UID: "${UID:-}"
-        GID: "${GID:-}"
+        UID: $UID
+        GID: $GID
     image: baserow_backend_dev:latest
     volumes:
       - ./backend:/baserow/backend
@@ -31,8 +31,8 @@ services:
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
-        UID: "${UID:-}"
-        GID: "${GID:-}"
+        UID: $UID
+        GID: $GID
     command: celery-dev worker -l INFO -Q celery
     volumes:
       - ./backend:/baserow/backend
@@ -49,8 +49,8 @@ services:
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
-        UID: "${UID:-}"
-        GID: "${GID:-}"
+        UID: $UID
+        GID: $GID
     command: celery-dev worker -l INFO -Q export
     volumes:
       - ./backend:/baserow/backend
@@ -67,8 +67,8 @@ services:
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
-        UID: "${UID:-}"
-        GID: "${GID:-}"
+        UID: $UID
+        GID: $GID
     command: celery-dev beat -l INFO -S redbeat.RedBeatScheduler
     volumes:
       - ./backend:/baserow/backend
@@ -84,8 +84,8 @@ services:
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
-        UID: "${UID:-}"
-        GID: "${GID:-}"
+        UID: $UID
+        GID: $GID
     image: baserow_web-frontend_dev:latest
     volumes:
       - ./web-frontend:/baserow/web-frontend

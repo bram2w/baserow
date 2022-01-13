@@ -112,7 +112,6 @@ out/
 
 # vscode config files
 .vscode
-jsconfig.json
 vetur.config.js
 
 formula/out/

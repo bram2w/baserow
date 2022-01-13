@@ -2,8 +2,11 @@ import { Registerable } from '@baserow/modules/core/registry'
 import ViewForm from '@baserow/modules/database/components/view/ViewForm'
 import GridView from '@baserow/modules/database/components/view/grid/GridView'
 import GridViewHeader from '@baserow/modules/database/components/view/grid/GridViewHeader'
+import GalleryView from '@baserow/modules/database/components/view/gallery/GalleryView'
+import GalleryViewHeader from '@baserow/modules/database/components/view/gallery/GalleryViewHeader'
 import FormView from '@baserow/modules/database/components/view/form/FormView'
 import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
+import { FileFieldType } from '@baserow/modules/database/fieldTypes'
 
 export const maxPossibleOrderValue = 32767
 
@@ -48,6 +51,13 @@ export class ViewType extends Registerable {
     return true
   }
 
+  /**
+   * Indicates whether it is possible to share this view via an url publically.
+   */
+  canShare() {
+    return false
+  }
+
   constructor(...args) {
     super(...args)
     this.type = this.getType()
@@ -55,6 +65,7 @@ export class ViewType extends Registerable {
     this.colorClass = this.getColorClass()
     this.canFilter = this.canFilter()
     this.canSort = this.canSort()
+    this.canShare = this.canShare()
 
     if (this.type === null) {
       throw new Error('The type name of a view type must be set.')
@@ -81,7 +92,30 @@ export class ViewType extends Registerable {
    * Should return the component that will actually display the view.
    */
   getComponent() {
-    throw new Error('Not implement error. This view should return a component.')
+    throw new Error(
+      'Not implemented error. This view should return a component.'
+    )
+  }
+
+  /**
+   * Should return a route name that will display the view when it has been
+   * publicly shared.
+   */
+  getPublicRoute() {
+    throw new Error(
+      'Not implemented error. This method should be implemented to return a route' +
+        ' name to a public page where the view can be seen.'
+    )
+  }
+
+  /**
+   * A human readable name of the view type to be used in the ShareViewLink and
+   * related components. For example the link to share to view will have the text:
+   * `Share {this.getSharingLinkName()}`
+   */
+  getSharingLinkName() {
+    const { i18n } = this.app
+    return i18n.t('viewType.sharing.linkName')
   }
 
   /**
@@ -243,6 +277,7 @@ export class ViewType extends Registerable {
       name: this.getName(),
       canFilter: this.canFilter,
       canSort: this.canSort,
+      canShare: this.canShare,
     }
   }
 
@@ -257,6 +292,29 @@ export class ViewType extends Registerable {
   isDeactivated() {
     return false
   }
+
+  /**
+   * Helper function to set a field value to null for all
+   * views of the same type
+   * Used when fields are converted or deleted and should no
+   * longer be set
+   */
+  _setFieldToNull({ rootGetters, dispatch }, field, fieldName) {
+    rootGetters['view/getAll']
+      .filter((view) => view.type === this.type)
+      .forEach((view) => {
+        if (view[fieldName] === field.id) {
+          dispatch(
+            'view/forceUpdate',
+            {
+              view,
+              values: { [fieldName]: null },
+            },
+            { root: true }
+          )
+        }
+      })
+  }
 }
 
 export class GridViewType extends ViewType {
@@ -265,7 +323,7 @@ export class GridViewType extends ViewType {
   }
 
   getIconClass() {
-    return 'th'
+    return 'bars'
   }
 
   getName() {
@@ -279,6 +337,14 @@ export class GridViewType extends ViewType {
 
   getComponent() {
     return GridView
+  }
+
+  canShare() {
+    return true
+  }
+
+  getPublicRoute() {
+    return 'database-public-grid-view'
   }
 
   async fetch({ store }, view, fields, primary, storePrefix = '') {
@@ -305,7 +371,7 @@ export class GridViewType extends ViewType {
   }
 
   async fieldRestored(
-    { dispatch },
+    { dispatch, rootGetters },
     table,
     selectedView,
     field,
@@ -313,9 +379,12 @@ export class GridViewType extends ViewType {
     storePrefix = ''
   ) {
     // There might be new filters and sorts associated with the restored field,
-    // ensure we fetch them. For now we have to fetch all filters/sorts however in the
-    // future we should instead just fetch them for this particular restored field.
-    await dispatch('view/refreshView', { view: selectedView }, { root: true })
+    // ensure we create them. They will be included on the field data object if present.
+    await dispatch(
+      'view/fieldRestored',
+      { field, fieldType, view: selectedView },
+      { root: true }
+    )
   }
 
   async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
@@ -471,6 +540,207 @@ export class GridViewType extends ViewType {
   }
 }
 
+/**
+ * This class can be used if the view store uses the `bufferedRows` mixin. It will
+ * enable real time collaboration and will make sure that the rows are in the store
+ * are updated properly.
+ */
+class BaseBufferedRowView extends ViewType {
+  getDefaultFieldOptionValues() {
+    return {}
+  }
+
+  async fetch({ store }, view, fields, primary, storePrefix = '') {
+    await store.dispatch(`${storePrefix}view/${this.getType()}/fetchInitial`, {
+      viewId: view.id,
+      fields,
+      primary,
+    })
+  }
+
+  async refresh(
+    { store },
+    view,
+    fields,
+    primary,
+    storePrefix = '',
+    includeFieldOptions = false
+  ) {
+    await store.dispatch(storePrefix + 'view/' + this.getType() + '/refresh', {
+      fields,
+      primary,
+      includeFieldOptions,
+    })
+  }
+
+  async fieldRestored(
+    { dispatch },
+    table,
+    selectedView,
+    field,
+    fieldType,
+    storePrefix = ''
+  ) {
+    // There might be new filters and sorts associated with the restored field,
+    // ensure we create them. They will be included on the field data object if present.
+    await dispatch(
+      'view/fieldRestored',
+      { field, fieldType, view: selectedView },
+      { root: true }
+    )
+  }
+
+  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
+    const value = fieldType.getEmptyValue(field)
+    await dispatch(
+      storePrefix + 'view/' + this.getType() + '/addField',
+      { field, value },
+      { root: true }
+    )
+    await dispatch(
+      storePrefix + 'view/' + this.getType() + '/setFieldOptionsOfField',
+      {
+        field,
+        values: this.getDefaultFieldOptionValues(),
+      },
+      { root: true }
+    )
+  }
+
+  async fieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
+    await dispatch(
+      storePrefix + 'view/' + this.getType() + '/forceDeleteFieldOptions',
+      field.id,
+      {
+        root: true,
+      }
+    )
+  }
+
+  async fieldOptionsUpdated({ store }, view, fieldOptions, storePrefix) {
+    await store.dispatch(
+      storePrefix + 'view/' + this.getType() + '/forceUpdateAllFieldOptions',
+      fieldOptions,
+      {
+        root: true,
+      }
+    )
+  }
+
+  async rowCreated(
+    { store },
+    tableId,
+    fields,
+    primary,
+    values,
+    metadata,
+    storePrefix = ''
+  ) {
+    if (this.isCurrentView(store, tableId)) {
+      await store.dispatch(
+        storePrefix + 'view/' + this.getType() + '/afterNewRowCreated',
+        {
+          view: store.getters['view/getSelected'],
+          fields,
+          primary,
+          values,
+        }
+      )
+    }
+  }
+
+  async rowUpdated(
+    { store },
+    tableId,
+    fields,
+    primary,
+    row,
+    values,
+    metadata,
+    storePrefix = ''
+  ) {
+    if (this.isCurrentView(store, tableId)) {
+      await store.dispatch(
+        storePrefix + 'view/' + this.getType() + '/afterExistingRowUpdated',
+        {
+          view: store.getters['view/getSelected'],
+          fields,
+          primary,
+          row,
+          values,
+        }
+      )
+    }
+  }
+
+  async rowDeleted({ store }, tableId, fields, primary, row, storePrefix = '') {
+    if (this.isCurrentView(store, tableId)) {
+      await store.dispatch(
+        storePrefix + 'view/' + this.getType() + '/afterExistingRowDeleted',
+        {
+          view: store.getters['view/getSelected'],
+          fields,
+          primary,
+          row,
+        }
+      )
+    }
+  }
+}
+
+export class GalleryViewType extends BaseBufferedRowView {
+  static getType() {
+    return 'gallery'
+  }
+
+  getIconClass() {
+    return 'th-large'
+  }
+
+  getColorClass() {
+    return 'color-error'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewType.gallery')
+  }
+
+  getHeaderComponent() {
+    return GalleryViewHeader
+  }
+
+  getComponent() {
+    return GalleryView
+  }
+
+  getDefaultFieldOptionValues() {
+    // The default values should be the same as in the `GalleryViewFieldOptions`
+    // model in the backend to stay consistent.
+    return {
+      hidden: true,
+      order: maxPossibleOrderValue,
+    }
+  }
+
+  fieldUpdated(context, field, oldField, fieldType, storePrefix) {
+    // If the field type has changed from a file field to something else, it could
+    // be that there are gallery views that depending on that field. So we need to
+    // change to type to null if that's the case.
+    const type = FileFieldType.getType()
+    if (oldField.type === type && field.type !== type) {
+      this._setFieldToNull(context, field, 'card_cover_image_field')
+    }
+  }
+
+  fieldDeleted(context, field, fieldType, storePrefix = '') {
+    // We want to loop over all gallery views that we have in the store and check if
+    // they were depending on this deleted field. If that's case, we can set it to null
+    // because it doesn't exist anymore.
+    this._setFieldToNull(context, field, 'card_cover_image_field')
+  }
+}
+
 export class FormViewType extends ViewType {
   static getType() {
     return 'form'
@@ -495,6 +765,19 @@ export class FormViewType extends ViewType {
 
   canSort() {
     return false
+  }
+
+  canShare() {
+    return true
+  }
+
+  getPublicRoute() {
+    return 'database-table-form'
+  }
+
+  getSharingLinkName() {
+    const { i18n } = this.app
+    return i18n.t('viewType.sharing.formLinkName')
   }
 
   getHeaderComponent() {

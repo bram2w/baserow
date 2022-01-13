@@ -4,7 +4,7 @@
       <li>
         <a @click=";[$emit('create-row'), hide()]">
           <i class="context__menu-icon fas fa-fw fa-plus"></i>
-          Create row
+          {{ $t('kanbanViewStackContext.createCard') }}
         </a>
       </li>
       <li v-if="option !== null">
@@ -13,7 +13,7 @@
           @click="$refs.updateContext.toggle($refs.updateContextLink)"
         >
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
-          Edit stack
+          {{ $t('kanbanViewStackContext.editStack') }}
         </a>
         <KanbanViewUpdateStackContext
           ref="updateContext"
@@ -27,19 +27,22 @@
       <li v-if="option !== null">
         <a @click="$refs.deleteModal.show()">
           <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
-          Delete stack
+          {{ $t('kanbanViewStackContext.deleteStack') }}
         </a>
       </li>
     </ul>
     <Modal v-if="option !== null" ref="deleteModal">
-      <h2 class="box__title">Delete {{ option.value }}</h2>
+      <h2 class="box__title">
+        {{ $t('kanbanViewStackContext.delete', { name: option.value }) }}
+      </h2>
       <Error :error="error"></Error>
       <div>
         <p>
-          Are you sure that you want to delete stack {{ option.value }}?
-          Deleting the stack results in deleting the select option of the single
-          select field, which might result into data loss because row values are
-          going to be set to empty.
+          {{
+            $t('kanbanViewStackContext.deleteDescription', {
+              name: option.value,
+            })
+          }}
         </p>
         <div class="actions">
           <div class="align-right">
@@ -49,7 +52,7 @@
               :disabled="loading"
               @click="deleteStack()"
             >
-              Delete {{ option.value }}
+              {{ $t('kanbanViewStackContext.delete', { name: option.value }) }}
             </a>
           </div>
         </div>
@@ -118,3 +121,26 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "kanbanViewStackContext": {
+      "createCard": "Create card",
+      "editStack": "Edit stack",
+      "deleteStack": "Delete stack",
+      "delete": "Delete {name}",
+      "deleteDescription": "Are you sure that you want to delete stack {name}? Deleting the stack results in deleting the select option of the single select field, which might result into data loss because row values are going to be set to empty."
+    }
+  },
+  "fr": {
+    "kanbanViewStackContext": {
+      "createCard": "Créer une carte",
+      "editStack": "Modifier la colonne",
+      "deleteStack": "Supprimer la colonne",
+      "delete": "Supprimer {name}",
+      "deleteDescription": "Êtes-vous sur·e de vouloir supprimer la colonne {name} ? Supprimer une valeur revient à supprimer l'option correspondante de la liste déroulante, ce qui peut impliquer une perte d'information car les lignes contenant cette valeur auront désormais une valeur vide à la place pour ce champ."
+    }
+  }
+}
+</i18n>

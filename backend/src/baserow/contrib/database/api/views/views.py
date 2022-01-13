@@ -1,4 +1,7 @@
 from django.db import transaction
+from django.db.models import ObjectDoesNotExist
+from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -24,11 +27,20 @@ from baserow.api.utils import (
     CustomFieldRegistryMappingSerializer,
 )
 from baserow.api.schemas import get_error_schema
+from baserow.api.serializers import get_example_pagination_serializer_class
+from baserow.api.pagination import PageNumberPagination
 from baserow.core.exceptions import UserNotInGroup
-from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
+from baserow.contrib.database.api.fields.serializers import LinkRowValueSerializer
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_FIELD_NOT_IN_TABLE,
+    ERROR_FIELD_DOES_NOT_EXIST,
+)
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
-from baserow.contrib.database.fields.models import Field
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.models import Field, LinkRowField
+from baserow.contrib.database.fields.exceptions import (
+    FieldNotInTable,
+    FieldDoesNotExist,
+)
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.views.registries import view_type_registry
@@ -46,6 +58,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortFieldNotSupported,
     UnrelatedFieldError,
     ViewDoesNotSupportFieldOptions,
+    CannotShareViewTypeError,
 )
 
 from .serializers import (
@@ -72,6 +85,7 @@ from .errors import (
     ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED,
     ERROR_UNRELATED_FIELD,
     ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
+    ERROR_CANNOT_SHARE_VIEW_TYPE,
 )
 
 
@@ -205,7 +219,11 @@ class ViewsView(APIView):
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_FIELD_NOT_IN_TABLE",
+                ]
             ),
             404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
         },
@@ -331,7 +349,11 @@ class ViewView(APIView):
                 view_type_registry, ViewSerializer
             ),
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_FIELD_NOT_IN_TABLE",
+                ]
             ),
             404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
         },
@@ -983,7 +1005,9 @@ class ViewFieldOptionsView(APIView):
         view_type = view_type_registry.get_by_model(view)
 
         try:
-            serializer_class = view_type.get_field_options_serializer_class()
+            serializer_class = view_type.get_field_options_serializer_class(
+                create_if_missing=True
+            )
         except ValueError:
             raise ViewDoesNotSupportFieldOptions(
                 "The view type does not have a `field_options_serializer_class`"
@@ -1032,7 +1056,9 @@ class ViewFieldOptionsView(APIView):
         handler = ViewHandler()
         view = handler.get_view(view_id).specific
         view_type = view_type_registry.get_by_model(view)
-        serializer_class = view_type.get_field_options_serializer_class()
+        serializer_class = view_type.get_field_options_serializer_class(
+            create_if_missing=True
+        )
         data = validate_data(serializer_class, request.data)
 
         with view_type.map_api_exceptions():
@@ -1040,3 +1066,154 @@ class ViewFieldOptionsView(APIView):
 
         serializer = serializer_class(view)
         return Response(serializer.data)
+
+
+class RotateViewSlugView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                required=True,
+                description="Rotates the slug of the view related to the provided "
+                "value.",
+            )
+        ],
+        tags=["Database table views"],
+        operation_id="rotate_database_view_slug",
+        description=(
+            "Rotates the unique slug of the view by replacing it with a new "
+            "value. This would mean that the publicly shared URL of the view will "
+            "change. Anyone with the old URL won't be able to access the view"
+            "anymore. Only view types which are sharable can have their slugs rotated."
+        ),
+        request=None,
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                view_type_registry,
+                ViewSerializer,
+            ),
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_CANNOT_SHARE_VIEW_TYPE"]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            CannotShareViewTypeError: ERROR_CANNOT_SHARE_VIEW_TYPE,
+        }
+    )
+    @transaction.atomic
+    def post(self, request, view_id):
+        """Rotates the slug of a view."""
+
+        handler = ViewHandler()
+        view = ViewHandler().get_view(view_id)
+        view = handler.rotate_view_slug(request.user, view)
+        serializer = view_type_registry.get_serializer(view, ViewSerializer)
+        return Response(serializer.data)
+
+
+class PublicViewLinkRowFieldLookupView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="slug",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.STR,
+                required=True,
+                description="The slug related to the view.",
+            ),
+            OpenApiParameter(
+                name="field_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                required=True,
+                description="The field id of the link row field.",
+            ),
+        ],
+        tags=["Database table views"],
+        operation_id="database_table_public_view_link_row_field_lookup",
+        description=(
+            "If the view is publicly shared or if an authenticated user has access to "
+            "the related group, then this endpoint can be used to do a value lookup of "
+            "the link row fields that are included in the view. Normally it is not "
+            "possible for a not authenticated visitor to fetch the rows of a table. "
+            "This endpoint makes it possible to fetch the id and primary field value "
+            "of the related table of a link row included in the view."
+        ),
+        responses={
+            200: get_example_pagination_serializer_class(LinkRowValueSerializer),
+            404: get_error_schema(
+                ["ERROR_VIEW_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
+            ),
+        },
+    )
+    @map_exceptions(
+        {
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+        }
+    )
+    def get(self, request, slug, field_id):
+        handler = ViewHandler()
+        view = handler.get_public_view_by_slug(request.user, slug).specific
+        view_type = view_type_registry.get_by_model(view)
+
+        if not view_type.can_share:
+            raise ViewDoesNotExist("View does not exist.")
+
+        link_row_field_content_type = ContentType.objects.get_for_model(LinkRowField)
+
+        try:
+            queryset = view_type.get_visible_field_options_in_order(view)
+            field_option = queryset.get(
+                field_id=field_id, field__content_type=link_row_field_content_type
+            )
+        except ObjectDoesNotExist:
+            raise FieldDoesNotExist("The view field option does not exist.")
+
+        search = request.GET.get("search")
+        link_row_field = field_option.field.specific
+        table = link_row_field.link_row_table
+        primary_field = table.field_set.filter(primary=True).first()
+        model = table.get_model(fields=[primary_field], field_ids=[])
+        queryset = model.objects.all().enhance_by_fields()
+
+        # If the view type needs the link row values to be restricted, we must figure
+        # out which relations the view actually has to figure so that we can restrict
+        # the queryset.
+        if view_type.restrict_link_row_public_view_sharing:
+            # If it's possible to filter in this view, we need to apply the filters
+            # to make sure that the visitor can only request values that are actually
+            # visible in the view.
+            if view_type.can_filter:
+                # We need the full model in order to apply all the filters.
+                view_model = view.table.get_model()
+                view_queryset = view_model.objects.all().enhance_by_fields()
+                view_queryset = handler.apply_filters(view, view_queryset)
+            else:
+                view_model = view.table.get_model(fields=[link_row_field])
+                view_queryset = view_model.objects.all().enhance_by_fields()
+
+            view_queryset = view_queryset.values_list(f"field_{link_row_field.id}__id")
+            queryset = queryset.filter(id__in=view_queryset)
+
+        if search:
+            queryset = queryset.search_all_fields(search)
+
+        paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
+        page = paginator.paginate_queryset(queryset, request, self)
+        serializer = LinkRowValueSerializer(
+            page,
+            many=True,
+        )
+        return paginator.get_paginated_response(serializer.data)

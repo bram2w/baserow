@@ -49,7 +49,9 @@ describe('View Filter Tests', () => {
   async function thereIsATableWithRowAndFilter(field, row, filter) {
     const table = mockServer.createTable()
     const { application } = await mockServer.createAppAndGroup(table)
-    const gridView = mockServer.createGridView(application, table, [filter])
+    const gridView = mockServer.createGridView(application, table, {
+      filters: [filter],
+    })
     const fields = mockServer.createFields(application, table, [field])
 
     mockServer.createRows(gridView, fields, [row])

@@ -43,7 +43,8 @@ export class BaserowUpper extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns its argument in upper case'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.upperDescription')
   }
 
   getSyntaxUsage() {
@@ -64,7 +65,8 @@ export class BaserowLower extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns its argument in lower case'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.lowerDescription')
   }
 
   getSyntaxUsage() {
@@ -86,7 +88,8 @@ export class BaserowConcat extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns its arguments joined together as a single piece of text'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.concatDescription')
   }
 
   getSyntaxUsage() {
@@ -108,7 +111,8 @@ export class BaserowAdd extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns its two arguments added together'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.addDescription')
   }
 
   getSyntaxUsage() {
@@ -145,7 +149,8 @@ export class BaserowMinus extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns its two arguments subtracted'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.minusDescription')
   }
 
   getSyntaxUsage() {
@@ -181,7 +186,8 @@ export class BaserowMultiply extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns its two arguments multiplied together'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.multiplyDescription')
   }
 
   getSyntaxUsage() {
@@ -211,7 +217,8 @@ export class BaserowDivide extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns its two arguments divided, the first divided by the second'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.divideDescription')
   }
 
   getSyntaxUsage() {
@@ -241,7 +248,8 @@ export class BaserowEqual extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns if its two arguments have the same value.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.equalDescription')
   }
 
   getSyntaxUsage() {
@@ -271,10 +279,8 @@ export class BaserowIf extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'If the first argument is true then returns the second argument, otherwise ' +
-      'returns the third.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.ifDescription')
   }
 
   getSyntaxUsage() {
@@ -296,7 +302,8 @@ export class BaserowToText extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Converts the input to text'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.toTextDescription')
   }
 
   getSyntaxUsage() {
@@ -318,7 +325,8 @@ export class BaserowDatetimeFormat extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Converts the date to text given a way of formatting the date'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.datetimeFormatDescription')
   }
 
   getSyntaxUsage() {
@@ -340,7 +348,8 @@ export class BaserowToNumber extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Converts the input to a number if possible'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.toNumberDescription')
   }
 
   getSyntaxUsage() {
@@ -362,7 +371,8 @@ export class BaserowField extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the field named by the single text argument'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.fieldDescription')
   }
 
   getSyntaxUsage() {
@@ -384,12 +394,8 @@ export class BaserowLookup extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Looks up the values from a field in another table for rows in a link row' +
-      ' field. The first argument should be the name of a link row field in the' +
-      ' current table and the second should be the name of a field in the linked' +
-      ' table.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.lookupDescription')
   }
 
   getSyntaxUsage() {
@@ -413,7 +419,8 @@ export class BaserowIsBlank extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns true if the argument is empty or blank, false otherwise'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.isBlankDescription')
   }
 
   getSyntaxUsage() {
@@ -435,7 +442,8 @@ export class BaserowT extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the arguments value if it is text, but otherwise '
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.tDescription')
   }
 
   getSyntaxUsage() {
@@ -457,7 +465,8 @@ export class BaserowNot extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns false if the argument is true and true if the argument is false'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.notDescription')
   }
 
   getSyntaxUsage() {
@@ -479,7 +488,8 @@ export class BaserowGreaterThan extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns true if the first argument greater than the second, otherwise false'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.greaterThanDescription')
   }
 
   getSyntaxUsage() {
@@ -512,7 +522,8 @@ export class BaserowGreaterThanOrEqual extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns true if the first argument is greater than or equal to the second, otherwise false'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.greaterThanOrEqualDescription')
   }
 
   getSyntaxUsage() {
@@ -545,7 +556,8 @@ export class BaserowLessThan extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns true if the first argument less than the second, otherwise false'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.lessThanDescription')
   }
 
   getSyntaxUsage() {
@@ -578,7 +590,8 @@ export class BaserowLessThanOrEqual extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns true if the first argument less than or equal to the second, otherwise false'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.lessThanOrEqualDescription')
   }
 
   getSyntaxUsage() {
@@ -611,7 +624,8 @@ export class BaserowToDate extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the first argument converted into a date given a date format string as the second argument'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.toDateDescription')
   }
 
   getSyntaxUsage() {
@@ -633,7 +647,8 @@ export class BaserowDay extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the day of the month as a number between 1 to 31 from the argument'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.dayDescription')
   }
 
   getSyntaxUsage() {
@@ -655,11 +670,8 @@ export class BaserowDateDiff extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      "Given a date unit to measure in as the first argument ('year', " +
-      "'month', 'week', 'day', 'hour', 'minute', 'seconds') calculates and returns " +
-      'the number of units from the second argument to the third.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.dateDiffDescription')
   }
 
   getSyntaxUsage() {
@@ -684,10 +696,8 @@ export class BaserowAnd extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Returns the logical and of the first and second argument, so if they are both' +
-      'true then the result is true, otherwise it is false'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.andDescription')
   }
 
   getSyntaxUsage() {
@@ -713,10 +723,8 @@ export class BaserowOr extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Returns the logical or of the first and second argument, so if either are ' +
-      'true then the result is true, otherwise it is false'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.orDescription')
   }
 
   getSyntaxUsage() {
@@ -742,7 +750,8 @@ export class BaserowDateInterval extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the date interval corresponding to the provided argument.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.dateIntervalDescription')
   }
 
   getSyntaxUsage() {
@@ -764,10 +773,8 @@ export class BaserowReplace extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Replaces all instances of the second argument in the first argument with ' +
-      'the third argument'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.replaceDescription')
   }
 
   getSyntaxUsage() {
@@ -789,11 +796,8 @@ export class BaserowSearch extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Returns a positive integer starting from 1 for the first ' +
-      'occurrence of the second argument inside the first, or 0 if no ' +
-      'occurrence is found.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.searchDescription')
   }
 
   getSyntaxUsage() {
@@ -818,7 +822,8 @@ export class BaserowRowId extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the rows unique identifying number'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.rowIdDescription')
   }
 
   getSyntaxUsage() {
@@ -840,7 +845,8 @@ export class BaserowLength extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the number of characters in the first argument provided'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.lengthDescription')
   }
 
   getSyntaxUsage() {
@@ -862,7 +868,8 @@ export class BaserowReverse extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the reversed text of the provided first argument'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.reverseDescription')
   }
 
   getSyntaxUsage() {
@@ -884,7 +891,8 @@ export class BaserowNotEqual extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns if its two arguments have different values.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.notEqualDescription')
   }
 
   getSyntaxUsage() {
@@ -914,7 +922,8 @@ export class BaserowCount extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the number of items in its first argument.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.countDescription')
   }
 
   getSyntaxUsage() {
@@ -936,7 +945,8 @@ export class BaserowContains extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns true if the first piece of text contains at least once the second.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.containsDescription')
   }
 
   getSyntaxUsage() {
@@ -958,10 +968,8 @@ export class BaserowLeft extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Extracts the left most characters from the first input, stops when it has' +
-      ' extracted the number of characters specified by the second input.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.leftDescription')
   }
 
   getSyntaxUsage() {
@@ -983,10 +991,8 @@ export class BaserowRight extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Extracts the right most characters from the first input, stops when it has' +
-      ' extracted the number of characters specified by the second input.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.rightDescription')
   }
 
   getSyntaxUsage() {
@@ -1008,7 +1014,8 @@ export class BaserowTrim extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Removes all whitespace from the left and right sides of the input.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.trimDescription')
   }
 
   getSyntaxUsage() {
@@ -1030,10 +1037,8 @@ export class BaserowRegexReplace extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Replaces any text in the first input which matches the regex specified by' +
-      ' the second input with the text in the third input.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.regexReplaceDescription')
   }
 
   getSyntaxUsage() {
@@ -1055,7 +1060,8 @@ export class BaserowGreatest extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the greatest value of the two inputs.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.greatestDescription')
   }
 
   getSyntaxUsage() {
@@ -1077,7 +1083,8 @@ export class BaserowLeast extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the smallest of the two inputs.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.leastDescription')
   }
 
   getSyntaxUsage() {
@@ -1099,7 +1106,8 @@ export class BaserowMonth extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the number of months in the provided date.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.monthDescription')
   }
 
   getSyntaxUsage() {
@@ -1121,7 +1129,8 @@ export class BaserowYear extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the number of years in the provided date.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.yearDescription')
   }
 
   getSyntaxUsage() {
@@ -1143,7 +1152,8 @@ export class BaserowSecond extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the number of seconds in the provided date.'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.secondDescription')
   }
 
   getSyntaxUsage() {
@@ -1164,11 +1174,8 @@ export class BaserowWhenEmpty extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'If the first input is calculated to be empty the ' +
-      'second input will be returned instead, otherwise if the first input is not' +
-      ' empty the first will be returned.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.whenEmptyDescription')
   }
 
   getSyntaxUsage() {
@@ -1190,10 +1197,8 @@ export class BaserowAny extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Returns true if any one of the provided looked up values is true,' +
-      ' false if they are all false.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.anyDescription')
   }
 
   getSyntaxUsage() {
@@ -1215,10 +1220,8 @@ export class BaserowEvery extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Returns true if every one of the provided looked up values is true,' +
-      ' false otherwise.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.everyDescription')
   }
 
   getSyntaxUsage() {
@@ -1240,7 +1243,8 @@ export class BaserowMax extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the largest number from all the looked up values provided'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.maxDescription')
   }
 
   getSyntaxUsage() {
@@ -1266,7 +1270,8 @@ export class BaserowMin extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Returns the smallest number from all the looked up values provided'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.minDescription')
   }
 
   getSyntaxUsage() {
@@ -1292,10 +1297,8 @@ export class BaserowJoin extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Concats all of the values from the first input together using the values' +
-      ' from the second input'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.joinDescription')
   }
 
   getSyntaxUsage() {
@@ -1321,13 +1324,8 @@ export class BaserowStddevPop extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Calculates the population standard deviation of the values and returns the' +
-      ' result. ' +
-      'The population standard deviation should be used when the provided values' +
-      ' contain a ' +
-      ' value for every single piece of data in the population.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.stddevPopDescription')
   }
 
   getSyntaxUsage() {
@@ -1353,12 +1351,8 @@ export class BaserowStddevSample extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Calculates the sample standard deviation of the values and returns the' +
-      ' result. ' +
-      'The sample deviation should be used when the provided values are only for a' +
-      ' sample or subset  of values for an underlying population.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.stddevSampleDescription')
   }
 
   getSyntaxUsage() {
@@ -1384,11 +1378,8 @@ export class BaserowVarianceSample extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Calculates the sample variance of the values and returns the result. ' +
-      'The sample variance should be used when the provided values are only for a' +
-      ' sample or subset of values for an underlying population.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.varianceSampleDescription')
   }
 
   getSyntaxUsage() {
@@ -1414,11 +1405,8 @@ export class BaserowVariancePop extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Calculates the population variance of the values and returns the result. ' +
-      'The population variance should be used when the provided values contain a ' +
-      ' value for every single piece of data in the population.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.variancePopDescription')
   }
 
   getSyntaxUsage() {
@@ -1444,7 +1432,8 @@ export class BaserowAvg extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Averages all of the values and returns the result'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.avgDescription')
   }
 
   getSyntaxUsage() {
@@ -1470,7 +1459,8 @@ export class BaserowSum extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return 'Sums all of the values and returns the result'
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.sumDescription')
   }
 
   getSyntaxUsage() {
@@ -1496,10 +1486,8 @@ export class BaserowFilter extends BaserowFunctionDefinition {
   }
 
   getDescription() {
-    return (
-      'Filters down an expression involving a lookup/link field reference or a' +
-      ' lookup function call.'
-    )
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.filterDescription')
   }
 
   getSyntaxUsage() {

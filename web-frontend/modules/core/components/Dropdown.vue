@@ -8,12 +8,14 @@
   >
     <a v-if="showInput" class="dropdown__selected" @click="show()">
       <template v-if="hasValue()">
-        <i
-          v-if="selectedIcon"
-          class="dropdown__selected-icon fas"
-          :class="'fa-' + selectedIcon"
-        ></i>
-        {{ selectedName }}
+        <slot name="value">
+          <i
+            v-if="selectedIcon"
+            class="dropdown__selected-icon fas"
+            :class="'fa-' + selectedIcon"
+          />
+          {{ selectedName }}
+        </slot>
       </template>
       <template v-else>{{ $t('action.makeChoice') }}</template>
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>

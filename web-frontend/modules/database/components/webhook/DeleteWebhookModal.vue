@@ -71,9 +71,9 @@ export default {
   },
   "fr": {
     "deleteWebhookModal": {
-      "title": "@TODO",
-      "deleteButton": "@TODO",
-      "body": "@TODO"
+      "title": "Supprimer {webhookName}",
+      "deleteButton": "Supprimer le webhook",
+      "body": "Êtes-vous sûr·e de vouloir supprimer ce webhook ? Vous ne serez plus en mesure de le restaurer par la suite."
     }
   }
 }

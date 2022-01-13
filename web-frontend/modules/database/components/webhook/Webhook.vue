@@ -46,7 +46,7 @@
     </div>
     <div class="webhook__body">
       <Tabs>
-        <Tab title="Edit">
+        <Tab :title="$t('action.edit')">
           <UpdateWebhook
             :webhook="webhook"
             :table="table"
@@ -54,7 +54,7 @@
             @deleted="$emit('deleted', $event)"
           />
         </Tab>
-        <Tab title="Call log">
+        <Tab :title="$t('webhook.callLog')">
           <p v-if="webhook.calls.length <= 0">{{ $t('webhook.noCalls') }}</p>
           <WebhookCall
             v-for="call in webhook.calls"
@@ -154,15 +154,17 @@ export default {
       "details": "details",
       "lastCall": "Last call: {lastCallTime}",
       "noCalls": "No calls made",
+      "callLog": "Call log",
       "triggerDescription": "Triggers on every event | Triggers on {count} event | Triggers on {count} events"
     }
   },
   "fr": {
     "webhook": {
-      "details": "@TODO",
-      "lastCall": "@TODO",
-      "noCalls": "@TODO",
-      "triggerDescription": "@TODO"
+      "details": "détails",
+      "lastCall": "Dernier déclenchement : {lastCallTime}",
+      "noCalls": "Jamais déclenché",
+      "callLog": "Historique des appels",
+      "triggerDescription": "Déclenché par tous les événements | Déclenché par un événement | Déclenché par {count} événements"
     }
   }
 }

@@ -1,15 +1,27 @@
 <template>
+  <PaginatedDropdown
+    v-if="readOnly && view"
+    :fetch-page="fetchPage"
+    :value="filter.value"
+    :fetch-on-open="true"
+    :disabled="disabled"
+    class="filters__value-dropdown dropdown--tiny"
+    @input="$emit('input', $event)"
+  ></PaginatedDropdown>
   <a
+    v-else
     class="filters__value-link-row"
-    :class="{ 'filters__value-link-row--disabled': readOnly }"
-    @click.prevent="!readOnly && $refs.selectModal.show()"
+    :class="{ 'filters__value-link-row--disabled': disabled }"
+    @click.prevent="!disabled && $refs.selectModal.show()"
   >
     <template v-if="valid">
-      {{ name || `unnamed row ${filter.value}` }}
+      {{ name || $t('viewFilterTypeLinkRow.unnamed', { value: filter.value }) }}
     </template>
-    <div v-else class="filters__value-link-row-choose">Choose row</div>
+    <div v-else class="filters__value-link-row-choose">
+      {{ $t('viewFilterTypeLinkRow.choose') }}
+    </div>
     <SelectRowModal
-      v-if="!readOnly"
+      v-if="!disabled"
       ref="selectModal"
       :table-id="field.link_row_table"
       @selected="setValue"
@@ -19,12 +31,14 @@
 
 <script>
 import { isNumeric } from '@baserow/modules/core/utils/string'
+import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdown'
 import SelectRowModal from '@baserow/modules/database/components/row/SelectRowModal'
 import viewFilter from '@baserow/modules/database/mixins/viewFilter'
+import ViewService from '@baserow/modules/database/services/view'
 
 export default {
   name: 'ViewFilterTypeLinkRow',
-  components: { SelectRowModal },
+  components: { PaginatedDropdown, SelectRowModal },
   mixins: [viewFilter],
   data() {
     return {
@@ -66,6 +80,31 @@ export default {
       this.setNameFromRow(row, primary)
       this.$emit('input', row.id.toString())
     },
+    fetchPage(page, search) {
+      return ViewService(this.$client).linkRowFieldLookup(
+        this.view.id,
+        this.field.id,
+        page,
+        search
+      )
+    },
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "viewFilterTypeLinkRow": {
+      "unnamed": "unnamed row {value}",
+      "choose": "Choose row"
+    }
+  },
+  "fr": {
+    "viewFilterTypeLinkRow": {
+      "unnamed": "Ligne sans nom {value}",
+      "choose": "Choisissez une ligne"
+    }
+  }
+}
+</i18n>

@@ -1,8 +1,10 @@
 <template>
   <div class="kanban-view__stacked-by">
-    <div class="kanban-view__stacked-by-title">Group field</div>
+    <div class="kanban-view__stacked-by-title">
+      {{ $t('kanbanViewStakedBy.title') }}
+    </div>
     <div class="kanban-view__stacked-by-description">
-      Which single select field should the cards be stacked by?
+      {{ $t('kanbanViewStakedBy.chooseField') }}
     </div>
     <Radio
       v-for="field in singleSelectFields"
@@ -21,7 +23,7 @@
         @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
       >
         <i class="fas fa-plus"></i>
-        add single select field
+        {{ $t('kanbanViewStakedBy.addSelectField') }}
       </a>
       <CreateFieldContext
         ref="createFieldContext"
@@ -105,3 +107,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "kanbanViewStakedBy": {
+      "title": "Group field",
+      "chooseField": "Which single select field should the cards be stacked by?",
+      "addSelectField": "add single select field"
+    }
+  },
+  "fr": {
+    "kanbanViewStakedBy": {
+      "title": "Champ de regroupement",
+      "chooseField": "Par quel champ de type « liste déroulante » souhaitez-vous regrouper vos cartes ?",
+      "addSelectField": "Ajouter une liste déroulante"
+    }
+  }
+}
+</i18n>

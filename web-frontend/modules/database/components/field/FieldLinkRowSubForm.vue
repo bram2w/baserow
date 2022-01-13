@@ -118,7 +118,7 @@ export default {
     "fieldLinkRowSubForm": {
       "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
       "selectTableLabel": "Sélectionnez une table",
-      "dataLost": "En modifiant la table, toutes les données de la colonne seront supprimées"
+      "dataLost": "En modifiant la table, toutes les données du champ seront supprimées"
     }
   }
 }

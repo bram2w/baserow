@@ -2,14 +2,14 @@
   <a
     ref="createViewLink"
     v-tooltip="deactivated ? deactivatedText : null"
-    class="select__footer-multiple-item"
+    class="select__footer-create-link"
     :class="{
-      'select__footer-multiple-item--disabled': deactivated,
+      'select__footer-create-link--disabled': deactivated,
     }"
     @click="!deactivated && $refs.createModal.show($refs.createViewLink)"
   >
     <i
-      class="select__footer-multiple-icon fas"
+      class="select__footer-create-icon fas"
       :class="'fa-' + viewType.iconClass"
     ></i>
     {{ viewType.getName() }}

@@ -25,7 +25,8 @@
             ></Editable>
           </div>
           <div class="field-file__info">
-            {{ getDate(file.uploaded_at) }} - {{ file.size | formatBytes }}
+            {{ getDate(file.uploaded_at) }} -
+            {{ formatSize(file.size) }}
           </div>
         </div>
         <div class="field-file__actions">
@@ -109,6 +110,22 @@ export default {
       fileField.methods.renameFile.call(this, ...args)
       this.touch()
     },
+    /**
+     * Originally from
+     * https://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
+     *
+     * Converts an integer representing the amount of bytes to a human readable format.
+     * Where for example 1024 will end up in 1KB.
+     */
+    formatSize(bytes) {
+      if (bytes === 0) return '0 ' + this.$i18n.t(`rowEditFieldFile.sizes.0`)
+      const k = 1024
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+      const float = parseFloat((bytes / k ** i).toFixed(2)).toLocaleString(
+        this.$i18n.locale
+      )
+      return float + ' ' + this.$i18n.t(`rowEditFieldFile.sizes.${i}`)
+    },
   },
 }
 </script>
@@ -117,12 +134,28 @@ export default {
 {
   "en": {
     "rowEditFieldFile": {
-      "addFile": "Add a file"
+      "addFile": "Add a file",
+      "sizes": {
+        "0": "Bytes",
+        "1": "KB",
+        "2": "MB",
+        "3": "GB",
+        "4": "TB",
+        "5": "PB"
+      }
     }
   },
   "fr": {
     "rowEditFieldFile": {
-      "addFile": "Ajouter un fichier"
+      "addFile": "Ajouter un fichier",
+      "sizes": {
+        "0": "Octet(s)",
+        "1": "Ko",
+        "2": "Mo",
+        "3": "Go",
+        "4": "To",
+        "5": "Po"
+      }
     }
   }
 }

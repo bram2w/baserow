@@ -1,0 +1,109 @@
+.view-sharing__create-link {
+  display: block;
+  line-height: 56px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 20px;
+  color: $color-primary-900;
+  border-radius: 6px;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+
+  &.view-sharing__create-link--disabled {
+    color: $color-neutral-500;
+    background-color: transparent;
+
+    &:hover {
+      cursor: inherit;
+    }
+  }
+}
+
+.view-sharing__create-link-icon {
+  margin-right: 20px;
+  color: $color-warning-500;
+
+  .view-sharing__create-link--disabled & {
+    color: $color-neutral-500;
+  }
+}
+
+.view-sharing__shared-link {
+  padding: 25px 25px;
+}
+
+.view-sharing__shared-link-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.view-sharing__shared-link-description {
+  margin-bottom: 15px;
+}
+
+.view-sharing__shared-link-content {
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.view-sharing__shared-link-box {
+  border-radius: 3px;
+  background-color: $color-neutral-100;
+  line-height: 32px;
+  padding: 0 8px;
+  font-family: monospace;
+  font-size: 10px;
+  min-width: 0;
+}
+
+.view-sharing__shared-link-action {
+  position: relative;
+  width: 32px;
+  margin-left: 8px;
+  line-height: 32px;
+  color: $color-primary-900;
+  font-size: 12px;
+  text-align: center;
+  border-radius: 3px;
+
+  &:not(.view-sharing__shared-link-action--loading):hover {
+    background-color: $color-neutral-100;
+  }
+
+  &.view-sharing__shared-link-action--loading {
+    color: $white;
+    cursor: inherit;
+
+    &::before {
+      content: '';
+      margin-top: -7px;
+      margin-left: -7px;
+      z-index: 1;
+
+      @include loading(14px);
+      @include absolute(50%, auto, auto, 50%);
+    }
+  }
+
+  &.view-sharing__shared-link-action--disabled {
+    color: $color-primary-900;
+    background-color: transparent;
+
+    &:hover {
+      cursor: inherit;
+    }
+  }
+}
+
+.view-sharing__shared-link-foot {
+  display: flex;
+  justify-content: space-between;
+}
+
+.view-sharing__shared-link-disable {
+  color: $color-error-500;
+}

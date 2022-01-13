@@ -17,7 +17,7 @@
 <script>
 import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdown'
 import rowEditField from '@baserow/modules/database/mixins/rowEditField'
-import FormService from '@baserow/modules/database/services/view/form'
+import ViewService from '@baserow/modules/database/services/view'
 
 export default {
   name: 'FormViewFieldLinkRow',
@@ -48,7 +48,7 @@ export default {
   },
   methods: {
     fetchPage(page, search) {
-      return FormService(this.$client).linkRowFieldLookup(
+      return ViewService(this.$client).linkRowFieldLookup(
         this.slug,
         this.field.id,
         page,

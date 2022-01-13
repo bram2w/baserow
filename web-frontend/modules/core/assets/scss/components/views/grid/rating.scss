@@ -1,0 +1,8 @@
+.grid-field-rating {
+  @extend %ellipsis;
+
+  @include fixed-height(32px, 13px);
+
+  padding-left: 5px;
+  user-select: none;
+}

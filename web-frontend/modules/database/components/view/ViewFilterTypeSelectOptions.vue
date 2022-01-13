@@ -2,7 +2,7 @@
   <FieldSelectOptionsDropdown
     :value="copy"
     :options="field.select_options"
-    :disabled="readOnly"
+    :disabled="disabled"
     class="dropdown--floating filters__value-dropdown dropdown--tiny"
     @input="input"
   ></FieldSelectOptionsDropdown>

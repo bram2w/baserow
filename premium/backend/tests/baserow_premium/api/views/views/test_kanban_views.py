@@ -427,13 +427,14 @@ def test_patch_kanban_view_field_options(api_client, premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_kanban_view(api_client, premium_data_fixture):
+def test_create_kanban_view(api_client, data_fixture, premium_data_fixture):
     user, token = premium_data_fixture.create_user_and_token(
         has_active_premium_license=True
     )
     table = premium_data_fixture.create_database_table(user=user)
     single_select_field = premium_data_fixture.create_single_select_field(table=table)
     single_select_field_2 = premium_data_fixture.create_single_select_field()
+    cover_image_file_field = data_fixture.create_file_field(table=table)
 
     response = api_client.post(
         reverse("api:database:views:list", kwargs={"table_id": table.id}),
@@ -486,6 +487,7 @@ def test_create_kanban_view(api_client, premium_data_fixture):
             "filter_type": "AND",
             "filters_disabled": False,
             "single_select_field": single_select_field.id,
+            "card_cover_image_field": cover_image_file_field.id,
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -497,10 +499,44 @@ def test_create_kanban_view(api_client, premium_data_fixture):
     assert response_json["filter_type"] == "AND"
     assert response_json["filters_disabled"] is False
     assert response_json["single_select_field"] == single_select_field.id
+    assert response_json["card_cover_image_field"] == cover_image_file_field.id
 
     kanban_view = KanbanView.objects.all().last()
     assert kanban_view.id == response_json["id"]
     assert kanban_view.single_select_field_id == single_select_field.id
+
+
+@pytest.mark.django_db
+def test_create_kanban_view_invalid_card_cover_image_field(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text = data_fixture.create_text_field(table=table)
+    file_field = data_fixture.create_file_field()
+
+    response = api_client.post(
+        reverse("api:database:views:list", kwargs={"table_id": table.id}),
+        {"name": "Test 2", "type": "kanban", "card_cover_image_field": text.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]["card_cover_image_field"][0]["code"] == "does_not_exist"
+    )
+
+    response = api_client.post(
+        reverse("api:database:views:list", kwargs={"table_id": table.id}),
+        {"name": "Test 2", "type": "kanban", "card_cover_image_field": file_field.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FIELD_NOT_IN_TABLE"
 
 
 @pytest.mark.django_db
@@ -560,3 +596,30 @@ def test_update_kanban_view(api_client, premium_data_fixture):
 
     kanban_view.refresh_from_db()
     assert kanban_view.single_select_field is None
+
+
+@pytest.mark.django_db
+def test_update_kanban_view_card_cover_image_field(
+    api_client, data_fixture, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    cover_image_file_field = data_fixture.create_file_field(table=table)
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, card_cover_image_field=None
+    )
+
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": kanban_view.id}),
+        {
+            "card_cover_image_field": cover_image_file_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["card_cover_image_field"] == cover_image_file_field.id

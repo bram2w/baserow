@@ -43,6 +43,41 @@ function extractMetadataAndPopulateRow(data, rowIndex) {
   populateRow(row, metadata[row.id])
 }
 
+function getOrderBy(getters, rootGetters) {
+  if (getters.isPublic) {
+    const view = rootGetters['view/get'](getters.getLastGridId)
+    return view.sortings
+      .map((sort) => {
+        return `${sort.order === 'DESC' ? '-' : ''}field_${sort.field}`
+      })
+      .join(',')
+  } else {
+    return ''
+  }
+}
+
+function getFilters(getters, rootGetters) {
+  const filters = {}
+
+  if (getters.isPublic) {
+    const view = rootGetters['view/get'](getters.getLastGridId)
+
+    if (!view.filters_disabled) {
+      view.filters.forEach((filter) => {
+        const name = `filter__field_${filter.field}__${filter.type}`
+        if (!Object.prototype.hasOwnProperty.call(filters, name)) {
+          filters[name] = []
+        }
+        filters[name].push(filter.value)
+      })
+    }
+
+    filters.filter_type = [view.filter_type]
+  }
+
+  return filters
+}
+
 export const state = () => ({
   // The last used grid id.
   lastGridId: -1,
@@ -83,6 +118,7 @@ export const state = () => ({
   // entirely out. When false no server filter will be applied and rows which do not
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
+  public: false,
 })
 
 export const mutations = {
@@ -100,6 +136,9 @@ export const mutations = {
     state.activeSearchTerm = ''
     state.hideRowsNotMatchingSearch = true
   },
+  SET_PUBLIC(state, newPublicValue) {
+    state.public = newPublicValue
+  },
   SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
     state.activeSearchTerm = activeSearchTerm
     state.hideRowsNotMatchingSearch = hideRowsNotMatchingSearch
@@ -112,6 +151,9 @@ export const mutations = {
   },
   SET_WINDOW_HEIGHT(state, value) {
     state.windowHeight = value
+  },
+  SET_ROW_PADDING(state, value) {
+    state.rowPadding = value
   },
   SET_BUFFER_START_INDEX(state, value) {
     state.bufferStartIndex = value
@@ -166,6 +208,30 @@ export const mutations = {
   },
   UPDATE_ALL_FIELD_OPTIONS(state, fieldOptions) {
     state.fieldOptions = _.merge({}, state.fieldOptions, fieldOptions)
+  },
+  /**
+   * Only adds the new field options and removes the deleted ones. The existing ones
+   * will be left untouched.
+   */
+  ADD_MISSING_FIELD_OPTIONS(state, fieldOptions) {
+    // Add the missing field options.
+    Object.keys(fieldOptions).forEach((key) => {
+      const exists = Object.prototype.hasOwnProperty.call(
+        state.fieldOptions,
+        key
+      )
+      if (!exists) {
+        Vue.set(state.fieldOptions, key, fieldOptions[key])
+      }
+    })
+
+    // Remove the deleted ones.
+    Object.keys(state.fieldOptions).forEach((key) => {
+      const exists = Object.prototype.hasOwnProperty.call(fieldOptions, key)
+      if (!exists) {
+        Vue.delete(state.fieldOptions, key)
+      }
+    })
   },
   UPDATE_FIELD_OPTIONS_OF_FIELD(state, { fieldId, values }) {
     if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
@@ -341,12 +407,15 @@ export const mutations = {
   },
 }
 
-// Contains the timeout needed for the delayed delayed scroll top action.
-let fireTimeout = null
-// Contains a timestamp of the last fire of the related actions to the delayed
-// scroll top action.
-let lastFire = null
-// Contains the
+// Contains the info needed for the delayed scroll top action.
+const fireScrollTop = {
+  last: Date.now(),
+  timeout: null,
+  processing: false,
+  distance: 0,
+}
+
+// Contains the last row request to be able to cancel it.
 let lastRequest = null
 let lastRequestOffset = null
 let lastRequestLimit = null
@@ -362,7 +431,7 @@ export const actions = {
    * anything other then we already have or waiting for a new request will be made.
    */
   fetchByScrollTop(
-    { commit, getters, dispatch },
+    { commit, getters, rootGetters, dispatch },
     { scrollTop, fields, primary }
   ) {
     const windowHeight = getters.getWindowHeight
@@ -450,6 +519,7 @@ export const actions = {
       requestLimit > 0 &&
       (lastRequestOffset !== requestOffset || lastRequestLimit !== requestLimit)
     ) {
+      fireScrollTop.processing = true
       // If another request is runnig we need to cancel that one because it won't
       // what we need at the moment.
       if (lastRequest !== null) {
@@ -468,6 +538,9 @@ export const actions = {
           limit: requestLimit,
           cancelToken: lastSource.token,
           search: getters.getServerSearchTerm,
+          publicUrl: getters.isPublic,
+          orderBy: getOrderBy(getters, rootGetters),
+          filters: getFilters(getters, rootGetters),
         })
         .then(({ data }) => {
           data.results.forEach((part, index) => {
@@ -484,12 +557,14 @@ export const actions = {
           dispatch('visibleByScrollTop')
           dispatch('updateSearch', { fields, primary })
           lastRequest = null
+          fireScrollTop.processing = false
         })
         .catch((error) => {
           if (!axios.isCancel(error)) {
             lastRequest = null
             throw error
           }
+          fireScrollTop.processing = false
         })
     }
   },
@@ -566,8 +641,11 @@ export const actions = {
    * milliseconds to prevent calling the actions who do a lot of calculating a lot.
    */
   fetchByScrollTopDelayed({ dispatch }, { scrollTop, fields, primary }) {
+    const now = Date.now()
+
     const fire = (scrollTop) => {
-      lastFire = new Date().getTime()
+      fireScrollTop.distance = scrollTop
+      fireScrollTop.last = now
       dispatch('fetchByScrollTop', {
         scrollTop,
         fields,
@@ -576,13 +654,21 @@ export const actions = {
       dispatch('visibleByScrollTop', scrollTop)
     }
 
-    const difference = new Date().getTime() - lastFire
-    if (difference > 100) {
-      clearTimeout(fireTimeout)
+    const distance = Math.abs(scrollTop - fireScrollTop.distance)
+    const timeDelta = now - fireScrollTop.last
+    const velocity = distance / timeDelta
+
+    if (!fireScrollTop.processing && timeDelta > 100 && velocity < 2.5) {
+      clearTimeout(fireScrollTop.timeout)
       fire(scrollTop)
     } else {
-      clearTimeout(fireTimeout)
-      fireTimeout = setTimeout(() => {
+      // Allow velocity calculation on last ~100 ms
+      if (timeDelta > 100) {
+        fireScrollTop.distance = scrollTop
+        fireScrollTop.last = now
+      }
+      clearTimeout(fireScrollTop.timeout)
+      fireScrollTop.timeout = setTimeout(() => {
         fire(scrollTop)
       }, 100)
     }
@@ -591,9 +677,14 @@ export const actions = {
    * Fetches an initial set of rows and adds that data to the store.
    */
   async fetchInitial(
-    { dispatch, commit, getters },
+    { dispatch, commit, getters, rootGetters },
     { gridId, fields, primary }
   ) {
+    // Reset scrollTop when switching table
+    fireScrollTop.distance = 0
+    fireScrollTop.last = Date.now()
+    fireScrollTop.processing = false
+
     commit('SET_SEARCH', {
       activeSearchTerm: '',
       hideRowsNotMatchingSearch: true,
@@ -607,6 +698,9 @@ export const actions = {
       limit,
       includeFieldOptions: true,
       search: getters.getServerSearchTerm,
+      publicUrl: getters.isPublic,
+      orderBy: getOrderBy(getters, rootGetters),
+      filters: getFilters(getters, rootGetters),
     })
     data.results.forEach((part, index) => {
       extractMetadataAndPopulateRow(data, index)
@@ -637,7 +731,7 @@ export const actions = {
    * are provided in the refreshEvent.
    */
   refresh(
-    { dispatch, commit, getters },
+    { dispatch, commit, getters, rootGetters },
     { fields, primary, includeFieldOptions = false }
   ) {
     const gridId = getters.getLastGridId
@@ -650,6 +744,8 @@ export const actions = {
         gridId,
         search: getters.getServerSearchTerm,
         cancelToken: lastRefreshRequestSource.token,
+        publicUrl: getters.isPublic,
+        filters: getFilters(getters, rootGetters),
       })
       .then((response) => {
         const count = response.data.count
@@ -671,6 +767,9 @@ export const actions = {
             includeFieldOptions,
             cancelToken: lastRefreshRequestSource.token,
             search: getters.getServerSearchTerm,
+            publicUrl: getters.isPublic,
+            orderBy: getOrderBy(getters, rootGetters),
+            filters: getFilters(getters, rootGetters),
           })
           .then(({ data }) => ({
             data,
@@ -693,7 +792,14 @@ export const actions = {
         })
         dispatch('updateSearch', { fields, primary })
         if (includeFieldOptions) {
-          commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
+          if (getters.isPublic) {
+            // If the view is public, then we're in read only mode and we want to
+            // keep our existing field options state. So in that case, we only need
+            // to add the missing ones.
+            commit('ADD_MISSING_FIELD_OPTIONS', data.field_options)
+          } else {
+            commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
+          }
         }
         lastRefreshRequest = null
       })
@@ -713,27 +819,30 @@ export const actions = {
    */
   async updateFieldOptionsOfField(
     { commit, getters },
-    { field, values, oldValues }
+    { field, values, oldValues, readOnly = false }
   ) {
-    const gridId = getters.getLastGridId
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
     })
-    const updateValues = { field_options: {} }
-    updateValues.field_options[field.id] = values
 
-    try {
-      await ViewService(this.$client).updateFieldOptions({
-        viewId: gridId,
-        values: updateValues,
-      })
-    } catch (error) {
-      commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
-        fieldId: field.id,
-        values: oldValues,
-      })
-      throw error
+    if (!readOnly) {
+      const gridId = getters.getLastGridId
+      const updateValues = { field_options: {} }
+      updateValues.field_options[field.id] = values
+
+      try {
+        await ViewService(this.$client).updateFieldOptions({
+          viewId: gridId,
+          values: updateValues,
+        })
+      } catch (error) {
+        commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
+          fieldId: field.id,
+          values: oldValues,
+        })
+        throw error
+      }
     }
   },
   /**
@@ -752,20 +861,23 @@ export const actions = {
    */
   async updateAllFieldOptions(
     { dispatch, getters },
-    { newFieldOptions, oldFieldOptions }
+    { newFieldOptions, oldFieldOptions, readOnly = false }
   ) {
-    const gridId = getters.getLastGridId
     dispatch('forceUpdateAllFieldOptions', newFieldOptions)
-    const updateValues = { field_options: newFieldOptions }
 
-    try {
-      await ViewService(this.$client).updateFieldOptions({
-        viewId: gridId,
-        values: updateValues,
-      })
-    } catch (error) {
-      dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
-      throw error
+    if (!readOnly) {
+      const gridId = getters.getLastGridId
+      const updateValues = { field_options: newFieldOptions }
+
+      try {
+        await ViewService(this.$client).updateFieldOptions({
+          viewId: gridId,
+          values: updateValues,
+        })
+      } catch (error) {
+        dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
+        throw error
+      }
     }
   },
   /**
@@ -778,7 +890,10 @@ export const actions = {
    * Updates the order of all the available field options. The provided order parameter
    * should be an array containing the field ids in the correct order.
    */
-  async updateFieldOptionsOrder({ commit, getters, dispatch }, { order }) {
+  async updateFieldOptionsOrder(
+    { commit, getters, dispatch },
+    { order, readOnly = false }
+  ) {
     const oldFieldOptions = clone(getters.getAllFieldOptions)
     const newFieldOptions = clone(getters.getAllFieldOptions)
 
@@ -803,6 +918,7 @@ export const actions = {
     return await dispatch('updateAllFieldOptions', {
       oldFieldOptions,
       newFieldOptions,
+      readOnly,
     })
   },
   /**
@@ -811,8 +927,10 @@ export const actions = {
   forceDeleteFieldOptions({ commit }, fieldId) {
     commit('DELETE_FIELD_OPTIONS', fieldId)
   },
-  setWindowHeight({ commit }, value) {
+  setWindowHeight({ dispatch, commit, getters }, value) {
     commit('SET_WINDOW_HEIGHT', value)
+    commit('SET_ROW_PADDING', Math.ceil(value / getters.getRowHeight / 2))
+    dispatch('visibleByScrollTop')
   },
   setAddRowHover({ commit }, value) {
     commit('SET_ADD_ROW_HOVER', value)
@@ -1501,11 +1619,17 @@ export const actions = {
       commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
     }
   },
+  setPublic({ commit }, newPublicValue) {
+    commit('SET_PUBLIC', newPublicValue)
+  },
 }
 
 export const getters = {
   isLoaded(state) {
     return state.loaded
+  },
+  isPublic(state) {
+    return state.public
   },
   getLastGridId(state) {
     return state.lastGridId

@@ -23,7 +23,8 @@ export class DashboardType extends PremiumAdminType {
   }
 
   getName() {
-    return 'Dashboard'
+    const { i18n } = this.app
+    return i18n.t('premium.adminType.dashboard')
   }
 
   getRouteName() {
@@ -45,7 +46,8 @@ export class UsersAdminType extends PremiumAdminType {
   }
 
   getName() {
-    return 'Users'
+    const { i18n } = this.app
+    return i18n.t('premium.adminType.users')
   }
 
   getRouteName() {
@@ -67,7 +69,8 @@ export class GroupsAdminType extends PremiumAdminType {
   }
 
   getName() {
-    return 'Groups'
+    const { i18n } = this.app
+    return i18n.t('premium.adminType.groups')
   }
 
   getRouteName() {
@@ -89,7 +92,8 @@ export class LicensesAdminType extends AdminType {
   }
 
   getName() {
-    return 'Licenses'
+    const { i18n } = this.app
+    return i18n.t('premium.adminType.licenses')
   }
 
   getRouteName() {

@@ -63,7 +63,14 @@ class PublicFormViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FormView
-        fields = ("title", "description", "cover_image", "logo_image", "fields")
+        fields = (
+            "title",
+            "description",
+            "cover_image",
+            "logo_image",
+            "submit_text",
+            "fields",
+        )
 
 
 class FormViewSubmittedSerializer(serializers.ModelSerializer):

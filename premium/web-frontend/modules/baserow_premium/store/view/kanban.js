@@ -209,20 +209,23 @@ export const actions = {
    */
   async updateAllFieldOptions(
     { dispatch, getters },
-    { kanban, newFieldOptions, oldFieldOptions }
+    { kanban, newFieldOptions, oldFieldOptions, readOnly = false }
   ) {
-    const kanbanId = getters.getLastKanbanId
     dispatch('forceUpdateAllFieldOptions', newFieldOptions)
-    const updateValues = { field_options: newFieldOptions }
 
-    try {
-      await ViewService(this.$client).updateFieldOptions({
-        viewId: kanbanId,
-        values: updateValues,
-      })
-    } catch (error) {
-      dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
-      throw error
+    if (!readOnly) {
+      const kanbanId = getters.getLastKanbanId
+      const updateValues = { field_options: newFieldOptions }
+
+      try {
+        await ViewService(this.$client).updateFieldOptions({
+          viewId: kanbanId,
+          values: updateValues,
+        })
+      } catch (error) {
+        dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
+        throw error
+      }
     }
   },
   /**
@@ -241,7 +244,10 @@ export const actions = {
    * Updates the order of all the available field options. The provided order parameter
    * should be an array containing the field ids in the correct order.
    */
-  async updateFieldOptionsOrder({ commit, getters, dispatch }, { order }) {
+  async updateFieldOptionsOrder(
+    { commit, getters, dispatch },
+    { order, readOnly = false }
+  ) {
     const oldFieldOptions = clone(getters.getAllFieldOptions)
     const newFieldOptions = clone(getters.getAllFieldOptions)
 
@@ -266,6 +272,7 @@ export const actions = {
     return await dispatch('updateAllFieldOptions', {
       oldFieldOptions,
       newFieldOptions,
+      readOnly,
     })
   },
   /**
@@ -273,28 +280,31 @@ export const actions = {
    */
   async updateFieldOptionsOfField(
     { commit, getters },
-    { kanban, field, values }
+    { kanban, field, values, readOnly = false }
   ) {
-    const kanbanId = getters.getLastKanbanId
-    const oldValues = clone(getters.getAllFieldOptions[field.id])
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
     })
-    const updateValues = { field_options: {} }
-    updateValues.field_options[field.id] = values
 
-    try {
-      await ViewService(this.$client).updateFieldOptions({
-        viewId: kanbanId,
-        values: updateValues,
-      })
-    } catch (error) {
-      commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
-        fieldId: field.id,
-        values: oldValues,
-      })
-      throw error
+    if (!readOnly) {
+      const kanbanId = getters.getLastKanbanId
+      const oldValues = clone(getters.getAllFieldOptions[field.id])
+      const updateValues = { field_options: {} }
+      updateValues.field_options[field.id] = values
+
+      try {
+        await ViewService(this.$client).updateFieldOptions({
+          viewId: kanbanId,
+          values: updateValues,
+        })
+      } catch (error) {
+        commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
+          fieldId: field.id,
+          values: oldValues,
+        })
+        throw error
+      }
     }
   },
   /**

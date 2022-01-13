@@ -26,7 +26,8 @@ export class JSONTableExporter extends PremiumTableExporterType {
   }
 
   getName() {
-    return 'Export to JSON'
+    const { i18n } = this.app
+    return i18n.t('premium.exporterType.json')
   }
 
   getFormComponent() {
@@ -52,7 +53,8 @@ export class XMLTableExporter extends PremiumTableExporterType {
   }
 
   getName() {
-    return 'Export to XML'
+    const { i18n } = this.app
+    return i18n.t('premium.exporterType.xml')
   }
 
   getFormComponent() {

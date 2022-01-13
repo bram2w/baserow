@@ -41,14 +41,14 @@ export default {
           labels,
           datasets: [
             {
-              label: 'New users',
+              label: this.$t('activeUsers.newUsers'),
               borderColor: '#59cd90',
               backgroundColor: 'transparent',
               color: '#9bf2c4',
               data: newUserData,
             },
             {
-              label: 'Active users',
+              label: this.$t('activeUsers.activeUsers'),
               borderColor: '#198dd6',
               backgroundColor: 'transparent',
               color: '#b4bac2',
@@ -94,3 +94,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "activeUsers": {
+      "newUsers": "New users",
+      "activeUsers": "Active users"
+    }
+  },
+  "fr": {
+    "activeUsers": {
+      "newUsers": "Nouveaux utilisateurs",
+      "activeUsers": "Utilisateurs actifs"
+    }
+  }
+}
+</i18n>

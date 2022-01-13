@@ -4,6 +4,8 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import (
@@ -32,6 +34,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
     FormViewFieldTypeIsNotSupported,
+    CannotShareViewTypeError,
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -1263,22 +1266,27 @@ def test_delete_sort(send_mock, data_fixture):
 
 @pytest.mark.django_db
 @patch("baserow.contrib.database.views.signals.view_updated.send")
-def test_rotate_form_view_slug(send_mock, data_fixture):
+def test_rotate_view_slug(send_mock, data_fixture):
+    class UnShareableViewType(GridViewType):
+        can_share = False
+
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     form = data_fixture.create_form_view(table=table)
+    grid = data_fixture.create_grid_view(table=table)
     old_slug = str(form.slug)
 
     handler = ViewHandler()
 
     with pytest.raises(UserNotInGroup):
-        handler.rotate_form_view_slug(user=user_2, form=form)
+        handler.rotate_view_slug(user=user_2, view=form)
 
-    with pytest.raises(ValueError):
-        handler.rotate_form_view_slug(user=user, form=object())
+    with patch.dict(view_type_registry.registry, {"grid": UnShareableViewType()}):
+        with pytest.raises(CannotShareViewTypeError):
+            handler.rotate_view_slug(user=user, view=grid)
 
-    handler.rotate_form_view_slug(user=user, form=form)
+    handler.rotate_view_slug(user=user, view=form)
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["view"].id == form.id
@@ -1290,7 +1298,7 @@ def test_rotate_form_view_slug(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_public_form_view_by_slug(data_fixture):
+def test_get_public_view_by_slug(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     form = data_fixture.create_form_view(user=user)
@@ -1298,24 +1306,26 @@ def test_get_public_form_view_by_slug(data_fixture):
     handler = ViewHandler()
 
     with pytest.raises(ViewDoesNotExist):
-        handler.get_public_form_view_by_slug(user_2, "not_existing")
+        handler.get_public_view_by_slug(user_2, "not_existing")
 
     with pytest.raises(ViewDoesNotExist):
-        handler.get_public_form_view_by_slug(
-            user_2, "a3f1493a-9229-4889-8531-6a65e745602e"
-        )
+        handler.get_public_view_by_slug(user_2, "a3f1493a-9229-4889-8531-6a65e745602e")
 
     with pytest.raises(ViewDoesNotExist):
-        handler.get_public_form_view_by_slug(user_2, form.slug)
+        handler.get_public_view_by_slug(user_2, form.slug)
 
-    form2 = handler.get_public_form_view_by_slug(user, form.slug)
+    form2 = handler.get_public_view_by_slug(user, form.slug)
     assert form.id == form2.id
 
     form.public = True
     form.save()
 
-    form2 = handler.get_public_form_view_by_slug(user_2, form.slug)
+    form2 = handler.get_public_view_by_slug(user_2, form.slug)
     assert form.id == form2.id
+
+    form3 = handler.get_public_view_by_slug(user_2, form.slug, view_model=FormView)
+    assert form.id == form3.id
+    assert isinstance(form3, FormView)
 
 
 @pytest.mark.django_db
@@ -1375,3 +1385,363 @@ def test_submit_form_view(send_mock, data_fixture):
     assert getattr(all[1], f"field_{text_field.id}") == "Another value"
     assert getattr(all[1], f"field_{number_field.id}") == 10
     assert not getattr(all[1], f"field_{boolean_field.id}")
+
+
+@pytest.mark.django_db
+def test_get_public_views_which_include_row(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    visible_field = data_fixture.create_text_field(table=table)
+    hidden_field = data_fixture.create_text_field(table=table)
+    public_view1 = data_fixture.create_grid_view(
+        user,
+        create_options=False,
+        table=table,
+        public=True,
+        order=0,
+    )
+    public_view2 = data_fixture.create_grid_view(
+        user, table=table, public=True, order=1
+    )
+    public_view3 = data_fixture.create_grid_view(
+        user, table=table, public=True, order=2
+    )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
+    data_fixture.create_grid_view(user, table=table)
+    data_fixture.create_grid_view_field_option(public_view1, hidden_field, hidden=True)
+    data_fixture.create_grid_view_field_option(public_view2, hidden_field, hidden=True)
+
+    # Public View 1 has filters which match row 1
+    data_fixture.create_view_filter(
+        view=public_view1, field=visible_field, type="equal", value="Visible"
+    )
+    data_fixture.create_view_filter(
+        view=public_view1, field=hidden_field, type="equal", value="Hidden"
+    )
+
+    # Public View 2 has filters which match row 2
+    data_fixture.create_view_filter(
+        view=public_view2, field=visible_field, type="equal", value="Visible"
+    )
+    data_fixture.create_view_filter(
+        view=public_view2, field=hidden_field, type="equal", value="Not Match"
+    )
+
+    # Public View 3 has filters which match both rows
+    data_fixture.create_view_filter(
+        view=public_view2, field=visible_field, type="equal", value="Visible"
+    )
+
+    # Private View 1 has no filters so matches both rows
+
+    row = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{visible_field.id}": "Visible",
+            f"field_{hidden_field.id}": "Hidden",
+        },
+    )
+    row2 = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{visible_field.id}": "Visible",
+            f"field_{hidden_field.id}": "Not Match",
+        },
+    )
+
+    model = table.get_model()
+    checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
+    assert checker.get_public_views_where_row_is_visible(row) == [
+        public_view1.view_ptr,
+        public_view3.view_ptr,
+    ]
+    assert checker.get_public_views_where_row_is_visible(row2) == [
+        public_view2.view_ptr,
+        public_view3.view_ptr,
+    ]
+
+
+@pytest.mark.django_db
+def test_public_view_row_checker_caches_when_only_unfiltered_fields_updated(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    filtered_field = data_fixture.create_text_field(table=table)
+    unfiltered_field = data_fixture.create_text_field(table=table)
+    public_grid_view = data_fixture.create_grid_view(
+        user,
+        table=table,
+        public=True,
+    )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
+
+    data_fixture.create_view_filter(
+        view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
+    )
+    model = table.get_model()
+    visible_row = model.objects.create(
+        **{
+            f"field_{filtered_field.id}": "FilterValue",
+            f"field_{unfiltered_field.id}": "any",
+        }
+    )
+    invisible_row = model.objects.create(
+        **{
+            f"field_{filtered_field.id}": "NotFilterValue",
+            f"field_{unfiltered_field.id}": "any",
+        }
+    )
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[unfiltered_field.id],
+    )
+
+    assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
+        public_grid_view.view_ptr
+    ]
+    assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
+
+    # Because we've already checked these rows and we've told the checker we'll only
+    # be changing unfiltered_field it knows it can cache the results
+    with django_assert_num_queries(0):
+        assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
+            public_grid_view.view_ptr
+        ]
+        assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
+
+
+@pytest.mark.django_db
+def test_public_view_row_checker_includes_public_views_with_no_filters_with_no_queries(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    filtered_field = data_fixture.create_text_field(table=table)
+    unfiltered_field = data_fixture.create_text_field(table=table)
+    public_grid_view = data_fixture.create_grid_view(
+        user,
+        table=table,
+        public=True,
+    )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
+
+    model = table.get_model()
+    visible_row = model.objects.create(
+        **{
+            f"field_{filtered_field.id}": "any",
+            f"field_{unfiltered_field.id}": "any",
+        }
+    )
+    other_row = model.objects.create(
+        **{
+            f"field_{filtered_field.id}": "any",
+            f"field_{unfiltered_field.id}": "any",
+        }
+    )
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[unfiltered_field.id],
+    )
+
+    # It should precalculate that this view is always visible.
+    with django_assert_num_queries(0):
+        assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
+            public_grid_view.view_ptr
+        ]
+        assert row_checker.get_public_views_where_row_is_visible(other_row) == [
+            public_grid_view.view_ptr
+        ]
+
+
+@pytest.mark.django_db
+def test_public_view_row_checker_does_not_cache_when_any_filtered_fields_updated(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    filtered_field = data_fixture.create_text_field(table=table)
+    unfiltered_field = data_fixture.create_text_field(table=table)
+    public_grid_view = data_fixture.create_grid_view(
+        user,
+        table=table,
+        public=True,
+    )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
+
+    data_fixture.create_view_filter(
+        view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
+    )
+    model = table.get_model()
+    visible_row = model.objects.create(
+        **{
+            f"field_{filtered_field.id}": "FilterValue",
+            f"field_{unfiltered_field.id}": "any",
+        }
+    )
+    invisible_row = model.objects.create(
+        **{
+            f"field_{filtered_field.id}": "NotFilterValue",
+            f"field_{unfiltered_field.id}": "any",
+        }
+    )
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[filtered_field.id, unfiltered_field.id],
+    )
+
+    assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
+        public_grid_view.view_ptr
+    ]
+    assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
+
+    # Now update the rows so they swap and the invisible one becomes visible and vice
+    # versa
+    setattr(invisible_row, f"field_{filtered_field.id}", "FilterValue")
+    invisible_row.save()
+    setattr(visible_row, f"field_{filtered_field.id}", "NotFilterValue")
+    visible_row.save()
+
+    assert row_checker.get_public_views_where_row_is_visible(invisible_row) == [
+        public_grid_view.view_ptr
+    ]
+    assert row_checker.get_public_views_where_row_is_visible(visible_row) == []
+
+
+@pytest.mark.django_db
+def test_public_view_row_checker_runs_expected_queries_on_init(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    filtered_field = data_fixture.create_text_field(table=table)
+    unfiltered_field = data_fixture.create_text_field(table=table)
+    public_grid_view = data_fixture.create_grid_view(
+        user, table=table, public=True, order=0
+    )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
+
+    data_fixture.create_view_filter(
+        view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
+    )
+    model = table.get_model()
+    with django_assert_num_queries(2):
+        # First query to get the public views, second query to get their filters.
+        ViewHandler().get_public_views_row_checker(
+            table,
+            model,
+            only_include_views_which_want_realtime_events=True,
+            updated_field_ids=[filtered_field.id, unfiltered_field.id],
+        )
+
+    another_public_grid_view = data_fixture.create_grid_view(
+        user, table=table, public=True, order=1
+    )
+    # Public View 1 has filters which match row 1
+    data_fixture.create_view_filter(
+        view=another_public_grid_view,
+        field=filtered_field,
+        type="equal",
+        value="FilterValue",
+    )
+
+    # Adding another view shouldn't result in more queries
+    with django_assert_num_queries(2):
+        # First query to get the public views, second query to get their filters.
+        ViewHandler().get_public_views_row_checker(
+            table,
+            model,
+            only_include_views_which_want_realtime_events=True,
+            updated_field_ids=[filtered_field.id, unfiltered_field.id],
+        )
+
+
+@pytest.mark.django_db
+def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    filtered_field = data_fixture.create_text_field(table=table)
+    unfiltered_field = data_fixture.create_text_field(table=table)
+    public_grid_view = data_fixture.create_grid_view(
+        user, table=table, public=True, order=0
+    )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
+
+    # Public View 1 has filters which match row 1
+    data_fixture.create_view_filter(
+        view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
+    )
+    model = table.get_model()
+    visible_row = model.objects.create(
+        **{
+            f"field_{filtered_field.id}": "FilterValue",
+            f"field_{unfiltered_field.id}": "any",
+        }
+    )
+    invisible_row = model.objects.create(
+        **{
+            f"field_{filtered_field.id}": "NotFilterValue",
+            f"field_{unfiltered_field.id}": "any",
+        }
+    )
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[filtered_field.id, unfiltered_field.id],
+    )
+
+    with django_assert_num_queries(1):
+        # Only should run a single exists query to check if the row is in the single
+        # public view
+        assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
+            public_grid_view.view_ptr
+        ]
+    with django_assert_num_queries(1):
+        # Only should run a single exists query to check if the row is in the single
+        # public view
+        assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
+
+    another_public_grid_view = data_fixture.create_grid_view(
+        user, table=table, public=True, order=1
+    )
+    data_fixture.create_view_filter(
+        view=another_public_grid_view,
+        field=filtered_field,
+        type="equal",
+        value="FilterValue",
+    )
+
+    row_checker = ViewHandler().get_public_views_row_checker(
+        table,
+        model,
+        only_include_views_which_want_realtime_events=True,
+        updated_field_ids=[filtered_field.id, unfiltered_field.id],
+    )
+    with django_assert_num_queries(2):
+        # Now should run two queries, one per public view
+        assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
+            public_grid_view.view_ptr,
+            another_public_grid_view.view_ptr,
+        ]
+    with django_assert_num_queries(2):
+        # Now should run two queries, one per public view
+        assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []

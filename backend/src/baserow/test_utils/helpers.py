@@ -37,14 +37,18 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
     user = data_fixture.create_user(**user_kwargs)
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database, user=user)
-    link_table = data_fixture.create_database_table(database=database, user=user)
+    link_table = data_fixture.create_database_table(
+        database=database, user=user, name="link_table"
+    )
     other_table_primary_text_field = data_fixture.create_text_field(
         table=link_table, name="text_field", primary=True
     )
     decimal_link_table = data_fixture.create_database_table(
-        database=database, user=user
+        database=database, user=user, name="decimal_link_table"
     )
-    file_link_table = data_fixture.create_database_table(database=database, user=user)
+    file_link_table = data_fixture.create_database_table(
+        database=database, user=user, name="file_link_table"
+    )
     handler = FieldHandler()
     all_possible_kwargs_per_type = construct_all_possible_field_kwargs(
         link_table, decimal_link_table, file_link_table
@@ -90,6 +94,7 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
         "positive_int": 1,
         "negative_decimal": Decimal("-1.2"),
         "positive_decimal": Decimal("1.2"),
+        "rating": 3,
         "boolean": "True",
         "datetime_us": datetime,
         "date_us": date,

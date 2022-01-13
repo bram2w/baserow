@@ -15,3 +15,6 @@ format:
 
 test:
 	pytest tests ../premium/backend/tests || exit;
+
+test-parallel:
+	pytest tests ../premium/backend/tests -n 10 || exit;

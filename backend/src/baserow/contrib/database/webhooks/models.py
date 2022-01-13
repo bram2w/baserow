@@ -1,11 +1,12 @@
 import uuid
 
 from django.db import models
+from django.core.validators import MaxLengthValidator, URLValidator
 
 from baserow.core.models import CreatedAndUpdatedOnMixin
 from baserow.contrib.database.table.models import Table
 
-from .validators import header_name_validator, header_value_validator
+from .validators import header_name_validator, header_value_validator, url_validator
 
 
 class WebhookRequestMethods(models.TextChoices):
@@ -28,8 +29,12 @@ class TableWebhook(CreatedAndUpdatedOnMixin, models.Model):
         help_text="Indicates whether the field names must be used as payload key "
         "instead of the id.",
     )
-    url = models.URLField(
-        help_text="The URL that must call when the webhook is " "triggered."
+
+    # We use a `TextField` here as Django `URLField` is based on 255 chars
+    # limited `CharField`
+    url = models.TextField(
+        help_text="The URL that must be called when the webhook is triggered.",
+        validators=[MaxLengthValidator(2000), URLValidator(), url_validator],
     )
     request_method = models.CharField(
         max_length=10,
@@ -78,7 +83,9 @@ class TableWebhookCall(models.Model):
     )
     event_type = models.CharField(max_length=50)
     called_time = models.DateTimeField(null=True)
-    called_url = models.URLField()
+    called_url = models.TextField(
+        validators=[MaxLengthValidator(2000), URLValidator(), url_validator]
+    )
     request = models.TextField(
         null=True, help_text="A text copy of the request headers and body."
     )

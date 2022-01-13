@@ -6,7 +6,9 @@
           ref="textAreaFormulaInput"
           :value="formula"
           class="formula-field__input-formula"
-          placeholder="Enter your formula here, use tab to autocomplete"
+          :placeholder="
+            $t('formulaAdvancedEditContext.textAreaFormulaInputPlaceholder')
+          "
           @input="formulaChanged"
           @blur="$emit('blur', $event)"
           @click="recalcAutoComplete"
@@ -21,7 +23,7 @@
           <FormulaFieldItemGroup
             :filtered-items="filteredFields"
             :unfiltered-items="fields"
-            title="Fields"
+            :title="$t('formulaAdvancedEditContext.fields')"
             @hover-item="selectItem"
             @click-item="doAutoComplete(null, $event)"
           >
@@ -29,7 +31,7 @@
           <FormulaFieldItemGroup
             :filtered-items="filteredFunctions"
             :unfiltered-items="functions"
-            title="Functions"
+            :title="$t('formulaAdvancedEditContext.functions')"
             @hover-item="selectItem"
             @click-item="doAutoComplete($event, null)"
           >
@@ -37,7 +39,7 @@
           <FormulaFieldItemGroup
             :filtered-items="filteredOperators"
             :unfiltered-items="unfilteredOperators"
-            title="Operators"
+            :title="$t('formulaAdvancedEditContext.operators')"
             :show-operator="true"
             @hover-item="selectItem"
             @click-item="doAutoComplete($event, null)"
@@ -92,15 +94,28 @@ export default {
     },
   },
   data() {
-    const functions = this.getAndWrapFunctions()
     return {
-      functions,
-      selectedItem: functions[0],
-      filteredFunctions: functions,
+      selectedItem: null,
+      filteredFunctions: [],
       filteredFields: [],
     }
   },
   computed: {
+    functions() {
+      return Object.values(this.$registry.getAll('formula_function'))
+        .sort(this.sortFunctions.bind(this))
+        .map((f) =>
+          this.wrapItem(
+            f.getType(),
+            this.funcTypeToIconClass(f),
+            f.getDescription(),
+            f.getExamples(),
+            f.getSyntaxUsage(),
+            f.getOperator(),
+            f
+          )
+        )
+    },
     formula: {
       get() {
         return this.value
@@ -114,7 +129,7 @@ export default {
         this.wrapItem(
           f.name,
           this.getFieldIcon(f),
-          `A ${f.type} field`,
+          this.$t('formulaAdvancedEditContext.fieldType', { type: f.type }),
           [`concat(field('${f.name}'), ' extra text ')`],
           [`field('${f.name}')`],
           false,
@@ -129,7 +144,14 @@ export default {
       return this.filteredFunctions.filter((f) => f.operator)
     },
   },
+  watch: {
+    functions() {
+      this.selectedItem = this.functions[0]
+      this.recalcAutoComplete()
+    },
+  },
   mounted() {
+    this.selectedItem = this.functions[0]
     this.recalcAutoComplete()
   },
   methods: {
@@ -256,21 +278,29 @@ export default {
 
       return 0
     },
-    getAndWrapFunctions() {
-      return Object.values(this.$registry.getAll('formula_function'))
-        .sort(this.sortFunctions.bind(this))
-        .map((f) =>
-          this.wrapItem(
-            f.getType(),
-            this.funcTypeToIconClass(f),
-            f.getDescription(),
-            f.getExamples(),
-            f.getSyntaxUsage(),
-            f.getOperator(),
-            f
-          )
-        )
-    },
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "formulaAdvancedEditContext" : {
+      "textAreaFormulaInputPlaceholder": "Click to edit the formula",
+      "fields": "Fields",
+      "functions": "Functions",
+      "operators": "Operators",
+      "fieldType": "A {type} field"
+    }
+  },
+  "fr": {
+    "formulaAdvancedEditContext" : {
+      "textAreaFormulaInputPlaceholder": "Cliquez pour éditer la formule",
+      "fields": "Champs",
+      "functions": "Fonctions",
+      "operators": "Operateurs",
+      "fieldType": "Un champ de type {type}"
+    }
+  }
+}
+</i18n>

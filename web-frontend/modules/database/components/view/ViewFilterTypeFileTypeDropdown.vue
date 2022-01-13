@@ -2,12 +2,17 @@
   <Dropdown
     :value="filter.value"
     :show-search="false"
-    :disabled="readOnly"
     class="filters__value-dropdown dropdown--tiny"
     @input="$emit('input', $event)"
   >
-    <DropdownItem name="image" value="image"></DropdownItem>
-    <DropdownItem name="document" value="document"></DropdownItem>
+    <DropdownItem
+      :name="$t('viewFilterTypeFileTypeDropdown.image')"
+      value="image"
+    ></DropdownItem>
+    <DropdownItem
+      :name="$t('viewFilterTypeFileTypeDropdown.document')"
+      value="document"
+    ></DropdownItem>
   </Dropdown>
 </template>
 
@@ -34,3 +39,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "viewFilterTypeFileTypeDropdown": {
+      "image": "image",
+      "document": "document"
+    }
+  },
+  "fr": {
+    "viewFilterTypeFileTypeDropdown": {
+      "image": "Image",
+      "document": "Document"
+    }
+  }
+}
+</i18n>

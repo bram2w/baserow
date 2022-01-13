@@ -13,6 +13,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -218,8 +219,8 @@ def test_list_rows(api_client, data_fixture):
     )
 
     number_field_type = field_type_registry.get("number")
-    old_can_order_by = number_field_type.can_order_by
-    number_field_type.can_order_by = False
+    old_can_order_by = number_field_type._can_order_by
+    number_field_type._can_order_by = False
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
         f"{url}?order_by=-field_{field_2.id}",
@@ -233,7 +234,7 @@ def test_list_rows(api_client, data_fixture):
         f"It is not possible to order by field_{field_2.id} because the field type "
         f"number does not support filtering."
     )
-    number_field_type.can_order_by = old_can_order_by
+    number_field_type._can_order_by = old_can_order_by
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
@@ -620,6 +621,25 @@ def test_create_row(api_client, data_fixture):
         "id": 7,
         "order": "6.00000000000000000000",
     }
+
+
+@pytest.mark.django_db
+def test_create_empty_row_for_interesting_fields(api_client, data_fixture):
+    """
+    Test a common case: create a row with empty values.
+    """
+
+    table, user, row, _ = setup_interesting_test_table(data_fixture)
+    jwt_token = data_fixture.generate_token(user)
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
 
 
 @pytest.mark.django_db
@@ -1450,4 +1470,64 @@ def test_list_rows_with_attribute_names(api_client, data_fixture):
     assert (
         response_json["detail"]
         == f"The field field_{field_1.id} was not found in the table."
+    )
+
+
+@pytest.mark.django_db
+def test_list_rows_returns_https_next_url(api_client, data_fixture, settings):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
+
+    model = table.get_model()
+    model.objects.create(
+        **{
+            f"field_{field_1.id}": "name 1",
+        }
+    )
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["next"] is None
+
+    for i in range(settings.ROW_PAGE_SIZE_LIMIT + 1):
+        model.objects.create(
+            **{
+                f"field_{field_1.id}": f"name {i}",
+            }
+        )
+
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert (
+        response_json["next"] == "http://testserver/api/database/rows/table/"
+        f"{table.id}/?page=2"
+    )
+
+    settings.SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        HTTP_X_FORWARDED_PROTO="https",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert (
+        response_json["next"] == "https://testserver:80/api/database/rows/table/"
+        f"{table.id}/?page=2"
     )

@@ -47,7 +47,7 @@
 import { required } from 'vuelidate/lib/validators'
 
 import ColorSelectContext from '@baserow/modules/core/components/ColorSelectContext'
-import { colors } from '@baserow/modules/core/utils/colors'
+import { randomColor } from '@baserow/modules/core/utils/colors'
 
 export default {
   name: 'FieldSelectOptions',
@@ -61,6 +61,7 @@ export default {
   data() {
     return {
       colorContextSelected: -1,
+      lastSeenId: -1,
     }
   },
   methods: {
@@ -72,9 +73,11 @@ export default {
     add() {
       this.value.push({
         value: '',
-        color: colors[Math.floor(Math.random() * colors.length)],
+        color: randomColor(),
+        id: this.lastSeenId,
       })
       this.$emit('input', this.value)
+      this.lastSeenId -= 1
     },
     openColor(index) {
       this.colorContextSelected = index

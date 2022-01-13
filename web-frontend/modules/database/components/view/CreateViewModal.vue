@@ -1,6 +1,12 @@
 <template>
   <Modal>
-    <h2 class="box__title">Create new {{ viewType.getName() | lowercase }}</h2>
+    <h2 class="box__title">
+      {{
+        $t('createViewModal.createNew', {
+          view: viewType.getName().toLowerCase(),
+        })
+      }}
+    </h2>
     <Error :error="error"></Error>
     <component
       :is="viewType.getViewFormComponent()"
@@ -14,7 +20,11 @@
             :class="{ 'button--loading': loading }"
             :disabled="loading"
           >
-            Add {{ viewType.getName() | lowercase }}
+            {{
+              $t('createViewModal.add', {
+                view: viewType.getName().toLowerCase(),
+              })
+            }}
           </button>
         </div>
       </div>
@@ -66,3 +76,20 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "createViewModal": {
+      "createNew": "Create new {view}",
+      "add": "Add {view}"
+    }
+  },
+  "fr": {
+    "createViewModal": {
+      "createNew": "Créer une vue {view}",
+      "add": "Créer une vue {view}"
+    }
+  }
+}
+</i18n>

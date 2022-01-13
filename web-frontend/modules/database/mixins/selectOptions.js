@@ -1,7 +1,7 @@
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { clone } from '@baserow/modules/core/utils/object'
 import { isPrintableUnicodeCharacterKeyPress } from '@baserow/modules/core/utils/events'
-import { colors } from '@baserow/modules/core/utils/colors'
+import { randomColor } from '@baserow/modules/core/utils/colors'
 import FieldSelectOptionsDropdown from '@baserow/modules/database/components/field/FieldSelectOptionsDropdown'
 
 export default {
@@ -9,14 +9,14 @@ export default {
   methods: {
     /**
      * Adds a new select option to the field and then updates the field. This method is
-     * called from the dropdown, the user can create a new optionfrom  there if no
+     * called from the dropdown, the user can create a new option from there if no
      * options are found matching his search query.
      */
     async createOption({ value, done }) {
       const values = { select_options: clone(this.field.select_options) }
       values.select_options.push({
         value,
-        color: colors[Math.floor(Math.random() * colors.length)],
+        color: randomColor(),
       })
 
       try {

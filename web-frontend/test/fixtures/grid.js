@@ -13,3 +13,19 @@ export function createRows(mock, gridView, fields, rows = []) {
     field_options: fieldOptions,
   })
 }
+
+export function createPublicGridViewRows(mock, viewSlug, fields, rows = []) {
+  const fieldOptions = {}
+  for (let i = 1; i < fields.length; i++) {
+    fieldOptions[i] = {
+      width: 200,
+      hidden: false,
+      order: i,
+    }
+  }
+  mock.onGet(`/database/views/grid/${viewSlug}/public/rows/`).reply(200, {
+    count: rows.length,
+    results: rows,
+    field_options: fieldOptions,
+  })
+}

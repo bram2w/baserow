@@ -11,10 +11,10 @@ import Scrollbars from '@baserow/modules/core/components/Scrollbars'
 import Error from '@baserow/modules/core/components/Error'
 import SwitchInput from '@baserow/modules/core/components/SwitchInput'
 import Copied from '@baserow/modules/core/components/Copied'
+import MarkdownIt from '@baserow/modules/core/components/MarkdownIt'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
-import formatBytes from '@baserow/modules/core/filters/formatBytes'
 import nameAbbreviation from '@baserow/modules/core/filters/nameAbbreviation'
 
 import scroll from '@baserow/modules/core/directives/scroll'
@@ -36,10 +36,10 @@ Vue.component('Scrollbars', Scrollbars)
 Vue.component('Error', Error)
 Vue.component('SwitchInput', SwitchInput)
 Vue.component('Copied', Copied)
+Vue.component('MarkdownIt', MarkdownIt)
 
 Vue.filter('lowercase', lowercase)
 Vue.filter('uppercase', uppercase)
-Vue.filter('formatBytes', formatBytes)
 Vue.filter('nameAbbreviation', nameAbbreviation)
 
 Vue.directive('scroll', scroll)

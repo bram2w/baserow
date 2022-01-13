@@ -11,11 +11,15 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.registries import (
     RowMetadataType,
     row_metadata_registry,
 )
 from baserow.contrib.database.views.models import GridView
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.core.trash.handler import TrashHandler
 from baserow.test_utils.helpers import register_instance_temporarily
 
 
@@ -646,6 +650,18 @@ def test_create_grid_view(api_client, data_fixture):
     assert "filters" not in response_json
     assert "sortings" not in response_json
 
+    # Can't create a public non sharable view.
+    response = api_client.post(
+        reverse("api:database:views:list", kwargs={"table_id": table.id}),
+        {"name": "Test 1", "type": "gallery", "public": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "public" not in response_json
+    assert "slug" not in response_json
+
 
 @pytest.mark.django_db
 def test_update_grid_view(api_client, data_fixture):
@@ -655,6 +671,7 @@ def test_update_grid_view(api_client, data_fixture):
     table_2 = data_fixture.create_database_table(user=user_2)
     view = data_fixture.create_grid_view(table=table)
     view_2 = data_fixture.create_grid_view(table=table_2)
+    not_sharable_view = data_fixture.create_gallery_view(table=table)
 
     url = reverse("api:database:views:item", kwargs={"view_id": view_2.id})
     response = api_client.patch(
@@ -733,3 +750,689 @@ def test_update_grid_view(api_client, data_fixture):
     assert response_json["filters_disabled"] is True
     assert response_json["filters"][0]["id"] == filter_1.id
     assert response_json["sortings"] == []
+
+    # Can't make a non sharable view public.
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": not_sharable_view.id}),
+        {"public": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert "public" not in response_json
+    assert "slug" not in response_json
+
+
+@pytest.mark.django_db
+def test_get_public_grid_view(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    # Only information related the public field should be returned
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+
+    data_fixture.create_grid_view_field_option(grid_view, public_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+
+    # This view sort shouldn't be exposed as it is for a hidden field
+    data_fixture.create_view_sort(view=grid_view, field=hidden_field, order="ASC")
+    visible_sort = data_fixture.create_view_sort(
+        view=grid_view, field=public_field, order="DESC"
+    )
+
+    # View filters should not be returned at all for any and all fields regardless of
+    # if they are hidden.
+    data_fixture.create_view_filter(
+        view=grid_view, field=hidden_field, type="contains", value="hidden"
+    )
+    data_fixture.create_view_filter(
+        view=grid_view, field=public_field, type="contains", value="public"
+    )
+
+    # Can access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:grid:public_info", kwargs={"slug": grid_view.slug})
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "fields": [
+            {
+                "id": public_field.id,
+                "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "name": "public",
+                "order": 0,
+                "primary": False,
+                "text_default": "",
+                "type": "text",
+            }
+        ],
+        "view": {
+            "id": grid_view.slug,
+            "name": grid_view.name,
+            "order": 0,
+            "public": True,
+            "slug": grid_view.slug,
+            "sortings": [
+                # Note the sorting for the hidden field is not returned
+                {
+                    "field": visible_sort.field.id,
+                    "id": visible_sort.id,
+                    "order": "DESC",
+                    "view": grid_view.slug,
+                }
+            ],
+            "table": {
+                "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+            },
+            "type": "grid",
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_anon_user_cant_get_info_about_a_non_public_grid_view(api_client, data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user, public=False)
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:grid:public_info", kwargs={"slug": grid_view.slug})
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json == {
+        "detail": "The requested view does not exist.",
+        "error": "ERROR_VIEW_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_user_in_wrong_group_cant_get_info_about_a_non_public_grid_view(
+    api_client, data_fixture
+):
+    user = data_fixture.create_user()
+    other_user, other_user_token = data_fixture.create_user_and_token()
+    grid_view = data_fixture.create_grid_view(user=user, public=False)
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:public_info",
+            kwargs={"slug": grid_view.slug},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {other_user_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json == {
+        "detail": "The requested view does not exist.",
+        "error": "ERROR_VIEW_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_user_in_same_group_can_get_info_about_a_non_public_grid_view(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    grid_view = data_fixture.create_grid_view(user=user, public=False)
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:public_info",
+            kwargs={"slug": grid_view.slug},
+        ),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert "fields" in response_json
+    assert "view" in response_json
+
+
+@pytest.mark.django_db
+def test_cannot_get_info_about_non_grid_view(api_client, data_fixture):
+    user = data_fixture.create_user()
+    form_view = data_fixture.create_form_view(user=user, public=True)
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:public_info",
+            kwargs={"slug": form_view.slug},
+        ),
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json == {
+        "detail": "The requested view does not exist.",
+        "error": "ERROR_VIEW_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_cannot_get_info_about_trashed_grid_view(api_client, data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user, public=True)
+
+    TrashHandler.trash(
+        user, grid_view.table.database.group, None, grid_view.table.database.group
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:public_info",
+            kwargs={"slug": grid_view.slug},
+        ),
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response_json == {
+        "detail": "The requested view does not exist.",
+        "error": "ERROR_VIEW_DOES_NOT_EXIST",
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_public_doesnt_show_hidden_columns(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    # Only information related the public field should be returned
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+
+    public_field_option = data_fixture.create_grid_view_field_option(
+        grid_view, public_field, hidden=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+
+    RowHandler().create_row(user, table, values={})
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug})
+        + "?include=field_options"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                f"field_{public_field.id}": None,
+                "id": 1,
+                "order": "1.00000000000000000000",
+            }
+        ],
+        "field_options": {
+            f"{public_field.id}": {
+                "hidden": False,
+                "order": public_field_option.order,
+                "width": public_field_option.width,
+            },
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_public_with_query_param_filter(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, public_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+
+    first_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"public": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    get_params = [f"filter__field_{public_field.id}__contains=a"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == first_row.id
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    get_params = [
+        f"filter__field_{public_field.id}__contains=a",
+        f"filter__field_{public_field.id}__contains=b",
+        f"filter_type=OR",
+    ]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    get_params = [f"filter__field_{hidden_field.id}__contains=y"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FILTER_FIELD_NOT_FOUND"
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    get_params = [f"filter__field_{public_field.id}__random=y"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST"
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    get_params = [f"filter__field_{public_field.id}__higher_than=1"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD"
+
+
+@pytest.mark.django_db
+def test_list_rows_public_with_query_param_order(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(database=table.database)
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Link",
+        link_row_table=table_2,
+    )
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+    data_fixture.create_grid_view_field_option(grid_view, public_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+    data_fixture.create_grid_view_field_option(grid_view, link_row_field, hidden=False)
+
+    first_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+    second_row = RowHandler().create_row(
+        user, table, values={"public": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?order_by=-field_{public_field.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == second_row.id
+    assert response_json["results"][1]["id"] == first_row.id
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?order_by=field_{hidden_field.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_FOUND"
+
+    url = reverse(
+        "api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug}
+    )
+    response = api_client.get(
+        f"{url}?order_by=field_{link_row_field.id}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_ORDER_BY_FIELD_NOT_POSSIBLE"
+
+
+@pytest.mark.django_db
+def test_list_rows_public_filters_by_visible_and_hidden_columns(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    # Only information related the public field should be returned
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+
+    data_fixture.create_grid_view_field_option(grid_view, public_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+
+    data_fixture.create_view_filter(
+        view=grid_view, field=hidden_field, type="equal", value="y"
+    )
+    data_fixture.create_view_filter(
+        view=grid_view, field=public_field, type="equal", value="a"
+    )
+    # A row whose hidden column doesn't match the first filter
+    RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "not y"}, user_field_names=True
+    )
+    # A row whose public column doesn't match the second filter
+    RowHandler().create_row(
+        user, table, values={"public": "not a", "hidden": "y"}, user_field_names=True
+    )
+    # A row which matches all filters
+    visible_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug})
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert len(response_json["results"]) == 1
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == visible_row.id
+
+
+@pytest.mark.django_db
+def test_list_rows_public_only_searches_by_visible_columns(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    # Only information related the public field should be returned
+    public_field = data_fixture.create_text_field(table=table, name="public")
+    hidden_field = data_fixture.create_text_field(table=table, name="hidden")
+
+    grid_view = data_fixture.create_grid_view(
+        table=table, user=user, public=True, create_options=False
+    )
+
+    data_fixture.create_grid_view_field_option(grid_view, public_field, hidden=False)
+    data_fixture.create_grid_view_field_option(grid_view, hidden_field, hidden=True)
+
+    search_term = "search_term"
+    RowHandler().create_row(
+        user,
+        table,
+        values={"public": "other", "hidden": search_term},
+        user_field_names=True,
+    )
+    RowHandler().create_row(
+        user,
+        table,
+        values={"public": "other", "hidden": "other"},
+        user_field_names=True,
+    )
+    visible_row = RowHandler().create_row(
+        user,
+        table,
+        values={"public": search_term, "hidden": "other"},
+        user_field_names=True,
+    )
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug})
+        + f"?search={search_term}"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert len(response_json["results"]) == 1
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["id"] == visible_row.id
+
+
+@pytest.mark.django_db
+def test_grid_view_link_row_lookup_view(api_client, data_fixture):
+    field_handler = FieldHandler()
+    user, token = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    lookup_table = data_fixture.create_database_table(database=database)
+    grid = data_fixture.create_grid_view(table=table)
+    grid_2 = data_fixture.create_grid_view()
+    text_field = data_fixture.create_text_field(table=table)
+    link_row_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        link_row_table=lookup_table,
+        name="Link row 1",
+    )
+    disabled_link_row_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        link_row_table=lookup_table,
+        name="Link row 2",
+    )
+    unrelated_link_row_field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        link_row_table=lookup_table,
+        name="Link row 3",
+    )
+    primary_related_field = data_fixture.create_text_field(
+        table=lookup_table, primary=True
+    )
+    data_fixture.create_text_field(table=lookup_table)
+    data_fixture.create_grid_view_field_option(grid, text_field, hidden=False, order=1)
+    data_fixture.create_grid_view_field_option(
+        grid, link_row_field, hidden=False, order=2
+    )
+    data_fixture.create_grid_view_field_option(
+        grid, disabled_link_row_field, hidden=True, order=3
+    )
+    data_fixture.create_grid_view_field_option(
+        grid, unrelated_link_row_field, hidden=True, order=4
+    )
+    data_fixture.create_grid_view_field_option(
+        grid_2, unrelated_link_row_field, hidden=False, order=1
+    )
+
+    lookup_model = lookup_table.get_model()
+    i1 = lookup_model.objects.create(**{f"field_{primary_related_field.id}": "Test 1"})
+    i2 = lookup_model.objects.create(**{f"field_{primary_related_field.id}": "Test 2"})
+    i3 = lookup_model.objects.create(**{f"field_{primary_related_field.id}": "Test 3"})
+    i4 = lookup_model.objects.create(**{f"field_{primary_related_field.id}": "Test 4"})
+
+    # Because the `restrict_link_row_public_view_sharing` property is True for the
+    # grid view type, only related values that have relationship with the table and
+    # are visible in the view will be exposed via the endpoint. By adding the first
+    # three to the row that matches the filters, the fourth one, should never be
+    # visible via this endpoint.
+    model = table.get_model()
+    row = model.objects.create(**{f"field_{text_field.id}": "match"})
+    getattr(row, f"field_{link_row_field.id}").add(i1.id, i2.id, i3.id)
+    row_2 = model.objects.create(**{f"field_{text_field.id}": "no match"})
+    getattr(row_2, f"field_{link_row_field.id}").add(i4.id)
+
+    # Anonymous, not existing slug.
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": "NOT_EXISTING", "field_id": link_row_field.id},
+    )
+    response = api_client.get(url, {})
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+    # Anonymous, existing slug, but form is not public.
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(url, format="json")
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+    # user that doesn't have access to the group, existing slug, but form is not public.
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token_2}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
+
+    # valid user, existing slug, but invalid wrong field type.
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": text_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+    # valid user, existing slug, but invalid wrong field type.
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": 0},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+    # valid user, existing slug, but disabled link row field.
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": disabled_link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+    # valid user, existing slug, but unrelated link row field.
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": unrelated_link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT" f" {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
+
+    grid.public = True
+    grid.save()
+
+    # anonymous, existing slug, public form, correct link row field without any
+    # filters applied to the view.
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 4
+    assert len(response_json["results"]) == 4
+
+    # anonymous, existing slug, public form, correct link row field after applying a
+    # filter.
+    data_fixture.create_view_filter(user, view=grid, field=text_field, value="match")
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 3
+    assert len(response_json["results"]) == 3
+    assert response_json["results"][0]["id"] == i1.id
+    assert response_json["results"][0]["value"] == "Test 1"
+    assert len(response_json["results"][0]) == 2
+    assert response_json["results"][1]["id"] == i2.id
+    assert response_json["results"][2]["id"] == i3.id
+
+    # same as before only now with search.
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        f"{url}?search=Test 2",
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == i2.id
+    assert response_json["results"][0]["value"] == "Test 2"
+
+    # same as before only now with pagination
+    url = reverse(
+        "api:database:views:link_row_field_lookup",
+        kwargs={"slug": grid.slug, "field_id": link_row_field.id},
+    )
+    response = api_client.get(
+        f"{url}?size=1&page=2",
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["count"] == 3
+    assert response_json["next"] is not None
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == i2.id
+    assert response_json["results"][0]["value"] == "Test 2"

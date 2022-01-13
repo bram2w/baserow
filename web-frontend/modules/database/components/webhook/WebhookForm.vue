@@ -72,12 +72,29 @@
           <div class="control__elements">
             <input
               v-model="values.url"
+              :placeholder="$t('webhookForm.inputLabels.url')"
               class="input"
               :class="{ 'input--error': $v.values.url.$error }"
               @blur="$v.values.url.$touch()"
             />
-            <div v-if="$v.values.url.$error" class="error">
+            <div
+              v-if="
+                $v.values.url.$error &&
+                (!$v.values.url.required || !$v.values.url.url)
+              "
+              class="error"
+            >
               {{ $t('webhookForm.errors.urlField') }}
+            </div>
+            <div
+              v-else-if="$v.values.url.$error && !$v.values.url.maxLength"
+              class="error"
+            >
+              {{
+                $t('error.maxLength', {
+                  max: $v.values.url.$params.maxLength.max,
+                })
+              }}
             </div>
           </div>
         </div>
@@ -134,7 +151,7 @@
                 'input--error':
                   !lastHeader(index) && $v.headers.$each[index].name.$error,
               }"
-              placeholder="Name"
+              :placeholder="$t('webhookForm.inputLabels.name')"
               @input="lastHeader(index) && addHeader(header.name, header.value)"
               @blur="
                 !lastHeader(index) && $v.headers.$each[index].name.$touch()
@@ -147,7 +164,7 @@
                 'input--error':
                   !lastHeader(index) && $v.headers.$each[index].value.$error,
               }"
-              placeholder="Value"
+              :placeholder="$t('webhookForm.inputLabels.value')"
               @input="lastHeader(index) && addHeader(header.name, header.value)"
               @blur="
                 !lastHeader(index) && $v.headers.$each[index].value.$touch()
@@ -204,7 +221,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { required } from 'vuelidate/lib/validators'
+import { required, maxLength, url } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
@@ -306,7 +323,7 @@ export default {
   validations: {
     values: {
       name: { required },
-      url: { required },
+      url: { required, maxLength: maxLength(2000), url },
     },
     headers: {
       $each: {
@@ -369,6 +386,7 @@ export default {
     "webhookForm": {
       "inputLabels": {
         "name": "Name",
+        "value":"Value",
         "requestMethod": "Method",
         "url": "URL",
         "userFieldNames": "User field names",
@@ -398,30 +416,31 @@ export default {
   "fr": {
     "webhookForm": {
       "inputLabels": {
-        "name": "@TODO",
-        "requestMethod": "@TODO",
-        "url": "@TODO",
-        "userFieldNames": "@TODO",
-        "events": "@TODO",
-        "headers": "@TODO",
-        "example": "@TODO"
+        "name": "Nom",
+        "value":"Valeur",
+        "requestMethod": "Méthode",
+        "url": "URL",
+        "userFieldNames": "Noms des champs",
+        "events": "Quels événements déclenchent ce webhook",
+        "headers": "Entêtes additionels",
+        "example": "Example de requête"
       },
       "errors": {
-        "urlField": "@TODO",
-        "invalidHeaders": "@TODO"
+        "urlField": "Ce champ est requis est doit être une URL valide.",
+        "invalidHeaders": "Un des entête est invalide."
       },
       "checkbox": {
-        "sendUserFieldNames": "@TODO"
+        "sendUserFieldNames": "Utiliser les noms de champ plutôt que les identifiants"
       },
       "radio": {
-        "allEvents": "@TODO",
-        "customEvents": "@TODO"
+        "allEvents": "Tous les événements",
+        "customEvents": "Choisir les événements"
       },
-      "triggerButton": "@TODO",
+      "triggerButton": "Tester le webhook",
       "deactivated": {
-        "title": "@TODO",
-        "content": "@TODO",
-        "activate": "@TODO"
+        "title": "Le webhook est désactivé",
+        "content": "Ce webhook a été désactivé car il produisait trop d'échecs consécutifs. Veuillez vérifier l'historique des appels pour plus d'information. Cliquez sur le bouton ci-dessous pour l'activer de nouveau. Pensez à enregistrer le webhook avant de l'activer.",
+        "activate": "Activer"
       }
     }
   }

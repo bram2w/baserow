@@ -7,6 +7,8 @@ from django.core.files.storage import FileSystemStorage
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.handler import ViewHandler
 
+from baserow.contrib.database.fields.handler import FieldHandler
+
 from baserow_premium.views.exceptions import KanbanViewFieldDoesNotBelongToSameTable
 from baserow_premium.views.models import KanbanViewFieldOptions
 
@@ -146,3 +148,32 @@ def test_newly_created_view(premium_data_fixture):
         .values_list("hidden", flat=True)
     )
     assert list(all_field_options) == [False, False, False, True]
+
+
+@pytest.mark.django_db
+def test_convert_card_cover_image_field_to_another(premium_data_fixture):
+    user = premium_data_fixture.create_user()
+    table = premium_data_fixture.create_database_table(user=user)
+    file_field = premium_data_fixture.create_file_field(table=table)
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, card_cover_image_field=file_field
+    )
+
+    FieldHandler().update_field(user=user, field=file_field, new_type_name="text")
+    kanban_view.refresh_from_db()
+    assert kanban_view.card_cover_image_field_id is None
+
+
+@pytest.mark.django_db
+def test_convert_card_cover_image_field_deleted(premium_data_fixture):
+    user = premium_data_fixture.create_user()
+    table = premium_data_fixture.create_database_table(user=user)
+    file_field = premium_data_fixture.create_file_field(table=table)
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, card_cover_image_field=file_field
+    )
+
+    FieldHandler().delete_field(user=user, field=file_field)
+
+    kanban_view.refresh_from_db()
+    assert kanban_view.card_cover_image_field_id is None

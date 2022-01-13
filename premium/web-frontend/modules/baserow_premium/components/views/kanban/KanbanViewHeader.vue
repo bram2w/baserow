@@ -15,8 +15,14 @@
       >
         <i class="header__filter-icon fas fa-chevron-circle-down"></i>
         <span class="header__filter-name">
-          <template v-if="view.single_select_field === null">Stack by</template
-          ><template v-else>Stacked by {{ stackedByFieldName }}</template></span
+          <template v-if="view.single_select_field === null">{{
+            $t('kanbanViewHeader.stackBy')
+          }}</template
+          ><template v-else>{{
+            $t('kanbanViewHeader.stackedBy', {
+              fieldName: stackedByFieldName,
+            })
+          }}</template></span
         >
       </a>
       <Context ref="stackedContext">
@@ -45,16 +51,21 @@
         "
       >
         <i class="header__filter-icon fas fa-cog"></i>
-        <span class="header__filter-name">Customize cards</span>
+        <span class="header__filter-name">{{
+          $t('kanbanViewHeader.customizeCards')
+        }}</span>
       </a>
       <ViewFieldsContext
         ref="customizeContext"
         :fields="allFields"
         :read-only="readOnly"
         :field-options="fieldOptions"
+        :cover-image-field="view.card_cover_image_field"
+        :allow-cover-image-field="true"
         @update-all-field-options="updateAllFieldOptions"
         @update-field-options-of-field="updateFieldOptionsOfField"
         @update-order="orderFieldOptions"
+        @update-cover-image-field="updateCoverImageField"
       ></ViewFieldsContext>
     </li>
   </ul>
@@ -133,6 +144,7 @@ export default {
           {
             newFieldOptions,
             oldFieldOptions,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {
@@ -147,6 +159,7 @@ export default {
             field,
             values,
             oldValues,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {
@@ -159,8 +172,19 @@ export default {
           this.storePrefix + 'view/kanban/updateFieldOptionsOrder',
           {
             order,
+            readOnly: this.readOnly,
           }
         )
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+    },
+    async updateCoverImageField(value) {
+      try {
+        await this.$store.dispatch('view/update', {
+          view: this.view,
+          values: { card_cover_image_field: value },
+        })
       } catch (error) {
         notifyIf(error, 'view')
       }
@@ -168,3 +192,22 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "kanbanViewHeader": {
+      "stackBy": "Stack by",
+      "stackedBy": "Stacked by {fieldName}",
+      "customizeCards": "Customize cards"
+    }
+  },
+  "fr": {
+    "kanbanViewHeader": {
+      "stackBy": "Regrouper par",
+      "stackedBy": "Regroupé par {fieldName}",
+      "customizeCards": "Configurer les cartes"
+    }
+  }
+}
+</i18n>

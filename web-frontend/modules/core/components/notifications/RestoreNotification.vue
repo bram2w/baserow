@@ -71,7 +71,7 @@ export default {
   },
   "fr": {
     "restoreNotification": {
-      "restore": "Restore deleted {type}"
+      "restore": "Restaurer l'élément {type} supprimé"
     }
   }
 }

@@ -279,6 +279,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
         "phone_number": "+4412345678",
         "positive_decimal": "1.2",
         "positive_int": "1",
+        "rating": 3,
         "single_select": {
             "color": "red",
             "id": SelectOption.objects.get(value="A").id,

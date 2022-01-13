@@ -1,4 +1,5 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
+import { DateFieldType } from '@baserow/modules/database/fieldTypes'
 
 const mockedFields = {
   text: {
@@ -37,6 +38,14 @@ const mockedFields = {
     number_decimal_places: 1,
     number_negative: false,
     number_type: 'INTEGER',
+  },
+  rating: {
+    id: 16,
+    name: 'rating',
+    order: 4,
+    primary: false,
+    table_id: 42,
+    type: 'rating',
   },
   boolean: {
     id: 5,
@@ -149,6 +158,125 @@ const mockedFields = {
 
 const valuesToCall = [null, undefined]
 
+const datePrepareValueForCopy = [
+  {
+    fieldValue: '2021-12-04T10:57:22.184611Z',
+    field: {
+      date_format: 'EU',
+      date_include_time: true,
+      date_time_format: '24',
+    },
+    expectedValue: '04/12/2021 10:57',
+  },
+  {
+    fieldValue: '2021-12-07T00:00:00',
+    field: {
+      date_format: 'US',
+      date_include_time: false,
+    },
+    expectedValue: '12/07/2021',
+  },
+  {
+    fieldValue: '2021-12-08T16:06:38.684274Z',
+    field: {
+      date_format: 'ISO',
+      date_include_time: true,
+      date_time_format: '12',
+    },
+    expectedValue: '2021-12-08 04:06 PM',
+  },
+]
+
+const datePrepareValueForPaste = [
+  // Date field with EU format
+  {
+    fieldValue: '04/12/2021',
+    field: {
+      date_format: 'EU',
+    },
+    expectedValue: '2021-12-04',
+  },
+  {
+    fieldValue: '04/12/2021 22:57',
+    field: {
+      date_format: 'EU',
+      date_include_time: true,
+    },
+    expectedValue: '2021-12-04T22:57:00Z',
+  },
+  {
+    fieldValue: '04/12/2021 10:57 PM',
+    field: {
+      date_format: 'EU',
+      date_include_time: true,
+    },
+    expectedValue: '2021-12-04T22:57:00Z',
+  },
+  {
+    fieldValue: '2021-12-04',
+    field: {
+      date_format: 'EU',
+    },
+    expectedValue: '2021-12-04',
+  },
+  {
+    fieldValue: '2021-12-04 22:57',
+    field: {
+      date_format: 'EU',
+      date_include_time: true,
+    },
+    expectedValue: '2021-12-04T22:57:00Z',
+  },
+  {
+    fieldValue: '2021-12-04 10:57 PM',
+    field: {
+      date_format: 'EU',
+      date_include_time: true,
+    },
+    expectedValue: '2021-12-04T22:57:00Z',
+  },
+  {
+    fieldValue: '2021-12-04T22:57:00Z',
+    field: {
+      date_format: 'EU',
+      date_include_time: true,
+    },
+    expectedValue: '2021-12-04T22:57:00Z',
+  },
+  {
+    fieldValue: '04/16/2021', // Explicit US date in EU field
+    field: {
+      date_format: 'EU',
+    },
+    expectedValue: '2021-04-16',
+  },
+
+  // Date field with US format
+  {
+    fieldValue: '04/12/2021',
+    field: {
+      date_format: 'US',
+    },
+    expectedValue: '2021-04-12',
+  },
+  {
+    fieldValue: '04/12/2021 22:57',
+    field: {
+      date_format: 'US',
+      date_include_time: true,
+    },
+    expectedValue: '2021-04-12T22:57:00Z',
+  },
+  {
+    fieldValue: '04/12/2021 10:57 PM',
+    field: {
+      date_format: 'US',
+      date_include_time: true,
+    },
+    expectedValue: '2021-04-12T22:57:00Z',
+  },
+]
+
 describe('FieldType tests', () => {
   let testApp = null
   let fieldRegistry = null
@@ -181,6 +309,34 @@ describe('FieldType tests', () => {
         }
         expect(t).not.toThrow(TypeError)
       }
+    }
+  )
+
+  test.each(datePrepareValueForCopy)(
+    'Verify that prepareValueForCopy for DateFieldType returns the expected output',
+    (value) => {
+      const result = new DateFieldType().prepareValueForCopy(
+        value.field,
+        value.fieldValue
+      )
+      expect(result).toBe(value.expectedValue)
+    }
+  )
+
+  test.each(datePrepareValueForPaste)(
+    'Verify that prepareValueForPaste for DateFieldType returns the expected output',
+    (value) => {
+      const clipboardData = {
+        getData() {
+          return value.fieldValue
+        },
+      }
+
+      const result = new DateFieldType().prepareValueForPaste(
+        value.field,
+        clipboardData
+      )
+      expect(result).toBe(value.expectedValue)
     }
   )
 })

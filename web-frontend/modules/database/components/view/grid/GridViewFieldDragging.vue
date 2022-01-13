@@ -31,6 +31,10 @@ export default {
       type: Number,
       required: true,
     },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
   },
   data() {
     return {
@@ -247,9 +251,10 @@ export default {
 
       try {
         await this.$store.dispatch(
-          this.storePrefix + 'view/grid/updateFieldOptionsOrder',
+          `${this.storePrefix}view/grid/updateFieldOptionsOrder`,
           {
             order: newOrder,
+            readOnly: this.readOnly,
           }
         )
       } catch (error) {

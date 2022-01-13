@@ -218,7 +218,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.7.1",
+    "VERSION": "1.8.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -235,6 +235,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table view filters"},
         {"name": "Database table view sortings"},
         {"name": "Database table grid view"},
+        {"name": "Database table gallery view"},
         {"name": "Database table form view"},
         {"name": "Database table kanban view"},
         {"name": "Database table rows"},
@@ -325,7 +326,7 @@ else:
 
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
-USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48]}
+USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [None, 160]}
 
 # The directory that contains the all the templates in JSON format. When for example
 # the `sync_templates` management command is called, then the templates in the
@@ -365,3 +366,19 @@ WEBHOOKS_MAX_RETRIES_PER_CALL = 8
 WEBHOOKS_MAX_PER_TABLE = 20
 WEBHOOKS_MAX_CALL_LOG_ENTRIES = 10
 WEBHOOKS_REQUEST_TIMEOUT_SECONDS = 5
+
+# ======== WARNING ========
+# Please read and understand everything at:
+# https://docs.djangoproject.com/en/3.2/ref/settings/#secure-proxy-ssl-header
+# before enabling this setting otherwise you can compromise your site’s security.
+# This setting will ensure the "next" urls provided by the various paginated API
+# endpoints will be returned with https when appropriate.
+# If using gunicorn also behind the proxy you might also need to set
+# --forwarded-allow-ips='*'. See the following link for more information:
+# https://stackoverflow.com/questions/62337379/how-to-append-nginx-ip-to-x-forwarded
+# -for-in-kubernetes-nginx-ingress-controller
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS = bool(
+    os.getenv("DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS", "")
+)

@@ -34,6 +34,7 @@ def test_create_form_view(api_client, data_fixture):
     assert response_json["description"] == ""
     assert response_json["cover_image"] is None
     assert response_json["logo_image"] is None
+    assert response_json["submit_text"] == "Submit"
     assert response_json["submit_action"] == "MESSAGE"
     assert response_json["submit_action_redirect_url"] == ""
 
@@ -48,6 +49,7 @@ def test_create_form_view(api_client, data_fixture):
     assert form.description == ""
     assert form.cover_image is None
     assert form.logo_image is None
+    assert form.submit_text == "Submit"
     assert form.submit_action == "MESSAGE"
     assert form.submit_action_redirect_url == ""
     assert "filters" not in response_json
@@ -64,6 +66,7 @@ def test_create_form_view(api_client, data_fixture):
             "description": "Description",
             "cover_image": {"name": user_file_1.name},
             "logo_image": {"name": user_file_2.name},
+            "submit_text": "NEW SUBMIT",
             "submit_action": "REDIRECT",
             "submit_action_redirect_url": "https://localhost",
         },
@@ -80,6 +83,7 @@ def test_create_form_view(api_client, data_fixture):
     assert response_json["description"] == "Description"
     assert response_json["cover_image"]["name"] == user_file_1.name
     assert response_json["logo_image"]["name"] == user_file_2.name
+    assert response_json["submit_text"] == "NEW SUBMIT"
     assert response_json["submit_action"] == "REDIRECT"
     assert response_json["submit_action_redirect_url"] == "https://localhost"
 
@@ -92,6 +96,7 @@ def test_create_form_view(api_client, data_fixture):
     assert form.description == "Description"
     assert form.cover_image_id == user_file_1.id
     assert form.logo_image_id == user_file_2.id
+    assert form.submit_text == "NEW SUBMIT"
     assert form.submit_action == "REDIRECT"
     assert form.submit_action_redirect_url == "https://localhost"
 
@@ -129,6 +134,7 @@ def test_update_form_view(api_client, data_fixture):
             "type": "form",
             "public": True,
             "title": "Title",
+            "submit_text": "Patched Submit",
             "description": "Description",
             "cover_image": {"name": user_file_1.name},
             "logo_image": {"name": user_file_2.name},
@@ -148,6 +154,7 @@ def test_update_form_view(api_client, data_fixture):
     assert response_json["description"] == "Description"
     assert response_json["cover_image"]["name"] == user_file_1.name
     assert response_json["logo_image"]["name"] == user_file_2.name
+    assert response_json["submit_text"] == "Patched Submit"
     assert response_json["submit_action"] == "REDIRECT"
     assert response_json["submit_action_redirect_url"] == "https://localhost"
 
@@ -159,6 +166,7 @@ def test_update_form_view(api_client, data_fixture):
     assert form.description == "Description"
     assert form.cover_image_id == user_file_1.id
     assert form.logo_image_id == user_file_2.id
+    assert form.submit_text == "Patched Submit"
     assert form.submit_action == "REDIRECT"
     assert form.submit_action_redirect_url == "https://localhost"
 
@@ -190,35 +198,6 @@ def test_update_form_view(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["cover_image"] is None
     assert response_json["logo_image"]["name"] == user_file_2.name
-
-
-@pytest.mark.django_db
-def test_rotate_slug(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
-    table = data_fixture.create_database_table(user=user)
-    view = data_fixture.create_form_view(table=table)
-    view_2 = data_fixture.create_form_view()
-    old_slug = str(view.slug)
-
-    url = reverse("api:database:views:form:rotate_slug", kwargs={"view_id": view_2.id})
-    response = api_client.post(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
-
-    url = reverse("api:database:views:form:rotate_slug", kwargs={"view_id": 99999})
-    response = api_client.post(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
-    assert response.status_code == HTTP_404_NOT_FOUND
-
-    url = reverse("api:database:views:form:rotate_slug", kwargs={"view_id": view.id})
-    response = api_client.post(
-        url,
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_200_OK
-    assert response_json["slug"] != old_slug
-    assert len(response_json["slug"]) == 43
 
 
 @pytest.mark.django_db
@@ -522,25 +501,25 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # Anonymous, not existing slug.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": "NOT_EXISTING", "field_id": link_row_field.id},
     )
     response = api_client.get(url, {})
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
 
     # Anonymous, existing slug, but form is not public.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(url, format="json")
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
 
     # user that doesn't have access to the group, existing slug, but form is not public.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(
@@ -549,11 +528,11 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT" f" {token_2}",
     )
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_FORM_DOES_NOT_EXIST"
+    assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
 
     # valid user, existing slug, but invalid wrong field type.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": text_field.id},
     )
     response = api_client.get(
@@ -566,7 +545,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # valid user, existing slug, but invalid wrong field type.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": 0},
     )
     response = api_client.get(
@@ -579,7 +558,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # valid user, existing slug, but disabled link row field.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": disabled_link_row_field.id},
     )
     response = api_client.get(
@@ -592,7 +571,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # valid user, existing slug, but unrelated link row field.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": unrelated_link_row_field.id},
     )
     response = api_client.get(
@@ -608,7 +587,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # anonymous, existing slug, public form, correct link row field.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(
@@ -627,7 +606,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # same as before only now with search.
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(
@@ -643,7 +622,7 @@ def test_form_view_link_row_lookup_view(api_client, data_fixture):
 
     # same as before only now with pagination
     url = reverse(
-        "api:database:views:form:link_row_field_lookup",
+        "api:database:views:link_row_field_lookup",
         kwargs={"slug": form.slug, "field_id": link_row_field.id},
     )
     response = api_client.get(

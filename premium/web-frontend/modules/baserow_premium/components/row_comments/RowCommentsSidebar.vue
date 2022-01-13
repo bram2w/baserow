@@ -5,7 +5,7 @@
         <div class="row-comments__empty">
           <i class="row-comments__empty-icon fas fa-comments"></i>
           <div class="row-comments__empty-text">
-            Row comments are available in the premium version.
+            {{ $t('rowCommentSidebar.onlyPremium') }}
           </div>
         </div>
       </div>
@@ -17,10 +17,11 @@
           <div v-if="totalCount === 0" class="row-comments__empty">
             <i class="row-comments__empty-icon fas fa-comments"></i>
             <div class="row-comments__empty-text">
-              <template v-if="readOnly">No comments for this row.</template>
+              <template v-if="readOnly">{{
+                $t('rowCommentSidebar.readOnlyNoComment')
+              }}</template>
               <template v-else>
-                No comments for this row yet. Use the form below to add a
-                comment.
+                {{ $t('rowCommentSidebar.noComment') }}
               </template>
             </div>
           </div>
@@ -49,7 +50,7 @@
             <AutoExpandableTextareaInput
               ref="AutoExpandableTextarea"
               v-model="comment"
-              placeholder="Comment"
+              :placeholder="$t('rowCommentSidebar.comment')"
               @entered="postComment"
             >
             </AutoExpandableTextareaInput>
@@ -158,3 +159,24 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "rowCommentSidebar": {
+      "onlyPremium": "Row comments are available in the premium version.",
+      "readOnlyNoComment": "No comments for this row.",
+      "noComment": "No comments for this row yet. Use the form below to add a comment.",
+      "comment": "Comment"
+    }
+  },
+  "fr": {
+    "rowCommentSidebar": {
+      "onlyPremium": "Les commentaires de lignes sont disponibles dans la version premium.",
+      "readOnlyNoComment": "Aucun commentaire pour cette ligne.",
+      "noComment": "Aucun commentaire pour cette ligne. Utilisez le formulaire ci-dessous pour ajouter un commentaire.",
+      "comment": "Commentaire"
+    }
+  }
+}
+</i18n>

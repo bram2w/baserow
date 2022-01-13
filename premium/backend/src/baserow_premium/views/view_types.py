@@ -2,7 +2,9 @@ from django.urls import path, include
 
 from rest_framework.serializers import PrimaryKeyRelatedField
 
-from baserow.contrib.database.fields.models import SingleSelectField
+from baserow.contrib.database.fields.models import SingleSelectField, FileField
+from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.views.registries import ViewType
 from baserow_premium.api.views.kanban.serializers import (
     KanbanViewFieldOptionsSerializer,
@@ -20,20 +22,29 @@ class KanbanViewType(ViewType):
     model_class = KanbanView
     field_options_model_class = KanbanViewFieldOptions
     field_options_serializer_class = KanbanViewFieldOptionsSerializer
-    allowed_fields = ["single_select_field"]
-    serializer_field_names = ["single_select_field"]
+    allowed_fields = ["single_select_field", "card_cover_image_field"]
+    serializer_field_names = ["single_select_field", "card_cover_image_field"]
     serializer_field_overrides = {
         "single_select_field": PrimaryKeyRelatedField(
             queryset=SingleSelectField.objects.all(),
             required=False,
             default=None,
             allow_null=True,
-        )
+        ),
+        "card_cover_image_field": PrimaryKeyRelatedField(
+            queryset=FileField.objects.all(),
+            required=False,
+            default=None,
+            allow_null=True,
+            help_text="References a file field of which the first image must be shown "
+            "as card cover image.",
+        ),
     }
     api_exceptions_map = {
         KanbanViewFieldDoesNotBelongToSameTable: (
             ERROR_KANBAN_VIEW_FIELD_DOES_NOT_BELONG_TO_SAME_TABLE
         ),
+        FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
 
     def get_api_urls(self):
@@ -46,10 +57,10 @@ class KanbanViewType(ViewType):
     def prepare_values(self, values, table, user):
         """
         Check if the provided single select option belongs to the same table.
+        Check if the provided card cover image field belongs to the same table.
         """
 
         name = "single_select_field"
-
         if name in values:
             if isinstance(values[name], int):
                 values[name] = SingleSelectField.objects.get(pk=values[name])
@@ -60,6 +71,20 @@ class KanbanViewType(ViewType):
             ):
                 raise KanbanViewFieldDoesNotBelongToSameTable(
                     "The provided single select field does not belong to the kanban "
+                    "view's table."
+                )
+
+        name = "card_cover_image_field"
+        if name in values:
+            if isinstance(values[name], int):
+                values[name] = FileField.objects.get(pk=values[name])
+
+            if (
+                isinstance(values[name], FileField)
+                and values[name].table_id != table.id
+            ):
+                raise FieldNotInTable(
+                    "The provided file select field id does not belong to the kanban "
                     "view's table."
                 )
 
@@ -126,13 +151,10 @@ class KanbanViewType(ViewType):
         When a kanban view is created, we want to set the first three fields as visible.
         """
 
-        field_options = view.get_field_options(create_if_not_exists=True)
-        field_options.sort(key=lambda x: x.field_id)
-        ids_to_update = [
-            field_option.id
-            for index, field_option in enumerate(field_options)
-            if index < 3
-        ]
+        field_options = view.get_field_options(create_if_missing=True).order_by(
+            "field__id"
+        )
+        ids_to_update = [f.id for f in field_options[0:3]]
 
         if len(ids_to_update) > 0:
             KanbanViewFieldOptions.objects.filter(id__in=ids_to_update).update(

@@ -30,7 +30,7 @@
       :loading="loading"
       @values-changed="$emit('values-changed', values)"
     />
-    <slot></slot>
+    <slot :filename="exportFilename"></slot>
   </form>
 </template>
 
@@ -81,6 +81,13 @@ export default {
     selectedView() {
       return this.views.find((view) => view.id === this.values.view_id) || null
     },
+    selectedExporter() {
+      return (
+        this.exporterTypes.find(
+          (exporterType) => exporterType.type === this.values.exporter_type
+        ) || null
+      )
+    },
     exporterTypes() {
       const types = Object.values(this.$registry.getAll('exporter'))
       return types.filter((exporterType) => {
@@ -101,9 +108,12 @@ export default {
         return null
       }
 
-      return this.exporterTypes
-        .find((exporterType) => exporterType.type === this.values.exporter_type)
-        .getFormComponent()
+      return this.selectedExporter.getFormComponent()
+    },
+    exportFilename() {
+      return `export - ${this.view.table.name}${
+        this.selectedView ? ` - ${this.selectedView.name}` : ''
+      }.${this.selectedExporter?.getType()}`
     },
   },
   created() {

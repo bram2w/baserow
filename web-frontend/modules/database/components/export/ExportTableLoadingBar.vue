@@ -31,8 +31,7 @@
         button button--large button--success
         export-table-modal__export-button
       "
-      :href="job.url"
-      target="_blank"
+      :href="`${job.url}?dl=${filename}`"
     >
       {{ $t('exportTableLoadingBar.download') }}
     </a>
@@ -43,6 +42,16 @@
 export default {
   name: 'ExportTableLoadingBar',
   props: {
+    filename: {
+      type: String,
+      required: false,
+      default: 'export',
+    },
+    exportType: {
+      type: String,
+      required: false,
+      default: 'export',
+    },
     job: {
       type: Object,
       required: false,

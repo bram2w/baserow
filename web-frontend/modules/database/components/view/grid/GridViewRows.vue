@@ -1,7 +1,9 @@
 <template>
   <div
     class="grid-view__rows"
-    :style="{ transform: `translateY(${rowsTop}px)` }"
+    :style="{
+      transform: `translateY(${rowsTop}px) translateX(${leftOffset}px)`,
+    }"
   >
     <GridViewRow
       v-for="row in rows"
@@ -32,6 +34,11 @@ export default {
     fields: {
       type: Array,
       required: true,
+    },
+    leftOffset: {
+      type: Number,
+      required: false,
+      default: 0,
     },
     table: {
       type: Object,

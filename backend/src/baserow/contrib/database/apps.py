@@ -69,6 +69,7 @@ class DatabaseConfig(AppConfig):
             LongTextFieldType,
             URLFieldType,
             NumberFieldType,
+            RatingFieldType,
             BooleanFieldType,
             DateFieldType,
             LastModifiedFieldType,
@@ -88,6 +89,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(URLFieldType())
         field_type_registry.register(EmailFieldType())
         field_type_registry.register(NumberFieldType())
+        field_type_registry.register(RatingFieldType())
         field_type_registry.register(BooleanFieldType())
         field_type_registry.register(DateFieldType())
         field_type_registry.register(LastModifiedFieldType())
@@ -122,9 +124,10 @@ class DatabaseConfig(AppConfig):
         )
         field_converter_registry.register(FormulaFieldConverter())
 
-        from .views.view_types import GridViewType, FormViewType
+        from .views.view_types import GridViewType, GalleryViewType, FormViewType
 
         view_type_registry.register(GridViewType())
+        view_type_registry.register(GalleryViewType())
         view_type_registry.register(FormViewType())
 
         from .views.view_filters import (
@@ -141,6 +144,7 @@ class DatabaseConfig(AppConfig):
             DateEqualsCurrentYearViewFilterType,
             HigherThanViewFilterType,
             LowerThanViewFilterType,
+            DateEqualsDayOfMonthViewFilterType,
             ContainsViewFilterType,
             FilenameContainsViewFilterType,
             HasFileTypeViewFilterType,
@@ -152,6 +156,7 @@ class DatabaseConfig(AppConfig):
             LinkRowHasNotViewFilterType,
             MultipleSelectHasViewFilterType,
             MultipleSelectHasNotViewFilterType,
+            LengthIsLowerThanViewFilterType,
         )
 
         view_filter_type_registry.register(EqualViewFilterType())
@@ -160,6 +165,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(HasFileTypeViewFilterType())
         view_filter_type_registry.register(ContainsViewFilterType())
         view_filter_type_registry.register(ContainsNotViewFilterType())
+        view_filter_type_registry.register(LengthIsLowerThanViewFilterType())
         view_filter_type_registry.register(HigherThanViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
@@ -168,6 +174,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateNotEqualViewFilterType())
         view_filter_type_registry.register(DateEqualsTodayViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentMonthViewFilterType())
+        view_filter_type_registry.register(DateEqualsDayOfMonthViewFilterType())
         view_filter_type_registry.register(DateEqualsCurrentYearViewFilterType())
         view_filter_type_registry.register(SingleSelectEqualViewFilterType())
         view_filter_type_registry.register(SingleSelectNotEqualViewFilterType())
@@ -183,9 +190,10 @@ class DatabaseConfig(AppConfig):
 
         application_type_registry.register(DatabaseApplicationType())
 
-        from .ws.pages import TablePageType
+        from .ws.pages import TablePageType, PublicViewPageType
 
         page_registry.register(TablePageType())
+        page_registry.register(PublicViewPageType())
 
         from .export.table_exporters.csv_table_exporter import CsvTableExporter
 

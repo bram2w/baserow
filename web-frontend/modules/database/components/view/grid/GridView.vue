@@ -45,12 +45,12 @@
       :style="{ left: leftWidth + 'px' }"
     ></div>
     <GridViewFieldWidthHandle
-      v-if="!readOnly"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
       :grid="view"
       :field="primary"
       :width="leftFieldsWidth"
+      :read-only="readOnly"
       :store-prefix="storePrefix"
     ></GridViewFieldWidthHandle>
     <GridViewSection
@@ -75,7 +75,23 @@
       @select-next="selectNextCell($event)"
       @edit-modal="$refs.rowEditModal.show($event.id)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
-    ></GridViewSection>
+    >
+      <template v-if="publicGrid" #foot>
+        <div class="grid-view__foot-logo">
+          <a
+            href="https://baserow.io"
+            target="_blank"
+            title="Baserow - open source no-code database tool and Airtable alternative"
+          >
+            <img
+              height="14"
+              src="@baserow/modules/core/static/img/logo.svg"
+              alt="Baserow - open source no-code database tool and Airtable alternative"
+            />
+          </a>
+        </div>
+      </template>
+    </GridViewSection>
     <GridViewRowDragging
       ref="rowDragging"
       :table="table"
@@ -723,7 +739,7 @@ export default {
       "insertRowBelow": "Insérer en dessous",
       "enlargeRow": "Afficher la ligne",
       "deleteRow": "Supprimer la ligne",
-      "rowCount": "Acunne ligne | 1 ligne | {count} lignes"
+      "rowCount": "Acune ligne | 1 ligne | {count} lignes"
     }
   }
 }
