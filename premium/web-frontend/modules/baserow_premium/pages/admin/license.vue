@@ -422,7 +422,7 @@ export default {
       "users": "Utilisateurs",
       "description": "Choisissez les utilisateurs qui peuvent utiliser les fonctionalités du plan {product_code}. Cette licence vous permet de distribuer le plan {product_code} à un maximum de {seats} utilisateurs.",
       "seatLeft": "Vous n'avez plus de place disponible|Il reste une seule place|Il reste {count} places",
-      "fillSeats": "Distribuer les places aux utilisateurs restant",
+      "fillSeats": "Distribuer les places aux utilisateurs restants",
       "removeAll": "Enlever tous les utilisateurs",
       "licenseId": "Numéro de licence",
       "addUser": "Ajouter un utilisateur",
@@ -431,7 +431,7 @@ export default {
       "expired": "Expirée",
       "validFrom": "Début de validité",
       "validThrough": "Fin de validité",
-      "validThroughDescription": "Quand la licence expire, tous les utilisateurs associés ne serons plus en mesure d'utiliser les fonctionnalités offertes par la licence.",
+      "validThroughDescription": "Quand la licence expire, les utilisateurs associés n'auront plus accès aux fonctionnalités offertes par la licence.",
       "lastCheck": "Dernière vérification",
       "lastCheckDescription": "La licence est vérifiée réguliérement. Si vous avez, par exemple, renouvellé ou mis à jour votre licence, les changements ne deviennent actifs qu'après la vérification.",
       "checkNow": "Vérifier maintenant",
@@ -443,7 +443,7 @@ export default {
       "rowUsage": "Nombre de ligne",
       "storeUsage": "Espace disponible",
       "disconnectLicense": "Déconnecter la licence",
-      "disconnectDescription": "Si vous deconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
+      "disconnectDescription": "Si vous déconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
     }
   }
 }

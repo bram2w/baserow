@@ -131,7 +131,7 @@ export default {
   "fr": {
     "testWebhookModal": {
       "title": "Test du webhook",
-      "unreachable": "Serveur inacessible"
+      "unreachable": "Serveur inaccessible"
     }
   }
 }

@@ -138,7 +138,7 @@ export default {
   },
   head() {
     return {
-      title: 'Dashboard',
+      title: this.$t('dashboard.title'),
     }
   },
   computed: {
@@ -170,6 +170,7 @@ export default {
 {
   "en":{
     "dashboard":{
+      "title": "Dashboard",
       "alertTitle": "We need your help!",
       "alertText": "If you find Baserow useful then sponsoring, starring or sharing us is greatly appreciated. By sponsoring us on GitHub you will get early access to the premium features!",
       "tweetContent": "Check out @baserow an open source no-code database tool and Airtable alternative!",
@@ -187,9 +188,10 @@ export default {
   },
   "fr":{
     "dashboard":{
+      "title": "Accueil",
       "alertTitle": "Soutenez-nous !",
       "alertText": "Si vous trouvez Baserow utile, n'hésitez pas à nous sponsoriser, étoiler, partager :",
-      "tweetContent": "Découvrez @baserow, une base de données no-code et libre alternative à Airtable",
+      "tweetContent": "Découvrez @baserow, une base de données no-code libre, une alternative à Airtable",
       "redditTitle": "Baserow - Une base de données no-code libre",
       "noGroupTitle": "Aucun groupe",
       "noGroupText": "Vous n'êtes membre d'aucun groupe. Les applications telles que les bases de données doivent appartenir à un groupe, donc pour pouvoir en créer, vous devez créer au moins un groupe.",

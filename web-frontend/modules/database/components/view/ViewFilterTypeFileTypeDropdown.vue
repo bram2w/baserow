@@ -2,16 +2,15 @@
   <Dropdown
     :value="filter.value"
     :show-search="false"
-    :disabled="disabled"
     class="filters__value-dropdown dropdown--tiny"
     @input="$emit('input', $event)"
   >
     <DropdownItem
-      :name="$t('viewFilterFileTypeDropdown.image')"
+      :name="$t('viewFilterTypeFileTypeDropdown.image')"
       value="image"
     ></DropdownItem>
     <DropdownItem
-      :name="$t('viewFilterFileTypeDropdown.document')"
+      :name="$t('viewFilterTypeFileTypeDropdown.document')"
       value="document"
     ></DropdownItem>
   </Dropdown>
@@ -44,13 +43,13 @@ export default {
 <i18n>
 {
   "en": {
-    "viewFilterFileTypeDropdown": {
-      "image": "Image",
-      "document": "Document"
+    "viewFilterTypeFileTypeDropdown": {
+      "image": "image",
+      "document": "document"
     }
   },
   "fr": {
-    "viewFilterFileTypeDropdown": {
+    "viewFilterTypeFileTypeDropdown": {
       "image": "Image",
       "document": "Document"
     }

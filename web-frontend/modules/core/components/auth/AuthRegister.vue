@@ -229,7 +229,7 @@ export default {
   },
   "fr": {
     "error":{
-      "alreadyExistsTitle": "l'Utilisateur existe déjà",
+      "alreadyExistsTitle": "L'utilisateur existe déjà",
       "alreadyExistsMessage": "Un utilisateur avec la même adresse électronique existe déjà."
     },
     "field":{

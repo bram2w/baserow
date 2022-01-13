@@ -158,15 +158,15 @@ export default {
     "passwordSettings": {
       "title": "Mise à jour du mot de passe",
       "changedTitle": "Mot de passe mis à jour",
-      "changedDescription": "Votre mot de passe a été mis à jour. La prochaine fois que vous souhaitez vous connecter, vous devrez utiliser le nouveau mot de passe",
+      "changedDescription": "Votre mot de passe a été mis à jour. La prochaine fois que vous souhaitez vous connecter, vous devrez utiliser le nouveau mot de passe.",
       "oldPasswordLabel": "Ancien mot de passe",
-      "oldPasswordRequiredError": "L'ancien mot de passe est obligatoire",
+      "oldPasswordRequiredError": "L'ancien mot de passe est obligatoire.",
       "newPasswordLabel": "Nouveau mot de passe",
       "repeatNewPasswordLabel": "Répétez le mot de passe",
       "repeatNewPasswordMatchError": "Les deux mots de passe ne correspondent pas.",
       "submitButton": "Mettre à jour",
       "errorInvalidOldPasswordTitle": "Ancien mot de passe invalide",
-      "errorInvalidOldPasswordMessage": "Impossible de mettre à jour votre mot de passe car votre ancien mot de passe est invalide."
+      "errorInvalidOldPasswordMessage": "Impossible de mettre à jour votre mot de passe car votre ancien mot de passe est incorrect."
     }
   }
 }

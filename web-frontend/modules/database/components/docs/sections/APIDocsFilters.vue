@@ -54,8 +54,8 @@ export default {
   "fr": {
     "apiDocsFilters":{
       "filter": "Filtre",
-      "exampleValue": "Example",
-      "example": "Example complet",
+      "exampleValue": "Exemple",
+      "example": "Exemple complet",
       "field": "La valeur {name}"
     }
   }

@@ -17,7 +17,7 @@
         </li>
         <li>
           <nuxt-link :to="{ name: 'forgot-password' }">
-            {{ $t('action.forgotPassword') }}
+            {{ $t('login.forgotPassword') }}
           </nuxt-link>
         </li>
       </ul>
@@ -38,7 +38,7 @@ export default {
   layout: 'login',
   head() {
     return {
-      title: 'Login',
+      title: this.$t('login.title'),
       link: [
         {
           rel: 'canonical',
@@ -68,12 +68,14 @@ export default {
 <i18n>
 {
   "en": {
-    "action": {
+    "login": {
+      "title": "Login",
       "forgotPassword": "Forgot password"
     }
   },
   "fr": {
-    "action": {
+    "login": {
+      "title": "Identification",
       "forgotPassword": "Mot de passe oublié"
     }
   }

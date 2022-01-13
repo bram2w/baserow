@@ -146,13 +146,13 @@ export default {
   },
   "fr": {
     "shareViewLink": {
-      "shareView": "@todo",
-      "shareViewTitle": "@todo",
-      "sharedViewTitle": "@todo",
-      "sharedViewDescription": "@todo",
-      "disableLink": "@todo",
-      "generateNewUrl": "@todo",
-      "copyURL": "@todo"
+      "shareView": "Partager {viewTypeSharingLinkName}",
+      "shareViewTitle": "Créer un lien de partage privé vers {viewTypeSharingLinkName}",
+      "sharedViewTitle": "Actuellement, {viewTypeSharingLinkName} est partagé·e via un lien privé",
+      "sharedViewDescription": "Les personnes possédant le lien peuvent voir {viewTypeSharingLinkName}",
+      "disableLink": "désactivé le lien de partage",
+      "generateNewUrl": "générer un nouveau lien",
+      "copyURL": "copier le lien"
     }
   }
 }

@@ -54,7 +54,7 @@ export default {
   },
   "fr": {
     "apiDocsAuth":{
-      "description": "Baserow utilise un système d'authentification simple par jeton. Vous devez générer au moins un jeton d'API dans votre {settingsLink} afin d'utiliser les API suivantes. Il est possible de définir des droits de création, lecture, modification et suppression par table et ce pour chaque jeton. Pour vous authentifier à l'API, fournissez le jeton avec l'entête HTTP «\u00A0Authorization\u00A0» de la requête. Tous les appels à l'API doivent être authentifiés et réalisés via le protocole sécurisé HTTPS.",
+      "description": "Baserow utilise un système d'authentification simple par jeton. Vous devez générer au moins un jeton d'API dans votre {settingsLink} afin d'utiliser les API suivantes. Il est possible de définir des droits de création, lecture, modification et suppression par table et ce pour chaque jeton. Pour vous authentifier à l'API, fournissez le jeton via l'entête HTTP «\u00A0Authorization\u00A0» de la requête. Tous les appels à l'API doivent être authentifiés et réalisés via le protocole sécurisé HTTPS.",
       "settingsLink": "compte"
     }
   }

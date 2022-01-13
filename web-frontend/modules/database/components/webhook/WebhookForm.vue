@@ -439,7 +439,7 @@ export default {
       "triggerButton": "Tester le webhook",
       "deactivated": {
         "title": "Le webhook est désactivé",
-        "content": "Ce webhook a été désactivé car il y avait trop échecs consécutifs. Veuillez vérifier l'historique des appels pour plus d'information. Cliquez sur le bouton ci-dessous pour l'activer de nouveau. Pensez à enregistrer le webhook avant de l'activer.",
+        "content": "Ce webhook a été désactivé car il produisait trop d'échecs consécutifs. Veuillez vérifier l'historique des appels pour plus d'information. Cliquez sur le bouton ci-dessous pour l'activer de nouveau. Pensez à enregistrer le webhook avant de l'activer.",
         "activate": "Activer"
       }
     }

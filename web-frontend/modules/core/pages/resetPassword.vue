@@ -94,7 +94,7 @@ export default {
   },
   head() {
     return {
-      title: 'Reset password',
+      title: this.$t('resetPassword.title'),
     }
   },
   methods: {
@@ -163,7 +163,7 @@ export default {
       "repeatNewPassword": "Répetez le mot de passe",
       "submit": "Mettre à jour",
       "changed": "Mot de passe mis à jour",
-      "errorInvalidLinkTitle": "Lien invalid",
+      "errorInvalidLinkTitle": "Lien invalide",
       "errorInvalidLinkMessage": "Il n'est pas possible de réinitialiser le mot de passe car le lien est invalide.",
       "errorLinkExpiredTitle": "Lien expiré",
       "errorLinkExpiredMessage": "Le lien de réinitialisation de mot de passe a expiré, Veuillez en demander un nouveau."

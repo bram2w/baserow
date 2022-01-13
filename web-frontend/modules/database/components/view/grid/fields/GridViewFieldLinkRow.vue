@@ -13,7 +13,9 @@
               item.value === null || item.value === '',
           }"
         >
-          {{ item.value || 'unnamed row ' + item.id }}
+          {{
+            item.value || $t('gridViewFieldLinkRow.unnamed', { value: item.id })
+          }}
         </span>
         <a
           v-if="!readOnly"
@@ -120,3 +122,18 @@ export default {
   },
 }
 </script>
+
+<i18n>
+{
+  "en": {
+    "gridViewFieldLinkRow": {
+      "unnamed": "unnamed row {value}"
+    }
+  },
+  "fr": {
+    "gridViewFieldLinkRow": {
+      "unnamed": "Ligne sans nom {value}"
+    }
+  }
+}
+</i18n>

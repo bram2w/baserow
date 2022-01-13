@@ -74,7 +74,7 @@ export default {
   },
   "fr": {
     "apiDocsTableGetRow":{
-      "description": "Retour une ligne de la table {name}.",
+      "description": "Retourne une ligne de la table {name}.",
       "rowId": "L'identifiant unique de la ligne demandée."
     }
   }

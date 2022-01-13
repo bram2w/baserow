@@ -13,7 +13,12 @@
               item.value === null || item.value === '',
           }"
         >
-          {{ item.value || 'unnamed row ' + item.id }}
+          {{
+            item.value ||
+            parent.$t('functionnalGridViewFieldLinkRow.unnamed', {
+              value: item.id,
+            })
+          }}
         </span>
       </div>
     </div>

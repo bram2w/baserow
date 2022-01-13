@@ -80,7 +80,7 @@ export default {
     "trashEmptyModal": {
       "titleIsTrashed": "Êtes-vous sûr·e de vouloir supprimer définitivement {name} ?",
       "titleIsNotTrashed": "Êtes-vous sûr·e de vouloir vider la corbeille de {name} ?",
-      "messageIsTrashed": "Cette action va le supprimer définitivement ainsi que tout contenu. Vous ne serez plus en mesure de le restaurer.",
+      "messageIsTrashed": "Cette action va tout supprimer définitivement ainsi que tout son contenu. Vous ne serez plus en mesure de le restaurer.",
       "messageIsNotTrashed": "Cette action va supprimer définitivement les éléments listés. Vous ne serez plus en mesure de les restaurer.",
       "buttonIsTrashed": "Supprimer définitivement",
       "buttonIsNotTrashed": "Vider"
