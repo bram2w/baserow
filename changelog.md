@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## Released (2022-01-13 1.8.1)
+
+* Fixed migration failing when upgrading a version of Baserow installed using Postgres 
+  10 or lower.
+
 ## Released (2022-01-13)
 
 * Fixed frontend errors occurring sometimes when mass deleting and restoring sorted 

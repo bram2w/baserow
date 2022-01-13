@@ -73,6 +73,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            "SET CONSTRAINTS ALL IMMEDIATE", reverse_sql=migrations.RunSQL.noop
+        ),
         migrations.AddField(
             model_name="view",
             name="public_temp",
@@ -137,5 +140,8 @@ class Migration(migrations.Migration):
             model_name="view",
             old_name="slug_temp",
             new_name="slug",
+        ),
+        migrations.RunSQL(
+            migrations.RunSQL.noop, reverse_sql="SET CONSTRAINTS ALL IMMEDIATE"
         ),
     ]
