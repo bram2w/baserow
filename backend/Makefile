@@ -6,12 +6,12 @@ install-dev-dependencies:
 	pip install -r requirements/dev.txt
 
 lint:
-	flake8 src tests ../premium/backend && black . ../premium/backend --extend-exclude='/(generated|migrations)/' --check || exit;
+	flake8 src tests ../premium/backend && black . ../premium/backend --extend-exclude='/generated/' --check || exit;
 
 lint-python: lint
 
 format:
-	black . ../premium/backend --extend-exclude='/(generated|migrations)/' || exit;
+	black . ../premium/backend --extend-exclude='/generated/' || exit;
 
 test:
 	pytest tests ../premium/backend/tests || exit;

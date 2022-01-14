@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 blank=True,
                 help_text="References a file field of which the first image must be "
-                          "shown as card cover image.",
+                "shown as card cover image.",
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="gallery_view_card_cover_field",

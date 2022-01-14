@@ -6,8 +6,9 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
-get_default_view_content_type = \
+get_default_view_content_type = (
     baserow.contrib.database.views.models.get_default_view_content_type
+)
 
 
 class Migration(migrations.Migration):
@@ -15,69 +16,109 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('core', '0001_initial'),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("core", "0001_initial"),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Database',
+            name="Database",
             fields=[
-                ('application_ptr', models.OneToOneField(
-                    auto_created=True, on_delete=django.db.models.deletion.CASCADE,
-                    parent_link=True, primary_key=True, serialize=False,
-                    to='core.Application')
-                 ),
+                (
+                    "application_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="core.Application",
+                    ),
+                ),
             ],
-            bases=('core.application',),
+            bases=("core.application",),
         ),
         migrations.CreateModel(
-            name='Table',
+            name="Table",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True,
-                                        serialize=False, verbose_name='ID')),
-                ('order', models.PositiveIntegerField()),
-                ('name', models.CharField(max_length=255)),
-                ('database', models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE,
-                    to='database.Database')
-                 ),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("order", models.PositiveIntegerField()),
+                ("name", models.CharField(max_length=255)),
+                (
+                    "database",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="database.Database",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('order',),
+                "ordering": ("order",),
             },
             bases=(baserow.core.mixins.OrderableMixin, models.Model),
         ),
         migrations.CreateModel(
-            name='View',
+            name="View",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True,
-                                        serialize=False, verbose_name='ID')),
-                ('order', models.PositiveIntegerField()),
-                ('name', models.CharField(max_length=255)),
-                ('content_type', models.ForeignKey(
-                    on_delete=models.SET(get_default_view_content_type),
-                    related_name='database_views', to='contenttypes.ContentType',
-                    verbose_name='content type')
-                 ),
-                ('table', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
-                                            to='database.Table')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("order", models.PositiveIntegerField()),
+                ("name", models.CharField(max_length=255)),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        on_delete=models.SET(get_default_view_content_type),
+                        related_name="database_views",
+                        to="contenttypes.ContentType",
+                        verbose_name="content type",
+                    ),
+                ),
+                (
+                    "table",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="database.Table"
+                    ),
+                ),
             ],
             options={
-                'ordering': ('order',),
+                "ordering": ("order",),
             },
-            bases=(baserow.core.mixins.OrderableMixin,
-                   baserow.core.mixins.PolymorphicContentTypeMixin, models.Model),
+            bases=(
+                baserow.core.mixins.OrderableMixin,
+                baserow.core.mixins.PolymorphicContentTypeMixin,
+                models.Model,
+            ),
         ),
         migrations.CreateModel(
-            name='GridView',
+            name="GridView",
             fields=[
-                ('view_ptr', models.OneToOneField(
-                    auto_created=True, on_delete=django.db.models.deletion.CASCADE,
-                    parent_link=True, primary_key=True, serialize=False,
-                    to='database.View')
-                 ),
+                (
+                    "view_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="database.View",
+                    ),
+                ),
             ],
-            bases=('database.view',),
+            bases=("database.view",),
         ),
     ]

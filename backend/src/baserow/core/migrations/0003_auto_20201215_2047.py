@@ -7,50 +7,47 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0002_userfile'),
+        ("core", "0002_userfile"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='application',
-            name='created_on',
+            model_name="application",
+            name="created_on",
             field=models.DateTimeField(
-                auto_now_add=True,
-                default=django.utils.timezone.now
+                auto_now_add=True, default=django.utils.timezone.now
             ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='application',
-            name='updated_on',
+            model_name="application",
+            name="updated_on",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AddField(
-            model_name='group',
-            name='created_on',
+            model_name="group",
+            name="created_on",
             field=models.DateTimeField(
-                auto_now_add=True,
-                default=django.utils.timezone.now
+                auto_now_add=True, default=django.utils.timezone.now
             ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='group',
-            name='updated_on',
+            model_name="group",
+            name="updated_on",
             field=models.DateTimeField(auto_now=True),
         ),
         migrations.AddField(
-            model_name='groupuser',
-            name='created_on',
+            model_name="groupuser",
+            name="created_on",
             field=models.DateTimeField(
-                auto_now_add=True,
-                default=django.utils.timezone.now
+                auto_now_add=True, default=django.utils.timezone.now
             ),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='groupuser',
-            name='updated_on',
+            model_name="groupuser",
+            name="updated_on",
             field=models.DateTimeField(auto_now=True),
         ),
     ]

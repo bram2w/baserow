@@ -6,22 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0017_view_filters_disabled'),
+        ("database", "0017_view_filters_disabled"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='token',
-            name='created',
+            model_name="token",
+            name="created",
             field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AlterField(
-            model_name='view',
-            name='filters_disabled',
+            model_name="view",
+            name="filters_disabled",
             field=models.BooleanField(
                 default=False,
-                help_text='Allows users to see results unfiltered while still keeping '
-                          'the filters saved for the view.'
+                help_text="Allows users to see results unfiltered while still keeping "
+                "the filters saved for the view.",
             ),
         ),
     ]

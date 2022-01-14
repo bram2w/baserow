@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0024_selectoption_singleselectfield'),
+        ("database", "0024_selectoption_singleselectfield"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='gridviewfieldoptions',
-            name='hidden',
+            model_name="gridviewfieldoptions",
+            name="hidden",
             field=models.BooleanField(default=False),
         ),
     ]

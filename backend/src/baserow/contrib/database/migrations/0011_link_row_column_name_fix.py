@@ -17,17 +17,20 @@ def rename_sql(schema_editor, table, old_name, new_name):
 
 
 def forward(apps, schema_editor):
-    LinkRowField = apps.get_model('database', 'LinkRowField')
+    LinkRowField = apps.get_model("database", "LinkRowField")
 
     cursor = connection.cursor()
     with connection.schema_editor() as tables_schema_editor:
         for field in LinkRowField.objects.all():
-            table_name = f'database_relation_{field.link_row_relation_id}'
-            new_name = f'table{field.table.id}model_id'
+            table_name = f"database_relation_{field.link_row_relation_id}"
+            new_name = f"table{field.table.id}model_id"
             first = field.id < field.link_row_related_field.id
 
-            cursor.execute("SELECT column_name FROM information_schema.columns WHERE "
-                           "table_name = %s", [table_name])
+            cursor.execute(
+                "SELECT column_name FROM information_schema.columns WHERE "
+                "table_name = %s",
+                [table_name],
+            )
             rows = cursor.fetchall()
 
             # Because it is a through table we expect exactly 3 columns, the id,
@@ -48,7 +51,7 @@ def forward(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0010_auto_20200828_1306'),
+        ("database", "0010_auto_20200828_1306"),
     ]
 
     operations = [
