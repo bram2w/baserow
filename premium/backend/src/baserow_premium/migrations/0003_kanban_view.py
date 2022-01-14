@@ -49,7 +49,7 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         default=True,
                         help_text="Whether or not the field should be hidden in the "
-                                  "card.",
+                        "card.",
                     ),
                 ),
                 (
@@ -57,7 +57,7 @@ class Migration(migrations.Migration):
                     models.SmallIntegerField(
                         default=32767,
                         help_text="The order that the field has in the form. Lower "
-                                  "value is first.",
+                        "value is first.",
                     ),
                 ),
                 (
@@ -92,7 +92,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 blank=True,
                 help_text="The single select field related to the options where rows "
-                          "should be stacked by.",
+                "should be stacked by.",
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="kanban_view_single_select_field",

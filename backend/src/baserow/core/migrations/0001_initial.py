@@ -13,61 +13,103 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Group',
+            name="Group",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True,
-                                        serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
             ],
         ),
         migrations.CreateModel(
-            name='GroupUser',
+            name="GroupUser",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True,
-                                        serialize=False, verbose_name='ID')),
-                ('order', models.PositiveIntegerField()),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
-                                            to='core.Group')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
-                                           to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("order", models.PositiveIntegerField()),
+                (
+                    "group",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="core.Group"
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ('order',),
+                "ordering": ("order",),
             },
             bases=(baserow.core.mixins.OrderableMixin, models.Model),
         ),
         migrations.AddField(
-            model_name='group',
-            name='users',
-            field=models.ManyToManyField(through='core.GroupUser',
-                                         to=settings.AUTH_USER_MODEL),
+            model_name="group",
+            name="users",
+            field=models.ManyToManyField(
+                through="core.GroupUser", to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.CreateModel(
-            name='Application',
+            name="Application",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True,
-                                        serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50)),
-                ('order', models.PositiveIntegerField()),
-                ('content_type', models.ForeignKey(
-                    on_delete=models.SET(
-                        baserow.core.models.get_default_application_content_type),
-                    related_name='applications',
-                    to='contenttypes.ContentType',
-                    verbose_name='content type')
-                 ),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
-                                            to='core.Group')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=50)),
+                ("order", models.PositiveIntegerField()),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        on_delete=models.SET(
+                            baserow.core.models.get_default_application_content_type
+                        ),
+                        related_name="applications",
+                        to="contenttypes.ContentType",
+                        verbose_name="content type",
+                    ),
+                ),
+                (
+                    "group",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="core.Group"
+                    ),
+                ),
             ],
             options={
-                'ordering': ('order',),
+                "ordering": ("order",),
             },
-            bases=(baserow.core.mixins.OrderableMixin,
-                   baserow.core.mixins.PolymorphicContentTypeMixin, models.Model),
+            bases=(
+                baserow.core.mixins.OrderableMixin,
+                baserow.core.mixins.PolymorphicContentTypeMixin,
+                models.Model,
+            ),
         ),
     ]

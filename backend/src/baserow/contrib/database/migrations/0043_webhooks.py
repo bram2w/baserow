@@ -32,8 +32,8 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         default=True,
                         help_text="Indicates whether the web hook is active. When a "
-                                  "webhook has failed multiple times, it will "
-                                  "automatically be deactivated.",
+                        "webhook has failed multiple times, it will "
+                        "automatically be deactivated.",
                     ),
                 ),
                 (
@@ -41,14 +41,14 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         default=True,
                         help_text="Indicates whether the field names must be used as "
-                                  "payload key instead of the id.",
+                        "payload key instead of the id.",
                     ),
                 ),
                 (
                     "url",
                     models.URLField(
                         help_text="The URL that must call when the webhook is "
-                                  "triggered."
+                        "triggered."
                     ),
                 ),
                 (
@@ -63,7 +63,7 @@ class Migration(migrations.Migration):
                         ],
                         default="POST",
                         help_text="The request method that be used when the event "
-                                  "occurs.",
+                        "occurs.",
                         max_length=10,
                     ),
                 ),
@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         default=True,
                         help_text="Indicates whether this webhook should listen to all "
-                                  "events.",
+                        "events.",
                     ),
                 ),
                 (
@@ -115,8 +115,7 @@ class Migration(migrations.Migration):
                     models.TextField(
                         validators=[
                             (
-                                baserow.contrib.database.webhooks.validators
-                                .header_name_validator
+                                baserow.contrib.database.webhooks.validators.header_name_validator
                             )
                         ]
                     ),
@@ -126,8 +125,7 @@ class Migration(migrations.Migration):
                     models.TextField(
                         validators=[
                             (
-                                baserow.contrib.database.webhooks.validators
-                                .header_value_validator
+                                baserow.contrib.database.webhooks.validators.header_value_validator
                             )
                         ]
                     ),

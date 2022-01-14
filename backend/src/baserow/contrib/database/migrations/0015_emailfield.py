@@ -6,20 +6,25 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('database', '0014_viewsort'),
+        ("database", "0014_viewsort"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EmailField',
+            name="EmailField",
             fields=[
-                ('field_ptr', models.OneToOneField(
-                    auto_created=True,
-                    on_delete=django.db.models.deletion.CASCADE,
-                    parent_link=True, primary_key=True, serialize=False,
-                    to='database.Field'
-                )),
+                (
+                    "field_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="database.Field",
+                    ),
+                ),
             ],
-            bases=('database.field',),
+            bases=("database.field",),
         ),
     ]

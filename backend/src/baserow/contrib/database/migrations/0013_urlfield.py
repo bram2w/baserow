@@ -7,22 +7,25 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0012_auto_20200904_1410'),
+        ("database", "0012_auto_20200904_1410"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='URLField',
+            name="URLField",
             fields=[
-                ('field_ptr', models.OneToOneField(
-                    auto_created=True,
-                    on_delete=django.db.models.deletion.CASCADE,
-                    parent_link=True,
-                    primary_key=True,
-                    serialize=False,
-                    to='database.Field'
-                )),
+                (
+                    "field_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="database.Field",
+                    ),
+                ),
             ],
-            bases=('database.field',),
+            bases=("database.field",),
         ),
     ]

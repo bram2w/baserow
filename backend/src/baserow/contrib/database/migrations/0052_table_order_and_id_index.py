@@ -71,7 +71,7 @@ def forward(apps, schema_editor):
 
     for table in tqdm(
         Table.objects.all().order_by("id"),
-        desc="Adding (order ASC, id ASC) index to all tables"
+        desc="Adding (order ASC, id ASC) index to all tables",
     ):
         _remove_index_for_field(schema_editor, table, ["order"])
         _add_index_for_field(schema_editor, table, ["order", "id"])

@@ -7,97 +7,96 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0005_settings'),
+        ("core", "0005_settings"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TemplateCategory',
+            name="TemplateCategory",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID'
-                    )
+                        verbose_name="ID",
+                    ),
                 ),
-                ('name', models.CharField(max_length=32)),
+                ("name", models.CharField(max_length=32)),
             ],
             options={
-                'ordering': ('name',),
+                "ordering": ("name",),
             },
         ),
         migrations.CreateModel(
-            name='Template',
+            name="Template",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID'
-                    )
+                        verbose_name="ID",
+                    ),
                 ),
-                ('name', models.CharField(max_length=64)),
+                ("name", models.CharField(max_length=64)),
                 (
-                    'slug',
+                    "slug",
                     models.SlugField(
-                        help_text='The template slug that is used to match the '
-                                  'template with the JSON file name.'
-                    )
+                        help_text="The template slug that is used to match the "
+                        "template with the JSON file name."
+                    ),
                 ),
                 (
-                    'icon',
+                    "icon",
                     models.CharField(
-                        help_text='The font awesome class name that can be used for '
-                                  'displaying purposes.',
-                        max_length=32
-                    )
+                        help_text="The font awesome class name that can be used for "
+                        "displaying purposes.",
+                        max_length=32,
+                    ),
                 ),
                 (
-                    'categories',
+                    "categories",
                     models.ManyToManyField(
-                        related_name='templates',
-                        to='core.TemplateCategory'
-                    )
+                        related_name="templates", to="core.TemplateCategory"
+                    ),
                 ),
                 (
-                    'group',
+                    "group",
                     models.ForeignKey(
-                        help_text='The group containing the applications related to '
-                                  'the template. The read endpoints related to that '
-                                  'group are publicly accessible for preview '
-                                  'purposes.',
+                        help_text="The group containing the applications related to "
+                        "the template. The read endpoints related to that "
+                        "group are publicly accessible for preview "
+                        "purposes.",
                         on_delete=django.db.models.deletion.SET_NULL,
                         null=True,
-                        to='core.Group'
-                    )
+                        to="core.Group",
+                    ),
                 ),
                 (
-                    'export_hash',
+                    "export_hash",
                     models.CharField(
                         blank=True,
-                        help_text='The export hash that is used to compare if the '
-                                  'exported group applications have changed when '
-                                  'syncing the templates.',
-                        max_length=64
-                    )
+                        help_text="The export hash that is used to compare if the "
+                        "exported group applications have changed when "
+                        "syncing the templates.",
+                        max_length=64,
+                    ),
                 ),
                 (
-                    'keywords',
+                    "keywords",
                     models.TextField(
                         blank=True,
-                        default='',
-                        help_text='Keywords related to the template that can be used '
-                                  'for search.'
-                    )
-                )
+                        default="",
+                        help_text="Keywords related to the template that can be used "
+                        "for search.",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('name',),
+                "ordering": ("name",),
             },
         ),
     ]

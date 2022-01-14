@@ -48,7 +48,7 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         default=True,
                         help_text="Whether or not the field should be hidden in the "
-                                  "card.",
+                        "card.",
                     ),
                 ),
                 (
@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
                     models.SmallIntegerField(
                         default=32767,
                         help_text="The order that the field has in the form. Lower "
-                                  "value is first.",
+                        "value is first.",
                     ),
                 ),
                 (
