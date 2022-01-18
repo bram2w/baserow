@@ -76,8 +76,8 @@ build-for-gitlab-project-registry:
     - docker:dind
   variables:
     IMAGE_LABELS: >
-      --label org.opencontainers.image.vendor=$CI_SERVER_URL/$GITLAB_USER_LOGIN
-      --label org.opencontainers.image.authors=$CI_SERVER_URL/$GITLAB_USER_LOGIN
+      --label org.opencontainers.image.vendor=$CI_PROJECT_URL
+      --label org.opencontainers.image.authors=$CI_PROJECT_URL
       --label org.opencontainers.image.revision=$CI_COMMIT_SHA
       --label org.opencontainers.image.source=$CI_PROJECT_URL
       --label org.opencontainers.image.documentation=$CI_PROJECT_URL
@@ -113,9 +113,10 @@ build-for-gitlab-project-registry:
       fi
 
       # Ensure we don't go over 128 char docker tag length limit
-      TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:110}
+      TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
       BRANCH_TAG=$TRUNCATED_BRANCH_NAME-$CI_COMMIT_SHORT_SHA
-      ADDITIONALTAGLIST="$ADDITIONALTAGLIST $BRANCH_TAG"
+      LATEST_BRANCH_TAG=$TRUNCATED_BRANCH_NAME-latest
+      ADDITIONALTAGLIST="$ADDITIONALTAGLIST $BRANCH_TAG $LATEST_BRANCH_TAG"
 
       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST latest"; fi
       # todo put "develop" in some sort of project variable.
