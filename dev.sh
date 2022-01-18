@@ -232,6 +232,10 @@ else
   echo "./dev.sh Using the already set value for the env variable SYNC_TEMPLATES_ON_STARTUP = $SYNC_TEMPLATES_ON_STARTUP"
 fi
 
+# Enable buildkit for faster builds with better caching.
+export COMPOSE_DOCKER_CLI_BUILD=1
+export DOCKER_BUILDKIT=1
+
 echo "./dev.sh running docker-compose commands:
 ------------------------------------------------
 "
@@ -274,5 +278,5 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
           "/bin/bash /baserow/web-frontend/docker/docker-entrypoint.sh lint-fix"
   launch_tab_and_exec "backend lint" \
           "backend" \
-          "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint"
+          "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint-shell"
 fi

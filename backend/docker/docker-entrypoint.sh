@@ -9,8 +9,7 @@ DATABASE_USER="${DATABASE_USER:-postgres}"
 DATABASE_HOST="${DATABASE_HOST:-db}"
 DATABASE_PORT="${DATABASE_PORT:-5432}"
 
-# Ensure the installed python dependencies are on the path and available.
-export PATH="$PATH:$HOME/.local/bin"
+source "/baserow/venv/bin/activate"
 
 postgres_ready() {
 python << END
@@ -43,18 +42,24 @@ done
 show_help() {
 # If you change this please update ./docs/reference/baserow-docker-api.md
     echo """
-Usage: docker run <imagename> COMMAND
+Usage: docker run [-T] baserow_backend[_dev] COMMAND
 Commands
-local     : Start django using a prod ready gunicorn server
-dev       : Start a normal Django development server
-bash      : Start a bash shell
-manage    : Start manage.py
-python    : Run a python command
-shell     : Start a Django Python shell
-celery    : Run celery
-celery-dev: Run a hot-reloading dev version of celery
-lint:     : Run the linting
-help      : Show this message
+local           : Start django using a prod ready gunicorn server
+dev             : Start a normal Django development server
+exec            : Exec a command directly
+bash            : Start a bash shell
+manage          : Start manage.py
+setup           : Runs all setup commands (migrate, update_formulas, sync_templates)
+python          : Run a python command
+shell           : Start a Django Python shell
+celery          : Run celery
+celery-dev:     : Run a hot-reloading dev version of celery
+lint:           : Run the linting (only available if using dev target)
+lint-exit       : Run the linting and exit (only available if using dev target)
+test:           : Run the tests (only available if using dev target)
+ci-test:        : Run the tests for ci including various reports (dev only)
+ci-check-startup: Start up a single gunicorn and timeout after 10 seconds for ci (dev).
+help            : Show this message
 """
 }
 
@@ -87,6 +92,9 @@ case "$1" in
         run_setup_commands_if_configured
         exec gunicorn --workers=3 -b 0.0.0.0:"${PORT}" -k uvicorn.workers.UvicornWorker baserow.config.asgi:application
     ;;
+    exec)
+        exec "${@:2}"
+    ;;
     bash)
         exec /bin/bash "${@:2}"
     ;;
@@ -96,13 +104,30 @@ case "$1" in
     python)
         exec python "${@:2}"
     ;;
+    setup)
+      echo "python /baserow/backend/src/baserow/manage.py migrate"
+      python /baserow/backend/src/baserow/manage.py migrate
+      echo "python /baserow/backend/src/baserow/manage.py update_formulas"
+      python /baserow/backend/src/baserow/manage.py update_formulas
+      echo "python /baserow/backend/src/baserow/manage.py sync_templates"
+      python /baserow/backend/src/baserow/manage.py sync_templates
+    ;;
     shell)
         exec python /baserow/backend/src/baserow/manage.py shell
     ;;
-    lint)
+    lint-shell)
         CMD="make lint-python"
         echo "$CMD"
         exec bash --init-file <(echo "history -s $CMD; $CMD")
+    ;;
+    lint)
+        exec make lint-python
+    ;;
+    ci-test)
+        exec make ci-test-python PYTEST_SPLITS="${PYTEST_SPLITS:-1}" PYTEST_SPLIT_GROUP="${PYTEST_SPLIT_GROUP:-1}"
+    ;;
+    ci-check-startup)
+        exec make ci-check-startup-python
     ;;
     celery)
         exec celery -A baserow "${@:2}"
@@ -123,6 +148,7 @@ case "$1" in
         exec bash --init-file <(echo "history -s $CMD; $CMD")
     ;;
     *)
+        echo "${@:2}"
         show_help
         exit 1
     ;;

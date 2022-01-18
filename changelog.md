@@ -8,6 +8,7 @@
 * Moved the in component `<i18n>` translations to JSON files. 
 * Fix restoring table linking to trashed tables creating invalid link field. 
 * Fixed not being able to create or convert a single select field with edge case name.
+* Rework Baserow docker images so they can be built and tested by gitlab CI.
 
 ## Released (2022-01-13 1.8.2)
 
