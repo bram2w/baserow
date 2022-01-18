@@ -120,8 +120,8 @@ build-for-gitlab-project-registry:
       mkdir -p /kaniko/.docker
       echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
       build_and_publish_image(){
-        IMAGE_NAME=$1
-        IMAGE_PATH=$2
+        IMAGE_PATH=$1
+        IMAGE_NAME=$2
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
             FORMATTEDTAGLIST="${FORMATTEDTAGLIST} --tag $IMAGE_REPO/$IMAGE_NAME:$TAG ";
@@ -131,7 +131,7 @@ build-for-gitlab-project-registry:
         #Reformat Docker tags to kaniko's --destination argument:
         FORMATTEDTAGLIST=$(echo "${FORMATTEDTAGLIST}" | sed s/\-\-tag/\-\-destination/g)
         echo "Kaniko arguments to run: --context $CI_PROJECT_DIR --dockerfile $IMAGE_PATH $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS";
-        /kaniko/executor --cleanup --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS;
+        /kaniko/executor --cleanup --context $CI_PROJECT_DIR --dockerfile $IMAGE_PATH $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS;
       }
       build_and_publish_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
-      build_and_publish_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend")
+      build_and_publish_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend"
