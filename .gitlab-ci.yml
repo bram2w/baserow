@@ -96,11 +96,14 @@ build-baserow-images:
         BRANCH_TAG=$TRUNCATED_BRANCH_NAME-$CI_COMMIT_SHORT_SHA
         DEV_LATEST_BRANCH_TAG=dev-$TRUNCATED_BRANCH_NAME-latest
 
+        # Try the latest CI image for this branch
         LATEST_CI_IMAGE="$CI_IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_BRANCH_TAG"
         CACHE_IMAGE=$LATEST_CI_IMAGE
         if ! docker pull $CACHE_IMAGE; then
+          # Try the latest dev image for this branch
           CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_BRANCH_TAG"
           if ! docker pull $CACHE_IMAGE; then
+            # Try the latest dev image from develop
             CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:dev-latest";
             if ! docker pull $CACHE_IMAGE; then
                CACHE_IMAGE=""
