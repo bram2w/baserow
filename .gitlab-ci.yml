@@ -150,10 +150,10 @@ backend-test:
     POSTGRES_DB: baserow
   script:
     - MJML_IP=$(cat /etc/hosts | awk '{if ($2 == "mjml") print $1;}')
-    - ping -w 2 $POSTGRES_IP
-    - POSTGRES_IP=$(cat /etc/hosts | awk '{if ($2 == "postgres") print $1;}')
     - ping -w 2 $MJML_IP
-    - docker run --rm --add-host="db:$POSTGRES_IP" --add-host="mjml:$MJML_IP" $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
+    - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
+    - ping -w 2 $DB_IP
+    - docker run --rm --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
 
 publish-baserow-images:
   image: docker:19.03.12
