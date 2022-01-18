@@ -115,7 +115,7 @@ build-for-gitlab-project-registry:
       # Ensure we don't go over 128 char docker tag length limit
       TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:110}
       BRANCH_TAG=$TRUNCATED_BRANCH_NAME-$CI_COMMIT_SHORT_SHA
-      ADDITIONALTAGLIST="$ADDITIONALTAGLIST "
+      ADDITIONALTAGLIST="$ADDITIONALTAGLIST $BRANCH_TAG"
       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST latest"; fi
       # todo put "develop" in some sort of project variable.
       if [[ "$CI_COMMIT_BRANCH" == "develop" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST dev-latest"; fi
