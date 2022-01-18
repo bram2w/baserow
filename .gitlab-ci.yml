@@ -100,9 +100,6 @@ build-for-gitlab-project-registry:
       #Build date for opencontainers
       BUILDDATE="'$(date '+%FT%T%z' | sed -E -n 's/(\+[0-9]{2})([0-9]{2})$/\1:\2/p')'" #rfc 3339 date
       IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.created=$BUILDDATE --label build-date=$BUILDDATE"
-      #Description for opencontainers
-      BUILDTITLE=$(echo $CI_PROJECT_TITLE | tr " " "_")
-      IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE --label org.opencontainers.image.description=$BUILDTITLE"
       #Add ref.name for opencontainers
       IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.ref.name=$IMAGE_REPO:$CI_COMMIT_REF_NAME"
 
@@ -125,6 +122,11 @@ build-for-gitlab-project-registry:
       build_and_publish_image(){
         IMAGE_PATH=$1
         IMAGE_NAME=$2
+
+        #Description for opencontainers
+        BUILDTITLE="$(echo $CI_PROJECT_TITLE | tr " " "_")_$IMAGE_NAME"
+        IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE --label org.opencontainers.image.description=$BUILDTITLE"
+
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
             FORMATTEDTAGLIST="${FORMATTEDTAGLIST} -t $IMAGE_REPO/$IMAGE_NAME:$TAG ";
