@@ -127,7 +127,7 @@ build-for-gitlab-project-registry:
         BUILDTITLE="$(echo $CI_PROJECT_TITLE | tr " " "_")_$IMAGE_NAME"
         IMAGE_LABELS_WITH_TITLE="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE --label org.opencontainers.image.description=$BUILDTITLE"
 
-        FORMATTEDTAGLIST = ""
+        FORMATTEDTAGLIST=""
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
             FORMATTEDTAGLIST="${FORMATTEDTAGLIST} -t $IMAGE_REPO/$IMAGE_NAME:$TAG ";
