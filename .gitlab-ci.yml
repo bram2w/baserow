@@ -70,13 +70,11 @@ stages:
 #    - timeout --preserve-status 10s gunicorn --workers=1 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker baserow.config.asgi:application
 
 build-for-gitlab-project-registry:
+  image: docker:latest
   stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
+  services:
+    - docker:dind
   variables:
-    #More Information on Kaniko Caching: https://cloud.google.com/build/docs/kaniko-cache
-    KANIKO_CACHE_ARGS: "--cache=true --cache-copy-layers=true --cache-ttl=24h"
     IMAGE_LABELS: >
       --label org.opencontainers.image.vendor=$CI_SERVER_URL/$GITLAB_USER_LOGIN
       --label org.opencontainers.image.authors=$CI_SERVER_URL/$GITLAB_USER_LOGIN
@@ -93,6 +91,10 @@ build-for-gitlab-project-registry:
       --label com.gitlab.ci.commiturl=$CI_PROJECT_URL/commit/$CI_COMMIT_SHA
       --label com.gitlab.ci.cijoburl=$CI_JOB_URL
       --label com.gitlab.ci.mrurl=$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_ID
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  # Default branch leaves tag empty (= latest tag)
+  # All other branches are tagged with the escaped branch name (commit ref slug)
   script:
     - |
       IMAGE_REPO=$CI_REGISTRY_IMAGE/testing
@@ -116,24 +118,27 @@ build-for-gitlab-project-registry:
       TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:110}
       BRANCH_TAG=$TRUNCATED_BRANCH_NAME-$CI_COMMIT_SHORT_SHA
       ADDITIONALTAGLIST="$ADDITIONALTAGLIST $BRANCH_TAG"
+
       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST latest"; fi
       # todo put "develop" in some sort of project variable.
       if [[ "$CI_COMMIT_BRANCH" == "develop" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST dev-latest"; fi
 
-      mkdir -p /kaniko/.docker
-      echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
       build_and_publish_image(){
         IMAGE_PATH=$1
         IMAGE_NAME=$2
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
-            FORMATTEDTAGLIST="${FORMATTEDTAGLIST} --destination $IMAGE_REPO/$IMAGE_NAME:$TAG ";
+            FORMATTEDTAGLIST="${FORMATTEDTAGLIST} -t $IMAGE_REPO/$IMAGE_NAME:$TAG ";
           done;
         fi
 
-        #Reformat Docker tags to kaniko's --destination argument:
-        echo "Kaniko arguments to run: --context $CI_PROJECT_DIR --dockerfile $IMAGE_PATH $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS";
-        /kaniko/executor --cleanup --context $CI_PROJECT_DIR --dockerfile $IMAGE_PATH $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS;
+        echo "docker build --pull $FORMATTEDTAGLIST $IMAGE_PATH $IMAGE_LABELS;"
+        if [[ -n "$ADDITIONALTAGLIST" ]]; then
+          for TAG in $ADDITIONALTAGLIST; do
+            echo "docker push $IMAGE_REPO/$IMAGE_NAME:$TAG";
+          done;
+        fi
       }
+
       build_and_publish_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
       build_and_publish_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend"
