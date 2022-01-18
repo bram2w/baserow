@@ -97,11 +97,15 @@ build-baserow-images:
         BRANCH_TAG=$TRUNCATED_BRANCH_NAME-$CI_COMMIT_SHORT_SHA
         DEV_LATEST_BRANCH_TAG=dev-$TRUNCATED_BRANCH_NAME-latest
 
-        CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_BRANCH_TAG"
+        LATEST_CI_IMAGE="$CI_IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_BRANCH_TAG"
+        CACHE_IMAGE=LATEST_CI_IMAGE
         if ! docker pull $CACHE_IMAGE; then
-          CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:dev-latest";
+          CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_BRANCH_TAG"
           if ! docker pull $CACHE_IMAGE; then
-             CACHE_IMAGE=""
+            CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:dev-latest";
+            if ! docker pull $CACHE_IMAGE; then
+               CACHE_IMAGE=""
+            fi
           fi
         fi
 
@@ -114,8 +118,8 @@ build-baserow-images:
         fi
 
         CI_IMAGE_PATH=$CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-        docker build --build-arg BUILDKIT_INLINE_CACHE=1 $CACHE_ARG --target dev --tag $CI_IMAGE_PATH -f $IMAGE_PATH .;
-        docker push $CI_IMAGE_PATH
+        docker build --build-arg BUILDKIT_INLINE_CACHE=1 $CACHE_ARG --target dev --tag $CI_IMAGE_PATH --tag $LATEST_CI_IMAGE -f $IMAGE_PATH .;
+        docker push $CI_IMAGE_PATH $LATEST_CI_IMAGE
       }
 
       build_and_push_ci_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
@@ -127,7 +131,7 @@ backend-lint:
   services:
     - docker:19.03.12-dind
   script:
-    - docker run $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA lint
+    - docker run --rm $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA lint
 
 backend-test:
   stage: test
@@ -141,11 +145,15 @@ backend-test:
   variables:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
-    DATABASE_USER: baserow
-    DATABASE_PASSWORD: baserow
-    DATABASE_NAME: baserow
+    POSTGRES_USER: baserow
+    POSTGRES_PASSWORD: baserow
+    POSTGRES_DB: baserow
   script:
-    - docker run --network host $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
+    - MJML_IP=$(cat /etc/hosts | awk '{if ($2 == "mjml") print $1;}')
+    - ping -w 2 $POSTGRES_IP
+    - POSTGRES_IP=$(cat /etc/hosts | awk '{if ($2 == "postgres") print $1;}')
+    - ping -w 2 $MJML_IP
+    - docker run --rm --add-host="db:$POSTGRES_IP" --add-host="mjml:$MJML_IP" $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
 
 publish-baserow-images:
   image: docker:19.03.12
