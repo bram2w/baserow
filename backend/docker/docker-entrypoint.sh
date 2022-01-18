@@ -108,10 +108,11 @@ case "$1" in
     lint)
       make lint-python
     ;;
-    test)
+    ci-test)
       mkdir reports/
-	    coverage run -m pytest tests ../premium/backend/tests -n 2 --junitxml=reports/report.xml --html=reports/pytest_report.html --self-contained-html || exit;
-	    coverage xml -o reports/coverage.xml
+      coverage run -m pytest tests ../premium/backend/tests -n 2 --junitxml=reports/report.xml --html=reports/pytest_report.html --self-contained-html || exit;
+      coverage xml -o reports/coverage.xml
+      coverage html -o reports/coverage.html
     ;;
     celery)
         exec celery -A baserow "${@:2}"

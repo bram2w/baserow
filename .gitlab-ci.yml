@@ -163,6 +163,7 @@ backend-test:
     when: always
     paths:
       - reports/pytest_report.html
+      - reports/coverage.html
     reports:
       cobertura: reports/coverage.xml
       junit: reports/report.xml
