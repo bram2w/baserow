@@ -93,8 +93,6 @@ build-for-gitlab-project-registry:
       --label com.gitlab.ci.mrurl=$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_ID
   before_script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-  # Default branch leaves tag empty (= latest tag)
-  # All other branches are tagged with the escaped branch name (commit ref slug)
   script:
     - |
       IMAGE_REPO=$CI_REGISTRY_IMAGE/testing
@@ -132,7 +130,7 @@ build-for-gitlab-project-registry:
           done;
         fi
 
-        echo "docker build --pull $FORMATTEDTAGLIST $IMAGE_PATH $IMAGE_LABELS;"
+        echo "docker build --pull $FORMATTEDTAGLIST $IMAGE_LABELS $IMAGE_PATH;"
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
             echo "docker push $IMAGE_REPO/$IMAGE_NAME:$TAG";
