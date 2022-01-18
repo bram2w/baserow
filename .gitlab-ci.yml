@@ -112,7 +112,10 @@ build-for-gitlab-project-registry:
         ADDITIONALTAGLIST="$ADDITIONALTAGLIST $VERSIONLABEL"
       fi
 
-      ADDITIONALTAGLIST="$ADDITIONALTAGLIST $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+      # Ensure we don't go over 128 char docker tag length limit
+      TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:110}
+      BRANCH_TAG=$TRUNCATED_BRANCH_NAME-$CI_COMMIT_SHORT_SHA
+      ADDITIONALTAGLIST="$ADDITIONALTAGLIST "
       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST latest"; fi
       # todo put "develop" in some sort of project variable.
       if [[ "$CI_COMMIT_BRANCH" == "develop" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST dev-latest"; fi
@@ -124,14 +127,13 @@ build-for-gitlab-project-registry:
         IMAGE_NAME=$2
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
-            FORMATTEDTAGLIST="${FORMATTEDTAGLIST} --tag $IMAGE_REPO/$IMAGE_NAME:$TAG ";
+            FORMATTEDTAGLIST="${FORMATTEDTAGLIST} --destination $IMAGE_REPO/$IMAGE_NAME:$TAG ";
           done;
         fi
 
         #Reformat Docker tags to kaniko's --destination argument:
-        FORMATTEDTAGLIST=$(echo "${FORMATTEDTAGLIST}" | sed s/\-\-tag/\-\-destination/g)
         echo "Kaniko arguments to run: --context $CI_PROJECT_DIR --dockerfile $IMAGE_PATH $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS";
-        /kaniko/executor --cleanup --context $CI_PROJECT_DIR --dockerfile $IMAGE_PATH $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS;
+        #/kaniko/executor --cleanup --context $CI_PROJECT_DIR --dockerfile $IMAGE_PATH $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS;
       }
       build_and_publish_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
       build_and_publish_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend"
