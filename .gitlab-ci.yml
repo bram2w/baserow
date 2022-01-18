@@ -157,6 +157,11 @@ backend-test:
     - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
     - ping -w 2 $DB_IP
     - docker run --rm --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
+  artifacts:
+    paths:
+      - pytest_report.html
+    reports:
+      cobertura: coverage.xml
 
 publish-baserow-images:
   image: docker:19.03.12

@@ -25,8 +25,7 @@ services:
   celery:
     image: baserow_backend_dev:latest
     build:
-      context: .
-      dockerfile: ./backend/docker/Dockerfile.dev
+      target: dev
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
@@ -43,8 +42,7 @@ services:
   celery-export-worker:
     image: baserow_backend_dev:latest
     build:
-      context: .
-      dockerfile: ./backend/docker/Dockerfile.dev
+      target: dev
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
@@ -61,8 +59,7 @@ services:
   celery-beat-worker:
     image: baserow_backend_dev:latest
     build:
-      context: .
-      dockerfile: ./backend/docker/Dockerfile.dev
+      target: dev
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.

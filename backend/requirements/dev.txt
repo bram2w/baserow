@@ -1,4 +1,4 @@
-flake8==3.9.1
+flake8==3.9.2
 pytest-django==4.4.0
 pytest-env==0.6.2
 pytest-asyncio==0.15.1
@@ -13,3 +13,6 @@ pyinstrument==4.0.3
 pyfakefs==4.5.0
 pytest-xdist==2.3.0
 responses==0.13.4
+pytest-html==3.1.1
+coverage==6.2
+pytest-cov==3.0.0
