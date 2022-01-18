@@ -145,7 +145,7 @@ backend-test:
     DATABASE_PASSWORD: baserow
     DATABASE_NAME: baserow
   script:
-    - docker run $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
+    - docker run --network host $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
 
 publish-baserow-images:
   image: docker:19.03.12
