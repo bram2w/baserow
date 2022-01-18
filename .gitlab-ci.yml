@@ -84,6 +84,9 @@ build-baserow-images:
     DOCKER_TLS_CERTDIR: "/certs"
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+  artifacts:
+    paths:
+      - backend_image.tar
   script:
     - |
       build_and_push_ci_image(){
@@ -118,9 +121,8 @@ build-baserow-images:
         fi
 
         CI_IMAGE_PATH=$CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-        docker build --build-arg BUILDKIT_INLINE_CACHE=1 $CACHE_ARG --target dev --tag $CI_IMAGE_PATH --tag $LATEST_CI_IMAGE -f $IMAGE_PATH .;
-        docker push $CI_IMAGE_PATH
-        docker push $LATEST_CI_IMAGE
+        docker build --build-arg BUILDKIT_INLINE_CACHE=1 $CACHE_ARG --target dev --tag $CI_IMAGE_PATH -f $IMAGE_PATH .;
+        docker save $CI_IMAGE_PATH > backend_image.tar
       }
 
       build_and_push_ci_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
@@ -131,7 +133,10 @@ backend-lint:
   image: docker:19.03.12
   services:
     - docker:19.03.12-dind
+  dependencies:
+    - build-baserow-images
   script:
+    - docker load < backend_image.tar
     - docker run --rm $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA lint
 
 backend-test:
@@ -149,7 +154,10 @@ backend-test:
     POSTGRES_USER: baserow
     POSTGRES_PASSWORD: baserow
     POSTGRES_DB: baserow
+  dependencies:
+    - build-baserow-images
   script:
+    - docker load < backend_image.tar
     - MJML_IP=$(cat /etc/hosts | awk '{if ($2 == "mjml") print $1;}')
     - ping -w 2 $MJML_IP
     - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
@@ -183,7 +191,10 @@ publish-baserow-images:
       --label com.gitlab.ci.mrurl=$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_ID
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+  dependencies:
+    - build-baserow-images
   script:
+    - docker load < backend_image.tar
     - |
       echo "Building and shipping image to $IMAGE_REPO"
       #Build date for opencontainers
@@ -227,6 +238,7 @@ publish-baserow-images:
         fi
 
         # Build the normal non-dev target image with all the tags and labels.
+        docker pull $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
         docker build --cache-from $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE -f $IMAGE_PATH .;
 
         # Push all the tags we just built above

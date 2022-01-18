@@ -109,7 +109,7 @@ case "$1" in
       make lint-python
     ;;
     test)
-	    pytest tests ../premium/backend/tests -n 2 -x || exit;
+      make test
     ;;
     celery)
         exec celery -A baserow "${@:2}"
