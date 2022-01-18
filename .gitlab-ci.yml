@@ -139,9 +139,9 @@ build-for-gitlab-project-registry:
 
         # Try cache from this branches latest image, if not fall back to the latest
         # develop image.
-        $CACHE_IMAGE=$IMAGE_REPO/$IMAGE_NAME:$LATEST_BRANCH_TAG
+        CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:$LATEST_BRANCH_TAG"
         if ! docker pull $CACHE_IMAGE; then
-          CACHE_IMAGE=$IMAGE_REPO/$IMAGE_NAME:dev-latest;
+          CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:dev-latest";
           if ! docker pull $CACHE_IMAGE; then
              CACHE_IMAGE=""
           fi
