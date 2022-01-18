@@ -1,4 +1,4 @@
-version: "3"
+version: "3.4"
 
 services:
   db:
@@ -63,6 +63,9 @@ services:
 
   celery:
     image: baserow_backend:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
     environment:
       - ADDITIONAL_APPS
       - EMAIL_SMTP
@@ -73,9 +76,6 @@ services:
       - EMAIL_SMTP_PASSWORD
       - FROM_EMAIL
       - DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS
-    build:
-      dockerfile: ./backend/Dockerfile
-      context: .
     command: celery worker -l INFO -Q celery
     depends_on:
       - backend

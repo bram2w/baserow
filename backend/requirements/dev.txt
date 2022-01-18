@@ -18,3 +18,6 @@ django-silk==4.2.0
 django-extensions==3.1.5
 snoop==0.4.1
 openapi-spec-validator==0.4.0
+pytest-html==3.1.1
+coverage==6.2
+pytest-split==0.6.0

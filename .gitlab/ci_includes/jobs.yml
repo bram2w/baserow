@@ -1,0 +1,409 @@
+# ============== "Abstract" ci stages used by real stages =======================
+
+# Builds a dev version of a specific Dockerfile (--target dev) using a previous CI
+# image or the latest develop image as a cache to speed up the build. Tags and pushes
+# the resulting dev image for later stages in the pipeline to use.
+#
+# To extend this stage set the DOCKERFILE_PATH and IMAGE_NAME variables.
+.build-baserow-image:
+  image: docker:20.10.12
+  stage: build
+  interruptible: true
+  # Prevent rebuilds when tagging as all we want to do is tag and push the already built image
+  except:
+    refs:
+      - pipelines
+    variables:
+      - $CI_COMMIT_TAG
+  services:
+    - docker:20.10.12-dind
+  variables:
+    DOCKER_BUILDKIT: 1
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    IMAGE_LABELS: >
+      --label org.opencontainers.image.vendor=$CI_PROJECT_URL
+      --label org.opencontainers.image.authors=$CI_PROJECT_URL
+      --label org.opencontainers.image.revision=$CI_COMMIT_SHA
+      --label org.opencontainers.image.source=$CI_PROJECT_URL
+      --label org.opencontainers.image.documentation=$CI_PROJECT_URL
+      --label org.opencontainers.image.licenses=$CI_PROJECT_URL
+      --label org.opencontainers.image.url=$CI_PROJECT_URL
+      --label vcs-url=$CI_PROJECT_URL
+      --label com.gitlab.ci.user=$CI_SERVER_URL/$GITLAB_USER_LOGIN
+      --label com.gitlab.ci.email=$GITLAB_USER_EMAIL
+      --label com.gitlab.ci.tagorbranch=$CI_COMMIT_REF_NAME
+      --label com.gitlab.ci.pipelineurl=$CI_PIPELINE_URL
+      --label com.gitlab.ci.commiturl=$CI_PROJECT_URL/commit/$CI_COMMIT_SHA
+      --label com.gitlab.ci.cijoburl=$CI_JOB_URL
+      --label com.gitlab.ci.mrurl=$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_ID
+      --label org.opencontainers.image.ref.name=$CI_IMAGE_REPO:$CI_COMMIT_REF_NAME
+  script:
+    - |
+      echo "$CI_REGISTRY_PASSWORD" | \
+        docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+      if [[ -z "$DOCKERFILE_PATH" ]]; then
+          echo "Must provide DOCKERFILE_PATH as a job variable" 2>&1
+          exit 1
+      fi
+      if [[ -z "$DEV_IMAGE_NAME" ]]; then
+          echo "Must provide DEV_IMAGE_NAME as a job variable" 2>&1
+          exit 1
+      fi
+
+
+      # Try cache from this branches latest image, if not fall back to the latest
+      # develop image.
+      # Ensure we don't go over 128 char docker tag length limit
+      TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
+      CI_DEV_LATEST_BRANCH_TAG=$CLEANUP_JOB_CI_TAG_PREFIX$TRUNCATED_BRANCH_NAME
+
+      LATEST_CI_IMAGE="$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CI_DEV_LATEST_BRANCH_TAG"
+      # ===== 1. Try pull an image we can use to cache the build with =====
+
+      # First try the latest CI image for this branch
+      CACHE_IMAGE=$LATEST_CI_IMAGE
+      if ! docker pull $CACHE_IMAGE; then
+
+          # If that didnt work try the latest dev image from develop
+          CACHE_IMAGE="$RELEASE_IMAGE_REPO/$DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG";
+          if ! docker pull $CACHE_IMAGE; then
+             CACHE_IMAGE=""
+          fi
+      fi
+
+      EXTRA_BUILD_ARGS=""
+      if [[ -n "$CACHE_IMAGE" ]]; then
+        echo "Caching docker build from $CACHE_IMAGE";
+        EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --cache-from $CACHE_IMAGE";
+      else
+        echo "Couldn't find image to cache build using"
+      fi
+
+      # This image tag is one that can be used by subsequent build steps, using the
+      # latest one might introduce race conditions with concurrent pipelines. Instead
+      # by using a simple name + sha we know we will be getting the right image later on
+      # and we can easily re-construct this image path also as $CI_COMMIT_SHORT_SHA is
+      # available in all stages.
+      CI_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+
+      # ===== 2. Build a dev image to be used in subsequent CI stages =====
+
+      if [[ -n "$BUILD_FROM_IMAGE" ]]; then
+        EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --build-arg FROM_IMAGE=$BUILD_FROM_IMAGE";
+        echo "Building from $BUILD_FROM_IMAGE."
+      fi
+
+      # * Use `--build-arg BUILDKIT_INLINE_CACHE=1` to ensure this image's itermediate
+      #    layers will be cached so builds caching from this image can use those layers.
+      # * $CACHE_ARG is a --cache-from if we have an existing image that we can use
+      #    to speed up this build.
+      # * Target the dev image as we want to run tests and linting in this image.
+      # * Tag as both the ci image for use in later stages and the latest ci image to
+      #   cache any future ci pipeline runs.
+      docker build \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        $EXTRA_BUILD_ARGS \
+        $IMAGE_LABELS \
+        --target dev \
+        --tag $CI_IMAGE_PATH \
+        --tag $LATEST_CI_IMAGE \
+        -f $DOCKERFILE_PATH .;
+
+      # ===== 3. Push the CI image for the next stages and latest ci image cache =====
+
+      docker push $CI_IMAGE_PATH
+      docker push $LATEST_CI_IMAGE
+
+# Builds a non-dev (no docker build target provided) and fully labelled final image
+# and tags and pushes the non-dev and dev images using $TESTED_IMAGE_PREFIX to mark
+# them as being successfully tested for the publishing jobs to use.
+#
+# To extend this stage set the DOCKERFILE_PATH, IMAGE_NAME and DEV_IMAGE_NAME variables.
+.build-final-baserow-image:
+  image: $CI_UTIL_IMAGE
+  stage: build-final
+  interruptible: true
+  # Prevent rebuilds when tagging as all we want to do is tag and push
+  except:
+    refs:
+      - pipelines
+    variables:
+      - $CI_COMMIT_TAG
+  services:
+    - docker:20.10.12-dind
+  variables:
+    DOCKER_BUILDKIT: 1
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+    IMAGE_LABELS: >
+      --label org.opencontainers.image.vendor=$CI_PROJECT_URL
+      --label org.opencontainers.image.authors=$CI_PROJECT_URL
+      --label org.opencontainers.image.revision=$CI_COMMIT_SHA
+      --label org.opencontainers.image.source=$CI_PROJECT_URL
+      --label org.opencontainers.image.documentation=$CI_PROJECT_URL
+      --label org.opencontainers.image.licenses=$CI_PROJECT_URL
+      --label org.opencontainers.image.url=$CI_PROJECT_URL
+      --label vcs-url=$CI_PROJECT_URL
+      --label com.gitlab.ci.user=$CI_SERVER_URL/$GITLAB_USER_LOGIN
+      --label com.gitlab.ci.email=$GITLAB_USER_EMAIL
+      --label com.gitlab.ci.tagorbranch=$CI_COMMIT_REF_NAME
+      --label com.gitlab.ci.pipelineurl=$CI_PIPELINE_URL
+      --label com.gitlab.ci.commiturl=$CI_PROJECT_URL/commit/$CI_COMMIT_SHA
+      --label com.gitlab.ci.cijoburl=$CI_JOB_URL
+      --label com.gitlab.ci.mrurl=$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_ID
+      --label org.opencontainers.image.ref.name=$RELEASE_IMAGE_REPO:$CI_COMMIT_REF_NAME
+  script:
+    - |
+      echo "$CI_REGISTRY_PASSWORD" | \
+        docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+      if [[ -z "$DOCKERFILE_PATH" ]]; then
+          echo "Must provide DOCKERFILE_PATH as a job variable" 2>&1
+          exit 1
+      fi
+      if [[ -z "$IMAGE_NAME" ]]; then
+          echo "Must provide IMAGE_NAME as a job variable" 2>&1
+          exit 1
+      fi
+      if [[ -z "$DEV_IMAGE_NAME" ]]; then
+          echo "Must provide DEV_IMAGE_NAME as a job variable" 2>&1
+          exit 1
+      fi
+
+      # ===== 1. Setup image metadata labels =====
+      #Build date for opencontainers
+      #rfc 3339 date
+      BUILDDATE="'$(date '+%FT%T%z' | sed -E -n 's/(\+[0-9]{2})([0-9]{2})$/\1:\2/p')'"
+      IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.created=$BUILDDATE"
+      IMAGE_LABELS="$IMAGE_LABELS --label build-date=$BUILDDATE"
+      # Description for opencontainers
+      BUILDTITLE="$(echo $CI_PROJECT_TITLE | tr " " "_")_$IMAGE_NAME"
+      IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE"
+      IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.description=$BUILDTITLE"
+
+      # ==== 2. Tag, build and push non-dev image ====
+
+      # Cache from the CI dev image to build the non dev image.
+      CI_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+
+      TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
+      NON_DEV_CACHE_IMAGE=$CI_IMAGE_REPO/$IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$TRUNCATED_BRANCH_NAME
+
+      TARGET_NON_DEV_IMAGE_PATH=$CI_IMAGE_REPO/$IMAGE_NAME:$TESTED_IMAGE_PREFIX$CI_COMMIT_SHORT_SHA
+      TARGET_DEV_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$TESTED_IMAGE_PREFIX$CI_COMMIT_SHORT_SHA
+
+      docker pull $CI_IMAGE_PATH
+
+      if ! docker pull $NON_DEV_CACHE_IMAGE ; then
+        echo "Failed to find non dev cache image $NON_DEV_CACHE_IMAGE..."
+        EXTRA_BUILD_ARGS="";
+      else
+        echo "Caching from $NON_DEV_CACHE_IMAGE";
+        EXTRA_BUILD_ARGS="--cache-from $NON_DEV_CACHE_IMAGE";
+      fi
+      
+      if [[ -n "$BUILD_FROM_IMAGE" ]]; then
+        EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --build-arg FROM_IMAGE=$BUILD_FROM_IMAGE";
+        IMAGE_LABELS="$IMAGE_LABELS --label built-from-image=$BUILD_FROM_IMAGE"
+        if docker pull "$BUILD_FROM_IMAGE"; then
+          BUILT_FROM_REVISION=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["org.opencontainers.image.revision"]')
+          BUILT_FROM_COMMITURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["com.gitlab.ci.commiturl"]')
+          BUILT_FROM_CIJOBURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["com.gitlab.ci.cijoburl"]')
+          BUILT_FROM_MRURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["com.gitlab.ci.mrurl"]')
+          BUILT_FROM_VCSURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["vcs-url"]')
+
+          IMAGE_LABELS="$IMAGE_LABELS --label built-from-revision=$BUILD_FROM_REVISION"
+          IMAGE_LABELS="$IMAGE_LABELS --label built-from-commiturl=$BUILD_FROM_COMMITURL"
+          IMAGE_LABELS="$IMAGE_LABELS --label built-from-cijoburl=$BUILD_FROM_CIJOBURL"
+          IMAGE_LABELS="$IMAGE_LABELS --label built-from-mrurl=$BUILD_FROM_MRURL"
+          IMAGE_LABELS="$IMAGE_LABELS --label built-from-vcsurl=$BUILD_FROM_VCSURL"
+        else
+          echo "Failed to pull build from image $BUILD_FROM_IMAGE, something has gone wrong"
+          exit 1
+        fi
+      fi
+
+      # Build the normal non-dev image with all the tags and labels.
+      docker build \
+        --cache-from $CI_IMAGE_PATH \
+        $EXTRA_BUILD_ARGS \
+        $FORMATTEDTAGLIST \
+        $IMAGE_LABELS \
+        -t $TARGET_NON_DEV_IMAGE_PATH \
+        -f $DOCKERFILE_PATH .;
+      docker push $TARGET_NON_DEV_IMAGE_PATH
+
+      # Build the cache image with layer caching enabled. We don't enable it for the image above to reduce its size.
+      docker build \
+        --cache-from $CI_IMAGE_PATH \
+        $EXTRA_BUILD_ARGS \
+        $IMAGE_LABELS \
+        --build-arg BUILDKIT_INLINE_CACHE=1 \
+        -t $NON_DEV_CACHE_IMAGE \
+        -f $DOCKERFILE_PATH .;
+      docker push $NON_DEV_CACHE_IMAGE
+
+      docker tag $CI_IMAGE_PATH $TARGET_DEV_IMAGE_PATH
+      docker push $TARGET_DEV_IMAGE_PATH
+
+# A simple docker based test job which does not run for a TAG pipeline and does not
+# check out git.
+.docker-image-test-stage:
+  stage: test
+  image: $CI_UTIL_IMAGE
+  interruptible: true
+  # Prevent rebuilds when tagging as all we want to do is tag and push
+  except:
+    refs:
+      - pipelines
+    variables:
+      - $CI_COMMIT_TAG
+  services:
+    - docker:20.10.12-dind
+
+
+# Pushes $SOURCE_IMAGE to $TARGET_IMAGE using the $TARGET_REGISTRY_PASSWORD,
+# $TARGET_REGISTRY_USER and $TARGET_REGISTRY credentials.
+#
+# Set $SKIP_IF_TAG_NOT_ON_BRANCH to make the job skip if the commit is not on
+# the specified branch. Useful for TAG pipelines when $CI_COMMIT_BRANCH is not set
+# and so we need to do some extra git work to figure out what branches this commit is
+# on.
+#
+# Set $SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH to a branch name. If the job is not
+# for a commit which is the latest on the specified branch name (for example due to
+# someone re-running a pipeline for an old commit) this job will be skipped.
+.publish-baserow-image:
+  image: $CI_UTIL_IMAGE
+  stage: publish
+  services:
+    - docker:20.10.12-dind
+  except:
+    refs:
+      - pipelines
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  allow_failure:
+    # By exiting with this code we can skip this step without failing the build,
+    # but still fail if something else goes wrong.
+    exit_codes: 137
+  script:
+    - |
+      if [[ -n "$SKIP_IF_TAG_NOT_ON_BRANCH" ]]; then
+        # Query for all the branches that this commit is part of.
+        curl -s --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+          "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch" \
+          -o this_commits_branches.json;
+        # Extract just the branch names from the json so we can assert it matches.
+        TAG_BRANCH_NAMES=$(cat this_commits_branches.json | jq -r ".[].name")
+        NUM_BRANCHES=$(cat this_commits_branches.json | jq length)
+        # Ensure the commit is only on master and no other branches, otherwise someone
+        # could checkout a master commit as a new branch and tag it to cause an image
+        # upload.
+        if [[ "$NUM_BRANCHES" != "1" || "$TAG_BRANCH_NAMES" != "$SKIP_IF_TAG_NOT_ON_BRANCH" ]]; then
+          echo "Tags should never be applied to non $SKIP_IF_TAG_NOT_ON_BRANCH branches!" 2>&1;
+          echo "Pipeline is running for tag: $CI_COMMIT_TAG which for a commit that only appears on $SKIP_IF_TAG_NOT_ON_BRANCH and no other branches." 2>&1;
+          echo "Instead this commit appears on $NUM_BRANCHES branches called $TAG_BRANCH_NAMES" 2>&1;
+          exit 1;
+        fi
+      fi
+
+      if [[ -n "$SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH" ]]; then
+        LATEST_COMMIT_HASH=$(git rev-parse origin/$SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH)
+        HEAD_COMMIT_HASH=$CI_COMMIT_SHA
+        if [[ "$LATEST_COMMIT_HASH" != "$HEAD_COMMIT_HASH" ]]; then
+            echo "Pipeline is not running for latest commit on origin/$SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH";
+            echo " which has commit $LATEST_COMMIT_HASH.";
+            echo "Instead pipeline is running on commit $HEAD_COMMIT_HASH, exitting as configured to do so in this situation...";
+            exit 137;
+        fi
+      fi
+
+      echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_REGISTRY" --password-stdin
+
+      if ! docker pull $SOURCE_IMAGE; then
+        echo "Could not pull $SOURCE_IMAGE, has the build pipeline finished yet?" 2>&1;
+        exit 1
+      fi
+      docker tag $SOURCE_IMAGE $TARGET_IMAGE
+      docker push $TARGET_IMAGE
+
+.skippable-job:
+  before_script:
+    - |
+      if [[ -z "$SKIP_JOB_NAME" ]]; then
+          echo "Must provide SKIP_JOB_NAME as a job variable" 2>&1
+          exit 1
+      fi
+
+      if [[ "$ENABLE_JOB_SKIPPING" = "true" ]]; then
+
+        try_download_latest_successful_artifacts_for_commit(){
+          COMMIT_HASH=$1
+          JOB_NAME=$2
+          echo -e "\e[0Ksection_start:`date +%s`:$COMMIT_HASH$JOB_NAME[collapsed=true]\r\e[0KPrevious successful run check for $JOB_NAME and $COMMIT_HASH"
+          URL="https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$COMMIT_HASH/statuses?name=$JOB_NAME"
+          COMMIT_GITLAB_JOBS=$(curl --header "PRIVATE-TOKEN: $PROJECT_READ_ONLY_API_TOKEN" $URL)
+
+          if [[ "$COMMIT_GITLAB_JOBS" ]]; then
+            echo "Got these job statuses: $COMMIT_GITLAB_JOBS"
+            JOB_ID=$(echo $COMMIT_GITLAB_JOBS| jq "[.[] | select(.status == \"success\")][0].id")
+            # Check if JOB_ID is an integer (POSIX compliant way)
+
+            if [ "$JOB_ID" -eq "$JOB_ID" ] 2> /dev/null;  then
+              if [[ -n "$DOWNLOAD_AND_UNPACK_ARTIFACTS_ON_SKIP" ]] ; then
+                exit_code=0
+                curl --fail --location --output artifacts.zip \
+                  --header "PRIVATE-TOKEN: $PROJECT_READ_ONLY_API_TOKEN" \
+                  "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$JOB_ID/artifacts" \
+                  || exit_code=$?;
+
+                if [ ${exit_code} -ne 0 ]; then
+                  echo "Failed to get artifacts from successful run $JOB_ID"
+                else
+                  unzip artifacts.zip || exit_code=$?
+                  if [ ${exit_code} -ne 0 ]; then
+                    echo "Failed to unzip artifacts"
+                  else
+                    if [[ -f "reports/stdout.txt" ]]; then
+                        cat reports/stdout.txt;
+                    fi
+                    echo "Skipping $JOB_NAME as previous successful run for $COMMIT_HASH and it's artifacts were found."
+                    exit 0;
+                  fi
+                fi
+
+              else
+                echo "Skipping $JOB_NAME as previous successful build for $COMMIT_HASH were found.".
+                exit 0;
+              fi
+            else
+              echo "Failed to find successful run of $JOB_NAME in $COMMIT_GITLAB_JOBS"
+            fi
+          else
+            echo "Failed to query gitlab for jobs";
+          fi
+          echo -e "\e[0Ksection_end:`date +%s`:$COMMIT_HASH$JOB_NAME\r\e[0K"
+        }
+
+        SECOND_PARENT_COMMIT=$(git rev-list -1 --merges ${CI_COMMIT_SHA}~1..${CI_COMMIT_SHA})
+        if [[ -z "$SECOND_PARENT_COMMIT" ]] ; then
+          # If there is no second parent commit then there is only one parent commit
+          # and so we can safely look for its artifacts.
+          PREVIOUS_COMMIT_SHA=$(git rev-parse HEAD~1)
+          # Search for successful runs of either the normal job or this job itself
+          # for either this or previous commit.
+          try_download_latest_successful_artifacts_for_commit $CI_COMMIT_SHA $SKIP_JOB_NAME
+          try_download_latest_successful_artifacts_for_commit $CI_COMMIT_SHA $CI_JOB_NAME
+          try_download_latest_successful_artifacts_for_commit $PREVIOUS_COMMIT_SHA $SKIP_JOB_NAME
+          try_download_latest_successful_artifacts_for_commit $PREVIOUS_COMMIT_SHA $CI_JOB_NAME
+          echo "Actually running job as successful run for previous or this commit not found"
+        else
+          # There is a second (or more) parent commit meaning we should re-run this job
+          # as a merge has happened.
+          echo "Running full job as this is a merge commit."
+        fi
+      else
+          echo "Force running job regardless of previous runs."
+      fi

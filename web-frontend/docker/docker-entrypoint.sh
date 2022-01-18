@@ -6,13 +6,18 @@ set -euo pipefail
 show_help() {
 # If you change this please update ./docs/reference/baserow-docker-api.md
     echo """
-Usage: docker run <imagename> COMMAND
+Usage: docker run [-T] baserow_web-frontend[_dev] COMMAND
 Commands
 dev      : Start a normal nuxt development server
 local    : Start a non-dev prod ready nuxt server
-lint     : Run the linting
+lint     : Run all the linting
 lint-fix : Run eslint fix
+stylelint: Run stylelint
+eslint   : Run eslint
+test     : Run jest tests
+ci-test  : Run ci tests with reporting
 bash     : Start a bash shell
+exec     : Exec a command directly
 help     : Show this message
 """
 }
@@ -38,10 +43,26 @@ case "$1" in
       echo "$CMD"
       exec bash --init-file <(echo "history -s $CMD; $CMD")
     ;;
+    eslint)
+      exec make eslint
+    ;;
+    stylelint)
+      exec make eslint
+    ;;
+    test)
+      exec make jest
+    ;;
+    ci-test)
+      exec make ci-test-javascript
+    ;;
+    exec)
+        exec "${@:2}"
+    ;;
     bash)
       exec /bin/bash "${@:2}"
     ;;
     *)
+      echo "${@:2}"
       show_help
       exit 1
     ;;

@@ -28,6 +28,7 @@
 * Fix Django's default index naming scheme causing index name collisions.
 * Workaround bug in Django's schema editor sometimes causing incorrect transaction 
   rollbacks resulting in the connection to the database becoming unusable.
+* Rework Baserow docker images so they can be built and tested by gitlab CI.
 
 ## Released (2022-01-13 1.8.2)
 

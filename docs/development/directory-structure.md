@@ -23,10 +23,8 @@ This whole directory is also added to the backend container.
   source directory. This file is registered as a command via the `setup.py`. When 
   someone adds Baserow as a dependency they can use the command `baserow migrate` which
   is the same as `python src/baserow/manage.py migrate`.
-* `Dockerfile`: the dockerfile that is used to build the image of the 
-  backend for running baserow on your local machine.
-* `docker/Dockerfile.dev`: the dockerfile that is used to build the development image 
-  of the backend.
+* `Dockerfile`: Builds an image containing just the backend service, build with 
+   `--target dev` to instead get a dev ready image.
 * `Makefile`: contains a few commands to install the dependencies, run the linter and
   run the tests.
 * `pytest.ini`: pytest configuration when running the tests.
@@ -85,10 +83,8 @@ web frontend. This whole directory is also added to the web-frontend container.
 * `.eslintrc.js`: the configuration for the eslint linter.
 * `.prettierrc`: configuration for prettier.
 * `.stylelintrc`: configuration for stylelint which lints the scss code.
-* `Dockerfile`: the dockerfile that is used to build the image of the
-  web-frontend for running baserow on your local machine.
-* `docker/Dockerfile.dev`: the dockerfile that is used to build the development image
-  of the web-frontend.
+* `Dockerfile`:  Builds an image containing just the web-frontend service, build with
+  `--target dev` to instead get a dev ready image.
 * `intellij-idea.webpack.config.js` a webpack config file that can be used by Intellij
   iDEA. It adds the correct aliases for the editor.
 * `jest.config.js`: config file for running the tests with JEST.
