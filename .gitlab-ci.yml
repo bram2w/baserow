@@ -92,8 +92,6 @@ build-for-gitlab-project-registry:
       --label com.gitlab.ci.cijoburl=$CI_JOB_URL
       --label com.gitlab.ci.mrurl=$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_ID
       # Use TLS https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#tls-enabled
-      DOCKER_HOST: tcp://docker:2376
-      DOCKER_TLS_CERTDIR: "/certs"
   before_script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
   script:
@@ -154,7 +152,6 @@ build-for-gitlab-project-registry:
           CACHE_ARG=""
         fi
 
-        echo "docker build $CACHE_ARG $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE -f $IMAGE_PATH ."
         docker build $CACHE_ARG $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE -f $IMAGE_PATH .;
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
