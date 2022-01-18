@@ -55,7 +55,7 @@ export default function CoreModule(options) {
           // If you change this default please also update the default for the
           // backend found in src/baserow/config/settings/base.py:321
           key: 'HOURS_UNTIL_TRASH_PERMANENTLY_DELETED',
-          default: 24 * 4,
+          default: 24 * 3,
         },
         {
           key: 'DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS',
