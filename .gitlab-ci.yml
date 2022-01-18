@@ -119,7 +119,8 @@ build-baserow-images:
 
         CI_IMAGE_PATH=$CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
         docker build --build-arg BUILDKIT_INLINE_CACHE=1 $CACHE_ARG --target dev --tag $CI_IMAGE_PATH --tag $LATEST_CI_IMAGE -f $IMAGE_PATH .;
-        docker push $CI_IMAGE_PATH $LATEST_CI_IMAGE
+        docker push $CI_IMAGE_PATH
+        docker push $LATEST_CI_IMAGE
       }
 
       build_and_push_ci_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
