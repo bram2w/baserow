@@ -134,10 +134,10 @@ build-for-gitlab-project-registry:
           done;
         fi
 
-        echo "docker build --pull $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE $IMAGE_PATH;"
+        docker build --pull $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE $IMAGE_PATH;
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
-            echo "docker push $IMAGE_REPO/$IMAGE_NAME:$TAG";
+            docker push $IMAGE_REPO/$IMAGE_NAME:$TAG;
           done;
         fi
       }
