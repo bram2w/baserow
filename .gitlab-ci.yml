@@ -2,9 +2,10 @@
 #  - apt-get update && apt-get -y install make curl gnupg2
 
 stages:
-#  - lint
-#  - test
   - build
+  - lint
+  - test
+  - push
 #
 #web-frontend-eslint:
 #  stage: lint
@@ -69,12 +70,15 @@ stages:
 #    - export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 #    - timeout --preserve-status 10s gunicorn --workers=1 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker baserow.config.asgi:application
 
-build-for-gitlab-project-registry:
+build-baserow-images:
   image: docker:19.03.12
   stage: build
   services:
     - docker:19.03.12-dind
   variables:
+    DOCKER_BUILDKIT: 1
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
     IMAGE_LABELS: >
       --label org.opencontainers.image.vendor=$CI_PROJECT_URL
       --label org.opencontainers.image.authors=$CI_PROJECT_URL
@@ -119,7 +123,7 @@ build-for-gitlab-project-registry:
       # todo put "develop" in some sort of project variable.
       if [[ "$CI_COMMIT_BRANCH" == "develop" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST dev-latest"; fi
 
-      build_and_publish_image(){
+      build_and_tag_image(){
         IMAGE_PATH=$1
         IMAGE_NAME=$2
 
@@ -130,13 +134,15 @@ build-for-gitlab-project-registry:
         FORMATTEDTAGLIST=""
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
-            FORMATTEDTAGLIST="${FORMATTEDTAGLIST} -t $IMAGE_REPO/$IMAGE_NAME:$TAG ";
+            TAGGED_IMAGE=$IMAGE_REPO/$IMAGE_NAME:$TAG
+            FORMATTEDTAGLIST="${FORMATTEDTAGLIST} -t $TAGGED_IMAGE ";
+            echo "$TAGGED_IMAGE\n" >> "image_tags_to_push_on_success.txt"
           done;
         fi
 
         # Try cache from this branches latest image, if not fall back to the latest
         # develop image.
-        CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:$LATEST_BRANCH_TAG"
+        CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:dev-$LATEST_BRANCH_TAG"
         if ! docker pull $CACHE_IMAGE; then
           CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:dev-latest";
           if ! docker pull $CACHE_IMAGE; then
@@ -151,13 +157,58 @@ build-for-gitlab-project-registry:
           CACHE_ARG=""
         fi
 
-        docker build $CACHE_ARG $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE -f $IMAGE_PATH .;
-        if [[ -n "$ADDITIONALTAGLIST" ]]; then
-          for TAG in $ADDITIONALTAGLIST; do
-            docker push $IMAGE_REPO/$IMAGE_NAME:$TAG;
-          done;
-        fi
+        echo "$IMAGE_REPO/$IMAGE_NAME:dev-$LATEST_BRANCH_TAG\n" >> "image_tags_to_push_on_success.txt"
+        docker build --build-arg BUILDKIT_INLINE_CACHE=1 $CACHE_ARG --target dev --tag dev-$LATEST_BRANCH_TAG --tag build-local-$IMAGE_NAME -f $IMAGE_PATH .;
+        # Build the normal image which will use cached layers already built in dev
+        # build above.
+        docker build $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE -f $IMAGE_PATH .;
+
       }
 
-      build_and_publish_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
-      build_and_publish_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend"
+      build_and_tag_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
+      build_and_tag_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend"
+  artifacts:
+    paths:
+      - image_tags_to_push_on_success.txt
+
+backend-lint:
+  stage: lint
+  image: build-local-backend
+  entrypoint: [""]
+  script:
+    - /baserow/backend/docker/docker-entrypoint.sh lint
+
+backend-test:
+  stage: test
+  image: build-local-backend
+  entrypoint: [""]
+  services:
+    - name: postgres:11.3
+      alias: db
+    - name: liminspace/mjml-tcpserver:0.10
+      alias: mjml
+  variables:
+    DATABASE_USER: baserow
+    DATABASE_PASSWORD: baserow
+    DATABASE_NAME: baserow
+  script:
+    - /baserow/backend/docker/docker-entrypoint.sh test
+
+push-baserow-images:
+  image: docker:19.03.12
+  stage: push
+  services:
+    - docker:19.03.12-dind
+  variables:
+    DOCKER_BUILDKIT: 1
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  dependencies:
+    - build-baserow-images
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
+  script:
+    - |
+      while read p; do
+        echo "docker push $p"
+      done < image_tags_to_push_on_success.txt

@@ -1,4 +1,4 @@
-FROM python:3.7-slim-buster
+FROM python:3.7-slim-buster as base
 
 ARG UID
 ENV UID=${UID:-9999}
@@ -19,6 +19,7 @@ RUN apt-get update && \
     dos2unix \
     tini \
     postgresql-client \
+    gettext \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \
@@ -26,13 +27,27 @@ RUN apt-get update && \
 
 USER $UID:$GID
 
-COPY --chown=$UID:$GID ./backend/requirements/base.txt /baserow/requirements/
-# Disable the path warn as we set the correct path in the entrypoint when it is easy
-# to know the users $HOME/.local/bin location. Changing path in the docker image does
-# not work as we do not know where $HOME when using an ENV command.
-RUN pip3 install --no-warn-script-location -r /baserow/requirements/base.txt
+# In slim docker images, mime.types is removed and we need it for mimetypes guessing
+COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
 
+# Install non-dev base dependencies into a virtual env.
+COPY --chown=$UID:$GID ./backend/requirements/base.txt /baserow/requirements/
+RUN python3 -m venv /baserow/venv
+RUN . /baserow/venv/bin/activate && pip3 install -r /baserow/requirements/base.txt
+
+# Build a dev_deps stage which also has the dev dependencies for use by the dev layer.
+FROM base as dev_deps
+
+COPY ./backend/requirements/dev.txt /baserow/requirements/
+RUN . /baserow/venv/bin/activate && pip3 install -r /baserow/requirements/dev.txt
+
+# The core stage contains all of Baserows source code and sets up the entrypoint
+FROM base as core
+
+# Copy over backend code.
 COPY --chown=$UID:$GID ./docs /baserow/docs
+# TODO - This copy also re-copies the requirements above, meaning this will be re-run
+#        and not cached even though we already have separate layers above.
 COPY --chown=$UID:$GID ./backend /baserow/backend
 COPY --chown=$UID:$GID ./premium/backend /baserow/premium/backend
 
@@ -42,10 +57,23 @@ WORKDIR /baserow/backend
 # the application rather than buffering it.
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/premium/backend/src
-ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
+ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh"]
 
 RUN dos2unix /baserow/backend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/backend/docker/docker-entrypoint.sh
 
-ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh"]
+
+FROM core as dev
+
+# Override virtualenv with one containing dev dependencies.
+COPY --chown=$UID:$GID --from=dev_deps /baserow/venv /baserow/venv
+
+# Override env variables and initial cmd to start up in dev mode.
+ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.dev'
+CMD ["dev"]
+
+FROM core as local
+
+ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
 CMD ["local"]
+

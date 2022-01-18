@@ -70,30 +70,31 @@ launch_tab_and_exec(){
 
 show_help() {
     echo """
-./dev.sh starts the baserow development environment and by default attempts to
-open terminal tabs which are attached to the running dev containers.
+./dev.sh wraps a docker-compose command with the correct config files and environment
+variables for running Baserow in dev mode. It provides a few extra custom flags but
+all other arguments will be passed through to docker-compose.
 
-Usage: ./dev.sh [optional start dev commands] [optional docker-compose up commands]
+Example usage:
+- ./dev.sh up --build
+- ./dev.sh da build
+- ./dev.sh da run --no-deps -T backend lint
 
-The ./dev.sh Commands are:
-restart         : Stop the dev environment first before relaunching.
-restart_wipe    : Stop the dev environment, delete the db and relaunch.
-down            : Down the dev environment and don't up after.
-kill            : Kill the dev environment and don't up after.
-build_only      : Build the dev environment and don't up after.
+By default ./dev.sh will also attempt to open terminal tabs which are attached to
+the running dev containers, use the da flag to disable this.
+
+Usage: ./dev.sh [optional custom dev.sh flags] [commands passed to docker-compose]
+
+The ./dev.sh custom flags are:
+dont_attach     : Don't attach to the running dev containers after starting them.
+da              : Shortcut for dont_attach.
 dont_migrate    : Disable automatic database migration on baserow startup.
 dont_sync       : Disable automatic template sync on baserow startup.
-dont_attach     : Don't attach to the running dev containers after starting them.
 ignore_ownership: Don't exit if there are files in the repo owned by a different user.
 help            : Show this message.
 """
 }
 
 dont_attach=false
-down=false
-kill=false
-build=false
-run=false
 up=true
 migrate=true
 sync_templates=true
@@ -111,48 +112,14 @@ case "${1:-noneleft}" in
         shift
         sync_templates=false
     ;;
-    dont_attach)
+    dont_attach | da)
         echo "./dev.sh: Configured to not attach to running dev containers."
         shift
         dont_attach=true
     ;;
-    restart)
-        echo "./dev.sh: Restarting Dev Environment"
-        shift
-        down=true
-        up=true
-    ;;
-    down)
-        echo "./dev.sh: Stopping Dev Environment"
-        shift
-        up=false
-        down=true
-    ;;
-    kill)
-        echo "./dev.sh: Killing Dev Environment"
-        shift
-        up=false
-        kill=true
-    ;;
-    run)
-        echo "./dev.sh: docker-compose running the provided commands"
-        shift
-        up=false
-        dont_attach=true
-        run=true
-    ;;
-    build_only)
-        echo "./dev.sh: Only Building Dev Environment (use 'up --build' instead to
-        rebuild and up)"
-        shift
-        build=true
-        up=false
-    ;;
-    restart_wipe)
+    wipe_db)
         echo "./dev.sh: Restarting Dev Env and Wiping Database"
         shift
-        down=true
-        up=true
         delete_db_volume=true
     ;;
     ignore_ownership)
@@ -232,34 +199,21 @@ else
   echo "./dev.sh Using the already set value for the env variable SYNC_TEMPLATES_ON_STARTUP = $SYNC_TEMPLATES_ON_STARTUP"
 fi
 
+# Enable buildkit for faster builds with better caching.
+export COMPOSE_DOCKER_CLI_BUILD=1
+export DOCKER_BUILDKIT=1
+
 echo "./dev.sh running docker-compose commands:
 ------------------------------------------------
 "
 
-if [ "$down" = true ] ; then
-# Remove the containers and remove the anonymous volumes for cleanliness sake.
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml rm -s -v -f
-fi
-
-if [ "$kill" = true ] ; then
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml kill
-fi
-
-if [ "$build" = true ] ; then
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml build "$@"
-fi
-
 if [ "$delete_db_volume" = true ] ; then
-docker volume rm baserow_pgdata
+docker volume rm baserow_pgdata || true;
 fi
 
-if [ "$up" = true ] ; then
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d "$@"
-fi
-
-if [ "$run" = true ] ; then
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml run "$@"
-fi
+set -x
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml "$@"
+set +x
 
 if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
 
@@ -274,5 +228,5 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
           "/bin/bash /baserow/web-frontend/docker/docker-entrypoint.sh lint-fix"
   launch_tab_and_exec "backend lint" \
           "backend" \
-          "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint"
+          "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint-shell"
 fi

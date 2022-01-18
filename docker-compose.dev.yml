@@ -1,4 +1,4 @@
-version: "3"
+version: "3.4"
 
 services:
 
@@ -8,8 +8,7 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: ./backend/docker/Dockerfile.dev
+      target: dev
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.

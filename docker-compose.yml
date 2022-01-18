@@ -1,4 +1,4 @@
-version: "3"
+version: "3.4"
 
 services:
   db:
@@ -30,6 +30,8 @@ services:
     build:
       dockerfile: ./backend/Dockerfile
       context: .
+      args:
+        - BUILDKIT_INLINE_CACHE=1
     image: baserow_backend:latest
     environment:
       - PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000}

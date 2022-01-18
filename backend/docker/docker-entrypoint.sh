@@ -9,8 +9,7 @@ DATABASE_USER="${DATABASE_USER:-postgres}"
 DATABASE_HOST="${DATABASE_HOST:-db}"
 DATABASE_PORT="${DATABASE_PORT:-5432}"
 
-# Ensure the installed python dependencies are on the path and available.
-export PATH="$PATH:$HOME/.local/bin"
+source "/baserow/venv/bin/activate"
 
 postgres_ready() {
 python << END
@@ -53,7 +52,9 @@ python    : Run a python command
 shell     : Start a Django Python shell
 celery    : Run celery
 celery-dev: Run a hot-reloading dev version of celery
-lint:     : Run the linting
+lint:     : Run the linting (only available if using dev target)
+lint-exit : Run the linting and exit (only available if using dev target)
+test:     : Run the tests (only available if using dev target)
 help      : Show this message
 """
 }
@@ -99,10 +100,16 @@ case "$1" in
     shell)
         exec python /baserow/backend/src/baserow/manage.py shell
     ;;
-    lint)
+    lint-shell)
         CMD="make lint-python"
         echo "$CMD"
         exec bash --init-file <(echo "history -s $CMD; $CMD")
+    ;;
+    lint)
+      make lint-python
+    ;;
+    test)
+      make test
     ;;
     celery)
         exec celery -A baserow "${@:2}"
