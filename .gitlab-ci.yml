@@ -125,15 +125,16 @@ build-for-gitlab-project-registry:
 
         #Description for opencontainers
         BUILDTITLE="$(echo $CI_PROJECT_TITLE | tr " " "_")_$IMAGE_NAME"
-        IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE --label org.opencontainers.image.description=$BUILDTITLE"
+        IMAGE_LABELS_WITH_TITLE="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE --label org.opencontainers.image.description=$BUILDTITLE"
 
+        FORMATTEDTAGLIST = ""
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
             FORMATTEDTAGLIST="${FORMATTEDTAGLIST} -t $IMAGE_REPO/$IMAGE_NAME:$TAG ";
           done;
         fi
 
-        echo "docker build --pull $FORMATTEDTAGLIST $IMAGE_LABELS $IMAGE_PATH;"
+        echo "docker build --pull $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE $IMAGE_PATH;"
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
             echo "docker push $IMAGE_REPO/$IMAGE_NAME:$TAG";
