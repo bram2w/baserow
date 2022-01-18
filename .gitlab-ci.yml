@@ -114,12 +114,12 @@ build-baserow-images:
         fi
 
         CI_IMAGE_PATH=$CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-        echo "docker build --build-arg BUILDKIT_INLINE_CACHE=1 $CACHE_ARG --target dev --tag $CI_IMAGE_PATH -f $IMAGE_PATH .;"
-        echo "docker push $CI_IMAGE_PATH"
+        docker build --build-arg BUILDKIT_INLINE_CACHE=1 $CACHE_ARG --target dev --tag $CI_IMAGE_PATH -f $IMAGE_PATH .;
+        docker push $CI_IMAGE_PATH
       }
 
       build_and_push_ci_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
-      build_and_push_ci_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend"
+      # build_and_push_ci_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend"
 
 backend-lint:
   stage: lint
@@ -127,7 +127,7 @@ backend-lint:
   services:
     - docker:19.03.12-dind
   script:
-    - echo "docker run $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA lint"
+    - docker run $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA lint
 
 backend-test:
   stage: test
@@ -145,7 +145,7 @@ backend-test:
     DATABASE_PASSWORD: baserow
     DATABASE_NAME: baserow
   script:
-    - echo "docker run $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test"
+    - docker run $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
 
 publish-baserow-images:
   image: docker:19.03.12
@@ -218,21 +218,21 @@ publish-baserow-images:
         fi
 
         # Build the normal non-dev target image with all the tags and labels.
-        echo "docker build --cache-from $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE -f $IMAGE_PATH .;"
+        docker build --cache-from $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $FORMATTEDTAGLIST $IMAGE_LABELS_WITH_TITLE -f $IMAGE_PATH .;
 
         # Push all the tags we just built above
         if [[ -n "$ADDITIONALTAGLIST" ]]; then
           for TAG in $ADDITIONALTAGLIST; do
             TAGGED_IMAGE=$IMAGE_REPO/$IMAGE_NAME:$TAG
-            echo "docker push $TAGGED_IMAGE"
+            docker push $TAGGED_IMAGE
           done;
         fi
 
         # Push the CI image as the latest dev image.
         DEV_LATEST_TAG=$IMAGE_REPO/$IMAGE_NAME:dev-$LATEST_BRANCH_TAG
-        echo "docker tag $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $DEV_LATEST_TAG"
-        echo "docker push $DEV_LATEST_TAG"
+        docker tag $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $DEV_LATEST_TAG
+        docker push $DEV_LATEST_TAG
       }
 
       build_and_push_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
-      build_and_push_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend"
+      # build_and_push_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend"

@@ -1,4 +1,4 @@
-FROM node:12-buster as dev
+FROM node:12-buster
 
 ARG UID
 ENV UID=${UID:-9999}
