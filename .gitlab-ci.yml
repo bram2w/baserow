@@ -156,12 +156,15 @@ backend-test:
     - ping -w 2 $MJML_IP
     - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
     - ping -w 2 $DB_IP
-    - docker run --rm --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
+    - mkdir reports
+    - docker run --rm -v $(pwd)/reports/:/baserow/backend/reports --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
   artifacts:
+    when: always
     paths:
-      - pytest_report.html
+      - reports/pytest_report.html
     reports:
-      cobertura: coverage.xml
+      cobertura: reports/coverage.xml
+      junit: reports/report.xml
 
 publish-baserow-images:
   image: docker:19.03.12

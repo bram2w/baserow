@@ -109,9 +109,8 @@ case "$1" in
       make lint-python
     ;;
     test)
-	    coverage run -m pytest tests ../premium/backend/tests -n 4 --html=pytest_report.html --self-contained-html || exit;
-	    coverage report
-	    coverage xml
+	    coverage run -m pytest tests ../premium/backend/tests -n 2 --junitxml=reports/report.xml --html=reports/pytest_report.html --self-contained-html || exit;
+	    coverage xml -o reports/coverage.xml
     ;;
     celery)
         exec celery -A baserow "${@:2}"
