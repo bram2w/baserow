@@ -109,6 +109,7 @@ case "$1" in
       make lint-python
     ;;
     test)
+      mkdir reports/
 	    coverage run -m pytest tests ../premium/backend/tests -n 2 --junitxml=reports/report.xml --html=reports/pytest_report.html --self-contained-html || exit;
 	    coverage xml -o reports/coverage.xml
     ;;

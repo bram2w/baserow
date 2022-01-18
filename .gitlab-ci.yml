@@ -156,8 +156,9 @@ backend-test:
     - ping -w 2 $MJML_IP
     - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
     - ping -w 2 $DB_IP
-    - mkdir reports
-    - docker run --rm -v $(pwd)/reports/:/baserow/backend/reports --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
+    - docker run --name=baserow_test_container --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $CI_IMAGE_REPO/backend:$CI_COMMIT_SHORT_SHA test
+    - docker cp baserow_test_container:/baserow/backend/reports reports
+    - docker rm baserow_test_container
   artifacts:
     when: always
     paths:
