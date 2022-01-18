@@ -55,6 +55,7 @@ celery-dev: Run a hot-reloading dev version of celery
 lint:     : Run the linting (only available if using dev target)
 lint-exit : Run the linting and exit (only available if using dev target)
 test:     : Run the tests (only available if using dev target)
+ci-test:  : Run the tests for ci including various reports (dev only)
 help      : Show this message
 """
 }
