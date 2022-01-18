@@ -1,70 +1,137 @@
-before_script:
-  - apt-get update && apt-get -y install make curl gnupg2
+#before_script:
+#  - apt-get update && apt-get -y install make curl gnupg2
 
 stages:
-  - lint
-  - test
+#  - lint
+#  - test
   - build
+#
+#web-frontend-eslint:
+#  stage: lint
+#  image: node:12
+#  script:
+#    - cd web-frontend
+#    - make install-dependencies
+#    - make eslint
+#
+#web-frontend-stylelint:
+#  stage: lint
+#  image: node:12
+#  script:
+#    - cd web-frontend
+#    - make install-dependencies
+#    - make stylelint
+#
+#web-frontend-test:
+#  stage: test
+#  image: node:12
+#  script:
+#    - cd web-frontend
+#    - make install-dependencies
+#    - make test
+#
+#backend-flake8:
+#  stage: lint
+#  image: python:3.7
+#  script:
+#    - cd backend
+#    - make install-dependencies
+#    - make install-dev-dependencies
+#    - make lint
+#
+#backend-pytest:
+#  stage: test
+#  image: python:3.7
+#  services:
+#    - name: postgres:11.3
+#      alias: db
+#    - name: liminspace/mjml-tcpserver:0.10
+#      alias: mjml
+#  variables:
+#    POSTGRES_USER: baserow
+#    POSTGRES_PASSWORD: baserow
+#    POSTGRES_DB: baserow
+#  script:
+#    - cd backend
+#    - make install-dependencies
+#    - make install-dev-dependencies
+#    - export PYTHONPATH=$CI_PROJECT_DIR/backend/src:$CI_PROJECT_DIR/premium/backend/src
+#    - make test
+#
+#backend-setup:
+#  stage: build
+#  image: python:3.7
+#  script:
+#    - pip install -e ./backend
+#    - python -c 'import baserow'
+#    - pip install -e ./premium/backend
+#    - python -c 'import baserow_premium'
+#    - export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
+#    - timeout --preserve-status 10s gunicorn --workers=1 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker baserow.config.asgi:application
 
-web-frontend-eslint:
-  stage: lint
-  image: node:12
-  script:
-    - cd web-frontend
-    - make install-dependencies
-    - make eslint
-
-web-frontend-stylelint:
-  stage: lint
-  image: node:12
-  script:
-    - cd web-frontend
-    - make install-dependencies
-    - make stylelint
-
-web-frontend-test:
-  stage: test
-  image: node:12
-  script:
-    - cd web-frontend
-    - make install-dependencies
-    - make test
-
-backend-flake8:
-  stage: lint
-  image: python:3.7
-  script:
-    - cd backend
-    - make install-dependencies
-    - make install-dev-dependencies
-    - make lint
-
-backend-pytest:
-  stage: test
-  image: python:3.7
-  services:
-    - name: postgres:11.3
-      alias: db
-    - name: liminspace/mjml-tcpserver:0.10
-      alias: mjml
-  variables:
-    POSTGRES_USER: baserow
-    POSTGRES_PASSWORD: baserow
-    POSTGRES_DB: baserow
-  script:
-    - cd backend
-    - make install-dependencies
-    - make install-dev-dependencies
-    - export PYTHONPATH=$CI_PROJECT_DIR/backend/src:$CI_PROJECT_DIR/premium/backend/src
-    - make test
-
-backend-setup:
+build-for-gitlab-project-registry:
   stage: build
-  image: python:3.7
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  variables:
+    #More Information on Kaniko Caching: https://cloud.google.com/build/docs/kaniko-cache
+    KANIKO_CACHE_ARGS: "--cache=true --cache-copy-layers=true --cache-ttl=24h"
+    IMAGE_LABELS: >
+      --label org.opencontainers.image.vendor=$CI_SERVER_URL/$GITLAB_USER_LOGIN
+      --label org.opencontainers.image.authors=$CI_SERVER_URL/$GITLAB_USER_LOGIN
+      --label org.opencontainers.image.revision=$CI_COMMIT_SHA
+      --label org.opencontainers.image.source=$CI_PROJECT_URL
+      --label org.opencontainers.image.documentation=$CI_PROJECT_URL
+      --label org.opencontainers.image.licenses=$CI_PROJECT_URL
+      --label org.opencontainers.image.url=$CI_PROJECT_URL
+      --label vcs-url=$CI_PROJECT_URL
+      --label com.gitlab.ci.user=$CI_SERVER_URL/$GITLAB_USER_LOGIN
+      --label com.gitlab.ci.email=$GITLAB_USER_EMAIL
+      --label com.gitlab.ci.tagorbranch=$CI_COMMIT_REF_NAME
+      --label com.gitlab.ci.pipelineurl=$CI_PIPELINE_URL
+      --label com.gitlab.ci.commiturl=$CI_PROJECT_URL/commit/$CI_COMMIT_SHA
+      --label com.gitlab.ci.cijoburl=$CI_JOB_URL
+      --label com.gitlab.ci.mrurl=$CI_PROJECT_URL/-/merge_requests/$CI_MERGE_REQUEST_ID
   script:
-    - pip install -e ./backend
-    - python -c 'import baserow'
-    - pip install -e ./premium/backend
-    - python -c 'import baserow_premium'
-    - export DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
-    - timeout --preserve-status 10s gunicorn --workers=1 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker baserow.config.asgi:application
+    - |
+      IMAGE_REPO=$CI_REGISTRY_IMAGE/testing
+      echo "Building and shipping image to $IMAGE_REPO"
+      #Build date for opencontainers
+      BUILDDATE="'$(date '+%FT%T%z' | sed -E -n 's/(\+[0-9]{2})([0-9]{2})$/\1:\2/p')'" #rfc 3339 date
+      IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.created=$BUILDDATE --label build-date=$BUILDDATE"
+      #Description for opencontainers
+      BUILDTITLE=$(echo $CI_PROJECT_TITLE | tr " " "_")
+      IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE --label org.opencontainers.image.description=$BUILDTITLE"
+      #Add ref.name for opencontainers
+      IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.ref.name=$IMAGE_REPO:$CI_COMMIT_REF_NAME"
+
+      VERSIONLABEL=$CI_COMMIT_TAG
+      if [[ ! -z "$VERSIONLABEL" ]]; then
+        IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.version=$VERSIONLABEL"
+        ADDITIONALTAGLIST="$ADDITIONALTAGLIST $VERSIONLABEL"
+      fi
+
+      ADDITIONALTAGLIST="$ADDITIONALTAGLIST $CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST latest"; fi
+      # todo put "develop" in some sort of project variable.
+      if [[ "$CI_COMMIT_BRANCH" == "develop" ]]; then ADDITIONALTAGLIST="$ADDITIONALTAGLIST dev-latest"; fi
+
+      mkdir -p /kaniko/.docker
+      echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n $CI_REGISTRY_USER:$CI_REGISTRY_PASSWORD | base64)\"}}}" > /kaniko/.docker/config.json
+      build_and_publish_image(){
+        IMAGE_NAME=$1
+        IMAGE_PATH=$2
+        if [[ -n "$ADDITIONALTAGLIST" ]]; then
+          for TAG in $ADDITIONALTAGLIST; do
+            FORMATTEDTAGLIST="${FORMATTEDTAGLIST} --tag $IMAGE_REPO/$IMAGE_NAME:$TAG ";
+          done;
+        fi
+
+        #Reformat Docker tags to kaniko's --destination argument:
+        FORMATTEDTAGLIST=$(echo "${FORMATTEDTAGLIST}" | sed s/\-\-tag/\-\-destination/g)
+        echo "Kaniko arguments to run: --context $CI_PROJECT_DIR --dockerfile $IMAGE_PATH $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS";
+        /kaniko/executor --cleanup --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile $KANIKO_CACHE_ARGS $FORMATTEDTAGLIST $IMAGE_LABELS;
+      }
+      build_and_publish_image "$CI_PROJECT_DIR/backend/Dockerfile" "backend"
+      build_and_publish_image "$CI_PROJECT_DIR/web-frontend/Dockerfile" "web-frontend")
