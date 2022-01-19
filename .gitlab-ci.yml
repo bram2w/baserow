@@ -97,7 +97,7 @@ variables:
       docker push $LATEST_CI_IMAGE
 
 # To extend this stage set the DOCKERFILE_PATH and IMAGE_NAME variables.
-.publish-baserow-images:
+.publishbaserowimages:
   image: docker:19.03.12
   stage: publish
   services:
@@ -235,7 +235,7 @@ backend-test:
       junit: reports/report.xml
 
 publish-backend-image:
-  extends: .publish-baserow-image
+  extends: .publishbaserowimage
   variables:
     IMAGE_NAME: $BACKEND_SERVICE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_SERVICE_NAME/Dockerfile
@@ -254,7 +254,6 @@ web-frontend-eslint:
     - docker:19.03.12-dind
   script:
     - docker run --rm $WEBFRONTEND_CI_IMAGE eslint
-    -
 web-frontend-stylelint:
   stage: test
   image: docker:19.03.12
@@ -282,7 +281,7 @@ web-frontend-test:
       junit: reports/junit.xml
 
 publish-web-frontend-image:
-  extends: .publish-baserow-image
+  extends: .publishbaserowimage
   variables:
     IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_SERVICE_NAME/Dockerfile
