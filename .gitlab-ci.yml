@@ -185,7 +185,7 @@ variables:
       # tested image.
       DEV_LATEST_BRANCH_TAG=$IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_TAG-$TRUNCATED_BRANCH_NAME
       docker tag $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $DEV_LATEST_BRANCH_TAG
-      docker push $DEV_LATEST_TAG
+      docker push $DEV_LATEST_BRANCH_TAG
 
 # ====================================== BACKEND ======================================
 build-backend-image:
@@ -233,6 +233,7 @@ backend-test:
     reports:
       cobertura: reports/coverage.xml
       junit: reports/report.xml
+  coverage: '/^TOTAL.+?(\d+\%)$/'
 
 publish-backend-image:
   extends: .publish-baserow-image
@@ -276,6 +277,7 @@ web-frontend-test:
     reports:
       cobertura: reports/coverage/cobertura-coverage.xml
       junit: reports/junit.xml
+  coverage: '/Lines\s*:\s*(\d+.?\d*)%/'
 
 publish-web-frontend-image:
   extends: .publish-baserow-image

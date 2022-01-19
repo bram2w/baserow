@@ -100,6 +100,7 @@ migrate=true
 sync_templates=true
 exit_if_other_owners_found=true
 delete_db_volume=false
+up_down_restart=false
 while true; do
 case "${1:-noneleft}" in
     dont_migrate)
@@ -118,9 +119,20 @@ case "${1:-noneleft}" in
         dont_attach=true
     ;;
     wipe_db)
-        echo "./dev.sh: Restarting Dev Env and Wiping Database"
+        echo "./dev.sh: Will wipe baserow's postgres database volume pg_data if exists."
         shift
         delete_db_volume=true
+    ;;
+    restart)
+        echo "./dev.sh: Will restart baserow using separate up and down commands, any extra parameters will only be passed to the up."
+        shift
+        up_down_restart=true
+    ;;
+    restart_wipe)
+        echo "./dev.sh: Will restart and wipe baserow's postgres database volume pg_data if exists."
+        shift
+        delete_db_volume=true
+        up_down_restart=true
     ;;
     ignore_ownership)
         echo "./dev.sh: Continuing if files in repo are not owned by $USER."
@@ -207,15 +219,41 @@ echo "./dev.sh running docker-compose commands:
 ------------------------------------------------
 "
 
+ARGS=$*
+if [ "$ARGS" = down ] ; then
+  echo "${YELLOW} ./dev.sh Replacing down with 'rm --stop -v --force' to clean up any anonymous volumes."
+  ARGS="rm --stop -v --force"
+fi
+
+if [ "$dont_attach" != true ] ; then
+  if [[ "$ARGS" = up* ]] || [[ "$ARGS" = start* ]] || [[ "$up_down_restart" = true ]]; then
+    if [[ "$ARGS" =~ .*" -d ".* ]] ; then
+      # Ensure we are upping/starting in detached mode so we can attach correctly.
+      ARGS="$ARGS -d"
+    fi
+  else
+    # Don't attempt to attach if we aren't doing a start or up
+    dont_attach=true
+  fi
+fi
+
+
 if [ "$delete_db_volume" = true ] ; then
 docker volume rm baserow_pgdata || true;
 fi
 
-set -x
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml "$@"
-set +x
+if [[ "$up_down_restart" != true ]] ; then
+  set -x
+  docker-compose -f docker-compose.yml -f docker-compose.dev.yml "$ARGS"
+  set +x
+else
+  set -x
+  docker-compose -f docker-compose.yml -f docker-compose.dev.yml rm --stop -v --force
+  docker-compose -f docker-compose.yml -f docker-compose.dev.yml up "$ARGS"
+  set +x
+fi
 
-if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
+if [ "$dont_attach" != true ]; then
 
   launch_tab_and_attach "backend" "backend"
   launch_tab_and_attach "web frontend" "web-frontend"
