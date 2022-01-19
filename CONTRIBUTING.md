@@ -38,6 +38,8 @@ repository on GitHub, but this is not the official one.
 * Documentation for every concept that can used by a plugin.
 * [changelog.md](changelog.md) should be updated with any new features.
 * The pipeline must pass.
+* Try to apply the **rule of 10s**: MRs should aim to have no more than 10 code files with more than 10 lines modified. 
+  A code file doesn't include tests/css/text/migrations/translations/configuration/ etc.
 
 ## Any contributions you make will be under the MIT Software License
 
