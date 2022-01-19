@@ -23,7 +23,7 @@ variables:
 # ============== "Abstract" ci stages used by later real stages =======================
 
 # To extend this stage set the DOCKERFILE_PATH and IMAGE_NAME variables.
-.build-baserow-image:
+.buildbaserowimage:
   image: docker:19.03.12
   stage: build
   services:
@@ -189,7 +189,7 @@ variables:
 
 # ====================================== BACKEND ======================================
 build-backend-image:
-  extends: .build-baserow-image
+  extends: .buildbaserowimage
   variables:
     IMAGE_NAME: $BACKEND_SERVICE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_SERVICE_NAME/Dockerfile
@@ -242,7 +242,7 @@ publish-backend-image:
 
 # ==================================== WEB-FRONTEND ====================================
 build-web-frontend-image:
-  extends: .build-baserow-image
+  extends: .buildbaserowimage
   variables:
     IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_SERVICE_NAME/Dockerfile
