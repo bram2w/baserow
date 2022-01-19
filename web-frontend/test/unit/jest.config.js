@@ -6,4 +6,6 @@ module.exports = Object.assign({}, baseConfig, {
   displayName: 'unit',
   setupFilesAfterEnv: ['./test/unit/jest.setup.js'],
   snapshotSerializers: ['jest-serializer-vue'],
+  collectCoverageFrom: ['src/**/*.js', '!**/node_modules/**'],
+  coverageReporters: ['html', 'text', 'text-summary', 'cobertura'],
 })

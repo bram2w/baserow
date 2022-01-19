@@ -42,7 +42,7 @@ done
 show_help() {
 # If you change this please update ./docs/reference/baserow-docker-api.md
     echo """
-Usage: docker run <imagename> COMMAND
+Usage: docker run [-T] baserow_backend[_dev] COMMAND
 Commands
 local     : Start django using a prod ready gunicorn server
 dev       : Start a normal Django development server
@@ -112,6 +112,7 @@ case "$1" in
     ci-test)
       mkdir reports/coverage_html/ -p
       coverage run -m pytest tests ../premium/backend/tests -n 2 --junitxml=reports/report.xml --html=reports/pytest_report.html --self-contained-html || exit;
+      coverage report
       coverage xml -o reports/coverage.xml
       coverage html -d reports/coverage_html/
     ;;

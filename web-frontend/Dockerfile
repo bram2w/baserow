@@ -1,4 +1,4 @@
-FROM node:12-buster
+FROM node:12-buster as base
 
 ARG UID
 ENV UID=${UID:-9999}
@@ -38,7 +38,6 @@ RUN yarn install
 COPY --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
 COPY --chown=$UID:$GID ./premium/web-frontend /baserow/premium/web-frontend/
 
-RUN yarn run build-local
 
 RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/web-frontend/docker/docker-entrypoint.sh
@@ -46,5 +45,15 @@ RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
 # tini installed above protects us from zombie processes and ensures the default signal
 # handlers work, see https://github.com/krallin/tini.
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/web-frontend/docker/docker-entrypoint.sh"]
+
+FROM base as dev
+
+# We don't bother running build-local in dev mode as it pre-compiles nuxt which won't
+# be used when running the nuxt dev server.
+CMD ["dev"]
+
+FROM base as local
+
+RUN yarn run build-local
 CMD ["local"]
 

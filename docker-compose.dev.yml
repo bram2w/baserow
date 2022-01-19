@@ -75,8 +75,7 @@ services:
 
   web-frontend:
     build:
-      context: .
-      dockerfile: ./web-frontend/docker/Dockerfile.dev
+      target: dev
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.

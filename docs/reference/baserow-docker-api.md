@@ -12,9 +12,9 @@ Below are the files used by our docker setup and what they are responsible for:
 
 - `docker-compose.yml`: A compose file which starts Baserow in local mode with no
   development features enabled.
-- `./backend/Dockerfile`: The backend's Dockerfile for local mode. See below for
+- `./backend/Dockerfile`: The backend's Dockerfile. See below for
   supported command line arguments. Also used to run the celery worker.
-- `./web-frontend/Dockerfile`: The web-frontend's Dockerfile for local mode. See below
+- `./web-frontend/Dockerfile`: The web-frontend's Dockerfile. See below
   for supported command line arguments.
 - `./media/Dockerfile`: A simple nginx image used to serve uploaded user files only.
 
@@ -22,23 +22,24 @@ Below are the files used by our docker setup and what they are responsible for:
 
 - `docker-compose.dev.yml`: A compose file which overrides parts of `docker-compose.yml`
   to enable development features, do not use this in production.
-- `./backend/docker/Dockerfile.dev`: The backends's Dockerfile for dev mode.
-- `./web-frontend/docker/Dockerfile.dev`: The web-frontend's Dockerfile for dev mode.
+- `./backend/docker/Dockerfile`: Build with `--target dev` to get the dev version.
+- `./web-frontend/docker/Dockerfile`: Build with `--target dev` to get the dev version. 
 
 ### For Both Envs
 
-- `./backend/docker/docker-entrypoint.sh`: The entrypoint script used for both of the
-  backend images.
-- `./web-frontend/docker/docker-entrypoint.sh`: The entrypoint script used for both of
-  the web-frontend images.
+- `./backend/docker/docker-entrypoint.sh`: The entrypoint script used by the backend
+  Dockerfile, provides a set of commonly used commands for working with baserow.
+- `./web-frontend/docker/docker-entrypoint.sh`: The entrypoint script used by the 
+   web-frontend Dockerfile, provides a set of commonly used commands for working
+  with Baserow.
 
 ## Backend Image CLI
 
 The `baserow_backend` and `baserow_backend_dev` images provide various commands used to
 change what process is started inside the container.
 
-```bash
-Usage: docker run <imagename> COMMAND
+```txt
+Usage: docker run [-T] baserow_backend[_dev] COMMAND
 Commands
 local     : Start django using a prod ready gunicorn server
 dev       : Start a normal Django development server
@@ -48,7 +49,10 @@ python    : Run a python command
 shell     : Start a Django Python shell
 celery    : Run celery
 celery-dev: Run a hot-reloading dev version of celery
-lint:     : Run the linting
+lint:     : Run the linting (only available if using dev image/target)
+lint-exit : Run the linting and exit (dev image only)
+test:     : Run the tests (dev image only)
+ci-test:  : Run the tests for ci including various reports (dev image only)
 help      : Show this message
 ```
 
@@ -66,13 +70,15 @@ $ ./dev.sh run backend COMMAND
 The `baserow_web-frontend` and `baserow_web-frontend_dev` images provide various
 commands used to change what process is started inside the container.
 
-```bash
-Usage: docker run <imagename> COMMAND
+```txt
+Usage: docker run [-T] baserow_web-frontend[_dev] COMMAND
 Commands
 dev      : Start a normal nuxt development server
 local    : Start a non-dev prod ready nuxt server
-lint     : Run the linting
+lint     : Run all the linting
 lint-fix : Run eslint fix
+stylelint: Run stylelint
+eslint   : Run eslint
 bash     : Start a bash shell
 help     : Show this message
 ```

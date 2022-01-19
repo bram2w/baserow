@@ -6,12 +6,15 @@ set -euo pipefail
 show_help() {
 # If you change this please update ./docs/reference/baserow-docker-api.md
     echo """
-Usage: docker run <imagename> COMMAND
+Usage: docker run [-T] baserow_web-frontend[_dev] COMMAND
 Commands
 dev      : Start a normal nuxt development server
 local    : Start a non-dev prod ready nuxt server
-lint     : Run the linting
+lint     : Run all the linting
 lint-fix : Run eslint fix
+stylelint: Run stylelint
+eslint   : Run eslint
+ci-test  : Run ci tests with reporting
 bash     : Start a bash shell
 help     : Show this message
 """
@@ -37,6 +40,16 @@ case "$1" in
       CMD="yarn run eslint --fix"
       echo "$CMD"
       exec bash --init-file <(echo "history -s $CMD; $CMD")
+    ;;
+    eslint)
+      exec make eslint
+    ;;
+    stylelint)
+      exec make eslint
+    ;;
+    ci-test)
+      mkdir reports/
+      JEST_JUNIT_OUTPUT_DIR=./reports/ yarn run jest --ci --reporters=default --reporters=jest-junit --collectCoverage --coverageDirectory="./reports/"
     ;;
     bash)
       exec /bin/bash "${@:2}"
