@@ -18,7 +18,7 @@ export class DashboardType extends PremiumAdminType {
     return 'dashboard'
   }
 
-  functionIsNotCovered(){
+  functionIsNotCovered() {
     return 0
   }
 

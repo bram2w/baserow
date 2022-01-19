@@ -274,6 +274,8 @@ web-frontend-test:
     - docker rm baserow_webfrontend_test_container
   artifacts:
     when: always
+    paths:
+      - reports/coverage/
     reports:
       cobertura: reports/coverage/cobertura-coverage.xml
       junit: reports/junit.xml
