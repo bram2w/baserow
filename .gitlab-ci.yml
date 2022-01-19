@@ -171,7 +171,7 @@ variables:
 
       # Build the normal non-dev target image with all the tags and labels.
       docker pull $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-      docker build --cache-from $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $FORMATTEDTAGLIST $IMAGE_LABELS -f $DOCKERFILE_PATH.;
+      docker build --cache-from $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $FORMATTEDTAGLIST $IMAGE_LABELS -f $DOCKERFILE_PATH .;
 
       # Push all the tags we just built above
       if [[ -n "$ADDITIONALTAGLIST" ]]; then
@@ -273,11 +273,8 @@ web-frontend-test:
     - docker rm baserow_webfrontend_test_container
   artifacts:
     when: always
-    paths:
-      - reports/pytest_report.html
-      - reports/coverage_html/
     reports:
-      cobertura: reports/cobertura-coverage.xml
+      cobertura: reports/coverage/cobertura-coverage.xml
       junit: reports/junit.xml
 
 publish-web-frontend-image:

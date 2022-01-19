@@ -96,6 +96,8 @@ venv/
 
 web-frontend/plugins/
 backend/plugins/
+web-frontend/reports/
+backend/reports/
 
 .idea/
 *.iml
