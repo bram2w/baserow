@@ -23,7 +23,7 @@ variables:
 # ============== "Abstract" ci stages used by later real stages =======================
 
 # To extend this stage set the DOCKERFILE_PATH and IMAGE_NAME variables.
-.buildbaserowimage:
+.build-baserow-image:
   image: docker:19.03.12
   stage: build
   services:
@@ -97,7 +97,7 @@ variables:
       docker push $LATEST_CI_IMAGE
 
 # To extend this stage set the DOCKERFILE_PATH and IMAGE_NAME variables.
-.publishbaserowimages:
+.publish-baserow-image:
   image: docker:19.03.12
   stage: publish
   services:
@@ -189,7 +189,7 @@ variables:
 
 # ====================================== BACKEND ======================================
 build-backend-image:
-  extends: .buildbaserowimage
+  extends: .build-baserow-image
   variables:
     IMAGE_NAME: $BACKEND_SERVICE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_SERVICE_NAME/Dockerfile
@@ -235,14 +235,14 @@ backend-test:
       junit: reports/report.xml
 
 publish-backend-image:
-  extends: .publishbaserowimage
+  extends: .publish-baserow-image
   variables:
     IMAGE_NAME: $BACKEND_SERVICE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_SERVICE_NAME/Dockerfile
 
 # ==================================== WEB-FRONTEND ====================================
 build-web-frontend-image:
-  extends: .buildbaserowimage
+  extends: .build-baserow-image
   variables:
     IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_SERVICE_NAME/Dockerfile
@@ -281,7 +281,7 @@ web-frontend-test:
       junit: reports/junit.xml
 
 publish-web-frontend-image:
-  extends: .publishbaserowimage
+  extends: .publish-baserow-image
   variables:
     IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_SERVICE_NAME/Dockerfile
