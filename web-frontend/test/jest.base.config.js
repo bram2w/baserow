@@ -18,9 +18,4 @@ module.exports = {
     '.*\\.(vue)$': 'vue-jest',
   },
   transformIgnorePatterns: [`/node_modules/(?!${esModules})`],
-  collectCoverage: true,
-  collectCoverageFrom: [
-    '<rootDir>/components/**/*.vue',
-    '<rootDir>/pages/**/*.vue',
-  ],
 }
