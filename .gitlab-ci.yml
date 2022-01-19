@@ -27,10 +27,12 @@ variables:
   # An image repo where dev and normal images will be stored after they have been
   # successfully built and tested.
   IMAGE_REPO: $CI_REGISTRY_IMAGE/testing
-  BACKEND_SERVICE_NAME: backend
-  WEBFRONTEND_SERVICE_NAME: web-frontend
-  BACKEND_CI_IMAGE: $CI_IMAGE_REPO/$BACKEND_SERVICE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
-  WEBFRONTEND_CI_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_SERVICE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+  BACKEND_IMAGE_NAME: backend
+  BACKEND_DEV_IMAGE_NAME: backend_dev
+  WEBFRONTEND_IMAGE_NAME: web-frontend
+  WEBFRONTEND_DEV_IMAGE_NAME: web-frontend_dev
+  BACKEND_CI_IMAGE: $CI_IMAGE_REPO/$BACKEND_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+  WEBFRONTEND_CI_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
   DEVELOP_BRANCH_NAME: develop
   DEVELOP_LATEST_TAG: $DEVELOP_BRANCH_NAME-latest
 
@@ -247,8 +249,8 @@ variables:
 build-backend-image:
   extends: .build-baserow-image
   variables:
-    DEV_IMAGE_NAME: $BACKEND_SERVICE_NAME_dev
-    DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_SERVICE_NAME/Dockerfile
+    DEV_IMAGE_NAME: $BACKEND_DEV_IMAGE_NAME
+    DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_IMAGE_NAME/Dockerfile
 
 backend-lint:
   stage: test
@@ -294,16 +296,16 @@ backend-test:
 publish-backend-image:
   extends: .publish-baserow-image
   variables:
-    IMAGE_NAME: $BACKEND_SERVICE_NAME
-    DEV_IMAGE_NAME: $BACKEND_SERVICE_NAME_dev
-    DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_SERVICE_NAME/Dockerfile
+    IMAGE_NAME: $BACKEND_IMAGE_NAME
+    DEV_IMAGE_NAME: $BACKEND_IMAGE_NAME_dev
+    DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_IMAGE_NAME/Dockerfile
 
 # ==================================== WEB-FRONTEND ====================================
 build-web-frontend-image:
   extends: .build-baserow-image
   variables:
-    DEV_IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME_dev
-    DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_SERVICE_NAME/Dockerfile
+    DEV_IMAGE_NAME: $WEBFRONTEND_DEV_IMAGE_NAME
+    DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_IMAGE_NAME/Dockerfile
 
 web-frontend-eslint:
   stage: test
@@ -341,6 +343,6 @@ web-frontend-test:
 publish-web-frontend-image:
   extends: .publish-baserow-image
   variables:
-    IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME
-    DEV_IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME_dev
-    DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_SERVICE_NAME/Dockerfile
+    IMAGE_NAME: $WEBFRONTEND_IMAGE_NAME
+    DEV_IMAGE_NAME: $WEBFRONTEND_DEV_IMAGE_NAME
+    DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_IMAGE_NAME/Dockerfile
