@@ -111,10 +111,11 @@ case "$1" in
     ;;
     ci-test)
       mkdir reports/coverage_html/ -p
-      coverage run -m pytest tests ../premium/backend/tests -n 2 --junitxml=reports/report.xml --html=reports/pytest_report.html --self-contained-html || exit;
+      cd ..
+      coverage run -m pytest backend/tests premium/backend/tests -n 2 --junitxml=backend/reports/report.xml --html=backend/reports/pytest_report.html --self-contained-html || exit;
       coverage report
-      coverage xml -o reports/coverage.xml
-      coverage html -d reports/coverage_html/
+      coverage xml -o backend/reports/coverage.xml
+      coverage html -d backend/reports/coverage_html/
     ;;
     celery)
         exec celery -A baserow "${@:2}"

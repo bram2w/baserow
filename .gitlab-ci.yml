@@ -10,15 +10,29 @@ variables:
   # An image repo which is used for storing and passing images between ci pipeline jobs
   # and also speeding up ci builds by caching from the latest ci image when building.
   CI_IMAGE_REPO: $CI_REGISTRY_IMAGE/ci
+  # Any images with tags prefixed with this will be cleaned up automatically by our
+  # gitlab cleanup job.
+  #
+  # ## Note:
+  #   These cleanup tag prefixes are needed as gitlab only supports cleanup via tags
+  #   over the regex and not per repo/image cleanup settings...
+  #
+  # IMPORTANT: UPDATE GITLAB CONTAINER REPO CLEANUP JOB REGEX IF YOU CHANGE THIS
+  CLEANUP_JOB_CI_TAG_PREFIX: ci-latest-
+  # Any images with tags prefixed with this will be cleaned up automatically by our
+  # gitlab cleanup job.
+  #
+  # IMPORTANT: UPDATE GITLAB CONTAINER REPO CLEANUP JOB REGEX IF YOU CHANGE THIS
+  CLEANUP_JOB_BRANCH_TAG_PREFIX: branch-latest-
   # An image repo where dev and normal images will be stored after they have been
   # successfully built and tested.
   IMAGE_REPO: $CI_REGISTRY_IMAGE/testing
-  DEV_LATEST_TAG: dev-latest
   BACKEND_SERVICE_NAME: backend
   WEBFRONTEND_SERVICE_NAME: web-frontend
-  BACKEND_CI_IMAGE: $CI_IMAGE_REPO/$BACKEND_SERVICE_NAME:$CI_COMMIT_SHORT_SHA
-  WEBFRONTEND_CI_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_SERVICE_NAME:$CI_COMMIT_SHORT_SHA
+  BACKEND_CI_IMAGE: $CI_IMAGE_REPO/$BACKEND_SERVICE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+  WEBFRONTEND_CI_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_SERVICE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
   DEVELOP_BRANCH_NAME: develop
+  DEVELOP_LATEST_TAG: $DEVELOP_BRANCH_NAME-latest
 
 # ============== "Abstract" ci stages used by later real stages =======================
 
@@ -36,16 +50,26 @@ variables:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
   script:
     - |
-      # Please set: DOCKERFILE_PATH
-      # Please set: IMAGE_NAME
+      if [[ -z "$DOCKERFILE_PATH" ]]; then
+          echo "Must provide DOCKERFILE_PATH as a job variable" 1>&2
+          exit 1
+      fi
+      if [[ -z "$DEV_IMAGE_NAME" ]]; then
+          echo "Must provide DEV_IMAGE_NAME as a job variable" 1>&2
+          exit 1
+      fi
+
 
       # Try cache from this branches latest image, if not fall back to the latest
       # develop image.
       # Ensure we don't go over 128 char docker tag length limit
       TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
-      DEV_LATEST_BRANCH_TAG=$DEV_LATEST_TAG-$TRUNCATED_BRANCH_NAME
+      CI_DEV_LATEST_BRANCH_TAG=$CLEANUP_JOB_CI_TAG_PREFIX$TRUNCATED_BRANCH_NAME
 
-      LATEST_CI_IMAGE="$CI_IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_BRANCH_TAG"
+      LATEST_CI_IMAGE="$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CI_DEV_LATEST_BRANCH_TAG"
+      # repo/ci/backend_dev:ci-latest-branchname
+      # repo/testing/backend_dev:branch-latest-branchname
+      # repo/testing/backend_dev:develop-latest
 
       # ===== 1. Try pull an image we can use to cache the build with =====
 
@@ -54,11 +78,11 @@ variables:
       if ! docker pull $CACHE_IMAGE; then
 
         # Then perhaps the latest dev image for this branch
-        CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_BRANCH_TAG"
+        CACHE_IMAGE="$IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_BRANCH_TAG_PREFIX$TRUNCATED_BRANCH_NAME"
         if ! docker pull $CACHE_IMAGE; then
 
           # Finally the latest dev image from develop
-          CACHE_IMAGE="$IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_TAG";
+          CACHE_IMAGE="$IMAGE_REPO/$DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG";
           if ! docker pull $CACHE_IMAGE; then
              CACHE_IMAGE=""
           fi
@@ -78,7 +102,7 @@ variables:
       # by using a simple name + sha we know we will be getting the right image later on
       # and we can easily re-construct this image also as $CI_COMMIT_SHORT_SHA is
       # available in all stages.
-      CI_IMAGE_PATH=$CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+      CI_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
 
       # ===== 2. Build a dev image to be used in subsequent CI stages =====
 
@@ -96,7 +120,7 @@ variables:
       docker push $CI_IMAGE_PATH
       docker push $LATEST_CI_IMAGE
 
-# To extend this stage set the DOCKERFILE_PATH and IMAGE_NAME variables.
+# To extend this stage set the DOCKERFILE_PATH and DEV_IMAGE_NAME variables.
 .publish-baserow-image:
   image: docker:19.03.12
   stage: publish
@@ -127,22 +151,32 @@ variables:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
   script:
     - |
-      # Please set: DOCKERFILE_PATH
-      # Please set: IMAGE_NAME
+      if [[ -z "$DOCKERFILE_PATH" ]]; then
+          echo "Must provide DOCKERFILE_PATH as a job variable" 1>&2
+          exit 1
+      fi
+      if [[ -z "$IMAGE_NAME" ]]; then
+          echo "Must provide IMAGE_NAME as a job variable" 1>&2
+          exit 1
+      fi
+      if [[ -z "$DEV_IMAGE_NAME" ]]; then
+          echo "Must provide DEV_IMAGE_NAME as a job variable" 1>&2
+          exit 1
+      fi
 
+
+      # ===== 1. Setup image metadata labels =====
       echo "Building and shipping image to $IMAGE_REPO"
       #Build date for opencontainers
       BUILDDATE="'$(date '+%FT%T%z' | sed -E -n 's/(\+[0-9]{2})([0-9]{2})$/\1:\2/p')'" #rfc 3339 date
       IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.created=$BUILDDATE --label build-date=$BUILDDATE"
+      # Description for opencontainers
+      BUILDTITLE="$(echo $CI_PROJECT_TITLE | tr " " "_")_$IMAGE_NAME"
+      IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE --label org.opencontainers.image.description=$BUILDTITLE"
 
-      # Ensure we don't go over 128 char docker tag length limit
-      TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
-      BRANCH_TAG=$TRUNCATED_BRANCH_NAME-$CI_COMMIT_SHORT_SHA
-      LATEST_BRANCH_TAG=latest-$TRUNCATED_BRANCH_NAME
-
-      ADDITIONALTAGLIST="$ADDITIONALTAGLIST $BRANCH_TAG $LATEST_BRANCH_TAG"
-
-      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+      # ==== 2. Tag, build and push non-dev image ====
+      # ====== 2.1. If on master and this commit tagged add latest and commit tag tags
+      if [[ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]]; then
         VERSIONLABEL=$CI_COMMIT_TAG
         if [[ ! -z "$VERSIONLABEL" ]]; then
           # If we are on master and this commit is tagged then publish this image
@@ -153,14 +187,14 @@ variables:
         fi
       fi
 
-      if [[ "$CI_COMMIT_BRANCH" == $DEVELOP_BRANCH_NAME ]]; then
-        ADDITIONALTAGLIST="$ADDITIONALTAGLIST $DEV_LATEST_TAG";
+      # ====== 2.2. Tag as develop-latest if on develop =====
+      if [[ "$CI_COMMIT_BRANCH" = $DEVELOP_BRANCH_NAME ]]; then
+        # TODO - Check if this is actually the latest commit on develop before doing
+        # this
+        ADDITIONALTAGLIST="$ADDITIONALTAGLIST $DEVELOP_LATEST_TAG";
       fi
 
-      # Description for opencontainers
-      BUILDTITLE="$(echo $CI_PROJECT_TITLE | tr " " "_")_$IMAGE_NAME"
-      IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE --label org.opencontainers.image.description=$BUILDTITLE"
-
+      # ====== 2.3. Tag and build non dev image =====
       FORMATTEDTAGLIST=""
       if [[ -n "$ADDITIONALTAGLIST" ]]; then
         for TAG in $ADDITIONALTAGLIST; do
@@ -169,11 +203,13 @@ variables:
         done;
       fi
 
-      # Build the normal non-dev target image with all the tags and labels.
-      docker pull $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA
-      docker build --cache-from $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $FORMATTEDTAGLIST $IMAGE_LABELS -f $DOCKERFILE_PATH .;
+      # Cache from the CI dev image to build the non dev image.
+      CI_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+      docker pull $CI_IMAGE_PATH
+      # Build the normal non-dev image with all the tags and labels.
+      docker build --cache-from $CI_IMAGE_PATH $FORMATTEDTAGLIST $IMAGE_LABELS -f $DOCKERFILE_PATH .;
 
-      # Push all the tags we just built above
+      # ====== 2.4. Push all non dev image tags =====
       if [[ -n "$ADDITIONALTAGLIST" ]]; then
         for TAG in $ADDITIONALTAGLIST; do
           TAGGED_IMAGE=$IMAGE_REPO/$IMAGE_NAME:$TAG
@@ -181,17 +217,37 @@ variables:
         done;
       fi
 
-      # Finally we can publish dev-latest for this branch as the latest passed and
-      # tested image.
-      DEV_LATEST_BRANCH_TAG=$IMAGE_REPO/$IMAGE_NAME:$DEV_LATEST_TAG-$TRUNCATED_BRANCH_NAME
-      docker tag $CI_IMAGE_REPO/$IMAGE_NAME:$CI_COMMIT_SHORT_SHA $DEV_LATEST_BRANCH_TAG
-      docker push $DEV_LATEST_BRANCH_TAG
+      # ====== 3. Publish dev image =====
+      # Finally we can publish the latest dev image for this branch as the image has
+      # now neen tested.
+
+      # Ensure we don't go over 128 char docker tag length limit
+      TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
+      BRANCH_DEV_LATEST_BRANCH_TAG=""
+
+      if [[ "$CI_COMMIT_BRANCH" = $DEVELOP_BRANCH_NAME ]]; then
+        BRANCH_DEV_LATEST_BRANCH_TAG=$IMAGE_REPO/$DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG
+      elif [[ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]]; then
+        VERSIONLABEL=$CI_COMMIT_TAG
+        if [[ ! -z "$VERSIONLABEL" ]]; then
+          # only publish dev image as latest if this is a tagged master version.
+          # todo : only do if this is the latest tag to prevent rebuilds
+          BRANCH_DEV_LATEST_BRANCH_TAG=$IMAGE_REPO/$DEV_IMAGE_NAME
+        fi 
+      else
+        BRANCH_DEV_LATEST_BRANCH_TAG=$IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_BRANCH_TAG_PREFIX$TRUNCATED_BRANCH_NAME
+      fi
+
+      if [[ -n "$BRANCH_DEV_LATEST_BRANCH_TAG" ]]; then
+        docker tag $CI_IMAGE_PATH $BRANCH_DEV_LATEST_BRANCH_TAG
+        docker push $BRANCH_DEV_LATEST_BRANCH_TAG
+      fi
 
 # ====================================== BACKEND ======================================
 build-backend-image:
   extends: .build-baserow-image
   variables:
-    IMAGE_NAME: $BACKEND_SERVICE_NAME
+    DEV_IMAGE_NAME: $BACKEND_SERVICE_NAME_dev
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_SERVICE_NAME/Dockerfile
 
 backend-lint:
@@ -239,13 +295,14 @@ publish-backend-image:
   extends: .publish-baserow-image
   variables:
     IMAGE_NAME: $BACKEND_SERVICE_NAME
+    DEV_IMAGE_NAME: $BACKEND_SERVICE_NAME_dev
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_SERVICE_NAME/Dockerfile
 
 # ==================================== WEB-FRONTEND ====================================
 build-web-frontend-image:
   extends: .build-baserow-image
   variables:
-    IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME
+    DEV_IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME_dev
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_SERVICE_NAME/Dockerfile
 
 web-frontend-eslint:
@@ -285,4 +342,5 @@ publish-web-frontend-image:
   extends: .publish-baserow-image
   variables:
     IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME
+    DEV_IMAGE_NAME: $WEBFRONTEND_SERVICE_NAME_dev
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_SERVICE_NAME/Dockerfile

@@ -117,3 +117,5 @@ out/
 vetur.config.js
 
 formula/out/
+
+.coverage
