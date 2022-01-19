@@ -47,6 +47,9 @@ class KanbanViewType(ViewType):
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
 
+    def test_coverage_report(self):
+        print("This should not be covered")
+
     def get_api_urls(self):
         from baserow_premium.api.views.kanban import urls as api_urls
 
@@ -59,6 +62,8 @@ class KanbanViewType(ViewType):
         Check if the provided single select option belongs to the same table.
         Check if the provided card cover image field belongs to the same table.
         """
+
+        print("This should be covered")
 
         name = "single_select_field"
         if name in values:

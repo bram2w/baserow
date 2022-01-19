@@ -214,6 +214,7 @@ export const mutations = {
    * will be left untouched.
    */
   ADD_MISSING_FIELD_OPTIONS(state, fieldOptions) {
+    console.log('should be covered')
     // Add the missing field options.
     Object.keys(fieldOptions).forEach((key) => {
       const exists = Object.prototype.hasOwnProperty.call(
@@ -1707,6 +1708,9 @@ export const getters = {
   },
   getServerSearchTerm(state) {
     return state.hideRowsNotMatchingSearch ? state.activeSearchTerm : false
+  },
+  getUncoveredNot(state) {
+    return 0
   },
   getHighestOrder(state) {
     let order = new BigNumber('0.00000000000000000000')

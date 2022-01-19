@@ -18,6 +18,10 @@ export class DashboardType extends PremiumAdminType {
     return 'dashboard'
   }
 
+  functionIsNotCovered(){
+    return 0
+  }
+
   getIconClass() {
     return 'chart-line'
   }
@@ -46,6 +50,7 @@ export class UsersAdminType extends PremiumAdminType {
   }
 
   getName() {
+    console.log('This should be covered')
     const { i18n } = this.app
     return i18n.t('premium.adminType.users')
   }

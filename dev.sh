@@ -221,13 +221,14 @@ echo "./dev.sh running docker-compose commands:
 
 ARGS=$*
 if [ "$ARGS" = down ] ; then
-  echo "${YELLOW} ./dev.sh Replacing down with 'rm --stop -v --force' to clean up any anonymous volumes."
+  echo "${YELLOW}./dev.sh Replacing down with 'rm --stop -v --force' to clean up any anonymous volumes.${NC}"
   ARGS="rm --stop -v --force"
 fi
 
 if [ "$dont_attach" != true ] ; then
   if [[ "$ARGS" = up* ]] || [[ "$ARGS" = start* ]] || [[ "$up_down_restart" = true ]]; then
-    if [[ "$ARGS" =~ .*" -d ".* ]] ; then
+    if [[ ! "$ARGS" = .*" -d ".* ]] ; then
+      echo "${YELLOW}./dev.sh appending -d, disable with dont_attach.${NC}"
       # Ensure we are upping/starting in detached mode so we can attach correctly.
       ARGS="$ARGS -d"
     fi
@@ -244,12 +245,14 @@ fi
 
 if [[ "$up_down_restart" != true ]] ; then
   set -x
-  docker-compose -f docker-compose.yml -f docker-compose.dev.yml "$ARGS"
+  # shellcheck disable=SC2086
+  docker-compose -f docker-compose.yml -f docker-compose.dev.yml $ARGS
   set +x
 else
   set -x
   docker-compose -f docker-compose.yml -f docker-compose.dev.yml rm --stop -v --force
-  docker-compose -f docker-compose.yml -f docker-compose.dev.yml up "$ARGS"
+  # shellcheck disable=SC2086
+  docker-compose -f docker-compose.yml -f docker-compose.dev.yml up $ARGS
   set +x
 fi
 

@@ -40,6 +40,9 @@ class GridViewType(ViewType):
     can_share = True
     when_shared_publicly_requires_realtime_events = True
 
+    def test_coverage_report(self):
+        print("This should not be covered")
+
     def get_api_urls(self):
         from baserow.contrib.database.api.views.grid import urls as api_urls
 
@@ -51,6 +54,8 @@ class GridViewType(ViewType):
         """
         Adds the serialized grid view options to the exported dict.
         """
+
+        print("this should be covered")
 
         serialized = super().export_serialized(grid, files_zip, storage)
 
