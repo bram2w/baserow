@@ -49,7 +49,7 @@ case "$1" in
     ;;
     ci-test)
       mkdir reports/
-      JEST_JUNIT_OUTPUT_DIR=./reports/ yarn run jest --ci --reporters=default --reporters=jest-junit --collectCoverage --coverageDirectory="./reports/coverage/" --coverageReporters=cobertura --coverageReporters=text-summary --coverageReporters=html
+      JEST_JUNIT_OUTPUT_DIR=./reports/ yarn run jest --ci --reporters=default --reporters=jest-junit --collectCoverage --coverageDirectory="./reports/coverage/"
     ;;
     bash)
       exec /bin/bash "${@:2}"
