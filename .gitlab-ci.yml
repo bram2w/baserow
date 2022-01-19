@@ -222,9 +222,9 @@ backend-test:
     - ping -w 2 $MJML_IP
     - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
     - ping -w 2 $DB_IP
-    - docker run --name=baserow_test_container --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $BACKEND_CI_IMAGE ci-test
-    - docker cp baserow_test_container:/baserow/backend/reports reports
-    - docker rm baserow_test_container
+    - docker run --name=baserow_backend_test_container --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $BACKEND_CI_IMAGE ci-test
+    - docker cp baserow_backend_test_container:/baserow/backend/reports reports
+    - docker rm baserow_backend_test_container
   artifacts:
     when: always
     paths:
@@ -268,9 +268,9 @@ web-frontend-test:
   services:
     - docker:19.03.12-dind
   script:
-    - docker run --name=baserow_test_container $WEBFRONTEND_CI_IMAGE ci-test
-    - docker cp baserow_test_container:/baserow/backend/reports reports
-    - docker rm baserow_test_container
+    - docker run --name=baserow_webfrontend_test_container $WEBFRONTEND_CI_IMAGE ci-test
+    - docker cp baserow_webfrontend_test_container:/baserow/web-frontend/reports reports
+    - docker rm baserow_webfrontend_test_container
   artifacts:
     when: always
     paths:
