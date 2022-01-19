@@ -238,23 +238,19 @@ if [ "$dont_attach" != true ] ; then
   fi
 fi
 
+if [[ "$up_down_restart" = true ]] ; then
+  docker-compose -f docker-compose.yml -f docker-compose.dev.yml rm --stop -v --force
+  ARGS="up $ARGS"
+fi
 
 if [ "$delete_db_volume" = true ] ; then
-docker volume rm baserow_pgdata || true;
+  docker volume rm baserow_pgdata || true;
 fi
 
-if [[ "$up_down_restart" != true ]] ; then
-  set -x
-  # shellcheck disable=SC2086
-  docker-compose -f docker-compose.yml -f docker-compose.dev.yml $ARGS
-  set +x
-else
-  set -x
-  docker-compose -f docker-compose.yml -f docker-compose.dev.yml rm --stop -v --force
-  # shellcheck disable=SC2086
-  docker-compose -f docker-compose.yml -f docker-compose.dev.yml up $ARGS
-  set +x
-fi
+set -x
+# shellcheck disable=SC2086
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml $ARGS
+set +x
 
 if [ "$dont_attach" != true ]; then
 
