@@ -69,10 +69,6 @@ variables:
       CI_DEV_LATEST_BRANCH_TAG=$CLEANUP_JOB_CI_TAG_PREFIX$TRUNCATED_BRANCH_NAME
 
       LATEST_CI_IMAGE="$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CI_DEV_LATEST_BRANCH_TAG"
-      # repo/ci/backend_dev:ci-latest-branchname
-      # repo/testing/backend_dev:branch-latest-branchname
-      # repo/testing/backend_dev:develop-latest
-
       # ===== 1. Try pull an image we can use to cache the build with =====
 
       # First try the latest CI image for this branch
@@ -297,7 +293,7 @@ publish-backend-image:
   extends: .publish-baserow-image
   variables:
     IMAGE_NAME: $BACKEND_IMAGE_NAME
-    DEV_IMAGE_NAME: $BACKEND_IMAGE_NAME_dev
+    DEV_IMAGE_NAME: $BACKEND_DEV_IMAGE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_IMAGE_NAME/Dockerfile
 
 # ==================================== WEB-FRONTEND ====================================
