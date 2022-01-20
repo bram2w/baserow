@@ -217,9 +217,9 @@ variables:
   script:
     - |
       if [[ -n "$EXIT_IF_TAG_NOT_ON_BRANCH" ]]; then
-        curl --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch" -o this_commits_branches.json
+        curl -s --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch" -o this_commits_branches.json
         cat this_commits_branches.json
-        BRANCH_MATCHES=$(jq '.[] | select(.name == "$EXIT_IF_TAG_NOT_ON_BRANCH")' this_commits_branches.json)
+        BRANCH_MATCHES=$(cat this_commits_branches.json | jq '.[] | select(.name == "$EXIT_IF_TAG_NOT_ON_BRANCH")')
         echo "-"
         echo $BRANCH_MATCHES
         echo "-"
@@ -246,8 +246,8 @@ variables:
       # before pushing any images to repos incase someone has tagged before the build
       # finished.
       if [[ -n "$CI_COMMIT_TAG" ]]; then
-        curl --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA" -o commit_info.json
-        LAST_PIPELINE_STATUS=$(jq --raw-output '.last_pipeline.status' commit_info.json)
+        curl -s --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA" -o commit_info.json
+        LAST_PIPELINE_STATUS=$(cat commit_info.json | jq --raw-output '.last_pipeline.status')
         if [[ "$LAST_PIPELINE_STATUS" != "success" ]]; then
           echo "Cannot publish tagged images as there is no successful pipeline run yet for this commit..."
           exit 1
