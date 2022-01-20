@@ -54,11 +54,11 @@ variables:
   script:
     - |
       if [[ -z "$DOCKERFILE_PATH" ]]; then
-          echo "Must provide DOCKERFILE_PATH as a job variable" 1>&2
+          echo "Must provide DOCKERFILE_PATH as a job variable"
           exit 1
       fi
       if [[ -z "$DEV_IMAGE_NAME" ]]; then
-          echo "Must provide DEV_IMAGE_NAME as a job variable" 1>&2
+          echo "Must provide DEV_IMAGE_NAME as a job variable"
           exit 1
       fi
 
@@ -151,15 +151,15 @@ variables:
   script:
     - |
       if [[ -z "$DOCKERFILE_PATH" ]]; then
-          echo "Must provide DOCKERFILE_PATH as a job variable" 1>&2
+          echo "Must provide DOCKERFILE_PATH as a job variable"
           exit 1
       fi
       if [[ -z "$IMAGE_NAME" ]]; then
-          echo "Must provide IMAGE_NAME as a job variable" 1>&2
+          echo "Must provide IMAGE_NAME as a job variable"
           exit 1
       fi
       if [[ -z "$DEV_IMAGE_NAME" ]]; then
-          echo "Must provide DEV_IMAGE_NAME as a job variable" 1>&2
+          echo "Must provide DEV_IMAGE_NAME as a job variable"
           exit 1
       fi
 
@@ -216,12 +216,12 @@ variables:
   script:
     - |
       if [[ -z "$SOURCE_IMAGE" ]]; then
-          echo "Must provide SOURCE_IMAGE as a job variable" 1>&2
-          exit 1
+          echo "Must provide SOURCE_IMAGE as a job variable";
+          exit 1;
       fi
       if [[ -z "$TARGET_IMAGE" ]]; then
-          echo "Must provide TARGET_IMAGE as a job variable" 1>&2
-          exit 1
+          echo "Must provide TARGET_IMAGE as a job variable";
+          exit 1;
       fi
 
       if [[ -n "$EXIT_IF_TAG_NOT_ON_BRANCH" ]]; then
@@ -253,7 +253,7 @@ variables:
         curl --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA" >> commit_info.json
         LAST_PIPELINE_STATUS=$(jq --raw-output '.last_pipeline.status' commit_info.json)
         if [[ "$LAST_PIPELINE_STATUS" != "success" ]]; then
-          echo "Cannot publish tagged images as there is no successful pipeline run yet for this commit..." 1>&2
+          echo "Cannot publish tagged images as there is no successful pipeline run yet for this commit..."
           exit 1
         fi
       fi
@@ -281,6 +281,10 @@ backend-lint:
   extends: .docker-image-test-stage
   script:
     - docker run --rm $BACKEND_CI_DEV_IMAGE lint
+  only:
+    changes:
+      - backend/
+      - premium/backend/
 
 backend-test:
   extends: .docker-image-test-stage
@@ -313,6 +317,10 @@ backend-test:
       cobertura: reports/coverage.xml
       junit: reports/report.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
+  only:
+    changes:
+      - backend/
+      - premium/backend/
 
 build-final-backend-image:
   extends: .build-final-baserow-image
@@ -332,11 +340,19 @@ web-frontend-eslint:
   extends: .docker-image-test-stage
   script:
     - docker run --rm $WEBFRONTEND_CI_DEV_IMAGE eslint
+  only:
+    changes:
+      - web-frontend/
+      - premium/web-frontend/
 
 web-frontend-stylelint:
   extends: .docker-image-test-stage
   script:
     - docker run --rm $WEBFRONTEND_CI_DEV_IMAGE stylelint
+  only:
+    changes:
+      - web-frontend/
+      - premium/web-frontend/
 
 web-frontend-test:
   extends: .docker-image-test-stage
@@ -352,6 +368,10 @@ web-frontend-test:
       cobertura: reports/coverage/cobertura-coverage.xml
       junit: reports/junit.xml
   coverage: '/Lines\s*:\s*(\d+.?\d*)%/'
+  only:
+    changes:
+      - web-frontend/
+      - premium/web-frontend/
 
 build-web-final-frontend-image:
   extends: .build-final-baserow-image

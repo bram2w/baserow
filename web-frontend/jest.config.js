@@ -17,7 +17,6 @@ module.exports = {
   ],
   coverageReporters: [
     'html',
-    'text',
     'text-summary',
     ['cobertura', { projectRoot: '/baserow/' }],
   ],
