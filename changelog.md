@@ -13,6 +13,7 @@
 
 * Fixed migration failing when upgrading a version of Baserow installed using Postgres 
   10 or lower.
+* Fixed download/preview files from another origin
 
 ## Released (2022-01-13)
 

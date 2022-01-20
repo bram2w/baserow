@@ -42,7 +42,12 @@
 }
 
 .file-field-modal__body {
-  @include absolute($file-field-modal-head-height, 0, $file-field-modal-foot-height, 0);
+  @include absolute(
+    $file-field-modal-head-height,
+    0,
+    $file-field-modal-foot-height,
+    0
+  );
 }
 
 .file-field-modal__body-nav {
@@ -75,7 +80,12 @@
   align-items: center;
   justify-content: center;
 
-  @include absolute(0, $file-field-modal-body-nav-width, 0, $file-field-modal-body-nav-width);
+  @include absolute(
+    0,
+    $file-field-modal-body-nav-width,
+    0,
+    $file-field-modal-body-nav-width
+  );
 }
 
 .file-field-modal__preview-icon {
@@ -165,5 +175,21 @@
 
   &:hover {
     background-color: $color-neutral-700;
+  }
+
+  &.file-field-modal__action--loading {
+    // Prevent interactions while loading file
+    pointer-events: none;
+
+    &::after {
+      content: '';
+
+      @include loading(16px);
+      @include absolute(8px, 8px, auto, auto);
+    }
+
+    & .fas {
+      visibility: hidden;
+    }
   }
 }
