@@ -1,11 +1,3 @@
-#before_script:
-#  - apt-get update && apt-get -y install make curl gnupg2
-
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      when: never
-
 stages:
   - build
   - test
@@ -47,10 +39,9 @@ variables:
   image: docker:19.03.12
   stage: build
   # Prevent rebuilds when tagging all we want to do is tag and push the already built image
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: never
-    - when: always
+  except:
+    variables:
+      - $CI_COMMIT_TAG
   services:
     - docker:19.03.12-dind
   variables:
@@ -127,10 +118,9 @@ variables:
   image: docker:19.03.12
   stage: build-final
   # Prevent rebuilds when tagging all we want to do is tag and push the already built image
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: never
-    - when: always
+  except:
+    variables:
+      - $CI_COMMIT_TAG
   services:
     - docker:19.03.12-dind
   variables:
@@ -195,10 +185,9 @@ variables:
   stage: test
   image: docker:19.03.12
   # Prevent rebuilds when tagging all we want to do is tag and push the already built image
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: never
-    - when: always
+  except:
+    variables:
+      - $CI_COMMIT_TAG
   services:
     - docker:19.03.12-dind
 
@@ -355,10 +344,9 @@ build-web-final-frontend-image:
 
 publish-backend-develop-latest-image:
   extends: .publish-baserow-image
-  rules:
-    - if: $CI_COMMIT_BRANCH != $DEVELOP_BRANCH_NAME
-      when: never
-    - when: always
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   variables:
     EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$DEVELOP_BRANCH_NAME
     SOURCE_IMAGE: $BACKEND_CI_IMAGE
@@ -370,10 +358,9 @@ publish-backend-develop-latest-image:
 
 publish-backend-develop-latest-dev-image:
   extends: .publish-baserow-image
-  rules:
-    - if: $CI_COMMIT_BRANCH != $DEVELOP_BRANCH_NAME
-      when: never
-    - when: always
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   variables:
     EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$DEVELOP_BRANCH_NAME
     SOURCE_IMAGE: $BACKEND_CI_DEV_IMAGE
@@ -384,11 +371,9 @@ publish-backend-develop-latest-dev-image:
 
 publish-backend-release-tagged-image:
   extends: .publish-baserow-image
-  rules:
-    # Only run this stage if someone has set a tag.
-    - if: $CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""
-      when: never
-    - when: always
+  only:
+    variables:
+      - $CI_COMMIT_TAG
   variables:
     EXIT_IF_TAG_NOT_ON_BRANCH: $CI_DEFAULT_BRANCH
     SOURCE_IMAGE: $BACKEND_CI_IMAGE
@@ -399,11 +384,9 @@ publish-backend-release-tagged-image:
 
 publish-backend-latest-release-image:
   extends: .publish-baserow-image
-  rules:
-    # Only run this stage if someone has set a tag.
-    - if: $CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""
-      when: never
-    - when: always
+  only:
+    variables:
+      - $CI_COMMIT_TAG
   variables:
     EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$CI_DEFAULT_BRANCH
     EXIT_IF_TAG_NOT_ON_BRANCH: $CI_DEFAULT_BRANCH
@@ -417,10 +400,9 @@ publish-backend-latest-release-image:
 
 publish-webfrontend-develop-latest-image:
   extends: .publish-baserow-image
-  rules:
-    - if: $CI_COMMIT_BRANCH != $DEVELOP_BRANCH_NAME
-      when: never
-    - when: always
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   variables:
     EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$DEVELOP_BRANCH_NAME
     SOURCE_IMAGE: $WEBFRONTEND_CI_IMAGE
@@ -432,10 +414,9 @@ publish-webfrontend-develop-latest-image:
 
 publish-webfrontend-develop-latest-dev-image:
   extends: .publish-baserow-image
-  rules:
-    - if: $CI_COMMIT_BRANCH != $DEVELOP_BRANCH_NAME
-      when: never
-    - when: always
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   variables:
     EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$DEVELOP_BRANCH_NAME
     SOURCE_IMAGE: $WEBFRONTEND_CI_DEV_IMAGE
@@ -446,11 +427,9 @@ publish-webfrontend-develop-latest-dev-image:
 
 publish-webfrontend-release-tagged-image:
   extends: .publish-baserow-image
-  rules:
-    # Only run this stage if someone has set a tag.
-    - if: $CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""
-      when: never
-    - when: always
+  only:
+    variables:
+      - $CI_COMMIT_TAG
   variables:
     EXIT_IF_TAG_NOT_ON_BRANCH: $CI_DEFAULT_BRANCH
     SOURCE_IMAGE: $WEBFRONTEND_CI_IMAGE
@@ -461,11 +440,9 @@ publish-webfrontend-release-tagged-image:
 
 publish-webfrontend-latest-release-image:
   extends: .publish-baserow-image
-  rules:
-    # Only run this stage if someone has set a tag.
-    - if: $CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""
-      when: never
-    - when: always
+  only:
+    variables:
+      - $CI_COMMIT_TAG
   variables:
     EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$CI_DEFAULT_BRANCH
     EXIT_IF_TAG_NOT_ON_BRANCH: $CI_DEFAULT_BRANCH
