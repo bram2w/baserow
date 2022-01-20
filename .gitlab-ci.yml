@@ -200,8 +200,6 @@ variables:
   variables:
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
-  before_script:
-    - echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_CI_REGISTRY" --password-stdin
   allow_failure:
     # By exiting with this code we can skip this step without failing the build,
     # but still fail if something else goes wrong.
@@ -238,6 +236,7 @@ variables:
         fi
       fi
 
+      echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_REGISTRY" --password-stdin
 
       if [[ -n "$DRY_RUN_PUBLISH" ]]; then
         echo "docker pull $SOURCE_IMAGE"
