@@ -8,6 +8,7 @@ stages:
   - publish
 
 variables:
+  DRY_RUN_PUBLISH: "true"
   # An image repo which is used for storing and passing images between ci pipeline jobs
   # and also speeding up ci builds by caching from the latest ci image when building.
   CI_IMAGE_REPO: $CI_REGISTRY_IMAGE/ci
@@ -243,9 +244,16 @@ variables:
         fi
       fi
 
-      docker pull $SOURCE_IMAGE
-      docker tag $SOURCE_IMAGE $TARGET_IMAGE
-      docker push $TARGET_IMAGE
+
+      if [[ -n "$DRY_RUN_PUBLISH" ]]; then
+        echo "docker pull $SOURCE_IMAGE"
+        echo "docker tag $SOURCE_IMAGE $TARGET_IMAGE"
+        echo "docker push $TARGET_IMAGE"
+      else
+        docker pull $SOURCE_IMAGE
+        docker tag $SOURCE_IMAGE $TARGET_IMAGE
+        docker push $TARGET_IMAGE
+      fi
 
 # ====================================== BACKEND ======================================
 build-backend-image:
