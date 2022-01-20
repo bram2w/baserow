@@ -213,7 +213,7 @@ variables:
     # but still fail if something else goes wrong.
     exit_codes: 137
   before_script:
-    - apk update && apk add curl jq
+    - apk update && apk add curl git jq
   script:
     - |
       if [[ -n "$EXIT_IF_TAG_NOT_ON_BRANCH" ]]; then
@@ -232,7 +232,7 @@ variables:
 
       if [[ -n "$EXIT_IF_NOT_LATEST_COMMIT_ON_REF" ]]; then
         LATEST_COMMIT_HASH=$(git rev-parse $EXIT_IF_NOT_LATEST_COMMIT_ON_REF)
-        HEAD_COMMIT_HASH=$(git rev-parse HEAD)
+        HEAD_COMMIT_HASH=$CI_COMMIT_SHA
         if [[ "$LATEST_COMMIT_HASH" != "$HEAD_COMMIT_HASH" ]]; then
             echo "Pipeline is not running for latest commit on origin/$EXIT_IF_NOT_LATEST_COMMIT_ON_REF"
             echo " which has commit $LATEST_COMMIT_HASH."
