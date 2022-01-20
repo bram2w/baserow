@@ -213,13 +213,15 @@ variables:
     # but still fail if something else goes wrong.
     exit_codes: 137
   before_script:
-    - apk update && apk add git jq
+    - apk update && apk add curl jq
   script:
     - |
       if [[ -n "$EXIT_IF_TAG_NOT_ON_BRANCH" ]]; then
-        git branch -a --contains $CI_COMMIT_TAG
-        git branch -a --contains tags/$CI_COMMIT_TAG
-        if ! $( git branch -a --contains $CI_COMMIT_TAG | grep -q $EXIT_IF_TAG_NOT_ON_BRANCH ); then
+        THIS_COMMITS_BRANCHES=$(curl --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch")
+        echo $THIS_COMMITS_BRANCHES
+        BRANCH_MATCHES=$(jq '.[] | select(.name == "$EXIT_IF_TAG_NOT_ON_BRANCH")')
+        echo $BRANCH_MATCHES
+        if [[ -z "$BRANCH_MATCHES" ]]; then
           echo "Pipeline is running for tag: $CI_COMMIT_TAG which is not on branch $EXIT_IF_TAG_NOT_ON_BRANCH";
           echo "Skipping publish...";
           exit 137;
