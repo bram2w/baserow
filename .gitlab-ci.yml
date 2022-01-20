@@ -31,7 +31,7 @@ variables:
   WEBFRONTEND_CI_DEV_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
   DEVELOP_BRANCH_NAME: develop
   DEVELOP_LATEST_TAG: develop-latest
-  MASTER_BRANCH_NAME: 736-build-and-publish-backend-and-web_frontend-docker-images
+  MASTER_BRANCH_NAME: master
 
 # ============== "Abstract" ci stages used by later real stages =======================
 
@@ -55,11 +55,11 @@ variables:
   script:
     - |
       if [[ -z "$DOCKERFILE_PATH" ]]; then
-          echo "Must provide DOCKERFILE_PATH as a job variable"
+          echo "Must provide DOCKERFILE_PATH as a job variable" 2>&1
           exit 1
       fi
       if [[ -z "$DEV_IMAGE_NAME" ]]; then
-          echo "Must provide DEV_IMAGE_NAME as a job variable"
+          echo "Must provide DEV_IMAGE_NAME as a job variable" 2>&1
           exit 1
       fi
 
@@ -152,15 +152,15 @@ variables:
   script:
     - |
       if [[ -z "$DOCKERFILE_PATH" ]]; then
-          echo "Must provide DOCKERFILE_PATH as a job variable"
+          echo "Must provide DOCKERFILE_PATH as a job variable" 2>&1
           exit 1
       fi
       if [[ -z "$IMAGE_NAME" ]]; then
-          echo "Must provide IMAGE_NAME as a job variable"
+          echo "Must provide IMAGE_NAME as a job variable" 2>&1
           exit 1
       fi
       if [[ -z "$DEV_IMAGE_NAME" ]]; then
-          echo "Must provide DEV_IMAGE_NAME as a job variable"
+          echo "Must provide DEV_IMAGE_NAME as a job variable" 2>&1
           exit 1
       fi
 
@@ -218,11 +218,7 @@ variables:
     - |
       if [[ -n "$EXIT_IF_TAG_NOT_ON_BRANCH" ]]; then
         curl -s --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch" -o this_commits_branches.json
-        cat this_commits_branches.json
         BRANCH_MATCHES=$(cat this_commits_branches.json | jq ".[] | select(.name == \"$EXIT_IF_TAG_NOT_ON_BRANCH\")")
-        echo "-"
-        echo $BRANCH_MATCHES
-        echo "-"
         if [[ -z "$BRANCH_MATCHES" ]]; then
           echo "Pipeline is running for tag: $CI_COMMIT_TAG which is not on branch $EXIT_IF_TAG_NOT_ON_BRANCH";
           echo "Skipping publish...";
@@ -247,9 +243,11 @@ variables:
       # finished.
       if [[ -n "$CI_COMMIT_TAG" ]]; then
         curl -s --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA" -o commit_info.json
+        cat commit_info.json
         LAST_PIPELINE_STATUS=$(cat commit_info.json | jq --raw-output '.last_pipeline.status')
+        echo $LAST_PIPELINE_STATUS
         if [[ "$LAST_PIPELINE_STATUS" != "success" ]]; then
-          echo "Cannot publish tagged images as there is no successful pipeline run yet for this commit..."
+          echo "Cannot publish tagged images as there is no successful pipeline run yet for this commit..." 2>&1
           exit 1
         fi
       fi
@@ -349,10 +347,6 @@ web-frontend-test:
     reports:
       cobertura: reports/coverage/cobertura-coverage.xml
       junit: reports/junit.xml
-  cache:
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - reports/
   coverage: '/Lines\s*:\s*(\d+.?\d*)%/'
 
 build-web-final-frontend-image:
