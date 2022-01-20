@@ -7067,11 +7067,6 @@ jest-runtime@^26.6.3:
     strip-bom "^4.0.0"
     yargs "^15.4.1"
 
-jest-serial-runner@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/jest-serial-runner/-/jest-serial-runner-1.2.0.tgz#d25002cc4ea1a2b7dd051d9e6c1fa5b17ca97a73"
-  integrity sha512-iEQPK4U6K+J+46bu3QV2Uu3EnQMiIMk9nFravKlT794KxIruch0kQSV46YHUOSBeFjR4kqY6ra3aqm/AlHklDg==
-
 jest-serializer-vue@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/jest-serializer-vue/-/jest-serializer-vue-2.0.2.tgz#b238ef286357ec6b480421bd47145050987d59b3"
