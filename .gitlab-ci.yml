@@ -218,8 +218,11 @@ variables:
     - |
       if [[ -n "$EXIT_IF_TAG_NOT_ON_BRANCH" ]]; then
         curl --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch" -o this_commits_branches.json
+        cat this_commits_branches.sjon
         BRANCH_MATCHES=$(jq '.[] | select(.name == "$EXIT_IF_TAG_NOT_ON_BRANCH")' this_commits_branches.json)
+        echo "-"
         echo $BRANCH_MATCHES
+        echo "-"
         if [[ -z "$BRANCH_MATCHES" ]]; then
           echo "Pipeline is running for tag: $CI_COMMIT_TAG which is not on branch $EXIT_IF_TAG_NOT_ON_BRANCH";
           echo "Skipping publish...";
