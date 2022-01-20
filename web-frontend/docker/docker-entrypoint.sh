@@ -48,8 +48,7 @@ case "$1" in
       exec make eslint
     ;;
     ci-test)
-      mkdir reports/
-      JEST_JUNIT_OUTPUT_DIR=./reports/ yarn run jest --ci --reporters=default --reporters=jest-junit --collectCoverage --coverageDirectory="./reports/coverage/"
+      exec make ci-test
     ;;
     bash)
       exec /bin/bash "${@:2}"

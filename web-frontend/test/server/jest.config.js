@@ -6,4 +6,5 @@ module.exports = Object.assign({}, baseConfig, {
   displayName: 'server',
   name: 'server',
   setupFilesAfterEnv: ['<rootDir>/web-frontend/test/server/jest.setup.js'],
+  runner: 'jest-serial-runner'
 })

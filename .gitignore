@@ -119,3 +119,4 @@ vetur.config.js
 formula/out/
 
 .coverage
+junit.xml

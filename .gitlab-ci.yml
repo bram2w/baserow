@@ -325,7 +325,7 @@ web-frontend-test:
     - docker:19.03.12-dind
   script:
     - docker run --name=baserow_webfrontend_test_container $WEBFRONTEND_CI_IMAGE ci-test
-    - docker cp baserow_webfrontend_test_container:/baserow/web-frontend/reports reports
+    - docker cp baserow_webfrontend_test_container:/baserow/reports reports
     - docker rm baserow_webfrontend_test_container
   artifacts:
     when: always

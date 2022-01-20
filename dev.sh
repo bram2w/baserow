@@ -227,7 +227,7 @@ fi
 
 if [ "$dont_attach" != true ] ; then
   if [[ "$ARGS" = up* ]] || [[ "$ARGS" = start* ]] || [[ "$up_down_restart" = true ]]; then
-    if [[ ! "$ARGS" = .*" -d ".* ]] ; then
+    if [[ ! "$ARGS" = *-d* ]] ; then
       echo "${YELLOW}./dev.sh appending -d, disable with dont_attach.${NC}"
       # Ensure we are upping/starting in detached mode so we can attach correctly.
       ARGS="$ARGS -d"
