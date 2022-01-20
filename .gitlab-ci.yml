@@ -4,6 +4,7 @@
 stages:
   - build
   - test
+  - build-final
   - publish
 
 variables:
@@ -19,11 +20,6 @@ variables:
   #
   # IMPORTANT: UPDATE GITLAB CONTAINER REPO CLEANUP JOB REGEX IF YOU CHANGE THIS
   CLEANUP_JOB_CI_TAG_PREFIX: ci-latest-
-  # Any images with tags prefixed with this will be cleaned up automatically by our
-  # gitlab cleanup job.
-  #
-  # IMPORTANT: UPDATE GITLAB CONTAINER REPO CLEANUP JOB REGEX IF YOU CHANGE THIS
-  CLEANUP_JOB_BRANCH_TAG_PREFIX: branch-latest-
   # An image repo where dev and normal images will be stored after they have been
   # successfully built and tested.
   IMAGE_REPO: $CI_REGISTRY_IMAGE/testing
@@ -31,8 +27,10 @@ variables:
   BACKEND_DEV_IMAGE_NAME: backend_dev
   WEBFRONTEND_IMAGE_NAME: web-frontend
   WEBFRONTEND_DEV_IMAGE_NAME: web-frontend_dev
-  BACKEND_CI_IMAGE: $CI_IMAGE_REPO/$BACKEND_DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
-  WEBFRONTEND_CI_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+  BACKEND_CI_IMAGE: $CI_IMAGE_REPO/$BACKEND_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+  WEBFRONTEND_CI_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+  BACKEND_CI_DEV_IMAGE: $CI_IMAGE_REPO/$BACKEND_DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+  WEBFRONTEND_CI_DEV_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
   DEVELOP_BRANCH_NAME: develop
   DEVELOP_LATEST_TAG: $DEVELOP_BRANCH_NAME-latest
 
@@ -42,6 +40,11 @@ variables:
 .build-baserow-image:
   image: docker:19.03.12
   stage: build
+  # Prevent rebuilds when tagging all we want to do is tag and push the already built image
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
   services:
     - docker:19.03.12-dind
   variables:
@@ -75,16 +78,11 @@ variables:
       CACHE_IMAGE=$LATEST_CI_IMAGE
       if ! docker pull $CACHE_IMAGE; then
 
-        # Then perhaps the latest dev image for this branch
-        CACHE_IMAGE="$IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_BRANCH_TAG_PREFIX$TRUNCATED_BRANCH_NAME"
-        if ! docker pull $CACHE_IMAGE; then
-
-          # Finally the latest dev image from develop
+          # If that didnt work try the latest dev image from develop
           CACHE_IMAGE="$IMAGE_REPO/$DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG";
           if ! docker pull $CACHE_IMAGE; then
              CACHE_IMAGE=""
           fi
-        fi
       fi
 
       if [[ -n "$CACHE_IMAGE" ]]; then
@@ -98,17 +96,17 @@ variables:
       # This image tag is one that can be used by subsequent build steps, using the
       # latest one might introduce race conditions with concurrent pipelines. Instead
       # by using a simple name + sha we know we will be getting the right image later on
-      # and we can easily re-construct this image also as $CI_COMMIT_SHORT_SHA is
+      # and we can easily re-construct this image path also as $CI_COMMIT_SHORT_SHA is
       # available in all stages.
       CI_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
 
       # ===== 2. Build a dev image to be used in subsequent CI stages =====
 
       # * Use `--build-arg BUILDKIT_INLINE_CACHE=1` to ensure this image's itermediate
-      #    layers will be cached and re-used in the final publish stage.
+      #    layers will be cached so builds caching from this image can use those layers.
       # * $CACHE_ARG is a --cache-from if we have an existing image that we can use
       #    to speed up this build.
-      # * Target the dev image as we want to run tests and linting in this image
+      # * Target the dev image as we want to run tests and linting in this image.
       # * Tag as both the ci image for use in later stages and the latest ci image to
       #   cache any future ci pipeline runs.
       docker build --build-arg BUILDKIT_INLINE_CACHE=1 $CACHE_ARG --target dev --tag $CI_IMAGE_PATH --tag $LATEST_CI_IMAGE -f $DOCKERFILE_PATH .;
@@ -118,10 +116,15 @@ variables:
       docker push $CI_IMAGE_PATH
       docker push $LATEST_CI_IMAGE
 
-# To extend this stage set the DOCKERFILE_PATH and DEV_IMAGE_NAME variables.
-.publish-baserow-image:
+# To extend this stage set the DOCKERFILE_PATH, IMAGE_NAME and DEV_IMAGE_NAME variables.
+.build-final-baserow-image:
   image: docker:19.03.12
-  stage: publish
+  stage: build-final
+  # Prevent rebuilds when tagging all we want to do is tag and push the already built image
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
   services:
     - docker:19.03.12-dind
   variables:
@@ -162,7 +165,6 @@ variables:
           exit 1
       fi
 
-
       # ===== 1. Setup image metadata labels =====
       echo "Building and shipping image to $IMAGE_REPO"
       #Build date for opencontainers
@@ -173,73 +175,77 @@ variables:
       IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.title=$BUILDTITLE --label org.opencontainers.image.description=$BUILDTITLE"
 
       # ==== 2. Tag, build and push non-dev image ====
-      # ====== 2.1. If on master and this commit tagged add latest and commit tag tags
-      if [[ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]]; then
-        VERSIONLABEL=$CI_COMMIT_TAG
-        if [[ ! -z "$VERSIONLABEL" ]]; then
-          # If we are on master and this commit is tagged then publish this image
-          # as the latest.
-          ADDITIONALTAGLIST="$ADDITIONALTAGLIST latest";
-          ADDITIONALTAGLIST="$ADDITIONALTAGLIST $VERSIONLABEL"
-          IMAGE_LABELS="$IMAGE_LABELS --label org.opencontainers.image.version=$VERSIONLABEL"
-        fi
-      fi
-
-      # ====== 2.2. Tag as develop-latest if on develop =====
-      if [[ "$CI_COMMIT_BRANCH" = $DEVELOP_BRANCH_NAME ]]; then
-        # TODO - Check if this is actually the latest commit on develop before doing
-        # this
-        ADDITIONALTAGLIST="$ADDITIONALTAGLIST $DEVELOP_LATEST_TAG";
-      fi
-
-      # ====== 2.3. Tag and build non dev image =====
-      FORMATTEDTAGLIST=""
-      if [[ -n "$ADDITIONALTAGLIST" ]]; then
-        for TAG in $ADDITIONALTAGLIST; do
-          TAGGED_IMAGE=$IMAGE_REPO/$IMAGE_NAME:$TAG
-          FORMATTEDTAGLIST="${FORMATTEDTAGLIST} -t $TAGGED_IMAGE ";
-        done;
-      fi
 
       # Cache from the CI dev image to build the non dev image.
       CI_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+      TARGET_NON_DEV_IMAGE_PATH=$CI_IMAGE_REPO/$IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+
       docker pull $CI_IMAGE_PATH
       # Build the normal non-dev image with all the tags and labels.
-      docker build --cache-from $CI_IMAGE_PATH $FORMATTEDTAGLIST $IMAGE_LABELS -f $DOCKERFILE_PATH .;
+      docker build --cache-from $CI_IMAGE_PATH $FORMATTEDTAGLIST $IMAGE_LABELS -t $TARGET_NON_DEV_IMAGE_PATH -f $DOCKERFILE_PATH .;
+      docker push $TARGET_NON_DEV_IMAGE_PATH
 
-      # ====== 2.4. Push all non dev image tags =====
-      if [[ -n "$ADDITIONALTAGLIST" ]]; then
-        for TAG in $ADDITIONALTAGLIST; do
-          TAGGED_IMAGE=$IMAGE_REPO/$IMAGE_NAME:$TAG
-          docker push $TAGGED_IMAGE
-        done;
+.docker-image-test-stage:
+  stage: test
+  image: docker:19.03.12
+  # Prevent rebuilds when tagging all we want to do is tag and push the already built image
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: always
+  services:
+    - docker:19.03.12-dind
+
+
+.publish-baserow-image:
+  image: docker:19.03.12
+  stage: publish
+  services:
+    - docker:19.03.12-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_CI_REGISTRY" --password-stdin
+  allow_failure:
+    # By exiting with this code we can skip this step without failing the build,
+    # but still fail if something else goes wrong.
+    exit_codes: 137
+  script:
+    - |
+      if [[ -z "$SOURCE_IMAGE" ]]; then
+          echo "Must provide SOURCE_IMAGE as a job variable" 1>&2
+          exit 1
+      fi
+      if [[ -z "$TARGET_IMAGE" ]]; then
+          echo "Must provide TARGET_IMAGE as a job variable" 1>&2
+          exit 1
       fi
 
-      # ====== 3. Publish dev image =====
-      # Finally we can publish the latest dev image for this branch as the image has
-      # now neen tested.
-
-      # Ensure we don't go over 128 char docker tag length limit
-      TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
-      BRANCH_DEV_LATEST_BRANCH_TAG=""
-
-      if [[ "$CI_COMMIT_BRANCH" = $DEVELOP_BRANCH_NAME ]]; then
-        BRANCH_DEV_LATEST_BRANCH_TAG=$IMAGE_REPO/$DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG
-      elif [[ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]]; then
-        VERSIONLABEL=$CI_COMMIT_TAG
-        if [[ ! -z "$VERSIONLABEL" ]]; then
-          # only publish dev image as latest if this is a tagged master version.
-          # todo : only do if this is the latest tag to prevent rebuilds
-          BRANCH_DEV_LATEST_BRANCH_TAG=$IMAGE_REPO/$DEV_IMAGE_NAME
-        fi 
-      else
-        BRANCH_DEV_LATEST_BRANCH_TAG=$IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_BRANCH_TAG_PREFIX$TRUNCATED_BRANCH_NAME
+      if [[ -n "$EXIT_IF_TAG_NOT_ON_BRANCH" ]]; then
+        git branch --contains $CI_COMMIT_TAG | grep $EXIT_IF_TAG_NOT_ON_BRANCH;
+        TAG_ON_BRANCH=$?
+        if [ $TAG_ON_BRANCH -ne 0 ]; then
+          echo "Pipeline is running for tag: $CI_COMMIT_TAG which is not on branch $EXIT_IF_TAG_NOT_ON_BRANCH"
+          echo "Skipping publish..."
+          exit 137
+        fi
       fi
 
-      if [[ -n "$BRANCH_DEV_LATEST_BRANCH_TAG" ]]; then
-        docker tag $CI_IMAGE_PATH $BRANCH_DEV_LATEST_BRANCH_TAG
-        docker push $BRANCH_DEV_LATEST_BRANCH_TAG
+      if [[ -n "$EXIT_IF_NOT_LATEST_COMMIT_ON_REF" ]]; then
+        LATEST_COMMIT_HASH=$(git rev-parse $EXIT_IF_NOT_LATEST_COMMIT_ON_REF)
+        HEAD_COMMIT_HASH=$(git rev-parse HEAD)
+        if [[ "$LATEST_COMMIT_HASH" != "$HEAD_COMMIT_HASH" ]]; then
+            echo "Pipeline is not running for latest commit on origin/$EXIT_IF_NOT_LATEST_COMMIT_ON_REF"
+            echo " which has commit $LATEST_COMMIT_HASH."
+            echo "Instead pipeline is running on commit $HEAD_COMMIT_HASH, exitting as configured to do so in this situation..."
+            exit 137
+        fi
       fi
+
+      docker pull $SOURCE_IMAGE
+      docker tag $SOURCE_IMAGE $TARGET_IMAGE
+      docker push $TARGET_IMAGE
 
 # ====================================== BACKEND ======================================
 build-backend-image:
@@ -249,16 +255,12 @@ build-backend-image:
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$BACKEND_IMAGE_NAME/Dockerfile
 
 backend-lint:
-  stage: test
-  image: docker:19.03.12
-  services:
-    - docker:19.03.12-dind
+  extends: .docker-image-test-stage
   script:
-    - docker run --rm $BACKEND_CI_IMAGE lint
+    - docker run --rm $BACKEND_CI_DEV_IMAGE lint
 
 backend-test:
-  stage: test
-  image: docker:19.03.12
+  extends: .docker-image-test-stage
   services:
     - docker:19.03.12-dind
     - name: postgres:11.3
@@ -276,7 +278,7 @@ backend-test:
     - ping -w 2 $MJML_IP
     - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
     - ping -w 2 $DB_IP
-    - docker run --name=baserow_backend_test_container --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $BACKEND_CI_IMAGE ci-test
+    - docker run --name=baserow_backend_test_container --add-host="db:$DB_IP" --add-host="mjml:$MJML_IP" $BACKEND_CI_DEV_IMAGE ci-test
     - docker cp baserow_backend_test_container:/baserow/backend/reports reports
     - docker rm baserow_backend_test_container
   artifacts:
@@ -289,8 +291,8 @@ backend-test:
       junit: reports/report.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
 
-publish-backend-image:
-  extends: .publish-baserow-image
+build-final-backend-image:
+  extends: .build-final-baserow-image
   variables:
     IMAGE_NAME: $BACKEND_IMAGE_NAME
     DEV_IMAGE_NAME: $BACKEND_DEV_IMAGE_NAME
@@ -304,27 +306,19 @@ build-web-frontend-image:
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_IMAGE_NAME/Dockerfile
 
 web-frontend-eslint:
-  stage: test
-  image: docker:19.03.12
-  services:
-    - docker:19.03.12-dind
+  extends: .docker-image-test-stage
   script:
-    - docker run --rm $WEBFRONTEND_CI_IMAGE eslint
+    - docker run --rm $WEBFRONTEND_CI_DEV_IMAGE eslint
+
 web-frontend-stylelint:
-  stage: test
-  image: docker:19.03.12
-  services:
-    - docker:19.03.12-dind
+  extends: .docker-image-test-stage
   script:
-    - docker run --rm $WEBFRONTEND_CI_IMAGE stylelint
+    - docker run --rm $WEBFRONTEND_CI_DEV_IMAGE stylelint
 
 web-frontend-test:
-  stage: test
-  image: docker:19.03.12
-  services:
-    - docker:19.03.12-dind
+  extends: .docker-image-test-stage
   script:
-    - docker run --name=baserow_webfrontend_test_container $WEBFRONTEND_CI_IMAGE ci-test
+    - docker run --name=baserow_webfrontend_test_container $WEBFRONTEND_CI_DEV_IMAGE ci-test
     - docker cp baserow_webfrontend_test_container:/baserow/reports reports
     - docker rm baserow_webfrontend_test_container
   artifacts:
@@ -336,9 +330,134 @@ web-frontend-test:
       junit: reports/junit.xml
   coverage: '/Lines\s*:\s*(\d+.?\d*)%/'
 
-publish-web-frontend-image:
-  extends: .publish-baserow-image
+build-web-final-frontend-image:
+  extends: .build-final-baserow-image
   variables:
     IMAGE_NAME: $WEBFRONTEND_IMAGE_NAME
     DEV_IMAGE_NAME: $WEBFRONTEND_DEV_IMAGE_NAME
     DOCKERFILE_PATH: $CI_PROJECT_DIR/$WEBFRONTEND_IMAGE_NAME/Dockerfile
+
+
+# ================================== PUSHING BACKEND ==================================
+
+publish-backend-develop-latest-image:
+  extends: .publish-baserow-image
+  rules:
+    - if: $CI_COMMIT_BRANCH != $DEVELOP_BRANCH_NAME
+      when: never
+    - when: always
+  variables:
+    EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $BACKEND_CI_IMAGE
+    TARGET_IMAGE: "$IMAGE_REPO/$BACKEND_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+
+publish-backend-develop-latest-dev-image:
+  extends: .publish-baserow-image
+  rules:
+    - if: $CI_COMMIT_BRANCH != $DEVELOP_BRANCH_NAME
+      when: never
+    - when: always
+  variables:
+    EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $BACKEND_CI_DEV_IMAGE
+    TARGET_IMAGE: "$IMAGE_REPO/$BACKEND_DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+publish-backend-release-tagged-image:
+  extends: .publish-baserow-image
+  rules:
+    # Only run this stage if someone has set a tag.
+    - if: $CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""
+      when: never
+    - when: always
+  variables:
+    EXIT_IF_TAG_NOT_ON_BRANCH: $CI_DEFAULT_BRANCH
+    SOURCE_IMAGE: $BACKEND_CI_IMAGE
+    TARGET_IMAGE: "$IMAGE_REPO/$BACKEND_IMAGE_NAME:$CI_COMMIT_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+publish-backend-latest-release-image:
+  extends: .publish-baserow-image
+  rules:
+    # Only run this stage if someone has set a tag.
+    - if: $CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""
+      when: never
+    - when: always
+  variables:
+    EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$CI_DEFAULT_BRANCH
+    EXIT_IF_TAG_NOT_ON_BRANCH: $CI_DEFAULT_BRANCH
+    SOURCE_IMAGE: $BACKEND_CI_IMAGE
+    TARGET_IMAGE: "$IMAGE_REPO/$BACKEND_IMAGE_NAME:latest"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+# ================================ PUSHING WEB-FRONTEND ===============================
+
+publish-webfrontend-develop-latest-image:
+  extends: .publish-baserow-image
+  rules:
+    - if: $CI_COMMIT_BRANCH != $DEVELOP_BRANCH_NAME
+      when: never
+    - when: always
+  variables:
+    EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $WEBFRONTEND_CI_IMAGE
+    TARGET_IMAGE: "$IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+
+publish-webfrontend-develop-latest-dev-image:
+  extends: .publish-baserow-image
+  rules:
+    - if: $CI_COMMIT_BRANCH != $DEVELOP_BRANCH_NAME
+      when: never
+    - when: always
+  variables:
+    EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $WEBFRONTEND_CI_DEV_IMAGE
+    TARGET_IMAGE: "$IMAGE_REPO/$WEBFRONTEND_DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+publish-webfrontend-release-tagged-image:
+  extends: .publish-baserow-image
+  rules:
+    # Only run this stage if someone has set a tag.
+    - if: $CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""
+      when: never
+    - when: always
+  variables:
+    EXIT_IF_TAG_NOT_ON_BRANCH: $CI_DEFAULT_BRANCH
+    SOURCE_IMAGE: $WEBFRONTEND_CI_IMAGE
+    TARGET_IMAGE: "$IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:$CI_COMMIT_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+publish-webfrontend-latest-release-image:
+  extends: .publish-baserow-image
+  rules:
+    # Only run this stage if someone has set a tag.
+    - if: $CI_COMMIT_TAG == null || $CI_COMMIT_TAG == ""
+      when: never
+    - when: always
+  variables:
+    EXIT_IF_NOT_LATEST_COMMIT_ON_REF: origin/$CI_DEFAULT_BRANCH
+    EXIT_IF_TAG_NOT_ON_BRANCH: $CI_DEFAULT_BRANCH
+    SOURCE_IMAGE: $WEBFRONTEND_CI_IMAGE
+    TARGET_IMAGE: "$IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:latest"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
