@@ -126,8 +126,6 @@ variables:
   services:
     - docker:19.03.12-dind
   variables:
-    # We are just pulling, building and pushing known images, no need for the source.
-    GIT_STRATEGY: none
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
@@ -214,7 +212,7 @@ variables:
     # but still fail if something else goes wrong.
     exit_codes: 137
   before_script:
-    - apk update && apk add git
+    - apk update && apk add git jq
   script:
     - |
       if [[ -z "$SOURCE_IMAGE" ]]; then
@@ -244,6 +242,19 @@ variables:
             echo " which has commit $LATEST_COMMIT_HASH."
             echo "Instead pipeline is running on commit $HEAD_COMMIT_HASH, exitting as configured to do so in this situation..."
             exit 137
+        fi
+      fi
+
+      # If a tag has been set we won't have run the build and test steps. Check using
+      # the gitlab API if we do actually have a successful build for this commit
+      # before pushing any images to repos incase someone has tagged before the build
+      # finished.
+      if [[ -n "$CI_COMMIT_TAG" ]]; then
+        curl --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA" >> commit_info.json
+        LAST_PIPELINE_STATUS=$(jq --raw-output '.last_pipeline.status' commit_info.json)
+        if [[ "$LAST_PIPELINE_STATUS" != "success" ]]; then
+          echo "Cannot publish tagged images as there is no successful pipeline run yet for this commit..." 1>&2
+          exit 1
         fi
       fi
 
