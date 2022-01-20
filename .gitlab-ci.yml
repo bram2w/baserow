@@ -347,7 +347,9 @@ web-frontend-stylelint:
 web-frontend-test:
   extends: .docker-image-test-stage
   script:
-    - docker run --name=baserow_webfrontend_test_container $WEBFRONTEND_CI_DEV_IMAGE ci-test
+    - mkdir reports/ -p
+    - docker run --name=baserow_webfrontend_test_container $WEBFRONTEND_CI_DEV_IMAGE ci-test > reports/latest_test_output.txt
+    - cat reports/latest_test_output.txt
     - docker cp baserow_webfrontend_test_container:/baserow/reports reports
     - docker rm baserow_webfrontend_test_container
   artifacts:
@@ -357,8 +359,21 @@ web-frontend-test:
     reports:
       cobertura: reports/coverage/cobertura-coverage.xml
       junit: reports/junit.xml
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - reports/
   coverage: '/Lines\s*:\s*(\d+.?\d*)%/'
   only:
+    changes:
+      - web-frontend/**/*
+      - premium/web-frontend/**/*
+
+web-frontend-test-copy-artifacts:
+  extends: web-frontend-test
+  script:
+    - cat reports/latest_test_output.txt
+  except:
     changes:
       - web-frontend/**/*
       - premium/web-frontend/**/*

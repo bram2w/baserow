@@ -19,7 +19,7 @@ export class DashboardType extends PremiumAdminType {
   }
 
   functionIsNotCovered() {
-    return 0
+    return 1
   }
 
   getIconClass() {
