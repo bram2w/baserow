@@ -1,6 +1,13 @@
 #before_script:
 #  - apt-get update && apt-get -y install make curl gnupg2
 
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH' # All branches
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"' # Merge requests
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS' # Fix detached merge request pipelines
+      when: never
+
 stages:
   - build
   - test
