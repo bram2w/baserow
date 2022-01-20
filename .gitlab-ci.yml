@@ -218,7 +218,7 @@ variables:
     - |
       if [[ -n "$EXIT_IF_TAG_NOT_ON_BRANCH" ]]; then
         curl --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch" -o this_commits_branches.json
-        cat this_commits_branches.sjon
+        cat this_commits_branches.json
         BRANCH_MATCHES=$(jq '.[] | select(.name == "$EXIT_IF_TAG_NOT_ON_BRANCH")' this_commits_branches.json)
         echo "-"
         echo $BRANCH_MATCHES
