@@ -141,7 +141,7 @@ export default {
     },
     trashDuration() {
       const hours = this.$env.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED
-      return moment().subtract(hours, 'hours').fromNow().replace('ago', '')
+      return moment().subtract(hours, 'hours').fromNow(true)
     },
   },
   methods: {

@@ -52,6 +52,15 @@ export default function CoreModule(options) {
           default: null,
         },
         {
+          // Set to `1` to force download links to download files via XHR query
+          // to bypass `Content-Disposition: inline` that can't be overridden
+          // in another way.
+          // If your files are stored under another origin, you also
+          // must add CORS headers to your server.
+          key: 'DOWNLOAD_FILE_VIA_XHR',
+          default: false,
+        },
+        {
           // If you change this default please also update the default for the
           // backend found in src/baserow/config/settings/base.py:321
           key: 'HOURS_UNTIL_TRASH_PERMANENTLY_DELETED',
