@@ -29,9 +29,9 @@ variables:
   WEBFRONTEND_CI_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
   BACKEND_CI_DEV_IMAGE: $CI_IMAGE_REPO/$BACKEND_DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
   WEBFRONTEND_CI_DEV_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
-  DEVELOP_BRANCH_NAME: 736-build-and-publish-backend-and-web_frontend-docker-images
+  DEVELOP_BRANCH_NAME: develop
   DEVELOP_LATEST_TAG: develop-latest
-  MASTER_BRANCH_NAME: master
+  MASTER_BRANCH_NAME: 736-build-and-publish-backend-and-web_frontend-docker-images
 
 # ============== "Abstract" ci stages used by later real stages =======================
 
@@ -271,10 +271,6 @@ backend-lint:
   extends: .docker-image-test-stage
   script:
     - docker run --rm $BACKEND_CI_DEV_IMAGE lint
-  only:
-    changes:
-      - backend/**/*
-      - premium/backend/**/*
 
 backend-test:
   extends: .docker-image-test-stage
@@ -307,10 +303,6 @@ backend-test:
       cobertura: reports/coverage.xml
       junit: reports/report.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
-  only:
-    changes:
-      - backend/**/*
-      - premium/backend/**/*
 
 build-final-backend-image:
   extends: .build-final-baserow-image
@@ -330,19 +322,11 @@ web-frontend-eslint:
   extends: .docker-image-test-stage
   script:
     - docker run --rm $WEBFRONTEND_CI_DEV_IMAGE eslint
-  only:
-    changes:
-      - web-frontend/**/*
-      - premium/web-frontend/**/*
 
 web-frontend-stylelint:
   extends: .docker-image-test-stage
   script:
     - docker run --rm $WEBFRONTEND_CI_DEV_IMAGE stylelint
-  only:
-    changes:
-      - web-frontend/**/*
-      - premium/web-frontend/**/*
 
 web-frontend-test:
   extends: .docker-image-test-stage
@@ -364,19 +348,6 @@ web-frontend-test:
     paths:
       - reports/
   coverage: '/Lines\s*:\s*(\d+.?\d*)%/'
-  only:
-    changes:
-      - web-frontend/**/*
-      - premium/web-frontend/**/*
-
-web-frontend-test-copy-artifacts:
-  extends: web-frontend-test
-  script:
-    - cat reports/latest_test_output.txt
-  except:
-    changes:
-      - web-frontend/**/*
-      - premium/web-frontend/**/*
 
 build-web-final-frontend-image:
   extends: .build-final-baserow-image
