@@ -42,6 +42,7 @@ variables:
   except:
     variables:
       - $CI_COMMIT_TAG
+  interruptible: true
   services:
     - docker:19.03.12-dind
   variables:
@@ -121,9 +122,12 @@ variables:
   except:
     variables:
       - $CI_COMMIT_TAG
+  interruptible: true
   services:
     - docker:19.03.12-dind
   variables:
+    # We are just pulling, building and pushing known images, no need for the source.
+    GIT_STRATEGY: none
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
@@ -188,6 +192,10 @@ variables:
   except:
     variables:
       - $CI_COMMIT_TAG
+  interruptible: true
+  variables:
+    # We are just running tests in pulled docker images, no need for the source.
+    GIT_STRATEGY: none
   services:
     - docker:19.03.12-dind
 
@@ -195,6 +203,7 @@ variables:
 .publish-baserow-image:
   image: docker:19.03.12
   stage: publish
+  interruptible: true
   services:
     - docker:19.03.12-dind
   variables:
@@ -204,6 +213,8 @@ variables:
     # By exiting with this code we can skip this step without failing the build,
     # but still fail if something else goes wrong.
     exit_codes: 137
+  before_script:
+    - apk update && apk add git
   script:
     - |
       if [[ -z "$SOURCE_IMAGE" ]]; then
