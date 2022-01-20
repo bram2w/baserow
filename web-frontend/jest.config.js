@@ -1,8 +1,10 @@
 // Setting reporters on the command line does not work so enable via this env variable
 // we have to set anyway when using the junit reporter in CI.
-const junitReporterConfig = process.env.JEST_JUNIT_OUTPUT_DIR ? {
-  reporters: ['default', '<rootDir>/web-frontend/node_modules/jest-junit'],
-} : {}
+const junitReporterConfig = process.env.JEST_JUNIT_OUTPUT_DIR
+  ? {
+      reporters: ['default', '<rootDir>/web-frontend/node_modules/jest-junit'],
+    }
+  : {}
 module.exports = {
   rootDir: '..',
   roots: ['<rootDir>/web-frontend/', '<rootDir>/premium/web-frontend'],
@@ -28,5 +30,5 @@ module.exports = {
     '!**/test/**',
     '!**/generated/**',
   ],
-  ...junitReporterConfig
+  ...junitReporterConfig,
 }

@@ -295,9 +295,7 @@ describe('User Admin Component Tests', () => {
     const modal = await ui.changeFullName(tooShortFullName)
     const error = ui.getModalFieldErrorText(modal)
 
-    expect(error).toContain(
-      'userForm.error.invalidName'
-    )
+    expect(error).toContain('userForm.error.invalidName')
   })
 
   test('a users full name cant be changed to more than 150 characters', async () => {
@@ -308,9 +306,7 @@ describe('User Admin Component Tests', () => {
     const modal = await ui.changeFullName(tooLongFullName)
     const error = ui.getModalFieldErrorText(modal)
 
-    expect(error).toContain(
-      'userForm.error.invalidName'
-    )
+    expect(error).toContain('userForm.error.invalidName')
   })
 
   test('a users username be changed', async () => {
