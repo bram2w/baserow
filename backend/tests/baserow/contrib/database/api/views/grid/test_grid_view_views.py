@@ -526,7 +526,7 @@ def test_patch_grid_view_field_options(api_client, data_fixture):
     url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
         url,
-        {"field_options": {1: {"width": "abc"}}},
+        {"field_options": {text_field.id: {"width": "abc"}}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -538,7 +538,7 @@ def test_patch_grid_view_field_options(api_client, data_fixture):
     url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
         url,
-        {"field_options": {1: {"hidden": "abc"}}},
+        {"field_options": {text_field.id: {"hidden": "abc"}}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

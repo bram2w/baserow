@@ -67,7 +67,7 @@ def test_get_include_exclude_fields(data_fixture):
     assert fields[0].id == field_2.id
 
     fields = row_handler.get_include_exclude_fields(
-        table, f"field_{field_1.id},field_{field_2}", f"field_{field_1.id}"
+        table, f"field_{field_1.id},field_{field_2.id}", f"field_{field_1.id}"
     )
     assert len(fields) == 1
     assert fields[0].id == field_2.id
