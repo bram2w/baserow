@@ -21,8 +21,8 @@ module.exports = {
     ['cobertura', { projectRoot: '/baserow/' }],
   ],
   collectCoverageFrom: [
-    '<rootDir>/premium/web-frontend/**/*.{js,Vue,vue}',
-    '<rootDir>/web-frontend/**/*.{js,Vue,vue}',
+    '<rootDir>/premium/web-frontend/modules/**/*.{js,Vue,vue}',
+    '<rootDir>/web-frontend/modules/**/*.{js,Vue,vue}',
     '!**/node_modules/**',
     '!**/.nuxt/**',
     '!**/reports/**',

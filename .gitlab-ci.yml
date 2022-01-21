@@ -31,7 +31,7 @@ variables:
   WEBFRONTEND_CI_DEV_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
   DEVELOP_BRANCH_NAME: develop
   DEVELOP_LATEST_TAG: develop-latest
-  MASTER_BRANCH_NAME: master
+  MASTER_BRANCH_NAME: 736-build-and-publish-backend-and-web_frontend-docker-images
 
 # ============== "Abstract" ci stages used by later real stages =======================
 
@@ -242,11 +242,11 @@ variables:
       # before pushing any images to repos incase someone has tagged before the build
       # finished.
       if [[ -n "$CI_COMMIT_TAG" ]]; then
-        curl -s --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA" -o commit_info.json
-        cat commit_info.json
-        LAST_PIPELINE_STATUS=$(cat commit_info.json | jq --raw-output '.last_pipeline.status')
-        echo $LAST_PIPELINE_STATUS
-        if [[ "$LAST_PIPELINE_STATUS" != "success" ]]; then
+        curl -s --header "JOB_TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/statuses?stage=build-final" -o commit_build_statuses.json
+        cat commit_build_statuses.json
+        NON_SUCCESSFUL_FINAL_BUILDS=$(cat commit_build_statuses.json | jq --raw-output '.[] | select(.status != "success").status')
+        echo $NON_SUCCESSFUL_FINAL_BUILDS
+        if [[ -n "$NON_SUCCESSFUL_FINAL_BUILDS" ]]; then
           echo "Cannot publish tagged images as there is no successful pipeline run yet for this commit..." 2>&1
           exit 1
         fi
