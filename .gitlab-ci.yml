@@ -277,12 +277,18 @@ variables:
   script:
     - |
       if [[ -n "$SKIP_IF_TAG_NOT_ON_BRANCH" ]]; then
+        # Query for all the branches that this commit is part of.
         curl -s --header "JOB-TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch" -o this_commits_branches.json
-        MATCHED_BRANCH_NAME=$(cat this_commits_branches.json | jq -r ".[] | select(.name == \"$SKIP_IF_TAG_NOT_ON_BRANCH\").name")
-        if [[ "$MATCHED_BRANCH_NAME" != "$SKIP_IF_TAG_NOT_ON_BRANCH" ]]; then
-          echo "Tags should never be applied to $SKIP_IF_TAG_NOT_ON_BRANCH non branches!" >&2;
-          echo "Pipeline is running for tag: $CI_COMMIT_TAG which is not on branch $SKIP_IF_TAG_NOT_ON_BRANCH";
-          echo "Skipping this publish as configured to do so...";
+        # Extract just the branch names from the json so we can assert it matches.
+        TAG_BRANCH_NAMES=$(cat this_commits_branches.json | jq -r ".[].name")
+        NUM_BRANCHES=$(cat this_commits_branches.json | jq length)
+        # Ensure the commit is only on master and no other branches, otherwise someone
+        # could checkout a master commit as a new branch and tag it to cause an image
+        # upload.
+        if [[ "$NUM_BRANCHES" != "1" || "$TAG_BRANCH_NAMES" != "$SKIP_IF_TAG_NOT_ON_BRANCH" ]]; then
+          echo "Tags should never be applied to non $SKIP_IF_TAG_NOT_ON_BRANCH branches!" 2>&1;
+          echo "Pipeline is running for tag: $CI_COMMIT_TAG which for a commit that only appears on $SKIP_IF_TAG_NOT_ON_BRANCH and no other branches." 2>&1;
+          echo "Instead this commit appears on $NUM_BRANCHES branches called $TAG_BRANCH_NAMES" 2>&1;
           exit 1;
         fi
       fi
@@ -291,17 +297,17 @@ variables:
         LATEST_COMMIT_HASH=$(git rev-parse origin/$SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH)
         HEAD_COMMIT_HASH=$CI_COMMIT_SHA
         if [[ "$LATEST_COMMIT_HASH" != "$HEAD_COMMIT_HASH" ]]; then
-            echo "Pipeline is not running for latest commit on origin/$SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH"
-            echo " which has commit $LATEST_COMMIT_HASH."
-            echo "Instead pipeline is running on commit $HEAD_COMMIT_HASH, exitting as configured to do so in this situation..."
-            exit 137
+            echo "Pipeline is not running for latest commit on origin/$SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH";
+            echo " which has commit $LATEST_COMMIT_HASH.";
+            echo "Instead pipeline is running on commit $HEAD_COMMIT_HASH, exitting as configured to do so in this situation...";
+            exit 137;
         fi
       fi
 
       echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_REGISTRY" --password-stdin
 
       if ! docker pull $SOURCE_IMAGE; then
-        echo "Could not pull $SOURCE_IMAGE, has the build pipeline finished yet?"
+        echo "Could not pull $SOURCE_IMAGE, has the build pipeline finished yet?" 2>&1;
         exit 1
       fi
       docker tag $SOURCE_IMAGE $TARGET_IMAGE

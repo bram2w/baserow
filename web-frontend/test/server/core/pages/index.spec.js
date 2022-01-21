@@ -26,7 +26,7 @@ describe('index redirect', () => {
       },
     })
 
-    nuxt = await createNuxt(true, 3001)
+    nuxt = await createNuxt(true, 3501)
     done()
   })
 
