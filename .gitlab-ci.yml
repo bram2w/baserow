@@ -242,7 +242,7 @@ variables:
       # before pushing any images to repos incase someone has tagged before the build
       # finished.
       if [[ -n "$CI_COMMIT_TAG" ]]; then
-        curl -s --header "JOB_TOKEN: $ELEVATED_API_ACCESS_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/statuses?stage=build-final" -o commit_build_statuses.json
+        curl -s --header "PRIVATE_TOKEN: $ELEVATED_API_ACCESS_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/statuses?stage=build-final" -o commit_build_statuses.json
         cat commit_build_statuses.json
         NON_SUCCESSFUL_FINAL_BUILDS=$(cat commit_build_statuses.json | jq --raw-output '.[] | select(.status != "success").status')
         echo $NON_SUCCESSFUL_FINAL_BUILDS
