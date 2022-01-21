@@ -1,3 +1,31 @@
+# Quick Summary:
+#
+# Some jobs will be skipped or not included depending on if the pipeline is running
+# because of a normal merge/push or instead because a git tag was made for a particular
+# commit.
+#
+# IF PIPELINE IS NOT RUNNING DUE TO A TAG THEN IT:
+#   1. Builds backend and web-frontend dev images and pushes to gitlab ci image repo.
+#   2. Uses these pushed images to run tests and lints on the backend.
+#   3. Caching from the ci dev images builds the non-dev images and pushes both dev and
+#      non-dev with tags marking them as tested.
+# IF LATEST COMMIT ON DEVELOP:
+#   4. Push the tested images to the Dockerhub repo under the develop-latest tag.
+# IF RUNNING DUE TO TAG ON MASTER:
+#   5. Push the tested images to the Dockerhub repo using the git tag as the docker tag.
+# IF RUNNING DUE TO TAG ON LATEST COMMIT ON MASTER:
+#   6. Push the tested images to the Dockerhub repo under the latest tag.
+#
+# Dockerhub Image Release Process as implemented below:
+# 1. Merge from develop to master
+# 2. Wait for the merge commit pipeline on master to build, test and succeed.
+# 3. Tag the merge commit in the Gitlab GUI with the git tag being the Baserow version
+#    (1.8.2, 1.0, etc).
+# 4. The tag will have its own pipeline which will then push the images build in step
+#    2 to Dockerhub. If step 2 failed or has not completed yet then this pipeline will
+#    fail and not push anything.
+
+
 stages:
   - build
   - test
@@ -5,16 +33,16 @@ stages:
   - publish
 
 variables:
-  DRY_RUN_PUBLISH: "true"
   # An image repo which is used for storing and passing images between ci pipeline jobs
   # and also speeding up ci builds by caching from the latest ci image when building.
   CI_IMAGE_REPO: $CI_REGISTRY_IMAGE/ci
-  # Any images with tags prefixed with these two will be cleaned up automatically by our
-  # gitlab cleanup job.
+  # Any images with tags prefixed with the two variables below will be cleaned up automatically
+  # by our gitlab cleanup job (https://gitlab.com/bramw/baserow/-/settings/packages_and_registries).
   #
   # ## Note:
-  #   These cleanup tag prefixes are needed as gitlab only supports cleanup via tags
-  #   over the regex and not per repo/image cleanup settings...
+  #   These cleanup tag prefixes are needed as gitlab only supports cleanup by defining
+  #   a regex that matches tags, so we can't do cleanup differently based on image name
+  #   or repo...
   #
   # IMPORTANT: UPDATE GITLAB CONTAINER REPO CLEANUP JOB REGEX IF YOU CHANGE THIS
   CLEANUP_JOB_CI_TAG_PREFIX: ci-latest-
@@ -36,6 +64,7 @@ variables:
   TESTED_BACKEND_CI_DEV_IMAGE: $CI_IMAGE_REPO/$BACKEND_DEV_IMAGE_NAME:$TESTED_IMAGE_PREFIX$CI_COMMIT_SHORT_SHA
   TESTED_WEBFRONTEND_CI_DEV_IMAGE: $CI_IMAGE_REPO/$WEBFRONTEND_DEV_IMAGE_NAME:$TESTED_IMAGE_PREFIX$CI_COMMIT_SHORT_SHA
   DEVELOP_BRANCH_NAME: develop
+  # Used to tag the latest images on $DEVELOP_BRANCH_NAME
   DEVELOP_LATEST_TAG: develop-latest
   MASTER_BRANCH_NAME: 736-build-and-publish-backend-and-web_frontend-docker-images
 
@@ -49,7 +78,7 @@ variables:
 .build-baserow-image:
   image: docker:19.03.12
   stage: build
-  # Prevent rebuilds when tagging all we want to do is tag and push the already built image
+  # Prevent rebuilds when tagging as all we want to do is tag and push the already built image
   except:
     variables:
       - $CI_COMMIT_TAG
@@ -127,13 +156,13 @@ variables:
 
 # Builds a non-dev (no docker build target provided) and fully labelled final image
 # and tags and pushes the non-dev and dev images using $TESTED_IMAGE_PREFIX to mark
-# them as being successfully tested for the publish jobs to use.
+# them as being successfully tested for the publishing jobs to use.
 #
 # To extend this stage set the DOCKERFILE_PATH, IMAGE_NAME and DEV_IMAGE_NAME variables.
 .build-final-baserow-image:
   image: docker:19.03.12
   stage: build-final
-  # Prevent rebuilds when tagging all we want to do is tag and push the already built image
+  # Prevent rebuilds when tagging as all we want to do is tag and push the already built image
   except:
     variables:
       - $CI_COMMIT_TAG
@@ -207,7 +236,7 @@ variables:
 .docker-image-test-stage:
   stage: test
   image: docker:19.03.12
-  # Prevent rebuilds when tagging all we want to do is tag and push the already built image
+  # Prevent rebuilds when tagging as all we want to do is tag and push the already built image
   except:
     variables:
       - $CI_COMMIT_TAG
@@ -222,7 +251,7 @@ variables:
 # Pushes $SOURCE_IMAGE to $TARGET_IMAGE using the $TARGET_REGISTRY_PASSWORD,
 # $TARGET_REGISTRY_USER and $TARGET_REGISTRY credentials.
 #
-# Set $SKIP_IF_COMMIT_NOT_ON_BRANCH to make the job skip if the commit is not on 
+# Set $SKIP_IF_TAG_NOT_ON_BRANCH to make the job skip if the commit is not on 
 # the specified branch. Useful for TAG pipelines when $CI_COMMIT_BRANCH is not set
 # and so we need to do some extra git work to figure out what branches this commit is 
 # on.
@@ -247,13 +276,14 @@ variables:
     - apk update && apk add curl git jq
   script:
     - |
-      if [[ -n "$SKIP_IF_COMMIT_NOT_ON_BRANCH" ]]; then
+      if [[ -n "$SKIP_IF_TAG_NOT_ON_BRANCH" ]]; then
         curl -s --header "JOB-TOKEN: $CI_JOB_TOKEN" "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch" -o this_commits_branches.json
-        BRANCH_MATCHES=$(cat this_commits_branches.json | jq ".[] | select(.name == \"$SKIP_IF_COMMIT_NOT_ON_BRANCH\")")
-        if [[ -z "$BRANCH_MATCHES" ]]; then
-          echo "Pipeline is running for tag: $CI_COMMIT_TAG which is not on branch $SKIP_IF_COMMIT_NOT_ON_BRANCH";
+        MATCHED_BRANCH_NAME=$(cat this_commits_branches.json | jq -r ".[] | select(.name == \"$SKIP_IF_TAG_NOT_ON_BRANCH\").name")
+        if [[ "$MATCHED_BRANCH_NAME" != "$SKIP_IF_TAG_NOT_ON_BRANCH" ]]; then
+          echo "Tags should never be applied to $SKIP_IF_TAG_NOT_ON_BRANCH non branches!" >&2;
+          echo "Pipeline is running for tag: $CI_COMMIT_TAG which is not on branch $SKIP_IF_TAG_NOT_ON_BRANCH";
           echo "Skipping this publish as configured to do so...";
-          exit 137;
+          exit 1;
         fi
       fi
 
@@ -270,18 +300,12 @@ variables:
 
       echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_REGISTRY" --password-stdin
 
-      if [[ -n "$DRY_RUN_PUBLISH" ]]; then
-        echo "docker pull $SOURCE_IMAGE"
-        echo "docker tag $SOURCE_IMAGE $TARGET_IMAGE"
-        echo "docker push $TARGET_IMAGE"
-      else
-        if ! docker pull $SOURCE_IMAGE; then
-          echo "Could not pull $SOURCE_IMAGE, has the build pipeline finished yet?"
-          exit 1
-        fi
-        docker tag $SOURCE_IMAGE $TARGET_IMAGE
-        docker push $TARGET_IMAGE
+      if ! docker pull $SOURCE_IMAGE; then
+        echo "Could not pull $SOURCE_IMAGE, has the build pipeline finished yet?"
+        exit 1
       fi
+      docker tag $SOURCE_IMAGE $TARGET_IMAGE
+      docker push $TARGET_IMAGE
 
 # ====================================== BACKEND ======================================
 build-backend-image:
@@ -377,6 +401,7 @@ build-web-final-frontend-image:
 
 # ================================== PUSHING BACKEND ==================================
 
+# Push baserow/backend:develop_latest
 publish-backend-develop-latest-image:
   extends: .publish-baserow-image
   only:
@@ -391,6 +416,7 @@ publish-backend-develop-latest-image:
     TARGET_REGISTRY_USER: $CI_REGISTRY_USER
 
 
+# Push baserow/backend_dev:develop_latest
 publish-backend-develop-latest-dev-image:
   extends: .publish-baserow-image
   only:
@@ -404,19 +430,21 @@ publish-backend-develop-latest-dev-image:
     TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $CI_REGISTRY_USER
 
+# Push baserow/backend:$VERSION_GIT_TAG
 publish-backend-release-tagged-image:
   extends: .publish-baserow-image
   only:
     variables:
       - $CI_COMMIT_TAG
   variables:
-    SKIP_IF_COMMIT_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SKIP_IF_TAG_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
     SOURCE_IMAGE: $TESTED_BACKEND_CI_IMAGE
     TARGET_IMAGE: "$IMAGE_REPO/$BACKEND_IMAGE_NAME:$CI_COMMIT_TAG"
     TARGET_REGISTRY: $CI_REGISTRY
     TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $CI_REGISTRY_USER
 
+# Push baserow/backend:latest
 publish-backend-latest-release-image:
   extends: .publish-baserow-image
   only:
@@ -424,7 +452,7 @@ publish-backend-latest-release-image:
       - $CI_COMMIT_TAG
   variables:
     SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $MASTER_BRANCH_NAME
-    SKIP_IF_COMMIT_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SKIP_IF_TAG_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
     SOURCE_IMAGE: $TESTED_BACKEND_CI_IMAGE
     TARGET_IMAGE: "$IMAGE_REPO/$BACKEND_IMAGE_NAME:latest"
     TARGET_REGISTRY: $CI_REGISTRY
@@ -433,6 +461,7 @@ publish-backend-latest-release-image:
 
 # ================================ PUSHING WEB-FRONTEND ===============================
 
+# Push baserow/web-frontend:develop_latest
 publish-webfrontend-develop-latest-image:
   extends: .publish-baserow-image
   only:
@@ -446,7 +475,7 @@ publish-webfrontend-develop-latest-image:
     TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $CI_REGISTRY_USER
 
-
+# Push baserow/web-frontend_dev:develop_latest
 publish-webfrontend-develop-latest-dev-image:
   extends: .publish-baserow-image
   only:
@@ -460,19 +489,21 @@ publish-webfrontend-develop-latest-dev-image:
     TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $CI_REGISTRY_USER
 
+# Push baserow/web-frontend:$VERSION_GIT_TAG
 publish-webfrontend-release-tagged-image:
   extends: .publish-baserow-image
   only:
     variables:
       - $CI_COMMIT_TAG
   variables:
-    SKIP_IF_COMMIT_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SKIP_IF_TAG_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
     SOURCE_IMAGE: $TESTED_WEBFRONTEND_CI_IMAGE
     TARGET_IMAGE: "$IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:$CI_COMMIT_TAG"
     TARGET_REGISTRY: $CI_REGISTRY
     TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $CI_REGISTRY_USER
 
+# Push baserow/web-frontend:latest
 publish-webfrontend-latest-release-image:
   extends: .publish-baserow-image
   only:
@@ -480,7 +511,7 @@ publish-webfrontend-latest-release-image:
       - $CI_COMMIT_TAG
   variables:
     SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $MASTER_BRANCH_NAME
-    SKIP_IF_COMMIT_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SKIP_IF_TAG_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
     SOURCE_IMAGE: $TESTED_WEBFRONTEND_CI_IMAGE
     TARGET_IMAGE: "$IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:latest"
     TARGET_REGISTRY: $CI_REGISTRY
