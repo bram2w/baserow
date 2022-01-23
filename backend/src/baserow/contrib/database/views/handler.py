@@ -424,7 +424,7 @@ class ViewHandler:
         # Check if field belongs to the grid views table
         if not view.table.field_set.filter(id=field.pk).exists():
             raise FieldNotInTable(
-                f"The field {field.pk} does not belong to table " f"{view.table.id}."
+                f"The field {field.pk} does not belong to table {view.table.id}."
             )
 
         view_filter = ViewFilter.objects.create(
@@ -546,7 +546,7 @@ class ViewHandler:
             # cannot filter so we raise a ValueError.
             if view_sort.field_id not in model._field_objects:
                 raise ValueError(
-                    f"The table model does not contain field " f"{view_sort.field_id}."
+                    f"The table model does not contain field {view_sort.field_id}."
                 )
 
             field = model._field_objects[view_sort.field_id]["field"]
@@ -655,19 +655,19 @@ class ViewHandler:
         field_type = field_type_registry.get_by_model(field.specific_class)
         if not field_type.can_order_by:
             raise ViewSortFieldNotSupported(
-                f"The field {field.pk} does not support " f"sorting."
+                f"The field {field.pk} does not support sorting."
             )
 
         # Check if field belongs to the grid views table
         if not view.table.field_set.filter(id=field.pk).exists():
             raise FieldNotInTable(
-                f"The field {field.pk} does not belong to table " f"{view.table.id}."
+                f"The field {field.pk} does not belong to table {view.table.id}."
             )
 
         # Check if the field already exists as sort
         if view.viewsort_set.filter(field_id=field.pk).exists():
             raise ViewSortFieldAlreadyExist(
-                f"A sort with the field {field.pk} " f"already exists."
+                f"A sort with the field {field.pk} already exists."
             )
 
         view_sort = ViewSort.objects.create(view=view, field=field, order=order)
@@ -713,7 +713,7 @@ class ViewHandler:
         field_type = field_type_registry.get_by_model(field.specific_class)
         if field.id != view_sort.field_id and not field_type.can_order_by:
             raise ViewSortFieldNotSupported(
-                f"The field {field.pk} does not support " f"sorting."
+                f"The field {field.pk} does not support sorting."
             )
 
         # If the field has changed we need to check if the new field doesn't already
@@ -723,7 +723,7 @@ class ViewHandler:
             and view_sort.view.viewsort_set.filter(field_id=field.pk).exists()
         ):
             raise ViewSortFieldAlreadyExist(
-                f"A sort with the field {field.pk} " f"already exists."
+                f"A sort with the field {field.pk} already exists."
             )
 
         view_sort.field = field
