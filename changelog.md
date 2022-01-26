@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Fixed `'<' not supported between instances of 'NoneType' and 'int'` error. Blank string for a decimal value is now converted to `None` when using the REST API.
+* Fixed not being able to create or convert a single select field with edge case name.
 
 ## Released (2022-01-13 1.8.2)
 

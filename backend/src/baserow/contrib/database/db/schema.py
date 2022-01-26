@@ -25,7 +25,7 @@ class PostgresqlLenientDatabaseSchemaEditor:
         )
             returns %(type)s
         as
-        $$
+        $FUNCTION$
         begin
             begin
                 %(alter_column_prepare_old_value)s
@@ -35,7 +35,7 @@ class PostgresqlLenientDatabaseSchemaEditor:
                 return p_default;
             end;
         end;
-        $$
+        $FUNCTION$
         language plpgsql;
     """
 
@@ -80,6 +80,8 @@ class PostgresqlLenientDatabaseSchemaEditor:
                 alter_column_prepare_new_value = self.alter_column_prepare_new_value
 
             quoted_column_name = self.quote_name(new_field.column)
+            for key, value in variables.items():
+                variables[key] = value.replace("$FUNCTION$", "")
             self.execute(self.sql_drop_try_cast)
             self.execute(
                 self.sql_create_try_cast
