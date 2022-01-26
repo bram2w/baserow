@@ -23,6 +23,8 @@ from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import (
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
+    RelatedTableTrashedException,
+    CannotRestoreChildBeforeParent,
 )
 from baserow.core.trash.handler import TrashHandler
 
@@ -1206,3 +1208,201 @@ def test_perm_delete_lookup_row_field(data_fixture, api_client):
     assert LinkRowField.objects_and_trash.all().count() == 0
     assert LookupField.objects_and_trash.all().count() == 0
     assert FormulaField.objects_and_trash.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_trashing_two_linked_tables_and_restoring_one_ignores_link_field(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table_1 = data_fixture.create_database_table(name="Table 1", database=database)
+    table_2 = data_fixture.create_database_table(name="Table 2", database=database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    table_1_primary_field = field_handler.create_field(
+        user=user, table=table_1, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user,
+        table=table_1,
+        values={f"field_{table_1_primary_field.id}": "John"},
+    )
+    row_handler.create_row(
+        user=user,
+        table=table_1,
+        values={f"field_{table_1_primary_field.id}": "Jane"},
+    )
+
+    # Create a primary field and some example data for the cars table.
+    cars_primary_field = field_handler.create_field(
+        user=user, table=table_2, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user, table=table_2, values={f"field_{cars_primary_field.id}": "BMW"}
+    )
+    row_handler.create_row(
+        user=user, table=table_2, values={f"field_{cars_primary_field.id}": "Audi"}
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table_2,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=table_1,
+    )
+    TrashHandler.trash(user, database.group, database, table_1)
+    TrashHandler.trash(user, database.group, database, table_2)
+
+    TrashHandler.restore_item(user, "table", table_1.id)
+
+    link_field_1.refresh_from_db()
+    assert link_field_1.trashed
+    assert link_field_1.link_row_related_field.trashed
+
+
+@pytest.mark.django_db
+def test_trashing_two_linked_tables_and_link_field_cant_restore_link_field(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table_1 = data_fixture.create_database_table(name="Table 1", database=database)
+    table_2 = data_fixture.create_database_table(name="Table 2", database=database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    table_1_primary_field = field_handler.create_field(
+        user=user, table=table_1, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user,
+        table=table_1,
+        values={f"field_{table_1_primary_field.id}": "John"},
+    )
+    row_handler.create_row(
+        user=user,
+        table=table_1,
+        values={f"field_{table_1_primary_field.id}": "Jane"},
+    )
+
+    # Create a primary field and some example data for the cars table.
+    cars_primary_field = field_handler.create_field(
+        user=user, table=table_2, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user, table=table_2, values={f"field_{cars_primary_field.id}": "BMW"}
+    )
+    row_handler.create_row(
+        user=user, table=table_2, values={f"field_{cars_primary_field.id}": "Audi"}
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table_1,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=table_2,
+    )
+    link_field_trash_entry = TrashHandler.trash(
+        user, database.group, database, link_field_1
+    )
+    TrashHandler.trash(user, database.group, database, table_1)
+    TrashHandler.trash(user, database.group, database, table_2)
+
+    with pytest.raises(CannotRestoreChildBeforeParent):
+        TrashHandler.restore_item(user, "field", link_field_1.id)
+
+    assert TrashEntry.objects.filter(id=link_field_trash_entry.id).exists()
+
+    TrashHandler.restore_item(user, "table", table_1.id)
+
+    with pytest.raises(RelatedTableTrashedException):
+        TrashHandler.restore_item(user, "field", link_field_1.id)
+
+    assert TrashEntry.objects.filter(id=link_field_trash_entry.id).exists()
+
+    TrashHandler.restore_item(user, "table", table_2.id)
+
+    link_field_1.refresh_from_db()
+    assert TrashEntry.objects.filter(id=link_field_trash_entry.id).exists()
+    assert link_field_1.trashed
+    assert link_field_1.link_row_related_field.trashed
+
+    TrashHandler.restore_item(user, "field", link_field_1.id)
+
+    link_field_1.refresh_from_db()
+    assert not TrashEntry.objects.filter(id=link_field_trash_entry.id).exists()
+    assert not link_field_1.trashed
+    assert not link_field_1.link_row_related_field.trashed
+
+
+@pytest.mark.django_db
+def test_trashing_two_linked_tables_after_one_perm_deleted_can_restore(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table_1 = data_fixture.create_database_table(name="Table 1", database=database)
+    table_2 = data_fixture.create_database_table(name="Table 2", database=database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    table_1_primary_field = field_handler.create_field(
+        user=user, table=table_1, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user,
+        table=table_1,
+        values={f"field_{table_1_primary_field.id}": "John"},
+    )
+    row_handler.create_row(
+        user=user,
+        table=table_1,
+        values={f"field_{table_1_primary_field.id}": "Jane"},
+    )
+
+    # Create a primary field and some example data for the cars table.
+    cars_primary_field = field_handler.create_field(
+        user=user, table=table_2, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user, table=table_2, values={f"field_{cars_primary_field.id}": "BMW"}
+    )
+    row_handler.create_row(
+        user=user, table=table_2, values={f"field_{cars_primary_field.id}": "Audi"}
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table_1,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=table_2,
+    )
+    link_field_trash_entry = TrashHandler.trash(
+        user, database.group, database, link_field_1
+    )
+    TrashHandler.trash(user, database.group, database, table_1)
+    table_2_trash_entry = TrashHandler.trash(user, database.group, database, table_2)
+
+    table_2_trash_entry.should_be_permanently_deleted = True
+    table_2_trash_entry.save()
+    TrashHandler.permanently_delete_marked_trash()
+
+    TrashHandler.restore_item(user, "table", table_1.id)
+
+    assert not Field.objects.filter(id=link_field_1.id).exists()
+    assert not Field.objects.filter(id=link_field_1.link_row_related_field.id).exists()
+
+    link_field_trash_entry.should_be_permanently_deleted = True
+    link_field_trash_entry.save()
+
+    TrashHandler.permanently_delete_marked_trash()
+
+    assert not TrashEntry.objects.exists()

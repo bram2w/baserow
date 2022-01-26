@@ -50,7 +50,7 @@ def test_get_all_parents_and_self_with_one_level_of_inheritance(data_fixture):
 
 @pytest.mark.django_db
 def test_get_all_parents_and_self_with_two_levels_of_inheritance(data_fixture):
-    class RootParent(PolymorphicContentTypeMixin, models.Model):
+    class RootParent2(PolymorphicContentTypeMixin, models.Model):
         name = models.CharField()
         content_type = models.ForeignKey(
             ContentType,
@@ -62,17 +62,17 @@ def test_get_all_parents_and_self_with_two_levels_of_inheritance(data_fixture):
         class Meta:
             app_label = "test"
 
-    class SubModel(RootParent):
+    class SubModel2(RootParent2):
         class Meta:
             app_label = "test"
 
-    class SubSubModel(SubModel):
+    class SubSubModel(SubModel2):
         class Meta:
             app_label = "test"
 
-    parent_model = RootParent(name="a")
-    sub_model = SubModel(name="a", rootparent_ptr=parent_model)
-    sub_sub_model = SubSubModel(name="a", submodel_ptr=sub_model)
+    parent_model = RootParent2(name="a")
+    sub_model = SubModel2(name="a", rootparent2_ptr=parent_model)
+    sub_sub_model = SubSubModel(name="a", submodel2_ptr=sub_model)
     assert sub_sub_model.all_parents_and_self() == [
         parent_model,
         sub_model,
@@ -113,9 +113,9 @@ def test_cant_define_model_with_multiple_parents_with_poly_mixin(data_fixture):
         class Meta:
             app_label = "test"
 
-    class SubModel(ParentA, ParentB):
+    class SubModel3(ParentA, ParentB):
         class Meta:
             app_label = "test"
 
     with pytest.raises(AttributeError, match="does not support multiple inheritance"):
-        SubModel(name="a")
+        SubModel3(name="a")

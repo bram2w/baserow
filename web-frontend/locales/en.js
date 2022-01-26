@@ -233,6 +233,12 @@ export default {
     cannotRestoreParentBeforeChildTitle: 'Please restore the parent first.',
     cannotRestoreParentBeforeChildDescription:
       'You cannot restore this item because it depends on a deleted item. Please restore the parent item first.',
+    cannotRestoreAsRelatedTableTrashedTitle:
+      'Please restore the related tables first.',
+    cannotRestoreAsRelatedTableTrashedDescription:
+      'You cannot restore this field because it depends on other tables which are' +
+      ' still trashed. Please' +
+      ' restore the other related tables first.',
     groupUserIsLastAdminTitle: "Can't leave the group",
     groupUserIsLastAdminDescription:
       "It's not possible to leave the group because you're the last admin. Please delete the group or give another user admin permissions.",
