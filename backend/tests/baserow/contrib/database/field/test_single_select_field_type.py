@@ -11,7 +11,10 @@ from faker import Faker
 
 from baserow.core.handler import CoreHandler
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import SelectOption, SingleSelectField
+from baserow.contrib.database.fields.models import (
+    SelectOption,
+    SingleSelectField,
+)
 from baserow.contrib.database.fields.field_types import SingleSelectFieldType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
@@ -82,6 +85,70 @@ def test_single_select_field_type(data_fixture):
         name="Another Single Select",
     )
     field_handler.update_field(user=user, field=field, new_type_name="text")
+
+
+@pytest.mark.django_db
+def test_can_convert_a_single_select_option_field_with_dollar_dollar_option(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="single_select",
+        name="Single select",
+        select_options=[
+            {
+                "value": "$$",
+                "color": "red",
+            }
+        ],
+    )
+    select_option = field.select_options.all()[0]
+
+    row_handler = RowHandler()
+    row = row_handler.create_row(user, table, {f"field_{field.id}": select_option.id})
+
+    field_handler.update_field(user=user, field=field, new_type_name="text")
+
+    new_row = row_handler.get_row(user, table, row.id)
+    assert getattr(new_row, f"field_{field.id}") == "$$"
+
+
+@pytest.mark.django_db
+def test_cant_use_dollar_end_tag_as_option_name_during_conversion(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="single_select",
+        name="Single select",
+        select_options=[
+            {
+                "value": "some $FUNCTION$ thing",
+                "color": "red",
+            }
+        ],
+    )
+    select_option = field.select_options.all()[0]
+
+    row_handler = RowHandler()
+    row = row_handler.create_row(user, table, {f"field_{field.id}": select_option.id})
+
+    field_handler.update_field(user=user, field=field, new_type_name="text")
+
+    new_row = row_handler.get_row(user, table, row.id)
+    assert getattr(new_row, f"field_{field.id}") == "some  thing"
 
 
 @pytest.mark.django_db
