@@ -105,22 +105,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "groupsContext": {
-      "search": "Search groups",
-      "noResults": "No results found",
-      "createGroup": "Create group"
-    }
-  },
-  "fr": {
-    "groupsContext": {
-      "search": "Rechercher",
-      "noResults": "Aucun résultat",
-      "createGroup": "Créer un groupe"
-    }
-  }
-}
-</i18n>

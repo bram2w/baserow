@@ -121,26 +121,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "kanbanViewStackContext": {
-      "createCard": "Create card",
-      "editStack": "Edit stack",
-      "deleteStack": "Delete stack",
-      "delete": "Delete {name}",
-      "deleteDescription": "Are you sure that you want to delete stack {name}? Deleting the stack results in deleting the select option of the single select field, which might result into data loss because row values are going to be set to empty."
-    }
-  },
-  "fr": {
-    "kanbanViewStackContext": {
-      "createCard": "Créer une carte",
-      "editStack": "Modifier la colonne",
-      "deleteStack": "Supprimer la colonne",
-      "delete": "Supprimer {name}",
-      "deleteDescription": "Êtes-vous sur·e de vouloir supprimer la colonne {name} ? Supprimer une valeur revient à supprimer l'option correspondante de la liste déroulante, ce qui peut impliquer une perte d'information car les lignes contenant cette valeur auront désormais une valeur vide à la place pour ce champ."
-    }
-  }
-}
-</i18n>

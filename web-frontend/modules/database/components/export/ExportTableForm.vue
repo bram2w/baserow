@@ -141,20 +141,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "exportTableForm": {
-      "viewLabel": "Select the view to export:",
-      "typeError": "No exporter type available please select a different view or entire table."
-    }
-  },
-  "fr": {
-    "exportTableForm": {
-      "viewLabel": "Sélectionnez la vue à exporter :",
-      "typeError": "Aucun export disponible, veuillez sélectionner une autre vue ou la table complète."
-    }
-  }
-}
-</i18n>

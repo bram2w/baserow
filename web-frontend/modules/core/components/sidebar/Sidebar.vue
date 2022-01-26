@@ -330,32 +330,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "sidebar":{
-      "createGroup": "Create group",
-      "inviteOthers": "Invite others",
-      "logoff": "Logoff",
-      "errorNoGroup": "You don’t have any groups.",
-      "admin": "Admin",
-      "dashboard": "Dashboard",
-      "trash": "Trash",
-      "settings": "Settings"
-    }
-  },
-  "fr":{
-    "sidebar":{
-      "createGroup": "Créer un groupe",
-      "inviteOthers": "Envoyer une invitation",
-      "logoff": "Se déconnecter",
-      "errorNoGroup": "Vous n'avez aucun groupe.",
-      "admin": "Administration",
-      "dashboard": "Accueil",
-      "trash": "Corbeille",
-      "settings": "Mon compte"
-    }
-  }
-}
-</i18n>

@@ -48,18 +48,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "applicationForm": {
-      "nameLabel": "Name"
-    }
-  },
-  "fr": {
-    "applicationForm": {
-      "nameLabel": "Nom"
-    }
-  }
-}
-</i18n>

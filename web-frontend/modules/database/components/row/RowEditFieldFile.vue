@@ -129,34 +129,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "rowEditFieldFile": {
-      "addFile": "Add a file",
-      "sizes": {
-        "0": "Bytes",
-        "1": "KB",
-        "2": "MB",
-        "3": "GB",
-        "4": "TB",
-        "5": "PB"
-      }
-    }
-  },
-  "fr": {
-    "rowEditFieldFile": {
-      "addFile": "Ajouter un fichier",
-      "sizes": {
-        "0": "Octet(s)",
-        "1": "Ko",
-        "2": "Mo",
-        "3": "Go",
-        "4": "To",
-        "5": "Po"
-      }
-    }
-  }
-}
-</i18n>

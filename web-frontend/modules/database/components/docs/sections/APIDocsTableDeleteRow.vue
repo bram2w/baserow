@@ -49,20 +49,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsTableDeleteRow":{
-      "description": "Deletes an existing {name} row.",
-      "rowId": "The unique identifier of the row that needs to be deleted."
-    }
-  },
-  "fr": {
-    "apiDocsTableDeleteRow":{
-      "description": "Supprime une ligne de la table *{name}*.",
-      "rowId": "L'identifiant unique de la ligne à supprimer."
-    }
-  }
-}
-</i18n>

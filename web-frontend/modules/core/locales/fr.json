@@ -1,0 +1,245 @@
+{
+    "paginator": {
+        "page": "page",
+        "of": "sur {pages}"
+    },
+    "copied": {
+        "label": "Copié !"
+    },
+    "sidebarApplication": {
+        "renameApplication": "Renommer {type}",
+        "viewTrash": "Voir la corbeille",
+        "deleteApplication": "Supprimer {type}"
+    },
+    "sidebar": {
+        "createGroup": "Créer un groupe",
+        "inviteOthers": "Envoyer une invitation",
+        "logoff": "Se déconnecter",
+        "errorNoGroup": "Vous n'avez aucun groupe.",
+        "admin": "Administration",
+        "dashboard": "Accueil",
+        "trash": "Corbeille",
+        "settings": "Mon compte"
+    },
+    "accountForm": {
+        "nameLabel": "Votre nom",
+        "languageLabel": "Langue de l'interface"
+    },
+    "accountSettings": {
+        "title": "Informations personnelles",
+        "changedTitle": "Mise à jour",
+        "changedDescription": "Les informations de votre compte utilisateur ont été mises à jour.",
+        "submitButton": "Modifier les informations"
+    },
+    "settingsModal": {
+        "title": "Mon compte"
+    },
+    "passwordSettings": {
+        "title": "Mise à jour du mot de passe",
+        "changedTitle": "Mot de passe mis à jour",
+        "changedDescription": "Votre mot de passe a été mis à jour. La prochaine fois que vous souhaitez vous connecter, vous devrez utiliser le nouveau mot de passe.",
+        "oldPasswordLabel": "Ancien mot de passe",
+        "oldPasswordRequiredError": "L'ancien mot de passe est obligatoire.",
+        "newPasswordLabel": "Nouveau mot de passe",
+        "repeatNewPasswordLabel": "Répétez le mot de passe",
+        "repeatNewPasswordMatchError": "Les deux mots de passe ne correspondent pas.",
+        "submitButton": "Mettre à jour",
+        "errorInvalidOldPasswordTitle": "Ancien mot de passe invalide",
+        "errorInvalidOldPasswordMessage": "Impossible de mettre à jour votre mot de passe car votre ancien mot de passe est incorrect."
+    },
+    "error": {
+        "alreadyExistsTitle": "L'utilisateur existe déjà",
+        "alreadyExistsMessage": "Un utilisateur avec la même adresse électronique existe déjà.",
+        "passwordRequired": "Le mot de passe est obligatoire.",
+        "invalidEmail": "Veuillez entrer une adresse électronique valide.",
+        "disabledAccountTitle": "Compte désactivé",
+        "disabledAccountMessage": "Ce compte utilisateur est desactivé.",
+        "incorrectCredentialTitle": "Identifiants incorrects",
+        "incorrectCredentialMessage": "L'adresse éléctronique et/ou le mot de passe sont incorrects.",
+        "inputRequired": "Ce champ est obligatoire."
+    },
+    "field": {
+        "language": "Langue",
+        "emailAddress": "Adresse électronique",
+        "name": "Votre nom",
+        "password": "Mot de passe",
+        "passwordRepeat": "Répetez votre mot de passe"
+    },
+    "invitationTitle": "Invitation",
+    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le groupe {group}.",
+    "groupForm": {
+        "nameLabel": "Nom"
+    },
+    "leaveGroupModal": {
+        "title": "Quitter {groupe}",
+        "message": "Êtes-vous sûr·e de vouloir quitter le groupe {group} ? Vous ne serez plus en mesure d'accéder aux applications associées et si vous souhaitez y accéder de nouveau, l'un des administrateurs du groupe devra vous envoyer une nouvelle invitation. Si vous quittez un groupe, celui-ci ne sera pas supprimé et les autres membres y auront toujours accès. Il n'est pas possible de quitter un groupe si vous êtes le dernier administrateur car il se retrouverait alors sans propriétaire.",
+        "leave": "Quitter le groupe"
+    },
+    "dashboardGroup": {
+        "showMembers": "Membres",
+        "createApplication": "Créer"
+    },
+    "groupInvitation": {
+        "title": "Invitation",
+        "message": "{by} vous a invité à rejoindre le groupe {group}.",
+        "reject": "Refuser",
+        "accept": "Accepter"
+    },
+    "groupMemberModal": {
+        "membersModalTitle": "Membres de {group}",
+        "userDescription": "{user} - membre depuis {since}",
+        "invitationDescription": "invité·e depuis {since}",
+        "sendInvite": "Envoyer l'invitation",
+        "userAlreadyInGroupTitle": "L'utilisateur est déjà dans le groupe.",
+        "userAlreadyInGroupText": "Il n'est pas possible d'envoyer une invitation à un utilisateur déjà présent dans le groupe."
+    },
+    "groupInviteForm": {
+        "invitationFormTitle": "Inviter par email",
+        "optionalMessagePlaceholder": "Message optionnel",
+        "errorInvalidEmail": "Veuillez saisir une adresse email valide."
+    },
+    "groupsContext": {
+        "search": "Rechercher",
+        "noResults": "Aucun résultat",
+        "createGroup": "Créer un groupe"
+    },
+    "groupContext": {
+        "renameGroup": "Renommer le groupe",
+        "members": "Membres",
+        "viewTrash": "Voir la corbeille",
+        "leaveGroup": "Quitter le groupe",
+        "deleteGroup": "Supprimer le groupe"
+    },
+    "createGroupModal": {
+        "createNew": "Nouveau groupe",
+        "add": "Ajouter le groupe"
+    },
+    "templateCategories": {
+        "search": "Chercher des modèles",
+        "title": "Modèles"
+    },
+    "templateHeader": {
+        "use": "Utiliser ce modèle"
+    },
+    "trashSidebar": {
+        "title": "Corbeille",
+        "unnamedGroup": "Groupe sans nom {id}"
+    },
+    "trashContents": {
+        "message": "Restaurer les éléments supprimés durant les {duration} derniers",
+        "empty": "Rien n'a été supprimé durant les trois derniers jours.",
+        "emptyButtonTrashed": "Supprimer {type} définitivement",
+        "emptyButtonNotTrashed": "Vider la corbeille pour {type}",
+        "unnamed": "Sans nom {type} {id}"
+    },
+    "trashEmptyModal": {
+        "titleIsTrashed": "Êtes-vous sûr·e de vouloir supprimer définitivement {name} ?",
+        "titleIsNotTrashed": "Êtes-vous sûr·e de vouloir vider la corbeille de {name} ?",
+        "messageIsTrashed": "Cette action va tout supprimer définitivement ainsi que tout son contenu. Vous ne serez plus en mesure de le restaurer.",
+        "messageIsNotTrashed": "Cette action va supprimer définitivement les éléments listés. Vous ne serez plus en mesure de les restaurer.",
+        "buttonIsTrashed": "Supprimer définitivement",
+        "buttonIsNotTrashed": "Vider"
+    },
+    "trashEntry": {
+        "deletedUser": "Un utilisateur supprimé",
+        "fromParent": "provenant de {parent}",
+        "name": "{user} a supprimé {type} {title} {parent}",
+        "restore": "Restaurer",
+        "unnamed": "Sans nom {type} {id}"
+    },
+    "trashModal": {
+        "emptyTitle": "Aucun groupe trouvé",
+        "emptyMessage": "Vous n'êtes membre d'aucun groupe. Les applications comme les bases de données doivent appartenir à un groupe, par conséquent vous devez créer un groupe afin d'être capable d'en créer."
+    },
+    "uploadViaURLUserFileUpload": {
+        "title": "À partir d'une URL",
+        "urlLabel": "URL",
+        "urlError": "Une URL valide doit être renseignée."
+    },
+    "userFilesModal": {
+        "title": "En provenance"
+    },
+    "uploadFileUserFileUpload": {
+        "title": "Envoyer un fichier",
+        "drop": "Déposez ici",
+        "clickOrDrop": "Cliquez ou déposez votre fichier ici",
+        "retry": "Recommencer"
+    },
+    "createApplicationContext": {
+        "fromTemplate": "À partir d'un modèle"
+    },
+    "applicationForm": {
+        "nameLabel": "Nom"
+    },
+    "connectingNotification": {
+        "title": "Reconnexion en cours",
+        "content": "Reconnexion avec le serveur en cours"
+    },
+    "failedConnectingNotification": {
+        "title": "Échec de connexion",
+        "content": "La connexion avec le serveur a été interrompue. Merci de rafraîchir la page.",
+        "action": "Rafraîchir la page"
+    },
+    "restoreNotification": {
+        "restore": "Restaurer l'élément {type} supprimé"
+    },
+    "errorLayout": {
+        "notFound": "La page que vous essayez de consulter n'a pas été trouvée. L'URL est incorrecte ou vous n'avez pas les permissions nécessaires pour voir cette page.",
+        "error": "Une erreur est survenue lors du chargement de la page. Nos developpeurs ont été notifiés de ce problème. Veuillez essayer de recharger la page ou retournez à l'accueil.",
+        "backDashboard": "Retourner à l'accueil",
+        "backLogin": "Retourner à l'identification",
+        "wrong": "Une erreur est survenue"
+    },
+    "dashboard": {
+        "title": "Accueil",
+        "alertTitle": "Soutenez-nous !",
+        "alertText": "Si vous trouvez Baserow utile, n'hésitez pas à nous sponsoriser, étoiler, partager :",
+        "tweetContent": "Découvrez @baserow, une base de données no-code libre, une alternative à Airtable",
+        "redditTitle": "Baserow - Une base de données no-code libre",
+        "noGroupTitle": "Aucun groupe",
+        "noGroupText": "Vous n'êtes membre d'aucun groupe. Les applications telles que les bases de données doivent appartenir à un groupe, donc pour pouvoir en créer, vous devez créer au moins un groupe.",
+        "createGroup": "Créer un groupe",
+        "becomeGithubSponsor": "Devenir sponsor Github",
+        "starOnGitlab": "Nous étoiler sur Gitlab",
+        "shareOnTwitter": "Tweeter à propos de Baserow",
+        "shareOnReddit": "Partager sur Reddit",
+        "shareOnFacebook": "Partager sur Facebook",
+        "shareOnLinkedIn": "Partager sur LinkedIn"
+    },
+    "login": {
+        "title": "Identification",
+        "forgotPassword": "Mot de passe oublié"
+    },
+    "resetPassword": {
+        "title": "Nouveau mot de passe",
+        "newPassword": "Nouveau mot de passe",
+        "repeatNewPassword": "Répetez le mot de passe",
+        "submit": "Mettre à jour",
+        "changed": "Mot de passe mis à jour",
+        "errorInvalidLinkTitle": "Lien invalide",
+        "errorInvalidLinkMessage": "Il n'est pas possible de réinitialiser le mot de passe car le lien est invalide.",
+        "errorLinkExpiredTitle": "Lien expiré",
+        "errorLinkExpiredMessage": "Le lien de réinitialisation de mot de passe a expiré, Veuillez en demander un nouveau."
+    },
+    "signup": {
+        "headTitle": "Création d'un nouveau compte",
+        "title": "Création de compte",
+        "disabled": "Création de compte desactivée",
+        "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée."
+    },
+    "forgotPassword": {
+        "title": "Mot de passe oublié",
+        "message": "Veuillez saisir votre adresse email dans le formulaire. Si nous trouvons un compte correspondant, nous vous enverrons un email avec un lien pour réinitialiser votre mot de passe.",
+        "submit": "Envoyer le lien",
+        "confirmation": "Si un compte correspond à votre adresse email, vous allez recevoir un lien de réinitialisation de mot de passe sur votre messagerie d'ici quelques minutes."
+    },
+    "settings": {
+        "settingsTitle": "Paramètres",
+        "baserowInstanceId": "Identifiant de l'instance de Baserow",
+        "instanceIdDescription": "Cet identifiant permet de désigner de manière unique votre instance de Baserow.",
+        "groupSignupRestrictions": "Restriction de création des comptes",
+        "settingAllowNewAccountsName": "Autoriser la création de compte",
+        "settingAllowNewAccountsDescription": "Par défaut, tout les visiteurs peuvent créer un compte sur votre instance de Baserow.",
+        "enabled": "Autoriser"
+    }
+}

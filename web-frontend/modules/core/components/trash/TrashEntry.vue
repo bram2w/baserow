@@ -89,26 +89,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "trashEntry": {
-      "deletedUser": "A deleted user",
-      "fromParent": "from {parent}",
-      "name": "{user} deleted {type} {title} {parent}",
-      "restore": "Restore",
-      "unnamed": "Unnamed {type} {id}"
-    }
-  },
-  "fr": {
-    "trashEntry": {
-      "deletedUser": "Un utilisateur supprimé",
-      "fromParent": "provenant de {parent}",
-      "name": "{user} a supprimé {type} {title} {parent}",
-      "restore": "Restaurer",
-      "unnamed": "Sans nom {type} {id}"
-    }
-  }
-}
-</i18n>

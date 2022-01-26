@@ -134,20 +134,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "viewSearchContext": {
-      "searchInRows": "Search in all rows",
-      "hideNotMatching": "hide not matching rows"
-    }
-  },
-  "fr": {
-    "viewSearchContext": {
-      "searchInRows": "Chercher dans toute la table",
-      "hideNotMatching": "cacher les lignes sans résultat"
-    }
-  }
-}
-</i18n>

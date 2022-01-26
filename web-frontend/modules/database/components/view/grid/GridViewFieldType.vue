@@ -259,22 +259,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "gridViewFieldType":{
-      "createFilter": "Create filter",
-      "sortField": "Sort",
-      "hideField":"Hide field"
-    }
-  },
-  "fr": {
-    "gridViewFieldType":{
-      "createFilter": "Définir un filtre",
-      "sortField": "Trier",
-      "hideField":"Cacher un champ"
-    }
-  }
-}
-</i18n>

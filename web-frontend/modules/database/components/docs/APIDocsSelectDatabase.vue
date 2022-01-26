@@ -45,18 +45,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsSelectDatabase": {
-      "needOneDatabase": "You need to have at least one database to view the API documentation."
-    }
-  },
-  "fr": {
-    "apiDocsSelectDatabase": {
-      "needOneDatabase": "Vous devez avoir au moins une base de données afin de consulter la documentation de l'API."
-    }
-  }
-}
-</i18n>

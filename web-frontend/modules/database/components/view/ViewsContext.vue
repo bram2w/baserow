@@ -201,20 +201,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "viewsContext": {
-      "searchView": "Search views",
-      "noViews": "No views found"
-    }
-  },
-  "fr": {
-    "viewsContext": {
-      "searchView": "Recherche",
-      "noViews": "Aucune vue trouvée"
-    }
-  }
-}
-</i18n>

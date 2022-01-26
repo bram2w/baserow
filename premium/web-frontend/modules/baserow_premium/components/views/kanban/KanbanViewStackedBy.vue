@@ -107,22 +107,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "kanbanViewStakedBy": {
-      "title": "Group field",
-      "chooseField": "Which single select field should the cards be stacked by?",
-      "addSelectField": "add single select field"
-    }
-  },
-  "fr": {
-    "kanbanViewStakedBy": {
-      "title": "Champ de regroupement",
-      "chooseField": "Par quel champ de type « liste déroulante » souhaitez-vous regrouper vos cartes ?",
-      "addSelectField": "Ajouter une liste déroulante"
-    }
-  }
-}
-</i18n>

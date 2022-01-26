@@ -140,34 +140,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "resetPassword": {
-      "title": "Reset password",
-      "newPassword": "New password",
-      "repeatNewPassword": "Repeat new password",
-      "submit": "Change password",
-      "changed": "Password changed",
-      "errorInvalidLinkTitle": "Invalid link",
-      "errorInvalidLinkMessage": "Could not reset the password because the link is invalid.",
-      "errorLinkExpiredTitle": "Link expired",
-      "errorLinkExpiredMessage": "The password reset link has expired. Please request another one."
-    }
-  },
-  "fr": {
-    "resetPassword": {
-      "title": "Nouveau mot de passe",
-      "newPassword": "Nouveau mot de passe",
-      "repeatNewPassword": "Répetez le mot de passe",
-      "submit": "Mettre à jour",
-      "changed": "Mot de passe mis à jour",
-      "errorInvalidLinkTitle": "Lien invalide",
-      "errorInvalidLinkMessage": "Il n'est pas possible de réinitialiser le mot de passe car le lien est invalide.",
-      "errorLinkExpiredTitle": "Lien expiré",
-      "errorLinkExpiredMessage": "Le lien de réinitialisation de mot de passe a expiré, Veuillez en demander un nouveau."
-    }
-  }
-}
-</i18n>

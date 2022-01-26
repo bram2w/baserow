@@ -84,22 +84,3 @@ export default {
   methods: {},
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsTableUpdateRow": {
-      "description": "Updates an existing {name} row.",
-      "rowId": "The unique identifier of the row that needs to be updated.",
-      "before": "If provided then the newly created row will be positioned before the row with the provided id."
-    }
-  },
-  "fr": {
-    "apiDocsTableUpdateRow": {
-      "description": "Modifie une ligne existante de la table {name}.",
-      "rowId": "L'identifiant unique de la ligne à modifier.",
-      "before": "Si un identifiant de ligne est fourni, la ligne sera placée avant la ligne portant cet identifiant."
-    }
-  }
-}
-</i18n>

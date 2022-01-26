@@ -1,0 +1,245 @@
+{
+    "paginator": {
+        "page": "page",
+        "of": "of {pages}"
+    },
+    "copied": {
+        "label": "Copied!"
+    },
+    "sidebarApplication": {
+        "renameApplication": "Rename {type}",
+        "viewTrash": "View trash",
+        "deleteApplication": "Delete {type}"
+    },
+    "sidebar": {
+        "createGroup": "Create group",
+        "inviteOthers": "Invite others",
+        "logoff": "Logoff",
+        "errorNoGroup": "You don’t have any groups.",
+        "admin": "Admin",
+        "dashboard": "Dashboard",
+        "trash": "Trash",
+        "settings": "Settings"
+    },
+    "accountForm": {
+        "nameLabel": "Your name",
+        "languageLabel": "Interface language"
+    },
+    "accountSettings": {
+        "title": "Account",
+        "changedTitle": "Changed",
+        "changedDescription": "Your account information has been changed.",
+        "submitButton": "Update account"
+    },
+    "settingsModal": {
+        "title": "Settings"
+    },
+    "passwordSettings": {
+        "title": "Change password",
+        "changedTitle": "Password changed",
+        "changedDescription": "Your password has been changed. The next time you want to login, you have to use your new password.",
+        "oldPasswordLabel": "Old password",
+        "oldPasswordRequiredError": "Old password is required.",
+        "newPasswordLabel": "New password",
+        "repeatNewPasswordLabel": "Repeat new password",
+        "repeatNewPasswordMatchError": "This field must match your new password field.",
+        "submitButton": "Change password",
+        "errorInvalidOldPasswordTitle": "Invalid password",
+        "errorInvalidOldPasswordMessage": "Could not change your password because your old password is invalid."
+    },
+    "error": {
+        "alreadyExistsTitle": "User already exists",
+        "alreadyExistsMessage": "A user with the provided e-mail address already exists.",
+        "passwordRequired": "A password is required.",
+        "invalidEmail": "Please enter a valid e-mail address.",
+        "disabledAccountTitle": "Account disabled",
+        "disabledAccountMessage": "This user account has been disabled.",
+        "incorrectCredentialTitle": "Incorrect credentials",
+        "incorrectCredentialMessage": "The provided e-mail address or password is incorrect.",
+        "inputRequired": "Input is required."
+    },
+    "field": {
+        "language": "Language",
+        "emailAddress": "E-mail address",
+        "name": "Your name",
+        "password": "Password",
+        "passwordRepeat": "Repeat password"
+    },
+    "invitationTitle": "Invitation",
+    "invitationMessage": "{invitedBy} has invited you to join {group}.",
+    "groupForm": {
+        "nameLabel": "Name"
+    },
+    "leaveGroupModal": {
+        "title": "Leave {group}",
+        "message": "Are you sure you want to leave the group {group}? You won't be able to access the related applications anymore and if you want to regain access, one of the admins must invite you again. If you leave the group, it will not be deleted. All the other members will still have access to it. It is not possible to leave a group if you're the last admin because that will leave it unmaintained.",
+        "leave": "Leave group"
+    },
+    "dashboardGroup": {
+        "showMembers": "Members",
+        "createApplication": "Create new"
+    },
+    "groupInvitation": {
+        "title": "Invitation",
+        "message": "{by} has invited you to join {group}.",
+        "reject": "Reject",
+        "accept": "Accept"
+    },
+    "groupMemberModal": {
+        "membersModalTitle": "{group} members",
+        "userDescription": "{user} - joined {since} ago",
+        "invitationDescription": "invited {since} ago",
+        "sendInvite": "Send invite",
+        "userAlreadyInGroupTitle": "User is already in the group.",
+        "userAlreadyInGroupText": "It is not possible to send an invitation when the user is already a member of the group."
+    },
+    "groupInviteForm": {
+        "invitationFormTitle": "Invite by email",
+        "optionalMessagePlaceholder": "Optional message",
+        "errorInvalidEmail": "Please enter a valid e-mail address."
+    },
+    "groupsContext": {
+        "search": "Search groups",
+        "noResults": "No results found",
+        "createGroup": "Create group"
+    },
+    "groupContext": {
+        "renameGroup": "Rename group",
+        "members": "Members",
+        "viewTrash": "View trash",
+        "leaveGroup": "Leave group",
+        "deleteGroup": "Delete group"
+    },
+    "createGroupModal": {
+        "createNew": "Create new group",
+        "add": "Add group"
+    },
+    "templateCategories": {
+        "search": "Search templates",
+        "title": "Templates"
+    },
+    "templateHeader": {
+        "use": "Use this template"
+    },
+    "trashSidebar": {
+        "title": "Trash",
+        "unnamedGroup": "Unnamed group {id}"
+    },
+    "trashContents": {
+        "message": "Restore deleted items from the past {duration}",
+        "empty": "Nothing has been deleted in the past three days.",
+        "emptyButtonTrashed": "Delete {type} permanently",
+        "emptyButtonNotTrashed": "Empty this {type}'s trash",
+        "unnamed": "Unnamed {type} {id}"
+    },
+    "trashEmptyModal": {
+        "titleIsTrashed": "Are you sure you want to permanently delete {name}?",
+        "titleIsNotTrashed": "Are you sure you want to empty the trash of {name}?",
+        "messageIsTrashed": "This will permanently delete it and all of its contents. After which they cannot be recovered.",
+        "messageIsNotTrashed": "This will permanently delete the listed items. After which they cannot be recovered.",
+        "buttonIsTrashed": "Permanently delete",
+        "buttonIsNotTrashed": "Empty"
+    },
+    "trashEntry": {
+        "deletedUser": "A deleted user",
+        "fromParent": "from {parent}",
+        "name": "{user} deleted {type} {title} {parent}",
+        "restore": "Restore",
+        "unnamed": "Unnamed {type} {id}"
+    },
+    "trashModal": {
+        "emptyTitle": "No groups found",
+        "emptyMessage": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group."
+    },
+    "uploadViaURLUserFileUpload": {
+        "title": "Upload from a URL",
+        "urlLabel": "URL",
+        "urlError": "A valid URL is required."
+    },
+    "userFilesModal": {
+        "title": "Upload from"
+    },
+    "uploadFileUserFileUpload": {
+        "title": "Upload from my device",
+        "drop": "Drop here",
+        "clickOrDrop": "Click or drop your files here",
+        "retry": "Retry"
+    },
+    "createApplicationContext": {
+        "fromTemplate": "From template"
+    },
+    "applicationForm": {
+        "nameLabel": "Name"
+    },
+    "connectingNotification": {
+        "title": "Reconnecting",
+        "content": "Reconnecting with server."
+    },
+    "failedConnectingNotification": {
+        "title": "Failed",
+        "content": "Connection to the server has failed. Please refresh the page.",
+        "action": "Refresh page"
+    },
+    "restoreNotification": {
+        "restore": "Restore deleted {type}"
+    },
+    "errorLayout": {
+        "notFound": "The page you are looking for has not been found. This might be because URL is incorrect or that you don’t have permission to view this page.",
+        "error": "Something went wrong while loading the page. Our developers have been notified of the issue. Please try to refresh or return to the dashboard.",
+        "backDashboard": "Back to dashboard",
+        "backLogin": "Back to login",
+        "wrong": "Something went wrong"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "alertTitle": "We need your help!",
+        "alertText": "If you find Baserow useful then sponsoring, starring or sharing us is greatly appreciated. By sponsoring us on GitHub you will get early access to the premium features!",
+        "tweetContent": "Check out @baserow an open source no-code database tool and Airtable alternative!",
+        "redditTitle": "'Baserow - An open source no-code database",
+        "noGroupTitle": "No groups found",
+        "noGroupText": "You aren’t a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group.",
+        "createGroup": "Create group",
+        "becomeGithubSponsor": "Become a GitHub sponsor",
+        "starOnGitlab": "Star us on Gitlab",
+        "shareOnTwitter": "Tweet about Baserow",
+        "shareOnReddit": "Share on Reddit",
+        "shareOnFacebook": "Share on Facebook",
+        "shareOnLinkedIn": "Share on LinkedIn"
+    },
+    "login": {
+        "title": "Login",
+        "forgotPassword": "Forgot password"
+    },
+    "resetPassword": {
+        "title": "Reset password",
+        "newPassword": "New password",
+        "repeatNewPassword": "Repeat new password",
+        "submit": "Change password",
+        "changed": "Password changed",
+        "errorInvalidLinkTitle": "Invalid link",
+        "errorInvalidLinkMessage": "Could not reset the password because the link is invalid.",
+        "errorLinkExpiredTitle": "Link expired",
+        "errorLinkExpiredMessage": "The password reset link has expired. Please request another one."
+    },
+    "signup": {
+        "headTitle": "Create new account",
+        "title": "Sign up",
+        "disabled": "Sign up is disabled",
+        "disabledMessage": "It's not possible to create an account because it has been disabled."
+    },
+    "forgotPassword": {
+        "title": "Forgot password",
+        "message": "Please enter your e-mail address in the form. If we find an account then we will send an e-mail with a link to reset your password.",
+        "submit": "Send link",
+        "confirmation": "If your email address exists in our database, you will receive a password reset link at your email address in a few minutes."
+    },
+    "settings": {
+        "settingsTitle": "Admin settings",
+        "baserowInstanceId": "Instance ID",
+        "instanceIdDescription": "The instance ID is the unique identifier of your Baserow copy.",
+        "groupSignupRestrictions": "Signup restrictions",
+        "settingAllowNewAccountsName": "Allow creating new accounts",
+        "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
+        "enabled": "enabled"
+    }
+}

@@ -283,26 +283,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "viewSortContext":{
-      "noSortTitle": "You have not yet created a sort",
-      "noSortText": "Sorts allow you to sort rows by a field.",
-      "sortBy": "Sort by",
-      "thenBy": "Then by",
-      "addSort": "choose a field to sort by"
-    }
-  },
-  "fr":{
-    "viewSortContext":{
-      "noSortTitle": "Vous n'avez configuré aucun tri",
-      "noSortText": "Le tri vous permet d'ordonner les lignes selon la valeur d'un champ.",
-      "sortBy": "Trier par",
-      "thenBy": "Puis par",
-      "addSort": "Ajouter un tri"
-    }
-  }
-}
-</i18n>

@@ -1,0 +1,224 @@
+{
+    "premium": {
+        "user":{
+            "isStaff": "Is staff",
+            "isGroupAdmin": "Is group admin",
+            "active": "Active",
+            "deactivated": "Deactivated"
+        },
+        "adminType":{
+            "dashboard": "Dashboard",
+            "users": "Users",
+            "groups": "Groups",
+            "licenses": "Licenses"
+        },
+        "viewType":{
+            "kanban": "Kanban"
+        },
+        "exporterType":{
+            "json": "Export to JSON",
+            "xml": "Export to XML"
+        }
+    },
+    "rowCommentSidebar": {
+        "onlyPremium": "Row comments are available in the premium version.",
+        "readOnlyNoComment": "No comments for this row.",
+        "noComment": "No comments for this row yet. Use the form below to add a comment.",
+        "comment": "Comment"
+    },
+    "rowComment": {
+        "you": "You"
+    },
+    "registerLicenseModal": {
+        "titleRegisterLicense": "Register a license",
+        "registerLicense": "Register license",
+        "viewPricing": "View pricing",
+        "licenseDescription": "A license can only be obtained on baserow.io. If you have already purchased a license, it will be delivered to you by email and you can get in from the overview in your account. Copy and paste the license key in the box below and click on the button to register the license key to this instance. It’s not possible to use the same key on two different installations. {pricingLink} if you don’t have a key yet.",
+        "licenseError": {
+            "invalidTitle": "Invalid",
+            "invalid": "The provided license is invalid.",
+            "unsupportedTitle": "Unsupported",
+            "unsupported": "The provided license is incompatible with your Baserow version. Please update to the latest version and try again.",
+            "expiredTitle": "Expired",
+            "expired": "The provided license has expired.",
+            "duplicateTitle": "Duplicate",
+            "duplicate": "The provided license is already registered to this instance.",
+            "instanceMismatchTitle": "Instance mistmatch",
+            "instanceMismatch": "The provided license does not belong to this instance."
+        }
+    },
+    "disconnectLicenseModal": {
+        "disconnectLicense": "Disconnect license",
+        "disconnectDescription": "Are you sure that you want to disconnect this license? If you disconnect this license while it's active, the related users won’t have access to the plan anymore. It will effectively remove the license. Please contact our support team at {contact} if you want to use this license in another self hosted instance."
+    },
+    "registerLicenseForm": {
+        "licenseKey": "License key"
+    },
+    "groupsAdminTable": {
+        "allGroups": "All groups",
+        "id": "ID",
+        "name": "Name",
+        "members": "Members",
+        "applications": "Applications",
+        "created": "Created"
+    },
+    "editGroupContext": {
+        "delete": "Permanently delete"
+    },
+    "deleteGroupModal": {
+        "title": "Delete {name}",
+        "confirmation": "Are you sure you want to delete the group: {name}?",
+        "comment": "The group will be permanently deleted, including the related applications. It is not possible to undo this action.",
+        "delete": "Delete group {name}"
+    },
+    "activeUsers": {
+        "newUsers": "New users",
+        "activeUsers": "Active users"
+    },
+    "usersAdminTable": {
+        "allUsers": "All users",
+        "id": "ID",
+        "username": "Username",
+        "name": "Name",
+        "groups": "Groups",
+        "lastLogin": "Last login",
+        "dateJoined": "Signed up",
+        "active": "Active"
+    },
+    "editUserContext": {
+        "changePassword": "Change password",
+        "delete": "Permanently delete"
+    },
+    "changePasswordForm": {
+        "newPassword": "New password",
+        "repeatPassword": "Repeat password",
+        "changePassword": "Change password",
+        "error": {
+            "doesntMatch": "This field must match your password field."
+        }
+    },
+    "userForm": {
+        "fullName": "Full name",
+        "email": "Email",
+        "isActive": "Is active",
+        "warning": {
+            "changeEmail": "Changing this users email address means when they sign in they must use the new email address to do so. This must be communicated with that user.",
+            "inactiveUser": "When a user is marked as inactive they are prevented from signing in.",
+            "userStaff": "Making the user staff gives them admin access to all users, all groups and the ability to revoke your own staff permissions."
+        },
+        "error": {
+            "invalidName": "Please enter a valid full name, it must be longer than 2 letters and less than 150.",
+            "invalidEmail": "Please enter a valid e-mail address."
+        }
+    },
+    "changeUserPasswordModal": {
+        "changePassword": "Change password for {username}"
+    },
+    "deleteUserModal": {
+        "title": "Delete {username}",
+        "confirmation": "Are you sure you want to delete the user: {name}?",
+        "comment1": "The user account will be deleted, however the groups that user is a member of will continue existing. The users group will not be deleted, even if this user is the last user in the group. Deleting the last user in a group prevents anyone being able to access that group.",
+        "comment2": "After deleting a user it is possible for a new user to sign up again using the deleted users email address. To ensure they cannot sign up again instead deactivate the user and do not delete them.",
+        "delete": "Delete user {username}"
+    },
+    "editUserModal": {
+        "delete": "Delete user",
+        "edit": "Edit { username }"
+    },
+    "crudTableSearchContext": {
+        "search": "Search"
+    },
+    "tableJSONExporter": {
+        "encoding": "Encoding"
+    },
+    "tableXMLExporter": {
+        "encoding": "Encoding"
+    },
+    "kanbanViewStackContext": {
+        "createCard": "Create card",
+        "editStack": "Edit stack",
+        "deleteStack": "Delete stack",
+        "delete": "Delete {name}",
+        "deleteDescription": "Are you sure that you want to delete stack {name}? Deleting the stack results in deleting the select option of the single select field, which might result into data loss because row values are going to be set to empty."
+    },
+    "kanbanViewHeader": {
+        "stackBy": "Stack by",
+        "stackedBy": "Stacked by {fieldName}",
+        "customizeCards": "Customize cards"
+    },
+    "kanbanViewOptionForm": {
+        "selectOption": "Select option"
+    },
+    "kanbanViewStakedBy": {
+        "title": "Group field",
+        "chooseField": "Which single select field should the cards be stacked by?",
+        "addSelectField": "add single select field"
+    },
+    "kanbanViewStack": {
+        "uncategorized": "Uncategorized",
+        "tryAgain": "Try again",
+        "new": "New"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "totals": "Totals",
+        "totalUsers": "Total users",
+        "totalGroups": "Total groups",
+        "totalApplications": "Total applications",
+        "newUsers": "New users",
+        "newUsers24h": "New users last 24 hours",
+        "newUsers7days": "New users last 7 days",
+        "newUsers30days": "New users last 30 days",
+        "activeUsers": "Active users",
+        "activeUsers24h": "Active users last 24 hours",
+        "activeUsers7days": "Active users last 7 days",
+        "activeUsers30days": "Active users last 30 days",
+        "viewAll": "View all"
+    },
+    "licenses": {
+        "titleNoLicenses": "No licenses found",
+        "titleLicenses": "Licenses",
+        "noLicensesDescription": "Your Baserow instance doesn’t have any licenses registered. A premium license gives you immediate access to all of the additional features. If you already have a license, you can register it here. Alternatively you can get one by clicking on the button below.",
+        "rowComments": "Row comments",
+        "kanbanView": "Kanban view",
+        "exports": "JSON and XML export",
+        "admin": "Admin functionality",
+        "getLicense": "Get a license",
+        "baserowInstanceId": "Your Baserow instance ID is:",
+        "registerLicense": "Register license",
+        "licenceId": "License ID",
+        "premium": "Premium",
+        "expired": "Expired",
+        "validity": "Valid from {start} through {end}",
+        "seats": "seats",
+        "premiumFeatures": "Premium features"
+    },
+    "license": {
+        "title": "{product_code} plan",
+        "users": "Users",
+        "description": "Choose the users that can use the {product_code} plan. This license allows you to grant {product_code} to a maximum of {seats} users.",
+        "seatLeft": "You have no seats left|You have one seat left|You have {count} seats left",
+        "fillSeats": "Fill seats with users that are not on the plan",
+        "removeAll": "Remove all users",
+        "licenseId": "License ID",
+        "addUser": "Add a user",
+        "plan": "Plan",
+        "premium": "premium",
+        "expired": "Expired",
+        "validFrom": "Valid from",
+        "validThrough": "Valid through",
+        "validThroughDescription": "After your license has expired, you and any assigned users will no longer be able to use the extra functionality granted by the license.",
+        "lastCheck": "Last check",
+        "lastCheckDescription": "The license is periodically checked for changes. If you for example renewed or upgraded your license, the changes become active after the check.",
+        "checkNow": "check now",
+        "seats": "Seats (amount of users)",
+        "licensedTo": "Licensed to",
+        "premiumFeatures": "Premium features",
+        "applications": "Applications / databases",
+        "unlimited": "Unlimited",
+        "rowUsage": "Row usage",
+        "storeUsage": "Storage usage",
+        "disconnectLicense": "Disconnect license",
+        "disconnectDescription": "If you disconnect this license while it's active, the related users won’t have access to the plan anymore. It will effectively remove the license. Please contact our support team at {contact} if you want to use this license in another self hosted instance."
+    }
+}

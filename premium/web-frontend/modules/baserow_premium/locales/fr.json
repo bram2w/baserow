@@ -1,0 +1,224 @@
+{
+    "premium": {
+        "user":{
+            "isStaff": "Est collaborateur",
+            "isGroupAdmin": "Est l'administrateur du groupe",
+            "active": "Actif",
+            "deactivated": "Inactif"
+        },
+        "adminType":{
+            "dashboard": "Statistiques",
+            "users": "Utilisateurs",
+            "groups": "Groupes",
+            "licenses": "Licences"
+        },
+        "viewType":{
+            "kanban": "Kanban"
+        },
+        "exporterType":{
+            "json": "Exporter vers JSON",
+            "xml": "Exporter vers XML"
+        }
+    },
+    "rowCommentSidebar": {
+        "onlyPremium": "Les commentaires de lignes sont disponibles dans la version premium.",
+        "readOnlyNoComment": "Aucun commentaire pour cette ligne.",
+        "noComment": "Aucun commentaire pour cette ligne. Utilisez le formulaire ci-dessous pour ajouter un commentaire.",
+        "comment": "Commentaire"
+    },
+    "rowComment": {
+        "you": "Vous"
+    },
+    "registerLicenseModal": {
+        "titleRegisterLicense": "Activer une licence",
+        "registerLicense": "Activer la licence",
+        "viewPricing": "Consultez les tarifs",
+        "licenseDescription": "Une licence peut-être obtenue uniquement sur baserow.io. Si vous avez déjà acheté une licence, elle vous sera envoyée par email et vous pourrez la consulter dans votre compte. Copiez-collez la clé de licence dans le champ ci-dessous et cliquez sur le bouton afin d'activer la licence pour cette instance de Baserow. Il n'est pas possible d'utiliser la même clé pour plusieurs instances. {pricingLink} si vous n'avez pas encore de clé.",
+        "licenseError": {
+            "invalidTitle": "Invalide",
+            "invalid": "La licence fournie est invalide.",
+            "unsupportedTitle": "Non supportée",
+            "unsupported": "La licence fournie est incompatible avec la version actuelle de Baserow. Veuillez mettre à jour votre instance avec la dernière version et essayez de nouveau.",
+            "expiredTitle": "Expirée",
+            "expired": "La licence fournie a expiré.",
+            "duplicateTitle": "Déja enregistrée",
+            "duplicate": "La licence fournie est déjà enregistrée sur cette instance.",
+            "instanceMismatchTitle": "Instance incorrecte",
+            "instanceMismatch": "La licence fournie n'a pas été créée pour cette instance."
+        }
+    },
+    "disconnectLicenseModal": {
+        "disconnectLicense": "Déconnecter la licence",
+        "disconnectDescription": "Êtes-vous sur·e de vouloir déconnecter la licence ? Si vous deconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
+    },
+    "registerLicenseForm": {
+        "licenseKey": "Clé de licence"
+    },
+    "groupsAdminTable": {
+        "allGroups": "Liste des groupes",
+        "id": "ID",
+        "name": "Nom",
+        "members": "Membres",
+        "applications": "Applications",
+        "created": "Créé le"
+    },
+    "editGroupContext": {
+        "delete": "Supprimer définitivement"
+    },
+    "deleteGroupModal": {
+        "title": "Supprimer {name}",
+        "confirmation": "Êtes-vous sûr·e de vouloir supprimer le groupe : {name} ?",
+        "comment": "Le groupe va être supprimé définitivement ainsi que ses applications liées. Il est impossible d'annuler cette action.",
+        "delete": "Supprimer le groupe {name}"
+    },
+    "activeUsers": {
+        "newUsers": "Nouveaux utilisateurs",
+        "activeUsers": "Utilisateurs actifs"
+    },
+    "usersAdminTable": {
+        "allUsers": "Liste des utilisateurs",
+        "id": "ID",
+        "username": "Identifiant",
+        "name": "Nom",
+        "groups": "Groupes",
+        "lastLogin": "Dernière connexion",
+        "dateJoined": "Date d'inscription",
+        "active": "Actif"
+    },
+    "editUserContext": {
+        "changePassword": "Modifier le mot de passe",
+        "delete": "Supprimer définitivement"
+    },
+    "changePasswordForm": {
+        "newPassword": "Nouveau mot de passe",
+        "repeatPassword": "Répétez le mot de passe",
+        "changePassword": "Mettre à jour le mot de passe",
+        "error": {
+            "doesntMatch": "Les deux mots de passe ne correspondent pas."
+        }
+    },
+    "userForm": {
+        "fullName": "Nom complet",
+        "email": "Adresse électronique",
+        "isActive": "Est actif",
+        "warning": {
+            "changeEmail": "Si vous changez l'adresse électronique, l'utilisateur devra désormais utiliser celle-ci pour s'identifier. Ceci doit être signifié à l'utilisateur.",
+            "inactiveUser": "Un utilisateur inactif n'est plus en mesure de s'identifier.",
+            "userStaff": "Un collaborateur a accès à la liste des utilisateurs, des groupes et peut changer les permissions de tous les utilisateurs."
+        },
+        "error": {
+            "invalidName": "Veuillez saisir un nom valide, il doit être composé de plus de 2 charactères et moins de 150.",
+            "invalidEmail": "Veuillez saisir une adresse électronique valide."
+        }
+    },
+    "changeUserPasswordModal": {
+        "changePassword": "Changer le mot de passe pour {username}"
+    },
+    "deleteUserModal": {
+        "title": "Supprimer {username}",
+        "confirmation": "Êtes-vous sûr·e de vouloir supprimer l'utilisateur : {name} ?",
+        "comment1": "Le compte de l'utilisateur va être supprimé, cependant les groupes dont l'utilisateur est membre vont continuer d'exister. Ces groupes ne seront pas supprimés même si cet utilisateur est le dernier utilisateur du groupe. Supprimer le dernier utilisateur d'un groupe interdit à quiconque d'y accéder de nouveau.",
+        "comment2": "Après avoir supprimé un utilisateur, il sera possible de créer un nouveau compte avec la même adresse email. Si vous souhaitez éviter que l'utilisateur puisse se connecter avec cette adresse, vous pouvez désactiver l'utilisateur plutôt que supprimer son compte.",
+        "delete": "Supprimer l'utilisateur {username}"
+    },
+    "editUserModal": {
+        "delete": "Supprimer l'utilisateur",
+        "edit": "Modifier {username}"
+    },
+    "crudTableSearchContext": {
+        "search": "Chercher"
+    },
+    "tableJSONExporter": {
+        "encoding": "Encodage"
+    },
+    "tableXMLExporter": {
+        "encoding": "Encodage"
+    },
+    "kanbanViewStackContext": {
+        "createCard": "Créer une carte",
+        "editStack": "Modifier la colonne",
+        "deleteStack": "Supprimer la colonne",
+        "delete": "Supprimer {name}",
+        "deleteDescription": "Êtes-vous sur·e de vouloir supprimer la colonne {name} ? Supprimer une valeur revient à supprimer l'option correspondante de la liste déroulante, ce qui peut impliquer une perte d'information car les lignes contenant cette valeur auront désormais une valeur vide à la place pour ce champ."
+    },
+    "kanbanViewHeader": {
+        "stackBy": "Regrouper par",
+        "stackedBy": "Regroupé par {fieldName}",
+        "customizeCards": "Configurer les cartes"
+    },
+    "kanbanViewOptionForm": {
+        "selectOption": "Nom de la colonne"
+    },
+    "kanbanViewStakedBy": {
+        "title": "Champ de regroupement",
+        "chooseField": "Par quel champ de type « liste déroulante » souhaitez-vous regrouper vos cartes ?",
+        "addSelectField": "Ajouter une liste déroulante"
+    },
+    "kanbanViewStack": {
+        "uncategorized": "Sans catégorie",
+        "tryAgain": "Essayer encore",
+        "new": "Nouveau"
+    },
+    "dashboard": {
+        "title": "Statistiques",
+        "totals": "Résumé",
+        "totalUsers": "Nombre d'utilisateur",
+        "totalGroups": "Nombre de groupe",
+        "totalApplications": "Nombre d'application",
+        "newUsers": "Nouveaux utilisateurs",
+        "newUsers24h": "Sur les dernières 24h",
+        "newUsers7days": "sur les 7 derniers jours",
+        "newUsers30days": "Sur les 30 derniers jours",
+        "activeUsers": "Utilisateurs actifs",
+        "activeUsers24h": "Sur les dernières 24h",
+        "activeUsers7days": "sur les 7 derniers jours",
+        "activeUsers30days": "Sur les 30 derniers jours",
+        "viewAll": "Consulter"
+    },
+    "licenses": {
+        "titleNoLicenses": "Aucune licences trouvée",
+        "titleLicenses": "Licences",
+        "noLicensesDescription": "Votre instance de Baserow n'a aucune licence enregistrée. Une licence premium vous donne immédiatement accés à plusieurs fonctionnalités additionnelles. Si vous avez déjà une licence, vous pouvez l'enregistrer ici. Vous pouvez également en obtenir une en cliquant sur le bouton ci-dessous.",
+        "rowComments": "Commentaires par lignes",
+        "kanbanView": "Vue Kanban",
+        "exports": "Export JSON et XML",
+        "admin": "Interface d'administration",
+        "getLicense": "Obtenir une licence",
+        "baserowInstanceId": "Votre identifiant d'instance Baserow est :",
+        "registerLicense": "Activer une licence",
+        "licenceId": "Numéro de licence",
+        "premium": "Premium",
+        "expired": "Expirée",
+        "validity": "Valide du {start} au {end}",
+        "seats": "places",
+        "premiumFeatures": "Fonctionalités premium"
+    },
+    "license": {
+        "title": "Plan {product_code}",
+        "users": "Utilisateurs",
+        "description": "Choisissez les utilisateurs qui peuvent utiliser les fonctionalités du plan {product_code}. Cette licence vous permet de distribuer le plan {product_code} à un maximum de {seats} utilisateurs.",
+        "seatLeft": "Vous n'avez plus de place disponible|Il reste une seule place|Il reste {count} places",
+        "fillSeats": "Distribuer les places aux utilisateurs restants",
+        "removeAll": "Enlever tous les utilisateurs",
+        "licenseId": "Numéro de licence",
+        "addUser": "Ajouter un utilisateur",
+        "plan": "Plan",
+        "premium": "premium",
+        "expired": "Expirée",
+        "validFrom": "Début de validité",
+        "validThrough": "Fin de validité",
+        "validThroughDescription": "Quand la licence expire, les utilisateurs associés n'auront plus accès aux fonctionnalités offertes par la licence.",
+        "lastCheck": "Dernière vérification",
+        "lastCheckDescription": "La licence est vérifiée réguliérement. Si vous avez, par exemple, renouvellé ou mis à jour votre licence, les changements ne deviennent actifs qu'après la vérification.",
+        "checkNow": "Vérifier maintenant",
+        "seats": "Places (nombre d'utilisateur max.)",
+        "licensedTo": "Attribuée à",
+        "premiumFeatures": "Fonctionnalités premium",
+        "applications": "Applications / Bases de données",
+        "unlimited": "Illimité",
+        "rowUsage": "Nombre de ligne",
+        "storeUsage": "Espace disponible",
+        "disconnectLicense": "Déconnecter la licence",
+        "disconnectDescription": "Si vous déconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
+    }
+}

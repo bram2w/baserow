@@ -76,20 +76,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "createViewModal": {
-      "createNew": "Create new {view}",
-      "add": "Add {view}"
-    }
-  },
-  "fr": {
-    "createViewModal": {
-      "createNew": "Créer une vue {view}",
-      "add": "Créer une vue {view}"
-    }
-  }
-}
-</i18n>

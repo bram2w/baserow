@@ -60,20 +60,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsParameter": {
-      "optional": "optional",
-      "defaultValue": "Default: {value}"
-    }
-  },
-  "fr": {
-    "apiDocsParameter": {
-      "optional": "optionnel",
-      "defaultValue": "Valeur par défaut : {value}"
-    }
-  }
-}
-</i18n>

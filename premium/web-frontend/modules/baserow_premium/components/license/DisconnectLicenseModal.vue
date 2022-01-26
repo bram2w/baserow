@@ -64,20 +64,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "disconnectLicenseModal": {
-      "disconnectLicense": "Disconnect license",
-      "disconnectDescription": "Are you sure that you want to disconnect this license? If you disconnect this license while it's active, the related users won’t have access to the plan anymore. It will effectively remove the license. Please contact our support team at {contact} if you want to use this license in another self hosted instance."
-    }
-  },
-  "fr": {
-    "disconnectLicenseModal": {
-      "disconnectLicense": "Déconnecter la licence",
-      "disconnectDescription": "Êtes-vous sur·e de vouloir déconnecter la licence ? Si vous deconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
-    }
-  }
-}
-</i18n>

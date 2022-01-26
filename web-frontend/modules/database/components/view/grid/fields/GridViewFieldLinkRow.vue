@@ -122,18 +122,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "gridViewFieldLinkRow": {
-      "unnamed": "unnamed row {value}"
-    }
-  },
-  "fr": {
-    "gridViewFieldLinkRow": {
-      "unnamed": "Ligne sans nom {value}"
-    }
-  }
-}
-</i18n>

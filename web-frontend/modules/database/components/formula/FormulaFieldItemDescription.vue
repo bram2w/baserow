@@ -44,20 +44,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "formulaFieldItemDescription" : {
-      "syntax": "Syntax",
-      "examples": "Examples"
-    }
-  },
-  "fr": {
-    "formulaFieldItemDescription" : {
-      "syntax": "Syntaxe",
-      "examples": "Exemples"
-    }
-  }
-}
-</i18n>

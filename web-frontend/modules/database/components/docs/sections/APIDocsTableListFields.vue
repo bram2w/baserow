@@ -81,34 +81,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsTableListFields":{
-      "description": "To list fields of the {name} table a `GET` request has to be made to the {name} fields endpoint. It's only possible to list the fields if the token has read, create or update permissions.",
-      "resultFieldProperties": "Result field properties",
-      "id": "Field primary key. Can be used to generate the database column name by adding `field_` prefix.",
-      "name": "Field name.",
-      "tableId": "Related table id.",
-      "order": "Field order in table. 0 for the first field.",
-      "primary": "Indicates if the field is a primary field. If `true` the field cannot be deleted and the value should represent the whole row.",
-      "type": "Type defined for this field.",
-      "extraProps": "Some extra properties are not described here because they are type specific."
-    }
-  },
-  "fr": {
-    "apiDocsTableListFields":{
-      "description": "Afin de lister les champs de la table {name} une requête de type {get} doit être envoyé auprès du point d'accès des champs de celle-ci. Le jeton d'authentification doit avoir les droits de création, modification et suppression afin de pouvoir lister les champs de la table.",
-      "resultFieldProperties": "Propriétés des champs de la réponse",
-      "id": "Clé primaire du champ. Permet de générer le nom de la colonne en base de données en ajoutant le prefix `field_`.",
-      "name": "Nom du champ.",
-      "tableId": "Clé étrangère de la table.",
-      "order": "Ordre du champ dans la table. 0 est le premier champ.",
-      "primary": "Indique si le champ est une clé primaire. Si la valeur est `true` le champ ne peut être effacé et ses valeurs doivent représenter la ligne entière.",
-      "type": "Type défini pour ce champ.",
-      "extraProps": "Certaines propriétés ne sont pas décrites ici car elles sont spécifiques au type de champ concerné."
-    }
-  }
-}
-</i18n>

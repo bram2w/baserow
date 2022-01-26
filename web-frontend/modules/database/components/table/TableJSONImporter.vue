@@ -207,34 +207,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "tableJSONImporter": {
-      "fileLabel": "Choose JSON file",
-      "fileDescription": "You can import an existing JSON file by uploading the .json file with tabular data, i.e.:",
-      "chooseButton": "Choose JSON file",
-      "encodingLabel": "Encoding",
-      "processingError": "Error occurred while parsing JSON: {error}",
-      "arrayError": "The JSON file is not an array.",
-      "emptyError": "This JSON file is empty.",
-      "limitFileSize": "The maximum file size is {limit}MB.",
-      "limitError": "It is not possible to import more than {limit} rows."
-    }
-  },
-  "fr": {
-    "tableJSONImporter": {
-      "fileLabel": "Choisissez un fichier JSON",
-      "fileDescription": "Vous pouvez importer un JSON existant en envoyant un fichier .json contenant des données tabulaires, c'est-à-dire :",
-      "chooseButton": "Choisir un fichier JSON",
-      "encodingLabel": "Encodage",
-      "processingError": "Une erreur est survenue lors du traitement du JSON : {error}",
-      "arrayError": "Ce fichier JSON n'est pas un tableau.",
-      "emptyError": "Ce fichier JSON est vide.",
-      "limitFileSize": "La taille maximum de fichier est de {limit}Mo.",
-      "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
-    }
-  }
-}
-</i18n>

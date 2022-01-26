@@ -57,18 +57,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "rowEditFieldLinkRow": {
-      "addLink": "Add another link"
-    }
-  },
-  "fr": {
-    "rowEditFieldLinkRow": {
-      "addLink": "Ajouter un lien"
-    }
-  }
-}
-</i18n>

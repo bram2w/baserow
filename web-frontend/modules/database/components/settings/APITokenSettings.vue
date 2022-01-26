@@ -126,32 +126,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiTokenSettings": {
-      "title": "Personal API tokens",
-      "createToken": "Create token",
-      "noTokensMessage": "You have not yet created an API token. You can use API tokens to authenticate with the REST API endpoints where you can create, read, update and delete rows. It is possible to set permissions on table level.",
-      "hasFullPermissions": "Has full permissions, also to all children.",
-      "hasOnlySelectedPermissions": "Has only permissions to the selected children.",
-      "noPermissions": "Doesn't have permissions.",
-      "createNewTitle": "Create new API token",
-      "backToOverview": "Back to overview"
-    }
-  },
-  "fr": {
-    "apiTokenSettings": {
-      "title": "Jetons d'API personnels",
-      "createToken": "Créer un jeton",
-      "noTokensMessage": "Vous n'avez pas encore créé de jeton. Vous pouvez utiliser les jetons d'API pour vous authentifier auprès de l'API REST qui vous permet de créer, lire, modifier et supprimer des lignes. Il est possible de définir des permissions différentes pour chaque table.",
-      "hasFullPermissions": "Toutes les permissions, pour les enfants également.",
-      "hasOnlySelectedPermissions": "Uniquement les permissions sélectionnées pour les enfants.",
-      "noPermissions": "Aucune permission",
-      "createNewTitle": "Créer un nouveau jeton",
-      "backToOverview": "Retour"
-    }
-  }
-}
-</i18n>

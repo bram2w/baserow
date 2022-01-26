@@ -138,32 +138,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "usersAdminTable": {
-      "allUsers": "All users",
-      "id": "ID",
-      "username": "Username",
-      "name": "Name",
-      "groups": "Groups",
-      "lastLogin": "Last login",
-      "dateJoined": "Signed up",
-      "active": "Active"
-    }
-  },
-  "fr": {
-    "usersAdminTable": {
-      "allUsers": "Liste des utilisateurs",
-      "id": "ID",
-      "username": "Identifiant",
-      "name": "Nom",
-      "groups": "Groupes",
-      "lastLogin": "Dernière connexion",
-      "dateJoined": "Date d'inscription",
-      "active": "Actif"
-    }
-  }
-}
-</i18n>

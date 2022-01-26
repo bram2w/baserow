@@ -168,18 +168,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "sidebarItem":{
-      "exportTable": "Export table"
-    }
-  },
-  "fr":{
-    "sidebarItem":{
-      "exportTable": "Exporter la table"
-    }
-  }
-}
-</i18n>

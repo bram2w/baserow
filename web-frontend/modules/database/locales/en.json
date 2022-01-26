@@ -1,0 +1,491 @@
+{
+    "webhookModal": {
+        "title": "{name} webhooks",
+        "createWebhook": "Create webhook",
+        "backToList": "Back to list"
+    },
+    "deleteWebhookModal": {
+        "title": "Delete {webhookName}",
+        "deleteButton": "Delete webhook",
+        "body": "Are you sure you want to delete this webhook? You will not be able to restore it later."
+    },
+    "webhookList": {
+        "noWebhooksMessage": "You have not created any webhooks yet. Webhooks can be used in order to inform 3rd party systems when a row in Baserow has been created, updated or deleted."
+    },
+    "testWebhookModal": {
+        "title": "Test webhook",
+        "unreachable": "Server unreachable"
+    },
+    "webhookForm": {
+        "inputLabels": {
+            "name": "Name",
+            "value": "Value",
+            "requestMethod": "Method",
+            "url": "URL",
+            "userFieldNames": "User field names",
+            "events": "Which events should trigger this webhook?",
+            "headers": "Additional headers",
+            "example": "Example payload"
+        },
+        "errors": {
+            "urlField": "This field is required and needs to be a valid url.",
+            "invalidHeaders": "One of the headers is invalid."
+        },
+        "checkbox": {
+            "sendUserFieldNames": "Use field name instead of id"
+        },
+        "radio": {
+            "allEvents": "Send me everything",
+            "customEvents": "Let me select individual events"
+        },
+        "triggerButton": "Trigger test webhook",
+        "deactivated": {
+            "title": "Webhook is deactivated",
+            "content": "This webhook has been deactivated because there have been too many consecutive failures. Please check the call log for more details. Click on the button below to activate it again. Don't forgot to save the webhook after activating.",
+            "activate": "Activate"
+        }
+    },
+    "webhook": {
+        "details": "details",
+        "lastCall": "Last call: {lastCallTime}",
+        "noCalls": "No calls made",
+        "callLog": "Call log",
+        "triggerDescription": "Triggers on every event | Triggers on {count} event | Triggers on {count} events"
+    },
+    "createWebhook": {
+        "errorTableWebhookMaxLimitExceededTitle": "Max webhooks exceeded",
+        "errorTableWebhookMaxLimitExceededDescription": "Can't create the webhook because the maximum amount of webhooks per table has been exceeded."
+    },
+    "sidebar": {
+        "viewAPI": "View API Docs",
+        "createTable": "Create table"
+    },
+    "sidebarItem": {
+        "exportTable": "Export table"
+    },
+    "apiToken": {
+        "create": "create",
+        "read": "read",
+        "update": "update",
+        "delete": "delete",
+        "tokenPrefix": "Token:",
+        "viewAPIDocs": "View API documentation",
+        "generateNewToken": "Generate new token",
+        "showOrHide": "Show or hide the token",
+        "copyToClipboard": "Copy to clipboard",
+        "showDatabases": "show databases"
+    },
+    "apiTokenSettings": {
+        "title": "Personal API tokens",
+        "createToken": "Create token",
+        "noTokensMessage": "You have not yet created an API token. You can use API tokens to authenticate with the REST API endpoints where you can create, read, update and delete rows. It is possible to set permissions on table level.",
+        "hasFullPermissions": "Has full permissions, also to all children.",
+        "hasOnlySelectedPermissions": "Has only permissions to the selected children.",
+        "noPermissions": "Doesn't have permissions.",
+        "createNewTitle": "Create new API token",
+        "backToOverview": "Back to overview"
+    },
+    "apiTokenForm": {
+        "nameLabel": "Name",
+        "groupLabel": "Group"
+    },
+    "apiDocsSelectDatabase": {
+        "needOneDatabase": "You need to have at least one database to view the API documentation."
+    },
+    "apiDocsExample": {
+        "requestSample": "Request sample",
+        "responseSample": "Response sample",
+        "userFieldNames": "User field names"
+    },
+    "apiDocsParameter": {
+        "optional": "optional",
+        "defaultValue": "Default: {value}"
+    },
+    "apiDocsTableGetRow": {
+        "description": "Fetch a single {name} row.",
+        "rowId": "The unique identifier of the row that is requested."
+    },
+    "apiDocsErrors": {
+        "errorCode": "Error code",
+        "name": "Name",
+        "description": "Description",
+        "okDescription": "Request completed successfully.",
+        "badRequestDescription": "The request contains invalid values or the JSON could not be parsed.",
+        "unauthorizedDescription": "When you try to access an endpoint without valid token.",
+        "notFoundDescription": "Row or table is not found.",
+        "requestEntityTooLargeDescription": "The request exceeded the maximum allowed payload size.",
+        "internalErrorDescription": "The server encountered an unexpected condition.",
+        "badGatewayDescription": "Baserow is restarting or an unexpected outage is in progress.",
+        "unavailableDescription": "The server could not process your request in time."
+    },
+    "apiDocsTableFields": {
+        "tableTitle": "{name} table",
+        "tableId": "The ID of this table is:",
+        "description": "Each row in the {name} table contains the following fields.",
+        "id": "ID",
+        "name": "Name",
+        "type": "Type",
+        "compatibleFilters": "Compatible filters"
+    },
+    "apiDocsTableListRows": {
+        "description": "To list rows in the *{name}* table a `GET` request has to be made to the *{name}* endpoint. The response is paginated and by default the first page is returned. The correct page can be fetched by providing the `page` and `size` query parameters.",
+        "page": "Defines which page of rows should be returned.",
+        "size": "Defines how many rows should be returned per page.",
+        "userFieldNames": "When any value is provided for the `user_field_names` GET param then field names returned by this endpoint will be the actual names of the fields.\n\n If the `user_field_names` GET param is not provided, then all returned field names will be `field_` followed by the id of the field. For example `field_1` refers to the field with an id of `1`.\n\n Additionally when `user_field_names` is set then the behaviour of the other GET parameters `order_by`, `include` and `exclude` changes. They instead expect comma separated lists of the actual field names instead.",
+        "search": "If provided only rows with data that matches the search query are going to be returned.",
+        "orderBy": "Optionally the rows can be ordered by fields separated by comma. By default or if prepended with a '+' a field is ordered in ascending (A-Z) order, but by prepending the field with a '-' it can be ordered descending (Z-A).\n\n #### With `user_field_names`:\n\n `order_by` should be a comma separated list of the field names to order by. For example if you provide the following GET parameter `order_by=My Field,-My Field 2` the rows will ordered by the field called `My Field` in ascending order. If some fields have the same value, that subset will be ordered by the field called `My Field 2` in descending order.\n\n Ensure fields with names starting with a `+` or `-` are explicitly prepended with another `+` or `-`. E.g `+-Name`.\n\n Le nom des champs contenant des virgules doit être entouré par des guillements : `\"Nom ,\"`. Si le nom des champs contient des guillements, ils doivent alors être protégés en utilisant le charactère `\\`. Ex : `Nom \\\"`.\n\n#### Without `user_field_names`:\n\n `order_by` should be a comma separated list of `field_` followed by the id of the field to order by. For example if you provide the following GET parameter `order_by=field_1,-field_2` the rows will ordered by `field_1` in ascending order. If some fields have the same value, that subset will be ordered by `field_2` in descending order.",
+        "filter": "The rows can optionally be filtered by the same view filters available for the views. Multiple filters can be provided if they follow the same format. The `field` and `filter` variable indicate how to filter and the value indicates where to filter on.\n\n For example if you provide the following GET parameter `filter__field_1__equal=test` then only rows where the value of field_1 is equal to test are going to be returned.",
+        "filterLink": "A list of all filters can be found here.",
+        "filterType": "- `AND`: Indicates that the rows must match all the provided filters.\n- `OR`: Indicates that the rows only have to match one of the filters.\n\n This works only if two or more filters are provided.",
+        "include": "All the fields are included in the response by default. You can select a subset of fields to include by providing the include query parameter.\n\n #### With `user_field_names`:\n\n `include` should be a comma separated list of field names to be included in results. For example if you provide the following GET param: `include=My Field,-My Field 2` then only those fields will be included (unless they are explicitly excluded).\n\n Le nom des champs contenant des virgules doit être entouré par des guillements : `\"Nom ,\"`. Si le nom des champs contient des guillements, ils doivent alors être protégés en utilisant le charactère `\\`. Ex : `Nom \\\"`.\n\n #### Without `user_field_names`:\n\n `include` should be a comma separated list of `field_` followed by the id of the field to include in the results. For example: If you provide the following GET parameter `exclude=field_1,field_2` then the fields with id `1` and id `2` then only those fields will be included (unless they are explicitly excluded).",
+        "exclude": "All the fields are included in the response by default. You can select a subset of fields to exclude by providing the exclude query parameter.\n\n #### With `user_field_names`:\n\n `exclude` should be a comma separated list of field names to be excluded from the results. For example if you provide the following GET param: `exclude=My Field,-My Field 2` then those fields will be excluded.\n\n Le nom des champs contenant des virgules doit être entouré par des guillements : `\"Nom ,\"`. Si le nom des champs contient des guillements, ils doivent alors être protégés en utilisant le charactère `\\`. Ex : `Nom \\\"`.\n\n #### Without `user_field_names`:\n\n `exclude` should be a comma separated list of `field_` followed by the id of the field to exclude from the results. For example: If you provide the following GET parameter `exclude=field_1,field_2` then the fields with id `1` and id `2` will be excluded."
+    },
+    "apiDocsIntro": {
+        "intro": "The {name} database provides an easy way to integrate the data with any external system. The API follows REST semantics, uses JSON to encode objects and relies on standard HTTP codes, machine and human readable errors to signal operation outcomes.",
+        "autoDocDescription": "This documentation is generated automatically based on the tables and fields that are in your database. If you make changes to your database, table or fields it could be that the API interface has also changed. Therefore, make sure that you update your API implementation accordingly.",
+        "databaseId": "The ID of this database is:",
+        "jsClient": "Javascript example API client:",
+        "pythonClient": "Python example API client:"
+    },
+    "apiDocsTableListFields": {
+        "description": "To list fields of the {name} table a `GET` request has to be made to the {name} fields endpoint. It's only possible to list the fields if the token has read, create or update permissions.",
+        "resultFieldProperties": "Result field properties",
+        "id": "Field primary key. Can be used to generate the database column name by adding `field_` prefix.",
+        "name": "Field name.",
+        "tableId": "Related table id.",
+        "order": "Field order in table. 0 for the first field.",
+        "primary": "Indicates if the field is a primary field. If `true` the field cannot be deleted and the value should represent the whole row.",
+        "type": "Type defined for this field.",
+        "extraProps": "Some extra properties are not described here because they are type specific."
+    },
+    "apiDocsTableDeleteRow": {
+        "description": "Deletes an existing {name} row.",
+        "rowId": "The unique identifier of the row that needs to be deleted."
+    },
+    "apiDocsTableMoveRow": {
+        "description": "Moves an existing {name} row before another row. If no `before_id` is provided, then the row will be moved to the end of the table.",
+        "rowId": "Moves the row related to the value.",
+        "before": "Moves the row related to the given `row_id` before the row related to the provided value. If not provided, then the row will be moved to the end."
+    },
+    "apiDocsTableUpdateRow": {
+        "description": "Updates an existing {name} row.",
+        "rowId": "The unique identifier of the row that needs to be updated.",
+        "before": "If provided then the newly created row will be positioned before the row with the provided id."
+    },
+    "apiDocsTableCreateRow": {
+        "description": "Create a new {name} row.",
+        "before": "If provided then the newly created row will be positioned before the row with the provided id."
+    },
+    "apiDocsAuth": {
+        "description": "Baserow uses a simple token based authentication. You need to generate at least one API token in your {settingsLink} to use the endpoints described below. It is possible to give create, read, update and delete permissions up until table level per token. You can authenticate to the API by providing your API token in the HTTP authorization bearer token header. All API requests must be authenticated and made over HTTPS.",
+        "settingsLink": "settings"
+    },
+    "apiDocsFilters": {
+        "filter": "Filter",
+        "exampleValue": "Example value",
+        "example": "Full example",
+        "field": "field {name}"
+    },
+    "fieldTextSubForm": {
+        "placeholder": "Default text"
+    },
+    "fieldSingleSelectSubForm": {
+        "optionsLabel": "Options"
+    },
+    "fieldSingleSelectDropdown": {
+        "notFound": "Option not found"
+    },
+    "fieldDateSubForm": {
+        "dateFormatLabel": "Date format",
+        "dateFormatEuropean": "European",
+        "dateFormatUS": "US",
+        "dateFormatISO": "ISO",
+        "includeTimeLabel": "Include time",
+        "timeFormatLabel": "Time format",
+        "24Hour": "24 hour",
+        "12Hour": "12 hour"
+    },
+    "fieldLinkRowSubForm": {
+        "noTable": "You need at least one other table in the same database to link to.",
+        "selectTableLabel": "Select a table to link to",
+        "dataLost": "By changing the table, all data will be lost."
+    },
+    "fieldSelectOptions": {
+        "add": "Add an option"
+    },
+    "fieldNumberSubForm": {
+        "typeLabel": "Number type",
+        "integer": "Integer",
+        "decimal": "Decimal",
+        "decimalPlacesLabel": "Decimal places",
+        "allowNegative": "Allow negative"
+    },
+    "fieldContext": {
+        "editField": "Edit field",
+        "deleteField": "Delete field"
+    },
+    "fieldForm": {
+        "name": "Name",
+        "fieldAlreadyExists": "A field with this name already exists.",
+        "nameNotAllowed": "This field name is not allowed.",
+        "nameTooLong": "This field name is too long."
+    },
+    "fieldLookupSubForm": {
+        "noTable": "You need at least one link row field to create a lookup field.",
+        "selectThroughFieldLabel": "Select a link row field",
+        "selectTargetFieldLabel": "Select a field to lookup"
+    },
+    "fieldFormulaNumberSubForm": {
+        "typeLabel": "Number type",
+        "integer": "Integer",
+        "decimal": "Decimal",
+        "decimalPlacesLabel": "Decimal places",
+        "allowNegative": "Allow negative"
+    },
+    "fieldRatingSubForm": {
+        "maxValue": "Max",
+        "color": "Color",
+        "style": "Style"
+    },
+    "rowCreateModal": {
+        "addField": "add field"
+    },
+    "selectRowContent": {
+        "search": "Search rows"
+    },
+    "rowEditModal": {
+        "addField": "add field"
+    },
+    "rowEditFieldMultipleSelect": {
+        "addOption": "Add another option"
+    },
+    "rowEditFieldFile": {
+        "addFile": "Add a file",
+        "sizes": {
+            "0": "Bytes",
+            "1": "KB",
+            "2": "MB",
+            "3": "GB",
+            "4": "TB",
+            "5": "PB"
+        }
+    },
+    "rowEditFieldLinkRow": {
+        "addLink": "Add another link"
+    },
+    "tableCSVImporter": {
+        "chooseFileLabel": "Choose CSV file",
+        "chooseFileDescription": "You can import an existing CSV by uploading the .CSV file with tabular data. Most spreadsheet applications will allow you to export your spreadsheet as a .CSV file.",
+        "chooseFile": "Choose CSV file",
+        "columnSeparator": "Column separator",
+        "recordSeparator": "record separator",
+        "unitSeparator": "unit separator",
+        "encoding": "Encoding",
+        "firstRowHeader": "First row is header",
+        "limitFileSize": "The maximum file size is {limit}MB.",
+        "limitError": "It is not possible to import more than {limit} rows.",
+        "emptyCSV": "This CSV file is empty."
+    },
+    "tableForm": {
+        "name": "Name"
+    },
+    "tableImporterPreview": {
+        "label": "Quick preview",
+        "remaining": "{remaining} other rows"
+    },
+    "tableXMLImporter": {
+        "fileLabel": "Choose XML file",
+        "fileDescription": "You can import an existing XML by uploading the .XML file with tabular data, i.e.:",
+        "chooseButton": "Choose XML file",
+        "processingError": "Error occurred while processing XML: {errors}",
+        "emptyError": "This XML file is empty.",
+        "limitFileSize": "The maximum file size is {limit}MB.",
+        "limitError": "It is not possible to import more than {limit} rows."
+    },
+    "tableJSONImporter": {
+        "fileLabel": "Choose JSON file",
+        "fileDescription": "You can import an existing JSON file by uploading the .json file with tabular data, i.e.:",
+        "chooseButton": "Choose JSON file",
+        "encodingLabel": "Encoding",
+        "processingError": "Error occurred while parsing JSON: {error}",
+        "arrayError": "The JSON file is not an array.",
+        "emptyError": "This JSON file is empty.",
+        "limitFileSize": "The maximum file size is {limit}MB.",
+        "limitError": "It is not possible to import more than {limit} rows."
+    },
+    "tablePasteImporter": {
+        "pasteLabel": "Paste the table data",
+        "pasteDescription": "You can copy the cells from a spreadsheet and paste them below.",
+        "firstRowHeader": "First row is header",
+        "limitError": "It is not possible to import more than {limit} rows."
+    },
+    "createTableModal": {
+        "title": "Create new table",
+        "importLabel": "Would you like to import existing data?",
+        "newTable": "Start with a new table",
+        "addButton": "Add table"
+    },
+    "formulaAdvancedEditContext": {
+        "textAreaFormulaInputPlaceholder": "Click to edit the formula",
+        "fields": "Fields",
+        "functions": "Functions",
+        "operators": "Operators",
+        "fieldType": "A {type} field"
+    },
+    "fieldFormulaInitialSubForm": {
+        "formulaInputPlaceholder": "Click to edit the formula",
+        "refreshFormulaOptions": "Refresh formula options"
+    },
+    "formulaFieldItemDescription": {
+        "syntax": "Syntax",
+        "examples": "Examples"
+    },
+    "viewSearchContext": {
+        "searchInRows": "Search in all rows",
+        "hideNotMatching": "hide not matching rows"
+    },
+    "viewsContext": {
+        "searchView": "Search views",
+        "noViews": "No views found"
+    },
+    "viewFilterTypeLinkRow": {
+        "unnamed": "unnamed row {value}",
+        "choose": "Choose row"
+    },
+    "viewFilterContext": {
+        "addFilter": "Add filter",
+        "disableAllFilters": "all disabled",
+        "noFilterTitle": "You have not yet created a filter",
+        "noFilterText": "Filters allow you to show rows that apply to your conditions.",
+        "where": "Where",
+        "and": "And",
+        "or": "Or"
+    },
+    "viewFilterTypeFileTypeDropdown": {
+        "image": "image",
+        "document": "document"
+    },
+    "createViewModal": {
+        "createNew": "Create new {view}",
+        "add": "Add {view}"
+    },
+    "shareViewLink": {
+        "shareView": "Share {viewTypeSharingLinkName}",
+        "shareViewTitle": "Create a private shareable link to the {viewTypeSharingLinkName}",
+        "sharedViewTitle": "This {viewTypeSharingLinkName} is currently shared via a private link",
+        "sharedViewDescription": "People who have the link can see the {viewTypeSharingLinkName}.",
+        "disableLink": "disable shared link",
+        "generateNewUrl": "generate new url",
+        "copyURL": "copy URL"
+    },
+    "viewSortContext": {
+        "noSortTitle": "You have not yet created a sort",
+        "noSortText": "Sorts allow you to sort rows by a field.",
+        "sortBy": "Sort by",
+        "thenBy": "Then by",
+        "addSort": "choose a field to sort by"
+    },
+    "viewSort": {
+        "sort": "Sort | 1 Sort | {count} Sorts"
+    },
+    "viewRotateSlugModal": {
+        "title": "Refresh URL",
+        "refreshWarning": "Are you sure that you want to refresh the URL of {viewName}? After refreshing, a new URL will be generated and it will not be possible to access the {viewTypeSharingLinkName} via the old URL. Everyone that you have shared the URL with, won't be able to access the {viewTypeSharingLinkName}.",
+        "generateNewURL": "Generate new URL"
+    },
+    "viewFieldsContext": {
+        "coverField": "Cover field",
+        "noCover": "No cover",
+        "search": "Search fields",
+        "hideAll": "Hide all",
+        "showAll": "Show all"
+    },
+    "viewFilterTypeBoolean": {
+        "selected": "Selected"
+    },
+    "viewFilter": {
+        "filter": "Filter | 1 Filter | {count} Filters"
+    },
+    "viewContext": {
+        "exportView": "Export view",
+        "renameView": "Rename view",
+        "deleteView": "Delete view"
+    },
+    "deleteViewModal": {
+        "title": "Delete {name}",
+        "description": "Are you sure you want to delete the view {name}? The table data will be preserved, but the filters, sortings and field widths related to the view will be deleted.",
+        "delete": "Delete view"
+    },
+    "viewForm": {
+        "name": "Name"
+    },
+    "galleryViewHeader": {
+        "customizeCards": "Customize cards"
+    },
+    "gridViewHide": {
+        "hideField": "Hide Fields | 1 hidden field | {count} hidden fields"
+    },
+    "gridViewFieldType": {
+        "createFilter": "Create filter",
+        "sortField": "Sort",
+        "hideField": "Hide field"
+    },
+    "gridViewRow": {
+        "rowNotMatchingFilters": "Row does not match filters",
+        "rowNotMatchingSearch": "Row does not match search",
+        "rowHasMoved": "Row has moved"
+    },
+    "gridView": {
+        "insertRowAbove": "Insert row above",
+        "insertRowBelow": "Insert row below",
+        "enlargeRow": "Enlarge row",
+        "deleteRow": "Delete row",
+        "rowCount": "No rows | 1 row | {count} rows"
+    },
+    "gridViewFieldLinkRow": {
+        "unnamed": "unnamed row {value}"
+    },
+    "previewAny": {
+        "externalWarning": "Opening your file via an external service exposes your file to their servers."
+    },
+    "exportTableModal": {
+        "failedTitle": "Export Failed",
+        "failedDescription": "The export failed due to a server error.",
+        "cancelledTitle": "Export Cancelled",
+        "cancelledDescription": "The export was cancelled."
+    },
+    "exporterTypeChoices": {
+        "formatLabel": "To which format would you like to export?"
+    },
+    "exportTableForm": {
+        "viewLabel": "Select the view to export:",
+        "typeError": "No exporter type available please select a different view or entire table."
+    },
+    "exportTableLoadingBar": {
+        "export": "Export",
+        "download": "Download"
+    },
+    "exportTableDropdown": {
+        "exportEntireTable": "Export entire table"
+    },
+    "tableCSVExporter": {
+        "columnSeparatorLabel": "Column separator",
+        "recordSeparator": "record separator",
+        "unitSeparator": "unit separator",
+        "encodingLabel": "Encoding",
+        "firstRowIsHeaderLabel": "First row is header"
+    },
+    "apiDocsDatabase": {
+        "pageTitle": "{name} database API documentation",
+        "back": "Back to dashboard",
+        "openDatabase": "open database"
+    },
+    "apiDocs": {
+        "title": "REST API",
+        "intro": "After you have created your database schema and API key in the {settingsLink} your Baserow database provides his own REST API endpoints to create, read, update and delete rows.",
+        "settings": "settings",
+        "selectApplicationTitle": "For which database do you want to see the documentation?",
+        "signIn": "Sign in to get started",
+        "back": "Back to dashboard"
+    }
+}

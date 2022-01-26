@@ -95,20 +95,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "fieldContext":{
-      "editField": "Edit field",
-      "deleteField": "Delete field"
-    }
-  },  
-  "fr": {
-    "fieldContext":{
-      "editField": "Modifier le champ",
-      "deleteField": "Supprimer le champ"
-    }
-  }
-}
-</i18n>

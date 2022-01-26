@@ -76,18 +76,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "viewFilter": {
-      "filter": "Filter | 1 Filter | {count} Filters"
-    }
-  },
-  "fr":{
-    "viewFilter": {
-      "filter": "Filtre | 1 Filtre | {count} Filtres"
-    }
-  }
-}
-</i18n>

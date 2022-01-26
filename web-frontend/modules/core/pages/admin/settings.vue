@@ -86,30 +86,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "settings":{
-      "settingsTitle": "Admin settings",
-      "baserowInstanceId": "Instance ID",
-      "instanceIdDescription": "The instance ID is the unique identifier of your Baserow copy.",
-      "groupSignupRestrictions": "Signup restrictions",
-      "settingAllowNewAccountsName": "Allow creating new accounts",
-      "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
-      "enabled": "enabled"
-    }
-  },
-  "fr":{
-    "settings":{
-      "settingsTitle": "Paramètres",
-      "baserowInstanceId": "Identifiant de l'instance de Baserow",
-      "instanceIdDescription": "Cet identifiant permet de désigner de manière unique votre instance de Baserow.",
-      "groupSignupRestrictions": "Restriction de création des comptes",
-      "settingAllowNewAccountsName": "Autoriser la création de compte",
-      "settingAllowNewAccountsDescription": "Par défaut, tout les visiteurs peuvent créer un compte sur votre instance de Baserow.",
-      "enabled": "Autoriser"
-    }
-  }
-}
-</i18n>

@@ -77,20 +77,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "exportTableLoadingBar": {
-      "export": "Export",
-      "download": "Download"
-    }
-  },
-  "fr": {
-    "exportTableLoadingBar": {
-      "export": "Exporter",
-      "download": "Télécharger"
-    }
-  }
-}
-</i18n>

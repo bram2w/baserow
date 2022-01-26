@@ -247,28 +247,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "groupMemberModal": {
-      "membersModalTitle": "{group} members",
-      "userDescription": "{user} - joined {since} ago",
-      "invitationDescription": "invited {since} ago",
-      "sendInvite": "Send invite",
-      "userAlreadyInGroupTitle": "User is already in the group.",
-      "userAlreadyInGroupText": "It is not possible to send an invitation when the user is already a member of the group."
-    }
-  },
-  "fr": {
-    "groupMemberModal": {
-      "membersModalTitle": "Membres de {group}",
-      "userDescription": "{user} - membre depuis {since}",
-      "invitationDescription": "invité·e depuis {since}",
-      "sendInvite": "Envoyer l'invitation",
-      "userAlreadyInGroupTitle": "L'utilisateur est déjà dans le groupe.",
-      "userAlreadyInGroupText": "Il n'est pas possible d'envoyer une invitation à un utilisateur déjà présent dans le groupe."
-    }
-  }
-}
-</i18n>

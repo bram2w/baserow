@@ -209,38 +209,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "error":{
-      "alreadyExistsTitle": "User already exists",
-      "alreadyExistsMessage": "A user with the provided e-mail address already exists."
-    },
-    "field":{
-      "language": "Language",
-      "emailAddress": "E-mail address",
-      "name":"Your name",
-      "password": "Password",
-      "passwordRepeat":"Repeat password"
-    },
-    "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} has invited you to join {group}."
-  },
-  "fr": {
-    "error":{
-      "alreadyExistsTitle": "L'utilisateur existe déjà",
-      "alreadyExistsMessage": "Un utilisateur avec la même adresse électronique existe déjà."
-    },
-    "field":{
-      "language": "Langue",
-      "emailAddress": "Adresse électronique",
-      "name":"Votre nom",
-      "password": "Mot de passe",
-      "passwordRepeat":"Répetez votre mot de passe"
-    },
-    "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le groupe {group}."
-  }
-}
-</i18n>
