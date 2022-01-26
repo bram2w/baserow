@@ -99,24 +99,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "groupInvitation": {
-      "title": "Invitation",
-      "message": "{by} has invited you to join {group}.",
-      "reject": "Reject",
-      "accept": "Accept"
-    }
-  },
-  "fr": {
-    "groupInvitation": {
-      "title": "Invitation",
-      "message": "{by} vous a invité à rejoindre le groupe {group}.",
-      "reject": "Refuser",
-      "accept": "Accepter"
-    }
-  }
-}
-</i18n>

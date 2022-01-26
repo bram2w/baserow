@@ -321,30 +321,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "viewFilterContext":{
-      "addFilter": "Add filter",
-      "disableAllFilters":"all disabled",
-      "noFilterTitle": "You have not yet created a filter",
-      "noFilterText": "Filters allow you to show rows that apply to your conditions.",
-      "where": "Where",
-      "and": "And",
-      "or": "Or"
-    }
-  },
-  "fr":{
-    "viewFilterContext":{
-      "addFilter": "Ajouter un filtre",
-      "disableAllFilters":"Tous désactivés",
-      "noFilterTitle": "Vous n'avez pas encore définit de filtre",
-      "noFilterText": "Les filtres permettent de voir uniquement les lignes qui correspondent à vos critères.",
-      "where": "Quand",
-      "and": "Et",
-      "or": "Ou"
-    }
-  }
-}
-</i18n>

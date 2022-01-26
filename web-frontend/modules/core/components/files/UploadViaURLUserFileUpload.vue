@@ -77,22 +77,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "uploadViaURLUserFileUpload": {
-      "title": "Upload from a URL",
-      "urlLabel": "URL",
-      "urlError": "A valid URL is required."
-    }
-  },
-  "fr": {
-    "uploadViaURLUserFileUpload": {
-      "title": "À partir d'une URL",
-      "urlLabel": "URL",
-      "urlError": "Une URL valide doit être renseignée."
-    }
-  }
-}
-</i18n>

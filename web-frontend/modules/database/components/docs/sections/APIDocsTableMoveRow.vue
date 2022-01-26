@@ -71,22 +71,3 @@ export default {
   methods: {},
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsTableMoveRow": {
-      "description": "Moves an existing {name} row before another row. If no `before_id` is provided, then the row will be moved to the end of the table.",
-      "rowId": "Moves the row related to the value.",
-      "before": "Moves the row related to the given `row_id` before the row related to the provided value. If not provided, then the row will be moved to the end."
-    }
-  },
-  "fr": {
-    "apiDocsTableMoveRow": {
-      "description": "Déplace une ligne existante de la table *{name}* avant une autre ligne. Si le paramètre `before_id` n'est pas fourni, la ligne est déplacée à la fin de la table.",
-      "rowId": "Identifiant unique de la ligne à déplacer.",
-      "before": "Permet de définir l'identifiant de la ligne avant laquelle la ligne choisie doit être déplacée. Si aucune valeur n'est fournie, la ligne est déplacée à la fin de la table."
-    }
-  }
-}
-</i18n>

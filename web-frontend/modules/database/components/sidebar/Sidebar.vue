@@ -95,20 +95,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "sidebar": {
-      "viewAPI": "View API Docs",
-      "createTable": "Create table"
-    }
-  },
-  "fr":{
-    "sidebar": {
-      "viewAPI": "Documentation de l'API",
-      "createTable": "Ajouter une table"
-    }
-  }
-}
-</i18n>

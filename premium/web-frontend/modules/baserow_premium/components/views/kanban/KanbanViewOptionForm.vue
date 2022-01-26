@@ -70,18 +70,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "kanbanViewOptionForm": {
-      "selectOption": "Select option"
-    }
-  },
-  "fr": {
-    "kanbanViewOptionForm": {
-      "selectOption": "Nom de la colonne"
-    }
-  }
-}
-</i18n>

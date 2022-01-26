@@ -36,22 +36,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "failedConnectingNotification": {
-      "title": "Failed",
-      "content": "Connection to the server has failed. Please refresh the page.",
-      "action": "Refresh page"
-    }
-  },
-  "fr": {
-    "failedConnectingNotification": {
-      "title": "Échec de connexion",
-      "content": "La connexion avec le serveur a été interrompue. Merci de rafraîchir la page.",
-      "action": "Rafraîchir la page"
-    }
-  }
-}
-</i18n>

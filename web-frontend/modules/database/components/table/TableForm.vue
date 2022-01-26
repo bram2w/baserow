@@ -48,18 +48,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "tableForm": {
-      "name": "Name"
-    }
-  },
-  "fr": {
-    "tableForm": {
-      "name": "Nom"
-    }
-  }
-}
-</i18n>

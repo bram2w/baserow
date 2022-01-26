@@ -127,24 +127,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "tablePasteImporter": {
-      "pasteLabel": "Paste the table data",
-      "pasteDescription": "You can copy the cells from a spreadsheet and paste them below.",
-      "firstRowHeader": "First row is header",
-      "limitError": "It is not possible to import more than {limit} rows."
-    }
-  },
-  "fr": {
-    "tablePasteImporter": {
-      "pasteLabel": "Collez les données tabulaires",
-      "pasteDescription": "Vous pouvez copier les lignes provenant d'un tableur et les coller ci-dessous.",
-      "firstRowHeader": "La première ligne est l'entête",
-      "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
-    }
-  }
-}
-</i18n>

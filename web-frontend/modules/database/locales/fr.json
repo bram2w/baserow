@@ -1,0 +1,490 @@
+{
+    "webhookModal": {
+        "title": "Webhooks de {name}",
+        "createWebhook": "Ajouter un webhook",
+        "backToList": "Retour à la liste"
+    },
+    "deleteWebhookModal": {
+        "title": "Supprimer {webhookName}",
+        "deleteButton": "Supprimer le webhook",
+        "body": "Êtes-vous sûr·e de vouloir supprimer ce webhook ? Vous ne serez plus en mesure de le restaurer par la suite."
+    },
+    "webhookList": {
+        "noWebhooksMessage": "Vous n'avez pas encore créé de webhook. Les webhooks peuvent être utilisés afin d'informer un système tiers quand une ligne a été créée, modifiée, supprimée dans Baserow."
+    },
+    "testWebhookModal": {
+        "title": "Test du webhook",
+        "unreachable": "Serveur inaccessible"
+    },
+    "webhookForm": {
+        "inputLabels": {
+            "name": "Nom",
+            "value": "Valeur",
+            "requestMethod": "Méthode",
+            "url": "URL",
+            "userFieldNames": "Noms des champs",
+            "events": "Quels événements déclenchent ce webhook",
+            "headers": "Entêtes additionels",
+            "example": "Example de requête"
+        },
+        "errors": {
+            "urlField": "Ce champ est requis est doit être une URL valide.",
+            "invalidHeaders": "Un des entête est invalide."
+        },
+        "checkbox": {
+            "sendUserFieldNames": "Utiliser les noms de champ plutôt que les identifiants"
+        },
+        "radio": {
+            "allEvents": "Tous les événements",
+            "customEvents": "Choisir les événements"
+        },
+        "triggerButton": "Tester le webhook",
+        "deactivated": {
+            "title": "Le webhook est désactivé",
+            "content": "Ce webhook a été désactivé car il produisait trop d'échecs consécutifs. Veuillez vérifier l'historique des appels pour plus d'information. Cliquez sur le bouton ci-dessous pour l'activer de nouveau. Pensez à enregistrer le webhook avant de l'activer.",
+            "activate": "Activer"
+        }
+    },
+    "webhook": {
+        "details": "détails",
+        "lastCall": "Dernier déclenchement : {lastCallTime}",
+        "noCalls": "Jamais déclenché",
+        "callLog": "Historique des appels",
+        "triggerDescription": "Déclenché par tous les événements | Déclenché par un événement | Déclenché par {count} événements"
+    },
+    "createWebhook": {
+        "errorTableWebhookMaxLimitExceededTitle": "Nombre maximum de webhook dépassé",
+        "errorTableWebhookMaxLimitExceededDescription": "Vous ne pouvez pas créer de webhook car le nombre maximum de webhook par table a été atteint."
+    },
+    "sidebar": {
+        "viewAPI": "Documentation de l'API",
+        "createTable": "Ajouter une table"
+    },
+    "sidebarItem": {
+        "exportTable": "Exporter la table"
+    },
+    "apiToken": {
+        "create": "créer",
+        "read": "lire",
+        "update": "modifier",
+        "delete": "supprimer",
+        "tokenPrefix": "Jeton :",
+        "viewAPIDocs": "Documentation de l'API",
+        "generateNewToken": "Générer un nouveau jeton",
+        "showOrHide": "Montrer ou masquer le jeton",
+        "copyToClipboard": "Copier dans le presse-papier",
+        "showDatabases": "Afficher le détail"
+    },
+    "apiTokenSettings": {
+        "title": "Jetons d'API personnels",
+        "createToken": "Créer un jeton",
+        "noTokensMessage": "Vous n'avez pas encore créé de jeton. Vous pouvez utiliser les jetons d'API pour vous authentifier auprès de l'API REST qui vous permet de créer, lire, modifier et supprimer des lignes. Il est possible de définir des permissions différentes pour chaque table.",
+        "hasFullPermissions": "Toutes les permissions, pour les enfants également.",
+        "hasOnlySelectedPermissions": "Uniquement les permissions sélectionnées pour les enfants.",
+        "noPermissions": "Aucune permission",
+        "createNewTitle": "Créer un nouveau jeton",
+        "backToOverview": "Retour"
+    },
+    "apiTokenForm": {
+        "nameLabel": "Nom",
+        "groupLabel": "Groupe"
+    },
+    "apiDocsSelectDatabase": {
+        "needOneDatabase": "Vous devez avoir au moins une base de données afin de consulter la documentation de l'API."
+    },
+    "apiDocsExample": {
+        "requestSample": "Example de requête",
+        "responseSample": "Example de réponse",
+        "userFieldNames": "Nom des champs utilisateur"
+    },
+    "apiDocsParameter": {
+        "optional": "optionnel",
+        "defaultValue": "Valeur par défaut : {value}"
+    },
+    "apiDocsTableGetRow": {
+        "description": "Retourne une ligne de la table {name}.",
+        "rowId": "L'identifiant unique de la ligne demandée."
+    },
+    "apiDocsErrors": {
+        "errorCode": "Code",
+        "name": "Nom",
+        "description": "Description",
+        "okDescription": "La requête a été executée avec succès.",
+        "badRequestDescription": "La requête contient des valeurs invalides ou le contenu JSON n'a pas pu être décodé.",
+        "unauthorizedDescription": "Le jeton d'authentification utilisé est invalide.",
+        "notFoundDescription": "La ligne ou la table n'a pas été trouvée.",
+        "requestEntityTooLargeDescription": "La taille du contenu de la requête dépasse la taille maximale autorisée.",
+        "internalErrorDescription": "Le serveur a rencontré une erreur interne inatendue.",
+        "badGatewayDescription": "Baserow est en cours de démarrage ou une interruption du service est en cours.",
+        "unavailableDescription": "Le serveur n'a pas répondu dans les délais impartis."
+    },
+    "apiDocsTableFields": {
+        "tableTitle": "Table {name}",
+        "tableId": "L'identifiant de cette table est :",
+        "description": "Chaque ligne dans la table « {name} » contient les champs décrits ci-dessous.",
+        "id": "ID",
+        "name": "Nom",
+        "type": "Type",
+        "compatibleFilters": "Filtres compatibles"
+    },
+    "apiDocsTableListRows": {
+        "description": "Afin de lister les lignes de la table *{name}* une requête de type `GET` doit être envoyée au point d'accès de la table *{name}*. La réponse est paginée et par défault la première page est retournée. La page désirée peut-être récupérée en définissant les paramètres de requête `page` et `size`.",
+        "page": "Permet de choisir la page.",
+        "size": "Permet de définir le nombre de ligne par page.",
+        "userFieldNames": "Quand une valeur est fournie pour le paramètre GET `user_field_names`, les noms des champs du résultat seront ceux définis par l'utilisateur.\n\n Si le paramêtre `user_field_names` n'est pas défini, alors les noms des champs seront `field_` suivis par l'identifiant du champ. Par exemple `field_1` fait référence au champ avec l'identifiant `1`.\n\n De plus, quand `user_field_names` est défini, vous devez également fournir les noms définis par l'utilisateur pour les paramètres `order_by`, `include` et `exclude`.",
+        "search": "Quand ce paramètre est défini, seules les lignes qui satisfont la recherche seront retournées.",
+        "orderBy": "Ce paramètre permet d'ordonner les lignes du résultat à l'aide d'une liste de champs séparés par une virgule. Par défaut ou s'il est préfixé par un `+` un champ est ordonné par ordre croissant (A-Z), en le préfixant par un `-` il sera ordonné par ordre décroissant (Z-A).\n\n #### Avec `user_field_names` :\n\n `order_by` doit être une liste de noms définis par l'utilisateur des champs sur lesquels s'appuient l'ordre séparés par des virgules. Par exemple si vous fournissez la valeur suivante `order_by=Mon champ,-Mon champ 2` les lignes seront ordonnées par le champ appelé `Mon champ` par ordre croissant. Si certaines lignes ont la même valeur pour `Mon champ` ce sous ensemble sera ordonné par la valeur du champ `Mon champ 2` par ordre décroissant.\n\n Assurez vous que les champs qui commencent par un `+` ou un `-` soit explicitement préfixés par un autre `+` ou `-`. Ex : `+-Nom`.\n\n Le nom des champs contenant des virgules doit être entouré par des guillements : `\"Nom ,\"`. Si le nom des champs contient des guillements, ceux-ci doivent être protégés en utilisant le charactère `\\`. Ex : `Nom \\\"`.\n\n #### Sans `user_field_names` :\n\n `order_by` doit être une liste de `field_` suivi par l'identifiant du champ à ordonner, séparés par des virgules. Par exemple si vous fournissez la valeur suivante pour ce paramètre `order_by=field_1,-field_2` les lignes seront ordonnées par le champ `field_1` par ordre croissant. Si certaines lignes ont la même valeur pour ce champ, ce sous ensemble sera ordonné par la valeur du champ `field_2` par ordre décroissant.",
+        "filter": "Ce paramètre permet de filtrer les lignes avec les même filtres que ceux disponibles dans les vues. Plusieurs filtres peuvent être définis simultanéement s'il suivent le même format. La variable `field` permet d'indiquer le champ à filtrer, tandis que `filter` permet de choiser le type de filtre.\n\n Par exemple si vous utilisez la valeur suivante : `filter__field_1__equal=test`, seule les lignes pour lesquelles la valeur du champ `field_1` est égale à *test* seront retournées.",
+        "filterLink": "Une liste des filtres disponibles peut être consultée ici.",
+        "filterType": "- `AND` : indique que les lignes doivent satisfaire tous les filtres définis.\n- `OR` : indique que les lignes doivent satisfaire au moins l'un des filtres définis pour être retournées.\n\n Cela fonctionne uniquement quand au moins 2 filtres sont définis.",
+        "include": "Par défaut, tous les champs de la table sont retournés. Vous pouvez définir le sous ensemble des champs qui seront dans les résultats en fournissant une valeur pour ce paramètre.\n\n #### Avec `user_field_names` :\n\n `include` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez conserver, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante `include=Mon champ,-Mon champ 2` alors seul ces champs seront retournés dans les résultats (sauf si vous les avez explicitement exclus avec le paramètre suivant).\n\n Le nom des champs contenant des virgules doit être entouré par des guillements : `\"Nom ,\"`. Si le nom des champs contient des guillements, ceux-ci doivent être protégés en utilisant le charactère `\\`. Ex : `Nom \\\"`.\n\n #### Sans `user_field_names` :\n\n `include` doit être une liste de `field_` suivis par l'identifiant d'un champ à inclure dans le résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante `exclude=field_1,field_2` alors les champs d'identifiant `1` et `2` seront les champs champs présents dans le résultat (sauf si vous les avez explicitement exclus avec le paramètre suivant).",
+        "exclude": "Par défaut, tous les champs de la table sont retournés dans les résultats. Vous pouvez choisir un sous ensemble de champs qui seront exclus des résultats en définissant une valeur pour ce paramètre.\n\n #### Avec `user_field_names`:\n\n `exclude` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez exclure, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante : `exclude=Mon champ,-Mon champ 2` alors ces deux champs seront exclus des résultats.\n\n Le nom des champs contenant des virgules doit être entouré par des guillements : `\"Nom ,\"`. Si le nom des champs contient des guillements, ceux-ci doivent être protégés en utilisant le charactère `\\`. Ex : `Nom \\\"`.\n\n #### Sans `user_field_names`:\n\n `exclude` doit être une liste de `field_` suivis par l'identifiant d'un champ à exclure du résultat, séparé par des virgules. Par example, si vous fournissez la valeur suivante : `exclude=field_1,field_2` alors les champs avec l'identifiant `1` et `2` seront exclus."
+    },
+    "apiDocsIntro": {
+        "intro": "L'API de la base {name} offre un moyen simple d'intégrer des données provenant d'un système externe. L'API suit les principes d'architecture REST, utilise le format JSON pour encoder les données, s'appuie sur les codes HTTP standards et propose des messages d'erreurs à la fois techniques mais également lisibles par les humains pour signaler les dysfonctionnements.",
+        "autoDocDescription": "Cette documentation est générée automatiquement à partir des table et des champs disponibles dans votre basse de données. Si vous effectuez des modifications sur la base, les tables ou bien sur les champs des tables, cela peut également modifier l'API. Par conséquent, assurez-vous de mettre à jour les clients de votre API dans ce cas.",
+        "databaseId": "Identifiant de la base :",
+        "jsClient": "Client pour les examples de requêtes en Javascript :",
+        "pythonClient": "Client pour les examples de requêtes en Python :"
+    },
+    "apiDocsTableListFields": {
+        "description": "Afin de lister les champs de la table {name} une requête de type {get} doit être envoyé auprès du point d'accès des champs de celle-ci. Le jeton d'authentification doit avoir les droits de création, modification et suppression afin de pouvoir lister les champs de la table.",
+        "resultFieldProperties": "Propriétés des champs de la réponse",
+        "id": "Clé primaire du champ. Permet de générer le nom de la colonne en base de données en ajoutant le prefix `field_`.",
+        "name": "Nom du champ.",
+        "tableId": "Clé étrangère de la table.",
+        "order": "Ordre du champ dans la table. 0 est le premier champ.",
+        "primary": "Indique si le champ est une clé primaire. Si la valeur est `true` le champ ne peut être effacé et ses valeurs doivent représenter la ligne entière.",
+        "type": "Type défini pour ce champ.",
+        "extraProps": "Certaines propriétés ne sont pas décrites ici car elles sont spécifiques au type de champ concerné."
+    },
+    "apiDocsTableDeleteRow": {
+        "description": "Supprime une ligne de la table *{name}*.",
+        "rowId": "L'identifiant unique de la ligne à supprimer."
+    },
+    "apiDocsTableMoveRow": {
+        "description": "Déplace une ligne existante de la table *{name}* avant une autre ligne. Si le paramètre `before_id` n'est pas fourni, la ligne est déplacée à la fin de la table.",
+        "rowId": "Identifiant unique de la ligne à déplacer.",
+        "before": "Permet de définir l'identifiant de la ligne avant laquelle la ligne choisie doit être déplacée. Si aucune valeur n'est fournie, la ligne est déplacée à la fin de la table."
+    },
+    "apiDocsTableUpdateRow": {
+        "description": "Modifie une ligne existante de la table {name}.",
+        "rowId": "L'identifiant unique de la ligne à modifier.",
+        "before": "Si un identifiant de ligne est fourni, la ligne sera placée avant la ligne portant cet identifiant."
+    },
+    "apiDocsTableCreateRow": {
+        "description": "Créé une nouvelle ligne pour la table {name}.",
+        "before": "Si ce paramètre est fourni, la nouvelle ligne sera positionnée avant la ligne portant l'identifiant fourni."
+    },
+    "apiDocsAuth": {
+        "description": "Baserow utilise un système d'authentification simple par jeton. Vous devez générer au moins un jeton d'API dans votre {settingsLink} afin d'utiliser les API suivantes. Il est possible de définir des droits de création, lecture, modification et suppression par table et ce pour chaque jeton. Pour vous authentifier à l'API, fournissez le jeton via l'entête HTTP « Authorization » de la requête. Tous les appels à l'API doivent être authentifiés et réalisés via le protocole sécurisé HTTPS.",
+        "settingsLink": "compte"
+    },
+    "apiDocsFilters": {
+        "filter": "Filtre",
+        "exampleValue": "Exemple",
+        "example": "Exemple complet",
+        "field": "La valeur {name}"
+    },
+    "fieldTextSubForm": {
+        "placeholder": "Texte par défault"
+    },
+    "fieldSingleSelectSubForm": {
+        "optionsLabel": "Options"
+    },
+    "fieldSingleSelectDropdown": {
+        "notFound": "Option manquante"
+    },
+    "fieldDateSubForm": {
+        "dateFormatLabel": "Format de date",
+        "dateFormatEuropean": "Européen",
+        "dateFormatUS": "Américain",
+        "dateFormatISO": "ISO",
+        "includeTimeLabel": "Inclure l'heure",
+        "timeFormatLabel": "Format de l'heure",
+        "24Hour": "24 heures",
+        "12Hour": "12 heures"
+    },
+    "fieldLinkRowSubForm": {
+        "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
+        "selectTableLabel": "Sélectionnez une table",
+        "dataLost": "En modifiant la table, toutes les données du champ seront supprimées"
+    },
+    "fieldSelectOptions": {
+        "add": "Ajouter une option"
+    },
+    "fieldNumberSubForm": {
+        "typeLabel": "Type numérique",
+        "integer": "Entier",
+        "decimal": "Décimal",
+        "decimalPlacesLabel": "Précision",
+        "allowNegative": "Autoriser les nombres négatifs"
+    },
+    "fieldContext": {
+        "editField": "Modifier le champ",
+        "deleteField": "Supprimer le champ"
+    },
+    "fieldForm": {
+        "name": "Nom",
+        "fieldAlreadyExists": "Un champ avec ce nom existe déjà.",
+        "nameNotAllowed": "Ce nom de champ n'est pas autorisé.",
+        "nameTooLong": "Ce nom de champ est trop long."
+    },
+    "fieldLookupSubForm": {
+        "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
+        "selectThroughFieldLabel": "Sélectionnez le lien vers la table",
+        "selectTargetFieldLabel": "Sélectionnez le champ à rapporter"
+    },
+    "fieldFormulaNumberSubForm": {
+        "typeLabel": "Type numérique",
+        "integer": "Entier",
+        "decimal": "Décimal",
+        "decimalPlacesLabel": "Précision",
+        "allowNegative": "Autoriser les nombres négatifs"
+    },
+    "fieldRatingSubForm": {
+        "maxValue": "Max",
+        "color": "Couleur",
+        "style": "Style"
+    },
+    "rowCreateModal": {
+        "addField": "Ajouter un champ"
+    },
+    "selectRowContent": {
+        "search": "Rechercher dans la table"
+    },
+    "rowEditModal": {
+        "addField": "Ajouter un champ"
+    },
+    "rowEditFieldMultipleSelect": {
+        "addOption": "Ajouter une option"
+    },
+    "rowEditFieldFile": {
+        "addFile": "Ajouter un fichier",
+        "sizes": {
+            "0": "Octet(s)",
+            "1": "Ko",
+            "2": "Mo",
+            "3": "Go",
+            "4": "To",
+            "5": "Po"
+        }
+    },
+    "rowEditFieldLinkRow": {
+        "addLink": "Ajouter un lien"
+    },
+    "tableCSVImporter": {
+        "chooseFileLabel": "Choisissez un fichier CSV",
+        "chooseFileDescription": "Vous pouvez importer un CSV existant en envoyant un fichier .CSV avec des données tabulaires. La plupart des tableurs sont capables de réaliser un export au format CSV.",
+        "chooseFile": "Choisir un fichier CSV",
+        "columnSeparator": "Sép. de colonne",
+        "recordSeparator": "Sép. d'enregistrement",
+        "unitSeparator": "séparateur d'unité",
+        "encoding": "Encodage",
+        "firstRowHeader": "La première ligne est l'entête",
+        "limitFileSize": "La taille maximum du fichier est de {limit}Mo.",
+        "limitError": "Il n'est pas possible d'importer plus de {limit} lignes.",
+        "emptyCSV": "Ce fichier CSV est vide."
+    },
+    "tableForm": {
+        "name": "Nom"
+    },
+    "tableImporterPreview": {
+        "label": "Aperçu",
+        "remaining": "{remaining} autres lignes"
+    },
+    "tableXMLImporter": {
+        "fileLabel": "Choisissez un fichier XML",
+        "fileDescription": "Vous pouvez importer un XML existant en envoyant un fichier .XML contenant des données tabulaires, c'est-à-dire :",
+        "chooseButton": "Choisir un fichier XML",
+        "processingError": "Une erreur est survenue lors du traitement du XML : {errors}",
+        "emptyError": "Ce fichier XML est vide",
+        "limitFileSize": "La taille maximum du fichier est de {limit}Mo.",
+        "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
+    },
+    "tableJSONImporter": {
+        "fileLabel": "Choisissez un fichier JSON",
+        "fileDescription": "Vous pouvez importer un JSON existant en envoyant un fichier .json contenant des données tabulaires, c'est-à-dire :",
+        "chooseButton": "Choisir un fichier JSON",
+        "encodingLabel": "Encodage",
+        "processingError": "Une erreur est survenue lors du traitement du JSON : {error}",
+        "arrayError": "Ce fichier JSON n'est pas un tableau.",
+        "emptyError": "Ce fichier JSON est vide.",
+        "limitFileSize": "La taille maximum de fichier est de {limit}Mo.",
+        "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
+    },
+    "tablePasteImporter": {
+        "pasteLabel": "Collez les données tabulaires",
+        "pasteDescription": "Vous pouvez copier les lignes provenant d'un tableur et les coller ci-dessous.",
+        "firstRowHeader": "La première ligne est l'entête",
+        "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
+    },
+    "createTableModal": {
+        "title": "Créer une nouvelle table",
+        "importLabel": "Souhaitez-vous importer des données existantes ?",
+        "newTable": "Commencer avec une table vide",
+        "addButton": "Ajouter la table"
+    },
+    "formulaAdvancedEditContext": {
+        "textAreaFormulaInputPlaceholder": "Cliquez pour éditer la formule",
+        "fields": "Champs",
+        "functions": "Fonctions",
+        "operators": "Operateurs",
+        "fieldType": "Un champ de type {type}"
+    },
+    "fieldFormulaInitialSubForm": {
+        "formulaInputPlaceholder": "Cliquez pour éditer la formule",
+        "refreshFormulaOptions": "Rafraichir les options"
+    },
+    "formulaFieldItemDescription": {
+        "syntax": "Syntaxe",
+        "examples": "Exemples"
+    },
+    "viewSearchContext": {
+        "searchInRows": "Chercher dans toute la table",
+        "hideNotMatching": "cacher les lignes sans résultat"
+    },
+    "viewsContext": {
+        "searchView": "Recherche",
+        "noViews": "Aucune vue trouvée"
+    },
+    "viewFilterTypeLinkRow": {
+        "unnamed": "Ligne sans nom {value}",
+        "choose": "Choisissez une ligne"
+    },
+    "viewFilterContext": {
+        "addFilter": "Ajouter un filtre",
+        "disableAllFilters": "Tous désactivés",
+        "noFilterTitle": "Vous n'avez pas encore définit de filtre",
+        "noFilterText": "Les filtres permettent de voir uniquement les lignes qui correspondent à vos critères.",
+        "where": "Quand",
+        "and": "Et",
+        "or": "Ou"
+    },
+    "viewFilterTypeFileTypeDropdown": {
+        "image": "Image",
+        "document": "Document"
+    },
+    "createViewModal": {
+        "createNew": "Créer une vue {view}",
+        "add": "Créer une vue {view}"
+    },
+    "shareViewLink": {
+        "shareView": "Partager {viewTypeSharingLinkName}",
+        "shareViewTitle": "Créer un lien de partage privé vers {viewTypeSharingLinkName}",
+        "sharedViewTitle": "Actuellement, {viewTypeSharingLinkName} est partagé·e via un lien privé",
+        "sharedViewDescription": "Les personnes possédant le lien peuvent voir {viewTypeSharingLinkName}",
+        "disableLink": "désactivé le lien de partage",
+        "generateNewUrl": "générer un nouveau lien",
+        "copyURL": "copier le lien"
+    },
+    "viewSortContext": {
+        "noSortTitle": "Vous n'avez configuré aucun tri",
+        "noSortText": "Le tri vous permet d'ordonner les lignes selon la valeur d'un champ.",
+        "sortBy": "Trier par",
+        "thenBy": "Puis par",
+        "addSort": "Ajouter un tri"
+    },
+    "viewSort": {
+        "sort": "Tri | 1 Tri | {count} Tris"
+    },
+    "viewRotateSlugModal": {
+        "title": "Mettre à jour le lien",
+        "refreshWarning": "Êtes-vous sûr·e de vouloir mettre à jour le lien vers {viewTypeSharingLinkName} {viewName} ? Après la mise à jour, il ne sera plus possible de consulter {viewTypeSharingLinkName} via l'ancien lien. Les personnes possédant le lien ne seront plus en mesure d'accéder à la page affichant {viewTypeSharingLinkName}.",
+        "generateNewURL": "Générer une nouvelle URL"
+    },
+    "viewFieldsContext": {
+        "coverField": "Image d'en-tête",
+        "noCover": "Pas d'en-tête",
+        "search": "Chercher un champ",
+        "hideAll": "Masquer tout",
+        "showAll": "Afficher tout"
+    },
+    "viewFilterTypeBoolean": {
+        "selected": "Sélectionné"
+    },
+    "viewFilter": {
+        "filter": "Filtre | 1 Filtre | {count} Filtres"
+    },
+    "viewContext": {
+        "exportView": "Exporter la vue",
+        "renameView": "Renommer la vue",
+        "deleteView": "Supprimer la vue"
+    },
+    "deleteViewModal": {
+        "title": "Supprimer la vue {name}",
+        "description": "Êtes-vous sur·e de vouloir supprimer la vue {name} ? Les données seront préservées, mais les filtres, tris et largeurs des champs associés à la vue seront supprimés.",
+        "delete": "Supprimer la vue"
+    },
+    "viewForm": {
+        "name": "Nom"
+    },
+    "galleryViewHeader": {
+        "customizeCards": "Configurer les cartes"
+    },
+    "gridViewHide": {
+        "hideField": "Cacher les champs | 1 champ caché | {count} champs cachés"
+    },
+    "gridViewFieldType": {
+        "createFilter": "Définir un filtre",
+        "sortField": "Trier",
+        "hideField": "Cacher un champ"
+    },
+    "gridViewRow": {
+        "rowNotMatchingFilters": "La ligne est filtrée",
+        "rowNotMatchingSearch": "La ligne ne contient pas le terme recherché",
+        "rowHasMoved": "La ligne est déplacée"
+    },
+    "gridView": {
+        "insertRowAbove": "Insérer au dessus",
+        "insertRowBelow": "Insérer en dessous",
+        "enlargeRow": "Afficher la ligne",
+        "deleteRow": "Supprimer la ligne",
+        "rowCount": "Acune ligne | 1 ligne | {count} lignes"
+    },
+    "gridViewFieldLinkRow": {
+        "unnamed": "Ligne sans nom {value}"
+    },
+    "previewAny": {
+        "externalWarning": "Ouvrir un fichier via un service externe expose votre fichier à leurs serveurs."
+    },
+    "exportTableModal": {
+        "failedTitle": "L'export a échoué",
+        "failedDescription": "L'export n'a pas pu aboutir en raison d'une erreur serveur.",
+        "cancelledTitle": "Export annulé",
+        "cancelledDescription": "L'export a été annulé."
+    },
+    "exporterTypeChoices": {
+        "formatLabel": "Vers quel format souhaitez-vous réaliser l'export ?"
+    },
+    "exportTableForm": {
+        "viewLabel": "Sélectionnez la vue à exporter :",
+        "typeError": "Aucun export disponible, veuillez sélectionner une autre vue ou la table complète."
+    },
+    "exportTableLoadingBar": {
+        "export": "Exporter",
+        "download": "Télécharger"
+    },
+    "exportTableDropdown": {
+        "exportEntireTable": "Exporter la table entière"
+    },
+    "tableCSVExporter": {
+        "columnSeparatorLabel": "Séparateur de colonne",
+        "recordSeparator": "Sép. d'enregistrement",
+        "unitSeparator": "Sép. d'unité",
+        "encodingLabel": "Encodage",
+        "firstRowIsHeaderLabel": "La première ligne contient l'entête"
+    },
+    "apiDocsDatabase": {
+        "pageTitle": "Documentation de l'API de la base {name}",
+        "back": "Retour à l'accueil",
+        "openDatabase": "Voir la base de données"
+    },
+    "apiDocs": {
+        "title": "API REST",
+        "intro": "Après avoir créé votre base de données et une clé d'API dans votre {settingsLink} Baserow fourni ses propres API REST pour créer, lire, mettre à jour et supprimer des lignes.",
+        "settings": "compte",
+        "selectApplicationTitle": "Choisissez une base de donnée :",
+        "signIn": "S'identifier"
+    }
+}

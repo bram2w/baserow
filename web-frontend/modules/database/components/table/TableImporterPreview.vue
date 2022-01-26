@@ -49,20 +49,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "tableImporterPreview": {
-      "label": "Quick preview",
-      "remaining": "{remaining} other rows"
-    }
-  },
-  "fr": {
-    "tableImporterPreview": {
-      "label": "Aperçu",
-      "remaining": "{remaining} autres lignes"
-    }
-  }
-}
-</i18n>

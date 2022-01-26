@@ -92,30 +92,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsTableFields":{
-      "tableTitle": "{name} table",
-      "tableId": "The ID of this table is:",
-      "description": "Each row in the {name} table contains the following fields.",
-      "id": "ID",
-      "name": "Name",
-      "type": "Type",
-      "compatibleFilters": "Compatible filters"
-    }
-  },
-  "fr": {
-    "apiDocsTableFields":{
-      "tableTitle": "Table {name}",
-      "tableId": "L'identifiant de cette table est :",
-      "description": "Chaque ligne dans la table « {name} » contient les champs décrits ci-dessous.",
-      "id": "ID",
-      "name": "Nom",
-      "type": "Type",
-      "compatibleFilters": "Filtres compatibles"
-    }
-  }
-}
-</i18n>

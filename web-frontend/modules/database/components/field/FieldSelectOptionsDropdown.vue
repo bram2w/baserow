@@ -137,18 +137,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "fieldSingleSelectDropdown": {
-      "notFound": "Option not found"
-    }
-  },
-  "fr": {
-    "fieldSingleSelectDropdown": {
-      "notFound": "Option manquante"
-    }
-  }
-}
-</i18n>

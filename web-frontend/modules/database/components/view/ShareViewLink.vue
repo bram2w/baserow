@@ -130,30 +130,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "shareViewLink": {
-      "shareView": "Share {viewTypeSharingLinkName}",
-      "shareViewTitle": "Create a private shareable link to the {viewTypeSharingLinkName}",
-      "sharedViewTitle": "This {viewTypeSharingLinkName} is currently shared via a private link",
-      "sharedViewDescription": "People who have the link can see the {viewTypeSharingLinkName}.",
-      "disableLink": "disable shared link",
-      "generateNewUrl": "generate new url",
-      "copyURL": "copy URL"
-    }
-  },
-  "fr": {
-    "shareViewLink": {
-      "shareView": "Partager {viewTypeSharingLinkName}",
-      "shareViewTitle": "Créer un lien de partage privé vers {viewTypeSharingLinkName}",
-      "sharedViewTitle": "Actuellement, {viewTypeSharingLinkName} est partagé·e via un lien privé",
-      "sharedViewDescription": "Les personnes possédant le lien peuvent voir {viewTypeSharingLinkName}",
-      "disableLink": "désactivé le lien de partage",
-      "generateNewUrl": "générer un nouveau lien",
-      "copyURL": "copier le lien"
-    }
-  }
-}
-</i18n>

@@ -721,26 +721,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "gridView":{
-      "insertRowAbove": "Insert row above",
-      "insertRowBelow": "Insert row below",
-      "enlargeRow": "Enlarge row",
-      "deleteRow": "Delete row",
-      "rowCount": "No rows | 1 row | {count} rows"
-    }
-  },
-  "fr": {
-    "gridView":{
-      "insertRowAbove": "Insérer au dessus",
-      "insertRowBelow": "Insérer en dessous",
-      "enlargeRow": "Afficher la ligne",
-      "deleteRow": "Supprimer la ligne",
-      "rowCount": "Acune ligne | 1 ligne | {count} lignes"
-    }
-  }
-}
-</i18n>

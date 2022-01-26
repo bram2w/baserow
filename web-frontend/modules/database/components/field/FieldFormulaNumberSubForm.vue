@@ -85,25 +85,3 @@ export default {
   },
 }
 </script>
-<i18n>
-{
-  "en": {
-    "fieldFormulaNumberSubForm": {
-      "typeLabel": "Number type",
-      "integer": "Integer",
-      "decimal": "Decimal",
-      "decimalPlacesLabel": "Decimal places",
-      "allowNegative": "Allow negative"
-    }
-  },
-  "fr": {
-    "fieldFormulaNumberSubForm": {
-      "typeLabel": "Type numérique",
-      "integer": "Entier",
-      "decimal": "Décimal",
-      "decimalPlacesLabel": "Précision",
-      "allowNegative": "Autoriser les nombres négatifs"
-    }
-  }
-}
-</i18n>

@@ -91,20 +91,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "viewFilterTypeLinkRow": {
-      "unnamed": "unnamed row {value}",
-      "choose": "Choose row"
-    }
-  },
-  "fr": {
-    "viewFilterTypeLinkRow": {
-      "unnamed": "Ligne sans nom {value}",
-      "choose": "Choisissez une ligne"
-    }
-  }
-}
-</i18n>

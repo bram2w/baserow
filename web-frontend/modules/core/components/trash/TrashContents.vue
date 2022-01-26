@@ -162,26 +162,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "trashContents": {
-      "message": "Restore deleted items from the past {duration}",
-      "empty": "Nothing has been deleted in the past three days.",
-      "emptyButtonTrashed": "Delete {type} permanently",
-      "emptyButtonNotTrashed": "Empty this {type}'s trash",
-      "unnamed": "Unnamed {type} {id}"
-    }
-  },
-  "fr": {
-    "trashContents": {
-      "message": "Restaurer les éléments supprimés durant les {duration} derniers",
-      "empty": "Rien n'a été supprimé durant les trois derniers jours.",
-      "emptyButtonTrashed": "Supprimer {type} définitivement",
-      "emptyButtonNotTrashed": "Vider la corbeille pour {type}",
-      "unnamed": "Sans nom {type} {id}"
-    }
-  }
-}
-</i18n>

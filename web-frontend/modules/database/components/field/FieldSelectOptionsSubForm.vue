@@ -39,18 +39,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "fieldSingleSelectSubForm": {
-      "optionsLabel": "Options"
-    }
-  },
-  "fr": {
-    "fieldSingleSelectSubForm": {
-      "optionsLabel": "Options"
-    }
-  }
-}
-</i18n>

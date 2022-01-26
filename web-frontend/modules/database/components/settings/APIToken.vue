@@ -456,36 +456,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiToken": {
-      "create": "create",
-      "read": "read",
-      "update": "update",
-      "delete": "delete",
-      "tokenPrefix": "Token:",
-      "viewAPIDocs": "View API documentation",
-      "generateNewToken": "Generate new token",
-      "showOrHide": "Show or hide the token",
-      "copyToClipboard": "Copy to clipboard",
-      "showDatabases": "show databases"
-    }
-  },
-  "fr": {
-    "apiToken": {
-      "create": "créer",
-      "read": "lire",
-      "update": "modifier",
-      "delete": "supprimer",
-      "tokenPrefix": "Jeton :",
-      "viewAPIDocs": "Documentation de l'API",
-      "generateNewToken": "Générer un nouveau jeton",
-      "showOrHide": "Montrer ou masquer le jeton",
-      "copyToClipboard": "Copier dans le presse-papier",
-      "showDatabases": "Afficher le détail"
-    }
-  }
-}
-</i18n>

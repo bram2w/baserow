@@ -100,32 +100,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "fieldDateSubForm": {
-      "dateFormatLabel": "Date format",
-      "dateFormatEuropean": "European",
-      "dateFormatUS": "US",
-      "dateFormatISO": "ISO",
-      "includeTimeLabel": "Include time",
-      "timeFormatLabel": "Time format",
-      "24Hour": "24 hour",
-      "12Hour": "12 hour"
-    }
-  },
-  "fr": {
-    "fieldDateSubForm": {
-      "dateFormatLabel": "Format de date",
-      "dateFormatEuropean": "Européen",
-      "dateFormatUS": "Américain",
-      "dateFormatISO": "ISO",
-      "includeTimeLabel": "Inclure l'heure",
-      "timeFormatLabel": "Format de l'heure",
-      "24Hour": "24 heures",
-      "12Hour": "12 heures"
-    }
-  }
-}
-</i18n>

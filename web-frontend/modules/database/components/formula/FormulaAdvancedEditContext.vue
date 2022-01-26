@@ -281,26 +281,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "formulaAdvancedEditContext" : {
-      "textAreaFormulaInputPlaceholder": "Click to edit the formula",
-      "fields": "Fields",
-      "functions": "Functions",
-      "operators": "Operators",
-      "fieldType": "A {type} field"
-    }
-  },
-  "fr": {
-    "formulaAdvancedEditContext" : {
-      "textAreaFormulaInputPlaceholder": "Cliquez pour éditer la formule",
-      "fields": "Champs",
-      "functions": "Fonctions",
-      "operators": "Operateurs",
-      "fieldType": "Un champ de type {type}"
-    }
-  }
-}
-</i18n>

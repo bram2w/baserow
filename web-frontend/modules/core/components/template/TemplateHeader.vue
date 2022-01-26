@@ -75,18 +75,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "templateHeader": {
-      "use": "Use this template"
-    }
-  },
-  "fr": {
-    "templateHeader": {
-      "use": "Utiliser ce modèle"
-    }
-  }
-}
-</i18n>

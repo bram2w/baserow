@@ -343,24 +343,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsDatabase": {
-      "pageTitle": "API Documentation {name}",
-      "back":"Back to dashboard",
-      "pageTitle": "{name} database API documentation",
-      "openDatabase": "open database"
-    }
-  },
-  "fr": {
-    "apiDocsDatabase": {
-      "pageTitle": "Documentation de l'API de {name}",
-      "back":"Retour à l'accueil",
-      "pageTitle": "Documentation de l'API de la base {name}",
-      "openDatabase": "Voir la base de données"
-    }
-  }
-}
-</i18n>

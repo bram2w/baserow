@@ -159,24 +159,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "rowCommentSidebar": {
-      "onlyPremium": "Row comments are available in the premium version.",
-      "readOnlyNoComment": "No comments for this row.",
-      "noComment": "No comments for this row yet. Use the form below to add a comment.",
-      "comment": "Comment"
-    }
-  },
-  "fr": {
-    "rowCommentSidebar": {
-      "onlyPremium": "Les commentaires de lignes sont disponibles dans la version premium.",
-      "readOnlyNoComment": "Aucun commentaire pour cette ligne.",
-      "noComment": "Aucun commentaire pour cette ligne. Utilisez le formulaire ci-dessous pour ajouter un commentaire.",
-      "comment": "Commentaire"
-    }
-  }
-}
-</i18n>

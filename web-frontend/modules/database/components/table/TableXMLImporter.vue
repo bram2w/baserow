@@ -170,30 +170,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "tableXMLImporter": {
-      "fileLabel": "Choose XML file",
-      "fileDescription": "You can import an existing XML by uploading the .XML file with tabular data, i.e.:",
-      "chooseButton": "Choose XML file",
-      "processingError": "Error occurred while processing XML: {errors}",
-      "emptyError": "This XML file is empty.",
-      "limitFileSize": "The maximum file size is {limit}MB.",
-      "limitError": "It is not possible to import more than {limit} rows."
-    }
-  },
-  "fr": {
-    "tableXMLImporter": {
-      "fileLabel": "Choisissez un fichier XML",
-      "fileDescription": "Vous pouvez importer un XML existant en envoyant un fichier .XML contenant des données tabulaires, c'est-à-dire :",
-      "chooseButton": "Choisir un fichier XML",
-      "processingError": "Une erreur est survenue lors du traitement du XML : {errors}",
-      "emptyError": "Ce fichier XML est vide",
-      "limitFileSize": "La taille maximum du fichier est de {limit}Mo.",
-      "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
-    }
-  }
-}
-</i18n>

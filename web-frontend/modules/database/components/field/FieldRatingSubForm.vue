@@ -113,22 +113,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "fieldRatingSubForm": {
-      "maxValue": "Max",
-      "color": "Color",
-      "style": "Style"
-    }
-  },
-  "fr": {
-    "fieldRatingSubForm": {
-      "maxValue": "Max",
-      "color": "Couleur",
-      "style": "Style"
-    }
-  }
-}
-</i18n>

@@ -4,6 +4,8 @@ import serveStatic from 'serve-static'
 
 import { routes } from './routes'
 import head from './head'
+import en from './locales/en.json'
+import fr from './locales/fr.json'
 
 export default function CoreModule(options) {
   /**
@@ -74,16 +76,14 @@ export default function CoreModule(options) {
     },
   ])
 
-  // Use feature flag to enable i18n
   const locales = [
-    { code: 'en', name: 'English', file: 'en.js' },
-    { code: 'fr', name: 'Français', file: 'fr.js' },
+    { code: 'en', name: 'English', file: 'en.json' },
+    { code: 'fr', name: 'Français', file: 'fr.json' },
   ]
 
   this.requireModule([
     '@nuxtjs/i18n',
     {
-      vueI18nLoader: true,
       strategy: 'no_prefix',
       defaultLocale: 'en',
       detectBrowserLanguage: {
@@ -98,6 +98,10 @@ export default function CoreModule(options) {
       },
     },
   ])
+
+  this.nuxt.hook('i18n:extend-messages', function (additionalMessages) {
+    additionalMessages.push({ en, fr })
+  })
 
   // Serve the static directory
   // @TODO we might need to change some things here for production. (See:

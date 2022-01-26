@@ -78,28 +78,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "changePasswordForm": {
-      "newPassword": "New password",
-      "repeatPassword": "Repeat password",
-      "changePassword": "Change password",
-      "error":{
-        "doesntMatch": "This field must match your password field."
-      }
-    }
-  },
-  "fr": {
-    "changePasswordForm": {
-      "newPassword": "Nouveau mot de passe",
-      "repeatPassword": "Répétez le mot de passe",
-      "changePassword": "Mettre à jour le mot de passe",
-      "error":{
-        "doesntMatch": "Les deux mots de passe ne correspondent pas."
-      }
-    }
-  }
-}
-</i18n>

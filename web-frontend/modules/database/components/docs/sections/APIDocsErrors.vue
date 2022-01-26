@@ -103,38 +103,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsErrors":{
-      "errorCode": "Error code",
-      "name": "Name",
-      "description": "Description",
-      "okDescription": "Request completed successfully.",
-      "badRequestDescription": "The request contains invalid values or the JSON could not be parsed.",
-      "unauthorizedDescription": "When you try to access an endpoint without valid token.",
-      "notFoundDescription": "Row or table is not found.",
-      "requestEntityTooLargeDescription": "The request exceeded the maximum allowed payload size.",
-      "internalErrorDescription": "The server encountered an unexpected condition.",
-      "badGatewayDescription": "Baserow is restarting or an unexpected outage is in progress.",
-      "unavailableDescription": "The server could not process your request in time."
-    }
-  },
-  "fr": {
-    "apiDocsErrors":{
-      "errorCode": "Code",
-      "name": "Nom",
-      "description": "Description",
-      "okDescription": "La requête a été executée avec succès.",
-      "badRequestDescription": "La requête contient des valeurs invalides ou le contenu JSON n'a pas pu être décodé.",
-      "unauthorizedDescription": "Le jeton d'authentification utilisé est invalide.",
-      "notFoundDescription": "La ligne ou la table n'a pas été trouvée.",
-      "requestEntityTooLargeDescription": "La taille du contenu de la requête dépasse la taille maximale autorisée.",
-      "internalErrorDescription": "Le serveur a rencontré une erreur interne inatendue.",
-      "badGatewayDescription": "Baserow est en cours de démarrage ou une interruption du service est en cours.",
-      "unavailableDescription": "Le serveur n'a pas répondu dans les délais impartis."
-    }
-  }
-}
-</i18n>

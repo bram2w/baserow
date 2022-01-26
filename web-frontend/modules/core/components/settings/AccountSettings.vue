@@ -66,24 +66,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "accountSettings": {
-      "title": "Account",
-      "changedTitle": "Changed",
-      "changedDescription": "Your account information has been changed.",
-      "submitButton": "Update account"
-    }
-  },
-  "fr": {
-    "accountSettings": {
-      "title": "Informations personnelles",
-      "changedTitle": "Mise à jour",
-      "changedDescription": "Les informations de votre compte utilisateur ont été mises à jour.",
-      "submitButton": "Modifier les informations"
-    }
-  }
-}
-</i18n>

@@ -75,22 +75,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "viewContext": {
-      "exportView": "Export view",
-      "renameView": "Rename view",
-      "deleteView": "Delete view"
-    }
-  },
-  "fr": {
-    "viewContext": {
-      "exportView": "Exporter la vue",
-      "renameView": "Renommer la vue",
-      "deleteView": "Supprimer la vue"
-    }
-  }
-}
-</i18n>

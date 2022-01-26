@@ -64,20 +64,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "login": {
-      "title": "Login",
-      "forgotPassword": "Forgot password"
-    }
-  },
-  "fr": {
-    "login": {
-      "title": "Identification",
-      "forgotPassword": "Mot de passe oublié"
-    }
-  }
-}
-</i18n>

@@ -39,20 +39,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "viewFilterTypeFileTypeDropdown": {
-      "image": "image",
-      "document": "document"
-    }
-  },
-  "fr": {
-    "viewFilterTypeFileTypeDropdown": {
-      "image": "Image",
-      "document": "Document"
-    }
-  }
-}
-</i18n>

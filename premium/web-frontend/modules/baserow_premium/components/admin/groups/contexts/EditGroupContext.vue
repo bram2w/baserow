@@ -40,18 +40,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "editGroupContext": {
-      "delete": "Permanently delete"
-    }
-  },
-  "fr": {
-    "editGroupContext": {
-      "delete": "Supprimer définitivement"
-    }
-  }
-}
-</i18n>

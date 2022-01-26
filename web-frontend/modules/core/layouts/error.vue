@@ -61,26 +61,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "errorLayout": {
-      "notFound": "The page you are looking for has not been found. This might be because URL is incorrect or that you don’t have permission to view this page.",
-      "error": "Something went wrong while loading the page. Our developers have been notified of the issue. Please try to refresh or return to the dashboard.",
-      "backDashboard": "Back to dashboard",
-      "backLogin": "Back to login",
-      "wrong": "Something went wrong"
-    }
-  },
-  "fr": {
-    "errorLayout": {
-      "notFound": "La page que vous essayez de consulter n'a pas été trouvée. L'URL est incorrecte ou vous n'avez pas les permissions nécessaires pour voir cette page.",
-      "error": "Une erreur est survenue lors du chargement de la page. Nos developpeurs ont été notifiés de ce problème. Veuillez essayer de recharger la page ou retournez à l'accueil.",
-      "backDashboard": "Retourner à l'accueil",
-      "backLogin": "Retourner à l'identification",
-      "wrong": "Une erreur est survenue"
-    }
-  }
-}
-</i18n>

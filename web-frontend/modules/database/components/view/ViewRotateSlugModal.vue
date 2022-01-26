@@ -74,23 +74,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "viewRotateSlugModal": {
-      "title": "Refresh URL",
-      "refreshWarning": "Are you sure that you want to refresh the URL of {viewName}? After refreshing, a new URL will be generated and it will not be possible to access the {viewTypeSharingLinkName} via the old URL. Everyone that you have shared the URL with, won't be able to access the {viewTypeSharingLinkName}.",
-      "generateNewURL": "Generate new URL"
-
-    }
-  },
-  "fr": {
-    "viewRotateSlugModal": {
-      "title": "Mettre à jour le lien",
-      "refreshWarning": "Êtes-vous sûr·e de vouloir mettre à jour le lien vers {viewTypeSharingLinkName} {viewName} ? Après la mise à jour, il ne sera plus possible de consulter {viewTypeSharingLinkName} via l'ancien lien. Les personnes possédant le lien ne seront plus en mesure d'accéder à la page affichant {viewTypeSharingLinkName}.",
-      "generateNewURL": "Générer une nouvelle URL"
-    }
-  }
-}
-</i18n>

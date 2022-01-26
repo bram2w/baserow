@@ -281,18 +281,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "selectRowContent": {
-      "search": "Search rows"
-    }
-  },
-  "fr": {
-    "selectRowContent": {
-      "search": "Rechercher dans la table"
-    }
-  }
-}
-</i18n>

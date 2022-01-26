@@ -40,24 +40,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsFilters":{
-      "filter": "Filter",
-      "exampleValue": "Example value",
-      "example": "Full example",
-      "field": "field {name}"
-    }
-  },
-  "fr": {
-    "apiDocsFilters":{
-      "filter": "Filtre",
-      "exampleValue": "Exemple",
-      "example": "Exemple complet",
-      "field": "La valeur {name}"
-    }
-  }
-}
-</i18n>
