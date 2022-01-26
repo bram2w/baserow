@@ -14,6 +14,7 @@ from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import TrashEntry
+from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.registries import TrashableItemType
 
 User = get_user_model()
@@ -35,9 +36,17 @@ class TableTrashableItemType(TrashableItemType):
         update_collector = CachingFieldUpdateCollector(trashed_item)
         field_handler = FieldHandler()
         for field in trashed_item.field_set(manager="objects_and_trash").all():
+            field = field.specific
+            field_type = field_type_registry.get_by_model(field)
+            field_ids_to_check_for_individual_entries = [field.id] + [
+                f.id
+                for f in field_type.get_other_fields_to_trash_restore_always_together(
+                    field
+                )
+            ]
             if TrashEntry.objects.filter(
                 trash_item_type="field",
-                trash_item_id=field.id,
+                trash_item_id__in=field_ids_to_check_for_individual_entries,
                 application=trashed_item.database,
                 group=trashed_item.database.group,
             ).exists():
@@ -45,12 +54,15 @@ class TableTrashableItemType(TrashableItemType):
                 # separately deleted individually before the table was deleted.
                 continue
 
-            field = field.specific
-            field_handler.restore_field(
-                field,
-                apply_and_send_updates=False,
-                update_collector=update_collector,
-            )
+            try:
+                field_handler.restore_field(
+                    field,
+                    apply_and_send_updates=False,
+                    update_collector=update_collector,
+                )
+            except RelatedTableTrashedException:
+                continue
+
             update_collector.cache_field(field)
         update_collector.apply_updates_and_get_updated_fields()
         update_collector.send_additional_field_updated_signals()
@@ -165,7 +177,9 @@ class FieldTrashableItemType(TrashableItemType):
         super().trash(item_to_trash, requesting_user)
 
         field_type = field_type_registry.get_by_model(item_to_trash)
-        for related_field in field_type.get_related_fields_to_trash_and_restore(
+        for (
+            related_field
+        ) in field_type.get_other_fields_to_trash_restore_always_together(
             item_to_trash
         ):
             if not related_field.trashed:

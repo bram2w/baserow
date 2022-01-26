@@ -10,6 +10,7 @@ from baserow.contrib.database.db.schema import lenient_schema_editor
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
 from .dependencies.handler import FieldDependencyHandler
@@ -699,12 +700,31 @@ class FieldHandler:
 
     def restore_field(
         self,
-        field,
-        update_collector=None,
-        apply_and_send_updates=True,
+        field: Field,
+        update_collector: Optional[CachingFieldUpdateCollector] = None,
+        apply_and_send_updates: bool = True,
     ):
+        """
+        Restores the provided field from being in the trashed state.
+
+        :param field: The trashed field to restore.
+        :param update_collector: An optional update collector that will be used to
+            collect any resulting field updates due to the restore.
+        :param apply_and_send_updates: Whether or not a field_restored signal should be
+            sent after restoring this field.
+        :raises CantRestoreTrashedItem: Raised when this field cannot yet be restored
+            due to other trashed items.
+        """
+
         field_type = field_type_registry.get_by_model(field)
         try:
+            other_fields_that_must_restore_at_same_time = (
+                field_type.get_other_fields_to_trash_restore_always_together(field)
+            )
+            for other_required_field in other_fields_that_must_restore_at_same_time:
+                if other_required_field.table.trashed:
+                    raise RelatedTableTrashedException()
+
             field.name = self.find_next_unused_field_name(
                 field.table,
                 [field.name, f"{field.name} (Restored)"],
@@ -738,11 +758,9 @@ class FieldHandler:
                 )
                 update_collector.send_additional_field_updated_signals()
 
-            for related_field in field_type.get_related_fields_to_trash_and_restore(
-                field
-            ):
-                if related_field.trashed:
-                    self.restore_field(related_field)
+            for other_required_field in other_fields_that_must_restore_at_same_time:
+                if other_required_field.trashed:
+                    self.restore_field(other_required_field)
         except Exception as e:
             # Restoring a field could result in various errors such as a circular
             # dependency appearing in the field dep graph. Allow the field type to

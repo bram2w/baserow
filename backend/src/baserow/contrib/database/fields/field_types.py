@@ -1404,7 +1404,7 @@ class LinkRowFieldType(FieldType):
     ):
         getattr(row, field_name).set(value)
 
-    def get_related_fields_to_trash_and_restore(self, field) -> List[Any]:
+    def get_other_fields_to_trash_restore_always_together(self, field) -> List[Any]:
         return [field.link_row_related_field]
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:

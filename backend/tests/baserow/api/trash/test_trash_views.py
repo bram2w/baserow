@@ -9,6 +9,8 @@ from rest_framework.status import (
     HTTP_400_BAD_REQUEST,
 )
 
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.models import Group, TrashEntry, Application
 from baserow.core.trash.handler import TrashHandler
 
@@ -764,3 +766,68 @@ def _assert_delete_called_twice_returns_correct_api_error(
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM"
+
+
+@pytest.mark.django_db
+def test_restoring_a_field_which_depends_on_trashed_table_fails(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table_1 = data_fixture.create_database_table(name="Table 1", database=database)
+    table_2 = data_fixture.create_database_table(name="Table 2", database=database)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    table_1_primary_field = field_handler.create_field(
+        user=user, table=table_1, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user,
+        table=table_1,
+        values={f"field_{table_1_primary_field.id}": "John"},
+    )
+    row_handler.create_row(
+        user=user,
+        table=table_1,
+        values={f"field_{table_1_primary_field.id}": "Jane"},
+    )
+
+    # Create a primary field and some example data for the cars table.
+    cars_primary_field = field_handler.create_field(
+        user=user, table=table_2, type_name="text", name="Name", primary=True
+    )
+    row_handler.create_row(
+        user=user, table=table_2, values={f"field_{cars_primary_field.id}": "BMW"}
+    )
+    row_handler.create_row(
+        user=user, table=table_2, values={f"field_{cars_primary_field.id}": "Audi"}
+    )
+
+    link_field_1 = field_handler.create_field(
+        user=user,
+        table=table_1,
+        type_name="link_row",
+        name="Customer",
+        link_row_table=table_2,
+    )
+    TrashHandler.trash(user, database.group, database, link_field_1)
+    TrashHandler.trash(user, database.group, database, table_1)
+    TrashHandler.trash(user, database.group, database, table_2)
+    TrashHandler.restore_item(user, "table", table_1.id)
+
+    response = api_client.patch(
+        reverse(
+            "api:trash:restore",
+        ),
+        {
+            "trash_item_type": "field",
+            "trash_item_id": link_field_1.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANT_RESTORE_AS_RELATED_TABLE_TRASHED"
