@@ -3443,26 +3443,27 @@ def test_date_equals_day_of_month_filter_type(data_fixture):
     handler = ViewHandler()
     model = table.get_model()
 
-    row_1 = model.objects.create(
-        **{
-            f"field_{date_field.id}": date(2021, 8, 11),
-        }
-    )
-    row_2 = model.objects.create(
-        **{
-            f"field_{date_field.id}": date(2020, 1, 1),
-        }
-    )
-    row_3 = model.objects.create(
-        **{
-            f"field_{date_field.id}": date(2019, 11, 1),
-        }
-    )
-    model.objects.create(
-        **{
-            f"field_{date_field.id}": None,
-        }
-    )
+    with freeze_time("2020-1-03 22:01"):
+        row_1 = model.objects.create(
+            **{
+                f"field_{date_field.id}": date(2021, 8, 11),
+            }
+        )
+        row_2 = model.objects.create(
+            **{
+                f"field_{date_field.id}": date(2020, 1, 1),
+            }
+        )
+        row_3 = model.objects.create(
+            **{
+                f"field_{date_field.id}": date(2019, 11, 1),
+            }
+        )
+        model.objects.create(
+            **{
+                f"field_{date_field.id}": None,
+            }
+        )
 
     # Date Field (No timezone)
     view_filter = data_fixture.create_view_filter(
