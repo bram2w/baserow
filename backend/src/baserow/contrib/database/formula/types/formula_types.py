@@ -519,7 +519,7 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
         return self, self
 
     def get_model_field(self, instance, **kwargs) -> models.Field:
-        return models.JSONField(default=dict, **kwargs)
+        return JSONField(default=dict, **kwargs)
 
     def get_response_serializer_field(self, instance, **kwargs) -> Optional[Field]:
         instance, field_type = super().get_baserow_field_instance_and_type()

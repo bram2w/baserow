@@ -18,6 +18,9 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.cache import (
+    invalidate_table_model_cache_and_related_models,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import (
@@ -65,6 +68,7 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
 
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
+    invalidate_table_model_cache_and_related_models(table.id)
     with django_assert_num_queries(13):
         TrashHandler.permanently_delete_marked_trash()
 
@@ -83,6 +87,7 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
 
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
+    invalidate_table_model_cache_and_related_models(table.id)
     # We only want seven more queries when deleting 2 rows instead of 1 compared to
     # above:
     # 1. An extra query to open the second trash entries savepoint

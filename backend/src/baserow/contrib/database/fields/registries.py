@@ -1062,6 +1062,19 @@ class FieldType(
             option list.
         """
 
+    # noinspection PyMethodMayBeStatic
+    def before_table_model_invalidated(
+        self,
+        field: Field,
+    ):
+        """
+        Called before the table the field is in is invalidated in the model cache.
+        Usually this method should be overridden to also invalidate the cache of other
+        tables models which would be affected by this tables cache being invalidated.
+        """
+
+        pass
+
 
 class FieldTypeRegistry(
     APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
