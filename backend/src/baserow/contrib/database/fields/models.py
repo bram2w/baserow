@@ -9,6 +9,9 @@ from baserow.contrib.database.fields.mixins import (
     DATE_FORMAT_CHOICES,
     DATE_TIME_FORMAT_CHOICES,
 )
+from baserow.contrib.database.table.cache import (
+    invalidate_table_model_cache_and_related_models,
+)
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_TYPE_CHOICES,
     FormulaHandler,
@@ -124,6 +127,9 @@ class Field(
 
         return name
 
+    def invalidate_table_model_cache(self):
+        return invalidate_table_model_cache_and_related_models(self.table_id)
+
     def dependant_fields_with_types(
         self, field_cache, starting_via_path_to_starting_table=None
     ):
@@ -151,7 +157,9 @@ class Field(
     def save(self, *args, **kwargs):
         kwargs.pop("field_lookup_cache", None)
         kwargs.pop("raise_if_invalid", None)
-        super().save(*args, **kwargs)
+        save = super().save(*args, **kwargs)
+        self.invalidate_table_model_cache()
+        return save
 
 
 class AbstractSelectOption(ParentFieldTrashableModelMixin, models.Model):

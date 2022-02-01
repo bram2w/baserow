@@ -138,6 +138,22 @@ class BaserowExpressionField(models.Field):
             self.register_lookup(lookup, lookup_name=name)
         super().__init__(*args, **kwargs)
 
+    def __copy__(self):
+        obj = super().__copy__()
+        # Un-override the __class__ property below so we dont un-serialize literally as
+        # self.expression_field.__class__
+        obj.__class__ = BaserowExpressionField
+        return obj
+
+    def __reduce__(self):
+        reduced_tuple = super().__reduce__()
+        if len(reduced_tuple) == 3:
+            # Un-override the __class__ property below so we dont un-serialize
+            # literally as self.expression_field.__class__
+            return reduced_tuple[0], (BaserowExpressionField,), reduced_tuple[2]
+        else:
+            return reduced_tuple
+
     @property
     def __class__(self):
         # Pretend to be the expression_field Django model field so Django will let
@@ -152,6 +168,7 @@ class BaserowExpressionField(models.Field):
         name, path, args, kwargs = super().deconstruct()
         kwargs["expression"] = self.expression
         kwargs["expression_field"] = self.expression_field
+        kwargs["requires_refresh_after_insert"] = self.requires_refresh_after_insert
         return name, path, args, kwargs
 
     def db_type(self, connection):

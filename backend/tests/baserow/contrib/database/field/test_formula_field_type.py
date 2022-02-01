@@ -1,15 +1,20 @@
 import inspect
 
 import pytest
+from django.db.models import TextField
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT
 
+from baserow.contrib.database.table.cache import (
+    generated_models_cache,
+)
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
     CachingFieldUpdateCollector,
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.field_types import FormulaFieldType
+from baserow.contrib.database.fields.fields import BaserowExpressionField
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import FormulaField, LookupField
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -369,9 +374,9 @@ def test_recalculate_formulas_according_to_version(
     )
     assert dependant_formula.version == 1
 
-    cache = FieldCache()
+    field_cache = FieldCache()
     for formula_field in FormulaField.objects.all():
-        FieldDependencyHandler().rebuild_dependencies(formula_field, cache)
+        FieldDependencyHandler().rebuild_dependencies(formula_field, field_cache)
     FormulaHandler().recalculate_formulas_according_to_version()
 
     formula_with_default_internal_field.refresh_from_db()
@@ -1173,3 +1178,27 @@ def test_cannot_create_view_filter_or_sort_on_invalid_field(data_fixture):
 
         with pytest.raises(ViewSortFieldNotSupported):
             ViewHandler().create_sort(user, grid_view, field, SORT_ORDER_DESC)
+
+
+@pytest.mark.django_db
+def test_can_cache_and_uncache_formula_model_field(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    handler = FieldHandler()
+    formula_field = handler.create_field(
+        user=user,
+        table=table,
+        type_name="formula",
+        name="2",
+        formula="'a'",
+    )
+    formula_field_type = field_type_registry.get_by_model(formula_field)
+    formula_model_field = formula_field_type.get_model_field(formula_field)
+    generated_models_cache.set("test_formula_key", formula_model_field)
+    uncached = generated_models_cache.get("test_formula_key")
+    assert uncached == formula_model_field
+    assert isinstance(uncached, BaserowExpressionField)
+    assert uncached.__class__ == TextField
+    assert str(uncached.expression) == str(formula_model_field.expression)

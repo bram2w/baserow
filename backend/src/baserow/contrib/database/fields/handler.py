@@ -230,6 +230,7 @@ class FieldHandler:
             )
 
         updated_fields = update_collector.apply_updates_and_get_updated_fields()
+
         field_created.send(
             self,
             field=instance,
@@ -612,6 +613,10 @@ class FieldHandler:
         if instance_to_create:
             SelectOption.objects.bulk_create(instance_to_create)
 
+        # The model has changed when the select options have changed, so we need to
+        # invalidate the model cache.
+        field.invalidate_table_model_cache()
+
     # noinspection PyMethodMayBeStatic
     def find_next_unused_field_name(
         self,
@@ -739,6 +744,7 @@ class FieldHandler:
             if update_collector is None:
                 update_collector = CachingFieldUpdateCollector(field.table)
             field.save(field_lookup_cache=update_collector)
+
             FieldDependencyHandler.rebuild_dependencies(field, update_collector)
             for (
                 dependant_field,

@@ -4,6 +4,8 @@ from urllib.parse import urlparse, urljoin
 
 from corsheaders.defaults import default_headers
 
+from baserow.version import VERSION
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -138,6 +140,25 @@ DATABASES = {
         "PORT": os.getenv("DATABASE_PORT", "5432"),
     }
 }
+
+GENERATED_MODEL_CACHE_NAME = "generated-models"
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": "baserow-default-cache",
+        "VERSION": VERSION,
+    },
+    GENERATED_MODEL_CACHE_NAME: {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": f"baserow-{GENERATED_MODEL_CACHE_NAME}-cache",
+        "VERSION": None,
+    },
+}
+
 
 # Should contain the database connection name of the database where the user tables
 # are stored. This can be different than the default database because there are not

@@ -539,20 +539,21 @@ def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
         assert LongTextField.objects.all().count() == 1
 
 
+class ReversingTextFieldUsingBothVarCharAndTextSqlTypes(TextFieldType):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        return """p_in = (reverse(p_in));"""
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        if instance.text_default == "use_other_sql_type":
+            return models.TextField(**kwargs)
+        else:
+            return models.CharField(**kwargs)
+
+
 @pytest.mark.django_db
 def test_field_which_changes_its_underlying_type_will_have_alter_sql_run(data_fixture):
-    class ReversingTextFieldUsingBothVarCharAndTextSqlTypes(TextFieldType):
-        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-            return """p_in = (reverse(p_in));"""
-
-        def get_model_field(self, instance, **kwargs):
-            kwargs["null"] = True
-            kwargs["blank"] = True
-            if instance.text_default == "use_other_sql_type":
-                return models.TextField(**kwargs)
-            else:
-                return models.CharField(**kwargs)
-
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     existing_text_field = data_fixture.create_text_field(table=table, order=1)
@@ -588,12 +589,13 @@ def test_field_which_changes_its_underlying_type_will_have_alter_sql_run(data_fi
         assert TextField.objects.all().count() == 1
 
 
+class AlwaysReverseOnUpdateField(TextFieldType):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        return """p_in = (reverse(p_in));"""
+
+
 @pytest.mark.django_db
 def test_just_changing_a_fields_name_will_not_run_alter_sql(data_fixture):
-    class AlwaysReverseOnUpdateField(TextFieldType):
-        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-            return """p_in = (reverse(p_in));"""
-
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     existing_text_field = data_fixture.create_text_field(table=table, order=1)
@@ -623,14 +625,16 @@ def test_just_changing_a_fields_name_will_not_run_alter_sql(data_fixture):
         assert TextField.objects.all().count() == 1
 
 
+class SameTypeAlwaysReverseOnUpdateField(TextFieldType):
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        return """p_in = (reverse(p_in));"""
+
+    def force_same_type_alter_column(self, from_field, to_field):
+        return True
+
+
 @pytest.mark.django_db
 def test_when_field_type_forces_same_type_alter_fields_alter_sql_is_run(data_fixture):
-    class SameTypeAlwaysReverseOnUpdateField(TextFieldType):
-        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-            return """p_in = (reverse(p_in));"""
-
-        def force_same_type_alter_column(self, from_field, to_field):
-            return True
 
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -703,26 +707,28 @@ def test_update_field_with_type_error_on_conversion_should_null_field(data_fixtu
         assert LongTextField.objects.all().count() == 1
 
 
+class ReversesWhenConvertsAwayTextField(LongTextFieldType):
+    type = "reserves_text"
+    model_class = LongTextField
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        return """p_in = concat(reverse(p_in), %(some_variable)s);""", {
+            "some_variable": "_POST_FIX"
+        }
+
+
+class AlwaysLowercaseTextField(TextFieldType):
+    type = "lowercase_text"
+    model_class = LongTextField
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        return """p_in = concat(%(other_variable)s, lower(p_in));""", {
+            "other_variable": "pre_fix_"
+        }
+
+
 @pytest.mark.django_db
 def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixture):
-    class ReversesWhenConvertsAwayTextField(LongTextFieldType):
-        type = "reserves_text"
-        model_class = LongTextField
-
-        def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
-            return """p_in = concat(reverse(p_in), %(some_variable)s);""", {
-                "some_variable": "_POST_FIX"
-            }
-
-    class AlwaysLowercaseTextField(TextFieldType):
-        type = "lowercase_text"
-        model_class = LongTextField
-
-        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-            return """p_in = concat(%(other_variable)s, lower(p_in));""", {
-                "other_variable": "pre_fix_"
-            }
-
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     existing_field_with_old_value_prep = data_fixture.create_long_text_field(
@@ -760,21 +766,24 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
         assert LongTextField.objects.all().count() == 1
 
 
+class ReversesWhenConvertsAwayTextField2(LongTextFieldType):
+    type = "reserves_text"
+    model_class = LongTextField
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        return """p_in = (reverse(p_in));"""
+
+
+class AlwaysLowercaseTextField2(TextFieldType):
+    type = "lowercase_text"
+    model_class = LongTextField
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        return """p_in = (lower(p_in));"""
+
+
 @pytest.mark.django_db
 def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixture):
-    class ReversesWhenConvertsAwayTextField(LongTextFieldType):
-        type = "reserves_text"
-        model_class = LongTextField
-
-        def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
-            return """p_in = (reverse(p_in));"""
-
-    class AlwaysLowercaseTextField(TextFieldType):
-        type = "lowercase_text"
-        model_class = LongTextField
-
-        def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
-            return """p_in = (lower(p_in));"""
 
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -796,8 +805,8 @@ def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixtu
     with patch.dict(
         field_type_registry.registry,
         {
-            "lowercase_text": AlwaysLowercaseTextField(),
-            "long_text": ReversesWhenConvertsAwayTextField(),
+            "lowercase_text": AlwaysLowercaseTextField2(),
+            "long_text": ReversesWhenConvertsAwayTextField2(),
         },
     ):
         handler.update_field(
