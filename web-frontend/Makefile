@@ -20,7 +20,7 @@ unit-test:
 	npx jest --selectProjects unit --selectProjects premium || exit;
 
 ci-test-javascript:
-	npx jest --ci || exit;
+	npx jest -i --ci --verbose || exit;
 
 unit-test-watch:
 	npx jest test/unit --watch || exit;

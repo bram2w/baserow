@@ -131,6 +131,8 @@ variables:
   # The image path for the helper CI util image that will be built and pushed to.
   CI_UTIL_IMAGE: $CI_IMAGE_REPO/ci_util_image:latest
 
+# ==================================== CI UTIL ====================================
+
 build-ci-util-image:
   image: docker:20.10.12
   stage: build
@@ -152,6 +154,8 @@ build-ci-util-image:
     changes:
       - .gitlab/ci_util_image/*
 
+# ==================================== BACKEND ====================================
+
 # If pipeline not triggered by tag :
 # - Builds the backend dev image and stores in ci repo for next stages.
 build-backend-image:
@@ -167,11 +171,6 @@ backend-lint:
     - .docker-image-test-stage
   script:
     - docker run --rm $BACKEND_CI_DEV_IMAGE lint
-  only:
-    # Skip linting if no change to files
-    changes:
-      - backend/**/*
-      - premium/backend/**/*
 
 # If pipeline not triggered by tag and backend code has changed:
 # - Runs the backend tests (the first 1/3)
@@ -211,11 +210,6 @@ backend-test-group-1:
         --add-host="db:$DB_IP" \
         --add-host="mjml:$MJML_IP" \
         $BACKEND_CI_DEV_IMAGE ci-check-startup;
-  only:
-    # Skip testing on if no change to backend files
-    changes:
-      - backend/**/*
-      - premium/backend/**/*
 
 # If pipeline not triggered by tag:
 # - Build and store non-dev images in CI repo under the `ci-tested` tag so we know
@@ -246,10 +240,6 @@ web-frontend-lint:
     - .docker-image-test-stage
   script:
     - docker run --rm $WEBFRONTEND_CI_DEV_IMAGE lint
-  only:
-    changes:
-      - web-frontend/**/*
-      - premium/web-frontend/**/*
 
 # If pipeline not triggered by tag and web-frontend code has changed:
 # - Runs the web-frontend tests
@@ -261,11 +251,6 @@ web-frontend-test:
   script:
     - |
       docker run --name=webfrontend_test $WEBFRONTEND_CI_DEV_IMAGE ci-test;
-  only:
-    # Skip testing on if no change to web-frontend files
-    changes:
-      - web-frontend/**/*
-      - premium/web-frontend/**/*
 
 # If pipeline not triggered by tag:
 # - Build and store non-dev images in CI repo under the `ci-tested` tag so we know
