@@ -16,35 +16,13 @@ format:
 test:
 	pytest tests ../premium/backend/tests || exit;
 
-test-regenerate-ci-durations:
-	pytest tests ../premium/backend/tests --store-durations || exit;
-
 test-parallel:
 	pytest tests ../premium/backend/tests -n 10 || exit;
 
-PYTEST_SPLITS:=1
-PYTEST_SPLIT_GROUP:=1
 ci-test-python:
-	mkdir reports/ -p; \
-	cd ..; \
-	COVERAGE_FILE=backend/reports/.coverage.$(PYTEST_SPLIT_GROUP) \
-	coverage run \
-	    --rcfile=backend/.coveragerc \
-	    -m pytest \
-	    --durations-path=backend/.test_durations \
-	    --splits $(PYTEST_SPLITS) \
-	    --group $(PYTEST_SPLIT_GROUP) \
-	    --junitxml=backend/reports/report.xml \
+	pytest \
 	    backend/tests \
 	    premium/backend/tests;
-
-generate-html-coverage-report:
-	mkdir html_coverage/ -p; \
-	cd ..; \
-	coverage run --rcfile=backend/.coveragerc -m pytest \
-	    backend/tests \
-	    premium/backend/tests; \
-	coverage html -d html_coverage/;
 
 ci-check-startup-python:
 	timeout --preserve-status 10s \

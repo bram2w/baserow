@@ -96,8 +96,6 @@ venv/
 
 web-frontend/plugins/
 backend/plugins/
-web-frontend/reports/
-backend/reports/
 
 .idea/
 *.iml
@@ -117,6 +115,3 @@ out/
 vetur.config.js
 
 formula/out/
-
-.coverage
-junit.xml

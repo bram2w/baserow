@@ -3,5 +3,3 @@
 **/.pytest_cache
 *.iml
 .idea/
-web-frontend/reports/
-backend/reports/
