@@ -73,7 +73,6 @@
     "stylelint": "^13.13.1",
     "stylelint-config-standard": "^22.0.0",
     "stylelint-webpack-plugin": "^3.0.1",
-    "vue-jest": "^3.0.3",
-    "jest-serializer-vue": "^2.0.2"
+    "vue-jest": "^3.0.3"
   }
 }
