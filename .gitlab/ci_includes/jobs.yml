@@ -265,3 +265,112 @@
     - docker:20.10.12-dind
 
 
+.skippable-job:
+  before_script:
+    - |
+      CLEAR="\e[0m"
+      RED="\e[31m"
+      GREEN="\e[32m"
+
+      echo -e "$GREEN =========== JOB SKIPPER =========== $CLEAR"
+      if [[ -z "$RUN_WHEN_CHANGES_MADE_IN" ]]; then
+          echo "Must provide RUN_WHEN_CHANGES_MADE_IN as a job variable" 2>&1
+          exit 1
+      fi
+
+      if [[ "$ENABLE_JOB_SKIPPING" = "true" ]]; then
+
+        exit_with_copied_artifacts_if_successful_job_for_commit(){
+          COMMIT_HASH=$1
+          JOB_NAME=$2
+          URL="https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$COMMIT_HASH/statuses?name=$JOB_NAME"
+          COMMIT_GITLAB_JOBS=$(curl --header "PRIVATE-TOKEN: $PROJECT_READ_ONLY_API_TOKEN" $URL)
+
+          if [[ "$COMMIT_GITLAB_JOBS" ]]; then
+            echo -e "\e[0Ksection_start:`date +%s`:$COMMIT_HASH$JOB_NAME[collapsed=true]\r\e[0KRaw job status download for $JOB_NAME and $COMMIT_HASH"
+            echo "Got these job statuses: $COMMIT_GITLAB_JOBS"
+            JOB_ID=$(echo $COMMIT_GITLAB_JOBS| jq "[.[] | select(.status == \"success\")][0].id")
+            echo -e "\e[0Ksection_end:`date +%s`:$COMMIT_HASH$JOB_NAME\r\e[0K"
+            # Check if JOB_ID is an integer (POSIX compliant way)
+
+            # Check if JOB_ID is an integer using bash magic.
+            if [ "$JOB_ID" -eq "$JOB_ID" ] 2> /dev/null;  then
+              if [[ -n "$DOWNLOAD_AND_UNPACK_ARTIFACTS_ON_SKIP" ]] ; then
+                exit_code=0
+                curl --fail --location --output artifacts.zip \
+                  --header "PRIVATE-TOKEN: $PROJECT_READ_ONLY_API_TOKEN" \
+                  "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$JOB_ID/artifacts" \
+                  || exit_code=$?;
+
+                if [ ${exit_code} -ne 0 ]; then
+                  echo -e "$RED Failed to get artifacts from successful run $JOB_ID $CLEAR"
+                else
+                  unzip artifacts.zip || exit_code=$?
+                  if [ ${exit_code} -ne 0 ]; then
+                    echo -e "$RED Failed to unzip artifacts $CLEAR"
+                  else
+                    # Echo a stdout report if found so gitlab's coverage regex which
+                    # searches stdout to find the overall coverage is correct even for
+                    # skipped jobs.
+                    if [[ -f "reports/stdout.txt" ]]; then
+                        cat reports/stdout.txt;
+                    fi
+                    echo -e "$GREEN Skipping $JOB_NAME as previous successful run for $COMMIT_HASH and it's artifacts were found. $CLEAR"
+                    exit 0;
+                  fi
+                fi
+
+              else
+                echo -e "$GREEN Skipping $JOB_NAME as previous successful build for $COMMIT_HASH was found. $CLEAR".
+                exit 0;
+              fi
+            else
+              echo "Failed to find successful run of $JOB_NAME in job statuses from gitlab for commit $COMMIT_HASH."
+            fi
+          else
+            echo -e "$RED Failed to query gitlab for jobs $CLEAR";
+          fi
+        }
+
+        echo "Checking if we can skip immediately if this commit already has a successful job run..."
+        exit_with_copied_artifacts_if_successful_job_for_commit $CI_COMMIT_SHA $CI_JOB_NAME
+        echo "Can't immediately skip as there was no successful previous job for this commit, checking changes..."
+
+        CHANGED_FILES=$(git diff --name-only --diff-filter=ADMR @~..@)
+        grep_exit_code=0
+        found_changes=0
+        for SEARCH_PATTERN in $RUN_WHEN_CHANGES_MADE_IN; do
+            echo $CHANGED_FILES | grep -q $SEARCH_PATTERN || grep_exit_code=$?;
+            if [ ${grep_exit_code} -eq 0 ]; then
+              echo -e "Found changes matching $GREEN $SEARCH_PATTERN $CLEAR in:"
+              echo $CHANGED_FILES
+              echo -e "$GREEN Running job normally without skipping due to the changes. $CLEAR"
+              found_changes=1
+              break
+            fi
+        done
+
+        if [ ${found_changes} -eq 0 ]; then
+          echo "No git diff changes found matching $RUN_WHEN_CHANGES_MADE_IN."
+          echo "Checking for previous commits job..."
+          SECOND_PARENT_COMMIT=$(git rev-list -1 --merges ${CI_COMMIT_SHA}~1..${CI_COMMIT_SHA})
+          if [[ -z "$SECOND_PARENT_COMMIT" ]] ; then
+            # If there is no second parent commit then there is only one parent commit
+            # and so we can safely check to see if that parent commit has a successful
+            # job run as this commit does not change any relavent files.
+            PREVIOUS_COMMIT_SHA=$(git rev-parse HEAD~1)
+            echo "Found single previous commit $PREVIOUS_COMMIT_SHA, checking for job.."
+            exit_with_copied_artifacts_if_successful_job_for_commit $PREVIOUS_COMMIT_SHA $CI_JOB_NAME
+            echo -e "$GREEN Running job without skipping as successful run for previous or this commit not found $CLEAR"
+          else
+            # There are more than one parent commits meaning we should re-run this job
+            # as this commit is a merge commit with multiple parents, so we can't safely
+            # skip this job.
+            echo -e "$GREEN Running full job as this is a merge commit. $CLEAR"
+          fi
+        fi
+      else
+          echo -e "$GREEN Force running job regardless of previous runs. $CLEAR"
+      fi
+
+      echo -e "$GREEN ================================ $CLEAR"

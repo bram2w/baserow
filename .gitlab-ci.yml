@@ -89,6 +89,9 @@ stages:
   - publish
 
 variables:
+  ENABLE_JOB_SKIPPING:
+    value: "true"
+    description: "If set to false then tests and lints will be forced to run and not use previously cached results."
   ENABLE_COVERAGE:
     value: "true"
     description: "If set to false then tests will not generate coverage or testing reports used by gitlab to show nicer MRs."
@@ -178,24 +181,29 @@ build-backend-image:
     DEV_IMAGE_NAME: $BACKEND_DEV_IMAGE_NAME
     DOCKERFILE_PATH: $BACKEND_DOCKERFILE_PATH
 
-# If pipeline not triggered by tag and backend code has changed:
-# - Runs the backend lint
+# If pipeline not triggered by tag:
+# - Runs the backend lint if changes to the backend, otherwise skips.
 backend-lint:
   extends:
     - .docker-image-test-stage
+    - .skippable-job
+  variables:
+    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/"
   script:
     - docker run --rm $BACKEND_CI_DEV_IMAGE lint
 
-# If pipeline not triggered by tag and backend code has changed:
-# - Runs the backend startup check
-# - Generates coverage db's and stores as artifact for later coverage merge and report
+# If pipeline not triggered by tag:
+# - Runs the backend startup check if changes to the backend, otherwise skips.
 backend-check-startup:
   extends:
     - .docker-image-test-stage
+    - .skippable-job
   services:
     - docker:20.10.12-dind
     - name: postgres:11.3
       alias: db
+  variables:
+    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/"
   script:
     - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
     - ping -w 2 $DB_IP
@@ -208,12 +216,13 @@ backend-check-startup:
           --add-host="db:$DB_IP" \
           $BACKEND_CI_DEV_IMAGE ci-check-startup;
 
-# If pipeline not triggered by tag and backend code has changed:
-# - Runs the backend tests (the first 1/3)
+# If pipeline not triggered by tag:
+# - Runs the backend tests (the first 1/3) if changes to the backend, otherwise skips.
 # - Generates coverage db's and stores as artifact for later coverage merge and report
 backend-test-group-1:
   extends:
     - .docker-image-test-stage
+    - .skippable-job
   services:
     - docker:20.10.12-dind
     - name: postgres:11.3
@@ -227,6 +236,8 @@ backend-test-group-1:
     POSTGRES_PASSWORD: baserow
     POSTGRES_DB: baserow
     PYTEST_SPLIT_GROUP: 1
+    RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/"
+    DOWNLOAD_AND_UNPACK_ARTIFACTS_ON_SKIP: 'true'
   script:
     - MJML_IP=$(cat /etc/hosts | awk '{if ($2 == "mjml") print $1;}')
     - ping -w 2 $MJML_IP
@@ -244,6 +255,17 @@ backend-test-group-1:
         $BACKEND_CI_DEV_IMAGE $TEST_TYPE;
     - docker cp baserow_backend_test_container:/baserow/backend/reports .
     - docker rm baserow_backend_test_container
+    - |
+      if [[ $PYTEST_SPLIT_GROUP = 1 ]]; then
+        docker run -e DATABASE_USER=baserow \
+          -e DATABASE_NAME=baserow \
+          -e DATABASE_HOST=db \
+          -e DATABASE_PASSWORD=baserow \
+          --rm \
+          --add-host="db:$DB_IP" \
+          --add-host="mjml:$MJML_IP" \
+          $BACKEND_CI_DEV_IMAGE ci-check-startup;
+      fi
   artifacts:
     paths:
       - reports/
@@ -296,6 +318,7 @@ collect-backend-coverage:
     reports:
       cobertura: coverage.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
+
 # If pipeline not triggered by tag:
 # - Build and store non-dev images in CI repo under the `ci-tested` tag so we know
 #   those images have passed the tests.
@@ -316,23 +339,27 @@ build-web-frontend-image:
     DEV_IMAGE_NAME: $WEBFRONTEND_DEV_IMAGE_NAME
     DOCKERFILE_PATH: $WEBFRONTEND_DOCKERFILE_PATH
 
-# If pipeline not triggered by tag and web-frontend code has changed:
-# - Runs eslint and stylelint
-# - Stores a web-frontend_lint_success file in the cache so future pipelines can skip
-#   if no file changes.
+# If pipeline not triggered by tag:
+# - Runs eslint and stylelint if the web-frontend code has changed, otherwise skips.
 web-frontend-lint:
   extends:
     - .docker-image-test-stage
+    - .skippable-job
+  variables:
+    RUN_WHEN_CHANGES_MADE_IN: "web-frontend/ premium/web-frontend/"
   script:
     - docker run --rm $WEBFRONTEND_CI_DEV_IMAGE lint
 
-# If pipeline not triggered by tag and web-frontend code has changed:
-# - Runs the web-frontend tests
+# If pipeline not triggered by tag:
+# - Runs the web-frontend tests if the web-frontend has changed, otherwise skips.
 # - Generates coverage and testing reports
-# - Stores the reports in the cache if successful
 web-frontend-test:
   extends:
     - .docker-image-test-stage
+    - .skippable-job
+  variables:
+    RUN_WHEN_CHANGES_MADE_IN: "web-frontend/ premium/web-frontend/"
+    DOWNLOAD_AND_UNPACK_ARTIFACTS_ON_SKIP: 'true'
   script:
     - mkdir reports/ -p
     - TEST_TYPE=$([[ "$ENABLE_COVERAGE" = "true" ]] && echo "ci-test" || echo "test")
