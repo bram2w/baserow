@@ -20,7 +20,7 @@ unit-test:
 	npx jest --selectProjects unit --selectProjects premium || exit;
 
 ci-test-javascript:
-	npx jest -i --ci --forceExit --verbose || exit;
+	JEST_JUNIT_OUTPUT_DIR=../reports/ npx jest -i --verbose --ci --forceExit --collectCoverage --coverageDirectory="./reports/coverage/" || exit;
 
 unit-test-watch:
 	npx jest test/unit --watch || exit;

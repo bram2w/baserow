@@ -89,6 +89,9 @@ stages:
   - publish
 
 variables:
+  ENABLE_COVERAGE:
+    value: "true"
+    description: "If set to false then tests will not generate coverage or testing reports used by gitlab to show nicer MRs."
   # An image repo which is used for storing and passing images between ci pipeline jobs
   # and also speeding up ci builds by caching from the latest ci image when building.
   CI_IMAGE_REPO: $CI_REGISTRY_IMAGE/ci
@@ -184,6 +187,28 @@ backend-lint:
     - docker run --rm $BACKEND_CI_DEV_IMAGE lint
 
 # If pipeline not triggered by tag and backend code has changed:
+# - Runs the backend startup check
+# - Generates coverage db's and stores as artifact for later coverage merge and report
+backend-check-startup:
+  extends:
+    - .docker-image-test-stage
+  services:
+    - docker:20.10.12-dind
+    - name: postgres:11.3
+      alias: db
+  script:
+    - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
+    - ping -w 2 $DB_IP
+    - |
+      docker run -e DATABASE_USER=baserow \
+          -e DATABASE_NAME=baserow \
+          -e DATABASE_HOST=db \
+          -e DATABASE_PASSWORD=baserow \
+          --rm \
+          --add-host="db:$DB_IP" \
+          $BACKEND_CI_DEV_IMAGE ci-check-startup;
+
+# If pipeline not triggered by tag and backend code has changed:
 # - Runs the backend tests (the first 1/3)
 # - Generates coverage db's and stores as artifact for later coverage merge and report
 backend-test-group-1:
@@ -201,27 +226,76 @@ backend-test-group-1:
     POSTGRES_USER: baserow
     POSTGRES_PASSWORD: baserow
     POSTGRES_DB: baserow
+    PYTEST_SPLIT_GROUP: 1
   script:
     - MJML_IP=$(cat /etc/hosts | awk '{if ($2 == "mjml") print $1;}')
     - ping -w 2 $MJML_IP
     - DB_IP=$(cat /etc/hosts | awk '{if ($2 == "db") print $1;}')
     - ping -w 2 $DB_IP
+    - mkdir -p reports
+    - TEST_TYPE=$([[ "$ENABLE_COVERAGE" = "true" ]] && echo "ci-test" || echo "test")
     - |
       docker run \
+        -e PYTEST_SPLITS=3 \
+        -e PYTEST_SPLIT_GROUP=$PYTEST_SPLIT_GROUP \
         --name=baserow_backend_test_container \
         --add-host="db:$DB_IP" \
         --add-host="mjml:$MJML_IP" \
-        $BACKEND_CI_DEV_IMAGE ci-test;
-    - |
-      docker run -e DATABASE_USER=baserow \
-        -e DATABASE_NAME=baserow \
-        -e DATABASE_HOST=db \
-        -e DATABASE_PASSWORD=baserow \
-        --rm \
-        --add-host="db:$DB_IP" \
-        --add-host="mjml:$MJML_IP" \
-        $BACKEND_CI_DEV_IMAGE ci-check-startup;
+        $BACKEND_CI_DEV_IMAGE $TEST_TYPE;
+    - docker cp baserow_backend_test_container:/baserow/backend/reports .
+    - docker rm baserow_backend_test_container
+  artifacts:
+    paths:
+      - reports/
+    reports:
+      junit: reports/report.xml
 
+# Create 2 more separate groups to parallelize pytest by using separate groups to
+# decrease overall build time. Pytest xdist doesn't help as the gitlab saas runners only
+# have a single virtual core so `pytest -n 2+` slows things down.
+backend-test-group-2:
+  extends: backend-test-group-1
+  variables:
+    PYTEST_SPLIT_GROUP: 2
+
+backend-test-group-3:
+  extends: backend-test-group-1
+  variables:
+    PYTEST_SPLIT_GROUP: 3
+
+# Collects together all the separate backend coverage databases from previous jobs and
+# combines them to generate a single report for gitlab to use. Gitlab itself does not
+# correctly merge these if you just add them all separately into artifacts->reports->
+# cobertura.
+collect-backend-coverage:
+  image: $CI_UTIL_IMAGE
+  stage: build-final
+  interruptible: true
+  only:
+    variables:
+      - $ENABLE_COVERAGE == "true"
+  # Prevent rebuilds when tagging as all we want to do is tag and push
+  except:
+    variables:
+      - $CI_COMMIT_TAG
+  # Depend on the `reports` artifacts from the previous jobs
+  dependencies:
+    - backend-test-group-1
+    - backend-test-group-2
+    - backend-test-group-3
+  script:
+    - . /baserow/venv/bin/activate
+    # The reports artifacts will be extracted before the script runs into reports by
+    # gitlab
+    - cp reports/.coverage.* .
+    - export COVERAGE_RCFILE=backend/.coveragerc
+    - coverage combine
+    - coverage report
+    - coverage xml -o coverage.xml
+  artifacts:
+    reports:
+      cobertura: coverage.xml
+  coverage: '/^TOTAL.+?(\d+\%)$/'
 # If pipeline not triggered by tag:
 # - Build and store non-dev images in CI repo under the `ci-tested` tag so we know
 #   those images have passed the tests.
@@ -260,8 +334,20 @@ web-frontend-test:
   extends:
     - .docker-image-test-stage
   script:
+    - mkdir reports/ -p
+    - TEST_TYPE=$([[ "$ENABLE_COVERAGE" = "true" ]] && echo "ci-test" || echo "test")
     - |
-      docker run --name=webfrontend_test $WEBFRONTEND_CI_DEV_IMAGE ci-test;
+      docker run --name=webfrontend_test $WEBFRONTEND_CI_DEV_IMAGE $TEST_TYPE \
+        | tee reports/stdout.txt;
+    - docker cp webfrontend_test:/baserow/reports .
+    - docker rm webfrontend_test
+  artifacts:
+    paths:
+      - reports/
+    reports:
+      cobertura: reports/coverage/cobertura-coverage.xml
+      junit: reports/junit.xml
+  coverage: '/Lines\s*:\s*(\d+.?\d*)%/'
 
 # If pipeline not triggered by tag:
 # - Build and store non-dev images in CI repo under the `ci-tested` tag so we know
