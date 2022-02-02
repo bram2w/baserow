@@ -264,6 +264,93 @@
   services:
     - docker:20.10.12-dind
 
+# Set $SKIP_IF_TAG_NOT_ON_BRANCH to make the job skip if the commit is not on
+# the specified branch. Useful for TAG pipelines when $CI_COMMIT_BRANCH is not set
+# and so we need to do some extra git work to figure out what branches this commit is
+# on.
+.skip-if-tag-not-on-branch:
+  script:
+    - |
+      if [[ -n "$SKIP_IF_TAG_NOT_ON_BRANCH" ]]; then
+        # Query for all the branches that this commit is part of.
+        curl -s --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+          "https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA/refs?type=branch" \
+          -o this_commits_branches.json;
+        # Extract just the branch names from the json so we can assert it matches.
+        TAG_BRANCH_NAMES=$(cat this_commits_branches.json | jq -r ".[].name")
+        NUM_BRANCHES=$(cat this_commits_branches.json | jq length)
+        # Ensure the commit is only on $SKIP_IF_TAG_NOT_ON_BRANCH and no other branches,
+        # otherwise someone could checkout a master commit as a new branch and tag it to
+        # cause an image upload.
+        if [[ "$NUM_BRANCHES" != "1" || "$TAG_BRANCH_NAMES" != "$SKIP_IF_TAG_NOT_ON_BRANCH" ]]; then
+          echo "Tags should never be applied to non $SKIP_IF_TAG_NOT_ON_BRANCH branches!" 2>&1;
+          echo "Pipeline is running for tag: $CI_COMMIT_TAG which for a commit that only appears on $SKIP_IF_TAG_NOT_ON_BRANCH and no other branches." 2>&1;
+          echo "Instead this commit appears on $NUM_BRANCHES branches called $TAG_BRANCH_NAMES" 2>&1;
+          exit 1;
+        fi
+      fi
+
+# Set $SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH to a branch name. If the job is not
+# for a commit which is the latest on the specified branch name (for example due to
+# someone re-running a pipeline for an old commit) this job will be skipped.
+.skip-if-not-latest-commit-on-branch:
+  allow_failure:
+    # By exiting with this code we can skip this step without failing the build,
+    # but still fail if something else goes wrong.
+    exit_codes: 137
+  script:
+    - |
+      if [[ -n "$SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH" ]]; then
+        LATEST_COMMIT_HASH=$(git rev-parse origin/$SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH)
+        HEAD_COMMIT_HASH=$CI_COMMIT_SHA
+        if [[ "$LATEST_COMMIT_HASH" != "$HEAD_COMMIT_HASH" ]]; then
+            echo "Pipeline is not running for latest commit on origin/$SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH";
+            echo " which has commit $LATEST_COMMIT_HASH.";
+            echo "Instead pipeline is running on commit $HEAD_COMMIT_HASH, exitting as configured to do so in this situation...";
+            exit 137;
+        fi
+      fi
+
+# Pushes $SOURCE_IMAGE to $TARGET_IMAGE using the $TARGET_REGISTRY_PASSWORD,
+# $TARGET_REGISTRY_USER and $TARGET_REGISTRY credentials.
+#
+# Set $SKIP_IF_TAG_NOT_ON_BRANCH to make the job skip if the commit is not on
+# the specified branch. Useful for TAG pipelines when $CI_COMMIT_BRANCH is not set
+# and so we need to do some extra git work to figure out what branches this commit is
+# on.
+#
+# Set $SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH to a branch name. If the job is not
+# for a commit which is the latest on the specified branch name (for example due to
+# someone re-running a pipeline for an old commit) this job will be skipped.
+.publish-baserow-image:
+  image: $CI_UTIL_IMAGE
+  stage: publish
+  services:
+    - docker:20.10.12-dind
+  except:
+    refs:
+      - pipelines
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_TLS_CERTDIR: "/certs"
+  allow_failure:
+    # By exiting with this code we can skip this step without failing the build,
+    # but still fail if something else goes wrong.
+    exit_codes: 137
+  script:
+    # Import and run the scripts from the jobs above. Separated like this for
+    # readability and no functional reason.
+    - !reference [.skip-if-tag-not-on-branch, script]
+    - !reference [.skip-if-not-latest-commit-on-branch, script]
+    - |
+      echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_REGISTRY" --password-stdin
+
+      if ! docker pull $SOURCE_IMAGE; then
+        echo "Could not pull $SOURCE_IMAGE, has the build pipeline finished yet?" 2>&1;
+        exit 1
+      fi
+      docker tag $SOURCE_IMAGE $TARGET_IMAGE
+      docker push $TARGET_IMAGE
 
 .skippable-job:
   before_script:

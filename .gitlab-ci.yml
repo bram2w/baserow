@@ -139,6 +139,8 @@ variables:
 
 # ==================================== CI UTIL ====================================
 
+# A simple util image used by the other jobs containing some helper tools like git, jq,
+# coverage etc.
 build-ci-util-image:
   image: docker:20.10.12
   stage: build
@@ -191,6 +193,8 @@ backend-lint:
     RUN_WHEN_CHANGES_MADE_IN: "backend/ premium/backend/"
   script:
     - docker run --rm $BACKEND_CI_DEV_IMAGE lint
+  needs:
+    - job: build-backend-image
 
 # If pipeline not triggered by tag:
 # - Runs the backend startup check if changes to the backend, otherwise skips.
@@ -198,6 +202,8 @@ backend-check-startup:
   extends:
     - .docker-image-test-stage
     - .skippable-job
+  needs:
+    - job: build-backend-image
   services:
     - docker:20.10.12-dind
     - name: postgres:11.3
@@ -266,7 +272,10 @@ backend-test-group-1:
           --add-host="mjml:$MJML_IP" \
           $BACKEND_CI_DEV_IMAGE ci-check-startup;
       fi
+  needs:
+    - job: build-backend-image
   artifacts:
+    name: "$CI_JOB_NAME-reports"
     paths:
       - reports/
     reports:
@@ -298,13 +307,16 @@ collect-backend-coverage:
       - $ENABLE_COVERAGE == "true"
   # Prevent rebuilds when tagging as all we want to do is tag and push
   except:
-    variables:
-      - $CI_COMMIT_TAG
+    refs:
+      - tags
   # Depend on the `reports` artifacts from the previous jobs
-  dependencies:
-    - backend-test-group-1
-    - backend-test-group-2
-    - backend-test-group-3
+  needs:
+    - job: backend-test-group-1
+      artifacts: true
+    - job: backend-test-group-2
+      artifacts: true
+    - job: backend-test-group-3
+      artifacts: true
   script:
     - . /baserow/venv/bin/activate
     # The reports artifacts will be extracted before the script runs into reports by
@@ -324,6 +336,12 @@ collect-backend-coverage:
 #   those images have passed the tests.
 build-final-backend-image:
   extends: .build-final-baserow-image
+  needs:
+    - job: backend-check-startup
+    - job: backend-test-group-1
+    - job: backend-test-group-2
+    - job: backend-test-group-3
+    - job: backend-lint
   variables:
     IMAGE_NAME: $BACKEND_IMAGE_NAME
     DEV_IMAGE_NAME: $BACKEND_DEV_IMAGE_NAME
@@ -345,6 +363,8 @@ web-frontend-lint:
   extends:
     - .docker-image-test-stage
     - .skippable-job
+  needs:
+    - job: build-web-frontend-image
   variables:
     RUN_WHEN_CHANGES_MADE_IN: "web-frontend/ premium/web-frontend/"
   script:
@@ -360,6 +380,8 @@ web-frontend-test:
   variables:
     RUN_WHEN_CHANGES_MADE_IN: "web-frontend/ premium/web-frontend/"
     DOWNLOAD_AND_UNPACK_ARTIFACTS_ON_SKIP: 'true'
+  needs:
+    - job: build-web-frontend-image
   script:
     - mkdir reports/ -p
     - TEST_TYPE=$([[ "$ENABLE_COVERAGE" = "true" ]] && echo "ci-test" || echo "test")
@@ -381,7 +403,171 @@ web-frontend-test:
 #   those images have passed the tests.
 build-final-web-frontend-image:
   extends: .build-final-baserow-image
+  needs:
+    - job: web-frontend-test
+    - job: web-frontend-lint
   variables:
     IMAGE_NAME: $WEBFRONTEND_IMAGE_NAME
     DEV_IMAGE_NAME: $WEBFRONTEND_DEV_IMAGE_NAME
     DOCKERFILE_PATH: $WEBFRONTEND_DOCKERFILE_PATH
+
+
+# ================================== TRIGGER SAAS =====================================
+
+# Triggers a special pipeline in dependant project and passes various variables to it.
+# Only on master and develop.
+trigger-saas-build:
+  stage: publish
+  inherit:
+    variables:
+      - CI_COMMIT_BRANCH
+      - TESTED_BACKEND_CI_IMAGE
+      - TESTED_WEBFRONTEND_CI_IMAGE
+      - CI_COMMIT_SHA
+      - CI_COMMIT_SHORT_SHA
+      - DEVELOP_BRANCH_NAME
+      - MASTER_BRANCH_NAME
+  variables:
+    UPSTREAM_SHA: $CI_COMMIT_SHA
+    UPSTREAM_SHORT_SHA: $CI_COMMIT_SHORT_SHA
+    UPSTREAM_TESTED_BACKEND_CI_IMAGE: $TESTED_BACKEND_CI_IMAGE
+    UPSTREAM_TESTED_WEBFRONTEND_CI_IMAGE: $TESTED_WEBFRONTEND_CI_IMAGE
+  only:
+    changes:
+      - web-frontend/**/*
+      - premium/web-frontend/**/*
+      - backend/**/*
+      - premium/backend/**/*
+    variables:
+      - ($CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME || $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME)
+  allow_failure: true
+  trigger:
+    project: bramw/baserow-saas
+    branch: $CI_COMMIT_BRANCH
+
+# ================================== PUSHING BACKEND ==================================
+
+# Push baserow/backend:develop_latest
+publish-backend-develop-latest-image:
+  extends: .publish-baserow-image
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_BACKEND_CI_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$BACKEND_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+
+# Push baserow/backend_dev:develop_latest
+publish-backend-develop-latest-dev-image:
+  extends: .publish-baserow-image
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_BACKEND_CI_DEV_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$BACKEND_DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+# Push baserow/backend:$VERSION_GIT_TAG
+publish-backend-release-tagged-image:
+  extends: .publish-baserow-image
+  only:
+    refs:
+      - tags
+  dependencies: []
+  variables:
+    SKIP_IF_TAG_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_BACKEND_CI_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$BACKEND_IMAGE_NAME:$CI_COMMIT_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+# Push baserow/backend:latest
+publish-backend-latest-release-image:
+  extends: .publish-baserow-image
+  only:
+    refs:
+      - tags
+  dependencies: []
+  variables:
+    SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SKIP_IF_TAG_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_BACKEND_CI_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$BACKEND_IMAGE_NAME:latest"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+# ================================ PUSHING WEB-FRONTEND ===============================
+
+# Push baserow/web-frontend:develop_latest
+publish-webfrontend-develop-latest-image:
+  extends: .publish-baserow-image
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_WEBFRONTEND_CI_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+# Push baserow/web-frontend_dev:develop_latest
+publish-webfrontend-develop-latest-dev-image:
+  extends: .publish-baserow-image
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $DEVELOP_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_WEBFRONTEND_CI_DEV_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$WEBFRONTEND_DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+# Push baserow/web-frontend:$VERSION_GIT_TAG
+publish-webfrontend-release-tagged-image:
+  extends: .publish-baserow-image
+  only:
+    refs:
+      - tags
+  dependencies: []
+  variables:
+    SKIP_IF_TAG_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_WEBFRONTEND_CI_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:$CI_COMMIT_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+# Push baserow/web-frontend:latest
+publish-webfrontend-latest-release-image:
+  extends: .publish-baserow-image
+  only:
+    refs:
+      - tags
+  dependencies: []
+  variables:
+    SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SKIP_IF_TAG_NOT_ON_BRANCH: $MASTER_BRANCH_NAME
+    SOURCE_IMAGE: $TESTED_WEBFRONTEND_CI_IMAGE
+    TARGET_IMAGE: "$RELEASE_IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:latest"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
