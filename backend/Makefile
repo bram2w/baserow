@@ -20,6 +20,7 @@ test-parallel:
 	pytest tests ../premium/backend/tests -n 10 || exit;
 
 ci-test-python:
+	cd ..; \
 	pytest \
 	    backend/tests \
 	    premium/backend/tests;
