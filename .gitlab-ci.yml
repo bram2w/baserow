@@ -150,9 +150,20 @@ build-ci-util-image:
     - cd .gitlab/ci_util_image
     - docker build -t $CI_UTIL_IMAGE .
     - docker push $CI_UTIL_IMAGE
+  # Only trigger this job manually to prevent it running every single time a new branch
+  # is made. See https://gitlab.com/gitlab-org/gitlab/-/issues/11427
+  when:
+    manual
+  # We can't use the newer rules: syntax due to https://gitlab.com/gitlab-org/gitlab/-/issues/34756
   only:
     changes:
       - .gitlab/ci_util_image/*
+  except:
+    refs:
+      # When a pipeline is triggered by an upstream project we don't want to rebuild.
+      - pipelines
+      # When a pipeline is triggered by a git commit tag we don't want to rebuild.
+      - tags
 
 # ==================================== BACKEND ====================================
 
