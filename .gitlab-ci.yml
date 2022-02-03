@@ -79,6 +79,101 @@
 #
 # Images with tags starting with `ci-latest` or `ci-tested` (made in steps 1. and 3.)
 # will be deleted after they are 7 days old by a job that runs daily at 11AM CET.
+#
+# == Docker Layer Caching and its Security implications.
+#
+# The build jobs defined in .gitlab/ci_includes/jobs.yml use docker BUILD_KIT enabled
+# image caching to:
+# 1. Cache docker image builds between different pipelines and branches.
+# 2. Cache docker image builds between the build and build-final stages in a single
+#    pipeline.
+#
+# By using BuildKit and multi-stage docker builds we are able to build and store images
+# which can then be pulled and used as a cache to build new images quickly from.
+#
+# === When are docker builds cached between different pipelines and branches?
+#
+# On branches other than master:
+# 1. A build job first tries to find the latest image built on that branch
+#    (registry.gitlab.com/bramw/baserow/ci/IMAGE_NAME:ci-latest-BRANCH_NAME)
+#    to use as a build cache.
+# 2. If no latest image is found then the build job will try use the latest ci dev image
+#    build on the develop branch:
+#    (registry.gitlab.com/bramw/baserow/ci/IMAGE_NAME:ci-latest-develop)
+# 3. Otherwise, the build job will run the build from scratch building all layers.
+# 4. Once the build job finishes it will push a new ci-latest-BRANCH_NAME image for
+#    future pipelines to cache from. This image will be built with
+#    BUILDKIT_INLINE_CACHE=1 ensuring all of its intermediate layers can be cached from.
+#
+# On master:
+# 1. The latest develop ci image will be used as the build cache.
+# 2. Otherwise, no build caching will happen.
+#
+# === When are docker builds cached on the same pipeline and how?
+#
+# 1. The initial build stage jobs will build and push a ci image (specifically a docker
+#    image built with `--target dev`, this means it will build the `dev` stage in the
+#    Dockerfile). This image will be built with BUILDKIT_INLINE_CACHE=1 ensuring all of
+#    its intermediate layers can be cached from.
+# 2. This image will be used for testing etc if required.
+# 3. Finally, in the build-final stage we build the non dev images. We cache these
+#    images from two sources:
+#    1. The dev ci image built by the previous build stage. This will contain all
+#       intermediate layers so the non-dev build should re-use cached layers for all
+#       docker layers shared by the dev and non dev stages.
+#    2. The latest non-dev ci image built by first a previous pipeline on this branch
+#       or if not found then the latest non-dev ci image built on develop. On master
+#       similarly to the first build stage we only check develop.
+#
+# === Security implications of docker image caching
+#
+# This article does a great job explaining why docker layer caching can cause security
+# issues: https://pythonspeed.com/articles/docker-cache-insecure-images/ . But
+# fundamentally if you cache the FROM base_image and RUN apt upgrade && apt update
+# stages docker won't ever re-run these, even if the base image has changed OR there
+# have been security fixes published for the packages.
+#
+# === Periodic full rebuilds on develop
+#
+# To get around the security implications of docker image layer caching we have a
+# daily ci pipeline scheduled job on develop (https://gitlab.com/bramw/baserow/-/pipeline_schedules)
+# which sets TRIGGER_FULL_IMAGE_REBUILD=yes as a pipeline variable. This forces all
+# the build stages to build their docker images from scratch pulling any updated base
+# images.
+#
+# This pipeline rebuilds all the `registry.gitlab.com/bramw/baserow/ci/IMAGE_NAME:ci-latest-develop`
+# images used for build caching on other branches, develop itself and on master to have
+# the latest security updates.
+#
+# === Why does master cache from develop and not use its own ci-latest cache images?
+#
+# 1. Master might not have any pipelines run for weeks between releases meaning:
+#   a. If it had its own ci-latest cached images they would get cleaned up before they
+#      could be used
+#   b. If they weren't cleaned up their layers might be massively out of date and weeks
+#      old.
+# 2. Ok then why not have a periodic job to rebuild on master?
+#   a. We are already periodically rebuilding on develop, why do the same work twice
+#      if we can just cache from develop.
+#   b. Master might start randomly breaking if breaking changes appear in the base
+#      layers that get rebuilt. It's much more preferable that only develop breaks
+#      and we fix any issues there before they hit master.
+# 3. Why not just always rebuild from scratch on master with no docker build caching?
+#   a. This makes the release process slower
+#   b. If a base image or package change occurs between the time we finish testing our
+#      develop images and when we merge develop into master, the images are master
+#      might completely break as a result. So now we would have to worry about
+#      this potential source of issues as an extra step for every release.
+#   c. We are essentially testing entirely different images from the ones being deployed
+#      if we just test on develop and master does a full rebuild.
+# 4. By having develop being the only place where we do the full rebuilds, it means we:
+#    a. Test those rebuilt base layers on all the feature branches and during any
+#       develop testing.
+#    b. We CD from develop to staging and so these rebuilds are automatically deployed
+#       and tested by that also.
+#    c. Only have one source of these rebuilt layers, which we test on develop and then
+#       re-use on master knowing they are safe.
+#
 
 include: '/.gitlab/ci_includes/jobs.yml'
 
@@ -89,6 +184,12 @@ stages:
   - publish
 
 variables:
+  # Visit https://gitlab.com/bramw/baserow/-/pipelines/new select your branch
+  # and click run to be able to run a new pipeline where you can manually control these
+  # variables.
+  TRIGGER_FULL_IMAGE_REBUILD:
+    value: "no"
+    description: "If set to yes then all images will re-pull their base images and rebuild entirely from scratch with no caching."
   ENABLE_JOB_SKIPPING:
     value: "true"
     description: "If set to false then tests and lints will be forced to run and not use previously cached results."
@@ -571,3 +672,36 @@ publish-webfrontend-latest-release-image:
     TARGET_REGISTRY: $CI_REGISTRY
     TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
+# ================================ MISC LINTS ===============================
+
+docker-file-hadolint:
+  extends:
+    - .docker-image-test-stage
+    - .skippable-job
+  dependencies: []
+  variables:
+    RUN_WHEN_CHANGES_MADE_IN: "Dockerfile"
+  script:
+    - mkdir -p reports
+    # Ignore the version pinning as we want security upgrades ASAP in our docker images.
+    - |
+      docker run --rm -i -v "$(pwd)":/opt/hadolint/. -w /opt/hadolint \
+        hadolint/hadolint:latest-debian \
+        hadolint --ignore DL3008 -f gitlab_codeclimate \
+        backend/Dockerfile web-frontend/Dockerfile
+  except:
+    refs:
+      # When a pipeline is triggered by an upstream project we don't want to lint.
+      - pipelines
+      # When a pipeline is triggered by a git commit tag we don't want to lint.
+      - tags
+  artifacts:
+    name: "$CI_JOB_NAME artifacts from $CI_PROJECT_NAME on $CI_COMMIT_REF_SLUG"
+    expire_in: 1 day
+    when: always
+    reports:
+      codequality:
+        - "reports/*"
+    paths:
+      - "reports/*"

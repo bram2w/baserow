@@ -59,26 +59,38 @@
       TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
       CI_DEV_LATEST_BRANCH_TAG=$CLEANUP_JOB_CI_TAG_PREFIX$TRUNCATED_BRANCH_NAME
 
-      LATEST_CI_IMAGE="$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CI_DEV_LATEST_BRANCH_TAG"
+      LATEST_BRANCH_CI_IMAGE="$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CI_DEV_LATEST_BRANCH_TAG"
       # ===== 1. Try pull an image we can use to cache the build with =====
 
-      # First try the latest CI image for this branch
-      CACHE_IMAGE=$LATEST_CI_IMAGE
-      if ! docker pull $CACHE_IMAGE; then
-
-          # If that didnt work try the latest dev image from develop
-          CACHE_IMAGE="$RELEASE_IMAGE_REPO/$DEV_IMAGE_NAME:$DEVELOP_LATEST_TAG";
-          if ! docker pull $CACHE_IMAGE; then
-             CACHE_IMAGE=""
-          fi
-      fi
-
+      CACHE_FROM_BUILD_ARGS=""
       EXTRA_BUILD_ARGS=""
-      if [[ -n "$CACHE_IMAGE" ]]; then
-        echo "Caching docker build from $CACHE_IMAGE";
-        EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --cache-from $CACHE_IMAGE";
+      if [[ "$TRIGGER_FULL_IMAGE_REBUILD" = "yes" ]]; then
+        # Set this variable to ensure the image is rebuilt fully and we re-run all
+        # build steps to ensure we get the latest and most secure base image + the
+        # the latest upgraded packages. See: https://pythonspeed.com/articles/docker-cache-insecure-images/
+
+        echo "Disabling all caching and doing a full image rebuild from scatch to ensure we get all the latest security updates"
+        EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --no-cache --pull"
       else
-        echo "Couldn't find image to cache build using"
+        if [[ "$CI_COMMIT_BRANCH" != "$MASTER_BRANCH_NAME" ]]; then
+          # On non master branches first try cache from the latest ci image built by
+          # this branch. We don't do this on master changes on master only appear by
+          # being merged from develop, so by caching master from develop-latest we will
+          # actually find some layers to use.
+          if docker pull $LATEST_BRANCH_CI_IMAGE; then
+            echo "Caching docker build from the latest branch ci image: $LATEST_BRANCH_CI_IMAGE";
+            CACHE_FROM_BUILD_ARGS="--cache-from $LATEST_BRANCH_CI_IMAGE";
+          fi
+        fi
+
+        if [[ -z "$CACHE_FROM_BUILD_ARGS" ]]; then
+            # If that didnt work try the latest ci dev image from develop
+            DEVELOP_LATEST_BRANCH_CI_IMAGE="$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$DEVELOP_BRANCH_NAME"
+            if docker pull $DEVELOP_LATEST_BRANCH_CI_IMAGE; then
+               echo "Caching docker build from the latest develop image: $DEVELOP_LATEST_BRANCH_CI_IMAGE";
+               CACHE_FROM_BUILD_ARGS="--cache-from $DEVELOP_LATEST_BRANCH_CI_IMAGE";
+            fi
+        fi
       fi
 
       # This image tag is one that can be used by subsequent build steps, using the
@@ -108,13 +120,17 @@
         $IMAGE_LABELS \
         --target dev \
         --tag $CI_IMAGE_PATH \
-        --tag $LATEST_CI_IMAGE \
+        --tag $LATEST_BRANCH_CI_IMAGE \
         -f $DOCKERFILE_PATH .;
 
       # ===== 3. Push the CI image for the next stages and latest ci image cache =====
 
       docker push $CI_IMAGE_PATH
-      docker push $LATEST_CI_IMAGE
+      if [[ "$CI_COMMIT_BRANCH" != "$MASTER_BRANCH_NAME" ]]; then
+        # We don't use latest branch images from master for any caching so no need to
+        # bother pushing.
+        docker push $LATEST_BRANCH_CI_IMAGE
+      fi
 
 # Builds a non-dev (no docker build target provided) and fully labelled final image
 # and tags and pushes the non-dev and dev images using $TESTED_IMAGE_PREFIX to mark
@@ -196,14 +212,30 @@
 
       docker pull $CI_IMAGE_PATH
 
-      if ! docker pull $NON_DEV_CACHE_IMAGE ; then
-        echo "Failed to find non dev cache image $NON_DEV_CACHE_IMAGE..."
-        EXTRA_BUILD_ARGS="";
-      else
-        echo "Caching from $NON_DEV_CACHE_IMAGE";
-        EXTRA_BUILD_ARGS="--cache-from $NON_DEV_CACHE_IMAGE";
+      CACHE_FROM_BUILD_ARGS=""
+      EXTRA_BUILD_ARGS=""
+      if [[ "$TRIGGER_FULL_IMAGE_REBUILD" != "yes" ]]; then
+        # Set this variable to ensure the image is rebuilt fully and we re-run all
+        # build steps to ensure we get the latest and most secure base image + the
+        # the latest upgraded packages. See: https://pythonspeed.com/articles/docker-cache-insecure-images/
+
+        if [[ "$CI_COMMIT_BRANCH" != "$MASTER_BRANCH_NAME" ]]; then
+          if docker pull $NON_DEV_CACHE_IMAGE ; then
+            echo "Caching from $NON_DEV_CACHE_IMAGE";
+            CACHE_FROM_BUILD_ARGS="--cache-from $NON_DEV_CACHE_IMAGE";
+          fi
+        fi
+
+        if [[ -z "$CACHE_FROM_BUILD_ARGS" ]]; then
+            # If that didnt work try the latest ci non-dev image from develop
+            DEVELOP_LATEST_BRANCH_CI_IMAGE="$CI_IMAGE_REPO/$IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$DEVELOP_BRANCH_NAME"
+            if docker pull $DEVELOP_LATEST_BRANCH_CI_IMAGE; then
+               echo "Caching docker build from the latest develop image: $DEVELOP_LATEST_BRANCH_CI_IMAGE";
+               CACHE_FROM_BUILD_ARGS="--cache-from $DEVELOP_LATEST_BRANCH_CI_IMAGE";
+            fi
+        fi
       fi
-      
+
       if [[ -n "$BUILD_FROM_IMAGE" ]]; then
         EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --build-arg FROM_IMAGE=$BUILD_FROM_IMAGE";
         IMAGE_LABELS="$IMAGE_LABELS --label built-from-image=$BUILD_FROM_IMAGE"
@@ -226,8 +258,12 @@
       fi
 
       # Build the normal non-dev image with all the tags and labels.
+      # Always cache from the CI_IMAGE_PATH as even when we are doing a full image
+      # rebuild it will have been already fully rebuilt once by the first stage so it
+      # is safe to use as a cache.
       docker build \
         --cache-from $CI_IMAGE_PATH \
+        $CACHE_FROM_BUILD_ARGS \
         $EXTRA_BUILD_ARGS \
         $FORMATTEDTAGLIST \
         $IMAGE_LABELS \
@@ -235,16 +271,22 @@
         -f $DOCKERFILE_PATH .;
       docker push $TARGET_NON_DEV_IMAGE_PATH
 
-      # Build the cache image with layer caching enabled. We don't enable it for the image above to reduce its size.
-      docker build \
-        --cache-from $CI_IMAGE_PATH \
-        $EXTRA_BUILD_ARGS \
-        $IMAGE_LABELS \
-        --build-arg BUILDKIT_INLINE_CACHE=1 \
-        -t $NON_DEV_CACHE_IMAGE \
-        -f $DOCKERFILE_PATH .;
-      docker push $NON_DEV_CACHE_IMAGE
+      # Build the cache image with layer caching enabled. We don't enable it for the
+      # image above to reduce its size.
+      # We don't do this for master as master always caches from develop.
+      if [[ "$CI_COMMIT_BRANCH" != "$MASTER_BRANCH_NAME" ]]; then
+        docker build \
+          --cache-from $CI_IMAGE_PATH \
+          $CACHE_FROM_BUILD_ARGS \
+          $EXTRA_BUILD_ARGS \
+          $IMAGE_LABELS \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          -t $NON_DEV_CACHE_IMAGE \
+          -f $DOCKERFILE_PATH .;
+        docker push $NON_DEV_CACHE_IMAGE
+      fi
 
+      # Push a tested dev version of the image also.
       docker tag $CI_IMAGE_PATH $TARGET_DEV_IMAGE_PATH
       docker push $TARGET_DEV_IMAGE_PATH
 
@@ -365,7 +407,10 @@
           exit 1
       fi
 
-      if [[ "$ENABLE_JOB_SKIPPING" = "true" ]]; then
+      # If we are doing a full rebuild then force run all the linting and tests.
+      # Always do this on master as we are always doing a full image rebuild and hence
+      # always need to run the tests.
+      if [[ "$ENABLE_JOB_SKIPPING" = "true" && "$TRIGGER_FULL_IMAGE_REBUILD" != "yes" ]]; then
 
         exit_with_copied_artifacts_if_successful_job_for_commit(){
           COMMIT_HASH=$1

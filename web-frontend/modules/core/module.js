@@ -33,7 +33,6 @@ export default function CoreModule(options) {
   this.options.alias['@baserow'] = path.resolve(__dirname, '../../')
 
   // The core depends on these modules.
-  this.requireModule('@nuxtjs/axios')
   this.requireModule('cookie-universal-nuxt')
   this.requireModule([
     'nuxt-env',

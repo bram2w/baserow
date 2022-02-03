@@ -8,6 +8,7 @@ ENV GID=${GID:-9999}
 # Perform all OS package installation and cleanup in one single command to reduce the
 # size of the created layer.
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     build-essential \
     curl \
@@ -33,7 +34,7 @@ COPY --chown=$UID:$GID ./web-frontend/package.json ./web-frontend/yarn.lock /bas
 WORKDIR /baserow/web-frontend
 
 # We still need dev-dependencies as we will be running a nuxt build below
-RUN yarn install
+RUN yarn install && yarn cache clean
 
 COPY --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
 COPY --chown=$UID:$GID ./premium/web-frontend /baserow/premium/web-frontend/

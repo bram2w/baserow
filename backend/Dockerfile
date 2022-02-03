@@ -8,9 +8,10 @@ ENV GID=${GID:-9999}
 # We might be running as a user which already exists in this image. In that situation
 # Everything is OK and we should just continue on.
 RUN groupadd -g $GID baserow_docker_group || exit 0
-RUN useradd --shell /bin/bash -u $UID -g $GID -o -c "" -m baserow_docker_user || exit 0
+RUN useradd --shell /bin/bash -u $UID -g $GID -o -c "" -m baserow_docker_user -l || exit 0
 
-RUN apt-get update && \
+RUN apt-get update &&  \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     build-essential \
     curl \
@@ -33,13 +34,15 @@ COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
 # Install non-dev base dependencies into a virtual env.
 COPY --chown=$UID:$GID ./backend/requirements/base.txt /baserow/requirements/
 RUN python3 -m venv /baserow/venv
-RUN . /baserow/venv/bin/activate && pip3 install -r /baserow/requirements/base.txt
+# hadolint ignore=SC1091
+RUN . /baserow/venv/bin/activate && pip3 install --no-cache-dir --upgrade pip==22.0.3 && pip3 install --no-cache-dir -r /baserow/requirements/base.txt
 
 # Build a dev_deps stage which also has the dev dependencies for use by the dev layer.
 FROM base as dev_deps
 
 COPY ./backend/requirements/dev.txt /baserow/requirements/
-RUN . /baserow/venv/bin/activate && pip3 install -r /baserow/requirements/dev.txt
+# hadolint ignore=SC1091
+RUN . /baserow/venv/bin/activate && pip3 install --no-cache-dir -r /baserow/requirements/dev.txt
 
 # The core stage contains all of Baserows source code and sets up the entrypoint
 FROM base as core

@@ -29,6 +29,7 @@
 * Workaround bug in Django's schema editor sometimes causing incorrect transaction 
   rollbacks resulting in the connection to the database becoming unusable.
 * Rework Baserow docker images so they can be built and tested by gitlab CI.
+* Bumped some backend and web-frontend dependencies.
 
 ## Released (2022-01-13 1.8.2)
 
