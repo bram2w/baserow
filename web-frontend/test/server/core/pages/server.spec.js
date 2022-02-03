@@ -2,7 +2,7 @@ import axios from 'axios'
 import MockAdapter from 'axios-mock-adapter'
 import httpMocks from 'node-mocks-http'
 
-import createNuxt from '@/test/helpers/create-nuxt'
+import createNuxt from '@baserow/test/helpers/create-nuxt'
 
 let nuxt = null
 let mock = null
@@ -26,7 +26,7 @@ describe('index redirect', () => {
       },
     })
 
-    nuxt = await createNuxt(true, 3501)
+    nuxt = await createNuxt(true)
     done()
   })
 
@@ -48,7 +48,13 @@ describe('index redirect', () => {
     expect(redirected.status).toBe(302)
   })
 
-  afterAll(async () => {
-    await nuxt.close()
+  test('login page renders', async () => {
+    const { html } = await nuxt.server.renderRoute('/login')
+    expect(html).toContain('Login')
+  })
+
+  test('sign up page renders', async () => {
+    const { html } = await nuxt.server.renderRoute('/signup')
+    expect(html).toContain('Sign up')
   })
 })

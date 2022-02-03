@@ -9,12 +9,13 @@
   image: docker:20.10.12
   stage: build
   interruptible: true
-  # Prevent rebuilds when tagging as all we want to do is tag and push the already built image
+  # We can't use the newer rules: syntax due to https://gitlab.com/gitlab-org/gitlab/-/issues/34756
   except:
     refs:
+      # When a pipeline is triggered by an upstream project we don't want to rebuild.
       - pipelines
-    variables:
-      - $CI_COMMIT_TAG
+      # When a pipeline is triggered by a git commit tag we don't want to rebuild.
+      - tags
   services:
     - docker:20.10.12-dind
   variables:
@@ -124,12 +125,13 @@
   image: $CI_UTIL_IMAGE
   stage: build-final
   interruptible: true
-  # Prevent rebuilds when tagging as all we want to do is tag and push
+  # We can't use the newer rules: syntax due to https://gitlab.com/gitlab-org/gitlab/-/issues/34756
   except:
     refs:
+      # When a pipeline is triggered by an upstream project we don't want to rebuild.
       - pipelines
-    variables:
-      - $CI_COMMIT_TAG
+      # When a pipeline is triggered by a git commit tag we don't want to rebuild.
+      - tags
   services:
     - docker:20.10.12-dind
   variables:
@@ -252,12 +254,13 @@
   stage: test
   image: $CI_UTIL_IMAGE
   interruptible: true
-  # Prevent rebuilds when tagging as all we want to do is tag and push
+  # We can't use the newer rules: syntax due to https://gitlab.com/gitlab-org/gitlab/-/issues/34756
   except:
     refs:
+      # When a pipeline is triggered by an upstream project we don't want to retest.
       - pipelines
-    variables:
-      - $CI_COMMIT_TAG
+      # When a pipeline is triggered by a git commit tag we don't want to retest.
+      - tags
   services:
     - docker:20.10.12-dind
 
