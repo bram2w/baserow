@@ -4,7 +4,7 @@ let nuxt = null
 
 describe('children', () => {
   beforeAll(async (done) => {
-    nuxt = await createNuxt(true)
+    nuxt = await createNuxt(true, 3503)
     done()
   }, 120000)
 

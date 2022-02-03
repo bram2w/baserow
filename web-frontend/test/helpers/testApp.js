@@ -12,7 +12,7 @@ import flushPromises from 'flush-promises'
  * Uses the real baserow plugins to setup a Vuex store and baserow registry
  * correctly.
  */
-function _createBaserowStoreAndRegistry(app, vueContext) {
+function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
   const store = new vueContext.vuex.Store({})
 
   setupCore({ store, app }, (name, dep) => {
@@ -26,10 +26,14 @@ function _createBaserowStoreAndRegistry(app, vueContext) {
   store.$client = app.client
   store.app = app
   app.$store = store
-  setupDatabasePlugin({
+  const setupContext = {
     store,
     app,
-  })
+  }
+  setupDatabasePlugin(setupContext)
+  if (extraPluginSetupFunc) {
+    extraPluginSetupFunc(setupContext)
+  }
   return store
 }
 
@@ -59,7 +63,7 @@ function _createBaserowStoreAndRegistry(app, vueContext) {
  *
  */
 export class TestApp {
-  constructor() {
+  constructor(extraPluginSetupFunc = null) {
     this.mock = new MockAdapter(axios, { onNoMatch: 'throwException' })
     // In the future we can extend this stub realtime implementation to perform
     // useful testing of realtime interaction in the frontend!
@@ -88,7 +92,11 @@ export class TestApp {
       },
     }
     this._vueContext = bootstrapVueContext()
-    this.store = _createBaserowStoreAndRegistry(this._app, this._vueContext)
+    this.store = _createBaserowStoreAndRegistry(
+      this._app,
+      this._vueContext,
+      extraPluginSetupFunc
+    )
     this._initialCleanStoreState = _.cloneDeep(this.store.state)
     this.mockServer = new MockServer(this.mock, this.store)
     this.failTestOnErrorResponse = true
