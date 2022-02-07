@@ -81,13 +81,12 @@ class EqualViewFilterType(ViewFilterType):
             return Q()
 
         # Check if the model_field accepts the value.
+        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
-            pass
-
-        return Q()
+            return Q()
 
 
 class NotEqualViewFilterType(NotViewFilterTypeMixin, EqualViewFilterType):
@@ -194,7 +193,7 @@ class LengthIsLowerThanViewFilterType(ViewFilterType):
                 annotation={f"{field_name}_len": Length(field_name)},
                 q={f"{field_name}_len__lt": int(value)},
             )
-        except Exception:
+        except ValueError:
             pass
 
         return Q()
@@ -228,13 +227,12 @@ class HigherThanViewFilterType(ViewFilterType):
             value = floor(decimal)
 
         # Check if the model_field accepts the value.
+        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{f"{field_name}__gt": value})
         except Exception:
-            pass
-
-        return Q()
+            return Q()
 
 
 class LowerThanViewFilterType(ViewFilterType):
@@ -265,13 +263,12 @@ class LowerThanViewFilterType(ViewFilterType):
             value = ceil(decimal)
 
         # Check if the model_field accepts the value.
+        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{f"{field_name}__lt": value})
         except Exception:
-            pass
-
-        return Q()
+            return Q()
 
 
 class DateEqualViewFilterType(ViewFilterType):
@@ -602,13 +599,12 @@ class BooleanViewFilterType(ViewFilterType):
         ]
 
         # Check if the model_field accepts the value.
+        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
-            pass
-
-        return Q()
+            return Q()
 
 
 class ManyToManyHasBaseViewFilter(ViewFilterType):

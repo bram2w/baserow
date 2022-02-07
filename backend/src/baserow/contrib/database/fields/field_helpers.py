@@ -140,7 +140,9 @@ def construct_all_possible_field_kwargs(
     }
     # If you have added a new field please add an entry into the dict above with any
     # test worthy combinations of kwargs
-    assert set(field_type_registry.get_types()) == set(
+    # nosec ignore as this code is test/dev cli tool only, no matter if this assert
+    # does not get run in the cli tools.
+    assert set(field_type_registry.get_types()) == set(  # nosec
         all_interesting_field_kwargs.keys()
     ), "Please add the new field type to the testing dictionary of interesting kwargs"
     return all_interesting_field_kwargs

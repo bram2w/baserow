@@ -11,7 +11,9 @@ from rest_framework_jwt.settings import api_settings
 jwt_get_username_from_payload = api_settings.JWT_PAYLOAD_GET_USERNAME_HANDLER
 jwt_decode_token = api_settings.JWT_DECODE_HANDLER
 
-ANONYMOUS_USER_TOKEN = "anonymous"
+# Nosec disables spurious hardcoded password warning, this is not a password but instead
+# the value of the JWT token to be used when a user wants to connect anonymously.
+ANONYMOUS_USER_TOKEN = "anonymous"  # nosec
 
 
 @database_sync_to_async

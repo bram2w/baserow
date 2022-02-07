@@ -21,3 +21,4 @@ openapi-spec-validator==0.4.0
 pytest-html==3.1.1
 coverage==6.2
 pytest-split==0.6.0
+bandit==1.7.2

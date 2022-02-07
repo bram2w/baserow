@@ -6,7 +6,7 @@ install-dev-dependencies:
 	pip install -r requirements/dev.txt
 
 lint:
-	flake8 src tests ../premium/backend && black . ../premium/backend --extend-exclude='/generated/' --check || exit;
+	flake8 src tests ../premium/backend && black . ../premium/backend --extend-exclude='/generated/' --check && bandit -r --exclude src/baserow/test_utils src/ ../premium/backend/src/ || exit;
 
 lint-python: lint
 
