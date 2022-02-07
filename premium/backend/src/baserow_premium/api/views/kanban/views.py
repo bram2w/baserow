@@ -172,7 +172,7 @@ class KanbanViewView(APIView):
             model, RowSerializer, is_response=True
         )
         rows = get_rows_grouped_by_single_select_field(
-            table=view.table,
+            view=view,
             single_select_field=single_select_option_field,
             option_settings=included_select_options,
             default_limit=default_limit,

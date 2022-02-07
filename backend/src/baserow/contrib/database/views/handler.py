@@ -295,6 +295,40 @@ class ViewHandler:
             if not filter_type.field_is_compatible(field):
                 filter.delete()
 
+    def _get_filter_builder(
+        self, view: View, model: GeneratedTableModel
+    ) -> FilterBuilder:
+        """
+        Constructs a FilterBuilder object based on the provided view's filter.
+
+        :param view: The view where to fetch the fields from.
+        :param model: The generated model containing all fields.
+        :return: FilterBuilder object with the view's filter applied.
+        """
+
+        # The table model has to be dynamically generated
+        if not hasattr(model, "_field_objects"):
+            raise ValueError("A queryset of the table model is required.")
+
+        filter_builder = FilterBuilder(filter_type=view.filter_type)
+        for view_filter in view.viewfilter_set.all():
+            if view_filter.field_id not in model._field_objects:
+                raise ValueError(
+                    f"The table model does not contain field "
+                    f"{view_filter.field_id}."
+                )
+            field_object = model._field_objects[view_filter.field_id]
+            field_name = field_object["name"]
+            model_field = model._meta.get_field(field_name)
+            view_filter_type = view_filter_type_registry.get(view_filter.type)
+            filter_builder.filter(
+                view_filter_type.get_filter(
+                    field_name, view_filter.value, model_field, field_object["field"]
+                )
+            )
+
+        return filter_builder
+
     def apply_filters(self, view, queryset):
         """
         Applies the view's filter to the given queryset.
@@ -311,37 +345,10 @@ class ViewHandler:
 
         model = queryset.model
 
-        # If the model does not have the `_field_objects` property then it is not a
-        # generated table model which is not supported.
-        if not hasattr(model, "_field_objects"):
-            raise ValueError("A queryset of the table model is required.")
-
-        # If the filter are disabled we don't have to do anything with the queryset.
         if view.filters_disabled:
             return queryset
 
-        filter_builder = FilterBuilder(filter_type=view.filter_type)
-
-        for view_filter in view.viewfilter_set.all():
-            # If the to be filtered field is not present in the `_field_objects` we
-            # cannot filter so we raise a ValueError.
-            if view_filter.field_id not in model._field_objects:
-                raise ValueError(
-                    f"The table model does not contain field "
-                    f"{view_filter.field_id}."
-                )
-
-            field_object = model._field_objects[view_filter.field_id]
-            field_name = field_object["name"]
-            model_field = model._meta.get_field(field_name)
-            view_filter_type = view_filter_type_registry.get(view_filter.type)
-
-            filter_builder.filter(
-                view_filter_type.get_filter(
-                    field_name, view_filter.value, model_field, field_object["field"]
-                )
-            )
-
+        filter_builder = self._get_filter_builder(view, model)
         return filter_builder.apply_to_queryset(queryset)
 
     def get_filter(self, user, view_filter_id, base_queryset=None):

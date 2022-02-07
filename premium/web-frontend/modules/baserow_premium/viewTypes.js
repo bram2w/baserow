@@ -38,7 +38,7 @@ export class KanbanViewType extends PremiumViewType {
   }
 
   canFilter() {
-    return false
+    return true
   }
 
   canSort() {
@@ -119,6 +119,7 @@ export class KanbanViewType extends PremiumViewType {
   ) {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/kanban/createdNewRow', {
+        view: store.getters['view/getSelected'],
         fields,
         primary,
         values,
@@ -138,6 +139,7 @@ export class KanbanViewType extends PremiumViewType {
   ) {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/kanban/updatedExistingRow', {
+        view: store.getters['view/getSelected'],
         fields,
         primary,
         row,
@@ -149,7 +151,10 @@ export class KanbanViewType extends PremiumViewType {
   async rowDeleted({ store }, tableId, fields, primary, row, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/kanban/deletedExistingRow', {
+        view: store.getters['view/getSelected'],
         row,
+        fields,
+        primary,
       })
     }
   }

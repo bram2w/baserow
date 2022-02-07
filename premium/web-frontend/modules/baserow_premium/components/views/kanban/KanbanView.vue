@@ -228,6 +228,7 @@ export default {
         await this.$store.dispatch(
           this.storePrefix + 'view/kanban/createNewRow',
           {
+            view: this.view,
             table: this.table,
             fields: this.fields,
             primary: this.primary,

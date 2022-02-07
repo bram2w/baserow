@@ -3,7 +3,10 @@ import _ from 'lodash'
 import { clone } from '@baserow/modules/core/utils/object'
 import ViewService from '@baserow/modules/database/services/view'
 import KanbanService from '@baserow_premium/services/views/kanban'
-import { getRowSortFunction } from '@baserow/modules/database/utils/view'
+import {
+  getRowSortFunction,
+  matchSearchFilters,
+} from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
 import FieldService from '@baserow/modules/database/services/field'
 import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
@@ -312,7 +315,7 @@ export const actions = {
    */
   async createNewRow(
     { dispatch, commit, getters },
-    { table, fields, primary, values }
+    { view, table, fields, primary, values }
   ) {
     // First prepare an object that we can send to the
     const allFields = [primary].concat(fields)
@@ -337,7 +340,12 @@ export const actions = {
       table.id,
       preparedValues
     )
-    return await dispatch('createdNewRow', { values: data, fields, primary })
+    return await dispatch('createdNewRow', {
+      view,
+      values: data,
+      fields,
+      primary,
+    })
   },
   /**
    * Can be called when a new row has been created. This action will make sure that
@@ -350,9 +358,22 @@ export const actions = {
    *                In that case, the `_` data will be preserved. Can be useful when
    *                a row has been updated while being dragged.
    */
-  createdNewRow({ commit, getters }, { values, fields, primary }) {
+  async createdNewRow(
+    { dispatch, commit, getters, rootGetters },
+    { view, values, fields, primary }
+  ) {
     const row = clone(values)
     populateRow(row)
+
+    const matchesFilters = await dispatch('rowMatchesFilters', {
+      view,
+      row,
+      fields,
+      primary,
+    })
+    if (!matchesFilters) {
+      return
+    }
 
     const singleSelectFieldId = getters.getSingleSelectFieldId
     const option = row[`field_${singleSelectFieldId}`]
@@ -381,7 +402,23 @@ export const actions = {
    * Can be called when a row in the table has been deleted. This action will make
    * sure that the state is updated accordingly.
    */
-  deletedExistingRow({ commit, getters }, { row }) {
+  async deletedExistingRow(
+    { dispatch, commit, getters },
+    { view, row, fields, primary }
+  ) {
+    row = clone(row)
+    populateRow(row)
+
+    const matchesFilters = await dispatch('rowMatchesFilters', {
+      view,
+      row,
+      fields,
+      primary,
+    })
+    if (!matchesFilters) {
+      return
+    }
+
     const singleSelectFieldId = getters.getSingleSelectFieldId
     const option = row[`field_${singleSelectFieldId}`]
     const stackId = option !== null ? option.id : 'null'
@@ -401,30 +438,60 @@ export const actions = {
     return null
   },
   /**
+   * Check if the provided row matches the provided view filters.
+   */
+  rowMatchesFilters(context, { view, fields, primary, row, overrides = {} }) {
+    const values = JSON.parse(JSON.stringify(row))
+    Object.assign(values, overrides)
+
+    // The value is always valid if the filters are disabled.
+    return view.filters_disabled
+      ? true
+      : matchSearchFilters(
+          this.$registry,
+          view.filter_type,
+          view.filters,
+          primary === null ? fields : [primary, ...fields],
+          values
+        )
+  },
+  /**
    * Can be called when a row in the table has been updated. This action will make sure
    * that the state is updated accordingly. If the single select field value has
    * changed, the row will be moved to the right stack. If the position has changed,
    * it will be moved to the right position.
    */
-  updatedExistingRow(
+  async updatedExistingRow(
     { dispatch, getters, commit },
-    { row, values, fields, primary }
+    { view, row, values, fields, primary }
   ) {
     const singleSelectFieldId = getters.getSingleSelectFieldId
     const fieldName = `field_${singleSelectFieldId}`
 
     // First, we virtually need to figure out if the row was in the old stack.
     const oldRow = populateRow(clone(row))
+    const oldRowMatchesFilters = await dispatch('rowMatchesFilters', {
+      view,
+      row: oldRow,
+      fields,
+      primary,
+    })
     const oldOption = oldRow[fieldName]
     const oldStackId = oldOption !== null ? oldOption.id : 'null'
     const oldStackResults = clone(getters.getStack(oldStackId).results)
     const oldExistingIndex = oldStackResults.findIndex(
       (r) => r.id === oldRow.id
     )
-    const oldExists = oldExistingIndex > -1
+    const oldExists = oldExistingIndex > -1 && oldRowMatchesFilters
 
     // Second, we need to figure out if the row should be visible in the new stack.
     const newRow = Object.assign(populateRow(clone(row)), values)
+    const newRowMatchesFilters = await dispatch('rowMatchesFilters', {
+      view,
+      row: newRow,
+      fields,
+      primary,
+    })
     const newOption = newRow[fieldName]
     const newStackId = newOption !== null ? newOption.id : 'null'
     const newStack = getters.getStack(newStackId)
@@ -444,7 +511,9 @@ export const actions = {
     )
     const newIndex = newStackResults.findIndex((r) => r.id === newRow.id)
     const newIsLast = newIndex === newStackResults.length - 1
-    const newExists = !newIsLast || newStackResults.length === newStackCount
+    const newExists =
+      (!newIsLast || newStackResults.length === newStackCount) &&
+      newRowMatchesFilters
 
     commit('UPDATE_ROW', { row, values })
 
@@ -455,18 +524,19 @@ export const actions = {
         targetStackId: newStackId,
         targetIndex: newIndex,
       })
+      commit('DECREASE_COUNT', { stackId: oldStackId })
+      commit('INCREASE_COUNT', { stackId: newStackId })
     } else if (oldExists && !newExists) {
       commit('DELETE_ROW', { stackId: oldStackId, index: oldExistingIndex })
+      commit('DECREASE_COUNT', { stackId: oldStackId })
     } else if (!oldExists && newExists) {
       commit('CREATE_ROW', {
         row: newRow,
         stackId: newStackId,
         index: newIndex,
       })
+      commit('INCREASE_COUNT', { stackId: newStackId })
     }
-
-    commit('DECREASE_COUNT', { stackId: oldStackId })
-    commit('INCREASE_COUNT', { stackId: newStackId })
   },
   /**
    * The dragging of rows to other stacks and position basically consists of three+
@@ -669,7 +739,7 @@ export const actions = {
    */
   async updateRowValue(
     { commit, dispatch },
-    { table, row, field, fields, primary, value, oldValue }
+    { view, table, row, field, fields, primary, value, oldValue }
   ) {
     const fieldType = this.$registry.get('field', field._.type.type)
     const allFields = [primary].concat(fields)
@@ -704,9 +774,10 @@ export const actions = {
     })
 
     await dispatch('updatedExistingRow', {
+      view,
       row,
       values: newValues,
-      field,
+      fields,
       primary,
     })
 
@@ -718,7 +789,13 @@ export const actions = {
       )
       commit('UPDATE_ROW', { row, values: data })
     } catch (error) {
-      dispatch('updatedExistingRow', { row, values: oldValues, field, primary })
+      dispatch('updatedExistingRow', {
+        view,
+        row,
+        values: oldValues,
+        fields,
+        primary,
+      })
       throw error
     }
   },

@@ -9,6 +9,7 @@ from rest_framework.status import (
 )
 
 from baserow_premium.views.models import KanbanView
+from baserow.contrib.database.views.handler import ViewHandler
 
 
 @pytest.mark.django_db
@@ -359,6 +360,261 @@ def test_list_all_rows_with_limit_and_offset(api_client, premium_data_fixture):
     assert len(response_json["rows"][str(option_a.id)]["results"]) == 2
     assert response_json["rows"][str(option_a.id)]["results"][0]["id"] == row_a1.id
     assert response_json["rows"][str(option_a.id)]["results"][1]["id"] == row_a2.id
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_kanban_filter(api_client, data_fixture, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, name="FilterNumberField"
+    )
+    kanban = premium_data_fixture.create_kanban_view(
+        table=table, single_select_field=single_select_field
+    )
+    threshold = 20
+    lower_than_threshold = threshold - 1
+    higher_than_threshold = threshold + 1
+    ViewHandler().create_filter(
+        user=user,
+        view=kanban,
+        type_name="lower_than",
+        value=threshold,
+        field=number_field,
+    )
+    model = table.get_model()
+    row_null_lower = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": None,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_null_lower2 = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": None,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_null_higher = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": None,
+            f"field_{number_field.id}": higher_than_threshold,
+        }
+    )
+    row_a_lower = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_a.id,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_a_lower2 = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_a.id,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_a_higher = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_a.id,
+            f"field_{number_field.id}": higher_than_threshold,
+        }
+    )
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
+    response = api_client.get(f"{url}", **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]) == 2
+    assert response_json["rows"]["null"]["count"] == 2
+    assert len(response_json["rows"]["null"]["results"]) == 2
+    assert response_json["rows"]["null"]["results"][0]["id"] == row_null_lower.id
+    assert response_json["rows"][str(option_a.id)]["count"] == 2
+    assert len(response_json["rows"][str(option_a.id)]["results"]) == 2
+    assert response_json["rows"][str(option_a.id)]["results"][0]["id"] == row_a_lower.id
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_kanban_filter_limit_offset(api_client, data_fixture, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, name="FilterNumberField"
+    )
+    kanban = premium_data_fixture.create_kanban_view(
+        table=table, single_select_field=single_select_field
+    )
+    threshold = 20
+    lower_than_threshold = threshold - 1
+    higher_than_threshold = threshold + 1
+    ViewHandler().create_filter(
+        user=user,
+        view=kanban,
+        type_name="lower_than",
+        value=threshold,
+        field=number_field,
+    )
+    model = table.get_model()
+    row_null_lower = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": None,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_null_lower2 = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": None,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_null_higher = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": None,
+            f"field_{number_field.id}": higher_than_threshold,
+        }
+    )
+    row_a_lower = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_a.id,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_a_lower2 = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_a.id,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_a_higher = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_a.id,
+            f"field_{number_field.id}": higher_than_threshold,
+        }
+    )
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
+    response = api_client.get(
+        f"{url}?filter=1&offset=1", **{"HTTP_AUTHORIZATION": f"JWT {token}"}
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]) == 2
+    assert response_json["rows"]["null"]["count"] == 2
+    assert len(response_json["rows"]["null"]["results"]) == 1
+    assert response_json["rows"]["null"]["results"][0]["id"] == row_null_lower2.id
+    assert response_json["rows"][str(option_a.id)]["count"] == 2
+    assert len(response_json["rows"][str(option_a.id)]["results"]) == 1
+    assert (
+        response_json["rows"][str(option_a.id)]["results"][0]["id"] == row_a_lower2.id
+    )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_kanban_filter_specific_options_limit_offset(
+    api_client, data_fixture, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+    single_select_field = premium_data_fixture.create_single_select_field(table=table)
+    option_a = premium_data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    option_b = premium_data_fixture.create_select_option(
+        field=single_select_field, value="B", color="green"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, name="FilterNumberField"
+    )
+    kanban = premium_data_fixture.create_kanban_view(
+        table=table, single_select_field=single_select_field
+    )
+    threshold = 20
+    lower_than_threshold = threshold - 1
+    higher_than_threshold = threshold + 1
+    ViewHandler().create_filter(
+        user=user,
+        view=kanban,
+        type_name="lower_than",
+        value=threshold,
+        field=number_field,
+    )
+    model = table.get_model()
+    row_null_lower = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": None,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_null_lower2 = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": None,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_null_higher = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": None,
+            f"field_{number_field.id}": higher_than_threshold,
+        }
+    )
+    row_a_lower = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_a.id,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_a_lower2 = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_a.id,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+    row_a_higher = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_a.id,
+            f"field_{number_field.id}": higher_than_threshold,
+        }
+    )
+    row_b_lower = model.objects.create(
+        **{
+            f"field_{single_select_field.id}_id": option_b.id,
+            f"field_{number_field.id}": lower_than_threshold,
+        }
+    )
+
+    url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
+    response = api_client.get(
+        f"{url}?select_option=null,1,1&select_option={option_a.id},2,0",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["rows"]) == 2
+    assert response_json["rows"]["null"]["count"] == 2
+    assert len(response_json["rows"]["null"]["results"]) == 1
+    assert response_json["rows"]["null"]["results"][0]["id"] == row_null_lower2.id
+    assert response_json["rows"][str(option_a.id)]["count"] == 2
+    assert len(response_json["rows"][str(option_a.id)]["results"]) == 2
+    assert response_json["rows"][str(option_a.id)]["results"][0]["id"] == row_a_lower.id
 
 
 @pytest.mark.django_db
