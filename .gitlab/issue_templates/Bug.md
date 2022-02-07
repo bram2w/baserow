@@ -20,4 +20,4 @@
 - **Deployment Type:** baserow.io / docker / cloudron / ubuntu with supervisor / heroku / other <!-- Delete / add as appropriate !-->
 - **Baserow Version:** Develop / 1.8 / 1.7 / 1.6 etc <!-- Delete / add as appropriate !-->
 
-/label ~"issue::needs feedback" ~issue::bug 
+/label ~"needs feedback ⚠️" ~"bug 🪲" 

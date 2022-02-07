@@ -8,5 +8,5 @@ idea then feel free to use this template to make a Feature Request issue. !-->
 ## Examples
 <!-- Are there any examples of this which exist in other software? !-->
 
-/label ~"issue::needs feedback" ~"issue::feature request"
+/label ~"needs feedback ⚠️" ~"feature request 💡" 
 
