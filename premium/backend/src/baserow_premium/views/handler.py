@@ -1,15 +1,17 @@
 from typing import Dict, Union
 
 from collections import defaultdict
+from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.handler import ViewHandler
 
 from django.db.models import Q, Count
 
-from baserow.contrib.database.table.models import Table, GeneratedTableModel
+from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.fields.models import SingleSelectField
 
 
 def get_rows_grouped_by_single_select_field(
-    table: Table,
+    view: View,
     single_select_field: SingleSelectField,
     option_settings: Dict[str, Dict[str, int]] = None,
     default_limit: int = 40,
@@ -33,7 +35,7 @@ def get_rows_grouped_by_single_select_field(
         }
     )
 
-    :param table: The table where to fetch the rows from.
+    :param view: The view where to fetch the fields from.
     :param single_select_field: The single select field where the rows must be
         grouped by.
     :param option_settings: Optionally, additional `limit` and `offset`
@@ -47,6 +49,8 @@ def get_rows_grouped_by_single_select_field(
     :return: The fetched rows including the total count.
     """
 
+    table = view.table
+
     if option_settings is None:
         option_settings = {}
 
@@ -54,6 +58,7 @@ def get_rows_grouped_by_single_select_field(
         model = table.get_model()
 
     base_queryset = model.objects.all().enhance_by_fields().order_by("order", "id")
+    base_option_queryset = ViewHandler().apply_filters(view, base_queryset)
     all_filters = Q()
     count_aggregates = {}
     all_options = list(single_select_field.select_options.all())
@@ -90,9 +95,9 @@ def get_rows_grouped_by_single_select_field(
         # We don't want to execute a single query for each select option,
         # so we create a subquery that finds the ids of the rows related to the
         # option group. After the single query has been executed we can group the rows.
-        sub_queryset = base_queryset.filter(filters).values_list("id", flat=True)[
-            offset : offset + limit
-        ]
+        sub_queryset = base_option_queryset.filter(filters).values_list(
+            "id", flat=True
+        )[offset : offset + limit]
         all_filters |= Q(id__in=sub_queryset)
 
         # Same goes for fetching the total count. We will construct a single query,
@@ -103,7 +108,8 @@ def get_rows_grouped_by_single_select_field(
         )
 
     queryset = list(base_queryset.filter(all_filters))
-    counts = model.objects.aggregate(**count_aggregates)
+    counts = base_option_queryset.aggregate(**count_aggregates)
+
     rows = defaultdict(lambda: {"count": 0, "results": []})
 
     for row in queryset:
