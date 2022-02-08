@@ -94,9 +94,6 @@ are accepted.
   download files via XHR query to bypass `Content-Disposition: inline` that
   can't be overridden in another way. If your files are stored under another
   origin, you also must add CORS headers to your server.
-* `MJML_SERVER_HOST` (default `mjml`): The hostname of the MJML TCP server. In the
-  development environment we use the `liminspace/mjml-tcpserver:0.10` image.
-* `MJML_SERVER_PORT` (default `28101`): The port of the MJML TCP server.
 * `PUBLIC_BACKEND_URL` (default `http://localhost:8000`): The publicly accessible URL of
   the backend. For the development environment this is `http://localhost:8000`, but if
   you change the port to 9000 it will be `http://localhost:9000`. You should be able to

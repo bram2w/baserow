@@ -88,10 +88,36 @@ services:
       # directly into the image instead of whatever is on your local filesystem.
       - /baserow/web-frontend/node_modules
       - ./premium/web-frontend/:/baserow/premium/web-frontend
-
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
+
+  mjml-email-compiler:
+    build:
+      target: dev
+      args:
+        # We allow configuring the UID/GID here so you can run as the dev's actual user
+        # reducing the chance the containers screw up the bind mounted folders.
+        UID: $UID
+        GID: $GID
+      context: .
+      dockerfile: ./web-frontend/Dockerfile
+    image: baserow_web-frontend:latest
+    command: "bash -c 'cd /baserow/backend/email_compiler/ && yarn install && yarn run watch'"
+    volumes:
+      - ./backend:/baserow/backend
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'  # disable saving logs
+    ports:
+      - "8025:8025" # web ui
+    networks:
+      local:
 
   media-volume-fixer:
     command: chown ${UID:-1000}:${GID:-1000} -R /baserow/media

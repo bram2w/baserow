@@ -87,7 +87,6 @@ $ # Run ./dev.sh for more details on what it can do!
 Building backend
 ...
 Starting db    ... done
-Starting mjml    ... done
 Starting redis    ... done
 Starting backend    ... done
 Starting web-frontend   ... done

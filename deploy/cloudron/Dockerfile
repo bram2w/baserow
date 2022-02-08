@@ -23,8 +23,6 @@ RUN virtualenv -p python3 env
 RUN env/bin/pip install --no-cache -r baserow/backend/requirements/base.txt
 RUN (cd baserow/web-frontend && yarn install && yarn build)
 
-RUN npm install -g mjml
-
 RUN (mkdir -p /app/code/cloudron/cloudron && \
      mkdir /app/data && \
     touch /app/code/cloudron/cloudron/__init__.py)

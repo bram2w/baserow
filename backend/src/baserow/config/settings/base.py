@@ -26,7 +26,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "channels",
-    "mjml",
     "drf_spectacular",
     "djcelery_email",
     "baserow.core",
@@ -309,11 +308,6 @@ if os.getenv("AWS_S3_ENDPOINT_URL", "") != "":
 
 if os.getenv("AWS_S3_CUSTOM_DOMAIN", "") != "":
     AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
-
-MJML_BACKEND_MODE = "tcpserver"
-MJML_TCPSERVERS = [
-    (os.getenv("MJML_SERVER_HOST", "mjml"), int(os.getenv("MJML_SERVER_PORT", 28101))),
-]
 
 PUBLIC_BACKEND_URL = os.getenv("PUBLIC_BACKEND_URL", "http://localhost:8000")
 PUBLIC_WEB_FRONTEND_URL = os.getenv("PUBLIC_WEB_FRONTEND_URL", "http://localhost:3000")

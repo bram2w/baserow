@@ -19,13 +19,6 @@ services:
     networks:
       local:
 
-  mjml:
-    image: liminspace/mjml-tcpserver:0.10
-    # mjml is based off the node image which creates a non root node user we can run as
-    user: "1000:1000"
-    networks:
-      local:
-
   backend:
     build:
       dockerfile: ./backend/Dockerfile
@@ -54,7 +47,6 @@ services:
     depends_on:
       - db
       - redis
-      - mjml
       - media-volume-fixer
     volumes:
       - media:/baserow/media

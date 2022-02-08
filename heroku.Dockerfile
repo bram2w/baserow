@@ -18,8 +18,6 @@ RUN apt-get update && \
     nodejs \
     && rm -rf /var/cache/apt /var/lib/apt/lists
 
-RUN npm install --global yarn mjml
-
 RUN mkdir -p /baserow
 WORKDIR /baserow
 

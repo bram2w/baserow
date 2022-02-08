@@ -80,7 +80,6 @@ $ docker-compose up
 Building backend
 ...
 Starting db             ... done
-Starting mjml           ... done
 Starting backend        ... done
 Starting celery         ... done
 Starting web-frontend   ... done

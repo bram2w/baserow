@@ -54,7 +54,7 @@ new_tab() {
 launch_tab_and_attach(){
   tab_name=$1
   service_name=$2
-  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose ps -q "$service_name")" | cut -c2-)
+  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose -f docker-compose.yml -f docker-compose.dev.yml ps -q "$service_name")" | cut -c2-)
   command="docker logs $container_name && docker attach $container_name"
   new_tab "$tab_name" "$command"
 }
@@ -63,7 +63,7 @@ launch_tab_and_exec(){
   tab_name=$1
   service_name=$2
   exec_command=$3
-  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose ps -q "$service_name")" | cut -c2-)
+  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose -f docker-compose.yml -f docker-compose.dev.yml ps -q "$service_name")" | cut -c2-)
   command="docker exec -it $container_name $exec_command"
   new_tab "$tab_name" "$command"
 }
@@ -85,6 +85,7 @@ dont_migrate    : Disable automatic database migration on baserow startup.
 dont_sync       : Disable automatic template sync on baserow startup.
 dont_attach     : Don't attach to the running dev containers after starting them.
 ignore_ownership: Don't exit if there are files in the repo owned by a different user.
+attach_all      : Attach to all launched containers.
 help            : Show this message.
 """
 }
@@ -99,6 +100,7 @@ migrate=true
 sync_templates=true
 exit_if_other_owners_found=true
 delete_db_volume=false
+attach_all=false
 while true; do
 case "${1:-noneleft}" in
     dont_migrate)
@@ -159,6 +161,10 @@ case "${1:-noneleft}" in
         echo "./dev.sh: Continuing if files in repo are not owned by $USER."
         shift
         exit_if_other_owners_found=false
+    ;;
+    attach_all)
+        shift
+        attach_all=true
     ;;
     help)
         show_help
@@ -236,6 +242,7 @@ fi
 export COMPOSE_DOCKER_CLI_BUILD=1
 export DOCKER_BUILDKIT=1
 
+
 echo "./dev.sh running docker-compose commands:
 ------------------------------------------------
 "
@@ -279,4 +286,10 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
   launch_tab_and_exec "backend lint" \
           "backend" \
           "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint-shell"
+
+  if [ "$attach_all" = true ] ; then
+    launch_tab_and_attach "mjml compiler" "mjml-email-compiler"
+    launch_tab_and_attach "db" "db"
+    launch_tab_and_attach "redis" "redis"
+  fi
 fi

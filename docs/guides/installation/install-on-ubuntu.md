@@ -221,23 +221,6 @@ $ baserow sync_templates
 $ deactivate
 ```
 
-## Install MJML used to generate email bodies
-
-Baserow sends invite and password reset emails to users. To do this it uses a technology 
-called MJML which generates the email bodies from a template. For email sending to work 
-in Baserow you will need to install and set up an MJML server by following the steps 
-below:
-
-```bash
-$ mkdir mjml_install
-$ cd mjml_install
-$ npm init -y && npm install mjml
-$ cd /baserow
-```
-
-You will then later on need to set the environment variables discussed in the
-Email SMTP configuration section to get Baserow sending emails.
-
 ## Install & Configure Supervisor
 
 Supervisor is an application that starts and keeps track of processes and will restart
