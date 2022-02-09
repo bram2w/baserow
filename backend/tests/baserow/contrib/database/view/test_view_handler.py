@@ -644,7 +644,7 @@ def test_apply_filters(data_fixture):
         view=grid_view, field=text_field, type="equal", value="Value 1"
     )
 
-    # Should raise a value error if the modal doesn't have the _field_objects property.
+    # Should raise a value error if the model doesn't have the _field_objects property.
     with pytest.raises(ValueError):
         view_handler.apply_filters(grid_view, GridView.objects.all())
 

@@ -51,6 +51,11 @@ ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED = (
     HTTP_400_BAD_REQUEST,
     "The field does not support view sorting.",
 )
+ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST = (
+    "ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST",
+    HTTP_400_BAD_REQUEST,
+    "The specified aggregation type does not exist.",
+)
 ERROR_UNRELATED_FIELD = (
     "ERROR_UNRELATED_FIELD",
     HTTP_400_BAD_REQUEST,

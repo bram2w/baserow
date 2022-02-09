@@ -53,7 +53,11 @@ class DatabaseConfig(AppConfig):
     def ready(self):
         self.prevent_generated_model_for_registering()
 
-        from .views.registries import view_type_registry, view_filter_type_registry
+        from .views.registries import (
+            view_type_registry,
+            view_filter_type_registry,
+            view_aggregation_type_registry,
+        )
         from .fields.registries import field_type_registry, field_converter_registry
         from .export.registries import table_exporter_registry
         from .formula.registries import (
@@ -186,6 +190,14 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(NotEmptyViewFilterType())
         view_filter_type_registry.register(MultipleSelectHasViewFilterType())
         view_filter_type_registry.register(MultipleSelectHasNotViewFilterType())
+
+        from .views.view_aggregations import (
+            EmptyCountViewAggregationType,
+            NotEmptyCountViewAggregationType,
+        )
+
+        view_aggregation_type_registry.register(EmptyCountViewAggregationType())
+        view_aggregation_type_registry.register(NotEmptyCountViewAggregationType())
 
         from .application_types import DatabaseApplicationType
 

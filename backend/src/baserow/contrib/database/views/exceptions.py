@@ -47,6 +47,18 @@ class ViewFilterNotSupported(Exception):
     """Raised when the view type does not support filters."""
 
 
+class FieldAggregationNotSupported(Exception):
+    """Raised when the view type does not support field aggregation."""
+
+
+class AggregationTypeDoesNotExist(Exception):
+    """Raised when trying to get an aggregation type that does not exist."""
+
+
+class AggregationTypeAlreadyRegistered(Exception):
+    """Raised when trying to register an aggregation type that exists already."""
+
+
 class ViewFilterTypeNotAllowedForField(Exception):
     """Raised when the view filter type is compatible with the field type."""
 

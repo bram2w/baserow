@@ -1,9 +1,10 @@
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Any, List, Optional, Iterable
+from typing import Dict, Any, List, Optional, Iterable, Tuple
 
 from django.core.exceptions import FieldDoesNotExist, ValidationError
-from django.db.models import F
+from django.db import models as django_models
+from django.db.models import F, Count
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
@@ -30,10 +31,15 @@ from .exceptions import (
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
+    FieldAggregationNotSupported,
     CannotShareViewTypeError,
 )
 from .models import View, ViewFilter, ViewSort
-from .registries import view_type_registry, view_filter_type_registry
+from .registries import (
+    view_type_registry,
+    view_filter_type_registry,
+    view_aggregation_type_registry,
+)
 from .signals import (
     view_created,
     view_updated,
@@ -816,6 +822,79 @@ class ViewHandler:
             queryset = self.apply_sorting(view, queryset, only_sort_by_field_ids)
         if search is not None:
             queryset = queryset.search_all_fields(search, only_search_by_field_ids)
+        return queryset
+
+    def get_field_aggregations(
+        self,
+        view: View,
+        aggregations: Iterable[Tuple[django_models.Field, str]],
+        model: Table = None,
+        with_total: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Returns a dict of aggregation for given (field, aggregation_type) couple.
+        Each dict key is the name of the field suffixed with two `_` then the
+        aggregation type. ex: "field_42__empty_count" for the empty count
+        aggregation of field with id 42.
+
+        :param view: The view to get the field aggregation for.
+        :param aggregations: A list of (field_instance, aggregation_type).
+        :param model: The model for this view table to generate the aggregation
+            query from, if not specified then the model will be generated
+            automatically.
+        :param with_total: Whether the total row count should be returned in the
+             result.
+        :raises FieldAggregationNotSupported: When the view type doesn't support
+            field aggregation.
+        :raises FieldNotInTable: When the field does not belong to the specified
+            view.
+        :returns: A dict of aggregation value
+        """
+
+        if model is None:
+            model = view.table.get_model()
+
+        queryset = model.objects.all().enhance_by_fields()
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+
+        # Check if view supports field aggregation
+        if not view_type.can_aggregate_field:
+            raise FieldAggregationNotSupported(
+                f"Field aggregation is not supported for {view_type.type} views."
+            )
+
+        # Apply filters to have accurate aggregation
+        if view_type.can_filter:
+            queryset = self.apply_filters(view, queryset)
+
+        aggregation_dict = {}
+        for (field_instance, aggregation_type_name) in aggregations:
+
+            # Check whether the field belongs to the table.
+            if field_instance.table_id != view.table_id:
+                raise FieldNotInTable(
+                    f"The field {field_instance.pk} does not belong to table "
+                    f"{view.table.id}."
+                )
+
+            # Prepare data for .get_aggregation call
+            field = model._field_objects[field_instance.id]["field"]
+            field_name = field_instance.db_column
+            model_field = model._meta.get_field(field_name)
+            aggregation_type = view_aggregation_type_registry.get(aggregation_type_name)
+
+            # Add the aggregation for the field
+            aggregation_dict[
+                f"{field_name}__{aggregation_type_name}"
+            ] = aggregation_type.get_aggregation(field_name, model_field, field)
+
+        if with_total:
+            # Add total to allow further calculation on the client
+            aggregation_dict["total"] = Count("id")
+
+        queryset = queryset.aggregate(**aggregation_dict)
+
         return queryset
 
     def rotate_view_slug(self, user, view):
