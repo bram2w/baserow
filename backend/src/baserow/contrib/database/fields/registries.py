@@ -1,6 +1,13 @@
 from typing import Any, List
 
-from django.db.models import Q
+from django.contrib.postgres.fields import JSONField, ArrayField
+from django.db import models as django_models
+from django.db.models import (
+    Q,
+    BooleanField,
+    DurationField,
+)
+from django.db.models.fields.related import ManyToManyField, ForeignKey
 
 from baserow.core.registry import (
     Instance,
@@ -111,6 +118,50 @@ class FieldType(
         """
 
         return queryset
+
+    def empty_query(
+        self,
+        field_name: str,
+        model_field: django_models.Field,
+        field: Field,
+    ):
+        """
+        Returns a Q filter which performs an empty filter over the
+        provided field for this specific type of field.
+
+        :param field_name: The name of the field.
+        :type field_name: str
+        :param model_field: The field's actual django field model instance.
+        :type model_field: django_models.Field
+        :param field: The related field's instance.
+        :type field: Field
+        :return: A Q filter.
+        :rtype: Q
+        """
+
+        fs = [ManyToManyField, ForeignKey, DurationField, ArrayField]
+        # If the model_field is a ManyToMany field we only have to check if it is None.
+        if any(isinstance(model_field, f) for f in fs):
+            return Q(**{f"{field_name}": None})
+
+        if isinstance(model_field, BooleanField):
+            return Q(**{f"{field_name}": False})
+
+        q = Q(**{f"{field_name}__isnull": True})
+        q = q | Q(**{f"{field_name}": None})
+
+        if isinstance(model_field, JSONField):
+            q = q | Q(**{f"{field_name}": []}) | Q(**{f"{field_name}": {}})
+
+        # If the model field accepts an empty string as value we are going to add
+        # that to the or statement.
+        try:
+            model_field.get_prep_value("")
+            q = q | Q(**{f"{field_name}": ""})
+        except Exception:
+            pass
+
+        return q
 
     def contains_query(self, field_name, value, model_field, field):
         """

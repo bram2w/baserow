@@ -37,6 +37,7 @@ class GridViewType(ViewType):
     model_class = GridView
     field_options_model_class = GridViewFieldOptions
     field_options_serializer_class = GridViewFieldOptionsSerializer
+    can_aggregate_field = True
     can_share = True
     when_shared_publicly_requires_realtime_events = True
 
