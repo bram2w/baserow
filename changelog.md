@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Fixed adding new fields in the edit row popup that require refresh in Kanban and Form views.
 * Cache model fields when generating model.
 * Fixed `'<' not supported between instances of 'NoneType' and 'int'` error. Blank 
   string for a decimal value is now converted to `None` when using the REST API.

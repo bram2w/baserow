@@ -84,6 +84,7 @@
       @update="updateValue"
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
+      @refresh="$emit('refresh', $event)"
     ></RowEditModal>
   </div>
 </template>
