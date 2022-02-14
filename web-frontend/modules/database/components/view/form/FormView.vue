@@ -8,6 +8,7 @@
       :read-only="readOnly"
       :store-prefix="storePrefix"
       @ordered-fields="orderFields"
+      @refresh="$emit('refresh', $event)"
     ></FormViewSidebar>
     <FormViewPreview
       :table="table"
