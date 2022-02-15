@@ -196,7 +196,7 @@ export default {
             // We need at least a single entry otherwise the user has probably chosen
             // a wrong file.
             this.values.data = ''
-            this.error = this.$i18n.$t('tableCSVImporter.emptyCSV')
+            this.error = this.$t('tableCSVImporter.emptyCSV')
             this.preview = {}
           } else {
             // If parsed successfully and it is not empty then the initial data can be

@@ -10,6 +10,7 @@
 * Fix restoring table linking to trashed tables creating invalid link field. 
 * Fixed not being able to create or convert a single select field with edge case name.
 * Add Kanban view filters.
+* Fix missing translation when importing empty CSV
 
 ## Released (2022-01-13 1.8.2)
 
