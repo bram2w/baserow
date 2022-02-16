@@ -8,6 +8,9 @@ from .registry import (
     APIUrlsInstanceMixin,
     ImportExportMixin,
 )
+from .export_serialized import CoreExportSerializedStructure
+from baserow.core.utils import ChildProgressBuilder
+from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 
 
 class Plugin(APIUrlsInstanceMixin, Instance):
@@ -184,15 +187,21 @@ class ApplicationType(
         :rtype: dict
         """
 
-        return {
-            "id": application.id,
-            "name": application.name,
-            "order": application.order,
-            "type": self.type,
-        }
+        return CoreExportSerializedStructure.application(
+            id=application.id,
+            name=application.name,
+            order=application.order,
+            type=self.type,
+        )
 
     def import_serialized(
-        self, group, serialized_values, id_mapping, files_zip, storage
+        self,
+        group,
+        serialized_values,
+        id_mapping,
+        files_zip,
+        storage,
+        progress_builder=None,
     ):
         """
         Imports the exported serialized application by the `export_serialized` as a new
@@ -211,6 +220,9 @@ class ApplicationType(
         :type files_zip: ZipFile
         :param storage: The storage where the files can be copied to.
         :type storage: Storage or None
+        :param progress_builder: If provided will be used to build a child progress bar
+            and report on this methods progress to the parent of the progress_builder.
+        :type: Optional[ChildProgressBuilder]
         :return: The newly created application.
         :rtype: Application
         """
@@ -223,6 +235,9 @@ class ApplicationType(
         serialized_copy.pop("type")
         application = self.model_class.objects.create(group=group, **serialized_copy)
         id_mapping["applications"][application_id] = application.id
+
+        progress = ChildProgressBuilder.build(progress_builder, child_total=1)
+        progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         return application
 

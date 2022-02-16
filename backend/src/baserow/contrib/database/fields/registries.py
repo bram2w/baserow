@@ -1124,8 +1124,6 @@ class FieldType(
         tables models which would be affected by this tables cache being invalidated.
         """
 
-        pass
-
 
 class FieldTypeRegistry(
     APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry

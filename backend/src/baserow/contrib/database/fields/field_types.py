@@ -22,6 +22,7 @@ from django.utils.timezone import make_aware
 from pytz import timezone
 from rest_framework import serializers
 
+from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
     ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
@@ -778,6 +779,7 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
     }
     source_field_name = None
     model_field_kwargs = {}
+    populate_from_field = None
 
     def prepare_value_for_db(self, instance, value):
         """
@@ -898,9 +900,16 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
         self, row, field_name, value, id_mapping, files_zip, storage
     ):
         """
-        We don't want to do anything here because we don't have the right value yet
-        and it will automatically be set when the row is saved.
+        The `auto_now_add` and `auto_now` properties are set to False during the
+        import. This allows us the set the correct from the import.
         """
+
+        if value is None:
+            value = getattr(row, self.source_field_name)
+        else:
+            value = datetime.fromisoformat(value)
+
+        setattr(row, field_name, value)
 
     def random_value(self, instance, fake, cache):
         return getattr(instance, self.source_field_name)
@@ -1633,11 +1642,11 @@ class FileFieldType(FieldType):
                 cache[cache_entry] = user_file
 
             file_names.append(
-                {
-                    "name": file["name"],
-                    "visible_name": file["visible_name"],
-                    "original_name": cache[cache_entry].original_name,
-                }
+                DatabaseExportSerializedStructure.file_field_value(
+                    name=file["name"],
+                    visible_name=file["visible_name"],
+                    original_name=cache[cache_entry].original_name,
+                )
             )
         return file_names
 
