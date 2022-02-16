@@ -13,6 +13,7 @@ from django.db.models import Q, Count
 from django.core.files.storage import default_storage
 from django.utils import translation
 
+from baserow.core.utils import ChildProgressBuilder
 from baserow.core.user.utils import normalize_email_address
 
 from .models import (
@@ -786,7 +787,12 @@ class CoreHandler:
         return exported_applications
 
     def import_applications_to_group(
-        self, group, exported_applications, files_buffer, storage=None
+        self,
+        group,
+        exported_applications,
+        files_buffer,
+        storage=None,
+        progress_builder=None,
     ):
         """
         Imports multiple exported applications into the given group. It is compatible
@@ -804,10 +810,17 @@ class CoreHandler:
         :type files_buffer: IOBase
         :param storage: The storage where the files can be copied to.
         :type storage: Storage or None
+        :param progress_builder: If provided will be used to build a child progress bar
+            and report on this methods progress to the parent of the progress_builder.
+        :type: Optional[ChildProgressBuilder]
         :return: The newly created applications based on the import and a dict
             containing a mapping of old ids to new ids.
         :rtype: list, dict
         """
+
+        progress = ChildProgressBuilder.build(
+            progress_builder, len(exported_applications) * 1000
+        )
 
         if not storage:
             storage = default_storage
@@ -818,7 +831,14 @@ class CoreHandler:
             for application in exported_applications:
                 application_type = application_type_registry.get(application["type"])
                 imported_application = application_type.import_serialized(
-                    group, application, id_mapping, files_zip, storage
+                    group,
+                    application,
+                    id_mapping,
+                    files_zip,
+                    storage,
+                    progress_builder=progress.create_child_builder(
+                        represents_progress=1000
+                    ),
                 )
                 imported_applications.append(imported_application)
 

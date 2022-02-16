@@ -9,9 +9,8 @@ from django.db import connections
 from django.apps.registry import apps
 
 from baserow.core.handler import CoreHandler
-from baserow.contrib.database.fields.models import Field, TextField
+from baserow.contrib.database.fields.models import Field, TextField, LinkRowField
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.exceptions import (
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,

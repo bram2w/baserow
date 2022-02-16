@@ -64,6 +64,7 @@ class DatabaseConfig(AppConfig):
             formula_function_registry,
         )
         from .webhooks.registries import webhook_event_type_registry
+        from .airtable.registry import airtable_column_type_registry
 
         from .plugins import DatabasePlugin
 
@@ -235,6 +236,36 @@ class DatabaseConfig(AppConfig):
         webhook_event_type_registry.register(RowCreatedEventType())
         webhook_event_type_registry.register(RowUpdatedEventType())
         webhook_event_type_registry.register(RowDeletedEventType())
+
+        from .airtable.airtable_column_types import (
+            TextAirtableColumnType,
+            DateAirtableColumnType,
+            NumberAirtableColumnType,
+            SelectAirtableColumnType,
+            MultiSelectAirtableColumnType,
+            RatingAirtableColumnType,
+            FormulaAirtableColumnType,
+            CheckboxAirtableColumnType,
+            PhoneAirtableColumnType,
+            ForeignKeyAirtableColumnType,
+            MultilineTextAirtableColumnType,
+            MultipleAttachmentAirtableColumnType,
+            RichTextTextAirtableColumnType,
+        )
+
+        airtable_column_type_registry.register(TextAirtableColumnType())
+        airtable_column_type_registry.register(DateAirtableColumnType())
+        airtable_column_type_registry.register(NumberAirtableColumnType())
+        airtable_column_type_registry.register(SelectAirtableColumnType())
+        airtable_column_type_registry.register(MultiSelectAirtableColumnType())
+        airtable_column_type_registry.register(RatingAirtableColumnType())
+        airtable_column_type_registry.register(FormulaAirtableColumnType())
+        airtable_column_type_registry.register(CheckboxAirtableColumnType())
+        airtable_column_type_registry.register(PhoneAirtableColumnType())
+        airtable_column_type_registry.register(ForeignKeyAirtableColumnType())
+        airtable_column_type_registry.register(MultilineTextAirtableColumnType())
+        airtable_column_type_registry.register(MultipleAttachmentAirtableColumnType())
+        airtable_column_type_registry.register(RichTextTextAirtableColumnType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

@@ -189,6 +189,12 @@ def test_import_export_last_modified_field(data_fixture):
         name="Last modified",
         type_name="last_modified",
     )
+    last_modified_field_2 = field_handler.create_field(
+        user=user,
+        table=table,
+        name="Created On 2",
+        type_name="created_on",
+    )
 
     row_handler = RowHandler()
 
@@ -202,11 +208,20 @@ def test_import_export_last_modified_field(data_fixture):
     assert getattr(row, f"field_{last_modified_field.id}") == datetime(
         2020, 1, 1, 12, 00, tzinfo=timezone("UTC")
     )
+    assert getattr(row, f"field_{last_modified_field_2.id}") == datetime(
+        2020, 1, 1, 12, 00, tzinfo=timezone("UTC")
+    )
 
     core_handler = CoreHandler()
     exported_applications = core_handler.export_group_applications(
         database.group, BytesIO()
     )
+
+    # We manually set this value in the export, because if it's set, then the import
+    # will use that value.
+    exported_applications[0]["tables"][0]["rows"][0][
+        f"field_{last_modified_field_2.id}"
+    ] = datetime(2021, 1, 1, 12, 00, tzinfo=timezone("UTC")).isoformat()
 
     with freeze_time("2020-01-02 12:00"):
         imported_applications, id_mapping = core_handler.import_applications_to_group(
@@ -217,9 +232,13 @@ def test_import_export_last_modified_field(data_fixture):
     imported_tables = imported_database.table_set.all()
     imported_table = imported_tables[0]
     imported_last_modified_field = imported_table.field_set.all().first().specific
+    imported_last_modified_field_2 = imported_table.field_set.all().last().specific
 
     imported_row = row_handler.get_row(user=user, table=imported_table, row_id=row.id)
     assert imported_row.id == row.id
     assert getattr(
         imported_row, f"field_{imported_last_modified_field.id}"
-    ) == datetime(2020, 1, 2, 12, 00, tzinfo=timezone("UTC"))
+    ) == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
+    assert getattr(
+        imported_row, f"field_{imported_last_modified_field_2.id}"
+    ) == datetime(2021, 1, 1, 12, 00, tzinfo=timezone("UTC"))
