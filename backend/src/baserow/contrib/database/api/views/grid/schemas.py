@@ -4,12 +4,29 @@ from drf_spectacular.plumbing import build_object_type
 field_aggregation_response_schema = build_object_type(
     {
         "value": {
-            "type": "any",
-            "description": "The aggregation result for the specified field.",
-            "example": 5,
+            "anyOf": [
+                {
+                    "type": "number",
+                    "description": "The aggregation result for the specified field.",
+                    "example": 5,
+                },
+                {
+                    "type": "string",
+                    "description": "The aggregation result for the specified field.",
+                },
+                {
+                    "type": "array",
+                    "items": {},
+                    "description": "The aggregation result for the specified field.",
+                },
+                {
+                    "type": "object",
+                    "description": "The aggregation result for the specified field.",
+                },
+            ]
         },
         "total": {
-            "type": "int",
+            "type": "integer",
             "description": (
                 "The total value count. Only returned if `include=total` "
                 "is specified as GET parameter."

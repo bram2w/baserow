@@ -12,6 +12,8 @@
 * Fixed not being able to create or convert a single select field with edge case name.
 * Add Kanban view filters.
 * Fix missing translation when importing empty CSV
+* Fixed OpenAPI spec. The specification is now valid and can be used for imports to other
+  tools, e.g. to various REST clients.
 
 ## Released (2022-01-13 1.8.2)
 

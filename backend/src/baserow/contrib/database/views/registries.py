@@ -303,7 +303,7 @@ class ViewType(
         meta = type(
             "Meta",
             (),
-            {"ref_name": self.type + " view field options"},
+            {"ref_name": self.type + "_view_field_options"},
         )
 
         attrs = {

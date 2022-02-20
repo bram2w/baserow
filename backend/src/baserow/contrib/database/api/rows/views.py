@@ -156,7 +156,7 @@ class RowsView(APIView):
                     "field names. For field names with commas you should surround the "
                     'name with quotes like so: `include=My Field,"Field With , "`. '
                     "A backslash can be used to escape field names which contain "
-                    'double quotes like so: `include=My Field,Field with \\"`.',
+                    'double quotes like so: `include=My Field,Field with \\"`.'
                 ),
             ),
             OpenApiParameter(
@@ -175,7 +175,7 @@ class RowsView(APIView):
                     "field names. For field names with commas you should surround the "
                     'name with quotes like so: `exclude=My Field,"Field With , "`. '
                     "A backslash can be used to escape field names which contain "
-                    'double quotes like so: `exclude=My Field,Field with \\"`.',
+                    'double quotes like so: `exclude=My Field,Field with \\"`.'
                 ),
             ),
             OpenApiParameter(
