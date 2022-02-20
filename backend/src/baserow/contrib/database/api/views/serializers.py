@@ -223,7 +223,7 @@ class CreateViewSerializer(serializers.ModelSerializer):
 
 class UpdateViewSerializer(serializers.ModelSerializer):
     class Meta:
-        ref_name = "view update"
+        ref_name = "view_update"
         model = View
         fields = ("name", "filter_type", "filters_disabled")
         extra_kwargs = {
