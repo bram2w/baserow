@@ -51,6 +51,7 @@ Everything related to contributing and developing for Baserow.
   use them.
 * [Code quality](./development/code-quality.md): More information about the code style,
   quality, choices we made, and how we enforce them.
+* [Debugging](./development/debugging.md): Debugging tools and how to use them.
 * [Create a template](./development/create-a-template.md): Create a template that can be
   previewed and installed by others.
 * [dev.sh](./development/dev_sh.md): Further details on how to use Baserow's `./dev.sh`
