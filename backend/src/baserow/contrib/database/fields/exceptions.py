@@ -91,18 +91,24 @@ class IncompatiblePrimaryFieldTypeError(Exception):
 
 
 class FieldWithSameNameAlreadyExists(Exception):
-    """Raised when a field is created or updated with a name that matches an
-    existing fields name in the same table."""
+    """
+    Raised when a field is created or updated with a name that matches an
+    existing fields name in the same table.
+    """
 
 
 class ReservedBaserowFieldNameException(Exception):
-    """Raised when a field is created or updated with a name that matches a reserved
-    Baserow field name."""
+    """
+    Raised when a field is created or updated with a name that matches a reserved
+    Baserow field name.
+    """
 
 
 class InvalidBaserowFieldName(Exception):
-    """Raised when a field name is not provided or an invalid blank field name is
-    provided."""
+    """
+    Raised when a field name is not provided or an invalid blank field name is
+    provided.
+    """
 
 
 class AllProvidedMultipleSelectValuesMustBeIntegers(Exception):

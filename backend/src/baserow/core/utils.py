@@ -253,7 +253,7 @@ def truncate_middle(content, max_length, middle="..."):
 
 
 def split_comma_separated_string(comma_separated_string: str) -> List[str]:
-    """
+    r"""
     Correctly splits a comma separated string which can contain quoted values to include
     commas in individual items like so: 'A,"B , C",D' -> ['A', 'B , C', 'D'] or using
     backslashes to escape double quotes like so: 'A,\"B,C' -> ['A', '"B', 'C'].

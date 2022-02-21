@@ -551,8 +551,8 @@ class ViewFilterTypeRegistry(Registry):
 
 class ViewAggregationType(Instance):
     """
-    If you want to aggregate the values of fields in a view, you can use a field aggregation.
-    For example you can compute a sum of all values of a field in a table.
+    If you want to aggregate the values of fields in a view, you can use a field
+    aggregation. For example you can compute a sum of all values of a field in a table.
     """
 
     def get_aggregation(

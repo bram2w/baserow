@@ -1,4 +1,4 @@
-"""
+r"""
 The database formula module can parse, type and generate Django expressions given a
 Baserow Formula string like:
 
