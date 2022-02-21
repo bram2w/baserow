@@ -1,9 +1,8 @@
 from django.urls import include
-from django.urls import re_path
+from django.urls import re_path, path
 from django.http import HttpResponse
 from django.conf import settings
 from django.conf.urls.static import static
-
 from baserow.core.registries import plugin_registry
 
 
@@ -19,3 +18,7 @@ urlpatterns = (
     + plugin_registry.urls
     + static(settings.MEDIA_URL_PATH, document_root=settings.MEDIA_ROOT)
 )
+
+
+if settings.DEBUG:
+    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
