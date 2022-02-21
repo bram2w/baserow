@@ -17,3 +17,4 @@ responses==0.13.4
 django-silk==4.2.0
 django-extensions==3.1.5
 snoop==0.4.1
+openapi-spec-validator==0.4.0
