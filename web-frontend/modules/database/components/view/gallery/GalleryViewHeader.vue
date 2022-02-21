@@ -31,6 +31,16 @@
         @update-cover-image-field="updateCoverImageField"
       ></ViewFieldsContext>
     </li>
+    <li class="header__filter-item header__filter-item--right">
+      <ViewSearch
+        :view="view"
+        :fields="fields"
+        :primary="primary"
+        :store-prefix="storePrefix"
+        :always-hide-rows-not-matching-search="true"
+        @refresh="$emit('refresh', $event)"
+      ></ViewSearch>
+    </li>
   </ul>
 </template>
 
@@ -39,10 +49,11 @@ import { mapGetters, mapState } from 'vuex'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ViewFieldsContext from '@baserow/modules/database/components/view/ViewFieldsContext'
+import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 
 export default {
   name: 'GalleryViewHeader',
-  components: { ViewFieldsContext },
+  components: { ViewFieldsContext, ViewSearch },
   props: {
     database: {
       type: Object,

@@ -135,15 +135,16 @@ export const actions = {
     }
     const fieldType = this.$registry.get('field', type)
 
-    const refreshNeeded =
-      fieldType.shouldRefreshWhenAdded() ||
-      anyFieldsNeedRefresh(data.related_fields, this.$registry)
+    const fetchNeeded =
+      fieldType.shouldFetchDataWhenAdded() ||
+      anyFieldsNeedFetch(data.related_fields, this.$registry)
     const callback = forceCreate
       ? await forceCreateCallback()
       : forceCreateCallback
     return {
       forceCreateCallback: callback,
-      refreshNeeded,
+      fetchNeeded,
+      newField: data,
     }
   },
   /**
@@ -186,7 +187,7 @@ export const actions = {
     // need to change things in loaded data. For example the grid field will add the
     // field to all of the rows that are in memory.
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldCreated(context, table, data, fieldType, 'page/')
+      await viewType.afterFieldCreated(context, table, data, fieldType, 'page/')
     }
 
     await dispatch('forceUpdateFields', {
@@ -251,7 +252,13 @@ export const actions = {
     // Call the field updated event on all the registered views because they might
     // need to change things in loaded data. For example the changed rows.
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldUpdated(context, data, oldField, fieldType, 'page/')
+      await viewType.afterFieldUpdated(
+        context,
+        data,
+        oldField,
+        fieldType,
+        'page/'
+      )
     }
 
     await dispatch('forceUpdateFields', {
@@ -315,7 +322,7 @@ export const actions = {
     // field options of that field.
     const fieldType = this.$registry.get('field', field.type)
     for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.fieldDeleted(context, field, fieldType, 'page/')
+      await viewType.afterFieldDeleted(context, field, fieldType, 'page/')
     }
   },
 }
@@ -351,9 +358,9 @@ export default {
   mutations,
 }
 
-export function anyFieldsNeedRefresh(fields, registry) {
+export function anyFieldsNeedFetch(fields, registry) {
   return fields.some((f) => {
     const relatedFieldType = registry.get('field', f.type)
-    return relatedFieldType.shouldRefreshWhenAdded()
+    return relatedFieldType.shouldFetchDataWhenAdded()
   })
 }

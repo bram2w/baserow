@@ -5,6 +5,7 @@ import { clone } from '@baserow/modules/core/utils/object'
 import {
   getRowSortFunction,
   matchSearchFilters,
+  calculateSingleRowSearchMatches,
 } from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
 
@@ -39,8 +40,21 @@ import RowService from '@baserow/modules/database/services/row'
  * ]
  * ```
  */
-export default ({ service, populateRow }) => {
+export default ({ service, customPopulateRow }) => {
   let lastRequestSource = null
+
+  const populateRow = (row) => {
+    if (customPopulateRow) {
+      customPopulateRow(row)
+    }
+    row._ ??= {}
+    // Matching rows for front-end only search is not yet properly
+    // supported and tested in this store mixin. Only server-side search
+    // implementation is finished.
+    row._.matchSearch = true
+    row._.fieldSearchMatches = []
+    return row
+  }
 
   /**
    * This helper function calculates the most optimal `limit` `offset` range of rows
@@ -130,6 +144,7 @@ export default ({ service, populateRow }) => {
     // This is needed to revert the position if anything goes wrong or the escape
     // key was pressed.
     draggingOriginalBefore: null,
+    activeSearchTerm: '',
   })
 
   const mutations = {
@@ -207,6 +222,23 @@ export default ({ service, populateRow }) => {
       state.draggingRow = null
       state.draggingOriginalBefore = null
     },
+    SET_SEARCH(state, { activeSearchTerm }) {
+      state.activeSearchTerm = activeSearchTerm
+    },
+    SET_ROW_SEARCH_MATCHES(state, { row, matchSearch, fieldSearchMatches }) {
+      row._.fieldSearchMatches.slice(0).forEach((value) => {
+        if (!fieldSearchMatches.has(value)) {
+          const index = row._.fieldSearchMatches.indexOf(value)
+          row._.fieldSearchMatches.splice(index, 1)
+        }
+      })
+      fieldSearchMatches.forEach((value) => {
+        if (!row._.fieldSearchMatches.includes(value)) {
+          row._.fieldSearchMatches.push(value)
+        }
+      })
+      row._.matchSearch = matchSearch
+    },
   }
 
   const actions = {
@@ -221,10 +253,14 @@ export default ({ service, populateRow }) => {
     ) {
       const { commit, getters } = context
       commit('SET_VIEW_ID', viewId)
+      commit('SET_SEARCH', {
+        activeSearchTerm: '',
+      })
       const { data } = await service(this.$client).fetchRows({
         viewId,
         offset: 0,
         limit: getters.getRequestSize,
+        search: getters.getServerSearchTerm,
         ...initialRowArguments,
       })
       const rows = Array(data.count).fill(null)
@@ -293,6 +329,7 @@ export default ({ service, populateRow }) => {
           offset: rangeToFetch.offset,
           limit: rangeToFetch.limit,
           cancelToken: lastRequestSource.token,
+          search: getters.getServerSearchTerm,
         })
         commit('UPDATE_ROWS', {
           offset: rangeToFetch.offset,
@@ -345,6 +382,7 @@ export default ({ service, populateRow }) => {
         } = await service(this.$client).fetchCount({
           viewId: getters.getViewId,
           cancelToken: lastRequestSource.token,
+          search: getters.getServerSearchTerm,
         })
 
         // Create a new empty array containing un-fetched rows.
@@ -359,9 +397,9 @@ export default ({ service, populateRow }) => {
           startIndex = currentVisible.startIndex
           endIndex = currentVisible.endIndex
           const difference = count - endIndex
-
           if (difference < 0) {
             startIndex += difference
+            startIndex = startIndex >= 0 ? startIndex : 0
             endIndex += difference
           }
 
@@ -384,6 +422,7 @@ export default ({ service, populateRow }) => {
             limit: rangeToFetch.limit,
             includeFieldOptions,
             cancelToken: lastRequestSource.token,
+            search: getters.getServerSearchTerm,
           })
 
           results.forEach((row, index) => {
@@ -570,11 +609,19 @@ export default ({ service, populateRow }) => {
       let row = clone(values)
       populateRow(row)
 
-      // Check if the row matches the filters. If not, we don't have to do anything
-      // because we know this row does not exist in the view.
-      if (
-        !(await dispatch('rowMatchesFilters', { view, fields, primary, row }))
-      ) {
+      const rowMatchesFilters = await dispatch('rowMatchesFilters', {
+        view,
+        fields,
+        primary,
+        row,
+      })
+      await dispatch('updateSearchMatchesForRow', {
+        view,
+        fields,
+        primary,
+        row,
+      })
+      if (!rowMatchesFilters || !row._.matchSearch) {
         return
       }
 
@@ -679,18 +726,33 @@ export default ({ service, populateRow }) => {
       populateRow(oldRow)
       populateRow(newRow)
 
-      const oldRowMatches = await dispatch('rowMatchesFilters', {
+      const oldMatchesFilters = await dispatch('rowMatchesFilters', {
         view,
         fields,
         primary,
         row: oldRow,
       })
-      const newRowMatches = await dispatch('rowMatchesFilters', {
+      const newMatchesFilters = await dispatch('rowMatchesFilters', {
         view,
         fields,
         primary,
         row: newRow,
       })
+      await dispatch('updateSearchMatchesForRow', {
+        view,
+        fields,
+        primary,
+        row: oldRow,
+      })
+      await dispatch('updateSearchMatchesForRow', {
+        view,
+        fields,
+        primary,
+        row: newRow,
+      })
+
+      const oldRowMatches = oldMatchesFilters && oldRow._.matchSearch
+      const newRowMatches = newMatchesFilters && newRow._.matchSearch
 
       if (oldRowMatches && !newRowMatches) {
         // If the old row did match the filters, but after the update it does not
@@ -773,11 +835,19 @@ export default ({ service, populateRow }) => {
       row = clone(row)
       populateRow(row)
 
-      // Check if the row matches the filters. If not, we don't have to do anything
-      // because we know this row does not exist in the view.
-      if (
-        !(await dispatch('rowMatchesFilters', { view, fields, primary, row }))
-      ) {
+      const rowMatchesFilters = await dispatch('rowMatchesFilters', {
+        view,
+        fields,
+        primary,
+        row,
+      })
+      await dispatch('updateSearchMatchesForRow', {
+        view,
+        fields,
+        primary,
+        row,
+      })
+      if (!rowMatchesFilters || !row._.matchSearch) {
         return
       }
 
@@ -876,6 +946,55 @@ export default ({ service, populateRow }) => {
 
       return false
     },
+    /**
+     * Changes the current search parameters if provided and optionally refreshes which
+     * cells match the new search parameters by updating every rows row._.matchSearch and
+     * row._.fieldSearchMatches attributes.
+     */
+    updateSearch(
+      { commit, dispatch, getters, state },
+      {
+        fields,
+        primary = null,
+        activeSearchTerm = state.activeSearchTerm,
+        refreshMatchesOnClient = true,
+      }
+    ) {
+      commit('SET_SEARCH', { activeSearchTerm })
+      if (refreshMatchesOnClient) {
+        getters.getRows.forEach((row) =>
+          dispatch('updateSearchMatchesForRow', {
+            row,
+            fields,
+            primary,
+            forced: true,
+          })
+        )
+      }
+    },
+    /**
+     * Updates a single row's row._.matchSearch and row._.fieldSearchMatches based on the
+     * current search parameters and row data. Overrides can be provided which can be used
+     * to override a row's field values when checking if they match the search parameters.
+     */
+    updateSearchMatchesForRow(
+      { commit, getters, rootGetters },
+      { row, fields, primary = null, overrides, forced = false }
+    ) {
+      // Avoid computing search on table loading
+      if (getters.getActiveSearchTerm || forced) {
+        const rowSearchMatches = calculateSingleRowSearchMatches(
+          row,
+          getters.getActiveSearchTerm,
+          getters.isHidingRowsNotMatchingSearch,
+          [primary, ...fields],
+          this.$registry,
+          overrides
+        )
+
+        commit('SET_ROW_SEARCH_MATCHES', rowSearchMatches)
+      }
+    },
   }
 
   const getters = {
@@ -902,6 +1021,15 @@ export default ({ service, populateRow }) => {
     },
     getDraggingOriginalBefore(state) {
       return state.draggingOriginalBefore
+    },
+    getActiveSearchTerm(state) {
+      return state.activeSearchTerm
+    },
+    getServerSearchTerm(state) {
+      return state.activeSearchTerm
+    },
+    isHidingRowsNotMatchingSearch(state) {
+      return true
     },
   }
 

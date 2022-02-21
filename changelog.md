@@ -14,6 +14,8 @@
 * Fix missing translation when importing empty CSV
 * Fixed OpenAPI spec. The specification is now valid and can be used for imports to other
   tools, e.g. to various REST clients.
+* Added search to gallery views.
+* Views supporting search are properly updated when a column with a matching default value is added.
 
 ## Released (2022-01-13 1.8.2)
 

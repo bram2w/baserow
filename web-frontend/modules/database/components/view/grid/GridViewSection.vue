@@ -10,6 +10,7 @@
         :include-add-field="includeAddField"
         :read-only="readOnly"
         :store-prefix="storePrefix"
+        @field-created="$emit('field-created', $event)"
         @refresh="$emit('refresh', $event)"
         @dragging="
           canOrderFields &&

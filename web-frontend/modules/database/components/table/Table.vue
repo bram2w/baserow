@@ -310,13 +310,18 @@ export default {
       const includeFieldOptions =
         typeof event === 'object' ? event.includeFieldOptions : false
 
+      const fieldsToRefresh =
+        typeof event === 'object' && event.newField
+          ? [...this.fields, event.newField]
+          : this.fields
+
       this.viewLoading = true
       const type = this.$registry.get('view', this.view.type)
       try {
         await type.refresh(
           { store: this.$store },
           this.view,
-          this.fields,
+          fieldsToRefresh,
           this.primary,
           this.storePrefix,
           includeFieldOptions

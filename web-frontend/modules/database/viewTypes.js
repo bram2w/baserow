@@ -7,6 +7,7 @@ import GalleryViewHeader from '@baserow/modules/database/components/view/gallery
 import FormView from '@baserow/modules/database/components/view/form/FormView'
 import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
 import { FileFieldType } from '@baserow/modules/database/fieldTypes'
+import { newFieldMatchesActiveSearchTerm } from '@baserow/modules/database/utils/view'
 
 export const maxPossibleOrderValue = 32767
 
@@ -175,10 +176,19 @@ export class ViewType extends Registerable {
   ) {}
 
   /**
+   * Should return true if the view must be refreshed when a new field has been
+   * created. This could for example be used to check whether the empty value matches
+   * the active search term.
+   */
+  shouldRefreshWhenFieldCreated(registry, store, field, storePrefix) {
+    return false
+  }
+
+  /**
    * Method that is called when a field has been created. This can be useful to
    * maintain data integrity for example to add the field to the grid view store.
    */
-  fieldCreated(context, table, field, fieldType, storePrefix) {}
+  afterFieldCreated(context, table, field, fieldType, storePrefix) {}
 
   /**
    * Method that is called when a field has been restored . This can be useful to
@@ -190,13 +200,13 @@ export class ViewType extends Registerable {
    * Method that is called when a field has been deleted. This can be useful to
    * maintain data integrity.
    */
-  fieldDeleted(context, field, fieldType, storePrefix) {}
+  afterFieldDeleted(context, field, fieldType, storePrefix) {}
 
   /**
    * Method that is called when a field has been changed. This can be useful to
    * maintain data integrity by updating the values.
    */
-  fieldUpdated(context, field, oldField, fieldType, storePrefix) {}
+  afterFieldUpdated(context, field, oldField, fieldType, storePrefix) {}
 
   /**
    * Method that is called when the field options of a view are updated.
@@ -387,7 +397,19 @@ export class GridViewType extends ViewType {
     )
   }
 
-  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
+  shouldRefreshWhenFieldCreated(registry, store, field, storePrefix) {
+    const searchTerm =
+      store.getters[storePrefix + 'view/grid/getActiveSearchTerm']
+    return newFieldMatchesActiveSearchTerm(registry, field, searchTerm)
+  }
+
+  async afterFieldCreated(
+    { dispatch },
+    table,
+    field,
+    fieldType,
+    storePrefix = ''
+  ) {
     const value = fieldType.getEmptyValue(field)
     await dispatch(
       storePrefix + 'view/grid/addField',
@@ -410,7 +432,7 @@ export class GridViewType extends ViewType {
     )
   }
 
-  async fieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
+  async afterFieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
     await dispatch(
       storePrefix + 'view/grid/forceDeleteFieldOptions',
       field.id,
@@ -420,7 +442,7 @@ export class GridViewType extends ViewType {
     )
   }
 
-  async fieldUpdated(
+  async afterFieldUpdated(
     { dispatch, rootGetters },
     field,
     oldField,
@@ -590,7 +612,21 @@ class BaseBufferedRowView extends ViewType {
     )
   }
 
-  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
+  shouldRefreshWhenFieldCreated(registry, store, field, storePrefix) {
+    const searchTerm =
+      store.getters[
+        storePrefix + 'view/' + this.getType() + '/getActiveSearchTerm'
+      ]
+    return newFieldMatchesActiveSearchTerm(registry, field, searchTerm)
+  }
+
+  async afterFieldCreated(
+    { dispatch },
+    table,
+    field,
+    fieldType,
+    storePrefix = ''
+  ) {
     const value = fieldType.getEmptyValue(field)
     await dispatch(
       storePrefix + 'view/' + this.getType() + '/addField',
@@ -607,7 +643,7 @@ class BaseBufferedRowView extends ViewType {
     )
   }
 
-  async fieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
+  async afterFieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
     await dispatch(
       storePrefix + 'view/' + this.getType() + '/forceDeleteFieldOptions',
       field.id,
@@ -723,17 +759,41 @@ export class GalleryViewType extends BaseBufferedRowView {
     }
   }
 
-  fieldUpdated(context, field, oldField, fieldType, storePrefix) {
+  async afterFieldUpdated(
+    { dispatch, rootGetters },
+    field,
+    oldField,
+    fieldType,
+    storePrefix
+  ) {
     // If the field type has changed from a file field to something else, it could
     // be that there are gallery views that depending on that field. So we need to
     // change to type to null if that's the case.
     const type = FileFieldType.getType()
     if (oldField.type === type && field.type !== type) {
-      this._setFieldToNull(context, field, 'card_cover_image_field')
+      this._setFieldToNull(
+        { dispatch, rootGetters },
+        field,
+        'card_cover_image_field'
+      )
     }
+    // The field changing may change which cells in the field should be highlighted so
+    // we refresh them to ensure that they still correctly match. E.g. changing a date
+    // fields date_format needs a search update as search string might no longer
+    // match the new format.
+    await dispatch(
+      storePrefix + 'view/gallery/updateSearch',
+      {
+        fields: rootGetters['field/getAll'],
+        primary: rootGetters['field/getPrimary'],
+      },
+      {
+        root: true,
+      }
+    )
   }
 
-  fieldDeleted(context, field, fieldType, storePrefix = '') {
+  afterFieldDeleted(context, field, fieldType, storePrefix = '') {
     // We want to loop over all gallery views that we have in the store and check if
     // they were depending on this deleted field. If that's case, we can set it to null
     // because it doesn't exist anymore.
@@ -801,7 +861,13 @@ export class FormViewType extends ViewType {
     })
   }
 
-  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
+  async afterFieldCreated(
+    { dispatch },
+    table,
+    field,
+    fieldType,
+    storePrefix = ''
+  ) {
     await dispatch(
       storePrefix + 'view/form/setFieldOptionsOfField',
       {
@@ -820,7 +886,7 @@ export class FormViewType extends ViewType {
     )
   }
 
-  async fieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
+  async afterFieldDeleted({ dispatch }, field, fieldType, storePrefix = '') {
     await dispatch(
       storePrefix + 'view/form/forceDeleteFieldOptions',
       field.id,

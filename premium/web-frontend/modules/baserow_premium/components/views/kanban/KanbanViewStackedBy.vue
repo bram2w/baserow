@@ -29,6 +29,7 @@
         ref="createFieldContext"
         :table="table"
         :forced-type="forcedFieldType"
+        @field-created="$event.callback()"
       ></CreateFieldContext>
     </div>
   </div>

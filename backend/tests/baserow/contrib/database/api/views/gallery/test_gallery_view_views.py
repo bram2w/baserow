@@ -151,6 +151,43 @@ def test_list_rows_include_field_options(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_rows_search(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Name", text_default=""
+    )
+    gallery = data_fixture.create_gallery_view(table=table)
+    search_term = "Smith"
+    model = gallery.table.get_model()
+    not_matching_row1 = model.objects.create(
+        **{f"field_{text_field.id}": "Mark Spencer"}
+    )
+    matching_row1 = model.objects.create(
+        **{f"field_{text_field.id}": f"Elon {search_term}"}
+    )
+    matching_row2 = model.objects.create(
+        **{f"field_{text_field.id}": f"James {search_term}"}
+    )
+    not_matching_row2 = model.objects.create(
+        **{f"field_{text_field.id}": "Robin Backham"}
+    )
+
+    url = reverse("api:database:views:gallery:list", kwargs={"view_id": gallery.id})
+    response = api_client.get(
+        url, {"search": search_term}, **{"HTTP_AUTHORIZATION": f"JWT {token}"}
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 2
+    assert response_json["results"][0]["id"] == matching_row1.id
+    assert response_json["results"][1]["id"] == matching_row2.id
+
+
+@pytest.mark.django_db
 def test_patch_gallery_view_field_options(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl",

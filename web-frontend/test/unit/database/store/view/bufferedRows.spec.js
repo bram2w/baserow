@@ -1,6 +1,8 @@
 import bufferedRows from '@baserow/modules/database/store/view/bufferedRows'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import { ContainsViewFilterType } from '@baserow/modules/database/viewFilters'
+import { createPrimaryField } from '@baserow/test/fixtures/fields'
+import { createView } from '@baserow/test/fixtures/view'
 
 describe('Buffered rows view store helper', () => {
   let testApp = null
@@ -1993,5 +1995,170 @@ describe('Buffered rows view store helper', () => {
     expect(rowsInStore[9].id).toBe(12)
     expect(rowsInStore[10].id).toBe(14)
     expect(rowsInStore[11]).toBe(null)
+  })
+})
+
+describe('Buffered rows search', () => {
+  let testApp = null
+  let store = null
+  let bufferedRowsModule = null
+  let view = null
+  const storeName = 'test'
+  const activeSearchTerm = 'searchterm'
+
+  beforeEach(() => {
+    testApp = new TestApp()
+    store = testApp.store
+    bufferedRowsModule = bufferedRows({ service: null, populateRow: null })
+    view = createView()
+  })
+
+  afterEach(() => {
+    testApp.afterEach()
+  })
+
+  test('Rows are fetched on refresh based on search term', async () => {
+    const serviceStub = () => {
+      return {
+        fetchRows(params) {
+          if (params.search === activeSearchTerm) {
+            return {
+              data: {
+                results: [
+                  {
+                    id: 1,
+                    order: '1.00000000000000000000',
+                    field_1: 'Row matching search',
+                  },
+                ],
+              },
+            }
+          }
+          return {
+            data: {
+              results: [
+                {
+                  id: 1,
+                  order: '1.00000000000000000000',
+                  field_1: 'Row matching search',
+                },
+                {
+                  id: 2,
+                  order: '2.00000000000000000000',
+                  field_1: 'Row not search',
+                },
+              ],
+            },
+          }
+        },
+        fetchCount(params) {
+          if (params.search === activeSearchTerm) {
+            return { data: { count: 1 } }
+          }
+          return { data: { count: 2 } }
+        },
+      }
+    }
+    bufferedRowsModule = bufferedRows({
+      service: serviceStub,
+      populateRow: null,
+    })
+    const state = Object.assign(bufferedRowsModule.state(), {
+      viewId: view.id,
+      rows: [],
+      activeSearchTerm,
+    })
+    bufferedRowsModule.state = () => state
+    store.registerModule(storeName, bufferedRowsModule)
+
+    await store.dispatch(`${storeName}/refresh`, {
+      fields: [],
+      primary: createPrimaryField(),
+    })
+
+    const rowsInStore = store.getters[`${storeName}/getRows`]
+    expect(rowsInStore.length).toBe(1)
+  })
+
+  test('A new row matching search has been added', async () => {
+    const state = Object.assign(bufferedRowsModule.state(), {
+      viewId: view.id,
+      rows: [{ id: 2, order: '2.00000000000000000000', field_1: 'Row 2' }],
+      activeSearchTerm,
+    })
+    bufferedRowsModule.state = () => state
+    store.registerModule(storeName, bufferedRowsModule)
+
+    const newMatchingRow = {
+      id: 1,
+      order: '1.00000000000000000000',
+      field_1: `matching the ${activeSearchTerm}`,
+    }
+
+    await store.dispatch(`${storeName}/afterNewRowCreated`, {
+      view,
+      fields: [],
+      primary: createPrimaryField(),
+      values: newMatchingRow,
+    })
+
+    const rowsInStore = store.getters[`${storeName}/getRows`]
+    expect(rowsInStore[0].id).toBe(newMatchingRow.id)
+  })
+
+  test('A new row not matching search has not been added', async () => {
+    const state = Object.assign(bufferedRowsModule.state(), {
+      viewId: view.id,
+      rows: [{ id: 2, order: '2.00000000000000000000', field_1: 'Row 2' }],
+      activeSearchTerm,
+    })
+    bufferedRowsModule.state = () => state
+    store.registerModule(storeName, bufferedRowsModule)
+
+    const newNotMatchingRow = {
+      id: 1,
+      order: '1.00000000000000000000',
+      field_1: `not matching`,
+    }
+
+    await store.dispatch(`${storeName}/afterNewRowCreated`, {
+      view,
+      fields: [],
+      primary: createPrimaryField(),
+      values: newNotMatchingRow,
+    })
+
+    const rowsInStore = store.getters[`${storeName}/getRows`]
+    expect(rowsInStore[0].id).not.toBe(newNotMatchingRow.id)
+  })
+
+  test('A row not matching search anymore has been removed', async () => {
+    const matchingRow = {
+      id: 2,
+      order: '2.00000000000000000000',
+      field_1: `matching the ${activeSearchTerm}`,
+    }
+    const state = Object.assign(bufferedRowsModule.state(), {
+      viewId: view.id,
+      rows: [matchingRow],
+      activeSearchTerm,
+    })
+    bufferedRowsModule.state = () => state
+    store.registerModule(storeName, bufferedRowsModule)
+
+    const newValues = {
+      field_1: 'not matching',
+    }
+
+    await store.dispatch(`${storeName}/afterExistingRowUpdated`, {
+      view,
+      fields: [],
+      primary: createPrimaryField(),
+      row: matchingRow,
+      values: newValues,
+    })
+
+    const rowsInStore = store.getters[`${storeName}/getRows`]
+    expect(rowsInStore[0]).toBeUndefined()
   })
 })

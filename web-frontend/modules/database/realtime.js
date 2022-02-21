@@ -1,5 +1,5 @@
 import { clone } from '@baserow/modules/core/utils/object'
-import { anyFieldsNeedRefresh } from '@baserow/modules/database/store/field'
+import { anyFieldsNeedFetch } from '@baserow/modules/database/store/field'
 
 /**
  * Registers the real time events related to the database module. When a message comes
@@ -58,17 +58,30 @@ export const registerRealtimeEvents = (realtime) => {
           relatedFields,
         })
       }
+      const view = store.getters['view/getSelected']
+      const viewMustBeRefreshed =
+        view &&
+        app.$registry
+          .get('view', view.type)
+          .shouldRefreshWhenFieldCreated(
+            app.$registry,
+            store,
+            data.field,
+            'page/'
+          )
       if (
-        !fieldType.shouldRefreshWhenAdded() &&
-        !anyFieldsNeedRefresh(relatedFields, registry)
+        fieldType.shouldFetchDataWhenAdded() ||
+        anyFieldsNeedFetch(relatedFields, registry) ||
+        viewMustBeRefreshed
       ) {
-        callback()
-      } else {
         app.$bus.$emit('table-refresh', {
           tableId: store.getters['table/getSelectedId'],
+          newField: data.field,
           includeFieldOptions: true,
           callback,
         })
+      } else {
+        callback()
       }
     }
   })
