@@ -517,7 +517,7 @@ def fill_remaining_seats_of_license(
 
 def remove_all_users_from_license(requesting_user: User, license_object: License):
     """
-    Removed all the users from a license. This will clear up all the seats.
+    Removes all the users from a license. This will clear up all the seats.
 
     :param requesting_user: The user on whose behalf the users are removed.
     :param license_object: The license object where the users must be removed from.
