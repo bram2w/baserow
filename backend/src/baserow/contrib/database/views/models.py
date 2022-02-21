@@ -240,7 +240,7 @@ class GridView(View):
 class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
     grid_view = models.ForeignKey(GridView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
-    # The defaults should be the same as in the `fieldCreated` of the `GridViewType`
+    # The defaults should match the ones in `afterFieldCreated` of the `GridViewType`
     # abstraction in the web-frontend.
     width = models.PositiveIntegerField(
         default=200,

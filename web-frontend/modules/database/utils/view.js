@@ -83,6 +83,17 @@ export const matchSearchFilters = (
   }
 }
 
+export function valueMatchesActiveSearchTerm(
+  registry,
+  field,
+  value,
+  activeSearchTerm
+) {
+  return registry
+    .get('field', field.type)
+    .containsFilter(value, activeSearchTerm, field)
+}
+
 function _findFieldsInRowMatchingSearch(
   row,
   activeSearchTerm,
@@ -102,9 +113,12 @@ function _findFieldsInRowMatchingSearch(
     const rowValue =
       fieldName in overrides ? overrides[fieldName] : row[fieldName]
     if (rowValue) {
-      const doesMatch = registry
-        .get('field', field.type)
-        .containsFilter(rowValue, activeSearchTerm, field)
+      const doesMatch = valueMatchesActiveSearchTerm(
+        registry,
+        field,
+        rowValue,
+        activeSearchTerm
+      )
       if (doesMatch) {
         fieldSearchMatches.add(field.id.toString())
       }
@@ -143,4 +157,26 @@ export function calculateSingleRowSearchMatches(
   const matchSearch =
     !hideRowsNotMatchingSearch || searchIsBlank || fieldSearchMatches.size > 0
   return { row, matchSearch, fieldSearchMatches }
+}
+
+/**
+ * Returns true is the empty value of the provided field matches the active search term.
+ */
+export function newFieldMatchesActiveSearchTerm(
+  registry,
+  newField,
+  activeSearchTerm
+) {
+  if (newField && activeSearchTerm !== '') {
+    const fieldType = registry.get('field', newField.type)
+    const emptyValue = fieldType.getEmptyValue(newField)
+
+    return valueMatchesActiveSearchTerm(
+      registry,
+      newField,
+      emptyValue,
+      activeSearchTerm
+    )
+  }
+  return false
 }

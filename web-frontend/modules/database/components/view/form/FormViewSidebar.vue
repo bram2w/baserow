@@ -63,7 +63,7 @@
         <CreateFieldContext
           ref="createFieldContext"
           :table="table"
-          @refresh="$emit('refresh', $event)"
+          @field-created="$event.callback()"
         ></CreateFieldContext>
       </div>
     </div>

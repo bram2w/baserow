@@ -159,7 +159,13 @@ export class KanbanViewType extends PremiumViewType {
     }
   }
 
-  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
+  async afterFieldCreated(
+    { dispatch },
+    table,
+    field,
+    fieldType,
+    storePrefix = ''
+  ) {
     await dispatch(
       storePrefix + 'view/kanban/setFieldOptionsOfField',
       {
@@ -175,7 +181,7 @@ export class KanbanViewType extends PremiumViewType {
     )
   }
 
-  fieldUpdated(context, field, oldField, fieldType, storePrefix) {
+  afterFieldUpdated(context, field, oldField, fieldType, storePrefix) {
     // Make sure that all Kanban views don't depend on fields that
     // have been converted to another type
     const type = SingleSelectFieldType.getType()
@@ -185,7 +191,7 @@ export class KanbanViewType extends PremiumViewType {
     }
   }
 
-  fieldDeleted(context, field, fieldType, storePrefix = '') {
+  afterFieldDeleted(context, field, fieldType, storePrefix = '') {
     // Make sure that all Kanban views don't depend on fields that
     // have been deleted
     this._setFieldToNull(context, field, 'single_select_field')

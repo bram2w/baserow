@@ -52,7 +52,7 @@ export default {
       delete values.type
 
       try {
-        const { forceCreateCallback, refreshNeeded } =
+        const { forceCreateCallback, fetchNeeded, newField } =
           await this.$store.dispatch('field/create', {
             type,
             values,
@@ -66,11 +66,7 @@ export default {
           this.$refs.form.reset()
           this.hide()
         }
-        if (refreshNeeded) {
-          this.$emit('refresh', { callback })
-        } else {
-          await callback()
-        }
+        this.$emit('field-created', { callback, newField, fetchNeeded })
       } catch (error) {
         this.loading = false
         const handledByForm = this.$refs.form.handleErrorByForm(error)

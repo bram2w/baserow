@@ -17,6 +17,7 @@
       :fields="fields"
       :primary="primary"
       :store-prefix="storePrefix"
+      :always-hide-rows-not-matching-search="alwaysHideRowsNotMatchingSearch"
       @refresh="$emit('refresh', $event)"
       @search-changed="searchChanged"
     ></ViewSearchContext>
@@ -45,6 +46,11 @@ export default {
     storePrefix: {
       type: String,
       required: true,
+    },
+    alwaysHideRowsNotMatchingSearch: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data: () => {

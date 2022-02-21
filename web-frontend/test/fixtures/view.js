@@ -1,5 +1,19 @@
 import { PUBLIC_PLACEHOLDER_ENTITY_ID } from '@baserow/modules/database/utils/constants'
 
+export function createView(data) {
+  const view = {
+    id: 1,
+    filters_disabled: false,
+    filters: [],
+    sortings: [],
+  }
+
+  return {
+    ...view,
+    ...data,
+  }
+}
+
 export function createPublicGridView(
   mock,
   viewSlug,

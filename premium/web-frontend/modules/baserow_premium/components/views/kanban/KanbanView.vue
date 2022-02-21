@@ -84,7 +84,7 @@
       @update="updateValue"
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
-      @refresh="$emit('refresh', $event)"
+      @field-created="fieldCreated"
     ></RowEditModal>
   </div>
 </template>
@@ -93,6 +93,7 @@
 import { mapGetters } from 'vuex'
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
 import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
@@ -110,7 +111,7 @@ export default {
     KanbanViewStackedBy,
     KanbanViewStack,
   },
-  mixins: [kanbanViewHelper],
+  mixins: [viewHelpers, kanbanViewHelper],
   props: {
     database: {
       type: Object,

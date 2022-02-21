@@ -466,11 +466,11 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * Determines whether a view refresh should be executed after the specific field
-   * has been added to a table. This is for example needed when a value depends on
-   * the backend and can't be guessed or calculated by the web-frontend.
+   * Determines whether row data of the field should be fetched again after the
+   * field has been created. This is for example needed when a value depends on the
+   * backend and can't be guessed or calculated by the web-frontend.
    */
-  shouldRefreshWhenAdded() {
+  shouldFetchDataWhenAdded() {
     return false
   }
 
@@ -1268,7 +1268,7 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     return moment().utc().format()
   }
 
-  shouldRefreshWhenAdded() {
+  shouldFetchDataWhenAdded() {
     return true
   }
 
@@ -2118,7 +2118,7 @@ export class FormulaFieldType extends FieldType {
     return true
   }
 
-  shouldRefreshWhenAdded() {
+  shouldFetchDataWhenAdded() {
     return true
   }
 

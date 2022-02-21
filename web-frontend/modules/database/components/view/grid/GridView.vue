@@ -20,6 +20,7 @@
       :store-prefix="storePrefix"
       :style="{ width: leftWidth + 'px' }"
       @refresh="$emit('refresh', $event)"
+      @field-created="fieldCreated"
       @row-hover="setRowHover($event.row, $event.value)"
       @row-context="showRowContext($event.event, $event.row)"
       @row-dragging="rowDragStart"
@@ -65,6 +66,7 @@
       :store-prefix="storePrefix"
       :style="{ left: leftWidth + 'px' }"
       @refresh="$emit('refresh', $event)"
+      @field-created="fieldCreated"
       @row-hover="setRowHover($event.row, $event.value)"
       @row-context="showRowContext($event.event, $event.row)"
       @add-row="addRow()"
@@ -144,11 +146,11 @@
       :fields="fields"
       :rows="allRows"
       :read-only="readOnly"
-      @refresh="$emit('refresh', $event)"
       @update="updateValue"
       @hidden="rowEditModalHidden"
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
+      @field-created="fieldCreated"
     ></RowEditModal>
   </div>
 </template>
@@ -163,6 +165,7 @@ import GridViewRowDragging from '@baserow/modules/database/components/view/grid/
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
+import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 
 export default {
   name: 'GridView',
@@ -172,7 +175,7 @@ export default {
     GridViewRowDragging,
     RowEditModal,
   },
-  mixins: [gridViewHelpers],
+  mixins: [viewHelpers, gridViewHelpers],
   props: {
     primary: {
       type: Object,

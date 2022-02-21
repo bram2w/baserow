@@ -120,8 +120,11 @@ class GalleryViewView(APIView):
         view.table.database.group.has_user(
             request.user, raise_error=True, allow_if_template=True
         )
+
+        search = request.GET.get("search")
+
         model = view.table.get_model()
-        queryset = view_handler.get_queryset(view, None, model)
+        queryset = view_handler.get_queryset(view, search, model)
 
         if "count" in request.GET:
             return Response({"count": queryset.count()})
