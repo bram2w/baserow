@@ -32,6 +32,20 @@ export default function CoreModule(options) {
   // Register new alias to the web-frontend directory.
   this.options.alias['@baserow'] = path.resolve(__dirname, '../../')
 
+  const BASEROW_PUBLIC_URLS = process.env.BASEROW_PUBLIC_URLS
+  if (BASEROW_PUBLIC_URLS) {
+    const splitPublicUrls = BASEROW_PUBLIC_URLS.trim().split(',')
+    if (splitPublicUrls.length === 0) {
+      throw new Error(
+        'If BASEROW_PUBLIC_URLS is provided it must be a comma' +
+          ' separated list of urls, ports or hostnames, instead it was empty.'
+      )
+    }
+    const trimmedFirstPublicUrl = splitPublicUrls[0].trim()
+    process.env.PUBLIC_BACKEND_URL = trimmedFirstPublicUrl
+    process.env.PUBLIC_WEB_FRONTEND_URL = trimmedFirstPublicUrl
+  }
+
   // The core depends on these modules.
   this.requireModule('cookie-universal-nuxt')
   this.requireModule([
@@ -41,6 +55,10 @@ export default function CoreModule(options) {
         {
           key: 'PRIVATE_BACKEND_URL',
           default: 'http://backend:8000',
+        },
+        {
+          key: 'BASEROW_DISABLE_PUBLIC_URL_CHECK',
+          default: false,
         },
         {
           key: 'PUBLIC_BACKEND_URL',

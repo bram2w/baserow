@@ -1,4 +1,4 @@
-FROM python:3.7-slim-buster as base
+FROM debian:buster-slim as base
 
 ARG UID
 ENV UID=${UID:-9999}
@@ -21,6 +21,10 @@ RUN apt-get update &&  \
     tini \
     postgresql-client \
     gettext \
+    procps \
+    python3 \
+    python3-pip \
+    python3-dev \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \
@@ -33,9 +37,10 @@ COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
 
 # Install non-dev base dependencies into a virtual env.
 COPY --chown=$UID:$GID ./backend/requirements/base.txt /baserow/requirements/
-RUN python3 -m venv /baserow/venv
+RUN python3 -m pip install --no-cache-dir --no-warn-script-location --disable-pip-version-check --upgrade pip==22.0.3
+RUN python3 -m pip install --no-cache-dir --no-warn-script-location --upgrade virtualenv==20.13.1 && python3 -m virtualenv /baserow/venv
 # hadolint ignore=SC1091
-RUN . /baserow/venv/bin/activate && pip3 install --no-cache-dir --upgrade pip==22.0.3 && pip3 install --no-cache-dir -r /baserow/requirements/base.txt
+RUN . /baserow/venv/bin/activate && pip3 install --no-cache-dir -r /baserow/requirements/base.txt
 
 # Build a dev_deps stage which also has the dev dependencies for use by the dev layer.
 FROM base as dev_deps
@@ -60,12 +65,12 @@ WORKDIR /baserow/backend
 # the application rather than buffering it.
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/premium/backend/src
-ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh"]
-EXPOSE 8000
 
 RUN dos2unix /baserow/backend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/backend/docker/docker-entrypoint.sh
 
+HEALTHCHECK CMD ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh"]
 
 FROM core as dev
 
@@ -74,10 +79,10 @@ COPY --chown=$UID:$GID --from=dev_deps /baserow/venv /baserow/venv
 
 # Override env variables and initial cmd to start up in dev mode.
 ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.dev'
-CMD ["dev"]
+CMD ["django-dev"]
 
 FROM core as local
 
 ENV DJANGO_SETTINGS_MODULE='baserow.config.settings.base'
-CMD ["local"]
+CMD ["gunicorn"]
 

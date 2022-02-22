@@ -6,7 +6,14 @@ install-dev-dependencies:
 	pip install -r requirements/dev.txt
 
 lint:
-	flake8 src tests ../premium/backend && black . ../premium/backend --extend-exclude='/generated/' --check && bandit -r --exclude src/baserow/test_utils src/ ../premium/backend/src/ || exit;
+	./python_dep_check.sh check && \
+	flake8 src tests ../premium/backend && \
+	black . ../premium/backend --extend-exclude='/generated/' --check && \
+	bandit -r --exclude src/baserow/test_utils src/ ../premium/backend/src/ \
+	|| exit;
+
+pip-clean-reinstall-and-freeze:
+	./python_dep_check.sh freeze
 
 lint-python: lint
 

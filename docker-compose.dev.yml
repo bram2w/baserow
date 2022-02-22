@@ -7,14 +7,16 @@ services:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
 
   backend:
+    image: baserow_backend_dev:latest
     build:
+      dockerfile: ./backend/Dockerfile
+      context: .
       target: dev
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
         UID: $UID
         GID: $GID
-    image: baserow_backend_dev:latest
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
@@ -22,16 +24,39 @@ services:
     stdin_open: true
     tty: true
 
-  celery:
-    image: baserow_backend_dev:latest
+  web-frontend:
+    image: baserow_web-frontend_dev:latest
     build:
+      dockerfile: ./web-frontend/Dockerfile
+      context: .
       target: dev
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
         UID: $UID
         GID: $GID
-    command: celery-dev worker -l INFO -Q celery
+    volumes:
+      - ./web-frontend:/baserow/web-frontend
+      # Override the above mounts for node_modules so we use the node_modules built
+      # directly into the image instead of whatever is on your local filesystem.
+      - /baserow/web-frontend/node_modules
+      - ./premium/web-frontend/:/baserow/premium/web-frontend
+    # Open stdin and tty so when attaching key input works as expected.
+    stdin_open: true
+    tty: true
+
+  celery:
+    image: baserow_backend_dev:latest
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: .
+      target: dev
+      args:
+        # We allow configuring the UID/GID here so you can run as the dev's actual user
+        # reducing the chance the containers screw up the bind mounted folders.
+        UID: $UID
+        GID: $GID
+    command: "watch-py celery-worker"
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
@@ -42,13 +67,15 @@ services:
   celery-export-worker:
     image: baserow_backend_dev:latest
     build:
+      dockerfile: ./backend/Dockerfile
+      context: .
       target: dev
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
         UID: $UID
         GID: $GID
-    command: celery-dev worker -l INFO -Q export
+    command: "watch-py celery-exportworker"
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
@@ -59,35 +86,18 @@ services:
   celery-beat-worker:
     image: baserow_backend_dev:latest
     build:
+      dockerfile: ./backend/Dockerfile
+      context: .
       target: dev
       args:
         # We allow configuring the UID/GID here so you can run as the dev's actual user
         # reducing the chance the containers screw up the bind mounted folders.
         UID: $UID
         GID: $GID
-    command: celery-dev beat -l INFO -S redbeat.RedBeatScheduler
+    command: "watch-py celery-beat"
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
-    # Open stdin and tty so when attaching key input works as expected.
-    stdin_open: true
-    tty: true
-
-  web-frontend:
-    build:
-      target: dev
-      args:
-        # We allow configuring the UID/GID here so you can run as the dev's actual user
-        # reducing the chance the containers screw up the bind mounted folders.
-        UID: $UID
-        GID: $GID
-    image: baserow_web-frontend_dev:latest
-    volumes:
-      - ./web-frontend:/baserow/web-frontend
-      # Override the above mounts for node_modules so we use the node_modules built
-      # directly into the image instead of whatever is on your local filesystem.
-      - /baserow/web-frontend/node_modules
-      - ./premium/web-frontend/:/baserow/premium/web-frontend
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
@@ -102,6 +112,8 @@ services:
         GID: $GID
       context: .
       dockerfile: ./web-frontend/Dockerfile
+    healthcheck:
+      test: [ "CMD-SHELL", "exit 0" ]
     image: baserow_web-frontend:latest
     command: "bash -c 'cd /baserow/backend/email_compiler/ && yarn install && yarn run watch'"
     volumes:
@@ -119,5 +131,15 @@ services:
     networks:
       local:
 
-  media-volume-fixer:
+  # When switching between dev and local the media files in the media volume will be
+  # owned by different users. Ensure that we chown them to the user appropriate for the
+  # environment here.
+  volume-permissions-fixer:
+    image: bash:4.4
     command: chown ${UID:-1000}:${GID:-1000} -R /baserow/media
+    volumes:
+      - media:/baserow/media
+      - caddy_config:/config
+      - caddy_data:/data
+    networks:
+      local:

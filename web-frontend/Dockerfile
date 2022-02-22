@@ -46,16 +46,16 @@ RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
 # tini installed above protects us from zombie processes and ensures the default signal
 # handlers work, see https://github.com/krallin/tini.
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/web-frontend/docker/docker-entrypoint.sh"]
-EXPOSE 3000
+HEALTHCHECK CMD ["/usr/bin/tini", "--", "curl", "-f", "http://localhost:3000/_health/"]
 
 FROM base as dev
 
 # We don't bother running build-local in dev mode as it pre-compiles nuxt which won't
 # be used when running the nuxt dev server.
-CMD ["dev"]
+CMD ["nuxt-dev"]
 
 FROM base as local
 
 RUN yarn run build-local
-CMD ["local"]
+CMD ["nuxt-local"]
 

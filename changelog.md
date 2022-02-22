@@ -31,6 +31,13 @@
 * Rework Baserow docker images so they can be built and tested by gitlab CI.
 * Bumped some backend and web-frontend dependencies.
 * Remove runtime mjml service and pre-render email templates at build time.
+* Add the all-in-one Baserow docker image.
+* Migrate the Baserow Cloudron and Heroku images to work from the all-in-one.
+* **breaking change** docker-compose.yml now requires secrets to be setup by the user,
+  listens by default on 0.0.0.0:80 with a Caddy reverse proxy, use BASEROW_PUBLIC_URLS 
+  now to configure a domain.
+* Add health checks for all services.
+* Ensure error logging is enabled in the Backend even when DEBUG is off.
 
 ## Released (2022-01-13 1.8.2)
 

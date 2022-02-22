@@ -2,17 +2,47 @@
 # Bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
 
+# ======================================================
+# ENVIRONMENT VARIABLES USED DIRECTLY BY THIS ENTRYPOINT
+# ======================================================
+
 # Used by docker-entrypoint.sh to start the dev server
 # If not configured you'll receive this: CommandError: "0.0.0.0:" is not a valid port number or address:port pair.
-PORT="${PORT:-8000}"
-DATABASE_USER="${DATABASE_USER:-postgres}"
+BASEROW_BACKEND_PORT="${BASEROW_BACKEND_PORT:-8000}"
+
+# Database environment variables used to check the Postgresql connection.
+DATABASE_USER="${DATABASE_USER:-baserow}"
 DATABASE_HOST="${DATABASE_HOST:-db}"
 DATABASE_PORT="${DATABASE_PORT:-5432}"
+DATABASE_NAME="${DATABASE_NAME:-baserow}"
+DATABASE_PASSWORD="${DATABASE_PASSWORD:-baserow}"
+# Or you can provide a Postgresql connection url
+DATABASE_URL="${DATABASE_URL:-}"
 
-source "/baserow/venv/bin/activate"
+BASEROW_POSTGRES_STARTUP_CHECK_ATTEMPTS="${BASEROW_POSTGRES_STARTUP_CHECK_ATTEMPTS:-5}"
+
+# Backend server related variables
+MIGRATE_ON_STARTUP=${MIGRATE_ON_STARTUP:-true}
+SYNC_TEMPLATES_ON_STARTUP=${SYNC_TEMPLATES_ON_STARTUP:-true}
+BASEROW_BACKEND_BIND_ADDRESS=${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}
+BASEROW_BACKEND_LOG_LEVEL=${BASEROW_BACKEND_LOG_LEVEL:-INFO}
+BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER=${BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER:-}
+
+BASEROW_AMOUNT_OF_WORKERS=${BASEROW_AMOUNT_OF_WORKERS:-1}
+BASEROW_AMOUNT_OF_GUNICORN_WORKERS=${BASEROW_AMOUNT_OF_GUNICORN_WORKERS:-3}
+
+# Celery related variables
+BASEROW_RUN_MINIMAL_CELERY=${BASEROW_RUN_MINIMAL_CELERY:-}
+BASEROW_CELERY_BEAT_STARTUP_DELAY=${BASEROW_CELERY_BEAT_STARTUP_DELAY:-15}
+
+
+# ======================================================
+# HELPER FUNCTIONS
+# ======================================================
 
 postgres_ready() {
-python << END
+  if [ -z "$DATABASE_URL" ]; then
+python3 << END
 import sys
 import psycopg2
 try:
@@ -27,39 +57,87 @@ except psycopg2.OperationalError:
     sys.exit(-1)
 sys.exit(0)
 END
+else
+  echo "Checking $DATABASE_URL"
+python3 << END
+import sys
+import psycopg2
+try:
+    psycopg2.connect(
+        "${DATABASE_URL}"
+    )
+except psycopg2.OperationalError:
+    sys.exit(-1)
+sys.exit(0)
+END
+  fi
 }
 
 wait_for_postgres() {
-until postgres_ready; do
-  >&2 echo 'Waiting for PostgreSQL to become available...'
-  sleep 1
+for i in $( seq 0 "$BASEROW_POSTGRES_STARTUP_CHECK_ATTEMPTS" )
+do
+  if ! postgres_ready; then
+    echo "Waiting for PostgreSQL to become available attempt " \
+         "$i/$BASEROW_POSTGRES_STARTUP_CHECK_ATTEMPTS ..."
+    sleep 2
+  else
+    echo 'PostgreSQL is available'
+    return 0
+  fi
 done
->&2 echo 'PostgreSQL is available'
+echo 'PostgreSQL did not become available in time...'
+exit 1
 }
 
 
 
 show_help() {
-# If you change this please update ./docs/reference/baserow-docker-api.md
     echo """
-Usage: docker run [-T] baserow_backend[_dev] COMMAND
-Commands
-local           : Start django using a prod ready gunicorn server
-dev             : Start a normal Django development server
-exec            : Exec a command directly
-bash            : Start a bash shell
-manage          : Start manage.py
+The available Baserow backend related commands, services and healthchecks are shown
+below:
+
+ADMIN COMMANDS:
 setup           : Runs all setup commands (migrate, update_formulas, sync_templates)
+manage          : Manage Baserow and its database
+bash            : Start a bash shell with the correct env setup
+backup          : Backs up Baserow's database to DATA_DIR/backups by default
+restore         : Restores Baserow's database restores from DATA_DIR/backups by default
 python          : Run a python command
 shell           : Start a Django Python shell
-celery          : Run celery
-celery-dev:     : Run a hot-reloading dev version of celery
-lint:           : Run the linting (only available if using dev target)
-lint-exit       : Run the linting and exit (only available if using dev target)
+shell           : Start a Django Python shell
+wait_for_db     : Waits BASEROW_POSTGRES_STARTUP_CHECK_ATTEMPTS attempts for the
+                  configured db to become available.
+help            : Show this message
+
+SERVICE COMMANDS:
+gunicorn            : Start Baserow backend django using a prod ready gunicorn server:
+                         * Waits for the postgres database to be available first
+                           checking BASEROW_POSTGRES_STARTUP_CHECK_ATTEMPTS times (default 5)
+                           before exiting.
+                         * Automatically migrates the database on startup unless
+                           MIGRATE_ON_STARTUP is set to something other than 'true'.
+                         * Automatically syncs Baserow's built in templates on startup
+                           unless SYNC_TEMPLATES_ON_STARTUP is set to something other
+                           than 'true'.
+                         * Binds to BASEROW_BACKEND_BIND_ADDRESS which defaults to 0.0.0.0
+celery-worker       : Start the celery worker queue which runs important async tasks
+celery-exportworker : Start the celery worker queue which runs slower async tasks
+celery-beat         : Start the celery beat service used to schedule periodic jobs
+
+HEALTHCHECK COMMANDS (exit with non zero when unhealthy, zero when healthy)
+backend-healthcheck             : Checks the gunicorn/django-dev service health
+celery-worker-healthcheck       : Checks the celery-worker health
+celery-exportworker-healthcheck : Checks the celery-exportworker health
+
+DEV COMMANDS (most will only work in the baserow_backend_dev image):
+django-dev      : Start a normal Baserow backend django development server, performs
+                  the same checks and setup as the gunicorn command above.
+lint-shell      : Run the linting (only available if using dev target)
+lint            : Run the linting and exit (only available if using dev target)
 test:           : Run the tests (only available if using dev target)
 ci-test:        : Run the tests for ci including various reports (dev only)
-ci-check-startup: Start up a single gunicorn and timeout after 10 seconds for ci (dev).
-help            : Show this message
+ci-check-startup: Start up a single gunicorn and timeout after 10 seconds for ci (dev)
+watch-py CMD    : Auto reruns the provided CMD whenever python files change
 """
 }
 
@@ -74,51 +152,94 @@ if [ "$SYNC_TEMPLATES_ON_STARTUP" = "true" ] ; then
 fi
 }
 
+start_celery_worker(){
+  if [[ -n "$BASEROW_RUN_MINIMAL_CELERY" ]]; then
+    EXTRA_CELERY_ARGS=(--without-heartbeat --without-gossip --without-mingle)
+  else
+    EXTRA_CELERY_ARGS=()
+  fi
+  exec celery -A baserow worker --concurrency "$BASEROW_AMOUNT_OF_WORKERS" "${EXTRA_CELERY_ARGS[@]}" -l INFO "$@"
+}
+
+# Lets devs attach to this container running the passed command, press ctrl-c and only
+# the command will stop. Additionally they will be able to use bash history to
+# re-run the containers command after they have done what they want.
+attachable_exec(){
+    echo "$@"
+    exec bash --init-file <(echo "history -s $*; $*")
+}
+
+# ======================================================
+# COMMANDS
+# ======================================================
+
+if [[ -z "${1:-}" ]]; then
+  echo "Must provide arguments to docker-entrypoint.sh"
+  show_help
+  exit 1
+fi
+
+source "/baserow/venv/bin/activate"
+
 case "$1" in
-    dev)
+    django-dev)
         wait_for_postgres
         run_setup_commands_if_configured
-        echo "Running Development Server on 0.0.0.0:${PORT}"
+        echo "Running Development Server on 0.0.0.0:${BASEROW_BACKEND_PORT}"
         echo "Press CTRL-p CTRL-q to close this session without stopping the container."
-        CMD="python /baserow/backend/src/baserow/manage.py runserver 0.0.0.0:${PORT}"
-        echo "$CMD"
-        # The below command lets devs attach to this container, press ctrl-c and only
-        # the server will stop. Additionally they will be able to use bash history to
-        # re-run the containers run server command after they have done what they want.
-        exec bash --init-file <(echo "history -s $CMD; $CMD")
+        attachable_exec python /baserow/backend/src/baserow/manage.py runserver "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}:${BASEROW_BACKEND_PORT}"
     ;;
-    local)
+    gunicorn)
         wait_for_postgres
         run_setup_commands_if_configured
-        exec gunicorn --workers=3 -b 0.0.0.0:"${PORT}" -k uvicorn.workers.UvicornWorker baserow.config.asgi:application
+
+        if [[ -n "$BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER" ]]; then
+          EXTRA_GUNICORN_ARGS=(--forwarded-allow-ips='*')
+        else
+          EXTRA_GUNICORN_ARGS=()
+        fi
+        # Gunicorn args explained in order:
+        #
+        # 1. See https://docs.gunicorn.org/en/stable/faq.html#blocking-os-fchmod for
+        #    why we set worker-tmp-dir to /dev/shm by default.
+        # 2. Log to stdout
+        # 3. Log requests to stdout
+        exec gunicorn --workers="$BASEROW_AMOUNT_OF_GUNICORN_WORKERS" \
+          --worker-tmp-dir "${TMPDIR:-/dev/shm}" \
+          --log-file=- \
+          --access-logfile=- \
+          --capture-output \
+          "${EXTRA_GUNICORN_ARGS[@]}" \
+          -b "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}":"${BASEROW_BACKEND_PORT}" \
+          --log-level="${BASEROW_BACKEND_LOG_LEVEL}" \
+          -k uvicorn.workers.UvicornWorker baserow.config.asgi:application "${@:2}"
     ;;
-    exec)
-        exec "${@:2}"
+    backend-healthcheck)
+      echo "Running backend healthcheck..."
+      curl --silent --output /dev/null --write-out "%{http_code}" "http://localhost:$BASEROW_BACKEND_PORT/_health/"
     ;;
     bash)
-        exec /bin/bash "${@:2}"
+        exec /bin/bash -c "${@:2}"
     ;;
     manage)
-        exec python /baserow/backend/src/baserow/manage.py "${@:2}"
+        exec python3 /baserow/backend/src/baserow/manage.py "${@:2}"
     ;;
     python)
-        exec python "${@:2}"
+        exec python3 "${@:2}"
     ;;
     setup)
-      echo "python /baserow/backend/src/baserow/manage.py migrate"
-      python /baserow/backend/src/baserow/manage.py migrate
-      echo "python /baserow/backend/src/baserow/manage.py update_formulas"
-      python /baserow/backend/src/baserow/manage.py update_formulas
-      echo "python /baserow/backend/src/baserow/manage.py sync_templates"
-      python /baserow/backend/src/baserow/manage.py sync_templates
+      echo "python3 /baserow/backend/src/baserow/manage.py migrate"
+      DONT_UPDATE_FORMULAS_AFTER_MIGRATION=yes python3 /baserow/backend/src/baserow/manage.py migrate
+      echo "python3 /baserow/backend/src/baserow/manage.py update_formulas"
+      python3 /baserow/backend/src/baserow/manage.py update_formulas
+      echo "python3 /baserow/backend/src/baserow/manage.py sync_templates"
+      python3 /baserow/backend/src/baserow/manage.py sync_templates
     ;;
     shell)
-        exec python /baserow/backend/src/baserow/manage.py shell
+        exec python3 /baserow/backend/src/baserow/manage.py shell
     ;;
     lint-shell)
-        CMD="make lint-python"
-        echo "$CMD"
-        exec bash --init-file <(echo "history -s $CMD; $CMD")
+        attachable_exec make lint-python
     ;;
     lint)
         exec make lint-python
@@ -129,10 +250,30 @@ case "$1" in
     ci-check-startup)
         exec make ci-check-startup-python
     ;;
-    celery)
-        exec celery -A baserow "${@:2}"
+    celery-worker)
+      start_celery_worker -Q celery -n default-worker@%h "${@:2}"
     ;;
-    celery-dev)
+    celery-worker-healthcheck)
+      echo "Running celery worker healthcheck..."
+      exec celery -A baserow inspect ping -d "default-worker@$HOSTNAME" -t 10 "${@:2}"
+    ;;
+    celery-exportworker)
+      start_celery_worker -Q export -n export-worker@%h "${@:2}"
+    ;;
+    celery-exportworker-healthcheck)
+      echo "Running celery export worker healthcheck..."
+      exec celery -A baserow inspect ping -d "export-worker@$HOSTNAME" -t 10 "${@:2}"
+    ;;
+    celery-beat)
+      # Delay the beat startup as there seems to be bug where the other celery workers
+      # starting up interfere with or break the lock obtained by it. Without this the
+      # second time beat extends its lock it will crash and have to be restarted.
+      echo "Sleeping for $BASEROW_CELERY_BEAT_STARTUP_DELAY before starting beat to prevent "\
+           "startup errors."
+      sleep "$BASEROW_CELERY_BEAT_STARTUP_DELAY"
+      exec celery -A baserow beat -l INFO -S redbeat.RedBeatScheduler "${@:2}"
+    ;;
+    watch-py)
         # Ensure we watch all possible python source code locations for changes.
         directory_args=''
         for i in $(echo "$PYTHONPATH" | tr ":" "\n")
@@ -140,12 +281,46 @@ case "$1" in
           directory_args="$directory_args -d=$i"
         done
 
-        CMD="watchmedo auto-restart $directory_args --pattern=*.py --recursive -- celery -A baserow ${*:2}"
-        echo "$CMD"
-        # The below command lets devs attach to this container, press ctrl-c and only
-        # the server will stop. Additionally they will be able to use bash history to
-        # re-run the containers run server command after they have done what they want.
-        exec bash --init-file <(echo "history -s $CMD; $CMD")
+        attachable_exec watchmedo auto-restart "$directory_args" --pattern=*.py --recursive -- bash "${BASH_SOURCE[0]} ${*:2}"
+    ;;
+    backup)
+        if [[ -n "$DATABASE_URL" ]]; then
+          echo -e "\e[31mThe backup command is currently incompatible with DATABASE_URL, "\
+            "please set the DATABASE_{HOST,USER,PASSWORD,NAME,PORT} variables manually"\
+            " instead. \e[0m" >&2
+          exit 1
+        fi
+        if [[ -n "${DATA_DIR:-}" ]]; then
+          cd "$DATA_DIR"/backups || true
+        fi
+        export PGPASSWORD=$DATABASE_PASSWORD
+        exec python3 /baserow/backend/src/baserow/manage.py backup_baserow \
+            -h "$DATABASE_HOST" \
+            -d "$DATABASE_NAME" \
+            -U "$DATABASE_USER" \
+            -p "$DATABASE_PORT" \
+            "${@:2}"
+    ;;
+    restore)
+        if [[ -n "$DATABASE_URL" ]]; then
+          echo -e "\e[31mThe restore command is currently incompatible with DATABASE_URL, "\
+            "please set the DATABASE_{HOST,USER,PASSWORD,NAME,PORT} variables manually"\
+            " instead. \e[0m" >&2
+          exit 1
+        fi
+        if [[ -n "${DATA_DIR:-}" ]]; then
+          cd "$DATA_DIR"/backups || true
+        fi
+        export PGPASSWORD=$DATABASE_PASSWORD
+        exec python3 /baserow/backend/src/baserow/manage.py restore_baserow \
+            -h "$DATABASE_HOST" \
+            -d "$DATABASE_NAME" \
+            -U "$DATABASE_USER" \
+            -p "$DATABASE_PORT" \
+            "${@:2}"
+    ;;
+    wait_for_db)
+      wait_for_postgres
     ;;
     *)
         echo "${@:2}"

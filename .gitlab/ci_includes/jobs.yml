@@ -136,7 +136,10 @@
 # and tags and pushes the non-dev and dev images using $TESTED_IMAGE_PREFIX to mark
 # them as being successfully tested for the publishing jobs to use.
 #
-# To extend this stage set the DOCKERFILE_PATH, IMAGE_NAME and DEV_IMAGE_NAME variables.
+# To extend this stage set the DOCKERFILE_PATH, IMAGE_NAME and optionally the
+# DEV_IMAGE_NAME variables. If DEV_IMAGE_NAME is set it will be used to cache the build
+# and a tested tag for it will be pushed at the end.
+# You can also set EXTRA_BUILD_ARGS to pass any extra args to the docker build call.
 .build-final-baserow-image:
   image: $CI_UTIL_IMAGE
   stage: build-final
@@ -183,10 +186,6 @@
           echo "Must provide IMAGE_NAME as a job variable" 2>&1
           exit 1
       fi
-      if [[ -z "$DEV_IMAGE_NAME" ]]; then
-          echo "Must provide DEV_IMAGE_NAME as a job variable" 2>&1
-          exit 1
-      fi
 
       # ===== 1. Setup image metadata labels =====
       #Build date for opencontainers
@@ -201,8 +200,17 @@
 
       # ==== 2. Tag, build and push non-dev image ====
 
+      CACHE_FROM_BUILD_ARGS=""
+      EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS"
       # Cache from the CI dev image to build the non dev image.
-      CI_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+      if [[ -n "$DEV_IMAGE_NAME" ]]; then
+        # Always cache from the CI_IMAGE_PATH as even when we are doing a full image
+        # rebuild it will have been already fully rebuilt once by the first stage so it
+        # is safe to use as a cache.
+        CI_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$CI_COMMIT_SHORT_SHA
+        docker pull $CI_IMAGE_PATH
+        CACHE_FROM_BUILD_ARGS="$CACHE_FROM_BUILD_ARGS --cache-from $CI_IMAGE_PATH";
+      fi
 
       TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
       NON_DEV_CACHE_IMAGE=$CI_IMAGE_REPO/$IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$TRUNCATED_BRANCH_NAME
@@ -210,10 +218,7 @@
       TARGET_NON_DEV_IMAGE_PATH=$CI_IMAGE_REPO/$IMAGE_NAME:$TESTED_IMAGE_PREFIX$CI_COMMIT_SHORT_SHA
       TARGET_DEV_IMAGE_PATH=$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$TESTED_IMAGE_PREFIX$CI_COMMIT_SHORT_SHA
 
-      docker pull $CI_IMAGE_PATH
 
-      CACHE_FROM_BUILD_ARGS=""
-      EXTRA_BUILD_ARGS=""
       if [[ "$TRIGGER_FULL_IMAGE_REBUILD" != "yes" ]]; then
         # Set this variable to ensure the image is rebuilt fully and we re-run all
         # build steps to ensure we get the latest and most secure base image + the
@@ -222,7 +227,7 @@
         if [[ "$CI_COMMIT_BRANCH" != "$MASTER_BRANCH_NAME" ]]; then
           if docker pull $NON_DEV_CACHE_IMAGE ; then
             echo "Caching from $NON_DEV_CACHE_IMAGE";
-            CACHE_FROM_BUILD_ARGS="--cache-from $NON_DEV_CACHE_IMAGE";
+            CACHE_FROM_BUILD_ARGS="$CACHE_FROM_BUILD_ARGS --cache-from $NON_DEV_CACHE_IMAGE";
           fi
         fi
 
@@ -231,38 +236,56 @@
             DEVELOP_LATEST_BRANCH_CI_IMAGE="$CI_IMAGE_REPO/$IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$DEVELOP_BRANCH_NAME"
             if docker pull $DEVELOP_LATEST_BRANCH_CI_IMAGE; then
                echo "Caching docker build from the latest develop image: $DEVELOP_LATEST_BRANCH_CI_IMAGE";
-               CACHE_FROM_BUILD_ARGS="--cache-from $DEVELOP_LATEST_BRANCH_CI_IMAGE";
+               CACHE_FROM_BUILD_ARGS="$CACHE_FROM_BUILD_ARGS --cache-from $DEVELOP_LATEST_BRANCH_CI_IMAGE";
             fi
         fi
       fi
 
-      if [[ -n "$BUILD_FROM_IMAGE" ]]; then
-        EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --build-arg FROM_IMAGE=$BUILD_FROM_IMAGE";
-        IMAGE_LABELS="$IMAGE_LABELS --label built-from-image=$BUILD_FROM_IMAGE"
-        if docker pull "$BUILD_FROM_IMAGE"; then
-          BUILT_FROM_REVISION=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["org.opencontainers.image.revision"]')
-          BUILT_FROM_COMMITURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["com.gitlab.ci.commiturl"]')
-          BUILT_FROM_CIJOBURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["com.gitlab.ci.cijoburl"]')
-          BUILT_FROM_MRURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["com.gitlab.ci.mrurl"]')
-          BUILT_FROM_VCSURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["vcs-url"]')
-
-          IMAGE_LABELS="$IMAGE_LABELS --label built-from-revision=$BUILD_FROM_REVISION"
-          IMAGE_LABELS="$IMAGE_LABELS --label built-from-commiturl=$BUILD_FROM_COMMITURL"
-          IMAGE_LABELS="$IMAGE_LABELS --label built-from-cijoburl=$BUILD_FROM_CIJOBURL"
-          IMAGE_LABELS="$IMAGE_LABELS --label built-from-mrurl=$BUILD_FROM_MRURL"
-          IMAGE_LABELS="$IMAGE_LABELS --label built-from-vcsurl=$BUILD_FROM_VCSURL"
+      setup_build_from_image(){
+        if [[ -z "$1" ]]; then
+          # If no argument is provided then look for a variable called BUILD_FROM_IMAGE
+          # and use that.
+          BUILD_FROM_VARIABLE_NAME="BUILD_FROM_IMAGE"
+          BUILD_FROM_DOCKER_ARG="FROM_IMAGE"
+          LABEL_PREFIX="built-from"
         else
-          echo "Failed to pull build from image $BUILD_FROM_IMAGE, something has gone wrong"
-          exit 1
+          # If no argument is provided then look for a variable called
+          # BUILD_FROM_$1_IMAGE and use that.
+          BUILD_FROM_VARIABLE_NAME="BUILD_FROM_$1_IMAGE"
+          BUILD_FROM_DOCKER_ARG="FROM_$1_IMAGE"
+          LOWER_CASE_ARG=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+          LABEL_PREFIX="built-from-$LOWER_CASE_ARG-"
         fi
-      fi
+
+        eval BUILD_FROM_IMAGE=\$${BUILD_FROM_VARIABLE_NAME}
+        if [[ -n "$BUILD_FROM_IMAGE" ]]; then
+          EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --build-arg $BUILD_FROM_DOCKER_ARG=$BUILD_FROM_IMAGE";
+          IMAGE_LABELS="$IMAGE_LABELS --label $LABEL_PREFIX-image=$BUILD_FROM_IMAGE"
+          if docker pull "$BUILD_FROM_IMAGE"; then
+            BUILT_FROM_REVISION=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["org.opencontainers.image.revision"]')
+            BUILT_FROM_COMMITURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["com.gitlab.ci.commiturl"]')
+            BUILT_FROM_CIJOBURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["com.gitlab.ci.cijoburl"]')
+            BUILT_FROM_MRURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["com.gitlab.ci.mrurl"]')
+            BUILT_FROM_VCSURL=$(docker inspect $BUILD_FROM_IMAGE | jq -r '.[0].Config.Labels["vcs-url"]')
+
+            IMAGE_LABELS="$IMAGE_LABELS --label $LABEL_PREFIX-revision=$BUILD_FROM_REVISION"
+            IMAGE_LABELS="$IMAGE_LABELS --label $LABEL_PREFIX-commiturl=$BUILD_FROM_COMMITURL"
+            IMAGE_LABELS="$IMAGE_LABELS --label $LABEL_PREFIX-cijoburl=$BUILD_FROM_CIJOBURL"
+            IMAGE_LABELS="$IMAGE_LABELS --label $LABEL_PREFIX-mrurl=$BUILD_FROM_MRURL"
+            IMAGE_LABELS="$IMAGE_LABELS --label $LABEL_PREFIX-vcsurl=$BUILD_FROM_VCSURL"
+          else
+            echo "Failed to pull build from image $BUILD_FROM_IMAGE, something has gone wrong"
+            exit 1
+          fi
+        fi
+      }
+
+      setup_build_from_image ""
+      setup_build_from_image BACKEND
+      setup_build_from_image WEBFRONTEND
 
       # Build the normal non-dev image with all the tags and labels.
-      # Always cache from the CI_IMAGE_PATH as even when we are doing a full image
-      # rebuild it will have been already fully rebuilt once by the first stage so it
-      # is safe to use as a cache.
       docker build \
-        --cache-from $CI_IMAGE_PATH \
         $CACHE_FROM_BUILD_ARGS \
         $EXTRA_BUILD_ARGS \
         $FORMATTEDTAGLIST \
@@ -276,7 +299,6 @@
       # We don't do this for master as master always caches from develop.
       if [[ "$CI_COMMIT_BRANCH" != "$MASTER_BRANCH_NAME" ]]; then
         docker build \
-          --cache-from $CI_IMAGE_PATH \
           $CACHE_FROM_BUILD_ARGS \
           $EXTRA_BUILD_ARGS \
           $IMAGE_LABELS \
@@ -286,9 +308,11 @@
         docker push $NON_DEV_CACHE_IMAGE
       fi
 
-      # Push a tested dev version of the image also.
-      docker tag $CI_IMAGE_PATH $TARGET_DEV_IMAGE_PATH
-      docker push $TARGET_DEV_IMAGE_PATH
+      if [[ -n "$DEV_IMAGE_NAME" ]]; then
+        # Push a tested dev version of the image also.
+        docker tag $CI_IMAGE_PATH $TARGET_DEV_IMAGE_PATH
+        docker push $TARGET_DEV_IMAGE_PATH
+      fi
 
 # A simple docker based test job which does not run for a TAG pipeline and does not
 # check out git.
@@ -437,7 +461,7 @@
                 if [ ${exit_code} -ne 0 ]; then
                   echo -e "$RED Failed to get artifacts from successful run $JOB_ID $CLEAR"
                 else
-                  unzip artifacts.zip || exit_code=$?
+                  unzip -o artifacts.zip || exit_code=$?
                   if [ ${exit_code} -ne 0 ]; then
                     echo -e "$RED Failed to unzip artifacts $CLEAR"
                   else

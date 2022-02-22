@@ -8,34 +8,54 @@ experience while keeping it easy for developers to write plugins and maintain th
 codebase. The developer documentation contains several topics you might need as a
 developer.
 
-## Getting started
+## Installation
 
-New to Baserow? This is the place to start.
+We provide a hosted version of Baserow which you can sign up and start using immediately
+at [https://baserow.io](https://baserow.io). Alternatively you can easily self-host
+Baserow by following one the guides below:
 
-* [Introduction](./getting-started/introduction.md): An introduction to some important
-  concepts before using Baserow.
-* [API](./getting-started/api.md): An introduction to the REST API and information about
+* [Install with Docker](installation/install-with-docker.md): A step-by-step guide to
+  install Baserow using docker.
+* [Install with Docker Compose](installation/install-with-docker.md): A step-by-step
+  guide to install Baserow using Docker Compose.
+* [Install on Cloudron](installation/install-on-cloudron.md): Instructions to manually
+  install Baserow on Cloudron.
+* [Install on Heroku](installation/install-on-heroku.md): A step-by-step guide to
+  install Baserow using Heroku.
+* [Migrate from Ubuntu to Docker](installation/migrate-from-ubuntu-to-docker.md): If you
+  have previously installed Baserow using the deprecated ubuntu guide below then please
+  follow this guide to migrate your install to use the new Docker install.
+* [Install on Ubuntu](installation/install-on-ubuntu.md): Instructions on how to install 
+  Docker and use it to install Baserow on a fresh ubuntu install.
+* [DEPRECATED: Install on Ubuntu](installation/old-install-on-ubuntu.md): A deprecated 
+  and now unsupported guide on how to manually install Baserow and its required services 
+  on a fresh ubuntu install. Please use the guides above instead.
+
+## Baserow Tutorials
+
+* [Understanding Baserow Formulas](tutorials/understanding-baserow-formulas.md): A
+  tutorial explaining how to use the formula field in Baserow.
+* [Debugging Connection Issues](tutorials/understanding-baserow-formulas.md): A
+  tutorial explaining how to use the formula field in Baserow.
+
+## API Usage
+
+Baserow provides various APIs detailed below:
+
+* [REST API](apis/rest-api.md): An introduction to the REST API and information about
   API resources.
-* [WebSocket API](./getting-started/web-socket-api.md): An introduction to the
-  WebSockets API which is used to broadcast real time updates.
-* [Database plugin](./getting-started/database-plugin.md) An introduction to the
-  database plugin which is installed by default.
+* [WebSocket API](apis/web-socket-api.md): An introduction to the WebSockets API which
+  is used to broadcast real time updates.
 
-## Guides
+## Technical Overviews
 
-Need some help with setting things up or understanding how Baserow works?
-
-* [Running Locally](guides/running-baserow-locally.md): A step-by-step guide to run
-  Baserow on your computer.
-* [Install on Cloudron](guides/installation/install-on-cloudron.md): Instructions
-  to manually install Baserow on Cloudron.
-* [Install on Ubuntu](./guides/installation/install-on-ubuntu.md): A step-by-step guide
-  to install Baserow on an Ubuntu server.
-* [Understanding Baserow Formulas](./guides/understanding-baserow-formulas.md): A guide
-  explaining how to use the formula field in Baserow.
-* [Formula Technical Guide](./guides/formula-technical-guide.md): A more technical guide
-  about formulas aimed at developers who want to understand and work with internals of 
-  Baserow formulas.
+* [Introduction](technical/introduction.md): An introduction to some important technical
+  concepts in Baserow.
+* [Database plugin](technical/database-plugin.md) An introduction to the database plugin
+  which is installed by default.
+* [Formula Technical Guide](technical/formula-technical-guide.md): A more technical
+  guide about formulas aimed at developers who want to understand and work with
+  internals of Baserow formulas.
 
 ## Development
 
@@ -56,19 +76,8 @@ Everything related to contributing and developing for Baserow.
   previewed and installed by others.
 * [dev.sh](./development/dev_sh.md): Further details on how to use Baserow's `./dev.sh`
   helper script.
-- [IntelliJ setup](./development/intellij-setup.md): How to configure Intellij to work 
+* [IntelliJ setup](./development/intellij-setup.md): How to configure Intellij to work
   well with Baserow for development purposes.
-
-## FAQs 
-
-* [Baserow Docker How To](./guides/baserow-docker-how-to.md): Common operations and
-  solutions for working with baserow's docker environments.
-
-## Reference 
-
-* [Baserow Docker API](./reference/baserow-docker-api.md): An API reference with all
-  supported environment variables, command line arguments and usage patterns for
-  Baserow's docker images and compose files.
 
 ## Plugins
 
