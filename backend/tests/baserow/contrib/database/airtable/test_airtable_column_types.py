@@ -20,10 +20,6 @@ from baserow.contrib.database.fields.models import (
     MultipleSelectField,
     PhoneNumberField,
 )
-from baserow.contrib.database.fields.field_types import (
-    NUMBER_TYPE_INTEGER,
-    NUMBER_TYPE_DECIMAL,
-)
 from baserow.contrib.database.airtable.airtable_column_types import (
     TextAirtableColumnType,
     DateAirtableColumnType,
@@ -761,8 +757,7 @@ def test_airtable_import_number_integer_column(data_fixture, api_client):
     )
     assert isinstance(baserow_field, NumberField)
     assert isinstance(airtable_column_type, NumberAirtableColumnType)
-    assert baserow_field.number_type == NUMBER_TYPE_INTEGER
-    assert baserow_field.number_decimal_places == 1
+    assert baserow_field.number_decimal_places == 0
     assert baserow_field.number_negative is False
 
     assert (
@@ -818,7 +813,6 @@ def test_airtable_import_number_decimal_column(data_fixture, api_client):
     )
     assert isinstance(baserow_field, NumberField)
     assert isinstance(airtable_column_type, NumberAirtableColumnType)
-    assert baserow_field.number_type == NUMBER_TYPE_DECIMAL
     assert baserow_field.number_decimal_places == 1
     assert baserow_field.number_negative is False
 
@@ -840,7 +834,6 @@ def test_airtable_import_number_decimal_column(data_fixture, api_client):
     )
     assert isinstance(baserow_field, NumberField)
     assert isinstance(airtable_column_type, NumberAirtableColumnType)
-    assert baserow_field.number_type == NUMBER_TYPE_DECIMAL
     assert baserow_field.number_decimal_places == 2
     assert baserow_field.number_negative is True
 
