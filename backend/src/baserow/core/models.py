@@ -63,6 +63,11 @@ class Settings(models.Model):
         help_text="Indicates whether new users can create a new account when signing "
         "up.",
     )
+    allow_signups_via_group_invitations = models.BooleanField(
+        default=True,
+        help_text="Indicates whether invited users can create an account when signing "
+        "up, even if allow_new_signups is disabled.",
+    )
 
 
 class UserProfile(models.Model):

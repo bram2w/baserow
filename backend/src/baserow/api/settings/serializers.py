@@ -6,9 +6,10 @@ from baserow.core.models import Settings
 class SettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Settings
-        fields = ("allow_new_signups",)
+        fields = ("allow_new_signups", "allow_signups_via_group_invitations")
         extra_kwargs = {
             "allow_new_signups": {"required": False},
+            "allow_signups_via_group_invitations": {"required": False},
         }
 
 

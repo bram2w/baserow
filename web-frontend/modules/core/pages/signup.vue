@@ -6,7 +6,7 @@
       </h1>
       <LangPicker />
     </div>
-    <template v-if="!settings.allow_new_signups">
+    <template v-if="!isSignupEnabled">
       <div class="alert alert--simple alert--error alert--has-icon">
         <div class="alert__icon">
           <i class="fas fa-exclamation"></i>
@@ -54,6 +54,13 @@ export default {
     }
   },
   computed: {
+    isSignupEnabled() {
+      return (
+        this.settings.allow_new_signups ||
+        (this.settings.allow_signups_via_group_invitations &&
+          this.invitation?.id)
+      )
+    },
     ...mapGetters({
       settings: 'settings/get',
     }),

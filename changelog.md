@@ -16,6 +16,8 @@
   tools, e.g. to various REST clients.
 * Added search to gallery views.
 * Views supporting search are properly updated when a column with a matching default value is added.
+* Allow for group registrations while public registration is closed
+* Allow for signup via group invitation while public registration is closed.
 
 ## Released (2022-01-13 1.8.2)
 
