@@ -18,21 +18,25 @@ def construct_all_possible_field_kwargs(
         "url": [{"name": "url"}],
         "email": [{"name": "email"}],
         "number": [
-            {"name": "negative_int", "number_type": "INTEGER", "number_negative": True},
+            {
+                "name": "negative_int",
+                "number_negative": True,
+                "number_decimal_places": 0,
+            },
             {
                 "name": "positive_int",
-                "number_type": "INTEGER",
                 "number_negative": False,
+                "number_decimal_places": 0,
             },
             {
                 "name": "negative_decimal",
-                "number_type": "DECIMAL",
                 "number_negative": "True",
+                "number_decimal_places": 1,
             },
             {
                 "name": "positive_decimal",
-                "number_type": "DECIMAL",
                 "number_negative": False,
+                "number_decimal_places": 1,
             },
         ],
         "rating": [

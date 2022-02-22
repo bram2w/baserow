@@ -710,7 +710,6 @@ def setup_testing_table(data_fixture):
     price_field = data_fixture.create_number_field(
         table=table,
         name="Price",
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=True,
         order=4,

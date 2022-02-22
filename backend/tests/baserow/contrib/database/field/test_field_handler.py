@@ -207,17 +207,7 @@ def test_create_field(send_mock, data_fixture):
             user=user,
             table=table,
             type_name="number",
-            name="Test number field",
-            number_type="NOT_EXISTING",
-        )
-
-    with pytest.raises(ValueError):
-        handler.create_field(
-            user=user,
-            table=table,
-            type_name="number",
-            name="Test number field",
-            number_type="DECIMAL",
+            name="Test decimal with oversized decimal places value",
             number_decimal_places=9999,
         )
 
@@ -226,8 +216,7 @@ def test_create_field(send_mock, data_fixture):
         table=table,
         type_name="number",
         name="Test number field",
-        number_type="INTEGER",
-        number_decimal_places=2,
+        number_decimal_places=0,
         number_negative=True,
     )
 
@@ -235,8 +224,7 @@ def test_create_field(send_mock, data_fixture):
     assert number_field.name == "Test number field"
     assert number_field.order == 2
     assert number_field.table == table
-    assert number_field.number_type == "INTEGER"
-    assert number_field.number_decimal_places == 2
+    assert number_field.number_decimal_places == 0
     assert number_field.number_negative
 
     handler.create_field(
@@ -395,12 +383,12 @@ def test_update_field(send_mock, data_fixture):
         field=field,
         new_type_name="number",
         name="Number field",
-        number_type="INTEGER",
+        number_decimal_places=0,
         number_negative=False,
     )
 
     assert field.name == "Number field"
-    assert field.number_type == "INTEGER"
+    assert field.number_decimal_places == 0
     assert field.number_negative is False
     assert not hasattr(field, "text_default")
 
@@ -416,13 +404,11 @@ def test_update_field(send_mock, data_fixture):
         field=field,
         new_type_name="number",
         name="Price field",
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=True,
     )
 
     assert field.name == "Price field"
-    assert field.number_type == "DECIMAL"
     assert field.number_decimal_places == 2
     assert field.number_negative is True
 
@@ -439,7 +425,6 @@ def test_update_field(send_mock, data_fixture):
 
     field.refresh_from_db()
     assert field.name == "Active"
-    assert not hasattr(field, "number_type")
     assert not hasattr(field, "number_decimal_places")
     assert not hasattr(field, "number_negative")
 
@@ -1077,7 +1062,7 @@ def test_can_convert_formula_to_numeric_field(data_fixture):
         field=existing_formula_field,
         new_type_name="number",
         name="Price field",
-        number_type="INTEGER",
+        number_decimal_places=0,
         number_negative=True,
     )
 

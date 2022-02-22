@@ -51,7 +51,6 @@ def test_list_fields(api_client, data_fixture):
     assert response_json[1]["id"] == field_3.id
     assert response_json[1]["type"] == "number"
     assert not response_json[1]["primary"]
-    assert response_json[1]["number_type"] == field_3.number_type
     assert response_json[1]["number_decimal_places"] == field_3.number_decimal_places
     assert response_json[1]["number_negative"] == field_3.number_negative
 
@@ -390,15 +389,13 @@ def test_update_field(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == "Test 1"
     assert response_json["type"] == "number"
-    assert response_json["number_type"] == "INTEGER"
-    assert response_json["number_decimal_places"] == 1
+    assert response_json["number_decimal_places"] == 0
     assert response_json["number_negative"]
 
     url = reverse("api:database:fields:item", kwargs={"field_id": text.id})
     response = api_client.patch(
         url,
         {
-            "number_type": "DECIMAL",
             "number_decimal_places": 2,
             "number_negative": False,
         },
@@ -409,7 +406,6 @@ def test_update_field(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == "Test 1"
     assert response_json["type"] == "number"
-    assert response_json["number_type"] == "DECIMAL"
     assert response_json["number_decimal_places"] == 2
     assert not response_json["number_negative"]
 
@@ -424,7 +420,6 @@ def test_update_field(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == "Test 2"
     assert response_json["type"] == "boolean"
-    assert "number_type" not in response_json
     assert "number_decimal_places" not in response_json
     assert "number_negative" not in response_json
 
@@ -455,6 +450,31 @@ def test_update_field(api_client, data_fixture):
     )
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_update_field_number_type_deprecation_error(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table, number_decimal_places=1
+    )
+
+    url = reverse("api:database:fields:item", kwargs={"field_id": number_field.id})
+    response = api_client.patch(
+        url,
+        {"number_type": "INTEGER"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"]["number_type"][0]["error"] == (
+        "The number_type option has been removed and can no longer be provided. "
+        "Instead set number_decimal_places to 0 for an integer or 1-5 for a "
+        "decimal."
+    )
 
 
 @pytest.mark.django_db

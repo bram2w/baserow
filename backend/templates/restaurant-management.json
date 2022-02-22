@@ -107,7 +107,6 @@
               "name": "Hourly rate",
               "order": 9,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -1780,7 +1779,6 @@
               "name": "In stock",
               "order": 5,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 1,
               "number_negative": false
             },
@@ -1790,7 +1788,6 @@
               "name": "Ideal quantity",
               "order": 6,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 1,
               "number_negative": false
             },
@@ -2702,7 +2699,6 @@
               "name": "Cost to make",
               "order": 3,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -3443,7 +3439,6 @@
               "name": "Price",
               "order": 2,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -4015,7 +4010,6 @@
               "name": "Shift duration",
               "order": 5,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 1,
               "number_negative": false
             }

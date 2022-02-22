@@ -461,7 +461,6 @@
               "name": "Duration",
               "order": 7,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -503,7 +502,6 @@
               "name": "Cost",
               "order": 13,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -1388,7 +1386,6 @@
               "name": "Cost",
               "order": 4,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -1927,7 +1924,6 @@
               "name": "Cost",
               "order": 5,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -3130,7 +3126,6 @@
               "name": "Cost",
               "order": 5,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -3731,7 +3726,6 @@
               "name": "Cost",
               "order": 2,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -3741,7 +3735,6 @@
               "name": "Budget",
               "order": 3,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },

@@ -35,9 +35,8 @@ const mockedFields = {
     primary: false,
     table_id: 42,
     type: 'number',
-    number_decimal_places: 1,
+    number_decimal_places: 0,
     number_negative: false,
-    number_type: 'INTEGER',
   },
   rating: {
     id: 16,

@@ -2,7 +2,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.functional import cached_property
 from django.core.validators import MinValueValidator, MaxValueValidator
-
 from baserow.contrib.database.fields.mixins import (
     BaseDateMixin,
     TimezoneMixin,
@@ -26,16 +25,11 @@ from baserow.core.mixins import (
 )
 from baserow.core.utils import to_snake_case, remove_special_characters
 
-NUMBER_TYPE_INTEGER = "INTEGER"
-NUMBER_TYPE_DECIMAL = "DECIMAL"
-NUMBER_TYPE_CHOICES = (
-    ("INTEGER", "Integer"),
-    ("DECIMAL", "Decimal"),
-)
 
 NUMBER_MAX_DECIMAL_PLACES = 5
 
 NUMBER_DECIMAL_PLACES_CHOICES = [
+    (0, "1"),
     (1, "1.0"),
     (2, "1.00"),
     (3, "1.000"),
@@ -206,12 +200,9 @@ class URLField(Field):
 
 
 class NumberField(Field):
-    number_type = models.CharField(
-        max_length=32, choices=NUMBER_TYPE_CHOICES, default=NUMBER_TYPE_INTEGER
-    )
     number_decimal_places = models.IntegerField(
         choices=NUMBER_DECIMAL_PLACES_CHOICES,
-        default=1,
+        default=0,
         help_text="The amount of digits allowed after the point.",
     )
     number_negative = models.BooleanField(
@@ -219,10 +210,8 @@ class NumberField(Field):
     )
 
     def save(self, *args, **kwargs):
-        """Check if the number_type and number_decimal_places has a valid choice."""
+        """Check if the number_decimal_places has a valid choice."""
 
-        if not any(self.number_type in _tuple for _tuple in NUMBER_TYPE_CHOICES):
-            raise ValueError(f"{self.number_type} is not a valid choice.")
         if not any(
             self.number_decimal_places in _tuple
             for _tuple in NUMBER_DECIMAL_PLACES_CHOICES
@@ -396,7 +385,7 @@ class FormulaField(Field):
         null=True,
     )
     number_decimal_places = models.IntegerField(
-        choices=[(0, "1")] + NUMBER_DECIMAL_PLACES_CHOICES,
+        choices=NUMBER_DECIMAL_PLACES_CHOICES,
         default=None,
         null=True,
         help_text="The amount of digits allowed after the point.",

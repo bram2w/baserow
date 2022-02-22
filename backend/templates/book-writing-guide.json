@@ -86,8 +86,7 @@
               "name": "Word Count",
               "order": 11,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
