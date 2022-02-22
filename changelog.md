@@ -16,6 +16,9 @@
   tools, e.g. to various REST clients.
 * Added search to gallery views.
 * Views supporting search are properly updated when a column with a matching default value is added.
+* **breaking change** Number field has been changed and doesn't use `number_type` property 
+  anymore. The property `number_decimal_places` can be now set to `0` to indicate integers
+  instead.
 
 ## Released (2022-01-13 1.8.2)
 

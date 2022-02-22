@@ -75,7 +75,6 @@ def test_get_table_model(data_fixture):
         table=table_2,
         order=0,
         name="Sale price",
-        number_type="DECIMAL",
         number_decimal_places=3,
         number_negative=True,
     )

@@ -121,7 +121,6 @@ def test_create_row(send_mock, data_fixture):
     price_field = data_fixture.create_number_field(
         table=table,
         name="Price",
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=False,
     )
@@ -258,7 +257,6 @@ def test_get_row(data_fixture):
     price_field = data_fixture.create_number_field(
         table=table,
         name="Price",
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=False,
     )
@@ -303,7 +301,6 @@ def test_update_row(send_mock, data_fixture):
     price_field = data_fixture.create_number_field(
         table=table,
         name="Price",
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=False,
     )
@@ -465,7 +462,6 @@ def test_restore_row(send_mock, data_fixture):
     price_field = data_fixture.create_number_field(
         table=table,
         name="Price",
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=False,
     )
@@ -565,7 +561,6 @@ def test_has_row(data_fixture):
     price_field = data_fixture.create_number_field(
         table=table,
         name="Price",
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=False,
     )

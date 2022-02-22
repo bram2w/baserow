@@ -131,8 +131,7 @@
               "name": "Quantity",
               "order": 6,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -188,8 +187,7 @@
               "name": "Price",
               "order": 9,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1056,8 +1054,7 @@
               "name": "Age",
               "order": 5,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1464,8 +1461,7 @@
               "name": "Coverage",
               "order": 8,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             }
           ],

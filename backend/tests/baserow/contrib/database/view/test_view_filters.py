@@ -68,7 +68,7 @@ def test_equal_filter_type(data_fixture):
     long_text_field = data_fixture.create_long_text_field(table=table)
     integer_field = data_fixture.create_number_field(table=table)
     decimal_field = data_fixture.create_number_field(
-        table=table, number_type="DECIMAL", number_decimal_places=2
+        table=table, number_decimal_places=2
     )
     boolean_field = data_fixture.create_boolean_field(table=table)
     formula_field = data_fixture.create_formula_field(table=table, formula="'test'")
@@ -204,7 +204,7 @@ def test_not_equal_filter_type(data_fixture):
     long_text_field = data_fixture.create_long_text_field(table=table)
     integer_field = data_fixture.create_number_field(table=table)
     decimal_field = data_fixture.create_number_field(
-        table=table, number_type="DECIMAL", number_decimal_places=2
+        table=table, number_decimal_places=2
     )
     boolean_field = data_fixture.create_boolean_field(table=table)
     formula_field = data_fixture.create_formula_field(table=table, formula="'test'")
@@ -347,7 +347,6 @@ def test_contains_filter_type(data_fixture):
     )
     number_field = data_fixture.create_number_field(
         table=table,
-        number_type="DECIMAL",
         number_negative=True,
         number_decimal_places=2,
     )
@@ -567,7 +566,6 @@ def test_contains_not_filter_type(data_fixture):
     )
     number_field = data_fixture.create_number_field(
         table=table,
-        number_type="DECIMAL",
         number_negative=True,
         number_decimal_places=2,
     )
@@ -967,7 +965,6 @@ def test_higher_than_filter_type(data_fixture):
     integer_field = data_fixture.create_number_field(table=table, number_negative=True)
     decimal_field = data_fixture.create_number_field(
         table=table,
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=True,
     )
@@ -1118,7 +1115,6 @@ def test_lower_than_filter_type(data_fixture):
     integer_field = data_fixture.create_number_field(table=table, number_negative=True)
     decimal_field = data_fixture.create_number_field(
         table=table,
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=True,
     )
@@ -2214,7 +2210,7 @@ def test_empty_filter_type(data_fixture):
     long_text_field = data_fixture.create_long_text_field(table=table)
     integer_field = data_fixture.create_number_field(table=table)
     decimal_field = data_fixture.create_number_field(
-        table=table, number_type="DECIMAL", number_decimal_places=2
+        table=table, number_decimal_places=2
     )
     date_field = data_fixture.create_date_field(table=table)
     date_time_field = data_fixture.create_date_field(
@@ -2369,7 +2365,7 @@ def test_not_empty_filter_type(data_fixture):
     long_text_field = data_fixture.create_long_text_field(table=table)
     integer_field = data_fixture.create_number_field(table=table)
     decimal_field = data_fixture.create_number_field(
-        table=table, number_type="DECIMAL", number_decimal_places=2
+        table=table, number_decimal_places=2
     )
     date_field = data_fixture.create_date_field(table=table)
     date_time_field = data_fixture.create_date_field(

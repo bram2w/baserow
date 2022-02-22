@@ -19,7 +19,7 @@ def test_altering_value_of_referenced_field(
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "number", "type": "number", "number_type": "INTEGER"},
+        {"name": "number", "type": "number", "number_decimal_places": 0},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -702,7 +702,6 @@ def test_altering_type_of_underlying_causes_type_update(api_client, data_fixture
         {
             "name": "text",
             "type": "number",
-            "number_type": "DECIMAL",
             "number_decimal_places": 2,
         },
         format="json",
@@ -897,7 +896,7 @@ def test_can_type_an_invalid_formula_field(
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "number", "type": "number", "number_type": "INTEGER"},
+        {"name": "number", "type": "number", "number_decimal_places": 0},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -935,7 +934,7 @@ def test_can_type_a_valid_formula_field(
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "number", "type": "number", "number_type": "INTEGER"},
+        {"name": "number", "type": "number", "number_decimal_places": 0},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -981,7 +980,7 @@ def test_type_endpoint_returns_error_for_bad_syntax(
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "number", "type": "number", "number_type": "INTEGER"},
+        {"name": "number", "type": "number", "number_decimal_places": 0},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1018,7 +1017,7 @@ def test_type_endpoint_returns_error_for_missing_parameters(
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "number", "type": "number", "number_type": "INTEGER"},
+        {"name": "number", "type": "number", "number_decimal_places": 0},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1055,7 +1054,7 @@ def test_type_endpoint_returns_error_for_missing_field(
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "number", "type": "number", "number_type": "INTEGER"},
+        {"name": "number", "type": "number", "number_decimal_places": 0},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1080,7 +1079,7 @@ def test_type_endpoint_returns_error_for_non_formula_field(
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "number", "type": "number", "number_type": "INTEGER"},
+        {"name": "number", "type": "number", "number_decimal_places": 0},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1164,7 +1163,7 @@ def test_type_endpoint_returns_error_if_not_permissioned_for_field(
     table = data_fixture.create_database_table(user=user)
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
-        {"name": "number", "type": "number", "number_type": "INTEGER"},
+        {"name": "number", "type": "number", "number_decimal_places": 0},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -1249,7 +1248,6 @@ def test_altering_type_of_underlying_causes_type_update_nested(
         {
             "name": "text",
             "type": "number",
-            "number_type": "DECIMAL",
             "number_decimal_places": 2,
         },
         format="json",

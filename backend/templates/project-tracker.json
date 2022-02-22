@@ -622,7 +622,6 @@
               "name": "Est. Days",
               "order": 4,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 1,
               "number_negative": false
             },

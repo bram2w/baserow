@@ -102,7 +102,6 @@
               "name": "Cost",
               "order": 5,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },

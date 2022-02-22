@@ -1,11 +1,12 @@
 <template>
   <div>
-    <FieldFormulaNumberSubForm
+    <FieldNumberSubForm
       v-if="formulaType === 'number'"
       :default-values="defaultValues"
       :table="table"
+      :allow-set-number-negative="false"
     >
-    </FieldFormulaNumberSubForm>
+    </FieldNumberSubForm>
     <FieldDateSubForm
       v-else-if="['date', 'last_modified', 'created_on'].includes(formulaType)"
       :default-values="defaultValues"
@@ -15,14 +16,14 @@
   </div>
 </template>
 <script>
-import FieldFormulaNumberSubForm from '@baserow/modules/database/components/field/FieldFormulaNumberSubForm'
+import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 import form from '@baserow/modules/core/mixins/form'
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 
 export default {
   name: 'FormulaTypeSubForms',
-  components: { FieldFormulaNumberSubForm, FieldDateSubForm },
+  components: { FieldNumberSubForm, FieldDateSubForm },
   mixins: [form, fieldSubForm],
   props: {
     table: {

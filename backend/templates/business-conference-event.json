@@ -261,8 +261,7 @@
               "name": "Duration (min)",
               "order": 2,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1327,8 +1326,7 @@
               "name": "Years of experience",
               "order": 5,
               "primary": false,
-              "number_type": "DECIMAL",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1992,8 +1990,7 @@
               "name": "Room capacity",
               "order": 3,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             }
           ],

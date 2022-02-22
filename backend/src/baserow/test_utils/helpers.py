@@ -59,7 +59,6 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
         table=decimal_link_table,
         name="text_field",
         primary=True,
-        number_type="DECIMAL",
         number_decimal_places=3,
         number_negative=True,
     )
