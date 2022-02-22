@@ -220,6 +220,20 @@ def test_create_user_with_invitation(data_fixture):
             group_invitation_token=signer.dumps(invitation.id),
         )
 
+    data_fixture.update_settings(
+        allow_new_signups=False, allow_signups_via_group_invitations=False
+    )
+    with pytest.raises(DisabledSignupError):
+        user_handler.create_user(
+            "Test1",
+            "test0@test.nl",
+            valid_password,
+            group_invitation_token=signer.dumps(invitation.id),
+        )
+
+    data_fixture.update_settings(
+        allow_new_signups=False, allow_signups_via_group_invitations=True
+    )
     user = user_handler.create_user(
         "Test1",
         "test0@test.nl",

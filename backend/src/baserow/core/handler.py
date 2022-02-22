@@ -98,7 +98,9 @@ class CoreHandler:
             settings_instance = self.get_settings()
 
         settings_instance = set_allowed_attrs(
-            kwargs, ["allow_new_signups"], settings_instance
+            kwargs,
+            ["allow_new_signups", "allow_signups_via_group_invitations"],
+            settings_instance,
         )
 
         settings_instance.save()

@@ -103,9 +103,6 @@ class UserHandler:
 
         core_handler = CoreHandler()
 
-        if not core_handler.get_settings().allow_new_signups:
-            raise DisabledSignupError("Sign up is disabled.")
-
         email = normalize_email_address(email)
 
         if User.objects.filter(Q(email=email) | Q(username=email)).exists():
@@ -124,6 +121,15 @@ class UserHandler:
                     "The email address of the invitation does not match the one of the "
                     "user."
                 )
+
+        settings = core_handler.get_settings()
+        allow_new_signups = settings.allow_new_signups
+        allow_signup_for_invited_user = (
+            settings.allow_signups_via_group_invitations
+            and group_invitation is not None
+        )
+        if not (allow_new_signups or allow_signup_for_invited_user):
+            raise DisabledSignupError("Sign up is disabled.")
 
         user = User(first_name=name, email=email, username=email)
 

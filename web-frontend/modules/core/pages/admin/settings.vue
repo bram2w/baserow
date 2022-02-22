@@ -48,6 +48,28 @@
             >
           </div>
         </div>
+        <div v-if="!settings.allow_new_signups" class="admin-settings__item">
+          <div class="admin-settings__label">
+            <div class="admin-settings__name">
+              {{ $t('settings.settingAllowSignupsViaGroupInvitationsName') }}
+            </div>
+            <div class="admin-settings__description">
+              {{
+                $t('settings.settingAllowSignupsViaGroupInvitationDescription')
+              }}
+            </div>
+          </div>
+          <div class="admin-settings__control">
+            <SwitchInput
+              :value="settings.allow_signups_via_group_invitations"
+              :large="true"
+              @input="
+                updateSettings({ allow_signups_via_group_invitations: $event })
+              "
+              >{{ $t('settings.enabled') }}</SwitchInput
+            >
+          </div>
+        </div>
       </div>
     </div>
   </div>
