@@ -7,8 +7,6 @@ from django.core.exceptions import ValidationError
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.fields.models import (
-    NUMBER_TYPE_INTEGER,
-    NUMBER_TYPE_DECIMAL,
     TextField,
     LongTextField,
     URLField,
@@ -93,12 +91,13 @@ class NumberAirtableColumnType(AirtableColumnType):
 
     def to_baserow_field(self, raw_airtable_column, timezone):
         type_options = raw_airtable_column.get("typeOptions", {})
+        decimal_places = 0
+
+        if type_options.get("format", "integer") == "decimal":
+            decimal_places = max(1, type_options.get("precision", 1))
 
         return NumberField(
-            number_type=NUMBER_TYPE_DECIMAL
-            if type_options.get("format", "integer") == "decimal"
-            else NUMBER_TYPE_INTEGER,
-            number_decimal_places=max(1, type_options.get("precision", 1)),
+            number_decimal_places=decimal_places,
             number_negative=type_options.get("negative", True),
         )
 
