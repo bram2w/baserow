@@ -42,6 +42,9 @@ export default {
           this.isImage = isImage
           return isImage
         },
+        accept: () => {
+          return 'image/*'
+        },
         enter: () => {
           this.dragging = true
         },

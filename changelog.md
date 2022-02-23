@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added accept `image/*` attribute to the form cover and logo upload. 
 * Added management to import a shared Airtable base.
 * Fixed adding new fields in the edit row popup that require refresh in Kanban and Form views.
 * Cache model fields when generating model.

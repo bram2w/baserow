@@ -44,6 +44,7 @@ export default {
 
     // The input that is needed to open the file chooser.
     el.userFileUploadElement = document.createElement('input')
+    el.userFileUploadElement.accept = el.userFileUploadValue.accept()
     el.userFileUploadElement.type = 'file'
     el.userFileUploadElement.style.display = 'none'
     el.userFileUploadElement.addEventListener('change', (event) => {
@@ -101,6 +102,9 @@ export default {
   },
   update(el, binding) {
     const defaults = {
+      accept() {
+        return '*'
+      },
       check() {
         return true
       },
