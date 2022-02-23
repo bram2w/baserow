@@ -276,7 +276,7 @@ export default {
      * Focuses the search field when the component mounts.
      */
     focusSearch() {
-      this.$refs.search.focus()
+      this.$refs.search?.focus()
     },
   },
 }

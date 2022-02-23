@@ -22,6 +22,7 @@
 * **breaking change** Number field has been changed and doesn't use `number_type` property 
   anymore. The property `number_decimal_places` can be now set to `0` to indicate integers
   instead.
+* Fixed error when the select row modal is closed immediately after opening.
 
 ## Released (2022-01-13 1.8.2)
 
