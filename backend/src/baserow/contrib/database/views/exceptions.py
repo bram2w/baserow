@@ -47,18 +47,6 @@ class ViewFilterNotSupported(Exception):
     """Raised when the view type does not support filters."""
 
 
-class FieldAggregationNotSupported(Exception):
-    """Raised when the view type does not support field aggregation."""
-
-
-class AggregationTypeDoesNotExist(Exception):
-    """Raised when trying to get an aggregation type that does not exist."""
-
-
-class AggregationTypeAlreadyRegistered(Exception):
-    """Raised when trying to register an aggregation type that exists already."""
-
-
 class ViewFilterTypeNotAllowedForField(Exception):
     """Raised when the view filter type is compatible with the field type."""
 
@@ -94,11 +82,41 @@ class ViewSortFieldAlreadyExist(Exception):
 
 
 class ViewSortFieldNotSupported(Exception):
-    """Raised when a field does not supports sorting in a view."""
+    """Raised when a field does not support sorting in a view."""
 
 
 class ViewDoesNotSupportFieldOptions(Exception):
     """Raised when a view type does not support field options."""
+
+
+class FieldAggregationNotSupported(Exception):
+    """Raised when the view type does not support field aggregation."""
+
+
+class AggregationTypeDoesNotExist(Exception):
+    """Raised when trying to get an aggregation type that does not exist."""
+
+
+class AggregationTypeAlreadyRegistered(Exception):
+    """Raised when trying to register an aggregation type that exists already."""
+
+
+class GridViewAggregationDoesNotSupportField(Exception):
+    """
+    Raised when someone tries to use an aggregation type that doesn't support the
+    given field.
+    """
+
+    def __init__(self, aggregation_type, *args, **kwargs):
+        self.aggregation_type = aggregation_type
+        super().__init__(
+            (
+                f"The aggregation type {aggregation_type} is not compatible with the "
+                " given field."
+            ),
+            *args,
+            **kwargs,
+        )
 
 
 class FormViewFieldTypeIsNotSupported(Exception):

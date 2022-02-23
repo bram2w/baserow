@@ -33,10 +33,8 @@
       @edit-modal="$refs.rowEditModal.show($event.id)"
     >
       <template #foot>
-        <div class="grid-view__column" :style="{ width: leftWidth + 'px' }">
-          <div class="grid-view__foot-info">
-            {{ $tc('gridView.rowCount', count, { count }) }}
-          </div>
+        <div class="grid-view__foot-info">
+          {{ $tc('gridView.rowCount', count, { count }) }}
         </div>
       </template>
     </GridViewSection>
@@ -78,8 +76,8 @@
       @edit-modal="$refs.rowEditModal.show($event.id)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     >
-      <template v-if="publicGrid" #foot>
-        <div class="grid-view__foot-logo">
+      <template #foot>
+        <div v-if="publicGrid" class="grid-view__foot-logo">
           <a
             href="https://baserow.io"
             target="_blank"
@@ -299,6 +297,10 @@ export default {
     }
     this.$el.resizeEvent()
     window.addEventListener('resize', this.$el.resizeEvent)
+    this.$store.dispatch(
+      this.storePrefix + 'view/grid/fetchAllFieldAggregationData',
+      { view: this.view }
+    )
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$el.resizeEvent)
@@ -373,14 +375,14 @@ export default {
     },
     /**
      * This method is called by the Scrollbars component and should return the element
-     * that handles the the horizontal scrolling.
+     * that handles the horizontal scrolling.
      */
     getHorizontalScrollbarElement() {
       return this.$refs.right.$el
     },
     /**
      * This method is called by the Scrollbars component and should return the element
-     * that handles the the vertical scrolling.
+     * that handles the vertical scrolling.
      */
     getVerticalScrollbarElement() {
       return this.$refs.right.$refs.body

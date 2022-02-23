@@ -374,6 +374,7 @@ export class GridViewType extends ViewType {
     includeFieldOptions = false
   ) {
     await store.dispatch(storePrefix + 'view/grid/refresh', {
+      view,
       fields,
       primary,
       includeFieldOptions,

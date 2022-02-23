@@ -1,18 +1,38 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from django.utils.functional import lazy
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.models import GridViewFieldOptions, ViewSort, View
-from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.registries import (
+    view_type_registry,
+    view_aggregation_type_registry,
+)
 
 
 class GridViewFieldOptionsSerializer(serializers.ModelSerializer):
+    aggregation_raw_type = serializers.ChoiceField(
+        choices=lazy(view_aggregation_type_registry.get_types, list)(),
+        help_text=GridViewFieldOptions._meta.get_field(
+            "aggregation_raw_type"
+        ).help_text,
+        required=False,
+        default="",
+        allow_blank=True,
+    )
+
     class Meta:
         model = GridViewFieldOptions
-        fields = ("width", "hidden", "order")
+        fields = (
+            "width",
+            "hidden",
+            "order",
+            "aggregation_type",
+            "aggregation_raw_type",
+        )
 
 
 class GridViewFilterSerializer(serializers.Serializer):

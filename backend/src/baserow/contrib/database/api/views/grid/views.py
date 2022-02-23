@@ -399,20 +399,13 @@ class GridViewFieldAggregationView(APIView):
         )
         field_instance = FieldHandler().get_field(field_id)
 
-        # Check whether the field belongs to the table
-        if view.table_id != field_instance.table_id:
-            raise FieldNotInTable(
-                f"The field {field_instance.pk} does not belong to table "
-                f"{view.table_id}."
-            )
-
-        model = view.table.get_model(field_ids=[], fields=[field_instance])
-
         aggregation_type = request.GET.get("type")
 
         # Compute aggregation
+        # Note: we can't optimize model by giving a model with just
+        # the aggregated field because we may need other fields for filtering
         aggregations = view_handler.get_field_aggregations(
-            view, [(field_instance, aggregation_type)], model, with_total=total
+            view, [(field_instance, aggregation_type)], with_total=total
         )
 
         result = {

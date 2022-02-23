@@ -18,6 +18,7 @@ from baserow.contrib.database.views.models import (
 from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_filter_type_registry,
+    view_aggregation_type_registry,
 )
 from baserow.contrib.database.views.exceptions import (
     ViewTypeDoesNotExist,
@@ -34,6 +35,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
     FormViewFieldTypeIsNotSupported,
+    GridViewAggregationDoesNotSupportField,
     CannotShareViewTypeError,
 )
 from baserow.contrib.database.fields.models import Field
@@ -537,6 +539,29 @@ def test_update_field_options(send_mock, data_fixture):
     assert options_4[1].field_id == field_2.id
     assert options_4[2].width == 50
     assert options_4[2].field_id == field_4.id
+
+
+@pytest.mark.django_db
+def test_grid_view_aggregation_type_field_option(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field_1 = data_fixture.create_text_field(table=table)
+
+    # Fake incompatible field
+    empty_count = view_aggregation_type_registry.get("empty_count")
+    empty_count.field_is_compatible = lambda _: False
+
+    with pytest.raises(GridViewAggregationDoesNotSupportField):
+        ViewHandler().update_field_options(
+            user=user,
+            view=grid_view,
+            field_options={
+                field_1.id: {"aggregation_raw_type": "empty_count"},
+            },
+        )
+
+    empty_count.field_is_compatible = lambda _: True
 
 
 @pytest.mark.django_db

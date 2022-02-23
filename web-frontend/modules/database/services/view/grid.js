@@ -96,5 +96,14 @@ export default (client) => {
     fetchPublicViewInfo(viewSlug) {
       return client.get(`/database/views/grid/${viewSlug}/public/info/`)
     },
+    fetchFieldAggregation(gridId, fieldId, rawType) {
+      const params = new URLSearchParams()
+      params.append('type', rawType)
+
+      return client.get(
+        `/database/views/grid/${gridId}/aggregation/${fieldId}/`,
+        { params }
+      )
+    },
   }
 }

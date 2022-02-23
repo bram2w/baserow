@@ -18,6 +18,7 @@ from baserow.contrib.database.rows.registries import (
     row_metadata_registry,
 )
 from baserow.contrib.database.views.models import GridView
+from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.core.trash.handler import TrashHandler
 from baserow.test_utils.helpers import register_instance_temporarily
@@ -573,6 +574,21 @@ def test_field_aggregation(api_client, data_fixture):
 
     assert response_json == {"value": 1, "total": 4}
 
+    # Does it works with filter
+    data_fixture.create_view_filter(
+        view=grid, field=number_field, type="higher_than", value="10"
+    )
+
+    # Count with total
+    response = api_client.get(
+        url + f"?type=not_empty_count",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert response_json == {"value": 1}
+
 
 @pytest.mark.django_db
 def test_patch_grid_view_field_options(api_client, data_fixture):
@@ -601,19 +617,34 @@ def test_patch_grid_view_field_options(api_client, data_fixture):
     assert response_json["field_options"][str(text_field.id)]["width"] == 300
     assert response_json["field_options"][str(text_field.id)]["hidden"] is True
     assert response_json["field_options"][str(text_field.id)]["order"] == 32767
+    assert response_json["field_options"][str(text_field.id)]["aggregation_type"] == ""
+    assert (
+        response_json["field_options"][str(text_field.id)]["aggregation_raw_type"] == ""
+    )
     assert response_json["field_options"][str(number_field.id)]["width"] == 200
     assert response_json["field_options"][str(number_field.id)]["hidden"] is False
     assert response_json["field_options"][str(number_field.id)]["order"] == 32767
+    assert (
+        response_json["field_options"][str(number_field.id)]["aggregation_type"] == ""
+    )
+    assert (
+        response_json["field_options"][str(number_field.id)]["aggregation_raw_type"]
+        == ""
+    )
     options = grid.get_field_options()
     assert len(options) == 2
     assert options[0].field_id == text_field.id
     assert options[0].width == 300
     assert options[0].hidden is True
     assert options[0].order == 32767
+    assert options[0].aggregation_type == ""
+    assert options[0].aggregation_raw_type == ""
     assert options[1].field_id == number_field.id
     assert options[1].width == 200
     assert options[1].hidden is False
     assert options[1].order == 32767
+    assert options[1].aggregation_type == ""
+    assert options[1].aggregation_raw_type == ""
 
     url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(
@@ -714,6 +745,41 @@ def test_patch_grid_view_field_options(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert response_json["detail"]["field_options"][0]["code"] == "invalid_value"
+
+    # Test unregistered aggregation type
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.patch(
+        url,
+        {"field_options": {text_field.id: {"aggregation_raw_type": "foo"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["field_options"][0]["code"] == "invalid_value"
+
+    # Test aggregation type that doesn't support the field
+    # Fake incompatible field
+    empty_count = view_aggregation_type_registry.get("empty_count")
+    empty_count.field_is_compatible = lambda _: False
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
+    response = api_client.patch(
+        url,
+        {"field_options": {text_field.id: {"aggregation_raw_type": "empty_count"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD"
+    assert (
+        response_json["detail"]
+        == "The aggregation type does not support the given field."
+    )
+
+    empty_count.field_is_compatible = lambda _: True
 
 
 @pytest.mark.django_db
@@ -1151,6 +1217,8 @@ def test_list_rows_public_doesnt_show_hidden_columns(api_client, data_fixture):
                 "hidden": False,
                 "order": public_field_option.order,
                 "width": public_field_option.width,
+                "aggregation_type": "",
+                "aggregation_raw_type": "",
             },
         },
     }

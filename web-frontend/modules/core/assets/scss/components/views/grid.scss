@@ -113,13 +113,19 @@
 .grid-view__foot {
   @include absolute(auto, 0, 0, 0);
 
+  display: flex;
   height: 48px;
   background-color: $color-neutral-50;
   border-top: 1px solid $color-neutral-200;
 }
 
 .grid-view__foot-info {
-  padding: 10px;
+  @extend %ellipsis;
+
+  @include fixed-height(32px, 13px);
+
+  min-width: 60px;
+  padding-left: 6px;
 }
 
 .grid-view__foot-logo {

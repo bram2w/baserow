@@ -5,6 +5,9 @@ from baserow.api.user_files.serializers import UserFileField
 from baserow.contrib.database.api.views.form.errors import (
     ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
 )
+from baserow.contrib.database.api.views.grid.errors import (
+    ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,
+)
 from baserow.contrib.database.api.views.form.serializers import (
     FormViewFieldOptionsSerializer,
 )
@@ -18,8 +21,12 @@ from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.core.user_files.handler import UserFileHandler
-from .exceptions import FormViewFieldTypeIsNotSupported
+from .exceptions import (
+    FormViewFieldTypeIsNotSupported,
+    GridViewAggregationDoesNotSupportField,
+)
 from .handler import ViewHandler
 from .models import (
     GridView,
@@ -40,6 +47,10 @@ class GridViewType(ViewType):
     can_aggregate_field = True
     can_share = True
     when_shared_publicly_requires_realtime_events = True
+
+    api_exceptions_map = {
+        GridViewAggregationDoesNotSupportField: ERROR_AGGREGATION_DOES_NOT_SUPPORTED_FIELD,
+    }
 
     def get_api_urls(self):
         from baserow.contrib.database.api.views.grid import urls as api_urls
@@ -117,6 +128,51 @@ class GridViewType(ViewType):
             model._field_objects[field_id] for field_id in ordered_visible_field_ids
         ]
         return ordered_field_objects, model
+
+    def before_field_options_update(self, view, field_options, fields):
+        """
+        Checks if a aggregation raw types are compatible with the field types.
+        """
+
+        fields_dict = {field.id: field for field in fields}
+        for field_id, options in field_options.items():
+            field = fields_dict.get(int(field_id), None)
+            aggregation_raw_type = options.get("aggregation_raw_type")
+            if aggregation_raw_type and field:
+                aggregation_type = view_aggregation_type_registry.get(
+                    aggregation_raw_type
+                )
+                if not aggregation_type.field_is_compatible(field):
+                    raise GridViewAggregationDoesNotSupportField(aggregation_type)
+
+        return field_options
+
+    def after_field_type_change(self, field):
+        """
+        Check field option aggregation_raw_type compatibility with the new field type.
+        """
+
+        field_options = GridViewFieldOptions.objects.filter(field=field).select_related(
+            "grid_view"
+        )
+
+        for field_option in field_options:
+            raw_type = field_option.aggregation_raw_type
+            if raw_type:
+                aggregation_type = view_aggregation_type_registry.get(raw_type)
+
+                if not aggregation_type.field_is_compatible(field):
+                    # The field has an aggregation and the type is not compatible with
+                    # the new field, so we need to clean the aggregation.
+                    ViewHandler().update_field_options(
+                        view=field_option.grid_view,
+                        field_options={
+                            field.id: {
+                                "aggregation_type": "",
+                                "aggregation_raw_type": "",
+                            }
+                        },
+                    )
 
     def get_visible_field_options_in_order(self, grid_view):
         return (

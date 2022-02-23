@@ -58,6 +58,7 @@ class Field(
     models.Model,
 ):
     """
+    Baserow base field model. All custom fields should inherit from this class.
     Because each field type can have custom settings, for example precision for a number
     field, values for an option field or checkbox style for a boolean field we need a
     polymorphic content type to store these settings in another table.

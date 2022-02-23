@@ -59,9 +59,12 @@ class DatabasePlugin(Plugin):
         )
 
         view_handler.update_field_options(
-            user,
-            customers_view,
-            {notes_field.id: {"width": 400}, active_field.id: {"width": 100}},
+            user=user,
+            view=customers_view,
+            field_options={
+                notes_field.id: {"width": 400},
+                active_field.id: {"width": 100},
+            },
             fields=[notes_field, active_field],
         )
         model = table.get_model(attribute_names=True)
@@ -98,8 +101,8 @@ class DatabasePlugin(Plugin):
             name="Amazon", active=False, started=date(2018, 1, 1), order=3
         )
         view_handler.update_field_options(
-            user,
-            projects_view,
-            {active_field.id: {"width": 100}},
+            user=user,
+            view=projects_view,
+            field_options={active_field.id: {"width": 100}},
             fields=[active_field],
         )

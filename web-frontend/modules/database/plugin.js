@@ -152,6 +152,12 @@ import {
   BaserowFormulaSpecialType,
   BaserowFormulaTextType,
 } from '@baserow/modules/database/formula/formulaTypes'
+import {
+  EmptyCountViewAggregationType,
+  NotEmptyCountViewAggregationType,
+  EmptyPercentageViewAggregationType,
+  NotEmptyPercentageViewAggregationType,
+} from '@baserow/modules/database/viewAggregationTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
@@ -364,6 +370,23 @@ export default (context) => {
   app.$registry.register('preview', new VideoFilePreview(context))
   app.$registry.register('preview', new PDFBrowserFilePreview(context))
   app.$registry.register('preview', new GoogleDocFilePreview(context))
+
+  app.$registry.register(
+    'viewAggregation',
+    new EmptyCountViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new NotEmptyCountViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new EmptyPercentageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new NotEmptyPercentageViewAggregationType(context)
+  )
 
   registerRealtimeEvents(app.$realtime)
 }

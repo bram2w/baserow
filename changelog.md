@@ -23,6 +23,7 @@
   anymore. The property `number_decimal_places` can be now set to `0` to indicate integers
   instead.
 * Fixed error when the select row modal is closed immediately after opening.
+* Add footer aggregations to grid view
 
 ## Released (2022-01-13 1.8.2)
 

@@ -302,7 +302,7 @@ export const actions = {
     }
   },
   /**
-   * Only makes the the delete call to the server.
+   * Only makes the delete call to the server.
    */
   async deleteCall({ commit, dispatch }, field) {
     return await FieldService(this.$client).delete(field.id)
