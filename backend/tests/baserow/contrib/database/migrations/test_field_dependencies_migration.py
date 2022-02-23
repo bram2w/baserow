@@ -1,16 +1,12 @@
-import pytest
-from django.core.management import call_command
-from django.db import DEFAULT_DB_ALIAS
-
 # noinspection PyPep8Naming
+import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
+
 # noinspection PyPep8Naming
-
-
-@pytest.mark.django_db
-def test_forwards_migration(data_fixture, transactional_db):
+@pytest.mark.django_db(transaction=True)
+def test_forwards_migration(data_fixture, reset_schema_after_module):
     migrate_from = [("database", "0043_webhooks")]
     migrate_to = [("database", "0044_field_dependencies")]
 
@@ -139,13 +135,10 @@ def test_forwards_migration(data_fixture, transactional_db):
     assert second_via.dependant.id == new_related_link_row_field.id
     assert second_via.dependency.id == text_field.id
 
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
-
 
 # noinspection PyPep8Naming
-@pytest.mark.django_db
-def test_backwards_migration(data_fixture, transactional_db):
+@pytest.mark.django_db(transaction=True)
+def test_backwards_migration(data_fixture, reset_schema_after_module):
     migrate_from = [("database", "0044_field_dependencies")]
     migrate_to = [("database", "0043_webhooks")]
 
@@ -189,9 +182,6 @@ def test_backwards_migration(data_fixture, transactional_db):
     assert new_formula_field.formula == f"field('text')"
     new_unknown_field_by_id = NewFormulaField.objects.get(id=unknown_field.id)
     assert new_unknown_field_by_id.formula == "field('unknown')"
-
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
 
 def migrate(target):

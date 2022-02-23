@@ -1,19 +1,15 @@
 import secrets
 from unittest.mock import patch
 
-import pytest
-from django.core.management import call_command
-from django.db import DEFAULT_DB_ALIAS
-
 # noinspection PyPep8Naming
+import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
+
 # noinspection PyPep8Naming
-
-
-@pytest.mark.django_db
-def test_forwards_migration(data_fixture, transactional_db):
+@pytest.mark.django_db(transaction=True)
+def test_forwards_migration(data_fixture, reset_schema_after_module):
     migrate_from = [("database", "0052_table_order_and_id_index")]
     migrate_to = [("database", "0053_add_and_move_public_flags")]
 
@@ -79,17 +75,16 @@ def test_forwards_migration(data_fixture, transactional_db):
     assert len(new_grid_view2.view_ptr.slug) == len(secrets.token_urlsafe())
     assert new_grid_view.view_ptr.slug != new_grid_view2.view_ptr.slug
 
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
-
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @patch(
     "baserow.contrib.database.migrations.0053_add_and_move_public_flags"
     ".update_batch_size"
 )
 def test_multi_batch_forwards_migration(
-    patched_update_size, data_fixture, transactional_db
+    patched_update_size,
+    data_fixture,
+    reset_schema_after_module,
 ):
     migrate_from = [("database", "0052_table_order_and_id_index")]
     migrate_to = [("database", "0053_add_and_move_public_flags")]
@@ -118,12 +113,10 @@ def test_multi_batch_forwards_migration(
 
     assert not NewGridView.objects.filter(slug__isnull=True).exists()
     assert not NewGridView.objects.filter(public=True).exists()
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
 
-@pytest.mark.django_db
-def test_backwards_migration(data_fixture, transactional_db):
+@pytest.mark.django_db(transaction=True)
+def test_backwards_migration(data_fixture, reset_schema_after_module):
     migrate_from = [("database", "0053_add_and_move_public_flags")]
     migrate_to = [("database", "0052_table_order_and_id_index")]
 
@@ -160,9 +153,6 @@ def test_backwards_migration(data_fixture, transactional_db):
     assert new_form_view.slug == form_view.slug
     assert not new_form_view2.public
     assert new_form_view2.slug == form_view2.slug
-
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
 
 def migrate(target):

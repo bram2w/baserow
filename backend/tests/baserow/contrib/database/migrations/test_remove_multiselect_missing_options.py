@@ -1,7 +1,7 @@
-import pytest
-
 # noinspection PyPep8Naming
-from django.db import connection
+import pytest
+from django.core.management import call_command
+from django.db import connection, DEFAULT_DB_ALIAS
 from django.db.migrations.executor import MigrationExecutor
 
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -16,8 +16,15 @@ def migrate(target):
 
 
 # noinspection PyPep8Naming
-@pytest.mark.django_db
-def test_forwards_migration(data_fixture, transactional_db, migrate_to_latest_at_end):
+@pytest.mark.django_db(transaction=True)
+def test_forwards_migration(data_fixture, reset_schema_after_module):
+    # This particular test wants to do a bunch of setup using actual Baserow code,
+    # ensure we have the latest migration applied to the test database so we can run
+    # this setup code first. Normally migration tests should first migrate to the
+    # schema they care about and then carefully setup state to avoid this problem,
+    # however here it is easier to do this.
+
+    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
     migrate_from = [("database", "0049_urlfield_2_textfield")]
     migrate_to = [("database", "0050_remove_multiselect_missing_options")]
 
