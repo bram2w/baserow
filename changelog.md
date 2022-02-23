@@ -24,6 +24,7 @@
   instead.
 * Fixed error when the select row modal is closed immediately after opening.
 * Add footer aggregations to grid view
+* Hide "Export view" button if there is no valid exporter available
 
 ## Released (2022-01-13 1.8.2)
 
