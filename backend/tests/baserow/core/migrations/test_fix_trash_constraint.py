@@ -1,6 +1,5 @@
-import pytest
-
 # noinspection PyPep8Naming
+import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
@@ -11,9 +10,9 @@ migrate_to = [("core", "0010_fix_trash_constraint")]
 
 
 # noinspection PyPep8Naming
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_migration_doesnt_fail_if_duplicate_entries_present_without_parent_id(
-    data_fixture, transactional_db, migrate_to_latest_at_end
+    data_fixture, reset_schema_after_module
 ):
     migrate(migrate_from)
 
@@ -35,9 +34,9 @@ def test_migration_doesnt_fail_if_duplicate_entries_present_without_parent_id(
 
 
 # noinspection PyPep8Naming
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_migration_doesnt_fail_if_duplicate_entries_present_with_parent_id(
-    data_fixture, transactional_db, migrate_to_latest_at_end
+    data_fixture, reset_schema_after_module
 ):
     migrate(migrate_from)
 

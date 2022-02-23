@@ -5,11 +5,14 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
+
 # noinspection PyPep8Naming
-
-
-@pytest.mark.django_db
-def test_forwards_migration(data_fixture, transactional_db, django_assert_num_queries):
+@pytest.mark.django_db(transaction=True)
+def test_forwards_migration(
+    data_fixture,
+    reset_schema_after_module,
+    django_assert_num_queries,
+):
     migrate_from = [("database", "0047_fix_date_diff")]
     migrate_to = [("database", "0048_fix_trashed_field_dependencies")]
 

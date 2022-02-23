@@ -19,6 +19,13 @@ def api_client():
     return APIClient()
 
 
+@pytest.fixture(scope="module")
+def reset_schema_after_module(request, django_db_setup, django_db_blocker):
+    yield
+    with django_db_blocker.unblock():
+        call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
+
+
 @pytest.fixture()
 def environ():
     original_env = os.environ.copy()
@@ -34,13 +41,6 @@ def mutable_field_type_registry():
     before = field_type_registry.registry.copy()
     yield field_type_registry
     field_type_registry.registry = before
-
-
-@pytest.fixture()
-def migrate_to_latest_at_end():
-    yield
-    # We need to apply the latest migration otherwise other tests might fail.
-    call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
 
 
 # We reuse this file in the premium backend folder, if you run a pytest session over

@@ -1,13 +1,12 @@
-import pytest
-
 # noinspection PyPep8Naming
+import pytest
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
 
 # noinspection PyPep8Naming
-@pytest.mark.django_db
-def test_forwards_migration(data_fixture, transactional_db, migrate_to_latest_at_end):
+@pytest.mark.django_db(transaction=True)
+def test_forwards_migration(data_fixture, reset_schema_after_module):
     migrate_from = [("database", "0039_formulafield")]
     migrate_to = [("database", "0040_formulafield_remove_field_by_id")]
 
@@ -53,8 +52,8 @@ def test_forwards_migration(data_fixture, transactional_db, migrate_to_latest_at
 
 
 # noinspection PyPep8Naming
-@pytest.mark.django_db
-def test_backwards_migration(data_fixture, transactional_db, migrate_to_latest_at_end):
+@pytest.mark.django_db(transaction=True)
+def test_backwards_migration(data_fixture, reset_schema_after_module):
     migrate_from = [("database", "0040_formulafield_remove_field_by_id")]
     migrate_to = [("database", "0039_formulafield")]
 

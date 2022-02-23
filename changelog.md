@@ -25,6 +25,7 @@
 * Fixed error when the select row modal is closed immediately after opening.
 * Add footer aggregations to grid view
 * Hide "Export view" button if there is no valid exporter available
+* Fix Django's default index naming scheme causing index name collisions.
 
 ## Released (2022-01-13 1.8.2)
 

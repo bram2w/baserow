@@ -421,7 +421,12 @@ class Table(
                 "app_label": app_label,
                 "ordering": ["order", "id"],
                 "indexes": [
-                    models.Index(fields=["order", "id"]),
+                    models.Index(
+                        # Use our own custom index as the default models.Index naming
+                        # scheme causes 5+ collisions on average per 1000 new tables.
+                        fields=["order", "id"],
+                        name=f"tbl_order_id_{self.id}_idx",
+                    ),
                 ],
             },
         )
