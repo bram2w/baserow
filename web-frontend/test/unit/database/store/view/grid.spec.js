@@ -4,14 +4,18 @@ import {
   EqualViewFilterType,
   ContainsViewFilterType,
 } from '@baserow/modules/database/viewFilters'
+import { clone } from '@baserow/modules/core/utils/object'
+import flushPromises from 'flush-promises'
 
 describe('Grid view store', () => {
   let testApp = null
   let store = null
+  let mockServer = null
 
   beforeEach(() => {
     testApp = new TestApp()
     store = testApp.store
+    mockServer = testApp.mockServer
   })
 
   afterEach(() => {
@@ -810,5 +814,110 @@ describe('Grid view store', () => {
     expect(store.getters['grid/getAllRows'][0]._.metadata.test).toBe(
       'test updated'
     )
+  })
+
+  test('fetchAllFieldAggregationData', async () => {
+    const state = Object.assign(gridStore.state(), {
+      fieldAggregationData: {},
+      fieldOptions: {
+        2: { aggregation_raw_type: 'empty_count' },
+        3: { aggregation_raw_type: 'not_empty_count' },
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    const fieldId1 = 2
+    const fieldId2 = 3
+
+    const view = {
+      id: 1,
+    }
+
+    mockServer.getFieldAggregationData(view.id, fieldId1, 'empty_count', {
+      value: 84,
+    })
+    mockServer.getFieldAggregationData(view.id, fieldId2, 'not_empty_count', {
+      value: 256,
+    })
+
+    await store.dispatch('grid/fetchAllFieldAggregationData', {
+      view,
+    })
+
+    expect(clone(store.getters['grid/getAllFieldAggregationData'])).toEqual({
+      2: {
+        loading: false,
+        value: 84,
+      },
+      3: {
+        loading: false,
+        value: 256,
+      },
+    })
+
+    // Check if a failing endpoint won't prevent other endpoints to update
+    mockServer.getFieldAggregationData(
+      view.id,
+      fieldId1,
+      'empty_count',
+      null,
+      true
+    )
+    mockServer.getFieldAggregationData(view.id, fieldId2, 'not_empty_count', {
+      value: 100,
+    })
+
+    testApp.dontFailOnErrorResponses()
+    await expect(
+      store.dispatch('grid/fetchAllFieldAggregationData', {
+        view,
+      })
+    ).rejects.toThrowErrorMatchingSnapshot()
+    testApp.failOnErrorResponses()
+
+    expect(clone(store.getters['grid/getAllFieldAggregationData'])).toEqual({
+      2: {
+        loading: false,
+        value: null,
+      },
+      3: {
+        loading: false,
+        value: 100,
+      },
+    })
+  })
+
+  test('fetchFieldAggregationData', async () => {
+    const state = Object.assign(gridStore.state(), {
+      fieldAggregationData: {},
+      fieldOptions: { 2: { aggregation_raw_type: 'empty_count' } },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    const fieldId = 2
+
+    const view = {
+      id: 1,
+    }
+
+    mockServer.getFieldAggregationData(view.id, fieldId, 'empty_count', {
+      value: 21,
+    })
+
+    await store.dispatch('grid/fetchFieldAggregationData', {
+      view,
+      fieldId,
+    })
+
+    await flushPromises()
+
+    expect(clone(store.getters['grid/getAllFieldAggregationData'])).toEqual({
+      2: {
+        loading: false,
+        value: 21,
+      },
+    })
   })
 })

@@ -51,11 +51,6 @@ ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED = (
     HTTP_400_BAD_REQUEST,
     "The field does not support view sorting.",
 )
-ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST = (
-    "ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST",
-    HTTP_400_BAD_REQUEST,
-    "The specified aggregation type does not exist.",
-)
 ERROR_UNRELATED_FIELD = (
     "ERROR_UNRELATED_FIELD",
     HTTP_400_BAD_REQUEST,
@@ -65,6 +60,11 @@ ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS = (
     "ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS",
     HTTP_400_BAD_REQUEST,
     "This view model does not support field options.",
+)
+ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST = (
+    "ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST",
+    HTTP_400_BAD_REQUEST,
+    "The specified aggregation type does not exist.",
 )
 ERROR_CANNOT_SHARE_VIEW_TYPE = (
     "ERROR_CANNOT_SHARE_VIEW_TYPE",

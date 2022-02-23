@@ -126,11 +126,13 @@ export class TestApp {
    * in your test suits afterEach method!
    */
   async afterEach() {
+    // Flushing promises should be done before the mock reset to avoid raising
+    // unwanted exceptions
+    await flushPromises()
     this.mock.reset()
     this.failOnErrorResponses()
     this.store.replaceState(_.cloneDeep(this._initialCleanStoreState))
     this._vueContext.teardownVueContext()
-    await flushPromises()
   }
 
   /**

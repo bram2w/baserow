@@ -409,6 +409,7 @@
     "viewContext": {
         "exportView": "Export view",
         "renameView": "Rename view",
+        "webhooks": "Webhooks",
         "deleteView": "Delete view"
     },
     "deleteViewModal": {
@@ -487,5 +488,11 @@
         "selectApplicationTitle": "For which database do you want to see the documentation?",
         "signIn": "Sign in to get started",
         "back": "Back to dashboard"
+    },
+    "viewAggregationType": {
+        "emptyCount": "Empty",
+        "notEmptyCount": "Filled",
+        "emptyPercentage": "Percent empty",
+        "notEmptyPercentage": "Percent filled"
     }
 }

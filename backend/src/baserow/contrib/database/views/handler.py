@@ -221,18 +221,20 @@ class ViewHandler:
 
         view_deleted.send(self, view_id=view_id, view=view, user=user)
 
-    def update_field_options(self, user, view, field_options, fields=None):
+    def update_field_options(self, view, field_options, user=None, fields=None):
         """
         Updates the field options with the provided values if the field id exists in
         the table related to the view.
 
-        :param user: The user on whose behalf the request is made.
-        :type user: User
         :param view: The view for which the field options need to be updated.
         :type view: View
         :param field_options: A dict with the field ids as the key and a dict
             containing the values that need to be updated as value.
         :type field_options: dict
+        :param user: Optionally the user on whose behalf the request is made. If you
+          give a user, the permissions are checked against this user otherwise there is
+          no permission checking.
+        :type user: User
         :param fields: Optionally a list of fields can be provided so that they don't
             have to be fetched again.
         :type fields: None or list
@@ -240,7 +242,11 @@ class ViewHandler:
             provided view.
         """
 
-        view.table.database.group.has_user(user, raise_error=True)
+        if user is not None:
+            # Here we check the permissions only if we have a user. If the field options
+            # update is triggered by user a action, we have one from the view but in
+            # some situation, we have automatic processing and we don't have any user.
+            view.table.database.group.has_user(user, raise_error=True)
 
         if not fields:
             fields = Field.objects.filter(table=view.table)
@@ -277,11 +283,13 @@ class ViewHandler:
 
         view_field_options_updated.send(self, view=view, user=user)
 
-    def field_type_changed(self, field):
+    def field_type_changed(self, field: Field):
         """
         This method is called by the FieldHandler when the field type of a field has
         changed. It could be that the field has filters or sortings that are not
         compatible anymore. If that is the case then those need to be removed.
+        All view_type `after_field_type_change` of views that are linked to this field
+        are also called to react on this change.
 
         :param field: The new field object.
         :type field: Field
@@ -300,6 +308,10 @@ class ViewHandler:
 
             if not filter_type.field_is_compatible(field):
                 filter.delete()
+
+        # Call view types hook
+        for view_type in view_type_registry.get_all():
+            view_type.after_field_type_change(field)
 
     def _get_filter_builder(
         self, view: View, model: GeneratedTableModel
@@ -617,7 +629,7 @@ class ViewHandler:
         :param base_queryset: The base queryset from where to select the view sort
             object from. This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
-        :raises ViewSortDoesNotExist: The the requested view does not exists.
+        :raises ViewSortDoesNotExist: The requested view does not exists.
         :return: The requested view sort instance.
         :type: ViewSort
         """
@@ -712,7 +724,9 @@ class ViewHandler:
         :param kwargs: The values that need to be updated, allowed values are
             `field` and `order`.
         :type kwargs: dict
-        :raises FieldNotInTable: When the field does not support sorting.
+        :raises ViewSortFieldNotSupported: When the field does not support sorting.
+        :raises FieldNotInTable:  When the provided field does not belong to the
+            provided view's table.
         :return: The updated view sort instance.
         :rtype: ViewSort
         """
@@ -891,7 +905,7 @@ class ViewHandler:
 
         if with_total:
             # Add total to allow further calculation on the client
-            aggregation_dict["total"] = Count("id")
+            aggregation_dict["total"] = Count("id", distinct=True)
 
         queryset = queryset.aggregate(**aggregation_dict)
 

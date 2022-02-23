@@ -298,17 +298,14 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 class="grid-view__foot"
               >
                 <div
-                  class="grid-view__column"
-                  style="width: 260px;"
+                  class="grid-view__foot-info"
                 >
-                  <div
-                    class="grid-view__foot-info"
-                  >
-                    
-          gridView.rowCount - 1
-        
-                  </div>
+                  
+        gridView.rowCount - 1
+      
                 </div>
+                 
+                <!---->
               </div>
             </div>
              
@@ -545,6 +542,8 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     />
                   </a>
                 </div>
+                 
+                <!---->
               </div>
             </div>
              

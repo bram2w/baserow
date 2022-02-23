@@ -36,5 +36,6 @@ class NotEmptyCountViewAggregationType(ViewAggregationType):
 
         return Count(
             "id",
+            distinct=True,
             filter=~field_type.empty_query(field_name, model_field, field),
         )

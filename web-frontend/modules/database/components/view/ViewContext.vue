@@ -10,7 +10,7 @@
       <li>
         <a @click="openWebhookModal()">
           <i class="context__menu-icon fas fa-fw fa-globe"></i>
-          Webhooks
+          {{ $t('viewContext.webhooks') }}
         </a>
       </li>
       <li>

@@ -106,6 +106,33 @@ export class MockServer {
       .reply(200)
   }
 
+  updateFieldOptions(viewId, values) {
+    this.mock
+      .onPatch(`/database/views/${viewId}/field-options/`, {
+        field_options: values,
+      })
+      .replyOnce(200)
+  }
+
+  // Grid view aggregation data mocks
+  getFieldAggregationData(viewId, fieldId, rawType, result, error = false) {
+    const mock = this.mock.onGet(
+      `/database/views/grid/${viewId}/aggregation/${fieldId}/`,
+      {
+        params: {
+          asymmetricMatch(actual) {
+            return actual.get('type') === rawType
+          },
+        },
+      }
+    )
+    if (error) {
+      mock.replyOnce(500)
+    } else {
+      mock.replyOnce(200, result)
+    }
+  }
+
   resetMockEndpoints() {
     this.mock.reset()
   }

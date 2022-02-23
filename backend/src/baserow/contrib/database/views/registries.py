@@ -1,6 +1,7 @@
 from typing import Callable, Union, List
 
 from django.contrib.auth.models import User as DjangoUser
+from django.db import models as django_models
 from rest_framework.fields import CharField
 
 from rest_framework.serializers import Serializer
@@ -19,7 +20,6 @@ from baserow.core.registry import (
     MapAPIExceptionsInstanceMixin,
 )
 from baserow.contrib.database.fields import models as field_models
-from django.db import models as django_models
 
 from .exceptions import (
     ViewTypeAlreadyRegistered,
@@ -337,6 +337,14 @@ class ViewType(
 
         return field_options
 
+    def after_field_type_change(self, field: field_models.Field) -> None:
+        """
+        This hook is called after the type of a field has changed and gives the
+        possibility to check compatibility with view stuff like specific field options.
+
+        :param field: The concerned field.
+        """
+
     def prepare_values(self, values: dict, table, user: DjangoUser):
         """
         The prepare_values hook gives the possibility to change the provided values
@@ -577,6 +585,17 @@ class ViewAggregationType(Instance):
         raise NotImplementedError(
             "Each aggregation type must have his own get_aggregation method."
         )
+
+    def field_is_compatible(self, field: field_models.Field) -> bool:
+        """
+        Given a particular instance of a field returns whether the field is supported
+        by this aggregation type or not.
+
+        :param field: The field to check.
+        :return: True if the field is compatible, False otherwise.
+        """
+
+        return True
 
 
 class ViewAggregationTypeRegistry(Registry):
