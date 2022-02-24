@@ -23,7 +23,7 @@
             "requestMethod": "Méthode",
             "url": "URL",
             "userFieldNames": "Noms des champs",
-            "events": "Quels événements déclenchent ce webhook",
+            "events": "Quels événements déclenchent ce webhook ?",
             "headers": "Entêtes additionels",
             "example": "Example de requête"
         },
@@ -81,7 +81,7 @@
         "noTokensMessage": "Vous n'avez pas encore créé de jeton. Vous pouvez utiliser les jetons d'API pour vous authentifier auprès de l'API REST qui vous permet de créer, lire, modifier et supprimer des lignes. Il est possible de définir des permissions différentes pour chaque table.",
         "hasFullPermissions": "Toutes les permissions, pour les enfants également.",
         "hasOnlySelectedPermissions": "Uniquement les permissions sélectionnées pour les enfants.",
-        "noPermissions": "Aucune permission",
+        "noPermissions": "Aucune permission.",
         "createNewTitle": "Créer un nouveau jeton",
         "backToOverview": "Retour"
     },
@@ -137,8 +137,8 @@
         "filter": "Ce paramètre permet de filtrer les lignes avec les même filtres que ceux disponibles dans les vues. Plusieurs filtres peuvent être définis simultanéement s'il suivent le même format. La variable `field` permet d'indiquer le champ à filtrer, tandis que `filter` permet de choiser le type de filtre.\n\n Par exemple si vous utilisez la valeur suivante : `filter__field_1__equal=test`, seule les lignes pour lesquelles la valeur du champ `field_1` est égale à *test* seront retournées.",
         "filterLink": "Une liste des filtres disponibles peut être consultée ici.",
         "filterType": "- `AND` : indique que les lignes doivent satisfaire tous les filtres définis.\n- `OR` : indique que les lignes doivent satisfaire au moins l'un des filtres définis pour être retournées.\n\n Cela fonctionne uniquement quand au moins 2 filtres sont définis.",
-        "include": "Par défaut, tous les champs de la table sont retournés. Vous pouvez définir le sous ensemble des champs qui seront dans les résultats en fournissant une valeur pour ce paramètre.\n\n #### Avec `user_field_names` :\n\n `include` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez conserver, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante `include=Mon champ,-Mon champ 2` alors seul ces champs seront retournés dans les résultats (sauf si vous les avez explicitement exclus avec le paramètre suivant).\n\n Le nom des champs contenant des virgules doit être entouré par des guillements : `\"Nom ,\"`. Si le nom des champs contient des guillements, ceux-ci doivent être protégés en utilisant le charactère `\\`. Ex : `Nom \\\"`.\n\n #### Sans `user_field_names` :\n\n `include` doit être une liste de `field_` suivis par l'identifiant d'un champ à inclure dans le résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante `exclude=field_1,field_2` alors les champs d'identifiant `1` et `2` seront les champs champs présents dans le résultat (sauf si vous les avez explicitement exclus avec le paramètre suivant).",
-        "exclude": "Par défaut, tous les champs de la table sont retournés dans les résultats. Vous pouvez choisir un sous ensemble de champs qui seront exclus des résultats en définissant une valeur pour ce paramètre.\n\n #### Avec `user_field_names`:\n\n `exclude` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez exclure, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante : `exclude=Mon champ,-Mon champ 2` alors ces deux champs seront exclus des résultats.\n\n Le nom des champs contenant des virgules doit être entouré par des guillements : `\"Nom ,\"`. Si le nom des champs contient des guillements, ceux-ci doivent être protégés en utilisant le charactère `\\`. Ex : `Nom \\\"`.\n\n #### Sans `user_field_names`:\n\n `exclude` doit être une liste de `field_` suivis par l'identifiant d'un champ à exclure du résultat, séparé par des virgules. Par example, si vous fournissez la valeur suivante : `exclude=field_1,field_2` alors les champs avec l'identifiant `1` et `2` seront exclus."
+        "include": "Par défaut, tous les champs de la table sont retournés. Vous pouvez définir le sous ensemble des champs qui seront dans les résultats en fournissant une valeur pour ce paramètre.\n\n#### Avec `user_field_names` :\n\n`include` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez conserver, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante `include=Mon champ,-Mon champ 2` alors seul ces champs seront retournés dans les résultats (sauf si vous les avez explicitement exclus avec le paramètre suivant).\n\nLe nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n#### Sans `user_field_names` :\n\n`include` doit être une liste de `field_` suivis par l'identifiant d'un champ à inclure dans le résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante `exclude=field_1,field_2` alors les champs d'identifiant `1` et `2` seront les champs présents dans le résultat (sauf si vous les avez explicitement exclus avec le paramètre suivant).",
+        "exclude": "Par défaut, tous les champs de la table sont retournés dans les résultats. Vous pouvez choisir un sous ensemble de champs qui seront exclus des résultats en définissant une valeur pour ce paramètre.\n\n#### Avec `user_field_names` :\n\n`exclude` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez exclure, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante : `exclude=Mon champ,-Mon champ 2` alors ces deux champs seront exclus des résultats.\n\nLe nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n#### Sans `user_field_names` :\n\n`exclude` doit être une liste de `field_` suivis par l'identifiant d'un champ à exclure du résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante : `exclude=field_1,field_2` alors les champs avec l'identifiant `1` et `2` seront exclus."
     },
     "apiDocsIntro": {
         "intro": "L'API de la base {name} offre un moyen simple d'intégrer des données provenant d'un système externe. L'API suit les principes d'architecture REST, utilise le format JSON pour encoder les données, s'appuie sur les codes HTTP standards et propose des messages d'erreurs à la fois techniques mais également lisibles par les humains pour signaler les dysfonctionnements.",
@@ -208,7 +208,7 @@
     "fieldLinkRowSubForm": {
         "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
         "selectTableLabel": "Sélectionnez une table",
-        "dataLost": "En modifiant la table, toutes les données du champ seront supprimées"
+        "dataLost": "En modifiant la table, toutes les données du champ seront supprimées."
     },
     "fieldSelectOptions": {
         "add": "Ajouter une option"
@@ -298,7 +298,7 @@
         "fileDescription": "Vous pouvez importer un XML existant en envoyant un fichier .XML contenant des données tabulaires, c'est-à-dire :",
         "chooseButton": "Choisir un fichier XML",
         "processingError": "Une erreur est survenue lors du traitement du XML : {errors}",
-        "emptyError": "Ce fichier XML est vide",
+        "emptyError": "Ce fichier XML est vide.",
         "limitFileSize": "La taille maximum du fichier est de {limit}Mo.",
         "limitError": "Il n'est pas possible d'importer plus de {limit} lignes."
     },
@@ -373,7 +373,7 @@
         "shareView": "Partager {viewTypeSharingLinkName}",
         "shareViewTitle": "Créer un lien de partage privé vers {viewTypeSharingLinkName}",
         "sharedViewTitle": "Actuellement, {viewTypeSharingLinkName} est partagé·e via un lien privé",
-        "sharedViewDescription": "Les personnes possédant le lien peuvent voir {viewTypeSharingLinkName}",
+        "sharedViewDescription": "Les personnes possédant le lien peuvent voir {viewTypeSharingLinkName}.",
         "disableLink": "désactivé le lien de partage",
         "generateNewUrl": "générer un nouveau lien",
         "copyURL": "copier le lien"
@@ -480,11 +480,12 @@
         "back": "Retour à l'accueil",
         "openDatabase": "Voir la base de données"
     },
-    "apiDocs": {
+    "apiDocsComponent": {
         "title": "API REST",
         "intro": "Après avoir créé votre base de données et une clé d'API dans votre {settingsLink} Baserow fourni ses propres API REST pour créer, lire, mettre à jour et supprimer des lignes.",
         "settings": "compte",
         "selectApplicationTitle": "Choisissez une base de donnée :",
-        "signIn": "S'identifier"
+        "signIn": "S'identifier",
+        "back": "Retourner à l'accueil"
     }
 }

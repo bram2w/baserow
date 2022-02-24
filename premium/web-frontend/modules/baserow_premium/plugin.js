@@ -17,6 +17,8 @@ import { KanbanViewType } from '@baserow_premium/viewTypes'
 
 import en from '@baserow_premium/locales/en.json'
 import fr from '@baserow_premium/locales/fr.json'
+import nl from '@baserow_premium/locales/nl.json'
+import de from '@baserow_premium/locales/de.json'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -32,6 +34,8 @@ export default (context) => {
     const { i18n } = app
     i18n.mergeLocaleMessage('en', en)
     i18n.mergeLocaleMessage('fr', fr)
+    i18n.mergeLocaleMessage('nl', nl)
+    i18n.mergeLocaleMessage('de', de)
   }
 
   store.registerModule('row_comments', rowCommentsStore)

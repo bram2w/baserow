@@ -6,6 +6,8 @@ import { routes } from './routes'
 import head from './head'
 import en from './locales/en.json'
 import fr from './locales/fr.json'
+import nl from './locales/nl.json'
+import de from './locales/de.json'
 
 export default function CoreModule(options) {
   /**
@@ -79,6 +81,8 @@ export default function CoreModule(options) {
   const locales = [
     { code: 'en', name: 'English', file: 'en.json' },
     { code: 'fr', name: 'Français', file: 'fr.json' },
+    { code: 'nl', name: 'Nederlands', file: 'nl.json' },
+    { code: 'de', name: 'Deutsch', file: 'de.json' },
   ]
 
   this.requireModule([
@@ -100,7 +104,7 @@ export default function CoreModule(options) {
   ])
 
   this.nuxt.hook('i18n:extend-messages', function (additionalMessages) {
-    additionalMessages.push({ en, fr })
+    additionalMessages.push({ en, fr, nl, de })
   })
 
   // Serve the static directory

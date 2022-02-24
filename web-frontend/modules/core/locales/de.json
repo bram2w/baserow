@@ -1,0 +1,245 @@
+{
+    "paginator": {
+        "page": "Seite",
+        "of": "von {pages}"
+    },
+    "copied": {
+        "label": "Kopiert!"
+    },
+    "sidebarApplication": {
+        "renameApplication": "Umbenennen {type}",
+        "viewTrash": "Ansicht Papierkorb",
+        "deleteApplication": "Löschen {type}"
+    },
+    "sidebar": {
+        "createGroup": "Gruppe erstellen",
+        "inviteOthers": "Andere einladen",
+        "logoff": "Abmeldung",
+        "errorNoGroup": "Sie haben keine Gruppen.",
+        "admin": "Administrator",
+        "dashboard": "Dashboard",
+        "trash": "Papierkorb",
+        "settings": "Einstellungen"
+    },
+    "accountForm": {
+        "nameLabel": "Ihr Name",
+        "languageLabel": "Sprache der Benutzeroberfläche"
+    },
+    "accountSettings": {
+        "title": "Konto",
+        "changedTitle": "Geändert",
+        "changedDescription": "Ihre Kontoinformationen wurden geändert.",
+        "submitButton": "Konto aktualisieren"
+    },
+    "settingsModal": {
+        "title": "Einstellungen"
+    },
+    "passwordSettings": {
+        "title": "Passwort ändern",
+        "changedTitle": "Passwort geändert",
+        "changedDescription": "Ihr Passwort wurde geändert. Wenn Sie sich das nächste Mal anmelden möchten, müssen Sie Ihr neues Passwort verwenden.",
+        "oldPasswordLabel": "Altes Passwort",
+        "oldPasswordRequiredError": "Das alte Passwort ist erforderlich.",
+        "newPasswordLabel": "Neues Passwort",
+        "repeatNewPasswordLabel": "Wiederholung des neuen Passworts",
+        "repeatNewPasswordMatchError": "Dieses Feld muss mit Ihrem neuen Passwortfeld übereinstimmen.",
+        "submitButton": "Passwort ändern",
+        "errorInvalidOldPasswordTitle": "Ungültiges Passwort",
+        "errorInvalidOldPasswordMessage": "Sie konnten Ihr Passwort nicht ändern, weil Ihr altes Passwort ungültig ist."
+    },
+    "error": {
+        "alreadyExistsTitle": "Benutzer existiert bereits",
+        "alreadyExistsMessage": "Es existiert bereits ein Benutzer mit der angegebenen E-Mail-Adresse.",
+        "passwordRequired": "Ein Passwort ist erforderlich.",
+        "invalidEmail": "Bitte geben Sie eine gültige E-Mail Adresse ein.",
+        "disabledAccountTitle": "Konto deaktiviert",
+        "disabledAccountMessage": "Dieses Benutzerkonto wurde deaktiviert.",
+        "incorrectCredentialTitle": "Inkorrekte Zugangsdaten",
+        "incorrectCredentialMessage": "Die angegebene E-Mail-Adresse oder das Passwort ist falsch.",
+        "inputRequired": "Eine Eingabe ist erforderlich."
+    },
+    "field": {
+        "language": "Sprache",
+        "emailAddress": "E-Mail Adresse",
+        "name": "Ihr Name",
+        "password": "Passwort",
+        "passwordRepeat": "Passwort wiederholen"
+    },
+    "invitationTitle": "Einladung",
+    "invitationMessage": "{invitedBy} hat Sie eingeladen, {group} beizutreten.",
+    "groupForm": {
+        "nameLabel": "Name"
+    },
+    "leaveGroupModal": {
+        "title": "Verlassen {Gruppe}",
+        "message": "Sind Sie sicher, dass Sie die Gruppe {group} verlassen wollen? Sie können dann nicht mehr auf die zugehörigen Anwendungen zugreifen. Wenn Sie wieder Zugang erhalten möchten, muss einer der Administratoren Sie erneut einladen. Wenn Sie die Gruppe verlassen, wird sie nicht gelöscht. Alle anderen Mitglieder haben weiterhin Zugang zu ihr. Es ist nicht möglich, eine Gruppe zu verlassen, wenn Sie der letzte Administrator sind, da die Gruppe dann nicht mehr gepflegt wird.",
+        "leave": "Gruppe verlassen"
+    },
+    "dashboardGroup": {
+        "showMembers": "Mitglieder",
+        "createApplication": "Neu erstellen"
+    },
+    "groupInvitation": {
+        "title": "Einladung",
+        "message": "{by} hat Sie eingeladen, der {group} beizutreten.",
+        "reject": "Abgelehnt",
+        "accept": "Akzeptiert"
+    },
+    "groupMemberModal": {
+        "membersModalTitle": "{group} Mitglieder",
+        "userDescription": "{user} - beigetreten vor {since}",
+        "invitationDescription": "eingeladen vor {since}",
+        "sendInvite": "Einladung senden",
+        "userAlreadyInGroupTitle": "Der Benutzer ist bereits Mitglied der Gruppe.",
+        "userAlreadyInGroupText": "Es ist nicht möglich, eine Einladung zu senden, wenn der Benutzer bereits Mitglied der Gruppe ist."
+    },
+    "groupInviteForm": {
+        "invitationFormTitle": "Einladen per E-Mail",
+        "optionalMessagePlaceholder": "Optionale Nachricht",
+        "errorInvalidEmail": "Bitte geben Sie eine gültige E-Mail Adresse ein."
+    },
+    "groupsContext": {
+        "search": "Suche nach Gruppen",
+        "noResults": "Keine Ergebnisse gefunden",
+        "createGroup": "Gruppe erstellen"
+    },
+    "groupContext": {
+        "renameGroup": "Gruppe umbenennen",
+        "members": "Mitglieder",
+        "viewTrash": "Papierkorb ansehen",
+        "leaveGroup": "Gruppe verlassen",
+        "deleteGroup": "Gruppe löschen"
+    },
+    "createGroupModal": {
+        "createNew": "Neue Gruppe erstellen",
+        "add": "Gruppe hinzufügen"
+    },
+    "templateCategories": {
+        "search": "Vorlagen suchen",
+        "title": "Vorlagen"
+    },
+    "templateHeader": {
+        "use": "Verwenden Sie diese Vorlage"
+    },
+    "trashSidebar": {
+        "title": "Papierkorb",
+        "unnamedGroup": "Unbenannte Gruppe {id}"
+    },
+    "trashContents": {
+        "message": "Gelöschte Objekte aus der Vergangenheit wiederherstellen {duration}",
+        "empty": "In den letzten drei Tagen ist nichts gelöscht worden.",
+        "emptyButtonTrashed": "{type} dauerhaft löschen",
+        "emptyButtonNotTrashed": "Den Papierkorb dieses {type}'s leeren",
+        "unnamed": "Unbenannt {type} {id}"
+    },
+    "trashEmptyModal": {
+        "titleIsTrashed": "Sind Sie sicher, dass Sie {name} dauerhaft löschen möchten?",
+        "titleIsNotTrashed": "Sind Sie sicher, dass Sie den Papierkorb von {name} leeren wollen?",
+        "messageIsTrashed": "Dadurch werden sie und ihr gesamter Inhalt endgültig gelöscht. Danach können sie nicht mehr wiederhergestellt werden.",
+        "messageIsNotTrashed": "Dadurch werden die aufgelisteten Elemente dauerhaft gelöscht. Danach können sie nicht mehr wiederhergestellt werden.",
+        "buttonIsTrashed": "Dauerhaft löschen",
+        "buttonIsNotTrashed": "leer"
+    },
+    "trashEntry": {
+        "deletedUser": "Ein gelöschter Benutzer",
+        "fromParent": "von {parent}",
+        "name": "{user} gelöscht {type} {title} {parent}",
+        "restore": "Wiederherstellen",
+        "unnamed": "Unbenannt {type} {id}"
+    },
+    "trashModal": {
+        "emptyTitle": "Keine Gruppen gefunden",
+        "emptyMessage": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also eine Gruppe erstellen."
+    },
+    "uploadViaURLUserFileUpload": {
+        "title": "Hochladen von einer URL",
+        "urlLabel": "URL",
+        "urlError": "Eine gültige URL ist erforderlich."
+    },
+    "userFilesModal": {
+        "title": "Hochladen von"
+    },
+    "uploadFileUserFileUpload": {
+        "title": "Hochladen von meinem Gerät",
+        "drop": "Hier ablegen",
+        "clickOrDrop": "Klicken Sie hier oder legen Sie Ihre Dateien ab",
+        "retry": "Wiederholung"
+    },
+    "createApplicationContext": {
+        "fromTemplate": "Von Vorlage"
+    },
+    "applicationForm": {
+        "nameLabel": "Name"
+    },
+    "connectingNotification": {
+        "title": "Wiederverbindung",
+        "content": "Wiederherstellung der Verbindung mit dem Server."
+    },
+    "failedConnectingNotification": {
+        "title": "Fehlgeschlagen",
+        "content": "Die Verbindung zum Server ist fehlgeschlagen. Bitte aktualisieren Sie die Seite.",
+        "action": "Seite aktualisieren"
+    },
+    "restoreNotification": {
+        "restore": "Gelöschten {type} wiederherstellen"
+    },
+    "errorLayout": {
+        "notFound": "Die Seite, die Sie suchen, wurde nicht gefunden. Dies könnte daran liegen, dass die URL nicht korrekt ist oder dass Sie keine Berechtigung haben, diese Seite anzuzeigen.",
+        "error": "Beim Laden der Seite ist ein Fehler aufgetreten. Unsere Entwickler wurden über das Problem informiert. Bitte versuchen Sie, die Seite zu aktualisieren oder zum Dashboard zurückzukehren.",
+        "backDashboard": "Zurück zum Dashboard",
+        "backLogin": "Zurück zur Anmeldung",
+        "wrong": "Etwas ist fehlgeschlagen"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "alertTitle": "Wir benötigen Ihre Hilfe!",
+        "alertText": "Wenn Sie Baserow nützlich finden, dann sind Sie herzlich eingeladen, uns zu sponsern, zu unterstützen oder zu teilen. Wenn Sie uns auf GitHub sponsern, erhalten Sie frühen Zugang zu den Premium-Funktionen!",
+        "tweetContent": "Entdecken Sie @baserow, ein Open-Source-Datenbank-Tool ohne Code und eine Alternative zu Airtable!",
+        "redditTitle": "Baserow - Eine Open-Source no-code Datenbank",
+        "noGroupTitle": "Keine Gruppen gefunden",
+        "noGroupText": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also eine Gruppe erstellen.",
+        "createGroup": "Gruppe erstellen",
+        "becomeGithubSponsor": "Werden Sie ein GitHub-Sponsor",
+        "starOnGitlab": "Begleiten Sie uns auf Gitlab",
+        "shareOnTwitter": "Tweet über Baserow",
+        "shareOnReddit": "Teilen auf Reddit",
+        "shareOnFacebook": "Teilen auf Facebook",
+        "shareOnLinkedIn": "Teilen auf LinkedIn"
+    },
+    "login": {
+        "title": "Anmeldung",
+        "forgotPassword": "Passwort vergessen"
+    },
+    "resetPassword": {
+        "title": "Passwort zurücksetzen",
+        "newPassword": "Neues Passwort",
+        "repeatNewPassword": "Wiederholung des neuen Passworts",
+        "submit": "Passwort ändern",
+        "changed": "Passwort geändert",
+        "errorInvalidLinkTitle": "Ungültiger Link",
+        "errorInvalidLinkMessage": "Das Passwort konnte nicht zurückgesetzt werden, da der Link ungültig ist.",
+        "errorLinkExpiredTitle": "Link abgelaufen",
+        "errorLinkExpiredMessage": "Der Link zum Zurücksetzen des Passworts ist abgelaufen. Bitte fordern Sie ein neues an."
+    },
+    "signup": {
+        "headTitle": "Neues Konto erstellen",
+        "title": "Registrieren Sie sich",
+        "disabled": "Registrierung ist deaktiviert",
+        "disabledMessage": "Es ist nicht möglich, ein Konto zu erstellen, da es deaktiviert wurde."
+    },
+    "forgotPassword": {
+        "title": "Passwort vergessen",
+        "message": "Bitte geben Sie Ihre E-Mail-Adresse in das Formular ein. Wenn wir ein Konto finden, senden wir Ihnen eine E-Mail mit einem Link zum Zurücksetzen Ihres Passworts.",
+        "submit": "Link senden",
+        "confirmation": "Wenn Ihre E-Mail-Adresse in unserer Datenbank vorhanden ist, erhalten Sie in wenigen Minuten einen Link zum Zurücksetzen des Passworts an Ihre E-Mail-Adresse."
+    },
+    "settings": {
+        "settingsTitle": "Administrator-Einstellungen",
+        "baserowInstanceId": "Instanz-ID",
+        "instanceIdDescription": "Die Instanz-ID ist die eindeutige Kennung Ihrer Baserow-Kopie.",
+        "groupSignupRestrictions": "Einschränkungen bei der Registrierung",
+        "settingAllowNewAccountsName": "Erstellen neuer Konten zulassen",
+        "settingAllowNewAccountsDescription": "Standardmäßig kann sich jeder Benutzer, der Ihre Baserow-Domain besucht, für ein neues Konto anmelden.",
+        "enabled": "aktiviert"
+    }
+}

@@ -3,25 +3,25 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-10-28 20:39+0000\n"
-"PO-Revision-Date: 2022-01-26 16:55+0000\n"
-"Last-Translator: Jérémie Pardou-Piquemal <jrmi@jeremiez.net>\n"
-"Language-Team: French <https://hosted.weblate.org/projects/baserow/"
-"backend-core/fr/>\n"
-"Language: fr\n"
+"PO-Revision-Date: 2022-02-02 19:53+0000\n"
+"Last-Translator: Natthapon <natthapon@wagner-international.com>\n"
+"Language-Team: German <https://hosted.weblate.org/projects/baserow/"
+"backend-core/de/>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Weblate 4.11-dev\n"
 
 #: src/baserow/core/emails.py:88
 #, python-format
 msgid "%(by)s invited you to %(group_name)s - Baserow"
-msgstr "%(by)s vous a invité à %(group_name)s - Baserow"
+msgstr "%(by)s hat dich zu %(group_name)s eingeladen - Baserow"
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:7
 msgid "Invitation"
-msgstr "Invitation"
+msgstr "Einladung"
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:9
 #, python-format
@@ -32,14 +32,14 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"          <strong>%(first_name)s</strong> vous a invité à collaborer au "
-"groupe\n"
+"          <strong>%(first_name)s</strong> hat Sie eingeladen, mitzuarbeiten "
+"an\n"
 "          <strong>%(group_name)s</strong>.\n"
 "        "
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:20
 msgid "Accept invitation"
-msgstr "Accepter l’invitation"
+msgstr "Einladung annehmen"
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:26
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:29
@@ -53,17 +53,17 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"          Baserow est un outil de base de données open source no-code qui "
-"vous permet de collaborer\n"
-"          sur des projets, avec des clients et plus encore. Il vous donne "
-"les possibilités d'un développeur \n"
-"          sans quitter votre navigateur.\n"
+"          Baserow ist ein Open-Source-Datenbank-Tool ohne Code, das Ihnen "
+"die Zusammenarbeit mit\n"
+"          über Projekte, Kunden und mehr. Es gibt Ihnen die Befugnisse eines "
+"Entwicklers ohne\n"
+"          Ihren Browser zu verlassen.\n"
 "        "
 
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:7
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:23
 msgid "Reset password"
-msgstr "Réinitialiser le mot de passe"
+msgstr "Passwort zurücksetzen"
 
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:9
 #, python-format
@@ -76,11 +76,11 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"          La réinitialisation du mot de passe a été demandée pour le compte "
-"(%(username)s) sur\n"
-"          Baserow (%(public_web_frontend_hostname)s). Si vous n'êtes pas à "
-"l'initiative de cette demande,\n"
-"          vous pouvez simplement ignorer cet e-mail.\n"
+"          Ein Passwort-Reset wurde für Ihr Konto ( %(username)s) beantragt "
+"am\n"
+"          Baserow (%(public_web_frontend_hostname)s). Wenn Sie dies nicht "
+"autorisiert haben,\n"
+"          können Sie diese E-Mail einfach ignorieren.\n"
 "        "
 
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:16
@@ -94,20 +94,20 @@ msgid ""
 "        "
 msgstr ""
 "\n"
-"          Pour poursuivre la réinitialisation de votre mot de passe, il "
-"suffit de cliquer sur le bouton ci-dessous, et vous\n"
-"          vous pourrez modifier votre mot de passe. Ce lien expirera dans\n"
-"          %(hours)s heures.\n"
+"          Um mit dem Zurücksetzen Ihres Passworts fortzufahren, klicken Sie "
+"einfach auf die untenstehende Schaltfläche, und Sie\n"
+"          können Sie Ihr Passwort ändern. Dieser Link läuft ab in\n"
+"          %(hours)s Stunden.\n"
 "        "
 
 #: src/baserow/core/user/emails.py:16
 msgid "Reset password - Baserow"
-msgstr "Réinitialiser le mot de passe - Baserow"
+msgstr "Passwort zurücksetzen - Baserow"
 
 #: src/baserow/core/user/handler.py:155
 #, python-format
 msgid "%(name)s's group"
-msgstr "Groupe de %(name)s"
+msgstr "%(name)s's Gruppe"
 
 #~ msgid "Group invitation"
 #~ msgstr "Invitation à un groupe"
