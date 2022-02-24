@@ -1,21 +1,21 @@
 {
     "premium": {
-        "user":{
+        "user": {
             "isStaff": "Est collaborateur",
             "isGroupAdmin": "Est l'administrateur du groupe",
             "active": "Actif",
             "deactivated": "Inactif"
         },
-        "adminType":{
+        "adminType": {
             "dashboard": "Statistiques",
             "users": "Utilisateurs",
             "groups": "Groupes",
             "licenses": "Licences"
         },
-        "viewType":{
+        "viewType": {
             "kanban": "Kanban"
         },
-        "exporterType":{
+        "exporterType": {
             "json": "Exporter vers JSON",
             "xml": "Exporter vers XML"
         }

@@ -1,0 +1,38 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-28 20:39+0000\n"
+"PO-Revision-Date: 2022-01-28 09:54+0000\n"
+"Last-Translator: Joey Li <joeyli16@icloud.com>\n"
+"Language-Team: Chinese (Simplified) <https://hosted.weblate.org/projects/"
+"baserow/backend-database/zh_Hans/>\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 4.11-dev\n"
+
+#: src/baserow/contrib/database/plugins.py:44
+#, python-format
+msgid "%(first_name)s's company"
+msgstr "%(first_name)s 的公司"
+
+#: src/baserow/contrib/database/plugins.py:48
+msgid "Customers"
+msgstr "客户"
+
+#: src/baserow/contrib/database/plugins.py:50
+#: src/baserow/contrib/database/plugins.py:85
+msgid "Grid"
+msgstr "表格"
+
+#: src/baserow/contrib/database/plugins.py:83
+msgid "Projects"
+msgstr "项目"

@@ -1,0 +1,245 @@
+{
+    "paginator": {
+        "page": "pagina",
+        "of": "van {pages}"
+    },
+    "copied": {
+        "label": "Gekopieerd!"
+    },
+    "sidebarApplication": {
+        "renameApplication": "Hernoem {type}",
+        "viewTrash": "Bekijk Prullenbak",
+        "deleteApplication": "Verwijder {type}"
+    },
+    "sidebar": {
+        "createGroup": "Groep aanmaken",
+        "inviteOthers": "Nodig anderen uit",
+        "logoff": "Afmelden",
+        "errorNoGroup": "Je hebt geen groepen.",
+        "admin": "Beheerder",
+        "dashboard": "Dashboard",
+        "trash": "Prullenbak",
+        "settings": "Instellingen"
+    },
+    "accountForm": {
+        "nameLabel": "Je naam",
+        "languageLabel": "Taal van de interface"
+    },
+    "accountSettings": {
+        "title": "Account",
+        "changedTitle": "Gewijzigd",
+        "changedDescription": "Je accountgegevens zijn gewijzigd.",
+        "submitButton": "Account bijwerken"
+    },
+    "settingsModal": {
+        "title": "Instellingen"
+    },
+    "passwordSettings": {
+        "title": "Wachtwoord wijzigen",
+        "changedTitle": "Wachtwoord gewijzigd",
+        "changedDescription": "Je wachtwoord is gewijzigd. De volgende keer dat je wilt inloggen, moet je het nieuwe wachtwoord gebruiken.",
+        "oldPasswordLabel": "Oud wachtwoord",
+        "oldPasswordRequiredError": "Oud wachtwoord is een verplicht veld.",
+        "newPasswordLabel": "Nieuw wachtwoord",
+        "repeatNewPasswordLabel": "Herhaal nieuw wachtwoord",
+        "repeatNewPasswordMatchError": "Dit veld moet overeenkomen met je nieuwe wachtwoordveld.",
+        "submitButton": "Wachtwoord wijzigen",
+        "errorInvalidOldPasswordTitle": "Ongeldig wachtwoord",
+        "errorInvalidOldPasswordMessage": "Wachtwoord kon niet veranderd worden omdat je oude wachtwoord ongeldig is."
+    },
+    "error": {
+        "alreadyExistsTitle": "Gebruiker bestaat al",
+        "alreadyExistsMessage": "Er bestaat al een gebruiker met het opgegeven e-mailadres.",
+        "passwordRequired": "Wachtwoord is een verplicht veld.",
+        "invalidEmail": "Voer een geldig e-mail adres in.",
+        "disabledAccountTitle": "Account uitgeschakeld",
+        "disabledAccountMessage": "Dit gebruikersaccount is uitgeschakeld.",
+        "incorrectCredentialTitle": "Inloggegevens zijn niet correct",
+        "incorrectCredentialMessage": "Het opgegeven e-mailadres of wachtwoord is niet correct.",
+        "inputRequired": "Dit is een verplicht veld."
+    },
+    "field": {
+        "language": "Taal",
+        "emailAddress": "E-mailadres",
+        "name": "Je naam",
+        "password": "Wachtwoord",
+        "passwordRepeat": "Herhaal wachtwoord"
+    },
+    "invitationTitle": "Uitnodiging",
+    "invitationMessage": "{uitgenodigd door} heeft je uitgenodigd om lid te worden van {groep}.",
+    "groupForm": {
+        "nameLabel": "Naam"
+    },
+    "leaveGroupModal": {
+        "title": "Verlaat {groep}",
+        "message": "Weet je zeker dat je de groep {groep} wilt verlaten? Je hebt dan geen toegang meer tot de relevante applicaties. Als je opnieuw toegang wilt krijgen, moet een van de beheerders je opnieuw uitnodigen. Als je de groep verlaat, zal de groep niet worden verwijderd. Alle andere leden zullen er nog steeds toegang toe hebben. Het is niet mogelijk om een groep te verlaten als je de laatste beheerder bent, omdat deze dan niet meer wordt onderhouden.",
+        "leave": "Verlaat groep"
+    },
+    "dashboardGroup": {
+        "showMembers": "Leden",
+        "createApplication": "Nieuwe aanmaken"
+    },
+    "groupInvitation": {
+        "title": "Uitnodiging",
+        "message": "{by} heeft je uitgenodigd om lid te worden van {group}.",
+        "reject": "Weigeren",
+        "accept": "Accepteren"
+    },
+    "groupMemberModal": {
+        "membersModalTitle": "Leden van {group}",
+        "userDescription": "{user} - lid geworden {since} geleden",
+        "invitationDescription": "uitgenodigd {since} geleden",
+        "sendInvite": "Uitnodiging versturen",
+        "userAlreadyInGroupTitle": "Gebruiker zit al in de groep.",
+        "userAlreadyInGroupText": "Het is niet mogelijk een uitnodiging te versturen als de gebruiker al lid is van de groep."
+    },
+    "groupInviteForm": {
+        "invitationFormTitle": "Uitnodigen per e-mail",
+        "optionalMessagePlaceholder": "Optioneel bericht",
+        "errorInvalidEmail": "Voer een geldig e-mail adres in."
+    },
+    "groupsContext": {
+        "search": "Zoek groepen",
+        "noResults": "Geen resultaten gevonden",
+        "createGroup": "Groep aanmaken"
+    },
+    "groupContext": {
+        "renameGroup": "Hernoem groep",
+        "members": "Leden",
+        "viewTrash": "Bekijk Prullenbak",
+        "leaveGroup": "Verlaat groep",
+        "deleteGroup": "Groep verwijderen"
+    },
+    "createGroupModal": {
+        "createNew": "Nieuwe groep aanmaken",
+        "add": "Groep toevoegen"
+    },
+    "templateCategories": {
+        "search": "Zoek sjablonen",
+        "title": "Sjablonen"
+    },
+    "templateHeader": {
+        "use": "Gebruik deze sjabloon"
+    },
+    "trashSidebar": {
+        "title": "Prullenbak",
+        "unnamedGroup": "Naamloze groep {id}"
+    },
+    "trashContents": {
+        "message": "Herstel items verwijderd in de afgelopen {duration}",
+        "empty": "Er is niets verwijderd in de afgelopen drie dagen.",
+        "emptyButtonTrashed": "Verwijder {type} permanent",
+        "emptyButtonNotTrashed": "Leeg de Prullenbak van dit {type}",
+        "unnamed": "Naamloos {type} {id}"
+    },
+    "trashEmptyModal": {
+        "titleIsTrashed": "Weet je zeker dat je {name} permanent wilt verwijderen?",
+        "titleIsNotTrashed": "Weet je zeker dat je de Prullenbak van {name} wilt legen?",
+        "messageIsTrashed": "De gehele inhoud van de prullenbak wordt permanent gewist. Dit kan niet ongedaan gemaakt of opgehaald worden.",
+        "messageIsNotTrashed": "Dit zal de items lijst permanent verwijderen. Herstel of ophalen is dan niet meer mogelijk.",
+        "buttonIsTrashed": "Permanent verwijderen",
+        "buttonIsNotTrashed": "Legen"
+    },
+    "trashEntry": {
+        "deletedUser": "Een verwijderde gebruiker",
+        "fromParent": "van {parent}",
+        "name": "{user} heeft {type} {title} {parent} verwijderd",
+        "restore": "Herstel",
+        "unnamed": "Naamloos {type} {id}"
+    },
+    "trashModal": {
+        "emptyTitle": "Geen groepen gevonden",
+        "emptyMessage": "Je bent geen lid van een groep. Toepassingen zoals databases horen bij een groep, dus om die aan te maken moet je eerst een groep maken."
+    },
+    "uploadViaURLUserFileUpload": {
+        "title": "Uploaden vanaf een URL",
+        "urlLabel": "URL",
+        "urlError": "Een geldige URL is een verplicht veld."
+    },
+    "userFilesModal": {
+        "title": "Uploaden van"
+    },
+    "uploadFileUserFileUpload": {
+        "title": "Uploaden vanaf mijn apparaat",
+        "drop": "Naar hier slepen",
+        "clickOrDrop": "Klik of sleep je bestanden naar hier",
+        "retry": "Opnieuw proberen"
+    },
+    "createApplicationContext": {
+        "fromTemplate": "Van sjabloon"
+    },
+    "applicationForm": {
+        "nameLabel": "Naam"
+    },
+    "connectingNotification": {
+        "title": "Opnieuw verbinden",
+        "content": "Opnieuw verbinding maken met de server."
+    },
+    "failedConnectingNotification": {
+        "title": "Mislukt",
+        "content": "Verbinding met de server is mislukt. Vernieuw de pagina.",
+        "action": "Pagina vernieuwen"
+    },
+    "restoreNotification": {
+        "restore": "Herstel verwijderd {type}"
+    },
+    "errorLayout": {
+        "notFound": "We kunnen de pagina die je zoekt niet vinden. Misschien is de URL niet correct, of misschien heb je geen autorisatie om deze pagina te bekijken.",
+        "error": "Er is iets misgegaan tijdens het laden van de pagina. Onze ontwikkelaars zijn op de hoogte gebracht van het probleem. Probeer Vernieuwen of ga terug naar het dashboard.",
+        "backDashboard": "Terug naar dashboard",
+        "backLogin": "Terug naar inloggen",
+        "wrong": "Er is iets misgegaan"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "alertTitle": "We hebben je hulp nodig!",
+        "alertText": "Als je Baserow nuttig vindt, dan waarderen we het zeer als je ons wilt sponsoren, sterren wilt geven of ons met anderen wilt delen. Door ons te sponsoren op GitHub krijg je vroegtijdige toegang tot de premium functies!",
+        "tweetContent": "Check @baserow, een open source no-code database tool en Airtable alternatief!",
+        "redditTitle": "'Baserow - Een open source no-code database",
+        "noGroupTitle": "Geen groepen gevonden",
+        "noGroupText": "Je bent geen lid van een groep. Toepassingen zoals databases horen bij een groep, dus om die te maken moet je eerst een groep aanmaken.",
+        "createGroup": "Groep aanmaken",
+        "becomeGithubSponsor": "Word een GitHub sponsor",
+        "starOnGitlab": "Geef ons een ster op Gitlab",
+        "shareOnTwitter": "Tweet over Baserow",
+        "shareOnReddit": "Deel op Reddit",
+        "shareOnFacebook": "Deel op Facebook",
+        "shareOnLinkedIn": "Deel op LinkedIn"
+    },
+    "login": {
+        "title": "Inloggen",
+        "forgotPassword": "Wachtwoord vergeten"
+    },
+    "resetPassword": {
+        "title": "Wachtwoord resetten",
+        "newPassword": "Nieuw wachtwoord",
+        "repeatNewPassword": "Herhaal nieuw wachtwoord",
+        "submit": "Wachtwoord wijzigen",
+        "changed": "Wachtwoord gewijzigd",
+        "errorInvalidLinkTitle": "Ongeldige link",
+        "errorInvalidLinkMessage": "Kon het wachtwoord niet resetten omdat de link ongeldig is.",
+        "errorLinkExpiredTitle": "Link verlopen",
+        "errorLinkExpiredMessage": "De link voor het resetten van je wachtwoord is verlopen. Vraag een nieuwe link aan."
+    },
+    "signup": {
+        "headTitle": "Nieuw account aanmaken",
+        "title": "Aanmelden",
+        "disabled": "Aanmelden is uitgeschakeld",
+        "disabledMessage": "Het is niet mogelijk om een account aan te maken omdat het is uitgeschakeld."
+    },
+    "forgotPassword": {
+        "title": "Wachtwoord vergeten",
+        "message": "Vul je e-mailadres in op het formulier. Als we een account vinden, sturen we een e-mail met een link om je wachtwoord te resetten.",
+        "submit": "Stuur link",
+        "confirmation": "Als je e-mailadres in onze database voorkomt, ontvangt je binnen enkele minuten op je e-mailadres een link om je wachtwoord opnieuw in te stellen."
+    },
+    "settings": {
+        "settingsTitle": "Beheerdersinstellingen",
+        "baserowInstanceId": "Installatie-ID",
+        "instanceIdDescription": "De installatie-ID is de unieke identificatiecode van je Baserow instantie.",
+        "groupSignupRestrictions": "Aanmeldingsbeperkingen",
+        "settingAllowNewAccountsName": "Toestaan aanmaken van nieuwe accounts",
+        "settingAllowNewAccountsDescription": "Standaard kan elke gebruiker die je Baserow-domein bezoekt zich aanmelden voor een nieuw account.",
+        "enabled": "ingeschakeld"
+    }
+}
