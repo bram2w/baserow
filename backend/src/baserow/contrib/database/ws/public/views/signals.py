@@ -49,13 +49,16 @@ def public_view_field_options_updated(sender, view, user, **kwargs):
         if not view_type.when_shared_publicly_requires_realtime_events:
             return
 
-        field_options = view_type.get_visible_field_options_in_order(view)
-        fields = [
-            field_type_registry.get_serializer(o.field, PublicFieldSerializer).data
-            for o in field_options.select_related("field")
-        ]
-        view_page_type.broadcast(
-            {"type": "force_view_refresh", "view_id": view.slug, "fields": fields},
-            None,
-            slug=view.slug,
-        )
+        def on_commit():
+            field_options = view_type.get_visible_field_options_in_order(view)
+            fields = [
+                field_type_registry.get_serializer(o.field, PublicFieldSerializer).data
+                for o in field_options.select_related("field")
+            ]
+            view_page_type.broadcast(
+                {"type": "force_view_refresh", "view_id": view.slug, "fields": fields},
+                None,
+                slug=view.slug,
+            )
+
+        transaction.on_commit(lambda: on_commit())

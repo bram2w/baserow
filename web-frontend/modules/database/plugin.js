@@ -155,8 +155,22 @@ import {
 import {
   EmptyCountViewAggregationType,
   NotEmptyCountViewAggregationType,
+  CheckedCountViewAggregationType,
+  NotCheckedCountViewAggregationType,
   EmptyPercentageViewAggregationType,
   NotEmptyPercentageViewAggregationType,
+  CheckedPercentageViewAggregationType,
+  NotCheckedPercentageViewAggregationType,
+  UniqueCountViewAggregationType,
+  MinViewAggregationType,
+  MaxViewAggregationType,
+  EarliestDateViewAggregationType,
+  LatestDateViewAggregationType,
+  SumViewAggregationType,
+  AverageViewAggregationType,
+  StdDevViewAggregationType,
+  VarianceViewAggregationType,
+  MedianViewAggregationType,
 } from '@baserow/modules/database/viewAggregationTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
@@ -375,6 +389,33 @@ export default (context) => {
   app.$registry.register('preview', new PDFBrowserFilePreview(context))
   app.$registry.register('preview', new GoogleDocFilePreview(context))
 
+  app.$registry.register('viewAggregation', new MinViewAggregationType(context))
+  app.$registry.register('viewAggregation', new MaxViewAggregationType(context))
+  app.$registry.register('viewAggregation', new SumViewAggregationType(context))
+  app.$registry.register(
+    'viewAggregation',
+    new AverageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new MedianViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new StdDevViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new VarianceViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new EarliestDateViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new LatestDateViewAggregationType(context)
+  )
   app.$registry.register(
     'viewAggregation',
     new EmptyCountViewAggregationType(context)
@@ -385,11 +426,31 @@ export default (context) => {
   )
   app.$registry.register(
     'viewAggregation',
+    new CheckedCountViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new NotCheckedCountViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
     new EmptyPercentageViewAggregationType(context)
   )
   app.$registry.register(
     'viewAggregation',
     new NotEmptyPercentageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new CheckedPercentageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new NotCheckedPercentageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new UniqueCountViewAggregationType(context)
   )
 
   registerRealtimeEvents(app.$realtime)

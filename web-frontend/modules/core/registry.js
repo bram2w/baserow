@@ -18,6 +18,15 @@ export class Registerable {
   getType() {
     return this.constructor.getType()
   }
+
+  /**
+   * Returns a weight to order the registerable. Used when you want an ordered list
+   * of all registered items.
+   * @returns order weight. Lower value first in the list.
+   */
+  getSort() {
+    return 0
+  }
 }
 
 /**
@@ -99,6 +108,17 @@ export class Registry {
       )
     }
     return this.registry[namespace]
+  }
+
+  /**
+   * Returns a list of the objects that are in the given namespace ordered by their
+   * `.getOrder()` value. Lower value first then for equality, the insertion order is
+   * considered.
+   */
+  getOrderedList(namespace) {
+    return Object.values(this.getAll(namespace)).sort(
+      (typeA, typeB) => typeA.getOrder() - typeB.getOrder()
+    )
   }
 
   /**

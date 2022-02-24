@@ -595,7 +595,14 @@ class ViewAggregationType(Instance):
         :return: True if the field is compatible, False otherwise.
         """
 
-        return True
+        from baserow.contrib.database.fields.registries import field_type_registry
+
+        field_type = field_type_registry.get_by_model(field.specific_class)
+
+        return any(
+            callable(t) and t(field) or t == field_type.type
+            for t in self.compatible_field_types
+        )
 
 
 class ViewAggregationTypeRegistry(Registry):

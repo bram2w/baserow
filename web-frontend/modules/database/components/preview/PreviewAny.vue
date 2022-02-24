@@ -70,19 +70,11 @@ export default {
     currentUrl() {
       return this.url
     },
-    previewTypes() {
-      return Object.entries(this.$registry.getAll('preview')).map(
-        ([, type]) => type
-      )
-    },
     compatibleTypes() {
-      return this.previewTypes
+      return this.$registry
+        .getOrderedList('preview')
         .filter((previewType) =>
           previewType.isCompatible(this.mimeType, this.url)
-        )
-        .sort(
-          (previewTypeA, previewTypeB) =>
-            previewTypeA.getOrder() - previewTypeB.getOrder()
         )
     },
     externalTypes() {

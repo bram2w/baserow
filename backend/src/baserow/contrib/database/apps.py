@@ -195,10 +195,28 @@ class DatabaseConfig(AppConfig):
         from .views.view_aggregations import (
             EmptyCountViewAggregationType,
             NotEmptyCountViewAggregationType,
+            MinViewAggregationType,
+            MaxViewAggregationType,
+            SumViewAggregationType,
+            AverageViewAggregationType,
+            MedianViewAggregationType,
+            DecileViewAggregationType,
+            VarianceViewAggregationType,
+            StdDevViewAggregationType,
+            UniqueCountViewAggregationType,
         )
 
         view_aggregation_type_registry.register(EmptyCountViewAggregationType())
         view_aggregation_type_registry.register(NotEmptyCountViewAggregationType())
+        view_aggregation_type_registry.register(UniqueCountViewAggregationType())
+        view_aggregation_type_registry.register(MinViewAggregationType())
+        view_aggregation_type_registry.register(MaxViewAggregationType())
+        view_aggregation_type_registry.register(SumViewAggregationType())
+        view_aggregation_type_registry.register(AverageViewAggregationType())
+        view_aggregation_type_registry.register(MedianViewAggregationType())
+        view_aggregation_type_registry.register(DecileViewAggregationType())
+        view_aggregation_type_registry.register(VarianceViewAggregationType())
+        view_aggregation_type_registry.register(StdDevViewAggregationType())
 
         from .application_types import DatabaseApplicationType
 

@@ -50,7 +50,7 @@ describe('Field footer component', () => {
     // field with no aggregation
     const wrapper1 = await mountComponent({
       view,
-      field: { id: 1 },
+      field: { id: 1, type: 'text' },
       storePrefix: 'page/',
     })
     expect(wrapper1.element).toMatchSnapshot()
@@ -58,7 +58,7 @@ describe('Field footer component', () => {
     // Field with aggregation
     const wrapper2 = await mountComponent({
       view,
-      field: { id: 2 },
+      field: { id: 2, type: 'text' },
       storePrefix: 'page/',
     })
 
@@ -73,7 +73,6 @@ describe('Field footer component', () => {
       view,
     })
 
-    await flushPromises()
     expect(wrapper2.element).toMatchSnapshot()
   })
 
@@ -104,7 +103,7 @@ describe('Field footer component', () => {
     // Field with aggregation
     const wrapper = await mountComponent({
       view,
-      field: { id: 3 },
+      field: { id: 3, type: 'text' },
       storePrefix: 'page/',
     })
 
