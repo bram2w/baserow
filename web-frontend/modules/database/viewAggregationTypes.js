@@ -1,5 +1,9 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import GenericViewAggregation from '@baserow/modules/database/components/aggregation/GenericViewAggregation'
+import {
+  FormulaFieldType,
+  NumberFieldType,
+} from '@baserow/modules/database/fieldTypes'
 
 export class ViewAggregationType extends Registerable {
   /**
@@ -106,7 +110,27 @@ export class EmptyCountViewAggregationType extends ViewAggregationType {
   }
 
   getCompatibleFieldTypes() {
-    return [() => true]
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'date',
+      'last_modified',
+      'created_on',
+      'link_row',
+      'file',
+      'single_select',
+      'multiple_select',
+      'phone_number',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'date',
+        'number'
+      ),
+    ]
   }
 
   getComponent() {
@@ -119,13 +143,91 @@ export class NotEmptyCountViewAggregationType extends ViewAggregationType {
     return 'not_empty_count'
   }
 
+  getRawType() {
+    return 'empty_count'
+  }
+
   getName() {
     const { i18n } = this.app
     return i18n.t('viewAggregationType.notEmptyCount')
   }
 
   getCompatibleFieldTypes() {
-    return [() => true]
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'date',
+      'last_modified',
+      'created_on',
+      'link_row',
+      'file',
+      'single_select',
+      'multiple_select',
+      'phone_number',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'date',
+        'number'
+      ),
+    ]
+  }
+
+  getValue(value, { rowCount }) {
+    return rowCount - value
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class NotCheckedCountViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'not_checked_count'
+  }
+
+  getRawType() {
+    return 'empty_count'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.notCheckedCount')
+  }
+
+  getCompatibleFieldTypes() {
+    return ['boolean', FormulaFieldType.compatibleWithFormulaTypes('boolean')]
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class CheckedCountViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'checked_count'
+  }
+
+  getRawType() {
+    return 'empty_count'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.checkedCount')
+  }
+
+  getCompatibleFieldTypes() {
+    return ['boolean', FormulaFieldType.compatibleWithFormulaTypes('boolean')]
+  }
+
+  getValue(value, { rowCount }) {
+    return rowCount - value
   }
 
   getComponent() {
@@ -153,11 +255,31 @@ export class EmptyPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getCompatibleFieldTypes() {
-    return [() => true]
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'date',
+      'last_modified',
+      'created_on',
+      'link_row',
+      'file',
+      'single_select',
+      'multiple_select',
+      'phone_number',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'date',
+        'number'
+      ),
+    ]
   }
 
-  getValue(value, context) {
-    return `${Math.round((value / context.rowCount) * 100)}%`
+  getValue(value, { rowCount }) {
+    return `${Math.round((value / rowCount) * 100)}%`
   }
 
   getComponent() {
@@ -171,7 +293,7 @@ export class NotEmptyPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getRawType() {
-    return 'not_empty_count'
+    return 'empty_count'
   }
 
   getName() {
@@ -185,11 +307,392 @@ export class NotEmptyPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getCompatibleFieldTypes() {
-    return [() => true]
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'date',
+      'last_modified',
+      'created_on',
+      'link_row',
+      'file',
+      'single_select',
+      'multiple_select',
+      'phone_number',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'date',
+        'number'
+      ),
+    ]
   }
 
-  getValue(value, context) {
-    return `${Math.round((value / context.rowCount) * 100)}%`
+  getValue(value, { rowCount }) {
+    return `${Math.round(((rowCount - value) / rowCount) * 100)}%`
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class NotCheckedPercentageViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'not_checked_percentage'
+  }
+
+  getRawType() {
+    return 'empty_count'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.notCheckedPercentage')
+  }
+
+  getShortName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.notCheckedCount')
+  }
+
+  getCompatibleFieldTypes() {
+    return ['boolean', FormulaFieldType.compatibleWithFormulaTypes('boolean')]
+  }
+
+  getValue(value, { rowCount }) {
+    return `${Math.round((value / rowCount) * 100)}%`
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class CheckedPercentageViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'checked_percentage'
+  }
+
+  getRawType() {
+    return 'not_empty_count'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.checkedPercentage')
+  }
+
+  getShortName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.checkedCount')
+  }
+
+  getCompatibleFieldTypes() {
+    return ['boolean', FormulaFieldType.compatibleWithFormulaTypes('boolean')]
+  }
+
+  getValue(value, { rowCount }) {
+    return `${Math.round(((rowCount - value) / rowCount) * 100)}%`
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class UniqueCountViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'unique_count'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.uniqueCount')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'text',
+      'long_text',
+      'url',
+      'email',
+      'number',
+      'date',
+      'single_select',
+      'phone_number',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        'text',
+        'char',
+        'date',
+        'number'
+      ),
+    ]
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class MinViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'min'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.min')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'number',
+      'rating',
+      FormulaFieldType.compatibleWithFormulaTypes('number'),
+    ]
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class MaxViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'max'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.max')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'number',
+      'rating',
+      FormulaFieldType.compatibleWithFormulaTypes('number'),
+    ]
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class EarliestDateViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'min_date'
+  }
+
+  getRawType() {
+    return 'min'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.earliestDate')
+  }
+
+  getShortName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.earliestDateShort')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
+  }
+
+  getValue(value, { field, fieldType }) {
+    return fieldType.toHumanReadableString(field, value)
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class LatestDateViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'max_date'
+  }
+
+  getRawType() {
+    return 'max'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.latestDate')
+  }
+
+  getShortName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.latestDateShort')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
+  }
+
+  getValue(value, { field, fieldType }) {
+    return fieldType.toHumanReadableString(field, value)
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class SumViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'sum'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.sum')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'number',
+      'rating',
+      FormulaFieldType.compatibleWithFormulaTypes('number'),
+    ]
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+export class AverageViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'average'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.average')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'number',
+      'rating',
+      FormulaFieldType.compatibleWithFormulaTypes('number'),
+    ]
+  }
+
+  getValue(value, { field, fieldType }) {
+    if (fieldType.getType() === 'number') {
+      return NumberFieldType.formatNumber(field, value)
+    } else {
+      return value && value.toFixed(2)
+    }
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class StdDevViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'std_dev'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.stdDev')
+  }
+
+  getShortName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.stdDevShort')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'number',
+      'rating',
+      FormulaFieldType.compatibleWithFormulaTypes('number'),
+    ]
+  }
+
+  getValue(value, { field, fieldType }) {
+    if (fieldType.getType() === 'number') {
+      return NumberFieldType.formatNumber(field, value)
+    } else {
+      return value && value.toFixed(2)
+    }
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class VarianceViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'variance'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.variance')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'number',
+      'rating',
+      FormulaFieldType.compatibleWithFormulaTypes('number'),
+    ]
+  }
+
+  getValue(value, { field, fieldType }) {
+    if (fieldType.getType() === 'number') {
+      return NumberFieldType.formatNumber(field, value)
+    } else {
+      return value && value.toFixed(2)
+    }
+  }
+
+  getComponent() {
+    return GenericViewAggregation
+  }
+}
+
+export class MedianViewAggregationType extends ViewAggregationType {
+  static getType() {
+    return 'median'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewAggregationType.median')
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'number',
+      'rating',
+      FormulaFieldType.compatibleWithFormulaTypes('number'),
+    ]
   }
 
   getComponent() {

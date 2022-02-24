@@ -915,6 +915,10 @@ export const actions = {
       fieldId,
       value: true,
     })
+    commit('SET_FIELD_AGGREGATION_DATA', {
+      fieldId,
+      value: null,
+    })
 
     try {
       const {

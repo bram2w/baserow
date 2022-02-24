@@ -81,10 +81,13 @@ export default {
     },
     value() {
       if (this.fieldAggregationData[this.field.id] !== undefined) {
-        return this.viewAggregationType.getValue(
-          this.fieldAggregationData[this.field.id].value,
-          { rowCount: this.rowCount }
-        )
+        const { value } = this.fieldAggregationData[this.field.id]
+
+        return this.viewAggregationType.getValue(value, {
+          rowCount: this.rowCount,
+          field: this.field,
+          fieldType: this.fieldType,
+        })
       } else {
         return undefined
       }
@@ -99,7 +102,12 @@ export default {
       return this.$registry.get('viewAggregation', this.aggregationType)
     },
     viewAggregationTypes() {
-      return Object.values(this.$registry.getAll('viewAggregation'))
+      return this.$registry
+        .getOrderedList('viewAggregation')
+        .filter((agg) => agg.fieldIsCompatible(this.field))
+    },
+    fieldType() {
+      return this.$registry.get('field', this.field.type)
     },
   },
   watch: {

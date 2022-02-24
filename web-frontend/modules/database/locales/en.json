@@ -493,6 +493,23 @@
         "emptyCount": "Empty",
         "notEmptyCount": "Filled",
         "emptyPercentage": "Percent empty",
-        "notEmptyPercentage": "Percent filled"
+        "notEmptyPercentage": "Percent filled",
+        "checkedCount": "Checked",
+        "notCheckedCount": "Unchecked",
+        "checkedPercentage": "Percent Checked",
+        "notCheckedPercentage": "Percent Unchecked",
+        "min": "Min",
+        "max": "Max",
+        "earliestDate": "Earliest date",
+        "earliestDateShort": "Earliest",
+        "latestDate": "Latest date",
+        "latestDateShort": "Latest",
+        "uniqueCount": "Unique",
+        "sum": "Sum",
+        "average": "Average",
+        "median": "Median",
+        "stdDev": "Standard deviation",
+        "stdDevShort": "Std dev",
+        "variance": "Variance"
     }
 }

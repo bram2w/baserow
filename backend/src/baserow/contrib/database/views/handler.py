@@ -907,9 +907,9 @@ class ViewHandler:
             # Add total to allow further calculation on the client
             aggregation_dict["total"] = Count("id", distinct=True)
 
-        queryset = queryset.aggregate(**aggregation_dict)
+        result = queryset.aggregate(**aggregation_dict)
 
-        return queryset
+        return result
 
     def rotate_view_slug(self, user, view):
         """
