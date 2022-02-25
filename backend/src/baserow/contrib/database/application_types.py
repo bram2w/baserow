@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from baserow.core.utils import ChildProgressBuilder
 from baserow.contrib.database.api.serializers import DatabaseSerializer
+from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.dependencies.update_collector import (
     CachingFieldUpdateCollector,
 )
@@ -215,7 +216,7 @@ class DatabaseApplicationType(ApplicationType):
 
             # We don't need to create all the fields individually because the schema
             # editor can handle the creation of the table schema in one go.
-            with connection.schema_editor() as schema_editor:
+            with safe_django_schema_editor() as schema_editor:
                 model = table["_object"].get_model(
                     fields=table["_field_objects"],
                     field_ids=[],

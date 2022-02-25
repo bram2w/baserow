@@ -4,7 +4,10 @@ from psycopg2 import sql
 from django.db import models, transaction
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.db.schema import lenient_schema_editor
+from baserow.contrib.database.db.schema import (
+    lenient_schema_editor,
+    safe_django_schema_editor,
+)
 
 from .registries import FieldConverter, field_type_registry
 from .models import (
@@ -35,7 +38,7 @@ class RecreateFieldConverter(FieldConverter):
         data is lost.
         """
 
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             schema_editor.remove_field(from_model, from_model_field)
             schema_editor.add_field(to_model, to_model_field)
 
@@ -553,7 +556,7 @@ class MultipleSelectFieldToSingleSelectFieldConverter(FieldConverter):
             from_model_field,
             to_model_field,
         )
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             schema_editor.add_field(to_model, to_model_field)
 
         multiple_select_first_value_query = sql.SQL(
@@ -598,7 +601,7 @@ class MultipleSelectFieldToSingleSelectFieldConverter(FieldConverter):
             to_field.db_column,
         )
 
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             schema_editor.remove_field(from_model, from_model_field)
 
 
@@ -635,7 +638,7 @@ class SingleSelectFieldToMultipleSelectFieldConverter(FieldConverter):
             from_model_field,
             to_model_field,
         )
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             schema_editor.add_field(to_model, to_model_field)
 
         query = sql.SQL(
@@ -656,5 +659,5 @@ class SingleSelectFieldToMultipleSelectFieldConverter(FieldConverter):
             query,
         )
 
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             schema_editor.remove_field(from_model, from_model_field)

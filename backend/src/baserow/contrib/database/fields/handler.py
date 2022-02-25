@@ -6,7 +6,10 @@ from django.conf import settings
 from django.db import connection
 from django.db.utils import ProgrammingError, DataError
 
-from baserow.contrib.database.db.schema import lenient_schema_editor
+from baserow.contrib.database.db.schema import (
+    lenient_schema_editor,
+    safe_django_schema_editor,
+)
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
@@ -207,7 +210,7 @@ class FieldHandler:
         FieldDependencyHandler.rebuild_dependencies(instance, update_collector)
 
         # Add the field to the table schema.
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             to_model = instance.table.get_model(field_ids=[], fields=[instance])
             model_field = to_model._meta.get_field(instance.db_column)
 

@@ -3,6 +3,7 @@ from typing import Optional, Any
 from django.contrib.auth import get_user_model
 from django.db import connection
 
+from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.dependencies.update_collector import (
     CachingFieldUpdateCollector,
 )
@@ -89,7 +90,7 @@ class TableTrashableItemType(TrashableItemType):
             # it still exists.
             trash_item_lookup_cache["row_table_model_cache"].pop(trashed_item.id, None)
 
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             model = trashed_item.get_model()
             schema_editor.delete_model(model)
 
@@ -156,7 +157,7 @@ class FieldTrashableItemType(TrashableItemType):
         field_type = field_type_registry.get_by_model(field)
 
         # Remove the field from the table schema.
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             from_model = field.table.get_model(field_ids=[], fields=[field])
             model_field = from_model._meta.get_field(field.db_column)
             schema_editor.remove_field(from_model, model_field)
