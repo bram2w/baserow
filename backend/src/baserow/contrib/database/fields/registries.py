@@ -1172,7 +1172,7 @@ class FieldConverter(Instance):
                 # possible to load all the old data in memory, convert it and then
                 # update the new data. Performance should always be kept in mind
                 # though.
-                with connection.schema_editor() as schema_editor:
+                with safe_django_schema_editor() as schema_editor:
                     schema_editor.remove_field(from_model, from_model_field)
                     schema_editor.add_field(to_model, to_model_field)
 

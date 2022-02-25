@@ -422,10 +422,8 @@ class Table(
                 "ordering": ["order", "id"],
                 "indexes": [
                     models.Index(
-                        # Use our own custom index as the default models.Index naming
-                        # scheme causes 5+ collisions on average per 1000 new tables.
                         fields=["order", "id"],
-                        name=f"tbl_order_id_{self.id}_idx",
+                        name=self.get_collision_safe_order_id_idx_name(),
                     ),
                 ],
             },
@@ -616,3 +614,9 @@ class Table(
             )
 
         return model
+
+    # Use our own custom index name as the default models.Index
+    # naming scheme causes 5+ collisions on average per 1000 new
+    # tables.
+    def get_collision_safe_order_id_idx_name(self):
+        return f"tbl_order_id_{self.id}_idx"

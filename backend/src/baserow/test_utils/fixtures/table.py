@@ -1,5 +1,4 @@
-from django.db import connection
-
+from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.table.models import Table
 
@@ -18,7 +17,7 @@ class TableFixtures:
         table = Table.objects.create(**kwargs)
 
         if create_table:
-            with connection.schema_editor() as schema_editor:
+            with safe_django_schema_editor() as schema_editor:
                 schema_editor.create_model(table.get_model())
 
         return table

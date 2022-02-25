@@ -1,5 +1,6 @@
 import contextlib
 
+from django.db import connection, transaction
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.backends.utils import strip_quotes
 
@@ -45,11 +46,12 @@ class PostgresqlLenientDatabaseSchemaEditor:
         alter_column_prepare_old_value="",
         alter_column_prepare_new_value="",
         force_alter_column=False,
+        **kwargs,
     ):
         self.alter_column_prepare_old_value = alter_column_prepare_old_value
         self.alter_column_prepare_new_value = alter_column_prepare_new_value
         self.force_alter_column = force_alter_column
-        super().__init__(*args)
+        super().__init__(*args, **kwargs)
 
     def _alter_field(
         self,
@@ -260,9 +262,29 @@ def lenient_schema_editor(
         kwargs["alter_column_prepare_new_value"] = alter_column_prepare_new_value
 
     try:
-        with connection.schema_editor(**kwargs) as schema_editor:
+        with safe_django_schema_editor(**kwargs) as schema_editor:
             yield schema_editor
     except Exception as e:
         raise e
     finally:
         connection.SchemaEditorClass = regular_schema_editor
+
+
+@contextlib.contextmanager
+def optional_atomic(atomic=True):
+    if atomic:
+        with transaction.atomic():
+            yield
+    else:
+        yield
+
+
+@contextlib.contextmanager
+def safe_django_schema_editor(atomic=True, **kwargs):
+    # django.db.backends.base.schema.BaseDatabaseSchemaEditor.__exit__ has a bug
+    # where it will not properly call atomic.__exit__ if executing deferred sql
+    # causes an exception. Instead we disable its internal atomic wrapper which has
+    # this bug and wrap it ourselves properly and safely.
+    with optional_atomic(atomic=atomic):
+        with connection.schema_editor(atomic=False, **kwargs) as schema_editor:
+            yield schema_editor

@@ -26,6 +26,8 @@
 * Add footer aggregations to grid view
 * Hide "Export view" button if there is no valid exporter available
 * Fix Django's default index naming scheme causing index name collisions.
+* Workaround bug in Django's schema editor sometimes causing incorrect transaction 
+  rollbacks resulting in the connection to the database becoming unusable.
 
 ## Released (2022-01-13 1.8.2)
 

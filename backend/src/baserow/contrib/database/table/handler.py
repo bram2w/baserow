@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.db import connection
 
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
@@ -21,6 +20,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
+from baserow.contrib.database.db.schema import safe_django_schema_editor
 from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
@@ -124,7 +124,7 @@ class TableHandler:
             TextField.objects.create(table=table, order=0, primary=True, name="Name")
 
         # Create the table schema in the database database.
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             # Django only creates indexes when the model is managed.
             model = table.get_model(managed=True)
             schema_editor.create_model(model)
