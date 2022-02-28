@@ -44,6 +44,7 @@ if [[ -n "${NO_COLOR:-}" ]]; then
   NC=
 fi
 
+if [[ -z "$BASEROW_RUN_MINIMAL" ]]; then
 # We are going to replace this wrapper.sh process with the process defined by the
 # args on the last line with the exec "$@". This is important as for signal handling
 # to work properly supervisord needs to be the direct parent of the supervised process.
@@ -54,4 +55,5 @@ fi
 # still becoming a direct child of supervisord.
 exec > >(ets -f "[$PREFIX][%Y-%m-%d %H:%M:%S]" | sed -u $"s,.*,${COLOR}&${NC},")
 exec 2> >(ets -f "[$PREFIX][%Y-%m-%d %H:%M:%S]" | sed -u $"s,.*,${COLOR}&${NC},")
+fi
 exec "$@"

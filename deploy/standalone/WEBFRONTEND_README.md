@@ -1,8 +1,10 @@
-# Baserow's Cloudron image 
+# Baserow's Standalone Webfrontend Image
 
-This is the Baserow maintained [Cloudron Image](https://cloudron.io).
+This image runs only the Baserow Web-frontend service and is intended for use by 
+advanced users. Please instead use the `baserow/baserow` image if you want a simpler \
+setup.
 
-Please see our [Install on Cloudron](https://baserow.io/docs/installation/install-on-cloudron)
+Please see our [Install using Standalone Images](https://baserow.io/docs/installation/install-using-standalone-images)
 guide for more details.
 
 ## About Baserow
@@ -28,5 +30,5 @@ guide for more details.
 
 ## Supported tags and Dockerfile Links
 
-* [`1.8.3`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/deploy/cloudron/Dockerfile)
-* [`develop_latest`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/deploy/cloudron/Dockerfile)
+* [`1.8.3`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/web-frontend/Dockerfile)
+* [`develop_latest`](https://gitlab.com/bramw/baserow/-/blob/develop/web-frontend/Dockerfile)

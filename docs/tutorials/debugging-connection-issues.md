@@ -15,7 +15,7 @@ which does not exist on the different machine, which is the usual cause of this 
 
 ## Fixing a Docker Install
 
-Ensure you have set the environment variable `BASEROW_PUBLIC_URLS` to the URL you are 
+Ensure you have set the environment variable `BASEROW_PUBLIC_URL` to the URL you are 
 using the access Baserow on. The following three sections show how to do this depending
 on how you are accessing your Baserow server.
 
@@ -25,7 +25,20 @@ If you are accessing your Baserow server using a domain name then you should lau
 Baserow like so:
 ```bash
 docker run \
-  -e BASEROW_PUBLIC_URLS=https://YOUR_DOMAIN_HERE \
+  -e BASEROW_PUBLIC_URL=https://YOUR_DOMAIN_HERE \
+  # ... followed by the rest of your normal baserow docker arguments 
+```
+
+### Access via a domain name with automatic HTTPS
+
+If you are accessing your Baserow server using a domain name and you want the Baserow
+Caddy server to automatically handle HTTPS for you then launch Baserow like so. If
+you still want to be able to access your Baserow from http://localhost add
+`,http://localhost` onto the BASEROW_CADDY_ADDRESSES.
+```bash
+docker run \
+  -e BASEROW_PUBLIC_URL=https://YOUR_DOMAIN_HERE \
+  -e BASEROW_CADDY_ADDRESSES=https://YOUR_DOMAIN_HERE \
   # ... followed by the rest of your normal baserow docker arguments 
 ```
 
@@ -35,7 +48,7 @@ If you are accessing your Baserow server using an IP address then you should lau
 Baserow like so: 
 ```bash
 docker run \
-  -e BASEROW_PUBLIC_URLS=http://YOUR_IP_ADDRESS_HERE \
+  -e BASEROW_PUBLIC_URL=http://YOUR_IP_ADDRESS_HERE \
   # ... followed by the rest of your normal baserow docker arguments 
 ```
 
@@ -44,27 +57,27 @@ docker run \
 If you have or want to access Baserow using a different port other than 80 (`-p 80:80`) 
 then you also need to set the environment variable `WEB_FRONTEND_PORT`. You also need 
 to ensure you properly change the `-p 80:80` argument to 
-`-p YOUR_CUSTOM_PORT:YOUR_CUSTOM_PORT` and also update the BASEROW_PUBLIC_URLS to include
+`-p YOUR_CUSTOM_PORT:80` and also update the BASEROW_PUBLIC_URL to include
 the port at the end. 
 
 > Please note that ports 3000, 5432, 1085 and
 > 8000 are already bound to within the Docker container and so you should pick a different
 > port for YOUR_CUSTOM_PORT. This is because the embedded Caddy reverse proxy listens
-> for connections at $BASEROW_PUBLIC_URLS, and so by adding a port onto this you will
+> for connections at $BASEROW_PUBLIC_URL, and so by adding a port onto this you will
 > also make Caddy inside the container listen on that port. 
 
 ```bash
 docker run \
-  -e BASEROW_PUBLIC_URLS=https://YOUR_IP_OR_DOMAIN_HERE:YOUR_CUSTOM_PORT \
+  -e BASEROW_PUBLIC_URL=https://YOUR_IP_OR_DOMAIN_HERE:YOUR_CUSTOM_PORT \
   -e WEB_FRONTEND_PORT=YOUR_CUSTOM_PORT \
-  -p YOUR_CUSTOM_PORT:YOUR_CUSTOM_PORT \
+  -p YOUR_CUSTOM_PORT:80 \
   # ... followed by the rest of your normal baserow docker arguments 
 ```
 
 
 ## Fixing a Docker-Compose Install
 
-Ensure you have set the environment variable `BASEROW_PUBLIC_URLS` to the URL you are
+Ensure you have set the environment variable `BASEROW_PUBLIC_URL` to the URL you are
 using the access Baserow on. See the 
 [Install with docker compose](../installation/install-with-docker-compose.md) guide
 to see the various ways you can set this variable using docker compose.
@@ -78,7 +91,19 @@ variables and arguments that are explained in the guide above.
 If you are accessing your Baserow server using a domain name then you should launch
 Baserow like so 
 ```bash
-BASEROW_PUBLIC_URLS=https://YOUR_DOMAIN_HERE docker-compose up -d
+BASEROW_PUBLIC_URL=https://YOUR_DOMAIN_HERE docker-compose up -d
+```
+
+### Access via a domain name with automatic HTTPS
+
+If you are accessing your Baserow server using a domain name and you want the Baserow
+Caddy server to automatically handle HTTPS for you then launch Baserow like so. If
+you still want to be able to access your Baserow from http://localhost add 
+`,http://localhost` onto the BASEROW_CADDY_ADDRESSES.
+```bash
+BASEROW_PUBLIC_URL=https://YOUR_DOMAIN_HERE \
+BASEROW_CADDY_ADDRESSES=https://YOUR_DOMAIN_HERE \
+docker-compose up -d
 ```
 
 ### Accessing via an IP address
@@ -86,7 +111,7 @@ BASEROW_PUBLIC_URLS=https://YOUR_DOMAIN_HERE docker-compose up -d
 If you are accessing your Baserow server using an IP address then you should launch
 Baserow like so:
 ```bash
-BASEROW_PUBLIC_URLS=https://YOUR_IP_HERE docker-compose up -d
+BASEROW_PUBLIC_URL=https://YOUR_IP_HERE docker-compose up -d
 ```
 
 ### Accessing using a non-standard port
@@ -95,7 +120,7 @@ If you have or want to access Baserow using a different port other than 80 and
 then you also need to set the environment variable `WEB_FRONTEND_PORT`.
 
 ```bash
-BASEROW_PUBLIC_URLS=https://YOUR_IP_OR_DOMAIN_HERE:YOUR_CUSTOM_PORT \
+BASEROW_PUBLIC_URL=https://YOUR_IP_OR_DOMAIN_HERE:YOUR_CUSTOM_PORT \
 WEB_FRONTEND_PORT=YOUR_CUSTOM_PORT \
 docker-compose up -d
 ```
@@ -105,7 +130,7 @@ docker-compose up -d
 Baserow also provides the `baserow/backend` and `baserow/web-frontend` images for users
 who want to host and co-ordinate the various Baserow services themselves. Using
 these images you instead need to set the following environment variables on all 
-containers running these images. Please note that the `BASEROW_PUBLIC_URLS` environment
+containers running these images. Please note that the `BASEROW_PUBLIC_URL` environment
 variable is not used by these standalone images.
 
 * `PUBLIC_BACKEND_URL` (default `http://localhost:8000`): The publicly accessible URL of

@@ -12,20 +12,22 @@ show_help() {
     echo """
 Usage: docker run --rm -it [-v baserow:$DATA_DIR] baserow COMMAND_FROM_BELOW
 Commands
-start           : Launches baserow with all services running internally in a single
-                  container.
-web-frontend    : Show all available one-off web-frontend commands.
-backend         : Show all available one-off backend commands.
-backend_with_db : Starts the embedded postgres database and then runs any supplied
-                  backend command normally. Useful for running one off commands that
-                  require the database like backups and restores.
-db_only         : Starts up only the embedded postgres server and makes it available
-                  for external connections if you expose port 5432 using
-                  the extra docker run argument of '-p 5432:5432'. Useful for if you
-                  need to manually inspect Baserows database etc.
-                  > You can find the postgres users password by separately running
-                  > docker exec -it baserow cat /baserow/data/.pgpass
-help            : Show this message.
+start         : Launches baserow with all services running internally in a single
+                container.
+start-only-db : Starts up only the embedded postgres server and makes it available
+                for external connections if you expose port 5432 using
+                the extra docker run argument of '-p 5432:5432'. Useful for if you
+                need to manually inspect Baserows database etc.
+                > You can find the postgres users password by separately running
+                > docker exec -it baserow cat /baserow/data/.pgpass
+
+backend-cmd CMD      : Runs the specified backend command, use the help command to
+                       show all available.
+backend-cmd-with-db  : Starts the embedded postgres database and then runs any supplied
+                       backend command normally. Useful for running one off commands
+                       that require the database like backups and restores.
+web-frontend-cmd CMD : Runs the specified web-frontend command, use help to show all
+help                 : Show this message.
 """
 }
 if [[ -z "${1:-}" ]]; then
@@ -33,6 +35,7 @@ if [[ -z "${1:-}" ]]; then
   show_help
   exit 1
 fi
+
 
 # From https://github.com/docker-library/postgres/blob/master/docker-entrypoint.sh
 # usage: file_env VAR [DEFAULT]
@@ -201,26 +204,24 @@ fi
 # directory as a volume, which will not be auto setup by docker with the containers
 # underlying structure.
 
-if [[ -z "${DATA_DIR_ALREADY_SETUP:-}" ]]; then
-  if [[ -z "${DISABLE_EMBEDDED_REDIS:-}" ]]; then
-    mkdir -p "$DATA_DIR"/redis
-    chown -R redis:redis "$DATA_DIR"/redis
-  fi
-
-  if [[ -z "${DISABLE_EMBEDDED_PSQL:-}" ]]; then
-    mkdir -p "$DATA_DIR"/postgres
-    chown -R postgres:postgres "$DATA_DIR"/postgres
-  fi
-
-  mkdir -p "$DATA_DIR"/caddy
-  chown -R "$DOCKER_USER": "$DATA_DIR"/caddy
-  mkdir -p "$DATA_DIR"/media
-  chown -R "$DOCKER_USER": "$DATA_DIR"/media
-  mkdir -p "$DATA_DIR"/env
-  chown -R "$DOCKER_USER": "$DATA_DIR"/env
-  mkdir -p "$DATA_DIR"/backups
-  chown -R "$DOCKER_USER": "$DATA_DIR"/backups
+if [[ -z "${DISABLE_EMBEDDED_REDIS:-}" ]]; then
+  mkdir -p "$DATA_DIR"/redis
+  chown -R redis:redis "$DATA_DIR"/redis
 fi
+
+if [[ -z "${DISABLE_EMBEDDED_PSQL:-}" ]]; then
+  mkdir -p "$DATA_DIR"/postgres
+  chown -R postgres:postgres "$DATA_DIR"/postgres
+fi
+
+mkdir -p "$DATA_DIR"/caddy
+chown -R "$DOCKER_USER": "$DATA_DIR"/caddy
+mkdir -p "$DATA_DIR"/media
+chown -R "$DOCKER_USER": "$DATA_DIR"/media
+mkdir -p "$DATA_DIR"/env
+chown -R "$DOCKER_USER": "$DATA_DIR"/env
+mkdir -p "$DATA_DIR"/backups
+chown -R "$DOCKER_USER": "$DATA_DIR"/backups
 
 # ========================
 # = COMMAND LINE ARG HANDLER
@@ -229,7 +230,12 @@ fi
 docker_safe_run(){
     # When running one off commands we want to become the docker user + ensure signals
     # are handled correctly. This function achieves both by using tini and gosu.
-    exec tini -s -- gosu "$DOCKER_USER" "$@"
+    CURRENT_USER=$(whoami)
+    if [[ "$CURRENT_USER" != "$DOCKER_USER" ]]; then
+      exec tini -s -- gosu "$DOCKER_USER" "$@"
+    else
+      exec tini -s -- "$@"
+    fi
 }
 
 check_can_start_embedded_services(){
@@ -241,7 +247,7 @@ check_can_start_embedded_services(){
     # parent processes id to be 1. If we are being execed in an existing container
     # these checks will fail.
     if [[ $$ -ne 1 || $(pgrep -f "redis") || $(pgrep -f "postgres") ]]; then
-        echo -e "\e[31mPlease do not run the db_only or backend_with_db commands in "\
+        echo -e "\e[31mPlease do not run the start-only-db or backend-cmd-with-db commands in "\
         "an existing Baserow container as they are designed tif [[ -z "${DISABLE_EMBEDDED_REDIS:-}" ]]; then
   mkdir -p "$DATA_DIR"/redis
   chown -R redis:redis "$DATA_DIR"/redis
@@ -262,7 +268,7 @@ case "$1" in
     start)
       exec /baserow/supervisor/start.sh "${@:2}"
     ;;
-    backend_with_db)
+    backend-cmd-with-db)
       check_can_start_embedded_services
 
       export SUPERVISOR_CONF=/baserow/supervisor/supervisor_include_only.conf
@@ -281,7 +287,7 @@ case "$1" in
       echo "=================================="
       finish
     ;;
-    db_only)
+    start-only-db)
       check_can_start_embedded_services
       # Run this temporary server with its own pg_hba.conf so if the above check somehow
       # fails we don't accidentally edit the pg_hba.conf of the normal embedded postgres
@@ -296,7 +302,7 @@ case "$1" in
       export EXTRA_POSTGRES_ARGS="-c listen_addresses='*' -c hba_file=$TMP_HBA_FILE"
       export SUPERVISOR_CONF=/baserow/supervisor/supervisor_include_only.conf
       startup_echo "INFO: You can find the baserow database user's password by running"
-      startup_echo "docker exec -it this_containers_name cat $DATA_DIR/.pgpass"
+      startup_echo "docker exec -it baserow cat $DATA_DIR/.pgpass"
       exec /baserow/supervisor/start.sh "${@:2}"
     ;;
     backend)

@@ -34,7 +34,7 @@
     },
     "SYNC_TEMPLATES_ON_STARTUP": {
       "description": "Automatically install's baserow's built in templates when set to 'true'. Disabled by default because the free Heroku database only supports 10k rows, Baserows templates if installed will use 12k rows and go over the limit. Change this to 'true' without the quotes if you have paid for the Heroku database upgrade and can store more than 10k rows. ",
-      "value": "no",
+      "value": "false",
       "required": false
     }
   }

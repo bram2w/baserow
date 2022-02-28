@@ -32,7 +32,7 @@ BASEROW_AMOUNT_OF_WORKERS=${BASEROW_AMOUNT_OF_WORKERS:-1}
 BASEROW_AMOUNT_OF_GUNICORN_WORKERS=${BASEROW_AMOUNT_OF_GUNICORN_WORKERS:-3}
 
 # Celery related variables
-BASEROW_RUN_MINIMAL_CELERY=${BASEROW_RUN_MINIMAL_CELERY:-}
+BASEROW_RUN_MINIMAL=${BASEROW_RUN_MINIMAL:-}
 BASEROW_CELERY_BEAT_STARTUP_DELAY=${BASEROW_CELERY_BEAT_STARTUP_DELAY:-15}
 
 
@@ -153,7 +153,7 @@ fi
 }
 
 start_celery_worker(){
-  if [[ -n "$BASEROW_RUN_MINIMAL_CELERY" ]]; then
+  if [[ -n "$BASEROW_RUN_MINIMAL" ]]; then
     EXTRA_CELERY_ARGS=(--without-heartbeat --without-gossip --without-mingle)
   else
     EXTRA_CELERY_ARGS=()
@@ -251,14 +251,25 @@ case "$1" in
         exec make ci-check-startup-python
     ;;
     celery-worker)
-      start_celery_worker -Q celery -n default-worker@%h "${@:2}"
+      if [[ -n "${BASEROW_RUN_MINIMAL}" && $BASEROW_AMOUNT_OF_WORKERS == "1" ]]; then
+        echo "Starting combined celery and export worker..."
+        start_celery_worker -Q celery,export -n default-worker@%h "${@:2}"
+      else
+        start_celery_worker -Q celery -n default-worker@%h "${@:2}"
+      fi
     ;;
     celery-worker-healthcheck)
       echo "Running celery worker healthcheck..."
       exec celery -A baserow inspect ping -d "default-worker@$HOSTNAME" -t 10 "${@:2}"
     ;;
     celery-exportworker)
-      start_celery_worker -Q export -n export-worker@%h "${@:2}"
+      if [[ -n "${BASEROW_RUN_MINIMAL}" && $BASEROW_AMOUNT_OF_WORKERS == "1" ]]; then
+        echo "Not starting export worker as the other worker will handle both queues " \
+             "to reduce memory usage"
+        while true; do sleep 2073600; done
+      else
+        start_celery_worker -Q export -n export-worker@%h "${@:2}"
+      fi
     ;;
     celery-exportworker-healthcheck)
       echo "Running celery export worker healthcheck..."

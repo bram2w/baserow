@@ -2,15 +2,11 @@
 
 set -euo pipefail
 
-# Heroku is configured with the non-plural version of this variable.
-# Default to using it but also allow the user to set BASEROW_PUBLIC_URLS.
-BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-https://$HEROKU_APP_NAME.herokuapp.com}
-export BASEROW_PUBLIC_URLS="${BASEROW_PUBLIC_URLS:-$BASEROW_PUBLIC_URL, :$PORT}"
-# Only listen to the port with caddy to disable its automatic ssl
-export BASEROW_CADDY_GLOBAL_CONF="auto_https off"
+export BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-https://$HEROKU_APP_NAME.herokuapp.com}
+export BASEROW_CADDY_ADDRESSES=":$PORT"
 export REDIS_URL=${REDIS_TLS_URL:-$REDIS_URL}
 export DJANGO_SETTINGS_MODULE='baserow.config.settings.heroku'
-export BASEROW_RUN_MINIMAL_CELERY=yes
+export BASEROW_RUN_MINIMAL=yes
 export DISABLE_EMBEDDED_PSQL=yes
 export DISABLE_EMBEDDED_REDIS=yes
 export SYNC_TEMPLATES_ON_STARTUP="${SYNC_TEMPLATES_ON_STARTUP:-no}"
@@ -28,3 +24,7 @@ export EMAIL_SMTP_HOST=$MAILGUN_SMTP_SERVER
 export EMAIL_SMTP_PORT=$MAILGUN_SMTP_PORT
 export EMAIL_SMTP_USER=$MAILGUN_SMTP_LOGIN
 export EMAIL_SMTP_PASSWORD=$MAILGUN_SMTP_PASSWORD
+# Heroku generates a random user who runs this container, set DOCKER_USER to that user
+# so we can setup the DATA_DIR.
+DOCKER_USER=$(whoami)
+export DOCKER_USER

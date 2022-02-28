@@ -27,7 +27,7 @@ wait_for_baserow() {
     sleep 1
   done
   echo "======================================================================="
-  echo -e "\e[32mBaserow is now available at ${BASEROW_PUBLIC_URLS}\e[0m"
+  echo -e "\e[32mBaserow is now available at ${BASEROW_PUBLIC_URL}\e[0m"
   echo "======================================================================="
 
   # Now go into warning mode where we loop and inform about changes in health.

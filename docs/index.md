@@ -16,8 +16,11 @@ Baserow by following one the guides below:
 
 * [Install with Docker](installation/install-with-docker.md): A step-by-step guide to
   install Baserow using docker.
-* [Install with Docker Compose](installation/install-with-docker.md): A step-by-step
-  guide to install Baserow using Docker Compose.
+* [Install with Docker Compose](installation/install-with-docker-compose.md): A 
+  step-by-step guide to install Baserow using Docker Compose.
+* [Install using Standalone images](installation/install-using-standalone-images.md): A
+  general overview on how to run the Baserow standalone service images with your own
+  container orchestration software.
 * [Install on Cloudron](installation/install-on-cloudron.md): Instructions to manually
   install Baserow on Cloudron.
 * [Install on Heroku](installation/install-on-heroku.md): A step-by-step guide to
@@ -26,13 +29,13 @@ Baserow by following one the guides below:
   Docker and use it to install Baserow on a fresh ubuntu install.
 * [DEPRECATED: Install on Ubuntu](installation/old-install-on-ubuntu.md): A deprecated 
   and now unsupported guide on how to manually install Baserow and its required services 
-  on a fresh ubuntu install. Please use the guides above instead.
+  on a fresh Ubuntu install. Please use the guides above instead.
 
 ## Baserow Tutorials
 
 * [Understanding Baserow Formulas](tutorials/understanding-baserow-formulas.md): A
   tutorial explaining how to use the formula field in Baserow.
-* [Debugging Connection Issues](tutorials/understanding-baserow-formulas.md): A
+* [Debugging Connection Issues](tutorials/debugging-connection-issues.md): A
   tutorial explaining how to use the formula field in Baserow.
 
 ## API Usage

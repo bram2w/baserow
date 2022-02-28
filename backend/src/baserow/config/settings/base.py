@@ -4,7 +4,6 @@ from urllib.parse import urlparse, urljoin
 import dj_database_url
 
 from corsheaders.defaults import default_headers
-from django.core.exceptions import ImproperlyConfigured
 
 from baserow.version import VERSION
 
@@ -255,7 +254,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.8.2",
+    "VERSION": "1.8.3",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -325,26 +324,16 @@ if os.getenv("AWS_S3_CUSTOM_DOMAIN", "") != "":
     AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
 
 EXTRA_ALLOWED_HOSTS_TO_ATTEMPT_ADDING = []
-if "BASEROW_PUBLIC_URLS" in os.environ:
-    BASEROW_PUBLIC_URLS = [
-        url.strip() for url in os.getenv("BASEROW_PUBLIC_URLS").split(",")
-    ]
-    if len(BASEROW_PUBLIC_URLS) == 0:
-        raise ImproperlyConfigured(
-            "BASEROW_PUBLIC_URLS was provided but was empty, it must be a comma "
-            "separated list of urls, ports or hosts."
-        )
-
-    FIRST_PUBLIC_URL = BASEROW_PUBLIC_URLS[0]
-    PUBLIC_BACKEND_URL = FIRST_PUBLIC_URL
-    PUBLIC_WEB_FRONTEND_URL = FIRST_PUBLIC_URL
-    EXTRA_ALLOWED_HOSTS_TO_ATTEMPT_ADDING = BASEROW_PUBLIC_URLS[1:]
-    if FIRST_PUBLIC_URL == "http://localhost":
+if "BASEROW_PUBLIC_URL" in os.environ:
+    BASEROW_PUBLIC_URL = os.getenv("BASEROW_PUBLIC_URL")
+    PUBLIC_BACKEND_URL = BASEROW_PUBLIC_URL
+    PUBLIC_WEB_FRONTEND_URL = BASEROW_PUBLIC_URL
+    if BASEROW_PUBLIC_URL == "http://localhost":
         print(
-            "WARNING: Starting up Baserow with a default first BASEROW_PUBLIC_URL of "
-            "http://localhost. If you attempt to access Baserow on any other hostname"
-            "requests to the backend will fail as they will be from an unknown host."
-            "Please set BASEROW_PUBLIC_URLS if you will be accessing Baserow "
+            "WARNING: Starting up Baserow with a default BASEROW_PUBLIC_URL of "
+            "http://localhost. If you attempt to access Baserow on any other hostname "
+            "requests to the backend will fail as they will be from an unknown host. "
+            "Please set BASEROW_PUBLIC_URL if you will be accessing Baserow "
             "from any other URL then http://locahost."
         )
 else:

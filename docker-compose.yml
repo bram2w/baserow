@@ -3,50 +3,65 @@ version: "3.4"
 # == README ==
 #
 # To use this docker-compose.yml to run Baserow you must set the three required
-# environment variables in the x-backend-required-variables section below and review
-# the variables in the x-common-important-variables section. If you receive the
+# environment variables in the `x-backend-required-variables` section below and review
+# the variables in the `x-common-important-variables` section. If you receive the
 # following error it is because you need to set the required environment variables
 # first:
-#
+#   ```
 # ERROR: Missing mandatory value for "environment" option interpolating
+#   ```
 #
-# If you are upgrading from Baserow 1.8.2 or earlier please read the additional section
-# below.
+#   If you are upgrading from Baserow 1.8.2 or earlier please read the additional section
+#   below.
 #
-# === How to set these environment variables ===
+#   See [Configuring Baserow](configuration.md) for information on the
+#   other environment variables you can configure.
 #
-# You can set these variables by using docker-compose env file
+#   ## How to set environment variables
+#
+#   You can set these variables by using docker-compose env file
 # (https://docs.docker.com/compose/environment-variables/#the-env-file):
-#     1. Copy the '.env.example' file in this directory to '.env':
-#            cp .env.example .env
-#     2. Edit '.env' and provide values for the missing environment variables.
-#     3. docker-compose up
+#   1. Copy the `.env.example` file found in the root of Baserows repository
+# (https://gitlab.com/bramw/baserow/-/blob/master/.env.example)  to `.env`:
+#   ```
+#   curl -o .env https://gitlab.com/bramw/baserow/-/blob/master/.env.example
+#   ```
+#   2. Edit `.env` and provide values for the missing environment variables.
+#   3. `docker-compose up`
 #
-# Alternatively you can set these variables by either running docker-compose with
+#   Alternatively you can set these variables by either running docker-compose with
 # the environment variables set on the command line (fill in secure values first):
+#   ```
+#   SECRET_KEY= DATABASE_PASSWORD= REDIS_PASSWORD= docker-compose up
+#   ```
 #
-# SECRET_KEY= DATABASE_PASSWORD= REDIS_PASSWORD= docker-compose up
+# ## Upgrading from Baserow 1.8.2's docker-compose file
 #
-# == Upgrading from Baserow 1.8.2's docker-compose file
-#
-# To upgrade from 1.8.2's docker-compose file you need to:
-# 1. Copy '.env.example' to '.env' and edit '.env' filling in the missing variables
-#    below:
-#    - SECRET_KEY to a secure value, existing logins sessions will be invalidated.
-#    - DATABASE_PASSWORD to a secure password (this defaulted to 'baserow' before, in
-#      step 3 we are going to change the database users password to the value you set)
-#    - REDIS_PASSWORD to a secure password
-#    - WEB_FRONTEND_PORT back to 3000 if you want to continue accessing Baserow on
-#      that port (it now defaults to 80).
-#    - BASEROW_PUBLIC_URLS to the URL/IP/Domain you were using access Baserow remotely (it must
-#      begin with http:// or https://). If you have set WEB_FRONTEND_PORT to anything
-#      but 80 you must append it to the end of BASEROW_PUBLIC_URLS.
-# 2. Stop your existing Baserow install when safe to do so:
-#        docker-compose down --remove-orphans
-# 3. Run the command below which will change the baserow postgresql users password to
-#    what you have set in step 1 in the .env file (no need to edit the command):
-#       docker-compose run --rm backend bash -c "PGPASSWORD=baserow psql -h db -U baserow -c \"ALTER USER baserow WITH PASSWORD '$DATABASE_PASSWORD';\" && echo 'Successfully changed Baserow's db user password'"
-# 4. docker-compose up -d
+# To upgrade from 1.8.2's docker-compose file from inside the Baserow git repo you need to:
+#   1. Stop your existing Baserow install when safe to do so:
+#   `docker-compose down`
+#   2. `git pull`
+#   3. Copy `.env.example` to `.env` and edit `.env` filling in the missing variables
+# below:
+#   - `SECRET_KEY` to a secure value, existing logins sessions will be invalidated.
+#   - `DATABASE_PASSWORD` to a secure password (this defaulted to 'baserow' before, in
+#     step 3 we are going to change the database users password to the value you set)
+#   - `REDIS_PASSWORD` to a secure password.
+#   - `WEB_FRONTEND_PORT` back to 3000 if you want to continue accessing Baserow on
+#     that port (it now defaults to 80).
+#   - `BASEROW_PUBLIC_URL` to the URL/IP/Domain you were using access Baserow remotely
+#     (it must begin with http:// or https://). If you have set `WEB_FRONTEND_PORT` to
+#     anything but 80 you must append it to the end of `BASEROW_PUBLIC_URL`.
+#   - `BASEROW_CADDY_ADDRESSES` configures which addresses the new internal Caddy reverse
+#     proxy listens on. By default, it will serve http only, enable automatic https
+#     by setting to `https://YOUR_DOMAIN_NAME.com`. Append `,http://localhost` if you
+#     still want to be able to access Baserow from `localhost`.
+#   4. Run the command below which will change the baserow postgresql users password to
+#      what you have set in step 1 in the .env file (no need to edit the command):
+#   ```
+#   docker-compose run --rm backend bash -c "PGPASSWORD=baserow psql -h db -U baserow -c \"ALTER USER baserow WITH PASSWORD '$DATABASE_PASSWORD';\" && echo 'Successfully changed Baserow's db user password'"
+#   ```
+#   5. `docker-compose up -d`
 
 # These environment variables are required to be set securely by you, see the README
 # above.
@@ -65,7 +80,7 @@ x-backend-required-variables: &backend-required-variables
 
 # These are optional but important variables which control how Baserow can be accessed.
 x-common-important-variables: &common-important-variables
-  # BASEROW_PUBLIC_URLS is a comma separated list of urls you will be using to access
+  # BASEROW_PUBLIC_URL is a comma separated list of urls you will be using to access
   # Baserow, normally should just be a single URL. The first URL provided will be used
   # to generate correct urls in emails, share links, downloads. All the urls will be
   # used by the Caddy reverse proxy as addresses to listen for. See
@@ -73,13 +88,17 @@ x-common-important-variables: &common-important-variables
   # Caddy will setup HTTPS automatically if you have setup DNS correctly and use a
   # https:// url. See https://caddyserver.com/docs/automatic-https.
   # > If you are also setting WEB_FRONTEND_PORT to anything but 80 then you must
-  # > append this port to your BASEROW_PUBLIC_URLS like so:
+  # > append this port to your BASEROW_PUBLIC_URL like so:
   # > $YOUR_BASEROW_PUBLIC_URL:$YOUR_CUSTOM_WEB_FRONTEND_PORT
-  BASEROW_PUBLIC_URLS: ${BASEROW_PUBLIC_URLS:-http://localhost, :80}
+  BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL:-http://localhost}
+  # This is a comma separated list of addresses the Caddy reverse proxy sitting in-front
+  # of Baserow's services will listen on. If you wish to enable automatic https then
+  # you should change this to be `https://YOUR_DOMAIN_NAME.com`.
+  BASEROW_CADDY_ADDRESSES: ${BASEROW_CADDY_ADDRESSES:-:80}
   # WEB_FRONTEND_PORT is the HTTP port that Baserow will bind to on the host to serve
   # content. Prior to 1.9 this defaulted to 3000 but was changed to 80 in 1.9.
   # > If set to anything but the default of 80 to access Baserow you will need to
-  # > append the port to your BASEROW_PUBLIC_URLS (see above).
+  # > append the port to your BASEROW_PUBLIC_URL (see above).
   WEB_FRONTEND_PORT: ${WEB_FRONTEND_PORT:-80}
   # WEB_FRONTEND_SSL_PORT is the SSL port Baserow will bind to on the host for HTTPS.
   WEB_FRONTEND_SSL_PORT: ${WEB_FRONTEND_SSL_PORT:-443}
@@ -92,13 +111,6 @@ x-common-important-variables: &common-important-variables
   #               running docker-compose. Useful for when you want to run Baserow behind
   #               a reverse proxy or just make it private.
   HOST_PUBLISH_IP: ${HOST_PUBLISH_IP:-0.0.0.0}
-  # If running Baserow behind a reverse proxy which already handles HTTPS you should
-  # disable the automatic HTTPS provided by Baserow's Caddy by setting
-  # BASEROW_CADDY_GLOBAL_CONF to 'auto_https off', see
-  # https://caddyserver.com/docs/automatic-https for more details and the Caddyfile in
-  # the root of this repository. You will probably also need to append ",:80" to
-  # BASEROW_PUBLIC_URLS so the Caddy server will listen for http requests.
-  BASEROW_CADDY_GLOBAL_CONF: ${BASEROW_CADDY_GLOBAL_CONF:-}
   # Set to any non-empty value to ensure Baserow generates https:// next links provided
   # by paginated API endpoints. Baserow will still work correctly if not enabled, this
   # is purely for giving the correct https url for clients of the API.
@@ -146,8 +158,9 @@ services:
     restart: unless-stopped
     environment:
       <<: *common-variables
+      BASEROW_CADDY_GLOBAL_CONF: ${BASEROW_CADDY_GLOBAL_CONF:-}
     ports:
-      - "${HOST_PUBLISH_IP:-0.0.0.0}:${WEB_FRONTEND_PORT:-80}:${WEB_FRONTEND_PORT:-80}"
+      - "${HOST_PUBLISH_IP:-0.0.0.0}:${WEB_FRONTEND_PORT:-80}:80"
       - "${HOST_PUBLISH_IP:-0.0.0.0}:${WEB_FRONTEND_SSL_PORT:-443}:443"
     volumes:
       - $PWD/Caddyfile:/etc/caddy/Caddyfile
@@ -163,7 +176,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.8.2
+    image: baserow/backend:1.8.3
     restart: unless-stopped
     environment:
       <<: *common-backend-variables
@@ -176,7 +189,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.8.2
+    image: baserow/web-frontend:1.8.3
     restart: unless-stopped
     environment:
       <<: *common-variables
@@ -186,7 +199,7 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.8.2
+    image: baserow/backend:1.8.3
     restart: unless-stopped
     environment:
       <<: *common-backend-variables
@@ -203,7 +216,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.8.2
+    image: baserow/backend:1.8.3
     restart: unless-stopped
     command: celery-exportworker
     # The backend image's baked in healthcheck defaults to the django healthcheck
@@ -220,7 +233,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.8.2
+    image: baserow/backend:1.8.3
     restart: unless-stopped
     command: celery-beat
     # We don't yet have a healthcheck for the beat worker, just assume it is healthy.

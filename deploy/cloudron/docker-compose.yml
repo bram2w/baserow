@@ -21,6 +21,7 @@ services:
       - CLOUDRON_MAIL_SMTP_USERNAME=mailhog
       - CLOUDRON_MAIL_SMTP_PASSWORD=mailhog
       - CLOUDRON_MAIL_SMTP_PORT=1025
+      - BASEROW_PUBLIC_URL=http://localhost
     ports:
       - "80:80"
       - "443:443"

@@ -2,7 +2,7 @@
     {$BASEROW_CADDY_GLOBAL_CONF}
 }
 
-{$BASEROW_PUBLIC_URLS} {
+{$BASEROW_CADDY_ADDRESSES} {
 	handle /api/* {
 		reverse_proxy {$PRIVATE_BACKEND_URL:localhost:8000}
 	}
@@ -25,6 +25,4 @@
 	}
 
 	reverse_proxy {$PRIVATE_WEBFRONTEND_URL:localhost:3000}
-
-    {$BASEROW_CADDY_EXTRA_CONF}
 }

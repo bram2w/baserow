@@ -314,7 +314,7 @@ export COMPOSE_DOCKER_CLI_BUILD=1
 export DOCKER_BUILDKIT=1
 
 export WEB_FRONTEND_PORT=${WEB_FRONTEND_PORT:-3000}
-export BASEROW_PUBLIC_URLS=${BASEROW_PUBLIC_URLS:-http://localhost:$WEB_FRONTEND_PORT, :$WEB_FRONTEND_PORT}
+export BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-http://localhost:$WEB_FRONTEND_PORT}
 
 
 echo "./dev.sh running docker-compose commands:

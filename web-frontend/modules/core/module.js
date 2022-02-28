@@ -32,18 +32,10 @@ export default function CoreModule(options) {
   // Register new alias to the web-frontend directory.
   this.options.alias['@baserow'] = path.resolve(__dirname, '../../')
 
-  const BASEROW_PUBLIC_URLS = process.env.BASEROW_PUBLIC_URLS
-  if (BASEROW_PUBLIC_URLS) {
-    const splitPublicUrls = BASEROW_PUBLIC_URLS.trim().split(',')
-    if (splitPublicUrls.length === 0) {
-      throw new Error(
-        'If BASEROW_PUBLIC_URLS is provided it must be a comma' +
-          ' separated list of urls, ports or hostnames, instead it was empty.'
-      )
-    }
-    const trimmedFirstPublicUrl = splitPublicUrls[0].trim()
-    process.env.PUBLIC_BACKEND_URL = trimmedFirstPublicUrl
-    process.env.PUBLIC_WEB_FRONTEND_URL = trimmedFirstPublicUrl
+  const BASEROW_PUBLIC_URL = process.env.BASEROW_PUBLIC_URL
+  if (BASEROW_PUBLIC_URL) {
+    process.env.PUBLIC_BACKEND_URL = BASEROW_PUBLIC_URL
+    process.env.PUBLIC_WEB_FRONTEND_URL = BASEROW_PUBLIC_URL
   }
 
   // The core depends on these modules.

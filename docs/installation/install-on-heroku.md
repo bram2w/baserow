@@ -1,5 +1,9 @@
 # Installation on Heroku
 
+> Any questions, problems or suggestions with this guide? Ask a question in our
+> [community](https://community.baserow.io/) or contribute the change yourself at
+> https://gitlab.com/bramw/baserow/-/tree/develop/docs .
+
 > The Heroku template and one click to deploy button are currently in beta.
 
 Heroku is a platform as a service that enables developer to build, run and operate
@@ -20,9 +24,9 @@ the free plan of Heroku by default.
 ## Could not connect to the API server error
 
 If you are getting a "Could not connect to the API server." error when logging in or
-creating an account, then you most likely need to update the `BASEROW_PUBLIC_URLS`
+creating an account, then you most likely need to update the `BASEROW_PUBLIC_URL`
 config var. You can do so by going to the settings page in your Heroku app dashboard,
-click on "Reveal Config Vars", find the `BASEROW_PUBLIC_URLS` and change the value to 
+click on "Reveal Config Vars", find the `BASEROW_PUBLIC_URL` and change the value to 
 `https://YOUR_APP_NAME.herokuapp.com`. Don't forget to replace `YOUR_APP_NAME` with the
 name of your app.
 
@@ -89,14 +93,14 @@ would need, you can do DYNO COUNT * BASEROW_AMOUNT_OF_WORKERS * 15.
 
 If you added a custom domain, then you need to change a Config Var on the settings
 page. Go to the Settings page and click on "Reveal Config Vars". Here you need to set
-the `BASEROW_PUBLIC_URLS` value and add your own URL. If your domain is 
+the `BASEROW_PUBLIC_URL` value and add your own URL. If your domain is 
 `baserow-test.com` ,then the value should be `https://baserow-test.com`. If you don't 
 have a custom domain then this value can be empty.
 
 ## Environment variables
 
 * SECRET_KEY: A unique string that is used to generate secrets.
-* BASEROW_PUBLIC_URLS: The public URL of your Heroku Baserow app. If empty, the default
+* BASEROW_PUBLIC_URL: The public URL of your Heroku Baserow app. If empty, the default
   Heroku app URL is used, but if it differs it must be changed.
   (eg. https://baserow-test.com).
 * BASEROW_AMOUNT_OF_WORKERS: The amount of workers per dyno.

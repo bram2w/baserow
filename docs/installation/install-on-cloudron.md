@@ -1,5 +1,9 @@
 # Installation on Cloudron
 
+> Any questions, problems or suggestions with this guide? Ask a question in our
+> [community](https://community.baserow.io/) or contribute the change yourself at
+> https://gitlab.com/bramw/baserow/-/tree/develop/docs .
+
 Cloudron is a complete solution for running apps on your server and keeping them
 up-to-date and secure. If you don't have Cloudron installed on a server you can follow
 the [installation instructions here ](https://docs.cloudron.io/installation/). Ensure
@@ -42,14 +46,14 @@ $ cd baserow/deploy/cloudron
 After that you can install the Baserow Cloudron app by executing the following commands.
 
 ```
-$ cloudron install -l baserow.{YOUR_DOMAIN} --image baserow/cloudron:1.8.2
+$ cloudron install -l baserow.{YOUR_DOMAIN} --image baserow/cloudron:1.8.3
 App is being installed.
 ...
 App is installed.
 ```
 
 > All the available versions can be found here:
-> [https://gitlab.com/bramw/baserow/container_registry/1692077](https://gitlab.com/bramw/baserow/container_registry/1692077)
+> [https://hub.docker.com/r/baserow/cloudron](https://hub.docker.com/r/baserow/cloudron)
 
 > If you get Failed to install app: 402 message: Missing token errors make sure you
 > have fully completed the installation of the cloudron server linked at the start.
@@ -85,7 +89,7 @@ the `baserow/deploy/cloudron` folder, you can upgrade your cloudron baserow serv
 the latest version by running the following command:
 
 ```
-cloudron update --app {YOUR_APP_ID} --image baserow/cloudron:1.8.2
+cloudron update --app {YOUR_APP_ID} --image baserow/cloudron:1.8.3
 ```
 
 > Note that you must replace the image with the most recent image of Baserow. The

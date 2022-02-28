@@ -6,22 +6,25 @@ tool gives you the powers of a developer without leaving your browser.
 * A spreadsheet database hybrid combining ease of use and powerful data organization.
 * Easily self-hosted with no storage restrictions or sign-up on https://baserow.io to
   get started immediately.
+* Alternative to Airtable.
 * Open-core with all non-premium features under
   the [MIT License](https://choosealicense.com/licenses/mit/) allowing commercial and
   private use.
+* Headless and API first.
+* Uses popular frameworks and tools like [Django](https://www.djangoproject.com/), 
+  [Vue.js](https://vuejs.org/) and [PostgreSQL](https://www.postgresql.org/).
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 
 ```bash
-docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.8.2
+docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.8.3
 ```
 
 ![Baserow screenshot](docs/assets/screenshot.png "Baserow screenshot")
 
 ## Get Involved
 
-**We're hiring** remote developers! More information at
-https://baserow.io/jobs/experienced-full-stack-developer.
+**We're hiring remotely**! More information at https://baserow.io/jobs.
 
 Join our forum on https://community.baserow.io/ or on Gitter via
 https://gitter.im/bramw-baserow/community. See [CONTRIBUTING.md](./CONTRIBUTING.md) on
@@ -29,14 +32,11 @@ how to become a contributor.
 
 ## Installation
 
-* [**Docker**](docs/installation/install-using-docker.md)
-* [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
+* [**Docker**](docs/installation/install-with-docker.md)
 * [**Ubuntu**](docs/installation/install-on-ubuntu.md)
-* [**Docker Compose** ](docs/installation/install-using-docker-compose.md)
-* [**
-  Heroku**: Easily install and scale up Baserow on Heroku.](docs/installation/install-on-heroku.md)
-* [**
-  Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
+* [**Docker Compose** ](docs/installation/install-with-docker-compose.md)
+* [**Heroku**: Easily install and scale up Baserow on Heroku.](docs/installation/install-on-heroku.md)
+* [**Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
 
 ## Official documentation
 
@@ -86,7 +86,7 @@ Created by Baserow B.V. - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 1.8.2
+Version: 1.8.3
 
 The official repository can be found at https://gitlab.com/bramw/baserow.
 
