@@ -1,11 +1,11 @@
 #!/bin/bash
 
-set -eu
+set -euo pipefail
 
 # Heroku is configured with the non-plural version of this variable.
 # Default to using it but also allow the user to set BASEROW_PUBLIC_URLS.
-BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-https://$HEROKU_APP_NAME.herokuapp.com, :$PORT}
-export BASEROW_PUBLIC_URLS=${BASEROW_PUBLIC_URLS:-$BASEROW_PUBLIC_URL}
+BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-https://$HEROKU_APP_NAME.herokuapp.com}
+export BASEROW_PUBLIC_URLS="${BASEROW_PUBLIC_URLS:-$BASEROW_PUBLIC_URL, :$PORT}"
 # Only listen to the port with caddy to disable its automatic ssl
 export BASEROW_CADDY_GLOBAL_CONF="auto_https off"
 export REDIS_URL=${REDIS_TLS_URL:-$REDIS_URL}

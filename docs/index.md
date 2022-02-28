@@ -22,9 +22,6 @@ Baserow by following one the guides below:
   install Baserow on Cloudron.
 * [Install on Heroku](installation/install-on-heroku.md): A step-by-step guide to
   install Baserow using Heroku.
-* [Migrate from Ubuntu to Docker](installation/migrate-from-ubuntu-to-docker.md): If you
-  have previously installed Baserow using the deprecated ubuntu guide below then please
-  follow this guide to migrate your install to use the new Docker install.
 * [Install on Ubuntu](installation/install-on-ubuntu.md): Instructions on how to install 
   Docker and use it to install Baserow on a fresh ubuntu install.
 * [DEPRECATED: Install on Ubuntu](installation/old-install-on-ubuntu.md): A deprecated 

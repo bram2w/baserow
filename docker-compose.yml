@@ -96,7 +96,8 @@ x-common-important-variables: &common-important-variables
   # disable the automatic HTTPS provided by Baserow's Caddy by setting
   # BASEROW_CADDY_GLOBAL_CONF to 'auto_https off', see
   # https://caddyserver.com/docs/automatic-https for more details and the Caddyfile in
-  # the root of this repository.
+  # the root of this repository. You will probably also need to append ",:80" to
+  # BASEROW_PUBLIC_URLS so the Caddy server will listen for http requests.
   BASEROW_CADDY_GLOBAL_CONF: ${BASEROW_CADDY_GLOBAL_CONF:-}
   # Set to any non-empty value to ensure Baserow generates https:// next links provided
   # by paginated API endpoints. Baserow will still work correctly if not enabled, this
