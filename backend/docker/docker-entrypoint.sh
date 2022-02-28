@@ -58,7 +58,7 @@ except psycopg2.OperationalError:
 sys.exit(0)
 END
 else
-  echo "Checking $DATABASE_URL"
+  echo "Checking the provided DATABASE_URL"
 python3 << END
 import sys
 import psycopg2

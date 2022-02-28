@@ -357,14 +357,14 @@ docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" kill
 fi
 
 if [ "$build" = true ] ; then
-  docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" build "$@"
-
   if [ "$build_deps" = true ]; then
     for dep in "${build_dependencies[@]}"
     do
       ${BASH_SOURCE[0]} "$dep" build_only
     done
   fi
+
+  docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" build "$@"
 fi
 
 if [ "$delete_volumes" = true ] ; then

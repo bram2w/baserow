@@ -12,6 +12,7 @@ services:
     environment:
       - BASEROW_PUBLIC_URLS=http://localhost, :80
       - DATABASE_URL=postgresql://baserow:baserow@db:5432/baserow
+      - HEROKU_APP_NAME=test
       - REDIS_URL=redis://:baserow@redis:6379
       - MAILGUN_DOMAIN=mailhog
       - MAILGUN_SMTP_SERVER=mailhog

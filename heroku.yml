@@ -3,8 +3,7 @@ build:
     web: heroku.Dockerfile
   config:
     FROM_IMAGE: registry.gitlab.com/bramw/baserow/testing/baserow:develop-latest
-release:
-  image: web
-  command:
-    - exit 0
+run:
+  web: /baserow.sh start
+
 

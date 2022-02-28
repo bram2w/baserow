@@ -10,7 +10,7 @@ set -euo pipefail
 # ========================
 show_help() {
     echo """
-Usage: docker run --rm --it [-v baserow:$DATA_DIR] baserow COMMAND_FROM_BELOW
+Usage: docker run --rm -it [-v baserow:$DATA_DIR] baserow COMMAND_FROM_BELOW
 Commands
 start           : Launches baserow with all services running internally in a single
                   container.
@@ -85,6 +85,11 @@ for f in /baserow/supervisor/env/*.sh; do
     # shellcheck disable=SC1090
     source "$f";
 done
+
+if [[ -z "$DATA_DIR" ]]; then
+  export DATA_DIR=/baserow/data
+fi
+
 for f in "$DATA_DIR"/env/*.sh; do
    startup_echo "Importing extra data dir settings from $f"
     # shellcheck disable=SC1090
@@ -111,6 +116,12 @@ if [[ -z "${DISABLE_VOLUME_CHECK:-}" ]]; then
   fi
 fi
 
+# Ensure the data dir exists
+if [[ ! -d "$DATA_DIR" ]]; then
+  mkdir -p "$DATA_DIR"
+  chown "$DOCKER_USER": "$DATA_DIR"
+fi
+
 # ========================
 # = CHECK IF DATABASE IS INCORRECTLY LOCALHOST
 # ========================
@@ -135,7 +146,8 @@ if [[ "$DATABASE_HOST" == "embed" && -z "${DATABASE_URL:-}" ]]; then
   startup_echo "No DATABASE_HOST or DATABASE_URL provided, using embedded postgres."
   export DATABASE_HOST=localhost
 else
-  startup_echo "Using provided external postgres at ${DATABASE_HOST:-} ${DATABASE_URL:-}"
+  startup_echo "Using provided external postgres at ${DATABASE_HOST:-} or the " \
+               "DATABASE_URL"
 fi
 
 # ========================
@@ -156,18 +168,23 @@ if [[ "$REDIS_HOST" == "embed" && -z "${REDIS_URL:-}" ]]; then
   export REDIS_HOST="localhost"
   startup_echo "Using embedded baserow redis as no REDIS_HOST or REDIS_URL provided. "
 else
-  startup_echo "Using provided external redis at ${REDIS_HOST:-} ${REDIS_URL:-}"
+  startup_echo "Using provided external redis at ${REDIS_HOST:-} or at the REDIS_URL"
 fi
 
 # ========================
 # =  SECRETS SETUP
 # ========================
-# Allow users to set secrets via mounted in files, docker secrets or env variables
+# Allow users to set secrets via mounted in files, docker secrets or env variables.
+if [[ -z "${REDIS_URL:-}" ]]; then
+  file_env REDIS_PASSWORD
+  create_secret_env_if_missing .redispass REDIS_PASSWORD
+else
+  echo "Not loading REDIS_PASSWORD as REDIS_URL is set and it should be included there"\
+       " instead"
+fi
+
 file_env SECRET_KEY
-file_env REDIS_PASSWORD
-# Setup secrets in the data volume if missing
 create_secret_env_if_missing .secret SECRET_KEY
-create_secret_env_if_missing .redispass REDIS_PASSWORD
 
 if [[ -z "${DATABASE_URL:-}" && -z "${DISABLE_EMBEDDED_SQL:-}" ]]; then
   file_env DATABASE_PASSWORD
@@ -184,32 +201,26 @@ fi
 # directory as a volume, which will not be auto setup by docker with the containers
 # underlying structure.
 
-mkdir -p "$DATA_DIR"/redis
-chown -R redis:redis "$DATA_DIR"/redis
+if [[ -z "${DATA_DIR_ALREADY_SETUP:-}" ]]; then
+  if [[ -z "${DISABLE_EMBEDDED_REDIS:-}" ]]; then
+    mkdir -p "$DATA_DIR"/redis
+    chown -R redis:redis "$DATA_DIR"/redis
+  fi
 
-mkdir -p "$DATA_DIR"/caddy
-chown -R "$DOCKER_USER": "$DATA_DIR"/caddy
+  if [[ -z "${DISABLE_EMBEDDED_PSQL:-}" ]]; then
+    mkdir -p "$DATA_DIR"/postgres
+    chown -R postgres:postgres "$DATA_DIR"/postgres
+  fi
 
-if [[ -z "${DISABLE_EMBEDDED_PSQL:-}" ]]; then
-  mkdir -p "$DATA_DIR"/postgres
-  chown -R postgres:postgres "$DATA_DIR"/postgres
+  mkdir -p "$DATA_DIR"/caddy
+  chown -R "$DOCKER_USER": "$DATA_DIR"/caddy
+  mkdir -p "$DATA_DIR"/media
+  chown -R "$DOCKER_USER": "$DATA_DIR"/media
+  mkdir -p "$DATA_DIR"/env
+  chown -R "$DOCKER_USER": "$DATA_DIR"/env
+  mkdir -p "$DATA_DIR"/backups
+  chown -R "$DOCKER_USER": "$DATA_DIR"/backups
 fi
-
-mkdir -p "$DATA_DIR"/media
-chown -R "$DOCKER_USER": "$DATA_DIR"/media
-mkdir -p "$DATA_DIR"/env
-chown -R "$DOCKER_USER": "$DATA_DIR"/env
-mkdir -p "$DATA_DIR"/backups
-chown -R "$DOCKER_USER": "$DATA_DIR"/backups
-
-# ========================
-# = REDIS
-# ========================
-# We need to do this here as $DATA_DIR can change at runtime.
-export REDIS_CONFIG_FILE="$DATA_DIR"/redis/redis.conf
-cp /etc/redis/redis.conf "$REDIS_CONFIG_FILE"
-sed -i "s;dir /var/lib/redis;dir $DATA_DIR/redis;g" "$REDIS_CONFIG_FILE"
-chown redis:redis "$REDIS_CONFIG_FILE"
 
 # ========================
 # = COMMAND LINE ARG HANDLER
@@ -231,7 +242,16 @@ check_can_start_embedded_services(){
     # these checks will fail.
     if [[ $$ -ne 1 || $(pgrep -f "redis") || $(pgrep -f "postgres") ]]; then
         echo -e "\e[31mPlease do not run the db_only or backend_with_db commands in "\
-        "an existing Baserow container as they are designed to be standalone. Please"\
+        "an existing Baserow container as they are designed tif [[ -z "${DISABLE_EMBEDDED_REDIS:-}" ]]; then
+  mkdir -p "$DATA_DIR"/redis
+  chown -R redis:redis "$DATA_DIR"/redis
+fi
+
+if [[ -z "${DISABLE_EMBEDDED_PSQL:-}" ]]; then
+  mkdir -p "$DATA_DIR"/postgres
+  chown -R postgres:postgres "$DATA_DIR"/postgres
+fi
+o be standalone. Please"\
         " use docker run instead of exec or just the normal 'backend' command.\e[0m" \
         >&2
         exit 1
