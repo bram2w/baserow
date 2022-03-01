@@ -9,7 +9,8 @@ export DJANGO_SETTINGS_MODULE='baserow.config.settings.heroku'
 export BASEROW_RUN_MINIMAL=yes
 export DISABLE_EMBEDDED_PSQL=yes
 export DISABLE_EMBEDDED_REDIS=yes
-export SYNC_TEMPLATES_ON_STARTUP="${SYNC_TEMPLATES_ON_STARTUP:-no}"
+export SYNC_TEMPLATES_ON_STARTUP="${SYNC_TEMPLATES_ON_STARTUP:-false}"
+export MIGRATE_ON_STARTUP="${MIGRATE_ON_STARTUP:-false}"
 # Heroku does not support mounting volumes!
 export DISABLE_VOLUME_CHECK=yes
 
