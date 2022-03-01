@@ -29,4 +29,6 @@ guide for more details.
 ## Supported tags and Dockerfile Links
 
 * [`1.8.3`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/deploy/cloudron/Dockerfile)
-* [`develop_latest`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/deploy/cloudron/Dockerfile)
+* [`latest`](https://gitlab.com/bramw/baserow/-/blob/master/deploy/cloudron/Dockerfile)
+* [`develop-latest`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/deploy/cloudron/Dockerfile)
+  This is a bleeding edge image from our development branch, use at your own risk.

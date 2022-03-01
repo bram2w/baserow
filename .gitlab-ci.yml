@@ -196,6 +196,9 @@ variables:
   ENABLE_COVERAGE:
     value: "true"
     description: "If set to false then tests will not generate coverage or testing reports used by gitlab to show nicer MRs."
+  ENABLE_RELEASES:
+    value: "false"
+    description: "If true then on master and develop release images will be pushed automatically"
   # An image repo which is used for storing and passing images between ci pipeline jobs
   # and also speeding up ci builds by caching from the latest ci image when building.
   CI_IMAGE_REPO: $CI_REGISTRY_IMAGE/ci
@@ -243,10 +246,6 @@ variables:
   HEROKU_DOCKERFILE_PATH: $CI_PROJECT_DIR/heroku.Dockerfile
   # The image path for the helper CI util image that will be built and pushed to.
   CI_UTIL_IMAGE: $CI_IMAGE_REPO/ci_util_image:latest
-  RELEASE_REGISTRY: docker.io
-  # An image repo where dev and normal images will be released to for public usage after
-  # they have been successfully built and tested.
-  RELEASE_IMAGE_REPO: index.docker.io/baserow
 
 # ==================================== CI UTIL ====================================
 
@@ -528,8 +527,8 @@ build-all-in-one-image:
     - job: build-final-backend-image
   only:
     variables:
-      - $TRIGGER_FULL_IMAGE_REBUILD != "no"
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   variables:
     IMAGE_NAME: $ALLINONE_IMAGE_NAME
     DOCKERFILE_PATH: $ALLINONE_DOCKERFILE_PATH
@@ -545,8 +544,8 @@ build-cloudron-image:
     - job: build-all-in-one-image
   only:
     variables:
-      - $TRIGGER_FULL_IMAGE_REBUILD != "no"
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   variables:
     IMAGE_NAME: $CLOUDRON_IMAGE_NAME
     DOCKERFILE_PATH: $CLOUDRON_DOCKERFILE_PATH
@@ -564,8 +563,8 @@ build-heroku-image:
     - job: build-all-in-one-image
   only:
     variables:
-      - $TRIGGER_FULL_IMAGE_REBUILD != "no"
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   variables:
     IMAGE_NAME: $HEROKU_IMAGE_NAME
     DOCKERFILE_PATH: $HEROKU_DOCKERFILE_PATH
@@ -604,7 +603,7 @@ trigger-saas-build:
 
 # ================================== PUSHING BACKEND ==================================
 
-# Push baserow/backend:develop_latest
+# Push baserow/backend:develop-latest
 publish-backend-develop-latest-image:
   extends: .publish-baserow-image
   only:
@@ -651,7 +650,7 @@ publish-backend-latest-release-image:
 
 # ================================ PUSHING WEB-FRONTEND ===============================
 
-# Push baserow/web-frontend:develop_latest
+# Push baserow/web-frontend:develop-latest
 publish-webfrontend-develop-latest-image:
   extends: .publish-baserow-image
   only:
@@ -699,12 +698,12 @@ publish-webfrontend-latest-release-image:
 
 # ================================ PUSHING ALL-IN-ONE ===============================
 
-# Push baserow/baserow:develop_latest
+# Push baserow/baserow:develop-latest
 publish-allinone-develop-latest-image:
   extends: .publish-baserow-image
   only:
     variables:
-      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME && $TRIGGER_FULL_IMAGE_REBUILD != "no"
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   dependencies: []
   variables:
     SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $DEVELOP_BRANCH_NAME
@@ -745,12 +744,12 @@ publish-allinone-latest-release-image:
     TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
 
-# Push baserow/cloudron:develop_latest
+# Push baserow/cloudron:develop-latest
 publish-cloudron-develop-latest-image:
   extends: .publish-baserow-image
   only:
     variables:
-      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME && $TRIGGER_FULL_IMAGE_REBUILD != "no"
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
   dependencies: []
   variables:
     SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $DEVELOP_BRANCH_NAME

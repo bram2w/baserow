@@ -31,4 +31,6 @@ guide for more details.
 ## Supported tags and Dockerfile Links
 
 * [`1.8.3`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/web-frontend/Dockerfile)
-* [`develop_latest`](https://gitlab.com/bramw/baserow/-/blob/develop/web-frontend/Dockerfile)
+* [`latest`](https://gitlab.com/bramw/baserow/-/blob/master/web-frontend/Dockerfile)
+* [`develop-latest`](https://gitlab.com/bramw/baserow/-/blob/develop/web-frontend/Dockerfile)
+  This is a bleeding edge image from our development branch, use at your own risk.
