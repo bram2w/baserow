@@ -600,7 +600,7 @@ trigger-saas-build:
   allow_failure: true
   trigger:
     project: bramw/baserow-saas
-    branch: develop
+    branch: $CI_COMMIT_BRANCH
 
 # ================================== PUSHING BACKEND ==================================
 
