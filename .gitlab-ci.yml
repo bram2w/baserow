@@ -234,7 +234,7 @@ variables:
   DEVELOP_LATEST_TAG: develop-latest
   # Names of important branches used to decide when to run certain jobs.
   MASTER_BRANCH_NAME: master
-  DEVELOP_BRANCH_NAME: develop
+  DEVELOP_BRANCH_NAME: various-docker-ci-fixes
   # The locations of the various dockerfiles to build.
   BACKEND_DOCKERFILE_PATH: $CI_PROJECT_DIR/backend/Dockerfile
   WEBFRONTEND_DOCKERFILE_PATH: $CI_PROJECT_DIR/web-frontend/Dockerfile
@@ -243,10 +243,10 @@ variables:
   HEROKU_DOCKERFILE_PATH: $CI_PROJECT_DIR/heroku.Dockerfile
   # The image path for the helper CI util image that will be built and pushed to.
   CI_UTIL_IMAGE: $CI_IMAGE_REPO/ci_util_image:latest
-  RELEASE_REGISTRY: registry.hub.docker.com
+  RELEASE_REGISTRY: docker.io
   # An image repo where dev and normal images will be released to for public usage after
   # they have been successfully built and tested.
-  RELEASE_IMAGE_REPO: baserow
+  RELEASE_IMAGE_REPO: index.docker.io/baserow
 
 # ==================================== CI UTIL ====================================
 
