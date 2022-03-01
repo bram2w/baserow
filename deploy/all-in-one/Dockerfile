@@ -19,9 +19,6 @@ ENV DATA_DIR=/baserow/data
 ENV POSTGRES_VERSION=11
 ENV POSTGRES_LOCATION=/etc/postgresql/11/main
 
-# In slim docker images, mime.types is removed and we need it for mimetypes guessing
-COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
-
 # ========================
 # = APT-GET UPDATE/UPGRADE/INSTALL DEPS + NODE + CADDY
 # ========================
@@ -85,6 +82,9 @@ RUN apt-get update && \
     # Sedding changes the owner, change it back.
     sed -i '/^logfile/d' /etc/redis/redis.conf && \
     chown redis:redis /etc/redis/redis.conf
+
+# In slim docker images, mime.types is removed and we need it for mimetypes guessing
+COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
 
 COPY --chown=$UID:$GID Caddyfile /baserow/caddy/Caddyfile
 
