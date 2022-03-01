@@ -466,11 +466,11 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * Determines whether a view refresh should be executed after the specific field
-   * has been added to a table. This is for example needed when a value depends on
-   * the backend and can't be guessed or calculated by the web-frontend.
+   * Determines whether row data of the field should be fetched again after the
+   * field has been created. This is for example needed when a value depends on the
+   * backend and can't be guessed or calculated by the web-frontend.
    */
-  shouldRefreshWhenAdded() {
+  shouldFetchDataWhenAdded() {
     return false
   }
 
@@ -865,21 +865,19 @@ export class NumberFieldType extends FieldType {
     if (value === '' || isNaN(value) || value === undefined || value === null) {
       return null
     }
-    const decimalPlaces =
-      field.number_type === 'DECIMAL' ? field.number_decimal_places : 0
     let number = new BigNumber(value)
     if (!field.number_negative && number.isLessThan(0)) {
       number = 0
     }
-    return number.toFixed(decimalPlaces)
+    return number.toFixed(field.number_decimal_places)
   }
 
   getDocsDataType(field) {
-    return field.number_type === 'DECIMAL' ? 'decimal' : 'number'
+    return field.number_decimal_places > 0 ? 'decimal' : 'number'
   }
 
   getDocsDescription(field) {
-    let t = field.number_type === 'INTEGER' ? 'number' : 'decimal'
+    let t = field.number_decimal_places === 0 ? 'number' : 'decimal'
     if (!field.number_negative) {
       t += 'Positive'
     }
@@ -889,7 +887,7 @@ export class NumberFieldType extends FieldType {
   }
 
   getDocsRequestExample(field) {
-    if (field.number_type === 'DECIMAL') {
+    if (field.number_decimal_places > 0) {
       let number = '0.'
       for (let i = 1; i <= field.number_decimal_places; i++) {
         number += '0'
@@ -1268,7 +1266,7 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     return moment().utc().format()
   }
 
-  shouldRefreshWhenAdded() {
+  shouldFetchDataWhenAdded() {
     return true
   }
 
@@ -2118,7 +2116,7 @@ export class FormulaFieldType extends FieldType {
     return true
   }
 
-  shouldRefreshWhenAdded() {
+  shouldFetchDataWhenAdded() {
     return true
   }
 

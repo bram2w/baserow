@@ -71,6 +71,7 @@
       @update="updateValue"
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
+      @field-created="fieldCreated"
     ></RowEditModal>
   </div>
 </template>
@@ -91,11 +92,12 @@ import RowCard from '@baserow/modules/database/components/card/RowCard'
 import RowCreateModal from '@baserow/modules/database/components/row/RowCreateModal'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import bufferedRowsDragAndDrop from '@baserow/modules/database/mixins/bufferedRowsDragAndDrop'
+import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 
 export default {
   name: 'GalleryView',
   components: { RowCard, RowCreateModal, RowEditModal },
-  mixins: [bufferedRowsDragAndDrop],
+  mixins: [viewHelpers, bufferedRowsDragAndDrop],
   props: {
     primary: {
       type: Object,

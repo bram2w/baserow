@@ -80,22 +80,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "groupInviteForm": {
-      "invitationFormTitle": "Invite by email",
-      "optionalMessagePlaceholder": "Optional message",
-      "errorInvalidEmail": "Please enter a valid e-mail address."
-    }
-  },
-  "fr": {
-    "groupInviteForm": {
-      "invitationFormTitle": "Inviter par email",
-      "optionalMessagePlaceholder": "Message optionnel",
-      "errorInvalidEmail": "Veuillez saisir une adresse email valide."
-    }
-  }
-}
-</i18n>

@@ -158,24 +158,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "fieldForm":{
-      "name": "Name",
-      "fieldAlreadyExists": "A field with this name already exists.",
-      "nameNotAllowed": "This field name is not allowed.",
-      "nameTooLong": "This field name is too long."
-    }
-  },
-  "fr": {
-    "fieldForm":{
-      "name": "Nom",
-      "fieldAlreadyExists": "Un champ avec ce nom existe déjà.",
-      "nameNotAllowed": "Ce nom de champ n'est pas autorisé.",
-      "nameTooLong": "Ce nom de champ est trop long."
-    }
-  }
-}
-</i18n>

@@ -73,20 +73,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiTokenForm": {
-      "nameLabel": "Name",
-      "groupLabel": "Group"
-    }
-  },
-  "fr": {
-    "apiTokenForm": {
-      "nameLabel": "Nom",
-      "groupLabel": "Groupe"
-    }
-  }
-}
-</i18n>

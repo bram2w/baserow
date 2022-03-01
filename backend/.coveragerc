@@ -1,0 +1,12 @@
+[run]
+# Also required for gitlab MR coverage to be shown correctly.
+relative_files = True
+omit =
+    */generated/*
+# We can't set source as it changes the xml reports file paths to be relative from
+# say `backend/src` instead of the root of the repo. Gitlab needs paths to be relative
+# from the root so instead we just set include which ensures in gitlab MR coverage is
+# shown correctly.
+include =
+    backend/src/**/*
+    premium/backend/src/**/*

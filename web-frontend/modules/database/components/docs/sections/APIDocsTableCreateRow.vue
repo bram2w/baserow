@@ -81,20 +81,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsTableCreateRow":{
-      "description": "Create a new {name} row.",
-      "before": "If provided then the newly created row will be positioned before the row with the provided id."
-    }
-  },
-  "fr": {
-    "apiDocsTableCreateRow":{
-      "description": "Créé une nouvelle ligne pour la table {name}.",
-      "before": "Si ce paramètre est fourni, la nouvelle ligne sera positionnée avant la ligne portant l'identifiant fourni."
-    }
-  }
-}
-</i18n>

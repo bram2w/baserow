@@ -71,8 +71,7 @@
               "name": "Walkability",
               "order": 6,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -81,8 +80,7 @@
               "name": "Transit",
               "order": 7,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -98,8 +96,7 @@
               "name": "Built",
               "order": 9,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1044,8 +1041,7 @@
               "name": "Bathrooms",
               "order": 5,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1054,8 +1050,7 @@
               "name": "Bedrooms",
               "order": 6,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1064,8 +1059,7 @@
               "name": "Rent",
               "order": 7,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1179,8 +1173,7 @@
               "name": "Size (m\u00b2)",
               "order": 14,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -2480,8 +2473,7 @@
               "name": "Zip Code",
               "order": 4,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {

@@ -333,22 +333,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "apiDocsExample": {
-      "requestSample": "Request sample",
-      "responseSample": "Response sample",
-      "userFieldNames": "User field names"
-    }
-  },
-  "fr": {
-    "apiDocsExample": {
-      "requestSample": "Example de requête",
-      "responseSample": "Example de réponse",
-      "userFieldNames": "Nom des champs utilisateur"
-    }
-  }
-}
-</i18n>

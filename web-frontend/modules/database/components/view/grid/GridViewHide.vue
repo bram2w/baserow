@@ -119,18 +119,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "gridViewHide": {
-      "hideField": "Hide Fields | 1 hidden field | {count} hidden fields"
-    }
-  },
-  "fr":{
-    "gridViewHide": {
-      "hideField": "Cacher les champs | 1 champ caché | {count} champs cachés"
-    }
-  }
-}
-</i18n>

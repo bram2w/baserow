@@ -104,22 +104,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "fieldLinkRowSubForm": {
-      "noTable": "You need at least one other table in the same database to link to.",
-      "selectTableLabel": "Select a table to link to",
-      "dataLost": "By changing the table, all data will be lost."
-    }
-  },
-  "fr": {
-    "fieldLinkRowSubForm": {
-      "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
-      "selectTableLabel": "Sélectionnez une table",
-      "dataLost": "En modifiant la table, toutes les données du champ seront supprimées"
-    }
-  }
-}
-</i18n>

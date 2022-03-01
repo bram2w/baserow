@@ -22,7 +22,10 @@
           </div>
         </div>
       </div>
-      <div class="control control--align-right margin-bottom-0">
+      <div
+        v-if="!alwaysHideRowsNotMatchingSearch"
+        class="control control--align-right margin-bottom-0"
+      >
         <SwitchInput
           v-model="hideRowsNotMatchingSearch"
           @input="searchIfChanged"
@@ -58,6 +61,11 @@ export default {
     storePrefix: {
       type: String,
       required: true,
+    },
+    alwaysHideRowsNotMatchingSearch: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {
@@ -103,15 +111,18 @@ export default {
       }
     },
     debouncedServerSearchRefresh: debounce(async function () {
-      await this.$store.dispatch(this.storePrefix + 'view/grid/updateSearch', {
-        activeSearchTerm: this.activeSearchTerm,
-        hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
-        // The refresh event we fire below will cause the table to refresh it state from
-        // the server using the newly set search terms.
-        refreshMatchesOnClient: false,
-        fields: this.fields,
-        primary: this.primary,
-      })
+      await this.$store.dispatch(
+        `${this.storePrefix}view/${this.view.type}/updateSearch`,
+        {
+          activeSearchTerm: this.activeSearchTerm,
+          hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
+          // The refresh event we fire below will cause the table to refresh it state from
+          // the server using the newly set search terms.
+          refreshMatchesOnClient: false,
+          fields: this.fields,
+          primary: this.primary,
+        }
+      )
       this.$emit('refresh', {
         callback: this.finishedLoading,
       })
@@ -119,13 +130,16 @@ export default {
     // Debounce even the client side only refreshes as otherwise spamming the keyboard
     // can cause many refreshes to queue up quickly bogging down the UI.
     debouncedClientSideSearchRefresh: debounce(async function () {
-      await this.$store.dispatch(this.storePrefix + 'view/grid/updateSearch', {
-        activeSearchTerm: this.activeSearchTerm,
-        hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
-        refreshMatchesOnClient: true,
-        fields: this.fields,
-        primary: this.primary,
-      })
+      await this.$store.dispatch(
+        `${this.storePrefix}view/${this.view.type}/updateSearch`,
+        {
+          activeSearchTerm: this.activeSearchTerm,
+          hideRowsNotMatchingSearch: this.hideRowsNotMatchingSearch,
+          refreshMatchesOnClient: true,
+          fields: this.fields,
+          primary: this.primary,
+        }
+      )
       this.finishedLoading()
     }, 10),
     finishedLoading() {
@@ -134,20 +148,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "viewSearchContext": {
-      "searchInRows": "Search in all rows",
-      "hideNotMatching": "hide not matching rows"
-    }
-  },
-  "fr": {
-    "viewSearchContext": {
-      "searchInRows": "Chercher dans toute la table",
-      "hideNotMatching": "cacher les lignes sans résultat"
-    }
-  }
-}
-</i18n>

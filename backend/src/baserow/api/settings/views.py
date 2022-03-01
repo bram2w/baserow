@@ -22,7 +22,7 @@ class SettingsView(APIView):
         responses={
             200: SettingsSerializer,
         },
-        auth=[None],
+        auth=[],
     )
     def get(self, request):
         """Responds with all the admin configured settings."""

@@ -50,7 +50,7 @@ class TextToDateFieldConverter(FieldConverter):
 
     def alter_field(self, from_field, to_field, from_model, to_model,
                     from_model_field, to_model_field, user, connection):
-        with connection.schema_editor() as schema_editor:
+        with safe_django_schema_editor() as schema_editor:
             schema_editor.remove_field(from_model, from_model_field)
             schema_editor.add_field(to_model, to_model_field)
 ```

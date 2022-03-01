@@ -419,7 +419,7 @@ export const actions = {
     return { filter }
   },
   /**
-   * Forcefully create a new view filterwithout making a request to the backend.
+   * Forcefully create a new view filter without making a request to the backend.
    */
   forceCreateFilter({ commit }, { view, values }) {
     const filter = Object.assign({}, values)

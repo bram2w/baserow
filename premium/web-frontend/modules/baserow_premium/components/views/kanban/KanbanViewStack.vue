@@ -527,22 +527,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "kanbanViewStack": {
-      "uncategorized": "Uncategorized",
-      "tryAgain": "Try again",
-      "new": "New"
-    }
-  },
-  "fr": {
-    "kanbanViewStack": {
-      "uncategorized": "Sans catégorie",
-      "tryAgain": "Essayer encore",
-      "new": "Nouveau"
-    }
-  }
-}
-</i18n>

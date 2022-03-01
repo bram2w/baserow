@@ -9,109 +9,109 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0001_initial'),
-        ('database', '0015_emailfield'),
+        ("core", "0001_initial"),
+        ("database", "0015_emailfield"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Token',
+            name="Token",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID'
-                    )
+                        verbose_name="ID",
+                    ),
                 ),
                 (
-                    'name', models.CharField(
+                    "name",
+                    models.CharField(
                         max_length=100,
-                        help_text='The human readable name of the token for the user.'
-                    )
+                        help_text="The human readable name of the token for the user.",
+                    ),
                 ),
                 (
-                    'key',
+                    "key",
                     models.CharField(
                         db_index=True,
                         max_length=32,
                         unique=True,
-                        help_text='The unique token key that can be used to authorize '
-                                  'for the table row endpoints.'
-                    )
+                        help_text="The unique token key that can be used to authorize "
+                        "for the table row endpoints.",
+                    ),
                 ),
+                ("created", models.DateTimeField(auto_now=True)),
                 (
-                    'created', models.DateTimeField(auto_now=True)
-                ),
-                (
-                    'group', models.ForeignKey(
+                    "group",
+                    models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='core.Group',
-                        help_text='Only the tables of the group can be accessed.'
-                    )
+                        to="core.Group",
+                        help_text="Only the tables of the group can be accessed.",
+                    ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to=settings.AUTH_USER_MODEL,
-                        help_text='The user that owns the token.'
-                    )
+                        help_text="The user that owns the token.",
+                    ),
                 ),
             ],
             options={
-                'ordering': ('id',),
+                "ordering": ("id",),
             },
         ),
         migrations.CreateModel(
-            name='TokenPermission',
+            name="TokenPermission",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID'
-                    )
+                        verbose_name="ID",
+                    ),
                 ),
                 (
-                    'type', models.CharField(
+                    "type",
+                    models.CharField(
                         choices=[
-                            ('create', 'Create'),
-                            ('read', 'Read'),
-                            ('update', 'Update'),
-                            ('delete', 'Delete')
+                            ("create", "Create"),
+                            ("read", "Read"),
+                            ("update", "Update"),
+                            ("delete", "Delete"),
                         ],
-                        max_length=6
-                    )
+                        max_length=6,
+                    ),
                 ),
                 (
-                    'database',
+                    "database",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='database.Database'
-                    )
+                        to="database.Database",
+                    ),
                 ),
                 (
-                    'table',
+                    "table",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='database.Table'
-                    )
+                        to="database.Table",
+                    ),
                 ),
                 (
-                    'token',
+                    "token",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to='database.Token'
-                    )
+                        on_delete=django.db.models.deletion.CASCADE, to="database.Token"
+                    ),
                 ),
             ],
         ),

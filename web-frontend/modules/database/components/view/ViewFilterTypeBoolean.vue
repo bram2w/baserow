@@ -24,18 +24,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "viewFilterTypeBoolean": {
-      "selected": "Selected"
-    }
-  },
-  "fr": {
-    "viewFilterTypeBoolean": {
-      "selected": "Sélectionné"
-    }
-  }
-}
-</i18n>

@@ -6,7 +6,7 @@
       </h1>
       <LangPicker />
     </div>
-    <template v-if="!settings.allow_new_signups">
+    <template v-if="!isSignupEnabled">
       <div class="alert alert--simple alert--error alert--has-icon">
         <div class="alert__icon">
           <i class="fas fa-exclamation"></i>
@@ -54,6 +54,13 @@ export default {
     }
   },
   computed: {
+    isSignupEnabled() {
+      return (
+        this.settings.allow_new_signups ||
+        (this.settings.allow_signups_via_group_invitations &&
+          this.invitation?.id)
+      )
+    },
     ...mapGetters({
       settings: 'settings/get',
     }),
@@ -65,24 +72,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "signup": {
-      "headTitle": "Create new account",
-      "title": "Sign up",
-      "disabled": "Sign up is disabled",
-      "disabledMessage": "It's not possible to create an account because it has been disabled."
-    }
-  },
-  "fr":{
-    "signup": {
-      "headTitle": "Création d'un nouveau compte",
-      "title": "Création de compte",
-      "disabled": "Création de compte desactivée",
-      "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée."
-    }
-  }
-}
-</i18n>

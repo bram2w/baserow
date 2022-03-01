@@ -119,7 +119,7 @@ class View(
 
         if not through_model:
             raise ValueError(
-                f"The view type {view_type.type} does not support field " f"options."
+                f"The view type {view_type.type} does not support field options."
             )
 
         field_name = get_model_reference_field_name(through_model, View)
@@ -240,7 +240,7 @@ class GridView(View):
 class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
     grid_view = models.ForeignKey(GridView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
-    # The defaults should be the same as in the `fieldCreated` of the `GridViewType`
+    # The defaults should match the ones in `afterFieldCreated` of the `GridViewType`
     # abstraction in the web-frontend.
     width = models.PositiveIntegerField(
         default=200,
@@ -257,6 +257,35 @@ class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
         help_text="The position that the field has within the view, lowest first. If "
         "there is another field with the same order value then the field with the "
         "lowest id must be shown first.",
+    )
+
+    aggregation_type = models.CharField(
+        default="",
+        blank=True,
+        max_length=48,
+        help_text=(
+            "Indicates how the field value is aggregated. This value is "
+            "different from the `aggregation_raw_type`. The `aggregation_raw_type` "
+            "is the value extracted from "
+            "the database, while the `aggregation_type` can implies further "
+            "calculations. For example: "
+            "if you want to compute an average, `sum` is going to be the "
+            "`aggregation_raw_type`, "
+            "the value extracted from database, and `sum / row_count` will be the "
+            "aggregation result displayed to the user. "
+            "This aggregation_type should be used by the client to compute the final "
+            "value."
+        ),
+    )
+
+    aggregation_raw_type = models.CharField(
+        default="",
+        blank=True,
+        max_length=48,
+        help_text=(
+            "Indicates how to compute the raw aggregation value from database. "
+            "This type must be registered in the backend prior to use it."
+        ),
     )
 
     class Meta:

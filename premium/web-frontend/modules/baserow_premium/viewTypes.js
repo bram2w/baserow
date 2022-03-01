@@ -38,7 +38,7 @@ export class KanbanViewType extends PremiumViewType {
   }
 
   canFilter() {
-    return false
+    return true
   }
 
   canSort() {
@@ -119,6 +119,7 @@ export class KanbanViewType extends PremiumViewType {
   ) {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/kanban/createdNewRow', {
+        view: store.getters['view/getSelected'],
         fields,
         primary,
         values,
@@ -138,6 +139,7 @@ export class KanbanViewType extends PremiumViewType {
   ) {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/kanban/updatedExistingRow', {
+        view: store.getters['view/getSelected'],
         fields,
         primary,
         row,
@@ -149,12 +151,21 @@ export class KanbanViewType extends PremiumViewType {
   async rowDeleted({ store }, tableId, fields, primary, row, storePrefix = '') {
     if (this.isCurrentView(store, tableId)) {
       await store.dispatch(storePrefix + 'view/kanban/deletedExistingRow', {
+        view: store.getters['view/getSelected'],
         row,
+        fields,
+        primary,
       })
     }
   }
 
-  async fieldCreated({ dispatch }, table, field, fieldType, storePrefix = '') {
+  async afterFieldCreated(
+    { dispatch },
+    table,
+    field,
+    fieldType,
+    storePrefix = ''
+  ) {
     await dispatch(
       storePrefix + 'view/kanban/setFieldOptionsOfField',
       {
@@ -170,7 +181,7 @@ export class KanbanViewType extends PremiumViewType {
     )
   }
 
-  fieldUpdated(context, field, oldField, fieldType, storePrefix) {
+  afterFieldUpdated(context, field, oldField, fieldType, storePrefix) {
     // Make sure that all Kanban views don't depend on fields that
     // have been converted to another type
     const type = SingleSelectFieldType.getType()
@@ -180,7 +191,7 @@ export class KanbanViewType extends PremiumViewType {
     }
   }
 
-  fieldDeleted(context, field, fieldType, storePrefix = '') {
+  afterFieldDeleted(context, field, fieldType, storePrefix = '') {
     // Make sure that all Kanban views don't depend on fields that
     // have been deleted
     this._setFieldToNull(context, field, 'single_select_field')

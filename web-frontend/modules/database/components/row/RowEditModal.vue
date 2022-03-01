@@ -34,7 +34,7 @@
         <CreateFieldContext
           ref="createFieldContext"
           :table="table"
-          @refresh="$emit('refresh', $event)"
+          @field-created="$emit('field-created', $event)"
         ></CreateFieldContext>
       </div>
     </template>
@@ -160,18 +160,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "rowEditModal": {
-      "addField": "add field"
-    }
-  },
-  "fr": {
-    "rowEditModal": {
-      "addField": "Ajouter un champ"
-    }
-  }
-}
-</i18n>

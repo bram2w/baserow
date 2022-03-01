@@ -210,22 +210,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "fieldLookupSubForm": {
-      "noTable": "You need at least one link row field to create a lookup field.",
-      "selectThroughFieldLabel": "Select a link row field",
-      "selectTargetFieldLabel": "Select a field to lookup"
-    }
-  },
-  "fr": {
-    "fieldLookupSubForm": {
-      "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",
-      "selectThroughFieldLabel": "Sélectionnez le lien vers la table",
-      "selectTargetFieldLabel": "Sélectionnez le champ à rapporter"
-    }
-  }
-}
-</i18n>

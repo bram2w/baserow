@@ -1,6 +1,7 @@
 from typing import Callable, Union, List
 
 from django.contrib.auth.models import User as DjangoUser
+from django.db import models as django_models
 from rest_framework.fields import CharField
 
 from rest_framework.serializers import Serializer
@@ -18,13 +19,15 @@ from baserow.core.registry import (
     ImportExportMixin,
     MapAPIExceptionsInstanceMixin,
 )
-from baserow.contrib.database import models
+from baserow.contrib.database.fields import models as field_models
 
 from .exceptions import (
     ViewTypeAlreadyRegistered,
     ViewTypeDoesNotExist,
     ViewFilterTypeAlreadyRegistered,
     ViewFilterTypeDoesNotExist,
+    AggregationTypeDoesNotExist,
+    AggregationTypeAlreadyRegistered,
 )
 
 
@@ -80,6 +83,12 @@ class ViewType(
     """
     Indicates if the view support sortings. If not, it will not be possible to add a
     sort to the view.
+    """
+
+    can_aggregate_field = False
+    """
+    Indicates if the view supports field aggregation. If not, it will not be possible
+    to compute fields aggregation for this view type.
     """
 
     can_share = False
@@ -294,7 +303,7 @@ class ViewType(
         meta = type(
             "Meta",
             (),
-            {"ref_name": self.type + " view field options"},
+            {"ref_name": self.type + "_view_field_options"},
         )
 
         attrs = {
@@ -327,6 +336,14 @@ class ViewType(
         """
 
         return field_options
+
+    def after_field_type_change(self, field: field_models.Field) -> None:
+        """
+        This hook is called after the type of a field has changed and gives the
+        possibility to check compatibility with view stuff like specific field options.
+
+        :param field: The concerned field.
+        """
 
     def prepare_values(self, values: dict, table, user: DjangoUser):
         """
@@ -431,7 +448,9 @@ class ViewFilterType(Instance):
         view_filter_type_registry.register(ExampleViewFilterType())
     """
 
-    compatible_field_types: List[Union[str, Callable[["models.Field"], bool]]] = []
+    compatible_field_types: List[
+        Union[str, Callable[["field_models.Field"], bool]]
+    ] = []
     """
     Defines which field types are compatible with the filter. Only the supported ones
     can be used in combination with the field. The values in this list can either be
@@ -538,7 +557,67 @@ class ViewFilterTypeRegistry(Registry):
     already_registered_exception_class = ViewFilterTypeAlreadyRegistered
 
 
+class ViewAggregationType(Instance):
+    """
+    If you want to aggregate the values of fields in a view, you can use a field
+    aggregation. For example you can compute a sum of all values of a field in a table.
+    """
+
+    def get_aggregation(
+        self,
+        field_name: str,
+        model_field: django_models.Field,
+        field: field_models.Field,
+    ) -> django_models.Aggregate:
+        """
+        Should return the requested django aggregation object based on
+        the provided arguments.
+
+        :param field_name: The name of the field that needs to be aggregated.
+        :type field_name: str
+        :param model_field: The field extracted from the model.
+        :type model_field: django_models.Field
+        :param field: The instance of the underlying baserow field.
+        :type field: Field
+        :return: A django aggregation object for this specific field.
+        """
+
+        raise NotImplementedError(
+            "Each aggregation type must have his own get_aggregation method."
+        )
+
+    def field_is_compatible(self, field: field_models.Field) -> bool:
+        """
+        Given a particular instance of a field returns whether the field is supported
+        by this aggregation type or not.
+
+        :param field: The field to check.
+        :return: True if the field is compatible, False otherwise.
+        """
+
+        from baserow.contrib.database.fields.registries import field_type_registry
+
+        field_type = field_type_registry.get_by_model(field.specific_class)
+
+        return any(
+            callable(t) and t(field) or t == field_type.type
+            for t in self.compatible_field_types
+        )
+
+
+class ViewAggregationTypeRegistry(Registry):
+    """
+    This registry contains all the available field aggregation operators. A field
+    aggregation allow to summarize all the values for a specific field of a table.
+    """
+
+    name = "field_aggregation"
+    does_not_exist_exception_class = AggregationTypeDoesNotExist
+    already_registered_exception_class = AggregationTypeAlreadyRegistered
+
+
 # A default view type registry is created here, this is the one that is used
 # throughout the whole Baserow application to add a new view type.
 view_type_registry = ViewTypeRegistry()
 view_filter_type_registry = ViewFilterTypeRegistry()
+view_aggregation_type_registry = ViewAggregationTypeRegistry()

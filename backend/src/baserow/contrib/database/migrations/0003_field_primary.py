@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0002_booleanfield_field_numberfield_textfield'),
+        ("database", "0002_booleanfield_field_numberfield_textfield"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='field',
-            name='primary',
+            model_name="field",
+            name="primary",
             field=models.BooleanField(default=False),
         ),
     ]

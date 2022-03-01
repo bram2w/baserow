@@ -119,20 +119,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "testWebhookModal": {
-      "title": "Test webhook",
-      "unreachable": "Server unreachable"
-    }
-  },
-  "fr": {
-    "testWebhookModal": {
-      "title": "Test du webhook",
-      "unreachable": "Serveur inaccessible"
-    }
-  }
-}
-</i18n>

@@ -59,18 +59,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "crudTableSearchContext": {
-      "search": "Search"
-    }
-  },
-  "fr": {
-    "crudTableSearchContext": {
-      "search": "Chercher"
-    }
-  }
-}
-</i18n>

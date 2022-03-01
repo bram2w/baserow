@@ -1,4 +1,4 @@
-import Vuelidate from 'vuelidate'
+import Vuelidate from '@baserow/node_modules/vuelidate/lib/index'
 import Vue from 'vue'
 import Vuex from 'vuex'
 import '@baserow/modules/core/plugins/global'

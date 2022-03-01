@@ -1,0 +1,224 @@
+{
+    "premium": {
+        "user": {
+            "isStaff": "Is personeel",
+            "isGroupAdmin": "Is groepsbeheerder",
+            "active": "Ingeschakeld",
+            "deactivated": "Uitgeschakeld"
+        },
+        "adminType": {
+            "dashboard": "Dashboard",
+            "users": "Gebruikers",
+            "groups": "Groepen",
+            "licenses": "Licenties"
+        },
+        "viewType": {
+            "kanban": "Kanban"
+        },
+        "exporterType": {
+            "json": "Exporteren naar JSON",
+            "xml": "Exporteren naar XML"
+        }
+    },
+    "rowCommentSidebar": {
+        "onlyPremium": "Rij-opmerkingen zijn beschikbaar in de premium versie.",
+        "readOnlyNoComment": "Geen opmerkingen voor deze rij.",
+        "noComment": "Er zijn nog geen opmerkingen voor deze rij. Gebruik het formulier hieronder om een opmerking toe te voegen.",
+        "comment": "Opmerking"
+    },
+    "rowComment": {
+        "you": "Jij"
+    },
+    "registerLicenseModal": {
+        "titleRegisterLicense": "Een licentie registreren",
+        "registerLicense": "Licentie registreren",
+        "viewPricing": "Prijzen bekijken",
+        "licenseDescription": "Een licentie kan alleen worden verkregen via baserow.io. Als je al een licentie hebt gekocht, wordt deze per e-mail naar je toegestuurd. Je kunt dan de licentie ophalen uit het overzicht in je account. Kopieer en plak de licentiesleutel in het vak hieronder. Klik op de knop om de licentiesleutel op deze installatie te registreren. Het is niet mogelijk om dezelfde sleutel op twee verschillende installaties te gebruiken. {pricingLink} als je nog geen sleutel hebt.",
+        "licenseError": {
+            "invalidTitle": "Ongeldig",
+            "invalid": "De verstrekte licentie is ongeldig.",
+            "unsupportedTitle": "Niet-ondersteund",
+            "unsupported": "De geleverde licentie is niet compatibel met deze versie van Baserow. Installeer de nieuwste versie en probeer het opnieuw.",
+            "expiredTitle": "Verlopen",
+            "expired": "De verstrekte licentie is verlopen.",
+            "duplicateTitle": "Duplicaat",
+            "duplicate": "De verstrekte licentie is al geregistreerd voor deze installatie.",
+            "instanceMismatchTitle": "Verkeerde installatie",
+            "instanceMismatch": "De verstrekte licentie hoort niet bij deze installatie."
+        }
+    },
+    "disconnectLicenseModal": {
+        "disconnectLicense": "Licentie ontkoppelen",
+        "disconnectDescription": "Weet je zeker dat je deze licentie wilt ontkoppelen? Als je deze licentie ontkoppelt terwijl deze actief is, hebben de gerelateerde gebruikers geen toegang meer tot het relevante plan. Deze handeling zal de licentie effectief verwijderen. Neem contact op met ons support team via {contact} als je deze licentie wilt gebruiken in een andere zelf-gehoste installatie."
+    },
+    "registerLicenseForm": {
+        "licenseKey": "Licentiesleutel"
+    },
+    "groupsAdminTable": {
+        "allGroups": "Alle groepen",
+        "id": "ID",
+        "name": "Naam",
+        "members": "Leden",
+        "applications": "Applicaties",
+        "created": "Aangemaakt"
+    },
+    "editGroupContext": {
+        "delete": "Permanent verwijderen"
+    },
+    "deleteGroupModal": {
+        "title": "Verwijder {name}",
+        "confirmation": "Weet je zeker dat je de groep: {name} wilt verwijderen?",
+        "comment": "De groep wordt permanent verwijderd, inclusief de bijbehorende applicaties. Het is niet mogelijk deze actie ongedaan te maken.",
+        "delete": "Groep {name} verwijderen"
+    },
+    "activeUsers": {
+        "newUsers": "Nieuwe gebruikers",
+        "activeUsers": "Actieve gebruikers"
+    },
+    "usersAdminTable": {
+        "allUsers": "Alle gebruikers",
+        "id": "ID",
+        "username": "Gebruikersnaam",
+        "name": "Naam",
+        "groups": "Groepen",
+        "lastLogin": "Laatste login",
+        "dateJoined": "Ingeschreven",
+        "active": "Ingeschakeld"
+    },
+    "editUserContext": {
+        "changePassword": "Wachtwoord wijzigen",
+        "delete": "Permanent verwijderen"
+    },
+    "changePasswordForm": {
+        "newPassword": "Nieuw wachtwoord",
+        "repeatPassword": "Herhaal wachtwoord",
+        "changePassword": "Wachtwoord wijzigen",
+        "error": {
+            "doesntMatch": "Dit veld moet overeenkomen met je wachtwoordveld."
+        }
+    },
+    "userForm": {
+        "fullName": "Volledige naam",
+        "email": "E-mail",
+        "isActive": "Is actief",
+        "warning": {
+            "changeEmail": "Als het e-mailadres van deze gebruiker wordt gewijzigd, moet hij/zij dit nieuwe e-mailadres gebruiken wanneer hij/zij zich aanmeldt. Dit moet aan de gebruiker worden gecommuniceerd.",
+            "inactiveUser": "Wanneer een gebruiker als inactief wordt gemarkeerd, kan deze zich niet meer aanmelden.",
+            "userStaff": "Door de gebruiker personeel te maken, krijgt deze beheerderstoegang tot alle gebruikers en alle groepen, met de mogelijkheid om de eigen personeelsrechten in te trekken."
+        },
+        "error": {
+            "invalidName": "Voer een geldige volledige naam in. De naam moet langer zijn dan 2 letters en minder dan 150.",
+            "invalidEmail": "Voer een geldig e-mail adres in."
+        }
+    },
+    "changeUserPasswordModal": {
+        "changePassword": "Wijzig wachtwoord voor {gebruikersnaam}"
+    },
+    "deleteUserModal": {
+        "title": "Verwijder {gebruikersnaam}",
+        "confirmation": "Weet je zeker dat je de gebruiker: {name} wilt verwijderen?",
+        "comment1": "De gebruikersaccount wordt verwijderd, maar de groepen waar die gebruiker lid van is blijven bestaan. De gebruikersgroep wordt niet verwijderd, zelfs als deze gebruiker de laatste gebruiker in de groep is. Door de laatste gebruiker in een groep te verwijderen kan niemand meer toegang krijgen tot die groep.",
+        "comment2": "Na het verwijderen van een gebruiker is het mogelijk dat een nieuwe gebruiker zich opnieuw aanmeldt met het e-mailadres van de verwijderde gebruiker. Om ervoor te zorgen dat ze zich niet opnieuw kunnen aanmelden, deactiveer de gebruiker in plaats van deze te verwijderen.",
+        "delete": "Verwijder gebruiker {gebruikersnaam}"
+    },
+    "editUserModal": {
+        "delete": "Gebruiker verwijderen",
+        "edit": "Bewerk { gebruikersnaam }"
+    },
+    "crudTableSearchContext": {
+        "search": "Zoeken"
+    },
+    "tableJSONExporter": {
+        "encoding": "Codering"
+    },
+    "tableXMLExporter": {
+        "encoding": "Codering"
+    },
+    "kanbanViewStackContext": {
+        "createCard": "Kaart aanmaken",
+        "editStack": "Bewerk stapel",
+        "deleteStack": "Stapel verwijderen",
+        "delete": "Verwijder {name}",
+        "deleteDescription": "Weet je zeker dat je de stapel {name} wilt verwijderen? Het verwijderen van de stapel resulteert in het verwijderen van de keuzeoptie van het enkelvoudige keuzeveld. Dit kan resulteren in gegevensverlies omdat de rijwaarden op leeg worden gezet."
+    },
+    "kanbanViewHeader": {
+        "stackBy": "Stapelen op",
+        "stackedBy": "Gestapeld op {fieldName}",
+        "customizeCards": "Kaarten aanpassen"
+    },
+    "kanbanViewOptionForm": {
+        "selectOption": "Selecteer optie"
+    },
+    "kanbanViewStakedBy": {
+        "title": "Groepsveld",
+        "chooseField": "Op welk enkelvoudig keuzeveld moeten de kaarten gestapeld worden?",
+        "addSelectField": "enkelvoudig keuzeveld toevoegen"
+    },
+    "kanbanViewStack": {
+        "uncategorized": "Zonder categorie",
+        "tryAgain": "Probeer het nog eens",
+        "new": "Nieuw"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "totals": "Totalen",
+        "totalUsers": "Totaal gebruikers",
+        "totalGroups": "Totaal groepen",
+        "totalApplications": "Totaal aanvragen",
+        "newUsers": "Nieuwe gebruikers",
+        "newUsers24h": "Nieuwe gebruikers laatste 24 uur",
+        "newUsers7days": "Nieuwe gebruikers laatste 7 dagen",
+        "newUsers30days": "Nieuwe gebruikers laatste 30 dagen",
+        "activeUsers": "Actieve gebruikers",
+        "activeUsers24h": "Actieve gebruikers laatste 24 uur",
+        "activeUsers7days": "Actieve gebruikers laatste 7 dagen",
+        "activeUsers30days": "Actieve gebruikers laatste 30 dagen",
+        "viewAll": "Alles bekijken"
+    },
+    "licenses": {
+        "titleNoLicenses": "Geen licenties gevonden",
+        "titleLicenses": "Licenties",
+        "noLicensesDescription": "Er zijn nog geen licenties geregistreerd op je Baserow installatie. Een premium licentie geeft je direct toegang tot alle extra functies. Als je al een licentie hebt, kun je die hier registreren. Je kunt er ook een halen door op de onderstaande knop te klikken.",
+        "rowComments": "Rij-opmerkingen",
+        "kanbanView": "Kanban bekijken",
+        "exports": "JSON en XML uitvoer",
+        "admin": "Beheerdersfunctionaliteit",
+        "getLicense": "Haal een licentie",
+        "baserowInstanceId": "Je Baserow instantie ID is:",
+        "registerLicense": "Licentie registreren",
+        "licenceId": "Licentie ID",
+        "premium": "Premium",
+        "expired": "Verlopen",
+        "validity": "Geldig van {start} tot {einde}",
+        "seats": "plaatsen",
+        "premiumFeatures": "Premium functies"
+    },
+    "license": {
+        "title": "{product_code} plan",
+        "users": "Gebruikers",
+        "description": "Kies de gebruikers die het {product_code} plan kunnen gebruiken. Deze licentie staat je toe {product_code} aan een maximum van {seats} gebruikers toe te kennen.",
+        "seatLeft": "U heeft geen plaatsen meer over|Je hebt nog één plaats over|Je hebt {count} plaatsen over",
+        "fillSeats": "Plaatsen vullen met gebruikers die niet op het plan staan",
+        "removeAll": "Verwijder alle gebruikers",
+        "licenseId": "Licentie ID",
+        "addUser": "Een gebruiker toevoegen",
+        "plan": "Plan",
+        "premium": "premium",
+        "expired": "Verlopen",
+        "validFrom": "Geldig vanaf",
+        "validThrough": "Geldig tot en met",
+        "validThroughDescription": "Nadat je licentie is verlopen, kunnen jij en de andere toegewezen gebruikers niet langer gebruik maken van de extra functionaliteit die op basis van de licentie wordt verleend.",
+        "lastCheck": "Laatste controle",
+        "lastCheckDescription": "De licentie wordt periodiek gecontroleerd op wijzigingen. Als je bijvoorbeeld je licentie hebt vernieuwd of opgewaardeerd, worden de wijzigingen actief na de controle.",
+        "checkNow": "nu controleren",
+        "seats": "Plaatsen (aantal gebruikers)",
+        "licensedTo": "Licentie voor",
+        "premiumFeatures": "Premium functies",
+        "applications": "Toepassingen / databanken",
+        "unlimited": "Onbeperkt",
+        "rowUsage": "Rijgebruik",
+        "storeUsage": "Opslaggebruik",
+        "disconnectLicense": "Licentie ontkoppelen",
+        "disconnectDescription": "Als je deze licentie ontkoppelt terwijl deze actief is, hebben de toegewezen gebruikers geen toegang meer tot het relevante plan. Deze handeling zal de licentie effectief verwijderen. Neem contact op met ons support team via {contact} als je deze licentie wilt gebruiken in een andere zelf-gehoste installatie."
+    }
+}

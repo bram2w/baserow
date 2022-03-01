@@ -1,17 +1,21 @@
 import datetime
 import os
 from urllib.parse import urlparse, urljoin
+import dj_database_url
 
 from corsheaders.defaults import default_headers
+
+from baserow.version import VERSION
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_THIS_TO_SOMETHING_SECRET_IN_PRODUCTION")
+if "SECRET_KEY" in os.environ:
+    SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv("BASEROW_BACKEND_DEBUG", "off") == "on"
 
 ALLOWED_HOSTS = ["localhost"]
 
@@ -24,9 +28,16 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "channels",
-    "mjml",
     "drf_spectacular",
     "djcelery_email",
+    "health_check",
+    "health_check.db",
+    "health_check.cache",
+    "health_check.storage",
+    "health_check.contrib.migrations",
+    "health_check.contrib.celery_ping",
+    "health_check.contrib.psutil",
+    "health_check.contrib.redis",
     "baserow.core",
     "baserow.api",
     "baserow.ws",
@@ -127,17 +138,40 @@ CHANNEL_LAYERS = {
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DATABASE_NAME", "baserow"),
-        "USER": os.getenv("DATABASE_USER", "baserow"),
-        "PASSWORD": os.getenv("DATABASE_PASSWORD", "baserow"),
-        "HOST": os.getenv("DATABASE_HOST", "db"),
-        "PORT": os.getenv("DATABASE_PORT", "5432"),
+if "DATABASE_URL" in os.environ:
+    DATABASES = {
+        "default": dj_database_url.parse(os.getenv("DATABASE_URL"), conn_max_age=600)
     }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DATABASE_NAME", "baserow"),
+            "USER": os.getenv("DATABASE_USER", "baserow"),
+            "PASSWORD": os.getenv("DATABASE_PASSWORD", "baserow"),
+            "HOST": os.getenv("DATABASE_HOST", "db"),
+            "PORT": os.getenv("DATABASE_PORT", "5432"),
+        }
+    }
+
+GENERATED_MODEL_CACHE_NAME = "generated-models"
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": "baserow-default-cache",
+        "VERSION": VERSION,
+    },
+    GENERATED_MODEL_CACHE_NAME: {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": f"baserow-{GENERATED_MODEL_CACHE_NAME}-cache",
+        "VERSION": None,
+    },
 }
+
 
 # Should contain the database connection name of the database where the user tables
 # are stored. This can be different than the default database because there are not
@@ -171,6 +205,8 @@ LANGUAGE_CODE = "en"
 LANGUAGES = [
     ("en", "English"),
     ("fr", "French"),
+    ("nl", "Dutch"),
+    ("de", "German"),
 ]
 
 TIME_ZONE = "UTC"
@@ -218,7 +254,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.8.2",
+    "VERSION": "1.8.3",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -266,13 +302,63 @@ SPECTACULAR_SETTINGS = {
 # The storage must always overwrite existing files.
 DEFAULT_FILE_STORAGE = "baserow.core.storage.OverwriteFileSystemStorage"
 
-MJML_BACKEND_MODE = "tcpserver"
-MJML_TCPSERVERS = [
-    (os.getenv("MJML_SERVER_HOST", "mjml"), int(os.getenv("MJML_SERVER_PORT", 28101))),
-]
+# Optional S3 storage configuration
+if os.getenv("AWS_ACCESS_KEY_ID", "") != "":
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_OBJECT_PARAMETERS = {
+        "CacheControl": "max-age=86400",
+    }
+    AWS_S3_FILE_OVERWRITE = True
+    AWS_DEFAULT_ACL = "public-read"
 
-PUBLIC_BACKEND_URL = os.getenv("PUBLIC_BACKEND_URL", "http://localhost:8000")
-PUBLIC_WEB_FRONTEND_URL = os.getenv("PUBLIC_WEB_FRONTEND_URL", "http://localhost:3000")
+if os.getenv("AWS_S3_REGION_NAME", "") != "":
+    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
+
+if os.getenv("AWS_S3_ENDPOINT_URL", "") != "":
+    AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
+
+if os.getenv("AWS_S3_CUSTOM_DOMAIN", "") != "":
+    AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
+
+EXTRA_ALLOWED_HOSTS_TO_ATTEMPT_ADDING = []
+if "BASEROW_PUBLIC_URL" in os.environ:
+    BASEROW_PUBLIC_URL = os.getenv("BASEROW_PUBLIC_URL")
+    PUBLIC_BACKEND_URL = BASEROW_PUBLIC_URL
+    PUBLIC_WEB_FRONTEND_URL = BASEROW_PUBLIC_URL
+    if BASEROW_PUBLIC_URL == "http://localhost":
+        print(
+            "WARNING: Starting up Baserow with a default BASEROW_PUBLIC_URL of "
+            "http://localhost. If you attempt to access Baserow on any other hostname "
+            "requests to the backend will fail as they will be from an unknown host. "
+            "Please set BASEROW_PUBLIC_URL if you will be accessing Baserow "
+            "from any other URL then http://locahost."
+        )
+else:
+    PUBLIC_BACKEND_URL = os.getenv("PUBLIC_BACKEND_URL", "http://localhost:8000")
+    PUBLIC_WEB_FRONTEND_URL = os.getenv(
+        "PUBLIC_WEB_FRONTEND_URL", "http://localhost:3000"
+    )
+    if "PUBLIC_BACKEND_URL" not in os.environ:
+        print(
+            "WARNING: Starting up Baserow with a default PUBLIC_BACKEND_URL of "
+            "http://localhost:8000. If you attempt to access Baserow on any other "
+            "hostname requests to the backend will fail as they will be from an "
+            "unknown host."
+            "Please ensure you set PUBLIC_BACKEND_URL if you will be accessing "
+            "Baserow from any other URL then http://locahost."
+        )
+    if "PUBLIC_WEB_FRONTEND_URL" not in os.environ:
+        print(
+            "WARNING: Starting up Baserow with a default PUBLIC_WEB_FRONTEND_URL "
+            "of http://localhost:3000. Emails sent by Baserow will use links pointing "
+            "to http://localhost:3000 when telling users how to access your server. If "
+            "this is incorrect please ensure you have set PUBLIC_WEB_FRONTEND_URL to "
+            "the URL where users can access your Baserow server."
+        )
+
 PRIVATE_BACKEND_URL = os.getenv("PRIVATE_BACKEND_URL", "http://backend:8000")
 PUBLIC_BACKEND_HOSTNAME = urlparse(PUBLIC_BACKEND_URL).hostname
 PUBLIC_WEB_FRONTEND_HOSTNAME = urlparse(PUBLIC_WEB_FRONTEND_URL).hostname
@@ -283,6 +369,20 @@ if PUBLIC_BACKEND_HOSTNAME:
 
 if PRIVATE_BACKEND_HOSTNAME:
     ALLOWED_HOSTS.append(PRIVATE_BACKEND_HOSTNAME)
+
+for extra_host in EXTRA_ALLOWED_HOSTS_TO_ATTEMPT_ADDING:
+    try:
+        hostname = urlparse(extra_host).hostname
+        if hostname is not None:
+            ALLOWED_HOSTS.append(hostname)
+    except ValueError:
+        hostname = None
+    if hostname is None:
+        print(
+            f"Not adding {extra_host} as an ALLOWED_HOST as it is not a valid url, "
+            f"this is expected and OK for extra PUBLIC_BASEROW_URLS used to "
+            f"configure caddy."
+        )
 
 FROM_EMAIL = os.getenv("FROM_EMAIL", "no-reply@localhost")
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
@@ -357,8 +457,8 @@ FILE_UPLOAD_PERMISSIONS = None
 
 MAX_FORMULA_STRING_LENGTH = 10000
 MAX_FIELD_REFERENCE_DEPTH = 1000
-UPDATE_FORMULAS_AFTER_MIGRATION = bool(
-    os.getenv("UPDATE_FORMULAS_AFTER_MIGRATION", "yes")
+DONT_UPDATE_FORMULAS_AFTER_MIGRATION = bool(
+    os.getenv("DONT_UPDATE_FORMULAS_AFTER_MIGRATION", "")
 )
 
 WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES = 8
@@ -377,8 +477,58 @@ WEBHOOKS_REQUEST_TIMEOUT_SECONDS = 5
 # --forwarded-allow-ips='*'. See the following link for more information:
 # https://stackoverflow.com/questions/62337379/how-to-append-nginx-ip-to-x-forwarded
 # -for-in-kubernetes-nginx-ingress-controller
-# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+if bool(os.getenv("BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER", False)):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS = bool(
     os.getenv("DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS", "")
 )
+
+BASEROW_BACKEND_LOG_LEVEL = os.getenv("BASEROW_BACKEND_LOG_LEVEL", "INFO")
+BASEROW_BACKEND_DATABASE_LOG_LEVEL = os.getenv(
+    "BASEROW_BACKEND_DATABASE_LOG_LEVEL", "ERROR"
+)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "console": {
+            "format": "%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %("
+            "message)s "
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "console",
+        },
+    },
+    "loggers": {
+        "gunicorn": {
+            "level": BASEROW_BACKEND_LOG_LEVEL,
+            "handlers": ["console"],
+            "propagate": True,
+        },
+        "django": {
+            "handlers": ["console"],
+            "level": BASEROW_BACKEND_LOG_LEVEL,
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": BASEROW_BACKEND_LOG_LEVEL,
+            "propagate": True,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": BASEROW_BACKEND_DATABASE_LOG_LEVEL,
+            "propagate": True,
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": BASEROW_BACKEND_LOG_LEVEL,
+    },
+}

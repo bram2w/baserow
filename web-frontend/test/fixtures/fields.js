@@ -23,3 +23,17 @@ export function createFields(mock, application, table, fields) {
   mock.onGet(`/database/fields/table/${table.id}/`).reply(200, fieldsWithIds)
   return fieldsWithIds
 }
+
+export function createPrimaryField(data) {
+  const primaryField = {
+    id: 1,
+    name: 'Primary field',
+    type: 'text',
+    primary: true,
+  }
+
+  return {
+    ...primaryField,
+    ...data,
+  }
+}

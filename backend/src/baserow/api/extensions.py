@@ -80,7 +80,7 @@ class CustomFieldRegistryMappingSerializerExtension(MappingSerializerExtension):
             types.type: types.get_serializer_class(
                 base_class=self.target.base_class,
                 meta_ref_name=(
-                    f"{types.type} {base_ref_name}" if base_ref_name else None
+                    f"{types.type}_{base_ref_name}" if base_ref_name else None
                 ),
             )
             for types in self.target.registry.registry.values()

@@ -94,8 +94,7 @@
               "name": "Lifetime",
               "order": 8,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -120,8 +119,7 @@
               "name": "Zip Code",
               "order": 11,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1016,8 +1014,7 @@
               "name": "Amount",
               "order": 4,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {

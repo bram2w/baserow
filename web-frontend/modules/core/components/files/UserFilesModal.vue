@@ -67,18 +67,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "userFilesModal": {
-      "title": "Upload from"
-    }
-  },
-  "fr": {
-    "userFilesModal": {
-      "title": "En provenance"
-    }
-  }
-}
-</i18n>

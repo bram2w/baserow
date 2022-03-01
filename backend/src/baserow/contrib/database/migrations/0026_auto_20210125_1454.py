@@ -6,26 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0025_gridviewfieldoptions_hidden'),
+        ("database", "0025_gridviewfieldoptions_hidden"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='token',
-            name='handled_calls',
+            model_name="token",
+            name="handled_calls",
             field=models.PositiveIntegerField(
                 default=0,
-                help_text='Indicates the total amount of calls were handled using '
-                          'this token.'
+                help_text="Indicates the total amount of calls were handled using "
+                "this token.",
             ),
         ),
         migrations.AddField(
-            model_name='token',
-            name='last_call',
+            model_name="token",
+            name="last_call",
             field=models.DateTimeField(
                 blank=True,
-                help_text='Timestamp when the last call was handled using this '
-                          'token.',
-                null=True),
+                help_text="Timestamp when the last call was handled using this "
+                "token.",
+                null=True,
+            ),
         ),
     ]

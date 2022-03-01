@@ -4,6 +4,10 @@ import serveStatic from 'serve-static'
 
 import { routes } from './routes'
 import head from './head'
+import en from './locales/en.json'
+import fr from './locales/fr.json'
+import nl from './locales/nl.json'
+import de from './locales/de.json'
 
 export default function CoreModule(options) {
   /**
@@ -28,8 +32,13 @@ export default function CoreModule(options) {
   // Register new alias to the web-frontend directory.
   this.options.alias['@baserow'] = path.resolve(__dirname, '../../')
 
+  const BASEROW_PUBLIC_URL = process.env.BASEROW_PUBLIC_URL
+  if (BASEROW_PUBLIC_URL) {
+    process.env.PUBLIC_BACKEND_URL = BASEROW_PUBLIC_URL
+    process.env.PUBLIC_WEB_FRONTEND_URL = BASEROW_PUBLIC_URL
+  }
+
   // The core depends on these modules.
-  this.requireModule('@nuxtjs/axios')
   this.requireModule('cookie-universal-nuxt')
   this.requireModule([
     'nuxt-env',
@@ -38,6 +47,10 @@ export default function CoreModule(options) {
         {
           key: 'PRIVATE_BACKEND_URL',
           default: 'http://backend:8000',
+        },
+        {
+          key: 'BASEROW_DISABLE_PUBLIC_URL_CHECK',
+          default: false,
         },
         {
           key: 'PUBLIC_BACKEND_URL',
@@ -50,6 +63,15 @@ export default function CoreModule(options) {
         {
           key: 'INITIAL_TABLE_DATA_LIMIT',
           default: null,
+        },
+        {
+          // Set to `1` to force download links to download files via XHR query
+          // to bypass `Content-Disposition: inline` that can't be overridden
+          // in another way.
+          // If your files are stored under another origin, you also
+          // must add CORS headers to your server.
+          key: 'DOWNLOAD_FILE_VIA_XHR',
+          default: false,
         },
         {
           // If you change this default please also update the default for the
@@ -65,16 +87,16 @@ export default function CoreModule(options) {
     },
   ])
 
-  // Use feature flag to enable i18n
   const locales = [
-    { code: 'en', name: 'English', file: 'en.js' },
-    { code: 'fr', name: 'Français', file: 'fr.js' },
+    { code: 'en', name: 'English', file: 'en.json' },
+    { code: 'fr', name: 'Français', file: 'fr.json' },
+    { code: 'nl', name: 'Nederlands', file: 'nl.json' },
+    { code: 'de', name: 'Deutsch', file: 'de.json' },
   ]
 
   this.requireModule([
     '@nuxtjs/i18n',
     {
-      vueI18nLoader: true,
       strategy: 'no_prefix',
       defaultLocale: 'en',
       detectBrowserLanguage: {
@@ -89,6 +111,10 @@ export default function CoreModule(options) {
       },
     },
   ])
+
+  this.nuxt.hook('i18n:extend-messages', function (additionalMessages) {
+    additionalMessages.push({ en, fr, nl, de })
+  })
 
   // Serve the static directory
   // @TODO we might need to change some things here for production. (See:

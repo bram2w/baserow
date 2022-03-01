@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.urls import path, include
 
 from drf_spectacular.views import SpectacularJSONAPIView, SpectacularRedocView
@@ -15,6 +16,11 @@ from .trash import urls as trash_urls
 
 app_name = "baserow.api"
 
+
+def public_health_check(request):
+    return HttpResponse("OK")
+
+
 urlpatterns = (
     [
         path("schema.json", SpectacularJSONAPIView.as_view(), name="json_schema"),
@@ -30,6 +36,7 @@ urlpatterns = (
         path("templates/", include(templates_urls, namespace="templates")),
         path("applications/", include(application_urls, namespace="applications")),
         path("trash/", include(trash_urls, namespace="trash")),
+        path("_health/", public_health_check, name="public_health_check"),
     ]
     + application_type_registry.api_urls
     + plugin_registry.api_urls

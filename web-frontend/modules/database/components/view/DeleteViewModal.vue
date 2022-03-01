@@ -61,22 +61,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "deleteViewModal": {
-      "title": "Delete {name}",
-      "description": "Are you sure you want to delete the view {name}? The table data will be preserved, but the filters, sortings and field widths related to the view will be deleted.",
-      "delete": "Delete view"
-    }
-  },
-  "fr": {
-    "deleteViewModal": {
-      "title": "Supprimer la vue {name}",
-      "description": "Êtes-vous sur·e de vouloir supprimer la vue {name} ? Les données seront préservées, mais les filtres, tris et largeurs des champs associés à la vue seront supprimés.",
-      "delete": "Supprimer la vue"
-    }
-  }
-}
-</i18n>

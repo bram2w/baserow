@@ -118,24 +118,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "forgotPassword": {
-      "title": "Forgot password",
-      "message": "Please enter your e-mail address in the form. If we find an account then we will send an e-mail with a link to reset your password.",
-      "submit": "Send link",
-      "confirmation": "If your email address exists in our database, you will receive a password reset link at your email address in a few minutes."
-    }
-  },
-  "fr": {
-    "forgotPassword": {
-      "title": "Mot de passe oublié",
-      "message": "Veuillez saisir votre adresse email dans le formulaire. Si nous trouvons un compte correspondant, nous vous enverrons un email avec un lien pour réinitialiser votre mot de passe.",
-      "submit": "Envoyer le lien",
-      "confirmation": "Si un compte correspond à votre adresse email, vous allez recevoir un lien de réinitialisation de mot de passe sur votre messagerie d'ici quelques minutes."
-    }
-  }
-}
-</i18n>

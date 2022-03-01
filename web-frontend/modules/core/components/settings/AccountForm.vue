@@ -61,20 +61,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "accountForm": {
-      "nameLabel": "Your name",
-      "languageLabel": "Interface language"
-    }
-  },
-  "fr": {
-    "accountForm": {
-      "nameLabel": "Votre nom",
-      "languageLabel": "Langue de l'interface"
-    }
-  }
-}
-</i18n>

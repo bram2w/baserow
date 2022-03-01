@@ -7,26 +7,29 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0005_auto_20200505_1242'),
+        ("database", "0005_auto_20200505_1242"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LongTextField',
+            name="LongTextField",
             fields=[
-                ('field_ptr', models.OneToOneField(
-                    auto_created=True,
-                    on_delete=django.db.models.deletion.CASCADE,
-                    parent_link=True,
-                    primary_key=True,
-                    serialize=False,
-                    to='database.Field'
-                )),
+                (
+                    "field_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="database.Field",
+                    ),
+                ),
             ],
-            bases=('database.field',),
+            bases=("database.field",),
         ),
         migrations.AlterModelOptions(
-            name='gridviewfieldoptions',
-            options={'ordering': ('field_id',)},
+            name="gridviewfieldoptions",
+            options={"ordering": ("field_id",)},
         ),
     ]

@@ -1,0 +1,61 @@
+version: "3.4"
+services:
+  # A dev / testing /example compose file for testing cloudron image works without
+  # cloudron
+  baserow_cloudron:
+    image: baserow_cloudron
+    build:
+      dockerfile: $PWD/deploy/cloudron/Dockerfile
+      context: $PWD
+      args:
+        - FROM_IMAGE=baserow
+    environment:
+      - CLOUDRON_POSTGRESQL_PASSWORD=baserow
+      - CLOUDRON_POSTGRESQL_DATABASE=baserow
+      - CLOUDRON_POSTGRESQL_HOST=db
+      - CLOUDRON_POSTGRESQL_USERNAME=baserow
+      - CLOUDRON_POSTGRESQL_PORT=5432
+      - CLOUDRON_APP_DOMAIN=localhost
+      - CLOUDRON_MAIL_FROM=noreply@localhost
+      - CLOUDRON_MAIL_SMTP_SERVER=mailhog
+      - CLOUDRON_MAIL_SMTP_USERNAME=mailhog
+      - CLOUDRON_MAIL_SMTP_PASSWORD=mailhog
+      - CLOUDRON_MAIL_SMTP_PORT=1025
+      - BASEROW_PUBLIC_URL=http://localhost
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - baserow_cloudron_data:/app/data
+    healthcheck:
+      test: [ "CMD-SHELL", "/baserow/backend/docker/docker-entrypoint.sh backend-healthcheck" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stdin_open: true
+    tty: true
+  db:
+    # Please ensure the postgres-client's major version in the backend image is kept in
+    # sync with this major version so pg_dump remains compatible.
+    image: postgres:11.3
+    environment:
+      - POSTGRES_USER=${DATABASE_USER:-baserow}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - POSTGRES_DB=${DATABASE_NAME:-baserow}
+    healthcheck:
+      test: [ "CMD-SHELL", "su postgres -c \"pg_isready -U ${DATABASE_USER:-baserow}\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - cloudron_pgdata:/var/lib/postgresql/data
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'  # disable saving logs
+    ports:
+      - "8025:8025" # web ui
+
+volumes:
+  cloudron_pgdata:
+  baserow_cloudron_data:

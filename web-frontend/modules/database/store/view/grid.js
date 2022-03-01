@@ -119,6 +119,7 @@ export const state = () => ({
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
   public: false,
+  fieldAggregationData: {},
 })
 
 export const mutations = {
@@ -404,6 +405,19 @@ export const mutations = {
     if (index !== -1) {
       state.rows.splice(index, 1)
     }
+  },
+  SET_FIELD_AGGREGATION_DATA(state, { fieldId, value }) {
+    Vue.set(state.fieldAggregationData, fieldId, {
+      loading: false,
+      ...(state.fieldAggregationData[fieldId] || {}),
+      value,
+    })
+  },
+  SET_FIELD_AGGREGATION_DATA_LOADING(state, { fieldId, value }) {
+    Vue.set(state.fieldAggregationData, fieldId, {
+      ...(state.fieldAggregationData[fieldId] || {}),
+      loading: value,
+    })
   },
 }
 
@@ -732,7 +746,7 @@ export const actions = {
    */
   refresh(
     { dispatch, commit, getters, rootGetters },
-    { fields, primary, includeFieldOptions = false }
+    { view, fields, primary, includeFieldOptions = false }
   ) {
     const gridId = getters.getLastGridId
     if (lastRefreshRequest !== null) {
@@ -801,6 +815,9 @@ export const actions = {
             commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
           }
         }
+        dispatch('fetchAllFieldAggregationData', {
+          view,
+        })
         lastRefreshRequest = null
       })
       .catch((error) => {
@@ -885,6 +902,62 @@ export const actions = {
    */
   forceUpdateAllFieldOptions({ commit }, fieldOptions) {
     commit('UPDATE_ALL_FIELD_OPTIONS', fieldOptions)
+  },
+  async fetchFieldAggregationData({ commit, getters }, { view, fieldId }) {
+    const options = getters.getAllFieldOptions[fieldId]
+    const isPublic = getters.isPublic
+
+    if (!options?.aggregation_raw_type || isPublic) {
+      return
+    }
+
+    commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
+      fieldId,
+      value: true,
+    })
+    commit('SET_FIELD_AGGREGATION_DATA', {
+      fieldId,
+      value: null,
+    })
+
+    try {
+      const {
+        data: { value },
+      } = await GridService(this.$client).fetchFieldAggregation(
+        view.id,
+        fieldId,
+        options.aggregation_raw_type
+      )
+
+      commit('SET_FIELD_AGGREGATION_DATA', {
+        fieldId,
+        value,
+      })
+    } catch (e) {
+      // Emptied the value
+      commit('SET_FIELD_AGGREGATION_DATA', {
+        fieldId,
+        value: null,
+      })
+      throw e
+    } finally {
+      commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
+        fieldId,
+        value: false,
+      })
+    }
+  },
+  fetchAllFieldAggregationData({ dispatch, getters }, { view }) {
+    const fieldOptions = getters.getAllFieldOptions
+
+    return Promise.all(
+      Object.keys(fieldOptions).map((fieldId) => {
+        return dispatch('fetchFieldAggregationData', {
+          view,
+          fieldId,
+        })
+      })
+    )
   },
   /**
    * Updates the order of all the available field options. The provided order parameter
@@ -1035,13 +1108,16 @@ export const actions = {
         values: data,
       })
       dispatch('onRowChange', { view, row, fields, primary })
+      dispatch('fetchAllFieldAggregationData', {
+        view,
+      })
     } catch (error) {
       commit('DELETE_ROW_IN_BUFFER', row)
       throw error
     }
   },
   /**
-   * Called after a new row has been created, which could be by by the user or via
+   * Called after a new row has been created, which could be by the user or via
    * another channel. It will only add the row if it belongs inside the views and it
    * also makes sure that row will be inserted at the correct position.
    */
@@ -1056,6 +1132,10 @@ export const actions = {
     // filters and search.
     dispatch('updateMatchFilters', { view, row, fields, primary })
     dispatch('updateSearchMatchesForRow', { row, fields, primary })
+
+    dispatch('fetchAllFieldAggregationData', {
+      view,
+    })
 
     // If the row does not match the filters or the search then we don't have to add
     // it at all.
@@ -1250,6 +1330,9 @@ export const actions = {
       )
       commit('UPDATE_ROW_IN_BUFFER', { row, values: updatedRow.data })
       dispatch('onRowChange', { view, row, fields, primary })
+      dispatch('fetchAllFieldAggregationData', {
+        view,
+      })
     } catch (error) {
       commit('UPDATE_ROW_IN_BUFFER', {
         row,
@@ -1279,6 +1362,10 @@ export const actions = {
 
     dispatch('updateMatchFilters', { view, row: newRow, fields, primary })
     dispatch('updateSearchMatchesForRow', { row: newRow, fields, primary })
+
+    dispatch('fetchAllFieldAggregationData', {
+      view,
+    })
 
     const oldRowExists = oldRow._.matchFilters && oldRow._.matchSearch
     const newRowExists = newRow._.matchFilters && newRow._.matchSearch
@@ -1437,6 +1524,10 @@ export const actions = {
     // Check if that row was visible in the view.
     dispatch('updateMatchFilters', { view, row, fields, primary })
     dispatch('updateSearchMatchesForRow', { row, fields, primary })
+
+    dispatch('fetchAllFieldAggregationData', {
+      view,
+    })
 
     // If the row does not match the filters or the search then did not exist in the
     // view, so we don't have to do anything.
@@ -1717,6 +1808,9 @@ export const getters = {
       }
     })
     return order
+  },
+  getAllFieldAggregationData(state) {
+    return state.fieldAggregationData
   },
 }
 

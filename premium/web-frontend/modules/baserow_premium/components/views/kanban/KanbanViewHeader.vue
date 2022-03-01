@@ -192,22 +192,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "kanbanViewHeader": {
-      "stackBy": "Stack by",
-      "stackedBy": "Stacked by {fieldName}",
-      "customizeCards": "Customize cards"
-    }
-  },
-  "fr": {
-    "kanbanViewHeader": {
-      "stackBy": "Regrouper par",
-      "stackedBy": "Regroupé par {fieldName}",
-      "customizeCards": "Configurer les cartes"
-    }
-  }
-}
-</i18n>

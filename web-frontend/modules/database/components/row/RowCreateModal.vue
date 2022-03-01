@@ -116,18 +116,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "rowCreateModal": {
-      "addField": "add field"
-    }
-  },
-  "fr": {
-    "rowCreateModal": {
-      "addField": "Ajouter un champ"
-    }
-  }
-}
-</i18n>

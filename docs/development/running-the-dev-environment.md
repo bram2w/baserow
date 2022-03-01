@@ -25,7 +25,7 @@ so by following the instructions on https://docs.docker.com/desktop/ and
 https://docs.docker.com/compose/install/.
 
 > Docker version 19.03 is the minimum required to build Baserow. It is strongly
-> advised however that you install the latest version of Docker available: 20.10.
+> advised however that you install the latest version of Docker available.
 > Please check that your docker is up to date by running `docker -v`.
 
 You will also need git installed which you can do by following the instructions on
@@ -61,7 +61,7 @@ master branch. If you are not familiar with git clone, this will download a copy
 Baserow's code to your computer.
 
 > Note that if you have already started the
-> [running baserow locally guide](../guides/running-baserow-locally.md) once, you might
+> [running baserow locally guide](../delete/running-baserow-locally.md) once, you might
 > need to rebuild the images for the development environment by using the command
 > `docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build`
 > or just `./dev.sh build_only` because they have container name conflicts.
@@ -87,7 +87,6 @@ $ # Run ./dev.sh for more details on what it can do!
 Building backend
 ...
 Starting db    ... done
-Starting mjml    ... done
 Starting redis    ... done
 Starting backend    ... done
 Starting web-frontend   ... done
@@ -127,7 +126,7 @@ bash history to get the original command to restart the containers main process.
 
 ## Other useful commands
 
-See the [docker how to guide](../guides/baserow-docker-how-to.md) for a larger collection of
+See the [docker how to guide](../delete/baserow-docker-how-to.md) for a larger collection of
 useful operations and commands, below is a quick example of some of the more common
 ones:
 
@@ -158,8 +157,8 @@ For further reading on how to work with docker containers and django check out:
 
 ## Baserow further reading
 
-- See [introduction](../getting-started/introduction.md) for more details on Baserow's
+- See [introduction](../technical/introduction.md) for more details on Baserow's
   architecture.
-- See [baserow docker api](../reference/baserow-docker-api.md) for more detail on how
+- See [baserow docker api](../technical/baserow-docker-api.md) for more detail on how
   Baserow's docker setup can be used and configured.
 - See [dev.sh](dev_sh.md) for further detail on what dev.sh does and why

@@ -12,9 +12,15 @@ lint: eslint stylelint
 lint-javascript: lint
 
 jest:
-	yarn run jest || exit;
+	npx jest || exit;
 
 test: jest
 
+unit-test:
+	npx jest --selectProjects unit --selectProjects premium || exit;
+
+ci-test-javascript:
+	JEST_JUNIT_OUTPUT_DIR=../reports/ npx jest -i --verbose --ci --forceExit --collectCoverage --coverageDirectory="./reports/coverage/" || exit;
+
 unit-test-watch:
-	yarn run jest test/unit --watch || exit;
+	npx jest test/unit --watch || exit;

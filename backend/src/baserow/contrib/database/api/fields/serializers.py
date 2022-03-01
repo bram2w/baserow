@@ -1,4 +1,5 @@
 from django.utils.functional import lazy
+from django.core.exceptions import ValidationError
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -168,3 +169,17 @@ class FileFieldResponseSerializer(
 
     def get_instance_attr(self, instance, name):
         return instance[name]
+
+
+class MustBeEmptyField(serializers.Field):
+    def __init__(self, error_message, *args, **kwargs):
+        def validator(value):
+            raise ValidationError(error_message, code="invalid")
+
+        kwargs["write_only"] = True
+        kwargs["required"] = False
+        kwargs["validators"] = [validator]
+        super().__init__(*args, **kwargs)
+
+    def to_internal_value(self, data):
+        return None

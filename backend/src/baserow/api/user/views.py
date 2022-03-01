@@ -93,7 +93,7 @@ class ObtainJSONWebToken(RegularObtainJSONWebToken):
                 "not found."
             },
         },
-        auth=[None],
+        auth=[],
     )
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
@@ -114,7 +114,7 @@ class RefreshJSONWebToken(RegularRefreshJSONWebToken):
             200: authenticate_user_schema,
             400: {"description": "The token is invalid or expired."},
         },
-        auth=[None],
+        auth=[],
     )
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
@@ -129,7 +129,7 @@ class VerifyJSONWebToken(RegularVerifyJSONWebToken):
             200: authenticate_user_schema,
             400: {"description": "The token is invalid or expired."},
         },
-        auth=[None],
+        auth=[],
     )
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
@@ -159,7 +159,7 @@ class UserView(APIView):
             ),
             404: get_error_schema(["ERROR_GROUP_INVITATION_DOES_NOT_EXIST"]),
         },
-        auth=[None],
+        auth=[],
     )
     @transaction.atomic
     @map_exceptions(
@@ -222,7 +222,7 @@ class SendResetPasswordEmailView(APIView):
                 ["ERROR_REQUEST_BODY_VALIDATION", "ERROR_HOSTNAME_IS_NOT_ALLOWED"]
             ),
         },
-        auth=[None],
+        auth=[],
     )
     @transaction.atomic
     @validate_body(SendResetPasswordEmailBodyValidationSerializer)
@@ -268,7 +268,7 @@ class ResetPasswordView(APIView):
                 ]
             ),
         },
-        auth=[None],
+        auth=[],
     )
     @transaction.atomic
     @map_exceptions(

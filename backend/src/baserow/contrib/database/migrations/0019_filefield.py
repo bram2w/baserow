@@ -7,25 +7,25 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0018_auto_20201110_1251'),
+        ("database", "0018_auto_20201110_1251"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='FileField',
+            name="FileField",
             fields=[
                 (
-                    'field_ptr',
+                    "field_ptr",
                     models.OneToOneField(
                         auto_created=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         parent_link=True,
                         primary_key=True,
                         serialize=False,
-                        to='database.Field'
-                    )
+                        to="database.Field",
+                    ),
                 ),
             ],
-            bases=('database.field',),
+            bases=("database.field",),
         ),
     ]

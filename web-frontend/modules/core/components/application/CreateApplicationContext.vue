@@ -62,18 +62,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "createApplicationContext":{
-      "fromTemplate": "From template"
-    }
-  },
-  "fr": {
-    "createApplicationContext":{
-      "fromTemplate": "À partir d'un modèle"
-    }
-  }
-}
-</i18n>

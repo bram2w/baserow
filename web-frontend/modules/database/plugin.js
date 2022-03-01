@@ -152,9 +152,44 @@ import {
   BaserowFormulaSpecialType,
   BaserowFormulaTextType,
 } from '@baserow/modules/database/formula/formulaTypes'
+import {
+  EmptyCountViewAggregationType,
+  NotEmptyCountViewAggregationType,
+  CheckedCountViewAggregationType,
+  NotCheckedCountViewAggregationType,
+  EmptyPercentageViewAggregationType,
+  NotEmptyPercentageViewAggregationType,
+  CheckedPercentageViewAggregationType,
+  NotCheckedPercentageViewAggregationType,
+  UniqueCountViewAggregationType,
+  MinViewAggregationType,
+  MaxViewAggregationType,
+  EarliestDateViewAggregationType,
+  LatestDateViewAggregationType,
+  SumViewAggregationType,
+  AverageViewAggregationType,
+  StdDevViewAggregationType,
+  VarianceViewAggregationType,
+  MedianViewAggregationType,
+} from '@baserow/modules/database/viewAggregationTypes'
+
+import en from '@baserow/modules/database/locales/en.json'
+import fr from '@baserow/modules/database/locales/fr.json'
+import nl from '@baserow/modules/database/locales/nl.json'
+import de from '@baserow/modules/database/locales/de.json'
 
 export default (context) => {
-  const { store, app } = context
+  const { store, app, isDev } = context
+
+  // Allow locale file hot reloading in dev
+  if (isDev && app.i18n) {
+    const { i18n } = app
+    i18n.mergeLocaleMessage('en', en)
+    i18n.mergeLocaleMessage('fr', fr)
+    i18n.mergeLocaleMessage('nl', nl)
+    i18n.mergeLocaleMessage('de', de)
+  }
+
   store.registerModule('table', tableStore)
   store.registerModule('view', viewStore)
   store.registerModule('field', fieldStore)
@@ -353,6 +388,70 @@ export default (context) => {
   app.$registry.register('preview', new VideoFilePreview(context))
   app.$registry.register('preview', new PDFBrowserFilePreview(context))
   app.$registry.register('preview', new GoogleDocFilePreview(context))
+
+  app.$registry.register('viewAggregation', new MinViewAggregationType(context))
+  app.$registry.register('viewAggregation', new MaxViewAggregationType(context))
+  app.$registry.register('viewAggregation', new SumViewAggregationType(context))
+  app.$registry.register(
+    'viewAggregation',
+    new AverageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new MedianViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new StdDevViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new VarianceViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new EarliestDateViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new LatestDateViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new EmptyCountViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new NotEmptyCountViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new CheckedCountViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new NotCheckedCountViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new EmptyPercentageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new NotEmptyPercentageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new CheckedPercentageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new NotCheckedPercentageViewAggregationType(context)
+  )
+  app.$registry.register(
+    'viewAggregation',
+    new UniqueCountViewAggregationType(context)
+  )
 
   registerRealtimeEvents(app.$realtime)
 }

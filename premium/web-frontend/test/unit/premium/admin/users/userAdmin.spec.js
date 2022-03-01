@@ -87,7 +87,7 @@ describe('User Admin Component Tests', () => {
     expect(signedUpCell.text()).toBe('04/21/2021 12:04 PM')
 
     // Shown as active
-    expect(isActiveCell.text()).toBe('Active')
+    expect(isActiveCell.text()).toBe('premium.user.active')
   })
 
   test('A user with no groups is displayed without any', async () => {
@@ -140,7 +140,7 @@ describe('User Admin Component Tests', () => {
 
     const cells = ui.findCells()
     const { isActiveCell } = ui.getRow(cells, 0)
-    expect(isActiveCell.text()).toContain('Deactivated')
+    expect(isActiveCell.text()).toContain('premium.user.deactivated')
   })
 
   test('A deactivated user can be activated', async () => {
@@ -160,7 +160,7 @@ describe('User Admin Component Tests', () => {
 
     const cells = ui.findCells()
     const { isActiveCell } = ui.getRow(cells, 0)
-    expect(isActiveCell.text()).toContain('Active')
+    expect(isActiveCell.text()).toContain('premium.user.active')
   })
 
   test('A users password can be changed', async () => {
@@ -186,7 +186,7 @@ describe('User Admin Component Tests', () => {
         validPassword,
         validPassword + 'DifferentFromFirst'
       )
-    ).toContain('This field must match your password field')
+    ).toContain('changePasswordForm.error.doesntMatch')
   })
 
   test('users password cant be changed less than 8 characters', async () => {
@@ -295,9 +295,7 @@ describe('User Admin Component Tests', () => {
     const modal = await ui.changeFullName(tooShortFullName)
     const error = ui.getModalFieldErrorText(modal)
 
-    expect(error).toContain(
-      'Please enter a valid full name, it must be longer than 2 letters and less than 150.'
-    )
+    expect(error).toContain('userForm.error.invalidName')
   })
 
   test('a users full name cant be changed to more than 150 characters', async () => {
@@ -308,9 +306,7 @@ describe('User Admin Component Tests', () => {
     const modal = await ui.changeFullName(tooLongFullName)
     const error = ui.getModalFieldErrorText(modal)
 
-    expect(error).toContain(
-      'Please enter a valid full name, it must be longer than 2 letters and less than 150.'
-    )
+    expect(error).toContain('userForm.error.invalidName')
   })
 
   test('a users username be changed', async () => {
@@ -344,7 +340,7 @@ describe('User Admin Component Tests', () => {
     const modal = await ui.changeEmail(invalidEmail)
     const error = ui.getModalFieldErrorText(modal)
 
-    expect(error).toContain('Please enter a valid e-mail address.')
+    expect(error).toContain('userForm.error.invalidEmail')
   })
 
   test('changing a users username and closing without saving resets the modals form', async () => {
@@ -602,7 +598,7 @@ describe('User Admin Component Tests', () => {
     let cells = ui.findCells()
     const { isActiveCell } = ui.getRow(cells, 0)
     expect(isActiveCell.text()).toBe(
-      startingIsActive ? 'Active' : 'Deactivated'
+      startingIsActive ? 'premium.user.active' : 'premium.user.deactivated'
     )
 
     mockPremiumServer.expectUserUpdated(user, {
@@ -620,7 +616,7 @@ describe('User Admin Component Tests', () => {
     cells = ui.findCells()
     const { isActiveCell: updatedIsActiveCell } = ui.getRow(cells, 0)
     expect(updatedIsActiveCell.text()).toBe(
-      startingIsActive ? 'Deactivated' : 'Active'
+      startingIsActive ? 'premium.user.deactivated' : 'premium.user.active'
     )
   }
 

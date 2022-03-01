@@ -59,22 +59,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "deleteWebhookModal": {
-      "title": "Delete {webhookName}",
-      "deleteButton": "Delete webhook",
-      "body": "Are you sure you want to delete this webhook? You will not be able to restore it later."
-    }
-  },
-  "fr": {
-    "deleteWebhookModal": {
-      "title": "Supprimer {webhookName}",
-      "deleteButton": "Supprimer le webhook",
-      "body": "Êtes-vous sûr·e de vouloir supprimer ce webhook ? Vous ne serez plus en mesure de le restaurer par la suite."
-    }
-  }
-}
-</i18n>

@@ -1,11 +1,11 @@
 import pytest
-
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
 
-@pytest.mark.django_db
-def test_forwards_migration(data_fixture, transactional_db, django_assert_num_queries):
+# noinspection PyPep8Naming
+@pytest.mark.django_db(transaction=True)
+def test_forwards_migration(data_fixture, reset_schema_after_module):
     migrate_from = [("database", "0057_fix_invalid_type_filters_and_sorts")]
     migrate_to = [("database", "0058_fix_hanging_formula_field_metadata")]
 

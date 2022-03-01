@@ -7,7 +7,10 @@ from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
 
 from baserow.core.user_files.handler import UserFileHandler
-from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.registries import (
+    view_type_registry,
+    view_aggregation_type_registry,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GalleryViewFieldOptions
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -62,6 +65,56 @@ def test_import_export_grid_view(data_fixture):
     assert field_option.width == imported_field_option.width
     assert field_option.hidden == imported_field_option.hidden
     assert field_option.order == imported_field_option.order
+
+
+@pytest.mark.django_db
+def test_grid_view_field_type_change(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field1 = data_fixture.create_text_field(table=table)
+    field2 = data_fixture.create_text_field(table=table)
+    grid_view = data_fixture.create_grid_view(table=table, create_options=False)
+
+    field_option1 = data_fixture.create_grid_view_field_option(
+        grid_view=grid_view,
+        field=field1,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty_count",
+    )
+
+    field_option2 = data_fixture.create_grid_view_field_option(
+        grid_view=grid_view,
+        field=field2,
+        aggregation_type="",
+        aggregation_raw_type="",
+    )
+
+    field_handler = FieldHandler()
+
+    options = grid_view.get_field_options()
+    assert options[0].aggregation_raw_type == "empty_count"
+
+    # Force field incompatibility for the test
+    empty_count = view_aggregation_type_registry.get("empty_count")
+    empty_count.field_is_compatible = lambda _: False
+
+    field_handler.update_field(
+        user=user,
+        field=field1,
+        new_type_name="boolean",
+    )
+
+    # We also test a field with field option but without aggregation_raw_type
+    field_handler.update_field(
+        user=user,
+        field=field2,
+        new_type_name="boolean",
+    )
+
+    empty_count.field_is_compatible = lambda _: True
+
+    options = grid_view.get_field_options()
+    assert options[0].aggregation_raw_type == ""
 
 
 @pytest.mark.django_db

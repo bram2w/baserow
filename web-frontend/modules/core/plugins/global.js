@@ -12,6 +12,7 @@ import Error from '@baserow/modules/core/components/Error'
 import SwitchInput from '@baserow/modules/core/components/SwitchInput'
 import Copied from '@baserow/modules/core/components/Copied'
 import MarkdownIt from '@baserow/modules/core/components/MarkdownIt'
+import DownloadLink from '@baserow/modules/core/components/DownloadLink'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -37,6 +38,7 @@ Vue.component('Error', Error)
 Vue.component('SwitchInput', SwitchInput)
 Vue.component('Copied', Copied)
 Vue.component('MarkdownIt', MarkdownIt)
+Vue.component('DownloadLink', DownloadLink)
 
 Vue.filter('lowercase', lowercase)
 Vue.filter('uppercase', uppercase)

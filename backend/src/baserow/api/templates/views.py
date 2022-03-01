@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -93,6 +95,7 @@ class InstallTemplateView(APIView):
             TemplateFileDoesNotExist: ERROR_TEMPLATE_FILE_DOES_NOT_EXIST,
         }
     )
+    @transaction.atomic
     def get(self, request, group_id, template_id):
         """Install a template into a group."""
 

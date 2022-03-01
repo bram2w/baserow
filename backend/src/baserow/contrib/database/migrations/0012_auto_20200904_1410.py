@@ -7,75 +7,73 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0011_link_row_column_name_fix'),
+        ("database", "0011_link_row_column_name_fix"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='view',
-            name='filter_type',
+            model_name="view",
+            name="filter_type",
             field=models.CharField(
-                choices=[
-                    ('AND', 'And'),
-                    ('OR', 'Or')
-                ],
-                default='AND',
+                choices=[("AND", "And"), ("OR", "Or")],
+                default="AND",
                 max_length=3,
-                help_text='Indicates whether all the rows should apply to all filters '
-                          '(AND) or to any filter (OR).'
+                help_text="Indicates whether all the rows should apply to all filters "
+                "(AND) or to any filter (OR).",
             ),
         ),
         migrations.CreateModel(
-            name='ViewFilter',
+            name="ViewFilter",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID'
-                    )
+                        verbose_name="ID",
+                    ),
                 ),
                 (
-                    'type', models.CharField(
+                    "type",
+                    models.CharField(
                         max_length=48,
                         help_text="Indicates how the field's value must be compared "
-                                  "to the filter's value. The filter is always in this "
-                                  "order `field` `type` `value` (example: `field_1` "
-                                  "`contains` `Test`)."
-                    )
+                        "to the filter's value. The filter is always in this "
+                        "order `field` `type` `value` (example: `field_1` "
+                        "`contains` `Test`).",
+                    ),
                 ),
                 (
-                    'value',
+                    "value",
                     models.CharField(
                         blank=True,
                         max_length=255,
                         help_text="The filter value that must be compared to the "
-                                  "field's value."
-                    )
+                        "field's value.",
+                    ),
                 ),
                 (
-                    'field',
+                    "field",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='database.Field',
+                        to="database.Field",
                         help_text="The field of which the value must be compared to "
-                                  "the filter value."
-                    )
+                        "the filter value.",
+                    ),
                 ),
                 (
-                    'view',
+                    "view",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='database.View',
-                        help_text='The view to which the filter applies. Each view '
-                                  'can have his own filters.'
-                    )
+                        to="database.View",
+                        help_text="The view to which the filter applies. Each view "
+                        "can have his own filters.",
+                    ),
                 ),
             ],
             options={
-                'ordering': ('id',),
+                "ordering": ("id",),
             },
         ),
     ]

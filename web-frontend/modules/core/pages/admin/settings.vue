@@ -48,6 +48,28 @@
             >
           </div>
         </div>
+        <div v-if="!settings.allow_new_signups" class="admin-settings__item">
+          <div class="admin-settings__label">
+            <div class="admin-settings__name">
+              {{ $t('settings.settingAllowSignupsViaGroupInvitationsName') }}
+            </div>
+            <div class="admin-settings__description">
+              {{
+                $t('settings.settingAllowSignupsViaGroupInvitationDescription')
+              }}
+            </div>
+          </div>
+          <div class="admin-settings__control">
+            <SwitchInput
+              :value="settings.allow_signups_via_group_invitations"
+              :large="true"
+              @input="
+                updateSettings({ allow_signups_via_group_invitations: $event })
+              "
+              >{{ $t('settings.enabled') }}</SwitchInput
+            >
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -86,30 +108,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "settings":{
-      "settingsTitle": "Admin settings",
-      "baserowInstanceId": "Instance ID",
-      "instanceIdDescription": "The instance ID is the unique identifier of your Baserow copy.",
-      "groupSignupRestrictions": "Signup restrictions",
-      "settingAllowNewAccountsName": "Allow creating new accounts",
-      "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
-      "enabled": "enabled"
-    }
-  },
-  "fr":{
-    "settings":{
-      "settingsTitle": "Paramètres",
-      "baserowInstanceId": "Identifiant de l'instance de Baserow",
-      "instanceIdDescription": "Cet identifiant permet de désigner de manière unique votre instance de Baserow.",
-      "groupSignupRestrictions": "Restriction de création des comptes",
-      "settingAllowNewAccountsName": "Autoriser la création de compte",
-      "settingAllowNewAccountsDescription": "Par défaut, tout les visiteurs peuvent créer un compte sur votre instance de Baserow.",
-      "enabled": "Autoriser"
-    }
-  }
-}
-</i18n>

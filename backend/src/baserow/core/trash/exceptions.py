@@ -22,3 +22,10 @@ class CannotDeleteAlreadyDeletedItem(Exception):
     """
     Raised when attempting to delete an item which has already been deleted.
     """
+
+
+class RelatedTableTrashedException(Exception):
+    """
+    Raised when attempting to restore a trashed field because one of its related fields
+    is in a trashed table.
+    """

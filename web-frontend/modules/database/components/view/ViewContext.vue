@@ -1,7 +1,7 @@
 <template>
   <Context ref="context">
     <ul class="context__menu">
-      <li>
+      <li v-if="hasValidExporter">
         <a @click="exportView()">
           <i class="context__menu-icon fas fa-fw fa-file-export"></i>
           {{ $t('viewContext.exportView') }}
@@ -10,7 +10,7 @@
       <li>
         <a @click="openWebhookModal()">
           <i class="context__menu-icon fas fa-fw fa-globe"></i>
-          Webhooks
+          {{ $t('viewContext.webhooks') }}
         </a>
       </li>
       <li>
@@ -34,6 +34,8 @@
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
+import viewTypeHasExporterTypes from '@baserow/modules/database/utils/viewTypeHasExporterTypes'
+
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 import DeleteViewModal from './DeleteViewModal'
 import WebhookModal from '@baserow/modules/database/components/webhook/WebhookModal.vue'
@@ -50,6 +52,11 @@ export default {
     table: {
       type: Object,
       required: true,
+    },
+  },
+  computed: {
+    hasValidExporter() {
+      return viewTypeHasExporterTypes(this.view.type, this.$registry)
     },
   },
   methods: {
@@ -75,22 +82,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "viewContext": {
-      "exportView": "Export view",
-      "renameView": "Rename view",
-      "deleteView": "Delete view"
-    }
-  },
-  "fr": {
-    "viewContext": {
-      "exportView": "Exporter la vue",
-      "renameView": "Renommer la vue",
-      "deleteView": "Supprimer la vue"
-    }
-  }
-}
-</i18n>

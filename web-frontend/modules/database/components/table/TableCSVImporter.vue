@@ -196,7 +196,7 @@ export default {
             // We need at least a single entry otherwise the user has probably chosen
             // a wrong file.
             this.values.data = ''
-            this.error = this.$i18n.$t('tableCSVImporter.emptyCSV')
+            this.error = this.$t('tableCSVImporter.emptyCSV')
             this.preview = {}
           } else {
             // If parsed successfully and it is not empty then the initial data can be
@@ -223,38 +223,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "tableCSVImporter": {
-      "chooseFileLabel": "Choose CSV file",
-      "chooseFileDescription": "You can import an existing CSV by uploading the .CSV file with tabular data. Most spreadsheet applications will allow you to export your spreadsheet as a .CSV file.",
-      "chooseFile": "Choose CSV file",
-      "columnSeparator": "Column separator",
-      "recordSeparator": "record separator",
-      "unitSeparator": "unit separator",
-      "encoding": "Encoding",
-      "firstRowHeader": "First row is header",
-      "limitFileSize": "The maximum file size is {limit}MB.",
-      "limitError": "It is not possible to import more than {limit} rows.",
-      "emptyCSV": "This CSV file is empty."
-    }
-  },
-  "fr": {
-    "tableCSVImporter": {
-      "chooseFileLabel": "Choisissez un fichier CSV",
-      "chooseFileDescription": "Vous pouvez importer un CSV existant en envoyant un fichier .CSV avec des données tabulaires. La plupart des tableurs sont capables de réaliser un export au format CSV.",
-      "chooseFile": "Choisir un fichier CSV",
-      "columnSeparator": "Sép. de colonne",
-      "recordSeparator": "Sép. d'enregistrement",
-      "unitSeparator": "séparateur d'unité",
-      "encoding": "Encodage",
-      "firstRowHeader": "La première ligne est l'entête",
-      "limitFileSize": "La taille maximum du fichier est de {limit}Mo.",
-      "limitError": "Il n'est pas possible d'importer plus de {limit} lignes.",
-      "emptyCSV": "Ce fichier CSV est vide."
-    }
-  }
-}
-</i18n>

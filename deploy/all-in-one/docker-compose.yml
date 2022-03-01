@@ -1,0 +1,28 @@
+version: "3.4"
+services:
+  # A dev / testing /example compose file for quickly setting up an all in one
+  baserow_all_in_one:
+    image: baserow
+    build:
+      dockerfile: $PWD/deploy/all-in-one/Dockerfile
+      context: $PWD
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - baserow_all_in_one_data:/baserow/data
+    healthcheck:
+      test: [ "CMD-SHELL", "/baserow/backend/docker/docker-entrypoint.sh backend-healthcheck" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stdin_open: true
+    tty: true
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'  # disable saving logs
+    ports:
+      - "8025:8025" # web ui
+volumes:
+  baserow_all_in_one_data:

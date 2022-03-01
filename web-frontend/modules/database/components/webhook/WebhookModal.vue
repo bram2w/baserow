@@ -97,22 +97,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "webhookModal": {
-      "title": "{name} webhooks",
-      "createWebhook": "Create webhook",
-      "backToList": "Back to list"
-    }
-  },
-  "fr": {
-    "webhookModal": {
-      "title": "Webhooks de {name}",
-      "createWebhook": "Ajouter un webhook",
-      "backToList": "Retour à la liste"
-    }
-  }
-}
-</i18n>

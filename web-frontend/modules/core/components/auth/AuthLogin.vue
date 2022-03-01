@@ -106,6 +106,33 @@ export default {
       this.credentials.email = this.invitation.email
     }
   },
+  async mounted() {
+    if (!this.$env.BASEROW_DISABLE_PUBLIC_URL_CHECK) {
+      const publicBackendUrl = new URL(this.$env.PUBLIC_BACKEND_URL)
+      if (publicBackendUrl.host !== window.location.host) {
+        // If the host of the browser location does not match the PUBLIC_BACKEND_URL
+        // then we are probably mis-configured.
+        try {
+          // Attempt to connect to the backend using the configured PUBLIC_BACKEND_URL
+          // just in-case it is actually configured correctly.
+          await this.$client.get('_health')
+        } catch (error) {
+          const publicBackendUrlWithProto =
+            publicBackendUrl.protocol + '//' + publicBackendUrl.host
+          const browserWindowUrl = location.protocol + '//' + location.host
+          this.showError(
+            'Backend URL mis-configuration detected',
+            `Cannot connect to the backend at ${publicBackendUrlWithProto}.` +
+              ` You visited Baserow at ${browserWindowUrl} ` +
+              ' which indicates you have mis-configured the Baserow ' +
+              ' BASEROW_PUBLIC_URL or PUBLIC_BACKEND_URL environment variables. ' +
+              ' Please visit https://baserow.io/docs/debugging-connection-issues ' +
+              ' on how to fix this error.'
+          )
+        }
+      }
+    }
+  },
   methods: {
     async login() {
       this.$v.$touch()
@@ -179,38 +206,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "error":{
-      "passwordRequired": "A password is required.",
-      "invalidEmail": "Please enter a valid e-mail address.",
-      "disabledAccountTitle": "Account disabled",
-      "disabledAccountMessage": "This user account has been disabled.",
-      "incorrectCredentialTitle": "Incorrect credentials",
-      "incorrectCredentialMessage": "The provided e-mail address or password is incorrect."
-    },
-    "field":{
-      "password": "Password"
-    },
-    "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} has invited you to join {group}."
-  },
-  "fr": {
-    "error":{
-      "passwordRequired": "Le mot de passe est obligatoire.",
-      "invalidEmail": "Veuillez entrer une adresse électronique valide.",
-      "disabledAccountTitle": "Compte désactivé",
-      "disabledAccountMessage": "Ce compte utilisateur est desactivé.",
-      "incorrectCredentialTitle": "Identifiants incorrects",
-      "incorrectCredentialMessage": "L'adresse éléctronique et/ou le mot de passe sont incorrects."
-    },
-    "field":{
-      "password": "Mot de passe"
-    },
-    "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le groupe {group}."
-  }
-}
-</i18n>

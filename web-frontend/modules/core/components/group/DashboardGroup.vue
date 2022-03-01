@@ -108,20 +108,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "dashboardGroup":{
-      "showMembers": "Members",
-      "createApplication": "Create new"
-    }
-  },
-  "fr":{
-    "dashboardGroup":{
-      "showMembers": "Membres",
-      "createApplication": "Créer"
-    }
-  }
-}
-</i18n>

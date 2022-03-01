@@ -4,6 +4,7 @@ from typing import Dict, Any, Union
 from django.db import models
 from django.db.models import Q, F
 
+from baserow.contrib.database.table.cache import generated_models_cache
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
@@ -25,6 +26,8 @@ from baserow.core.mixins import (
     TrashableModelMixin,
 )
 from baserow.core.utils import split_comma_separated_string
+
+from .cache import table_model_cache_entry_key
 
 deconstruct_filter_key_regex = re.compile(r"filter__field_([0-9]+)__([a-zA-Z0-9_]*)$")
 
@@ -341,6 +344,10 @@ class Table(
     class Meta:
         ordering = ("order",)
 
+    @property
+    def cache_key(self):
+        return table_model_cache_entry_key(self.id)
+
     @classmethod
     def get_last_order(cls, database):
         queryset = Table.objects.filter(database=database)
@@ -358,6 +365,7 @@ class Table(
         manytomany_models=None,
         add_dependencies=True,
         managed=False,
+        use_cache=True,
     ) -> GeneratedTableModel:
         """
         Generates a temporary Django model based on available fields that belong to
@@ -389,6 +397,8 @@ class Table(
             Only in very specific limited situations should this be enabled as
             generally Baserow itself manages most aspects of returned generated models.
         :type managed: bool
+        :param use_cache: Indicates whether a cached model can be used.
+        :type use_cache: bool
         :return: The generated model.
         :rtype: Model
         """
@@ -411,7 +421,10 @@ class Table(
                 "app_label": app_label,
                 "ordering": ["order", "id"],
                 "indexes": [
-                    models.Index(fields=["order", "id"]),
+                    models.Index(
+                        fields=["order", "id"],
+                        name=self.get_collision_safe_order_id_idx_name(),
+                    ),
                 ],
             },
         )
@@ -437,13 +450,6 @@ class Table(
             # An indication that the model is a generated table model.
             "_generated_table_model": True,
             "_table_id": self.id,
-            "_primary_field_id": -1,
-            # An object containing the table fields, field types and the chosen names
-            # with the table field id as key.
-            "_field_objects": {},
-            # An object containing the trashed table fields, field types and the chosen
-            # names with the table field id as key.
-            "_trashed_field_objects": {},
             # We are using our own table model manager to implement some queryset
             # helpers.
             "objects": TableModelManager(),
@@ -457,97 +463,129 @@ class Table(
             "__str__": __str__,
         }
 
-        # Construct a query to fetch all the fields of that table. We need to include
-        # any trashed fields so the created model still has them present as the column
-        # is still actually there. If the model did not have the trashed field
-        # attributes then model.objects.create will fail as the trashed columns will
-        # be given null values by django triggering not null constraints in the
-        # database.
-        fields_query = self.field_set(manager="objects_and_trash").all()
+        use_cache = (
+            use_cache
+            and len(fields) == 0
+            and field_ids is None
+            and add_dependencies is True
+            and attribute_names is False
+        )
 
-        # If the field ids are provided we must only fetch the fields of which the ids
-        # are in that list.
-        if isinstance(field_ids, list):
-            if len(field_ids) == 0:
-                fields_query = []
-            else:
-                fields_query = fields_query.filter(pk__in=field_ids)
+        field_attrs = generated_models_cache.get(self.cache_key)
+        if field_attrs is None or not use_cache:
+            if use_cache and hasattr(generated_models_cache, "lock"):
+                cache_lock = generated_models_cache.lock(self.cache_key)
+                cache_lock.acquire()
 
-        # If the field names are provided we must only fetch the fields of which the
-        # user defined name is in that list.
-        if isinstance(field_names, list):
-            if len(field_names) == 0:
-                fields_query = []
-            else:
-                fields_query = fields_query.filter(name__in=field_names)
-
-        # Create a combined list of fields that must be added and belong to the this
-        # table.
-        fields = list(fields) + [field for field in fields_query]
-
-        # If there are duplicate field names we have to store them in a list so we know
-        # later which ones are duplicate.
-        duplicate_field_names = []
-
-        already_included_field_names = set([f.name for f in fields])
-
-        # We will have to add each field to with the correct field name and model field
-        # to the attribute list in order for the model to work.
-        while len(fields) > 0:
-            field = fields.pop(0)
-            trashed = field.trashed
-            field = field.specific
-            field_type = field_type_registry.get_by_model(field)
-            field_name = field.db_column
-
-            if filtered and add_dependencies:
-                direct_dependencies = (
-                    FieldDependencyHandler.get_same_table_dependencies(field)
-                )
-                for f in direct_dependencies:
-                    if f.name not in already_included_field_names:
-                        fields.append(f)
-                        already_included_field_names.add(f.name)
-
-            # If attribute_names is True we will not use 'field_{id}' as attribute name,
-            # but we will rather use a name the user provided.
-            if attribute_names:
-                field_name = field.model_attribute_name
-                if trashed:
-                    field_name = f"trashed_{field_name}"
-                # If the field name already exists we will append '_field_{id}' to each
-                # entry that is a duplicate.
-                if field_name in attrs:
-                    duplicate_field_names.append(field_name)
-                    replaced_field_name = f"{field_name}_{attrs[field_name].db_column}"
-                    attrs[replaced_field_name] = attrs.pop(field_name)
-                if field_name in duplicate_field_names:
-                    field_name = f"{field_name}_{field.db_column}"
-
-            field_objects_dict = (
-                "_trashed_field_objects" if trashed else "_field_objects"
-            )
-            # Add the generated objects and information to the dict that
-            # optionally can be returned. We exclude trashed fields here so they
-            # are not displayed by baserow anywhere.
-            attrs[field_objects_dict][field.id] = {
-                "field": field,
-                "type": field_type,
-                "name": field_name,
+            field_attrs = {
+                "_primary_field_id": -1,
+                # An object containing the table fields, field types and the chosen
+                # names with the table field id as key.
+                "_field_objects": {},
+                # An object containing the trashed table fields, field types and the
+                # chosen names with the table field id as key.
+                "_trashed_field_objects": {},
             }
-            if field.primary:
-                attrs["_primary_field_id"] = field.id
 
-            # Add the field to the attribute dict that is used to generate the
-            # model. All the kwargs that are passed to the `get_model_field`
-            # method are going to be passed along to the model field.
-            extra_kwargs = {}
-            attrs[field_name] = field_type.get_model_field(
-                field,
-                db_column=field.db_column,
-                verbose_name=field.name,
-                **extra_kwargs,
-            )
+            # Construct a query to fetch all the fields of that table. We need to
+            # include any trashed fields so the created model still has them present
+            # as the column is still actually there. If the model did not have the
+            # trashed field attributes then model.objects.create will fail as the
+            # trashed columns will be given null values by django triggering not null
+            # constraints in the database.
+            fields_query = self.field_set(manager="objects_and_trash").all()
+
+            # If the field ids are provided we must only fetch the fields of which the
+            # ids are in that list.
+            if isinstance(field_ids, list):
+                if len(field_ids) == 0:
+                    fields_query = []
+                else:
+                    fields_query = fields_query.filter(pk__in=field_ids)
+
+            # If the field names are provided we must only fetch the fields of which the
+            # user defined name is in that list.
+            if isinstance(field_names, list):
+                if len(field_names) == 0:
+                    fields_query = []
+                else:
+                    fields_query = fields_query.filter(name__in=field_names)
+
+            # Create a combined list of fields that must be added and belong to the this
+            # table.
+            fields = list(fields) + [field for field in fields_query]
+
+            # If there are duplicate field names we have to store them in a list so we
+            # know later which ones are duplicate.
+            duplicate_field_names = []
+
+            already_included_field_names = set([f.name for f in fields])
+
+            # We will have to add each field to with the correct field name and model
+            # field to the attribute list in order for the model to work.
+            while len(fields) > 0:
+                field = fields.pop(0)
+                trashed = field.trashed
+                field = field.specific
+                field_type = field_type_registry.get_by_model(field)
+                field_name = field.db_column
+
+                if filtered and add_dependencies:
+                    direct_dependencies = (
+                        FieldDependencyHandler.get_same_table_dependencies(field)
+                    )
+                    for f in direct_dependencies:
+                        if f.name not in already_included_field_names:
+                            fields.append(f)
+                            already_included_field_names.add(f.name)
+
+                # If attribute_names is True we will not use 'field_{id}' as attribute
+                # name, but we will rather use a name the user provided.
+                if attribute_names:
+                    field_name = field.model_attribute_name
+                    if trashed:
+                        field_name = f"trashed_{field_name}"
+                    # If the field name already exists we will append '_field_{id}' to
+                    # each entry that is a duplicate.
+                    if field_name in field_attrs:
+                        duplicate_field_names.append(field_name)
+                        replaced_field_name = (
+                            f"{field_name}_{field_attrs[field_name].db_column}"
+                        )
+                        field_attrs[replaced_field_name] = field_attrs.pop(field_name)
+                    if field_name in duplicate_field_names:
+                        field_name = f"{field_name}_{field.db_column}"
+
+                field_objects_dict = (
+                    "_trashed_field_objects" if trashed else "_field_objects"
+                )
+                # Add the generated objects and information to the dict that
+                # optionally can be returned. We exclude trashed fields here so they
+                # are not displayed by baserow anywhere.
+                field_attrs[field_objects_dict][field.id] = {
+                    "field": field,
+                    "type": field_type,
+                    "name": field_name,
+                }
+                if field.primary:
+                    field_attrs["_primary_field_id"] = field.id
+
+                # Add the field to the attribute dict that is used to generate the
+                # model. All the kwargs that are passed to the `get_model_field`
+                # method are going to be passed along to the model field.
+                extra_kwargs = {}
+                field_attrs[field_name] = field_type.get_model_field(
+                    field,
+                    db_column=field.db_column,
+                    verbose_name=field.name,
+                    **extra_kwargs,
+                )
+
+            if use_cache:
+                # This also releases the lock
+                generated_models_cache.set(self.cache_key, field_attrs, timeout=None)
+
+        attrs.update(**field_attrs)
 
         # Create the model class.
         model = type(
@@ -576,3 +614,9 @@ class Table(
             )
 
         return model
+
+    # Use our own custom index name as the default models.Index
+    # naming scheme causes 5+ collisions on average per 1000 new
+    # tables.
+    def get_collision_safe_order_id_idx_name(self):
+        return f"tbl_order_id_{self.id}_idx"

@@ -169,22 +169,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "gridViewRow": {
-      "rowNotMatchingFilters": "Row does not match filters",
-      "rowNotMatchingSearch": "Row does not match search",
-      "rowHasMoved": "Row has moved"
-    }
-  },
-  "fr":{
-    "gridViewRow": {
-      "rowNotMatchingFilters": "La ligne est filtrée",
-      "rowNotMatchingSearch": "La ligne ne contient pas le terme recherché",
-      "rowHasMoved": "La ligne est déplacée"
-    }
-  }
-}
-</i18n>

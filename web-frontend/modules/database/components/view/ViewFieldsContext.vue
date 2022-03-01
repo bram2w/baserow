@@ -214,26 +214,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "viewFieldsContext": {
-      "coverField": "Cover field",
-      "noCover": "No cover",
-      "search": "Search fields",
-      "hideAll": "Hide all",
-      "showAll": "Show all"
-    }
-  },
-  "fr":{
-    "viewFieldsContext": {
-      "coverField": "Image d'en-tête",
-      "noCover": "Pas d'en-tête",
-      "search": "Chercher un champ",
-      "hideAll": "Masquer tout",
-      "showAll": "Afficher tout"
-    }
-  }
-}
-</i18n>

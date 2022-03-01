@@ -85,26 +85,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "tableCSVExporter": {
-      "columnSeparatorLabel": "Column separator",
-      "recordSeparator": "record separator",
-      "unitSeparator": "unit separator",
-      "encodingLabel": "Encoding",
-      "firstRowIsHeaderLabel": "First row is header"
-    }
-  },
-  "fr": {
-    "tableCSVExporter": {
-      "columnSeparatorLabel": "Séparateur de colonne",
-      "recordSeparator": "Sép. d'enregistrement",
-      "unitSeparator": "Sép. d'unité",
-      "encodingLabel": "Encodage",
-      "firstRowIsHeaderLabel": "La première ligne contient l'entête"
-    }
-  }
-}
-</i18n>

@@ -30,3 +30,10 @@ ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM = (
     HTTP_400_BAD_REQUEST,
     "This item has already been deleted.",
 )
+
+ERROR_CANT_RESTORE_AS_RELATED_TABLE_TRASHED = (
+    "ERROR_CANT_RESTORE_AS_RELATED_TABLE_TRASHED",
+    HTTP_400_BAD_REQUEST,
+    "This field cannot be restored as it depends on another table which is still "
+    "trashed.",
+)

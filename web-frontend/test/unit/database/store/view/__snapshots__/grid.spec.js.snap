@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Grid view store fetchAllFieldAggregationData 1`] = `"Request failed with status code 500"`;

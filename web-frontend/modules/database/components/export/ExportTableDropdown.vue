@@ -50,18 +50,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "exportTableDropdown": {
-      "exportEntireTable": "Export entire table"
-    }
-  },
-  "fr": {
-    "exportTableDropdown": {
-      "exportEntireTable": "Exporter la table entière"
-    }
-  }
-}
-</i18n>

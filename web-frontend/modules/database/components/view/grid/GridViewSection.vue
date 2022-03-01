@@ -10,6 +10,7 @@
         :include-add-field="includeAddField"
         :read-only="readOnly"
         :store-prefix="storePrefix"
+        @field-created="$emit('field-created', $event)"
         @refresh="$emit('refresh', $event)"
         @dragging="
           canOrderFields &&
@@ -45,6 +46,20 @@
       </div>
       <div class="grid-view__foot">
         <slot name="foot"></slot>
+        <template v-if="!publicGrid">
+          <div
+            v-for="field in fields"
+            :key="field.id"
+            :style="{ width: getFieldWidth(field.id) + 'px' }"
+          >
+            <GridViewFieldFooter
+              :field="field"
+              :view="view"
+              :store-prefix="storePrefix"
+              :read-only="readOnly"
+            />
+          </div>
+        </template>
       </div>
     </div>
     <GridViewFieldDragging
@@ -69,6 +84,7 @@ import GridViewRows from '@baserow/modules/database/components/view/grid/GridVie
 import GridViewRowAdd from '@baserow/modules/database/components/view/grid/GridViewRowAdd'
 import GridViewFieldDragging from '@baserow/modules/database/components/view/grid/GridViewFieldDragging'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
+import GridViewFieldFooter from '@baserow/modules/database/components/view/grid/GridViewFieldFooter'
 
 export default {
   name: 'GridViewSection',
@@ -78,6 +94,7 @@ export default {
     GridViewRows,
     GridViewRowAdd,
     GridViewFieldDragging,
+    GridViewFieldFooter,
   },
   mixins: [gridViewHelpers],
   props: {

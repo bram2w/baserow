@@ -34,18 +34,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "webhookList": {
-      "noWebhooksMessage": "You have not created any webhooks yet. Webhooks can be used in order to inform 3rd party systems when a row in Baserow has been created, updated or deleted."
-    }
-  },
-  "fr": {
-    "webhookList": {
-      "noWebhooksMessage": "Vous n'avez pas encore créé de webhook. Les webhooks peuvent être utilisés afin d'informer un système tiers quand une ligne a été créée, modifiée, supprimée dans Baserow."
-    }
-  }
-}
-</i18n>

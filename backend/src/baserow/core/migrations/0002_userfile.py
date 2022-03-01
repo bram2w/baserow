@@ -9,41 +9,41 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UserFile',
+            name="UserFile",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID'
-                    )
+                        verbose_name="ID",
+                    ),
                 ),
-                ('original_name', models.CharField(max_length=255)),
-                ('original_extension', models.CharField(max_length=64)),
-                ('unique', models.CharField(max_length=32)),
-                ('size', models.PositiveIntegerField()),
-                ('mime_type', models.CharField(max_length=127, blank=True)),
-                ('is_image', models.BooleanField(default=False)),
-                ('image_width', models.PositiveSmallIntegerField(null=True)),
-                ('image_height', models.PositiveSmallIntegerField(null=True)),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
-                ('sha256_hash', models.CharField(db_index=True, max_length=64)),
+                ("original_name", models.CharField(max_length=255)),
+                ("original_extension", models.CharField(max_length=64)),
+                ("unique", models.CharField(max_length=32)),
+                ("size", models.PositiveIntegerField()),
+                ("mime_type", models.CharField(max_length=127, blank=True)),
+                ("is_image", models.BooleanField(default=False)),
+                ("image_width", models.PositiveSmallIntegerField(null=True)),
+                ("image_height", models.PositiveSmallIntegerField(null=True)),
+                ("uploaded_at", models.DateTimeField(auto_now_add=True)),
+                ("sha256_hash", models.CharField(db_index=True, max_length=64)),
                 (
-                    'uploaded_by',
+                    "uploaded_by",
                     models.ForeignKey(
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        to=settings.AUTH_USER_MODEL
-                    )
+                        to=settings.AUTH_USER_MODEL,
+                    ),
                 ),
             ],
-            options={'ordering': ('id',)}
+            options={"ordering": ("id",)},
         ),
     ]

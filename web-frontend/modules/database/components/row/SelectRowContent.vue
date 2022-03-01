@@ -276,23 +276,8 @@ export default {
      * Focuses the search field when the component mounts.
      */
     focusSearch() {
-      this.$refs.search.focus()
+      this.$refs.search?.focus()
     },
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "selectRowContent": {
-      "search": "Search rows"
-    }
-  },
-  "fr": {
-    "selectRowContent": {
-      "search": "Rechercher dans la table"
-    }
-  }
-}
-</i18n>

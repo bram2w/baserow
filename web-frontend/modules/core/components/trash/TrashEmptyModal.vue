@@ -63,28 +63,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "trashEmptyModal": {
-      "titleIsTrashed": "Are you sure you want to permanently delete {name}?",
-      "titleIsNotTrashed": "Are you sure you want to empty the trash of {name}?",
-      "messageIsTrashed": "This will permanently delete it and all of its contents. After which they cannot be recovered.",
-      "messageIsNotTrashed": "This will permanently delete the listed items. After which they cannot be recovered.",
-      "buttonIsTrashed": "Permanently delete",
-      "buttonIsNotTrashed": "Empty"
-    }
-  },
-  "fr": {
-    "trashEmptyModal": {
-      "titleIsTrashed": "Êtes-vous sûr·e de vouloir supprimer définitivement {name} ?",
-      "titleIsNotTrashed": "Êtes-vous sûr·e de vouloir vider la corbeille de {name} ?",
-      "messageIsTrashed": "Cette action va tout supprimer définitivement ainsi que tout son contenu. Vous ne serez plus en mesure de le restaurer.",
-      "messageIsNotTrashed": "Cette action va supprimer définitivement les éléments listés. Vous ne serez plus en mesure de les restaurer.",
-      "buttonIsTrashed": "Supprimer définitivement",
-      "buttonIsNotTrashed": "Vider"
-    }
-  }
-}
-</i18n>

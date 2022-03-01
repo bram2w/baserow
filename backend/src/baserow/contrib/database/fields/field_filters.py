@@ -110,12 +110,12 @@ def contains_filter(field_name, value, model_field, _) -> OptionallyAnnotatedQ:
     if value == "":
         return Q()
     # Check if the model_field accepts the value.
+    # noinspection PyBroadException
     try:
         model_field.get_prep_value(value)
         return Q(**{f"{field_name}__icontains": value})
     except Exception:
-        pass
-    return Q()
+        return Q()
 
 
 def filename_contains_filter(field_name, value, _, field) -> OptionallyAnnotatedQ:
@@ -149,8 +149,9 @@ def _build_filename_contains_raw_query(field, value):
         FROM JSONB_ARRAY_ELEMENTS("field_{field.id}") as attached_files
         WHERE UPPER(attached_files ->> 'visible_name') LIKE UPPER(%s)
     )
-"""
-    return RawSQL(
+"""  # nosec
+    # No user input goes into the sql constructed + escaped param is used so safe.
+    return RawSQL(  # nosec
         num_files_with_name_like_value,
         params=[f"%{value}%"],
         output_field=BooleanField(),

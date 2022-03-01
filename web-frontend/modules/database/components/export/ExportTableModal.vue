@@ -167,24 +167,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "exportTableModal": {
-      "failedTitle": "Export Failed",
-      "failedDescription": "The export failed due to a server error.",
-      "cancelledTitle": "Export Cancelled",
-      "cancelledDescription": "The export was cancelled."
-    }
-  },
-  "fr": {
-    "exportTableModal": {
-      "failedTitle": "L'export a échoué",
-      "failedDescription": "L'export n'a pas pu aboutir en raison d'une erreur serveur.",
-      "cancelledTitle": "Export annulé",
-      "cancelledDescription": "L'export a été annulé."
-    }
-  }
-}
-</i18n>

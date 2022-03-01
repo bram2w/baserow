@@ -137,14 +137,14 @@ def test_rating_field_modification(data_fixture):
     integer_field = data_fixture.create_number_field(
         table=table,
         name="integer",
-        number_type="INTEGER",
+        number_decimal_places=0,
         number_negative=True,
     )
 
     decimal_field = data_fixture.create_number_field(
         table=table,
         name="decimal",
-        number_type="DECIMAL",
+        number_decimal_places=1,
         number_negative=True,
     )
 
@@ -267,14 +267,13 @@ def test_rating_field_modification(data_fixture):
         user=user,
         field=integer_field,
         new_type_name="number",
-        number_type="INTEGER",
+        number_decimal_places=0,
         number_negative=True,
     )
     field_handler.update_field(
         user=user,
         field=decimal_field,
         new_type_name="number",
-        number_type="DECIMAL",
         number_negative=True,
         number_decimal_places=2,
     )

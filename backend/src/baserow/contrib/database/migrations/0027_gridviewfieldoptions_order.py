@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0026_auto_20210125_1454'),
+        ("database", "0026_auto_20210125_1454"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='gridviewfieldoptions',
-            name='order',
+            model_name="gridviewfieldoptions",
+            name="order",
             field=models.SmallIntegerField(default=32767),
         ),
     ]

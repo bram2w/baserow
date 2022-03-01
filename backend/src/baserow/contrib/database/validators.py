@@ -12,7 +12,11 @@ def _lazy_re_compile(regex_value, flags=0):
         if isinstance(regex_value, str):
             return regex.compile(regex_value, flags)
         else:
-            assert not flags, "flags must be empty if regex is passed pre-compiled"
+            # Dev only warning, fine if this is not run in real code, this is a copied
+            # module see the docstring on UnicodeRegexValidator
+            assert (  # nosec
+                not flags
+            ), "flags must be empty if regex is passed pre-compiled"
             return regex_value
 
     return SimpleLazyObject(_compile)

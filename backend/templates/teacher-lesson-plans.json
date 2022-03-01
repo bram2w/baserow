@@ -998,8 +998,7 @@
               "name": "Est time (min)",
               "order": 6,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -1829,7 +1828,6 @@
               "name": "Price",
               "order": 8,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             }
@@ -2338,8 +2336,7 @@
               "name": "Time to read (min)",
               "order": 4,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             }
           ],
@@ -2656,7 +2653,6 @@
               "name": "Admission",
               "order": 3,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },

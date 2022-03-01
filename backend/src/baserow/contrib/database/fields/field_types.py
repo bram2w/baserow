@@ -22,6 +22,7 @@ from django.utils.timezone import make_aware
 from pytz import timezone
 from rest_framework import serializers
 
+from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
 from baserow.contrib.database.api.fields.errors import (
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
     ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
@@ -36,6 +37,7 @@ from baserow.contrib.database.api.fields.serializers import (
     FileFieldRequestSerializer,
     SelectOptionSerializer,
     FileFieldResponseSerializer,
+    MustBeEmptyField,
 )
 from baserow.contrib.database.formula import (
     BaserowExpression,
@@ -55,6 +57,7 @@ from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.contrib.database.table.cache import invalidate_single_table_in_model_cache
 from .dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
     CircularFieldDependencyError,
@@ -80,8 +83,6 @@ from .fields import (
 )
 from .handler import FieldHandler
 from .models import (
-    NUMBER_TYPE_INTEGER,
-    NUMBER_TYPE_DECIMAL,
     TextField,
     LongTextField,
     URLField,
@@ -313,8 +314,15 @@ class NumberFieldType(FieldType):
 
     type = "number"
     model_class = NumberField
-    allowed_fields = ["number_type", "number_decimal_places", "number_negative"]
-    serializer_field_names = ["number_type", "number_decimal_places", "number_negative"]
+    allowed_fields = ["number_decimal_places", "number_negative"]
+    serializer_field_names = ["number_decimal_places", "number_negative", "number_type"]
+    serializer_field_overrides = {
+        "number_type": MustBeEmptyField(
+            "The number_type option has been removed and can no longer be provided. "
+            "Instead set number_decimal_places to 0 for an integer or 1-5 for a "
+            "decimal."
+        )
+    }
 
     def prepare_value_for_db(self, instance, value):
         if value is not None:
@@ -329,11 +337,7 @@ class NumberFieldType(FieldType):
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
 
-        kwargs["decimal_places"] = (
-            0
-            if instance.number_type == NUMBER_TYPE_INTEGER
-            else instance.number_decimal_places
-        )
+        kwargs["decimal_places"] = instance.number_decimal_places
 
         if not instance.number_negative:
             kwargs["min_value"] = 0
@@ -355,7 +359,7 @@ class NumberFieldType(FieldType):
         # don't convert it to a string. However if a decimal to preserve any precision
         # we keep it as a string.
         instance = field_object["field"]
-        if instance.number_type == NUMBER_TYPE_INTEGER:
+        if instance.number_decimal_places == 0:
             return int(value)
 
         # DRF's Decimal Serializer knows how to quantize and format the decimal
@@ -363,11 +367,7 @@ class NumberFieldType(FieldType):
         return self.get_serializer_field(instance).to_representation(value)
 
     def get_model_field(self, instance, **kwargs):
-        kwargs["decimal_places"] = (
-            0
-            if instance.number_type == NUMBER_TYPE_INTEGER
-            else instance.number_decimal_places
-        )
+        kwargs["decimal_places"] = instance.number_decimal_places
 
         return models.DecimalField(
             max_digits=self.MAX_DIGITS + kwargs["decimal_places"],
@@ -377,13 +377,13 @@ class NumberFieldType(FieldType):
         )
 
     def random_value(self, instance, fake, cache):
-        if instance.number_type == NUMBER_TYPE_INTEGER:
+        if instance.number_decimal_places == 0:
             return fake.pyint(
                 min_value=-10000 if instance.number_negative else 1,
                 max_value=10000,
                 step=1,
             )
-        elif instance.number_type == NUMBER_TYPE_DECIMAL:
+        elif instance.number_decimal_places > 0:
             return fake.pydecimal(
                 min_value=-10000 if instance.number_negative else 1,
                 max_value=10000,
@@ -392,9 +392,7 @@ class NumberFieldType(FieldType):
 
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         if connection.vendor == "postgresql":
-            decimal_places = 0
-            if to_field.number_type == NUMBER_TYPE_DECIMAL:
-                decimal_places = to_field.number_decimal_places
+            decimal_places = to_field.number_decimal_places
 
             function = f"round(p_in::numeric, {decimal_places})"
 
@@ -418,21 +416,14 @@ class NumberFieldType(FieldType):
         return value if value is None else str(value)
 
     def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
-        if field.number_type == NUMBER_TYPE_INTEGER:
-            number_decimal_places = 0
-        else:
-            number_decimal_places = field.number_decimal_places
-        return BaserowFormulaNumberType(number_decimal_places=number_decimal_places)
+        return BaserowFormulaNumberType(
+            number_decimal_places=field.number_decimal_places
+        )
 
     def from_baserow_formula_type(
         self, formula_type: BaserowFormulaNumberType
     ) -> NumberField:
-        if formula_type.number_decimal_places == 0:
-            number_type = NUMBER_TYPE_INTEGER
-        else:
-            number_type = NUMBER_TYPE_DECIMAL
         return NumberField(
-            number_type=number_type,
             number_decimal_places=formula_type.number_decimal_places,
             number_negative=True,
         )
@@ -777,6 +768,7 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
     }
     source_field_name = None
     model_field_kwargs = {}
+    populate_from_field = None
 
     def prepare_value_for_db(self, instance, value):
         """
@@ -822,10 +814,11 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
         # If an empty value has been provided we do not want to filter at all.
         if value == "":
             return Q()
+        # No user input goes into the RawSQL, safe to use.
         return AnnotatedQ(
             annotation={
                 f"formatted_date_{field_name}": Coalesce(
-                    RawSQL(
+                    RawSQL(  # nosec
                         f"""TO_CHAR({field_name} at time zone %s,
                         '{field.get_psql_format()}')""",
                         [field.get_timezone()],
@@ -897,9 +890,16 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
         self, row, field_name, value, id_mapping, files_zip, storage
     ):
         """
-        We don't want to do anything here because we don't have the right value yet
-        and it will automatically be set when the row is saved.
+        The `auto_now_add` and `auto_now` properties are set to False during the
+        import. This allows us the set the correct from the import.
         """
+
+        if value is None:
+            value = getattr(row, self.source_field_name)
+        else:
+            value = datetime.fromisoformat(value)
+
+        setattr(row, field_name, value)
 
     def random_value(self, instance, fake, cache):
         return getattr(instance, self.source_field_name)
@@ -1329,7 +1329,10 @@ class LinkRowFieldType(FieldType):
         if count == 0:
             return []
 
-        values = model.objects.order_by("?")[0 : randrange(0, 3)].values_list(
+        # Ignoring with nosec as this randint usage is purely for constructing
+        # random data in dev environments and is not being used for security or
+        # cryptographical reasons.
+        values = model.objects.order_by("?")[0 : randrange(0, 3)].values_list(  # nosec
             "id", flat=True
         )
         return values
@@ -1404,7 +1407,7 @@ class LinkRowFieldType(FieldType):
     ):
         getattr(row, field_name).set(value)
 
-    def get_related_fields_to_trash_and_restore(self, field) -> List[Any]:
+    def get_other_fields_to_trash_restore_always_together(self, field) -> List[Any]:
         return [field.link_row_related_field]
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
@@ -1435,6 +1438,13 @@ class LinkRowFieldType(FieldType):
             ]
         else:
             return []
+
+    # noinspection PyMethodMayBeStatic
+    def before_table_model_invalidated(
+        self,
+        field: Field,
+    ):
+        invalidate_single_table_in_model_cache(field.link_row_table_id)
 
 
 class EmailFieldType(CharFieldMatchingRegexFieldType):
@@ -1589,8 +1599,11 @@ class FileFieldType(FieldType):
         if count == 0:
             return values
 
-        for i in range(0, randrange(0, 3)):
-            instance = UserFile.objects.all()[randint(0, count - 1)]
+        # Ignoring with nosec as this randint usage is purely for constructing
+        # random data in dev environments and is not being used for security or
+        # cryptographical reasons.
+        for i in range(0, randrange(0, 3)):  # nosec
+            instance = UserFile.objects.all()[randint(0, count - 1)]  # nosec
             serialized = instance.serialize()
             serialized["visible_name"] = serialized["name"]
             values.append(serialized)
@@ -1625,11 +1638,11 @@ class FileFieldType(FieldType):
                 cache[cache_entry] = user_file
 
             file_names.append(
-                {
-                    "name": file["name"],
-                    "visible_name": file["visible_name"],
-                    "original_name": cache[cache_entry].original_name,
-                }
+                DatabaseExportSerializedStructure.file_field_value(
+                    name=file["name"],
+                    visible_name=file["visible_name"],
+                    original_name=cache[cache_entry].original_name,
+                )
             )
         return file_names
 
@@ -1772,12 +1785,13 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             if len(values_mapping) == 0:
                 return None
 
+            # Has been checked for issues, everything is properly escaped and safe.
             sql = f"""
                 p_in = (SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = p_in);
-            """
+            """  # nosec
             return sql, variables
 
         return super().get_alter_column_prepare_old_value(
@@ -1806,7 +1820,8 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             if len(values_mapping) == 0:
                 return None
 
-            return (
+            # Has been checked for issues, everything is properly escaped and safe.
+            return (  # nosec
                 f"""p_in = (
                 SELECT value FROM (
                     VALUES {','.join(values_mapping)}
@@ -1860,7 +1875,10 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         if not select_options:
             return None
 
-        random_choice = randint(0, len(select_options) - 1)
+        # Ignoring with nosec as this randint usage is purely for constructing random
+        # data in dev environments and is not being used for security or cryptographical
+        # reasons.
+        random_choice = randint(0, len(select_options) - 1)  # nosec
 
         return select_options[random_choice]
 
@@ -1886,15 +1904,21 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         if len(option_value_mappings) == 0:
             return Q()
 
+        # Query uses parameters to pass in option values to so no injection possible.
+        # Dynamically built parts of the query are:
+        # - option_value_mappings which only contains internal ids and no user input
+        # - field.id which is an internal id and not user input
+        # So ignoring nosec error as happy this RawSQL is safe. Please update if changes
+        # are made.
         convert_rows_select_id_to_value_sql = f"""(
                 SELECT key FROM (
                     VALUES {','.join(option_value_mappings)}
                 ) AS values (key, value)
                 WHERE value = "field_{field.id}"
             )
-        """
+        """  # nosec
 
-        query = RawSQL(
+        query = RawSQL(  # nosec
             convert_rows_select_id_to_value_sql,
             params=option_values,
             output_field=models.CharField(),
@@ -2002,7 +2026,10 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         if not select_options:
             return None
 
-        random_choice = randint(1, len(select_options))
+        # Ignoring with nosec as this randint usage is purely for constructing random
+        # data in dev environments and is not being used for security or cryptographical
+        # reasons.
+        random_choice = randint(1, len(select_options))  # nosec
 
         return sample(set([x.id for x in select_options]), random_choice)
 

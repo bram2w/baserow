@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0036_createdonfield_lastmodifiedfield'),
+        ("database", "0036_createdonfield_lastmodifiedfield"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='exportjob',
-            name='export_options',
+            model_name="exportjob",
+            name="export_options",
             field=models.JSONField(),
         ),
     ]

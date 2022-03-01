@@ -7,36 +7,43 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0004_auto_20200117_1157'),
+        ("database", "0004_auto_20200117_1157"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='GridViewFieldOptions',
+            name="GridViewFieldOptions",
             fields=[
-                ('id', models.AutoField(
-                    auto_created=True,
-                    primary_key=True,
-                    serialize=False,
-                    verbose_name='ID'
-                )),
-                ('width', models.PositiveIntegerField(default=200)),
-                ('field', models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE,
-                    to='database.Field'
-                )),
-                ('grid_view', models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE,
-                    to='database.GridView'
-                )),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("width", models.PositiveIntegerField(default=200)),
+                (
+                    "field",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="database.Field"
+                    ),
+                ),
+                (
+                    "grid_view",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="database.GridView",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='gridview',
-            name='field_options',
+            model_name="gridview",
+            name="field_options",
             field=models.ManyToManyField(
-                through='database.GridViewFieldOptions',
-                to='database.Field'
+                through="database.GridViewFieldOptions", to="database.Field"
             ),
         ),
     ]

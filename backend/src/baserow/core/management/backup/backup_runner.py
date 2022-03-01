@@ -1,6 +1,8 @@
 import math
 import re
-import subprocess
+
+# See nosec comment later in file.
+import subprocess  # nosec
 import tarfile
 import tempfile
 from pathlib import Path
@@ -257,7 +259,9 @@ class BaserowBackupRunner:
     # noinspection PyMethodMayBeStatic
     def _run_command_in_sub_process(self, command):
         print(" ".join(command))
-        subprocess.check_output(command)
+        # Adding nosec ignore as this is only used by admin only command line tools
+        # where it it is completely reasonable to use subprocess and not insecure.
+        subprocess.check_output(command)  # nosec
 
 
 def _get_sorted_user_tables_names(conn) -> List[str]:
@@ -276,13 +280,17 @@ def _get_sorted_user_tables_names(conn) -> List[str]:
         # Ensure we order the tables by their numerical ID for consistent and
         # understandable back-up ordering.
         cursor.execute(
-            f"""SELECT CONCAT(table_schema, '.', table_name)
+            """SELECT CONCAT(table_schema, '.', table_name)
     FROM information_schema.tables
-    WHERE table_name ~ '^{table_prefix_regex_escaped}.*$' or
-          table_name ~ '^{through_table_regex_escaped}.*$'
+    WHERE table_name ~ %(table_prefix_regex_escaped)s  or
+          table_name ~ %(through_table_regex_escaped)s
     ORDER BY table_schema,
              substring(table_name FROM '[a-zA-Z]+'),
-             substring(table_name FROM '[0-9]+')::int"""
+             substring(table_name FROM '[0-9]+')::int""",
+            {
+                "table_prefix_regex_escaped": f"^{table_prefix_regex_escaped}.*$",
+                "through_table_regex_escaped": f"^{through_table_regex_escaped}.*$",
+            },
         )
         return [r[0] for r in cursor.fetchall()]
 

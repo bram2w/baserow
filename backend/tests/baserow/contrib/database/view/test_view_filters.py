@@ -68,7 +68,7 @@ def test_equal_filter_type(data_fixture):
     long_text_field = data_fixture.create_long_text_field(table=table)
     integer_field = data_fixture.create_number_field(table=table)
     decimal_field = data_fixture.create_number_field(
-        table=table, number_type="DECIMAL", number_decimal_places=2
+        table=table, number_decimal_places=2
     )
     boolean_field = data_fixture.create_boolean_field(table=table)
     formula_field = data_fixture.create_formula_field(table=table, formula="'test'")
@@ -204,7 +204,7 @@ def test_not_equal_filter_type(data_fixture):
     long_text_field = data_fixture.create_long_text_field(table=table)
     integer_field = data_fixture.create_number_field(table=table)
     decimal_field = data_fixture.create_number_field(
-        table=table, number_type="DECIMAL", number_decimal_places=2
+        table=table, number_decimal_places=2
     )
     boolean_field = data_fixture.create_boolean_field(table=table)
     formula_field = data_fixture.create_formula_field(table=table, formula="'test'")
@@ -347,7 +347,6 @@ def test_contains_filter_type(data_fixture):
     )
     number_field = data_fixture.create_number_field(
         table=table,
-        number_type="DECIMAL",
         number_negative=True,
         number_decimal_places=2,
     )
@@ -567,7 +566,6 @@ def test_contains_not_filter_type(data_fixture):
     )
     number_field = data_fixture.create_number_field(
         table=table,
-        number_type="DECIMAL",
         number_negative=True,
         number_decimal_places=2,
     )
@@ -967,7 +965,6 @@ def test_higher_than_filter_type(data_fixture):
     integer_field = data_fixture.create_number_field(table=table, number_negative=True)
     decimal_field = data_fixture.create_number_field(
         table=table,
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=True,
     )
@@ -1118,7 +1115,6 @@ def test_lower_than_filter_type(data_fixture):
     integer_field = data_fixture.create_number_field(table=table, number_negative=True)
     decimal_field = data_fixture.create_number_field(
         table=table,
-        number_type="DECIMAL",
         number_decimal_places=2,
         number_negative=True,
     )
@@ -2214,7 +2210,7 @@ def test_empty_filter_type(data_fixture):
     long_text_field = data_fixture.create_long_text_field(table=table)
     integer_field = data_fixture.create_number_field(table=table)
     decimal_field = data_fixture.create_number_field(
-        table=table, number_type="DECIMAL", number_decimal_places=2
+        table=table, number_decimal_places=2
     )
     date_field = data_fixture.create_date_field(table=table)
     date_time_field = data_fixture.create_date_field(
@@ -2369,7 +2365,7 @@ def test_not_empty_filter_type(data_fixture):
     long_text_field = data_fixture.create_long_text_field(table=table)
     integer_field = data_fixture.create_number_field(table=table)
     decimal_field = data_fixture.create_number_field(
-        table=table, number_type="DECIMAL", number_decimal_places=2
+        table=table, number_decimal_places=2
     )
     date_field = data_fixture.create_date_field(table=table)
     date_time_field = data_fixture.create_date_field(
@@ -3443,26 +3439,27 @@ def test_date_equals_day_of_month_filter_type(data_fixture):
     handler = ViewHandler()
     model = table.get_model()
 
-    row_1 = model.objects.create(
-        **{
-            f"field_{date_field.id}": date(2021, 8, 11),
-        }
-    )
-    row_2 = model.objects.create(
-        **{
-            f"field_{date_field.id}": date(2020, 1, 1),
-        }
-    )
-    row_3 = model.objects.create(
-        **{
-            f"field_{date_field.id}": date(2019, 11, 1),
-        }
-    )
-    model.objects.create(
-        **{
-            f"field_{date_field.id}": None,
-        }
-    )
+    with freeze_time("2020-1-03 22:01"):
+        row_1 = model.objects.create(
+            **{
+                f"field_{date_field.id}": date(2021, 8, 11),
+            }
+        )
+        row_2 = model.objects.create(
+            **{
+                f"field_{date_field.id}": date(2020, 1, 1),
+            }
+        )
+        row_3 = model.objects.create(
+            **{
+                f"field_{date_field.id}": date(2019, 11, 1),
+            }
+        )
+        model.objects.create(
+            **{
+                f"field_{date_field.id}": None,
+            }
+        )
 
     # Date Field (No timezone)
     view_filter = data_fixture.create_view_filter(

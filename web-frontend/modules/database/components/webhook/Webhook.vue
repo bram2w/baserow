@@ -146,26 +146,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "webhook": {
-      "details": "details",
-      "lastCall": "Last call: {lastCallTime}",
-      "noCalls": "No calls made",
-      "callLog": "Call log",
-      "triggerDescription": "Triggers on every event | Triggers on {count} event | Triggers on {count} events"
-    }
-  },
-  "fr": {
-    "webhook": {
-      "details": "détails",
-      "lastCall": "Dernier déclenchement : {lastCallTime}",
-      "noCalls": "Jamais déclenché",
-      "callLog": "Historique des appels",
-      "triggerDescription": "Déclenché par tous les événements | Déclenché par un événement | Déclenché par {count} événements"
-    }
-  }
-}
-</i18n>

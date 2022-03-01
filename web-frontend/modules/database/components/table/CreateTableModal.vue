@@ -136,24 +136,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "createTableModal": {
-      "title": "Create new table",
-      "importLabel": "Would you like to import existing data?",
-      "newTable": "Start with a new table",
-      "addButton": "Add table"
-    }
-  },
-  "fr": {
-    "createTableModal": {
-      "title": "Créer une nouvelle table",
-      "importLabel": "Souhaitez-vous importer des données existantes ?",
-      "newTable": "Commencer avec une table vide",
-      "addButton": "Ajouter la table"
-    }
-  }
-}
-</i18n>

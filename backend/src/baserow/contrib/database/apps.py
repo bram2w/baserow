@@ -4,6 +4,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import ProgrammingError
 from django.db.models.signals import post_migrate
 
+from baserow.contrib.database.table.cache import clear_generated_model_cache
 from baserow.core.registries import (
     plugin_registry,
     application_type_registry,
@@ -52,13 +53,18 @@ class DatabaseConfig(AppConfig):
     def ready(self):
         self.prevent_generated_model_for_registering()
 
-        from .views.registries import view_type_registry, view_filter_type_registry
+        from .views.registries import (
+            view_type_registry,
+            view_filter_type_registry,
+            view_aggregation_type_registry,
+        )
         from .fields.registries import field_type_registry, field_converter_registry
         from .export.registries import table_exporter_registry
         from .formula.registries import (
             formula_function_registry,
         )
         from .webhooks.registries import webhook_event_type_registry
+        from .airtable.registry import airtable_column_type_registry
 
         from .plugins import DatabasePlugin
 
@@ -186,6 +192,32 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(MultipleSelectHasViewFilterType())
         view_filter_type_registry.register(MultipleSelectHasNotViewFilterType())
 
+        from .views.view_aggregations import (
+            EmptyCountViewAggregationType,
+            NotEmptyCountViewAggregationType,
+            MinViewAggregationType,
+            MaxViewAggregationType,
+            SumViewAggregationType,
+            AverageViewAggregationType,
+            MedianViewAggregationType,
+            DecileViewAggregationType,
+            VarianceViewAggregationType,
+            StdDevViewAggregationType,
+            UniqueCountViewAggregationType,
+        )
+
+        view_aggregation_type_registry.register(EmptyCountViewAggregationType())
+        view_aggregation_type_registry.register(NotEmptyCountViewAggregationType())
+        view_aggregation_type_registry.register(UniqueCountViewAggregationType())
+        view_aggregation_type_registry.register(MinViewAggregationType())
+        view_aggregation_type_registry.register(MaxViewAggregationType())
+        view_aggregation_type_registry.register(SumViewAggregationType())
+        view_aggregation_type_registry.register(AverageViewAggregationType())
+        view_aggregation_type_registry.register(MedianViewAggregationType())
+        view_aggregation_type_registry.register(DecileViewAggregationType())
+        view_aggregation_type_registry.register(VarianceViewAggregationType())
+        view_aggregation_type_registry.register(StdDevViewAggregationType())
+
         from .application_types import DatabaseApplicationType
 
         application_type_registry.register(DatabaseApplicationType())
@@ -223,11 +255,47 @@ class DatabaseConfig(AppConfig):
         webhook_event_type_registry.register(RowUpdatedEventType())
         webhook_event_type_registry.register(RowDeletedEventType())
 
+        from .airtable.airtable_column_types import (
+            TextAirtableColumnType,
+            DateAirtableColumnType,
+            NumberAirtableColumnType,
+            SelectAirtableColumnType,
+            MultiSelectAirtableColumnType,
+            RatingAirtableColumnType,
+            FormulaAirtableColumnType,
+            CheckboxAirtableColumnType,
+            PhoneAirtableColumnType,
+            ForeignKeyAirtableColumnType,
+            MultilineTextAirtableColumnType,
+            MultipleAttachmentAirtableColumnType,
+            RichTextTextAirtableColumnType,
+        )
+
+        airtable_column_type_registry.register(TextAirtableColumnType())
+        airtable_column_type_registry.register(DateAirtableColumnType())
+        airtable_column_type_registry.register(NumberAirtableColumnType())
+        airtable_column_type_registry.register(SelectAirtableColumnType())
+        airtable_column_type_registry.register(MultiSelectAirtableColumnType())
+        airtable_column_type_registry.register(RatingAirtableColumnType())
+        airtable_column_type_registry.register(FormulaAirtableColumnType())
+        airtable_column_type_registry.register(CheckboxAirtableColumnType())
+        airtable_column_type_registry.register(PhoneAirtableColumnType())
+        airtable_column_type_registry.register(ForeignKeyAirtableColumnType())
+        airtable_column_type_registry.register(MultilineTextAirtableColumnType())
+        airtable_column_type_registry.register(MultipleAttachmentAirtableColumnType())
+        airtable_column_type_registry.register(RichTextTextAirtableColumnType())
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow.contrib.database.ws.signals  # noqa: F403, F401
 
         post_migrate.connect(safely_update_formula_versions, sender=self)
+        post_migrate.connect(clear_generated_model_cache_receiver, sender=self)
+
+
+# noinspection PyPep8Naming
+def clear_generated_model_cache_receiver(sender, **kwargs):
+    clear_generated_model_cache()
 
 
 # noinspection PyPep8Naming
@@ -236,7 +304,7 @@ def safely_update_formula_versions(sender, **kwargs):
     # app.ready will be called for management commands also, we only want to
     # execute the following hook when we are starting the django server as
     # otherwise backwards migrations etc will crash because of this.
-    if apps is not None and settings.UPDATE_FORMULAS_AFTER_MIGRATION:
+    if apps is not None and settings.DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
         from baserow.contrib.database.formula import FormulaHandler
 
         try:

@@ -7,53 +7,56 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0023_convert_int_to_bigint'),
+        ("database", "0023_convert_int_to_bigint"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SingleSelectField',
+            name="SingleSelectField",
             fields=[
-                ('field_ptr', models.OneToOneField(
-                    auto_created=True,
-                    on_delete=django.db.models.deletion.CASCADE,
-                    parent_link=True,
-                    primary_key=True,
-                    serialize=False,
-                    to='database.Field'
-                )),
+                (
+                    "field_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="database.Field",
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
-            bases=('database.field',),
+            bases=("database.field",),
         ),
         migrations.CreateModel(
-            name='SelectOption',
+            name="SelectOption",
             fields=[
-                ('id', models.AutoField(
-                    auto_created=True,
-                    primary_key=True,
-                    serialize=False,
-                    verbose_name='ID'
-                )),
-                ('value', models.CharField(
-                    blank=True,
-                    max_length=255
-                )),
-                ('color', models.CharField(
-                    blank=True,
-                    max_length=255
-                )),
-                ('order', models.PositiveIntegerField()),
-                ('field', models.ForeignKey(
-                    on_delete=django.db.models.deletion.CASCADE,
-                    related_name='select_options',
-                    to='database.Field'
-                )),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("value", models.CharField(blank=True, max_length=255)),
+                ("color", models.CharField(blank=True, max_length=255)),
+                ("order", models.PositiveIntegerField()),
+                (
+                    "field",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="select_options",
+                        to="database.Field",
+                    ),
+                ),
             ],
             options={
-                'ordering': ('order', 'id'),
+                "ordering": ("order", "id"),
             },
         ),
     ]

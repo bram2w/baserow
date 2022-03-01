@@ -80,18 +80,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "settingsModal": {
-      "title": "Settings"
-    }
-  },
-  "fr": {
-    "settingsModal": {
-      "title": "Mon compte"
-    }
-  }
-}
-</i18n>

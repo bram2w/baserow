@@ -19,9 +19,23 @@ import groupStore from '@baserow/modules/core/store/group'
 import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 
+import en from '@baserow/modules/core/locales/en.json'
+import fr from '@baserow/modules/core/locales/fr.json'
+import nl from '@baserow/modules/core/locales/nl.json'
+import de from '@baserow/modules/core/locales/de.json'
+
 export default (context, inject) => {
-  const { store } = context
+  const { store, isDev, app } = context
   inject('bus', new Vue())
+
+  // Allow locale file hot reloading in dev
+  if (isDev && app.i18n) {
+    const { i18n } = app
+    i18n.mergeLocaleMessage('en', en)
+    i18n.mergeLocaleMessage('fr', fr)
+    i18n.mergeLocaleMessage('nl', nl)
+    i18n.mergeLocaleMessage('de', de)
+  }
 
   const registry = new Registry()
   registry.registerNamespace('plugin')

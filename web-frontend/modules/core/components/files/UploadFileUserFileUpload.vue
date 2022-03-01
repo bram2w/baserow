@@ -255,24 +255,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "uploadFileUserFileUpload": {
-      "title": "Upload from my device",
-      "drop": "Drop here",
-      "clickOrDrop": "Click or drop your files here",
-      "retry": "Retry"
-    }
-  },
-  "fr": {
-    "uploadFileUserFileUpload": {
-      "title": "Envoyer un fichier",
-      "drop": "Déposez ici",
-      "clickOrDrop": "Cliquez ou déposez votre fichier ici",
-      "retry": "Recommencer"
-    }
-  }
-}
-</i18n>

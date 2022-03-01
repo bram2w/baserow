@@ -1,12 +1,9 @@
 from datetime import date
 import pytest
-
 from io import BytesIO
-
-
 from faker import Faker
-from baserow.contrib.database.views.handler import ViewHandler
 
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (

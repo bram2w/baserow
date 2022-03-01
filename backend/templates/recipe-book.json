@@ -106,8 +106,7 @@
               "name": "Cook Time (min)",
               "order": 9,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -116,8 +115,7 @@
               "name": "Prep Time (min)",
               "order": 10,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {

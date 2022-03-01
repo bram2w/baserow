@@ -61,6 +61,11 @@ ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS = (
     HTTP_400_BAD_REQUEST,
     "This view model does not support field options.",
 )
+ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST = (
+    "ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST",
+    HTTP_400_BAD_REQUEST,
+    "The specified aggregation type does not exist.",
+)
 ERROR_CANNOT_SHARE_VIEW_TYPE = (
     "ERROR_CANNOT_SHARE_VIEW_TYPE",
     HTTP_400_BAD_REQUEST,

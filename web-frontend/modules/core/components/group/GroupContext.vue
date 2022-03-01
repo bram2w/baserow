@@ -105,26 +105,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "groupContext": {
-      "renameGroup": "Rename group",
-      "members": "Members",
-      "viewTrash": "View trash",
-      "leaveGroup": "Leave group",
-      "deleteGroup": "Delete group"
-    }
-  },
-  "fr": {
-    "groupContext": {
-      "renameGroup": "Renommer le groupe",
-      "members": "Membres",
-      "viewTrash": "Voir la corbeille",
-      "leaveGroup": "Quitter le groupe",
-      "deleteGroup": "Supprimer le groupe"
-    }
-  }
-}
-</i18n>

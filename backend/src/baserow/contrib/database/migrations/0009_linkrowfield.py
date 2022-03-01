@@ -7,48 +7,45 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('database', '0008_auto_20200701_1608'),
+        ("database", "0008_auto_20200701_1608"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LinkRowField',
+            name="LinkRowField",
             fields=[
                 (
-                    'field_ptr',
+                    "field_ptr",
                     models.OneToOneField(
                         auto_created=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         parent_link=True,
                         primary_key=True,
                         serialize=False,
-                        to='database.Field'
-                    )
+                        to="database.Field",
+                    ),
                 ),
+                ("link_row_relation_id", models.IntegerField(blank=True, null=True)),
                 (
-                    'link_row_relation_id',
-                    models.IntegerField(blank=True, null=True)
-                ),
-                (
-                    'link_row_related_field',
+                    "link_row_related_field",
                     models.ForeignKey(
                         blank=True,
-                        help_text='The relation field in the other table.',
+                        help_text="The relation field in the other table.",
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
-                        to='database.LinkRowField'
-                    )
+                        to="database.LinkRowField",
+                    ),
                 ),
                 (
-                    'link_row_table',
+                    "link_row_table",
                     models.ForeignKey(
                         blank=True,
-                        help_text='The table that the field has a relation with.',
+                        help_text="The table that the field has a relation with.",
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='database.Table'
-                    )
+                        to="database.Table",
+                    ),
                 ),
             ],
-            bases=('database.field',),
+            bases=("database.field",),
         ),
     ]

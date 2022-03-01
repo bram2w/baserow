@@ -326,7 +326,7 @@ class ViewView(APIView):
                 type=OpenApiTypes.STR,
                 description=(
                     "A comma separated list of extra attributes to include on the "
-                    "returned view. The supported attributes are are `filters` and "
+                    "returned view. The supported attributes are `filters` and "
                     "`sortings`. "
                     "For example `include=filters,sortings` will add the attributes "
                     "`filters` and `sortings` to every returned view, containing "
@@ -1062,7 +1062,9 @@ class ViewFieldOptionsView(APIView):
         data = validate_data(serializer_class, request.data)
 
         with view_type.map_api_exceptions():
-            handler.update_field_options(request.user, view, data["field_options"])
+            handler.update_field_options(
+                user=request.user, view=view, field_options=data["field_options"]
+            )
 
         serializer = serializer_class(view)
         return Response(serializer.data)

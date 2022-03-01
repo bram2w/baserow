@@ -1,4 +1,5 @@
-from subprocess import CalledProcessError
+# Ignoring as only exception imported here so no security issue specifically here
+from subprocess import CalledProcessError  # nosec
 
 from django.core.management.base import BaseCommand, CommandError
 

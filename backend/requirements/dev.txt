@@ -1,9 +1,11 @@
 flake8==3.9.2
+pytest==6.2.5
 pytest-django==4.4.0
 pytest-env==0.6.2
 pytest-asyncio==0.15.1
 pytest-ordering==0.6
 pytest-mock==3.6.1
+pytest-icdiff==0.5
 freezegun==1.1.0
 responses==0.13.4
 watchdog==2.1.4
@@ -13,3 +15,11 @@ pyinstrument==4.0.3
 pyfakefs==4.5.0
 pytest-xdist==2.3.0
 responses==0.13.4
+django-silk==4.2.0
+django-extensions==3.1.5
+snoop==0.4.1
+openapi-spec-validator==0.4.0
+pytest-html==3.1.1
+coverage==6.2
+pytest-split==0.6.0
+bandit==1.7.2

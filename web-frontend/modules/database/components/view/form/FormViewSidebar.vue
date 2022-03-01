@@ -63,6 +63,7 @@
         <CreateFieldContext
           ref="createFieldContext"
           :table="table"
+          @field-created="$event.callback()"
         ></CreateFieldContext>
       </div>
     </div>

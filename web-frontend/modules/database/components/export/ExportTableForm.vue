@@ -38,6 +38,7 @@
 import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
+import viewTypeHasExporterTypes from '@baserow/modules/database/utils/viewTypeHasExporterTypes'
 
 import ExportTableDropdown from '@baserow/modules/database/components/export/ExportTableDropdown'
 import ExporterTypeChoices from '@baserow/modules/database/components/export/ExporterTypeChoices'
@@ -79,7 +80,7 @@ export default {
   computed: {
     viewsWithExporterTypes() {
       return this.views.filter((view) =>
-        this.viewTypeHasExporterTypes(view.type)
+        viewTypeHasExporterTypes(view.type, this.$registry)
       )
     },
     selectedView() {
@@ -128,33 +129,5 @@ export default {
       exporter_type: { required },
     },
   },
-  methods: {
-    viewTypeHasExporterTypes(viewType) {
-      const exporters = Object.values(this.$registry.getAll('exporter'))
-      for (let i = 0; i < exporters.length; i++) {
-        if (exporters[i].getSupportedViews().includes(viewType)) {
-          return true
-        }
-      }
-      return false
-    },
-  },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "exportTableForm": {
-      "viewLabel": "Select the view to export:",
-      "typeError": "No exporter type available please select a different view or entire table."
-    }
-  },
-  "fr": {
-    "exportTableForm": {
-      "viewLabel": "Sélectionnez la vue à exporter :",
-      "typeError": "Aucun export disponible, veuillez sélectionner une autre vue ou la table complète."
-    }
-  }
-}
-</i18n>

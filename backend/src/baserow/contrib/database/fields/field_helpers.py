@@ -18,21 +18,25 @@ def construct_all_possible_field_kwargs(
         "url": [{"name": "url"}],
         "email": [{"name": "email"}],
         "number": [
-            {"name": "negative_int", "number_type": "INTEGER", "number_negative": True},
+            {
+                "name": "negative_int",
+                "number_negative": True,
+                "number_decimal_places": 0,
+            },
             {
                 "name": "positive_int",
-                "number_type": "INTEGER",
                 "number_negative": False,
+                "number_decimal_places": 0,
             },
             {
                 "name": "negative_decimal",
-                "number_type": "DECIMAL",
                 "number_negative": "True",
+                "number_decimal_places": 1,
             },
             {
                 "name": "positive_decimal",
-                "number_type": "DECIMAL",
                 "number_negative": False,
+                "number_decimal_places": 1,
             },
         ],
         "rating": [
@@ -136,7 +140,9 @@ def construct_all_possible_field_kwargs(
     }
     # If you have added a new field please add an entry into the dict above with any
     # test worthy combinations of kwargs
-    assert set(field_type_registry.get_types()) == set(
+    # nosec ignore as this code is test/dev cli tool only, no matter if this assert
+    # does not get run in the cli tools.
+    assert set(field_type_registry.get_types()) == set(  # nosec
         all_interesting_field_kwargs.keys()
     ), "Please add the new field type to the testing dictionary of interesting kwargs"
     return all_interesting_field_kwargs

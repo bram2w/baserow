@@ -633,7 +633,7 @@ def test_number_field_type(api_client, data_fixture):
         {
             "name": "PositiveInt",
             "type": "number",
-            "number_type": "INTEGER",
+            "number_decimal_places": 0,
             "number_negative": False,
         },
         format="json",
@@ -653,7 +653,7 @@ def test_number_field_type(api_client, data_fixture):
         {
             "name": "NegativeInt",
             "type": "number",
-            "number_type": "INTEGER",
+            "number_decimal_places": 0,
             "number_negative": True,
         },
         format="json",
@@ -673,7 +673,6 @@ def test_number_field_type(api_client, data_fixture):
         {
             "name": "PositiveDecimal",
             "type": "number",
-            "number_type": "DECIMAL",
             "number_negative": False,
             "number_decimal_places": 2,
         },
@@ -694,7 +693,6 @@ def test_number_field_type(api_client, data_fixture):
         {
             "name": "NegativeDecimal",
             "type": "number",
-            "number_type": "DECIMAL",
             "number_negative": True,
             "number_decimal_places": 2,
         },

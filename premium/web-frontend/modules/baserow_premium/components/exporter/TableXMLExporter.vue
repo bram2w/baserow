@@ -42,18 +42,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "tableXMLExporter": {
-      "encoding": "Encoding"
-    }
-  },
-  "fr": {
-    "tableXMLExporter": {
-      "encoding": "Encodage"
-    }
-  }
-}
-</i18n>

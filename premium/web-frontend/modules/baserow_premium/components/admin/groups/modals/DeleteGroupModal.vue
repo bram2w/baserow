@@ -67,24 +67,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "deleteGroupModal": {
-      "title": "Delete {name}",
-      "confirmation": "Are you sure you want to delete the group: {name}?",
-      "comment":"The group will be permanently deleted, including the related applications. It is not possible to undo this action.",
-      "delete": "Delete group {name}"
-    }
-  },
-  "fr": {
-    "deleteGroupModal": {
-      "title": "Supprimer {name}",
-      "confirmation": "Êtes-vous sûr·e de vouloir supprimer le groupe : {name} ?",
-      "comment":"Le groupe va être supprimé définitivement ainsi que ses applications liées. Il est impossible d'annuler cette action.",
-      "delete": "Supprimer le groupe {name}"
-    }
-  }
-}
-</i18n>

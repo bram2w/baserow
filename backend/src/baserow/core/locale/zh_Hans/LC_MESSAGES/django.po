@@ -1,0 +1,108 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-10-28 20:39+0000\n"
+"PO-Revision-Date: 2022-01-28 09:54+0000\n"
+"Last-Translator: Joey Li <joeyli16@icloud.com>\n"
+"Language-Team: Chinese (Simplified) <https://hosted.weblate.org/projects/"
+"baserow/backend-core/zh_Hans/>\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 4.11-dev\n"
+
+#: src/baserow/core/emails.py:88
+#, python-format
+msgid "%(by)s invited you to %(group_name)s - Baserow"
+msgstr "%(by)s 邀请你加入 %(group_name)s - Baserow"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:7
+msgid "Invitation"
+msgstr "邀请"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:9
+#, python-format
+msgid ""
+"\n"
+"          <strong>%(first_name)s</strong> has invited you to collaborate on\n"
+"          <strong>%(group_name)s</strong>.\n"
+"        "
+msgstr ""
+"\n"
+"          <strong>%(first_name)s</strong> 已邀请你加入\n"
+"          <strong>%(group_name)s</strong>。\n"
+"        "
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:20
+msgid "Accept invitation"
+msgstr "接受邀请"
+
+#: src/baserow/core/templates/baserow/core/group_invitation.html:26
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:29
+msgid ""
+"\n"
+"          Baserow is an open source no-code database tool which allows you "
+"to collaborate\n"
+"          on projects, customers and more. It gives you the powers of a "
+"developer without\n"
+"          leaving your browser.\n"
+"        "
+msgstr ""
+"\n"
+"          Baserow 是一个开源的无代码数据库工具，\n"
+"          允许你在项目、客户和其他方面进行协作。\n"
+"          它让你在不离开浏览器的情况下拥有开发者的权力。\n"
+"        "
+
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:7
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:23
+msgid "Reset password"
+msgstr "重置密码"
+
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:9
+#, python-format
+msgid ""
+"\n"
+"          A password reset was requested for your account (%(username)s) on\n"
+"          Baserow (%(public_web_frontend_hostname)s). If you did not "
+"authorize this,\n"
+"          you may simply ignore this email.\n"
+"        "
+msgstr ""
+"\n"
+"          你在 Baserow (%(public_web_frontend_hostname)s) 上的 (%(username)s) "
+"账户正在请求重置密码。 \n"
+"          如果你并未授权本次操作，\n"
+"          可以忽略本封邮件。\n"
+"        "
+
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:16
+#, python-format
+msgid ""
+"\n"
+"          To continue with your password reset, simply click the button "
+"below, and you\n"
+"          will be able to change your password. This link will expire in\n"
+"          %(hours)s hours.\n"
+"        "
+msgstr ""
+"\n"
+"          要继续重置密码，只需点击下面的按钮，\n"
+"          然后你将能够更改你的密码。此链接将在\n"
+"          %(hours)s 小时后失效。\n"
+"        "
+
+#: src/baserow/core/user/emails.py:16
+msgid "Reset password - Baserow"
+msgstr "重置密码 - Baserow"
+
+#: src/baserow/core/user/handler.py:155
+#, python-format
+msgid "%(name)s's group"
+msgstr "%(name)s 的团队"
+
+#~ msgid "Group invitation"
+#~ msgstr "Invitation à un groupe"

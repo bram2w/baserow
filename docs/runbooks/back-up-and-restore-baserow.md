@@ -4,10 +4,10 @@
 1. Please ensure you only back-up a Baserow database which is not actively being used
    by a running Baserow instance or any other process which is making changes to the 
    database.
-1. Please create PGPASS file to store the password for your database, see
-   https://www.postgresql.org/docs/11/libpq-pgpass.html for more details on this file.
-1. Please read and understand the output of `./baserow backup_baserow --help`
-1. Run the following command to back-up Baserow.
+2. Please create PGPASS file to store the password for your database, see
+   https://www.postgresql.org/docs/11/libpq-pgpass.html for more details on this file. 
+3. Please read and understand the output of `./baserow backup_baserow --help`
+4. Run the following command to back-up Baserow.
     `PGPASSFILE=PATH_TO_YOUR_PGPASSFILE ./baserow backup_baserow -h YOUR_DB_HOST -d YOUR_DB_NAME -U YOUR_DB_USER -p YOUR_DB_PORT`
 
 ## Restoring Baserow

@@ -1,6 +1,13 @@
 from typing import Any, List
 
-from django.db.models import Q
+from django.contrib.postgres.fields import JSONField, ArrayField
+from django.db import models as django_models
+from django.db.models import (
+    Q,
+    BooleanField,
+    DurationField,
+)
+from django.db.models.fields.related import ManyToManyField, ForeignKey
 
 from baserow.core.registry import (
     Instance,
@@ -111,6 +118,49 @@ class FieldType(
         """
 
         return queryset
+
+    def empty_query(
+        self,
+        field_name: str,
+        model_field: django_models.Field,
+        field: Field,
+    ):
+        """
+        Returns a Q filter which performs an empty filter over the
+        provided field for this specific type of field.
+
+        :param field_name: The name of the field.
+        :type field_name: str
+        :param model_field: The field's actual django field model instance.
+        :type model_field: django_models.Field
+        :param field: The related field's instance.
+        :type field: Field
+        :return: A Q filter.
+        :rtype: Q
+        """
+
+        fs = [ManyToManyField, ForeignKey, DurationField, ArrayField]
+        # If the model_field is a ManyToMany field we only have to check if it is None.
+        if any(isinstance(model_field, f) for f in fs):
+            return Q(**{f"{field_name}": None})
+
+        if isinstance(model_field, BooleanField):
+            return Q(**{f"{field_name}": False})
+
+        q = Q(**{f"{field_name}__isnull": True})
+        q = q | Q(**{f"{field_name}": None})
+
+        if isinstance(model_field, JSONField):
+            q = q | Q(**{f"{field_name}": []}) | Q(**{f"{field_name}": {}})
+
+        # If the model field accepts an empty string as value we are going to add
+        # that to the or statement.
+        try:
+            model_field.get_prep_value("")
+            q = q | Q(**{f"{field_name}": ""})
+            return q
+        except Exception:
+            return q
 
     def contains_query(self, field_name, value, model_field, field):
         """
@@ -694,11 +744,11 @@ class FieldType(
             return str(human_readable_value)
 
     # noinspection PyMethodMayBeStatic
-    def get_related_fields_to_trash_and_restore(self, field) -> List[Any]:
+    def get_other_fields_to_trash_restore_always_together(self, field) -> List[Any]:
         """
         When a field of this type is trashed/restored, or the table it is in
-        trashed/restored, this method should return any other trashable items that
-        should be trashed or restored in tandem.
+        trashed/restored, this method should return any other trashable fields that
+        must always be trashed or restored in tandem with this field.
 
         For example, a link field has an opposing link field in the other table that
         should also be trashed when it is trashed. And so for link fields this method
@@ -706,7 +756,7 @@ class FieldType(
 
         :param field: The specific instance of the field that is being trashed or whose
             table is being trashed.
-        :return: A list of related trashable items that should be trashed or restored
+        :return: A list of related fields that should be trashed or restored
             in tandem with this field or it's table.
         """
 
@@ -1062,6 +1112,17 @@ class FieldType(
             option list.
         """
 
+    # noinspection PyMethodMayBeStatic
+    def before_table_model_invalidated(
+        self,
+        field: Field,
+    ):
+        """
+        Called before the table the field is in is invalidated in the model cache.
+        Usually this method should be overridden to also invalidate the cache of other
+        tables models which would be affected by this tables cache being invalidated.
+        """
+
 
 class FieldTypeRegistry(
     APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
@@ -1110,7 +1171,7 @@ class FieldConverter(Instance):
                 # possible to load all the old data in memory, convert it and then
                 # update the new data. Performance should always be kept in mind
                 # though.
-                with connection.schema_editor() as schema_editor:
+                with safe_django_schema_editor() as schema_editor:
                     schema_editor.remove_field(from_model, from_model_field)
                     schema_editor.add_field(to_model, to_model_field)
 

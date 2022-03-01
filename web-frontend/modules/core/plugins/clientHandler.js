@@ -67,6 +67,12 @@ class ClientErrorMap {
         app.i18n.t('clientHandler.cannotRestoreParentBeforeChildTitle'),
         app.i18n.t('clientHandler.cannotRestoreParentBeforeChildDescription')
       ),
+      ERROR_CANT_RESTORE_AS_RELATED_TABLE_TRASHED: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.cannotRestoreAsRelatedTableTrashedTitle'),
+        app.i18n.t(
+          'clientHandler.cannotRestoreAsRelatedTableTrashedDescription'
+        )
+      ),
       ERROR_GROUP_USER_IS_LAST_ADMIN: new ResponseErrorMessage(
         app.i18n.t('clientHandler.groupUserIsLastAdminTitle'),
         app.i18n.t('clientHandler.groupUserIsLastAdminDescription')

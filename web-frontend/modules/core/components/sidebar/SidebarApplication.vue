@@ -144,22 +144,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en":{
-    "sidebarApplication": {
-      "renameApplication": "Rename {type}",
-      "viewTrash": "View trash",
-      "deleteApplication": "Delete {type}"
-    }
-  },
-  "fr":{
-    "sidebarApplication": {
-      "renameApplication": "Renommer {type}",
-      "viewTrash": "Voir la corbeille",
-      "deleteApplication": "Supprimer {type}"
-    }
-  }
-}
-</i18n>

@@ -78,7 +78,6 @@
               "name": "Total cost",
               "order": 7,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -486,8 +485,7 @@
               "name": "Avg duration (min)",
               "order": 1,
               "primary": false,
-              "number_type": "INTEGER",
-              "number_decimal_places": 1,
+              "number_decimal_places": 0,
               "number_negative": false
             },
             {
@@ -523,7 +521,6 @@
               "name": "Avg cost",
               "order": 3,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },
@@ -1813,7 +1810,6 @@
               "name": "Cost",
               "order": 2,
               "primary": false,
-              "number_type": "DECIMAL",
               "number_decimal_places": 2,
               "number_negative": false
             },

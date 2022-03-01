@@ -1,6 +1,9 @@
 from .base import *  # noqa: F403, F401
 
 
+# This is a hardcoded key for test runs only.
+SECRET_KEY = "test_hardcoded_secret_key"  # nosec
+
 CELERY_BROKER_BACKEND = "memory"
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
@@ -15,3 +18,16 @@ USER_THUMBNAILS = {"tiny": [21, 21]}
 # could break the tests. They are expecting it to be 'http://localhost:8000/media/'
 # because that is default value in `base.py`.
 MEDIA_URL = "http://localhost:8000/media/"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "KEY_PREFIX": "baserow-default-cache",
+        "VERSION": VERSION,  # noqa: F405
+    },
+    GENERATED_MODEL_CACHE_NAME: {  # noqa: F405
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "KEY_PREFIX": f"baserow-{GENERATED_MODEL_CACHE_NAME}-cache",  # noqa: F405
+        "VERSION": None,
+    },
+}

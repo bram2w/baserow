@@ -12,6 +12,9 @@ from rest_framework.status import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.cache import (
+    invalidate_table_model_cache_and_related_models,
+)
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.test_utils.helpers import setup_interesting_test_table
 
@@ -221,6 +224,7 @@ def test_list_rows(api_client, data_fixture):
     number_field_type = field_type_registry.get("number")
     old_can_order_by = number_field_type._can_order_by
     number_field_type._can_order_by = False
+    invalidate_table_model_cache_and_related_models(table.id)
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
         f"{url}?order_by=-field_{field_2.id}",
@@ -235,6 +239,7 @@ def test_list_rows(api_client, data_fixture):
         f"number does not support filtering."
     )
     number_field_type._can_order_by = old_can_order_by
+    invalidate_table_model_cache_and_related_models(table.id)
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
@@ -643,6 +648,26 @@ def test_create_empty_row_for_interesting_fields(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_create_row_with_blank_decimal_field(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    decimal_field = data_fixture.create_number_field(
+        table=table, order=1, name="TestDecimal", number_decimal_places=1
+    )
+
+    response = api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {f"field_{decimal_field.id}": ""},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    response_json_row_1 = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json_row_1[f"field_{decimal_field.id}"] is None
+
+
+@pytest.mark.django_db
 def test_get_row(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -955,7 +980,6 @@ def test_update_row(api_client, data_fixture):
         table=table_3,
         order=0,
         name="Price",
-        number_type="DECIMAL",
         number_decimal_places=2,
     )
     model_3 = table_3.get_model()

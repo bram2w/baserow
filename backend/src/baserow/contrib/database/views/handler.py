@@ -1,9 +1,10 @@
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Any, List, Optional, Iterable
+from typing import Dict, Any, List, Optional, Iterable, Tuple
 
 from django.core.exceptions import FieldDoesNotExist, ValidationError
-from django.db.models import F
+from django.db import models as django_models
+from django.db.models import F, Count
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
@@ -30,10 +31,15 @@ from .exceptions import (
     ViewSortFieldAlreadyExist,
     ViewSortFieldNotSupported,
     ViewDoesNotSupportFieldOptions,
+    FieldAggregationNotSupported,
     CannotShareViewTypeError,
 )
 from .models import View, ViewFilter, ViewSort
-from .registries import view_type_registry, view_filter_type_registry
+from .registries import (
+    view_type_registry,
+    view_filter_type_registry,
+    view_aggregation_type_registry,
+)
 from .signals import (
     view_created,
     view_updated,
@@ -215,18 +221,20 @@ class ViewHandler:
 
         view_deleted.send(self, view_id=view_id, view=view, user=user)
 
-    def update_field_options(self, user, view, field_options, fields=None):
+    def update_field_options(self, view, field_options, user=None, fields=None):
         """
         Updates the field options with the provided values if the field id exists in
         the table related to the view.
 
-        :param user: The user on whose behalf the request is made.
-        :type user: User
         :param view: The view for which the field options need to be updated.
         :type view: View
         :param field_options: A dict with the field ids as the key and a dict
             containing the values that need to be updated as value.
         :type field_options: dict
+        :param user: Optionally the user on whose behalf the request is made. If you
+          give a user, the permissions are checked against this user otherwise there is
+          no permission checking.
+        :type user: User
         :param fields: Optionally a list of fields can be provided so that they don't
             have to be fetched again.
         :type fields: None or list
@@ -234,7 +242,11 @@ class ViewHandler:
             provided view.
         """
 
-        view.table.database.group.has_user(user, raise_error=True)
+        if user is not None:
+            # Here we check the permissions only if we have a user. If the field options
+            # update is triggered by user a action, we have one from the view but in
+            # some situation, we have automatic processing and we don't have any user.
+            view.table.database.group.has_user(user, raise_error=True)
 
         if not fields:
             fields = Field.objects.filter(table=view.table)
@@ -271,11 +283,13 @@ class ViewHandler:
 
         view_field_options_updated.send(self, view=view, user=user)
 
-    def field_type_changed(self, field):
+    def field_type_changed(self, field: Field):
         """
         This method is called by the FieldHandler when the field type of a field has
         changed. It could be that the field has filters or sortings that are not
         compatible anymore. If that is the case then those need to be removed.
+        All view_type `after_field_type_change` of views that are linked to this field
+        are also called to react on this change.
 
         :param field: The new field object.
         :type field: Field
@@ -295,6 +309,44 @@ class ViewHandler:
             if not filter_type.field_is_compatible(field):
                 filter.delete()
 
+        # Call view types hook
+        for view_type in view_type_registry.get_all():
+            view_type.after_field_type_change(field)
+
+    def _get_filter_builder(
+        self, view: View, model: GeneratedTableModel
+    ) -> FilterBuilder:
+        """
+        Constructs a FilterBuilder object based on the provided view's filter.
+
+        :param view: The view where to fetch the fields from.
+        :param model: The generated model containing all fields.
+        :return: FilterBuilder object with the view's filter applied.
+        """
+
+        # The table model has to be dynamically generated
+        if not hasattr(model, "_field_objects"):
+            raise ValueError("A queryset of the table model is required.")
+
+        filter_builder = FilterBuilder(filter_type=view.filter_type)
+        for view_filter in view.viewfilter_set.all():
+            if view_filter.field_id not in model._field_objects:
+                raise ValueError(
+                    f"The table model does not contain field "
+                    f"{view_filter.field_id}."
+                )
+            field_object = model._field_objects[view_filter.field_id]
+            field_name = field_object["name"]
+            model_field = model._meta.get_field(field_name)
+            view_filter_type = view_filter_type_registry.get(view_filter.type)
+            filter_builder.filter(
+                view_filter_type.get_filter(
+                    field_name, view_filter.value, model_field, field_object["field"]
+                )
+            )
+
+        return filter_builder
+
     def apply_filters(self, view, queryset):
         """
         Applies the view's filter to the given queryset.
@@ -311,37 +363,10 @@ class ViewHandler:
 
         model = queryset.model
 
-        # If the model does not have the `_field_objects` property then it is not a
-        # generated table model which is not supported.
-        if not hasattr(model, "_field_objects"):
-            raise ValueError("A queryset of the table model is required.")
-
-        # If the filter are disabled we don't have to do anything with the queryset.
         if view.filters_disabled:
             return queryset
 
-        filter_builder = FilterBuilder(filter_type=view.filter_type)
-
-        for view_filter in view.viewfilter_set.all():
-            # If the to be filtered field is not present in the `_field_objects` we
-            # cannot filter so we raise a ValueError.
-            if view_filter.field_id not in model._field_objects:
-                raise ValueError(
-                    f"The table model does not contain field "
-                    f"{view_filter.field_id}."
-                )
-
-            field_object = model._field_objects[view_filter.field_id]
-            field_name = field_object["name"]
-            model_field = model._meta.get_field(field_name)
-            view_filter_type = view_filter_type_registry.get(view_filter.type)
-
-            filter_builder.filter(
-                view_filter_type.get_filter(
-                    field_name, view_filter.value, model_field, field_object["field"]
-                )
-            )
-
+        filter_builder = self._get_filter_builder(view, model)
         return filter_builder.apply_to_queryset(queryset)
 
     def get_filter(self, user, view_filter_id, base_queryset=None):
@@ -430,7 +455,7 @@ class ViewHandler:
         # Check if field belongs to the grid views table
         if not view.table.field_set.filter(id=field.pk).exists():
             raise FieldNotInTable(
-                f"The field {field.pk} does not belong to table " f"{view.table.id}."
+                f"The field {field.pk} does not belong to table {view.table.id}."
             )
 
         view_filter = ViewFilter.objects.create(
@@ -558,7 +583,7 @@ class ViewHandler:
             # cannot filter so we raise a ValueError.
             if view_sort.field_id not in model._field_objects:
                 raise ValueError(
-                    f"The table model does not contain field " f"{view_sort.field_id}."
+                    f"The table model does not contain field {view_sort.field_id}."
                 )
 
             field = model._field_objects[view_sort.field_id]["field"]
@@ -604,7 +629,7 @@ class ViewHandler:
         :param base_queryset: The base queryset from where to select the view sort
             object from. This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
-        :raises ViewSortDoesNotExist: The the requested view does not exists.
+        :raises ViewSortDoesNotExist: The requested view does not exists.
         :return: The requested view sort instance.
         :type: ViewSort
         """
@@ -667,19 +692,19 @@ class ViewHandler:
         field_type = field_type_registry.get_by_model(field.specific_class)
         if not field_type.check_can_order_by(field):
             raise ViewSortFieldNotSupported(
-                f"The field {field.pk} does not support " f"sorting."
+                f"The field {field.pk} does not support sorting."
             )
 
         # Check if field belongs to the grid views table
         if not view.table.field_set.filter(id=field.pk).exists():
             raise FieldNotInTable(
-                f"The field {field.pk} does not belong to table " f"{view.table.id}."
+                f"The field {field.pk} does not belong to table {view.table.id}."
             )
 
         # Check if the field already exists as sort
         if view.viewsort_set.filter(field_id=field.pk).exists():
             raise ViewSortFieldAlreadyExist(
-                f"A sort with the field {field.pk} " f"already exists."
+                f"A sort with the field {field.pk} already exists."
             )
 
         view_sort = ViewSort.objects.create(view=view, field=field, order=order)
@@ -699,7 +724,9 @@ class ViewHandler:
         :param kwargs: The values that need to be updated, allowed values are
             `field` and `order`.
         :type kwargs: dict
-        :raises FieldNotInTable: When the field does not support sorting.
+        :raises ViewSortFieldNotSupported: When the field does not support sorting.
+        :raises FieldNotInTable:  When the provided field does not belong to the
+            provided view's table.
         :return: The updated view sort instance.
         :rtype: ViewSort
         """
@@ -725,7 +752,7 @@ class ViewHandler:
         field_type = field_type_registry.get_by_model(field.specific_class)
         if field.id != view_sort.field_id and not field_type.check_can_order_by(field):
             raise ViewSortFieldNotSupported(
-                f"The field {field.pk} does not support " f"sorting."
+                f"The field {field.pk} does not support sorting."
             )
 
         # If the field has changed we need to check if the new field doesn't already
@@ -735,7 +762,7 @@ class ViewHandler:
             and view_sort.view.viewsort_set.filter(field_id=field.pk).exists()
         ):
             raise ViewSortFieldAlreadyExist(
-                f"A sort with the field {field.pk} " f"already exists."
+                f"A sort with the field {field.pk} already exists."
             )
 
         view_sort.field = field
@@ -810,6 +837,79 @@ class ViewHandler:
         if search is not None:
             queryset = queryset.search_all_fields(search, only_search_by_field_ids)
         return queryset
+
+    def get_field_aggregations(
+        self,
+        view: View,
+        aggregations: Iterable[Tuple[django_models.Field, str]],
+        model: Table = None,
+        with_total: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Returns a dict of aggregation for given (field, aggregation_type) couple.
+        Each dict key is the name of the field suffixed with two `_` then the
+        aggregation type. ex: "field_42__empty_count" for the empty count
+        aggregation of field with id 42.
+
+        :param view: The view to get the field aggregation for.
+        :param aggregations: A list of (field_instance, aggregation_type).
+        :param model: The model for this view table to generate the aggregation
+            query from, if not specified then the model will be generated
+            automatically.
+        :param with_total: Whether the total row count should be returned in the
+             result.
+        :raises FieldAggregationNotSupported: When the view type doesn't support
+            field aggregation.
+        :raises FieldNotInTable: When the field does not belong to the specified
+            view.
+        :returns: A dict of aggregation value
+        """
+
+        if model is None:
+            model = view.table.get_model()
+
+        queryset = model.objects.all().enhance_by_fields()
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+
+        # Check if view supports field aggregation
+        if not view_type.can_aggregate_field:
+            raise FieldAggregationNotSupported(
+                f"Field aggregation is not supported for {view_type.type} views."
+            )
+
+        # Apply filters to have accurate aggregation
+        if view_type.can_filter:
+            queryset = self.apply_filters(view, queryset)
+
+        aggregation_dict = {}
+        for (field_instance, aggregation_type_name) in aggregations:
+
+            # Check whether the field belongs to the table.
+            if field_instance.table_id != view.table_id:
+                raise FieldNotInTable(
+                    f"The field {field_instance.pk} does not belong to table "
+                    f"{view.table.id}."
+                )
+
+            # Prepare data for .get_aggregation call
+            field = model._field_objects[field_instance.id]["field"]
+            field_name = field_instance.db_column
+            model_field = model._meta.get_field(field_name)
+            aggregation_type = view_aggregation_type_registry.get(aggregation_type_name)
+
+            # Add the aggregation for the field
+            aggregation_dict[
+                f"{field_name}__{aggregation_type_name}"
+            ] = aggregation_type.get_aggregation(field_name, model_field, field)
+
+        if with_total:
+            # Add total to allow further calculation on the client
+            aggregation_dict["total"] = Count("id", distinct=True)
+
+        result = queryset.aggregate(**aggregation_dict)
+
+        return result
 
     def rotate_view_slug(self, user, view):
         """

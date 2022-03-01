@@ -25,7 +25,6 @@ def test_get_table_serializer(data_fixture):
         table=table,
         order=4,
         name="Price",
-        number_type="DECIMAL",
         number_negative=True,
         number_decimal_places=2,
     )
@@ -148,7 +147,6 @@ def test_get_table_serializer(data_fixture):
         table=table,
         order=0,
         name="Sale price",
-        number_type="DECIMAL",
         number_decimal_places=3,
         number_negative=True,
     )

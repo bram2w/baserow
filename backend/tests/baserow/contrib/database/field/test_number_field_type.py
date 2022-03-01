@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.contrib.contenttypes.models import ContentType
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import NumberField, NUMBER_TYPE_DECIMAL
+from baserow.contrib.database.fields.models import NumberField
 from baserow.contrib.database.fields.registries import field_type_registry
 
 
@@ -29,7 +29,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
                 None,
                 None,
             ],
-            {"number_type": "INTEGER", "number_negative": False},
+            {"number_decimal_places": 0, "number_negative": False},
         ),
         (
             [
@@ -47,7 +47,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
                 None,
                 None,
             ],
-            {"number_type": "INTEGER", "number_negative": True},
+            {"number_decimal_places": 0, "number_negative": True},
         ),
         (
             [
@@ -66,7 +66,6 @@ from baserow.contrib.database.fields.registries import field_type_registry
                 None,
             ],
             {
-                "number_type": "DECIMAL",
                 "number_negative": False,
                 "number_decimal_places": 1,
             },
@@ -88,7 +87,6 @@ from baserow.contrib.database.fields.registries import field_type_registry
                 None,
             ],
             {
-                "number_type": "DECIMAL",
                 "number_negative": True,
                 "number_decimal_places": 3,
             },
@@ -139,7 +137,6 @@ def test_alter_number_field_column_type_negative(data_fixture):
     decimal_field = data_fixture.create_number_field(
         table=table,
         order=2,
-        number_type="DECIMAL",
         number_negative=True,
         number_decimal_places=2,
     )
@@ -170,7 +167,6 @@ def test_alter_number_field_column_type_negative(data_fixture):
 def test_import_export_number_field(data_fixture):
     number_field = data_fixture.create_number_field(
         name="Number field",
-        number_type="DECIMAL",
         number_negative=True,
         number_decimal_places=2,
     )
@@ -179,7 +175,6 @@ def test_import_export_number_field(data_fixture):
     number_field_imported = number_field_type.import_serialized(
         number_field.table, number_serialized, {}
     )
-    assert number_field.number_type == number_field_imported.number_type
     assert number_field.number_negative == number_field_imported.number_negative
     assert number_field.number_decimal_places == (
         number_field_imported.number_decimal_places
@@ -192,7 +187,6 @@ def test_content_type_still_set_when_save_overridden(data_fixture):
     field = NumberField(
         number_negative=False,
         number_decimal_places=1,
-        number_type=NUMBER_TYPE_DECIMAL,
         order=1,
         table=table,
     )

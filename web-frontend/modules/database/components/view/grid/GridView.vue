@@ -20,6 +20,7 @@
       :store-prefix="storePrefix"
       :style="{ width: leftWidth + 'px' }"
       @refresh="$emit('refresh', $event)"
+      @field-created="fieldCreated"
       @row-hover="setRowHover($event.row, $event.value)"
       @row-context="showRowContext($event.event, $event.row)"
       @row-dragging="rowDragStart"
@@ -32,10 +33,8 @@
       @edit-modal="$refs.rowEditModal.show($event.id)"
     >
       <template #foot>
-        <div class="grid-view__column" :style="{ width: leftWidth + 'px' }">
-          <div class="grid-view__foot-info">
-            {{ $tc('gridView.rowCount', count, { count }) }}
-          </div>
+        <div class="grid-view__foot-info">
+          {{ $tc('gridView.rowCount', count, { count }) }}
         </div>
       </template>
     </GridViewSection>
@@ -65,6 +64,7 @@
       :store-prefix="storePrefix"
       :style="{ left: leftWidth + 'px' }"
       @refresh="$emit('refresh', $event)"
+      @field-created="fieldCreated"
       @row-hover="setRowHover($event.row, $event.value)"
       @row-context="showRowContext($event.event, $event.row)"
       @add-row="addRow()"
@@ -76,8 +76,8 @@
       @edit-modal="$refs.rowEditModal.show($event.id)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     >
-      <template v-if="publicGrid" #foot>
-        <div class="grid-view__foot-logo">
+      <template #foot>
+        <div v-if="publicGrid" class="grid-view__foot-logo">
           <a
             href="https://baserow.io"
             target="_blank"
@@ -144,11 +144,11 @@
       :fields="fields"
       :rows="allRows"
       :read-only="readOnly"
-      @refresh="$emit('refresh', $event)"
       @update="updateValue"
       @hidden="rowEditModalHidden"
       @field-updated="$emit('refresh', $event)"
       @field-deleted="$emit('refresh')"
+      @field-created="fieldCreated"
     ></RowEditModal>
   </div>
 </template>
@@ -163,6 +163,7 @@ import GridViewRowDragging from '@baserow/modules/database/components/view/grid/
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
+import viewHelpers from '@baserow/modules/database/mixins/viewHelpers'
 
 export default {
   name: 'GridView',
@@ -172,7 +173,7 @@ export default {
     GridViewRowDragging,
     RowEditModal,
   },
-  mixins: [gridViewHelpers],
+  mixins: [viewHelpers, gridViewHelpers],
   props: {
     primary: {
       type: Object,
@@ -296,6 +297,10 @@ export default {
     }
     this.$el.resizeEvent()
     window.addEventListener('resize', this.$el.resizeEvent)
+    this.$store.dispatch(
+      this.storePrefix + 'view/grid/fetchAllFieldAggregationData',
+      { view: this.view }
+    )
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.$el.resizeEvent)
@@ -370,14 +375,14 @@ export default {
     },
     /**
      * This method is called by the Scrollbars component and should return the element
-     * that handles the the horizontal scrolling.
+     * that handles the horizontal scrolling.
      */
     getHorizontalScrollbarElement() {
       return this.$refs.right.$el
     },
     /**
      * This method is called by the Scrollbars component and should return the element
-     * that handles the the vertical scrolling.
+     * that handles the vertical scrolling.
      */
     getVerticalScrollbarElement() {
       return this.$refs.right.$refs.body
@@ -721,26 +726,3 @@ export default {
   },
 }
 </script>
-
-<i18n>
-{
-  "en": {
-    "gridView":{
-      "insertRowAbove": "Insert row above",
-      "insertRowBelow": "Insert row below",
-      "enlargeRow": "Enlarge row",
-      "deleteRow": "Delete row",
-      "rowCount": "No rows | 1 row | {count} rows"
-    }
-  },
-  "fr": {
-    "gridView":{
-      "insertRowAbove": "Insérer au dessus",
-      "insertRowBelow": "Insérer en dessous",
-      "enlargeRow": "Afficher la ligne",
-      "deleteRow": "Supprimer la ligne",
-      "rowCount": "Acune ligne | 1 ligne | {count} lignes"
-    }
-  }
-}
-</i18n>

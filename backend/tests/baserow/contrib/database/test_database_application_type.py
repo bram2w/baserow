@@ -1,5 +1,9 @@
 import pytest
 
+from pytz import UTC
+from datetime import datetime
+from freezegun import freeze_time
+
 from baserow.contrib.database.fields.models import FormulaField, TextField
 from baserow.core.registries import application_type_registry
 
@@ -20,14 +24,28 @@ def test_import_export_database(data_fixture):
     data_fixture.create_view_sort(view=view, field=text_field)
     model = table.get_model()
     row = model.objects.create(**{f"field_{text_field.id}": "Test"})
+    model.objects.create(**{f"field_{text_field.id}": "Test 2"})
+    model.objects.filter(id=row.id).update(
+        created_on=datetime(2021, 1, 1, 12, 30, tzinfo=UTC),
+        updated_on=datetime(2021, 1, 2, 13, 30, tzinfo=UTC),
+    )
+    row.refresh_from_db()
 
     database_type = application_type_registry.get("database")
     serialized = database_type.export_serialized(database, None, None)
+
+    # Delete the updated on, because the import should also be compatible with
+    # without these values present.
+    del serialized["tables"][0]["rows"][1]["created_on"]
+    del serialized["tables"][0]["rows"][1]["updated_on"]
+
     imported_group = data_fixture.create_group()
     id_mapping = {}
-    imported_database = database_type.import_serialized(
-        imported_group, serialized, id_mapping, None, None
-    )
+
+    with freeze_time("2022-01-01 12:00"):
+        imported_database = database_type.import_serialized(
+            imported_group, serialized, id_mapping, None, None
+        )
 
     assert imported_database.id != database.id
     assert imported_database.group_id == imported_group.id
@@ -47,8 +65,9 @@ def test_import_export_database(data_fixture):
     assert imported_view.viewsort_set.all().count() == 1
 
     imported_model = imported_table.get_model()
-    assert imported_model.objects.all().count() == 1
+    assert imported_model.objects.all().count() == 2
     imported_row = imported_model.objects.all().first()
+    imported_row_2 = imported_model.objects.all().last()
 
     imported_text_field = TextField.objects.get(table=imported_table)
     imported_formula_field = FormulaField.objects.get(table=imported_table)
@@ -58,6 +77,8 @@ def test_import_export_database(data_fixture):
     # same.
     assert imported_row.id == row.id
     assert imported_row.order == row.order
+    assert imported_row.created_on == datetime(2021, 1, 1, 12, 30, tzinfo=UTC)
+    assert imported_row.updated_on == datetime(2021, 1, 2, 13, 30, tzinfo=UTC)
     assert getattr(
         imported_row, f'field_{id_mapping["database_fields"][text_field.id]}'
     ) == (getattr(row, f"field_{text_field.id}"))
@@ -70,6 +91,11 @@ def test_import_export_database(data_fixture):
         imported_row, f'field_{id_mapping["database_fields"][formula_field.id]}'
     ) == (getattr(row, f"field_{formula_field.id}"))
 
+    # Because the created on and updated on were not provided, we expect these values
+    # to be equal to "now", which was frozen by freezegun during the import.
+    assert imported_row_2.created_on == datetime(2022, 1, 1, 12, 0, tzinfo=UTC)
+    assert imported_row_2.updated_on == datetime(2022, 1, 1, 12, 0, tzinfo=UTC)
+
     # It must still be possible to create a new row in the imported table
-    row_2 = imported_model.objects.create()
-    assert row_2.id == 2
+    row_3 = imported_model.objects.create()
+    assert row_3.id == 3

@@ -4,11 +4,9 @@ from math import floor, ceil
 
 from dateutil import parser
 from dateutil.parser import ParserError
-from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.postgres.aggregates.general import ArrayAgg
-from django.db.models import Q, IntegerField, BooleanField, DateTimeField, DurationField
+from django.db.models import Q, IntegerField, DateTimeField
 from django.db.models.functions import Cast, Length
-from django.db.models.fields.related import ManyToManyField, ForeignKey
 from pytz import timezone, all_timezones
 
 from baserow.contrib.database.fields.field_filters import AnnotatedQ
@@ -83,13 +81,12 @@ class EqualViewFilterType(ViewFilterType):
             return Q()
 
         # Check if the model_field accepts the value.
+        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
-            pass
-
-        return Q()
+            return Q()
 
 
 class NotEqualViewFilterType(NotViewFilterTypeMixin, EqualViewFilterType):
@@ -196,7 +193,7 @@ class LengthIsLowerThanViewFilterType(ViewFilterType):
                 annotation={f"{field_name}_len": Length(field_name)},
                 q={f"{field_name}_len__lt": int(value)},
             )
-        except Exception:
+        except ValueError:
             pass
 
         return Q()
@@ -230,13 +227,12 @@ class HigherThanViewFilterType(ViewFilterType):
             value = floor(decimal)
 
         # Check if the model_field accepts the value.
+        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{f"{field_name}__gt": value})
         except Exception:
-            pass
-
-        return Q()
+            return Q()
 
 
 class LowerThanViewFilterType(ViewFilterType):
@@ -267,13 +263,12 @@ class LowerThanViewFilterType(ViewFilterType):
             value = ceil(decimal)
 
         # Check if the model_field accepts the value.
+        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{f"{field_name}__lt": value})
         except Exception:
-            pass
-
-        return Q()
+            return Q()
 
 
 class DateEqualViewFilterType(ViewFilterType):
@@ -604,13 +599,12 @@ class BooleanViewFilterType(ViewFilterType):
         ]
 
         # Check if the model_field accepts the value.
+        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
-            pass
-
-        return Q()
+            return Q()
 
 
 class ManyToManyHasBaseViewFilter(ViewFilterType):
@@ -753,30 +747,9 @@ class EmptyViewFilterType(ViewFilterType):
     ]
 
     def get_filter(self, field_name, value, model_field, field):
-        fs = [ManyToManyField, ForeignKey, DurationField, ArrayField]
-        # If the model_field is a ManyToMany field we only have to check if it is None.
-        if any(isinstance(model_field, f) for f in fs):
-            return Q(**{f"{field_name}": None})
+        field_type = field_type_registry.get_by_model(field)
 
-        if isinstance(model_field, BooleanField):
-            return Q(**{f"{field_name}": False})
-
-        q = Q(**{f"{field_name}__isnull": True})
-        q.add(Q(**{f"{field_name}": None}), Q.OR)
-
-        if isinstance(model_field, JSONField):
-            q.add(Q(**{f"{field_name}": []}), Q.OR)
-            q.add(Q(**{f"{field_name}": {}}), Q.OR)
-
-        # If the model field accepts an empty string as value we are going to add
-        # that to the or statement.
-        try:
-            model_field.get_prep_value("")
-            q.add(Q(**{f"{field_name}": ""}), Q.OR)
-        except Exception:
-            pass
-
-        return q
+        return field_type.empty_query(field_name, model_field, field)
 
 
 class NotEmptyViewFilterType(NotViewFilterTypeMixin, EmptyViewFilterType):
