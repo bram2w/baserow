@@ -13,4 +13,5 @@ RUN mkdir -p "$DATA_DIR" && \
 
 COPY deploy/heroku/heroku_env.sh /baserow/supervisor/env/heroku_env.sh
 
-CMD ["start"]
+ENTRYPOINT []
+CMD []

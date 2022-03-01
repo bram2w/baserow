@@ -72,7 +72,7 @@ case "$1" in
       exec /bin/bash -c "${@:2}"
     ;;
     *)
-      echo "${@:2}"
+      echo "Command given was $*"
       show_help
       exit 1
     ;;

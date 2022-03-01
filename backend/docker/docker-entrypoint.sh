@@ -216,7 +216,14 @@ case "$1" in
     ;;
     backend-healthcheck)
       echo "Running backend healthcheck..."
-      curl --silent --output /dev/null --write-out "%{http_code}" "http://localhost:$BASEROW_BACKEND_PORT/_health/"
+      curlf() {
+        HTTP_CODE=$(curl --silent -o /dev/null --write-out "%{http_code}" --max-time 10 "$@")
+        if [[ ${HTTP_CODE} -lt 200 || ${HTTP_CODE} -gt 299 ]] ; then
+          return 22
+        fi
+        return 0
+      }
+      curlf "http://localhost:$BASEROW_BACKEND_PORT/_health/"
     ;;
     bash)
         exec /bin/bash -c "${@:2}"
@@ -334,7 +341,7 @@ case "$1" in
       wait_for_postgres
     ;;
     *)
-        echo "${@:2}"
+        echo "Command given was $*"
         show_help
         exit 1
     ;;

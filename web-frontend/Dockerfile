@@ -46,7 +46,7 @@ RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
 # tini installed above protects us from zombie processes and ensures the default signal
 # handlers work, see https://github.com/krallin/tini.
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/web-frontend/docker/docker-entrypoint.sh"]
-HEALTHCHECK CMD ["/usr/bin/tini", "--", "curl", "-f", "http://localhost:3000/_health/"]
+HEALTHCHECK CMD ["curl", "-f", "http://localhost:3000/_health/"]
 
 FROM base as dev
 

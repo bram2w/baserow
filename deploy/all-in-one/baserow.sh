@@ -305,14 +305,14 @@ case "$1" in
       startup_echo "docker exec -it baserow cat $DATA_DIR/.pgpass"
       exec /baserow/supervisor/start.sh "${@:2}"
     ;;
-    backend)
+    backend-cmd)
       docker_safe_run /baserow/backend/docker/docker-entrypoint.sh "${@:2}"
     ;;
-    web-frontend)
+    web-frontend-cmd)
       docker_safe_run /baserow/web-frontend/docker/docker-entrypoint.sh "${@:2}"
     ;;
     *)
-        echo "${@:2}"
+        echo "Command given was $*"
         show_help
         exit 1
     ;;
