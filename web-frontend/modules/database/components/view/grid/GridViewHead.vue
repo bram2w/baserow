@@ -17,6 +17,8 @@
       :store-prefix="storePrefix"
       @refresh="$emit('refresh', $event)"
       @dragging="$emit('dragging', $event)"
+      @field-created="$emit('field-created', $event)"
+      @update-inserted-field-order="updateInsertedFieldOrder"
     ></GridViewFieldType>
     <div
       v-if="includeAddField && !readOnly"
@@ -40,6 +42,7 @@
 </template>
 
 <script>
+import { notifyIf } from '@baserow/modules/core/utils/error'
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import GridViewFieldType from '@baserow/modules/database/components/view/grid/GridViewFieldType'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
@@ -82,6 +85,31 @@ export default {
     readOnly: {
       type: Boolean,
       required: true,
+    },
+  },
+  methods: {
+    /**
+     * After newField is created pressing "insert left" or "insert right" button,
+     * we need to move the newField into the correct order position.
+     * This function find the correct order position and update the fieldOptions accordingly.
+     **/
+    async updateInsertedFieldOrder({ position, newField, fromField }) {
+      const newOrder = this.fields.map((field) => field.id)
+      const oldIndex = newOrder.indexOf(newField.id)
+      const offset = position === 'left' ? 0 : 1
+      const newIndex = newOrder.indexOf(fromField.id) + offset
+      newOrder.splice(newIndex, 0, newOrder.splice(oldIndex, 1)[0])
+
+      try {
+        await this.$store.dispatch(
+          `${this.storePrefix}view/grid/updateFieldOptionsOrder`,
+          {
+            order: newOrder,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
     },
   },
 }
