@@ -237,7 +237,7 @@ variables:
   DEVELOP_LATEST_TAG: develop-latest
   # Names of important branches used to decide when to run certain jobs.
   MASTER_BRANCH_NAME: master
-  DEVELOP_BRANCH_NAME: various-docker-ci-fixes
+  DEVELOP_BRANCH_NAME: develop
   # The locations of the various dockerfiles to build.
   BACKEND_DOCKERFILE_PATH: $CI_PROJECT_DIR/backend/Dockerfile
   WEBFRONTEND_DOCKERFILE_PATH: $CI_PROJECT_DIR/web-frontend/Dockerfile
