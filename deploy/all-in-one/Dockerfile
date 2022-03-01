@@ -19,6 +19,9 @@ ENV DATA_DIR=/baserow/data
 ENV POSTGRES_VERSION=11
 ENV POSTGRES_LOCATION=/etc/postgresql/11/main
 
+# In slim docker images, mime.types is removed and we need it for mimetypes guessing
+COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
+
 # ========================
 # = APT-GET UPDATE/UPGRADE/INSTALL DEPS + NODE + CADDY
 # ========================
