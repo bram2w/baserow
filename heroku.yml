@@ -1,6 +1,8 @@
 build:
   docker:
     web: heroku.Dockerfile
+  config:
+    FROM_IMAGE: baserow/baserow:develop-latest
 release:
   image: web
   command:
