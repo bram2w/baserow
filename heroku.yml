@@ -1,10 +1,9 @@
 build:
   docker:
     web: heroku.Dockerfile
-  config:
-    FROM_IMAGE: baserow/baserow:develop-latest
 release:
   image: web
   command:
-    - backend-cmd manage migrate
-
+    - ./baserow.sh backend-cmd manage migrate
+run:
+  web: ./baserow.sh start

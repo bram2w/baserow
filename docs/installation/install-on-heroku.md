@@ -21,6 +21,21 @@ and follow the steps on heroku.com to proceed. After the installation, you can r
 Baserow on the URL provided by Heroku. Everything installed via the template runs on
 the free plan of Heroku by default.
 
+## Built-in Baserow templates disabled by default
+
+By default, we are using the `heroku-postgresql:hobby-dev` addon because that supports
+10k rows for free. The Baserow templates require more than 10k rows, so we do not
+load them by default. If you upgrade your heroku database to support more data and 
+want to load the templates run the following:
+
+1. Login to Heroku and open your Baserow app
+2. Click "More" in the top right
+3. Click "Run Console"
+4. Enter and run the following command `./baserow.sh backend-cmd manage sync_templates`
+
+Every time you upgrade your Heroku Baserow app you will need to repeat the steps 
+above the get the latest Baserow templates.
+
 ## Could not connect to the API server error
 
 If you are getting a "Could not connect to the API server." error when logging in or
