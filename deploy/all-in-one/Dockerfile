@@ -83,9 +83,12 @@ RUN apt-get update && \
     sed -i '/^logfile/d' /etc/redis/redis.conf && \
     chown redis:redis /etc/redis/redis.conf
 
+# In slim docker images, mime.types is removed and we need it for mimetypes guessing
+COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
+
 COPY --chown=$UID:$GID Caddyfile /baserow/caddy/Caddyfile
 
-HEALTHCHECK CMD ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
+HEALTHCHECK CMD ["/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
 
 # ========================
 # = BASEROW

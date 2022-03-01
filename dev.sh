@@ -238,6 +238,7 @@ case "${1:-noneleft}" in
         shift
     ;;
     help)
+        echo "Command given was $*"
         show_help
         exit 0
     ;;

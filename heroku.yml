@@ -1,5 +1,9 @@
 build:
   docker:
     web: heroku.Dockerfile
-  config:
-    FROM_IMAGE: registry.gitlab.com/bramw/baserow/testing/baserow:develop-latest
+release:
+  image: web
+  command:
+    - ./baserow.sh backend-cmd manage migrate
+run:
+  web: ./baserow.sh start

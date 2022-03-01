@@ -28,8 +28,11 @@ docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.8
 
 ## Supported tags and Dockerfile Links
 
-* [`1.8.3`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/deploy/all-in-one/Dockerfile)
-* [`develop_latest`](https://gitlab.com/bramw/baserow/-/blob/develop/deploy/all-in-one/Dockerfile)
+* [`X.Y.Z`](https://gitlab.com/bramw/baserow/-/blob/master/deploy/all-in-one/Dockerfile)
+  Tagged by Baserow version.
+* [`latest`](https://gitlab.com/bramw/baserow/-/blob/master/deploy/all-in-one/Dockerfile)
+* [`develop-latest`](https://gitlab.com/bramw/baserow/-/blob/develop/deploy/all-in-one/Dockerfile) 
+  This is a bleeding edge image from our development branch, use at your own risk.
 
 ## Quick Start
 
