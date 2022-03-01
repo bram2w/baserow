@@ -814,10 +814,11 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
         # If an empty value has been provided we do not want to filter at all.
         if value == "":
             return Q()
+        # No user input goes into the RawSQL, safe to use.
         return AnnotatedQ(
             annotation={
                 f"formatted_date_{field_name}": Coalesce(
-                    RawSQL(
+                    RawSQL(  # nosec
                         f"""TO_CHAR({field_name} at time zone %s,
                         '{field.get_psql_format()}')""",
                         [field.get_timezone()],
@@ -1328,7 +1329,10 @@ class LinkRowFieldType(FieldType):
         if count == 0:
             return []
 
-        values = model.objects.order_by("?")[0 : randrange(0, 3)].values_list(
+        # Ignoring with nosec as this randint usage is purely for constructing
+        # random data in dev environments and is not being used for security or
+        # cryptographical reasons.
+        values = model.objects.order_by("?")[0 : randrange(0, 3)].values_list(  # nosec
             "id", flat=True
         )
         return values
@@ -1595,8 +1599,11 @@ class FileFieldType(FieldType):
         if count == 0:
             return values
 
-        for i in range(0, randrange(0, 3)):
-            instance = UserFile.objects.all()[randint(0, count - 1)]
+        # Ignoring with nosec as this randint usage is purely for constructing
+        # random data in dev environments and is not being used for security or
+        # cryptographical reasons.
+        for i in range(0, randrange(0, 3)):  # nosec
+            instance = UserFile.objects.all()[randint(0, count - 1)]  # nosec
             serialized = instance.serialize()
             serialized["visible_name"] = serialized["name"]
             values.append(serialized)
@@ -1778,12 +1785,13 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             if len(values_mapping) == 0:
                 return None
 
+            # Has been checked for issues, everything is properly escaped and safe.
             sql = f"""
                 p_in = (SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = p_in);
-            """
+            """  # nosec
             return sql, variables
 
         return super().get_alter_column_prepare_old_value(
@@ -1812,7 +1820,8 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             if len(values_mapping) == 0:
                 return None
 
-            return (
+            # Has been checked for issues, everything is properly escaped and safe.
+            return (  # nosec
                 f"""p_in = (
                 SELECT value FROM (
                     VALUES {','.join(values_mapping)}
@@ -1866,7 +1875,10 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         if not select_options:
             return None
 
-        random_choice = randint(0, len(select_options) - 1)
+        # Ignoring with nosec as this randint usage is purely for constructing random
+        # data in dev environments and is not being used for security or cryptographical
+        # reasons.
+        random_choice = randint(0, len(select_options) - 1)  # nosec
 
         return select_options[random_choice]
 
@@ -1892,15 +1904,21 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         if len(option_value_mappings) == 0:
             return Q()
 
+        # Query uses parameters to pass in option values to so no injection possible.
+        # Dynamically built parts of the query are:
+        # - option_value_mappings which only contains internal ids and no user input
+        # - field.id which is an internal id and not user input
+        # So ignoring nosec error as happy this RawSQL is safe. Please update if changes
+        # are made.
         convert_rows_select_id_to_value_sql = f"""(
                 SELECT key FROM (
                     VALUES {','.join(option_value_mappings)}
                 ) AS values (key, value)
                 WHERE value = "field_{field.id}"
             )
-        """
+        """  # nosec
 
-        query = RawSQL(
+        query = RawSQL(  # nosec
             convert_rows_select_id_to_value_sql,
             params=option_values,
             output_field=models.CharField(),
@@ -2008,7 +2026,10 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         if not select_options:
             return None
 
-        random_choice = randint(1, len(select_options))
+        # Ignoring with nosec as this randint usage is purely for constructing random
+        # data in dev environments and is not being used for security or cryptographical
+        # reasons.
+        random_choice = randint(1, len(select_options))  # nosec
 
         return sample(set([x.id for x in select_options]), random_choice)
 

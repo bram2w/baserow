@@ -1,3 +1,5 @@
+import re
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -35,19 +37,26 @@ class BaseEmailMessage(EmailMultiAlternatives):
         context = self.get_context()
         html_content = render_to_string(template_name, context)
 
-        try:
-            body_start_index = html_content.index("<body>")
-            body_end_index = html_content.index("</body>")
-            html_content = html_content[body_start_index:body_end_index]
-        except ValueError:
-            pass
-
-        text_content = strip_tags(html_content)
+        text_content = self._get_plain_text_from_html(html_content)
 
         super().__init__(
             subject=subject, body=text_content, from_email=from_email, to=to
         )
         self.attach_alternative(html_content, "text/html")
+
+    @staticmethod
+    def _get_plain_text_from_html(html_content):
+        body_start_index = html_content.index("<body")
+        body_end_index = html_content.index("</body>")
+        body_with_no_tags = strip_tags(html_content[body_start_index:body_end_index])
+        body_with_collapsed_spaces = re.compile(r" +").sub(" ", body_with_no_tags)
+        body_without_blank_lines = re.compile(r"\n ").sub(
+            "\n", body_with_collapsed_spaces
+        )
+        body_with_collapsed_newlines = re.compile(r"\n+").sub(
+            "\n", body_without_blank_lines
+        )
+        return body_with_collapsed_newlines
 
     def get_context(self):
         return {

@@ -106,6 +106,33 @@ export default {
       this.credentials.email = this.invitation.email
     }
   },
+  async mounted() {
+    if (!this.$env.BASEROW_DISABLE_PUBLIC_URL_CHECK) {
+      const publicBackendUrl = new URL(this.$env.PUBLIC_BACKEND_URL)
+      if (publicBackendUrl.host !== window.location.host) {
+        // If the host of the browser location does not match the PUBLIC_BACKEND_URL
+        // then we are probably mis-configured.
+        try {
+          // Attempt to connect to the backend using the configured PUBLIC_BACKEND_URL
+          // just in-case it is actually configured correctly.
+          await this.$client.get('_health')
+        } catch (error) {
+          const publicBackendUrlWithProto =
+            publicBackendUrl.protocol + '//' + publicBackendUrl.host
+          const browserWindowUrl = location.protocol + '//' + location.host
+          this.showError(
+            'Backend URL mis-configuration detected',
+            `Cannot connect to the backend at ${publicBackendUrlWithProto}.` +
+              ` You visited Baserow at ${browserWindowUrl} ` +
+              ' which indicates you have mis-configured the Baserow ' +
+              ' BASEROW_PUBLIC_URL or PUBLIC_BACKEND_URL environment variables. ' +
+              ' Please visit https://baserow.io/docs/debugging-connection-issues ' +
+              ' on how to fix this error.'
+          )
+        }
+      }
+    }
+  },
   methods: {
     async login() {
       this.$v.$touch()

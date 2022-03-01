@@ -1,10 +1,10 @@
 export default (client) => {
   return {
-    fetchAll(sortId) {
-      return client.get(`/database/views/view/${sortId}/sortings/`)
+    fetchAll(viewId) {
+      return client.get(`/database/views/${viewId}/sortings/`)
     },
-    create(sortId, values) {
-      return client.post(`/database/views/view/${sortId}/sortings/`, values)
+    create(viewId, values) {
+      return client.post(`/database/views/${viewId}/sortings/`, values)
     },
     get(viewSortId) {
       return client.get(`/database/views/sort/${viewSortId}/`)

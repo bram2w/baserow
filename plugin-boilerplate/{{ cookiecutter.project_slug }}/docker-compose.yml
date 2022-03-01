@@ -17,12 +17,6 @@ services:
     ports:
       - 6379:6379
 
-  mjml:
-    container_name: {{ cookiecutter.project_slug }}-mjml
-    image: liminspace/mjml-tcpserver:0.10
-    ports:
-      - 28101:28101
-
   backend:
     container_name: {{ cookiecutter.project_slug }}-backend
     build:
@@ -36,7 +30,6 @@ services:
     depends_on:
       - db
       - redis
-      - mjml
     environment:
       - PUBLIC_BACKEND_URL=http://localhost:8001
       - PUBLIC_WEB_FRONTEND_URL=http://localhost:3001

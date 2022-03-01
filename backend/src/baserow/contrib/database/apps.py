@@ -304,7 +304,7 @@ def safely_update_formula_versions(sender, **kwargs):
     # app.ready will be called for management commands also, we only want to
     # execute the following hook when we are starting the django server as
     # otherwise backwards migrations etc will crash because of this.
-    if apps is not None and settings.UPDATE_FORMULAS_AFTER_MIGRATION:
+    if apps is not None and settings.DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
         from baserow.contrib.database.formula import FormulaHandler
 
         try:

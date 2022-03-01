@@ -25,7 +25,8 @@ def names_digest(*args, length):
     Generate a 32-bit digest of a set of arguments that can be used to shorten
     identifying names.
     """
-    h = hashlib.md5()
+    # Copied from django code for compat, no danger just used for naming indexes.
+    h = hashlib.md5()  # nosec
     for arg in args:
         h.update(arg.encode())
     return h.hexdigest()[:length]
@@ -94,7 +95,8 @@ def _copied_django_index_class_naming_func(table_name, column_names, suffix):
         column_names[0][:7],
         "%s_%s" % (names_digest(*hash_data, length=6), suffix),
     )
-    assert len(name) <= 30, (
+    # Copied from django code for compat
+    assert len(name) <= 30, (  # nosec
         "Index too long for multiple database support. Is self.suffix "
         "longer than 3 characters?"
     )

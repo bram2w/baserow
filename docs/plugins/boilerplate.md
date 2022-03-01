@@ -48,7 +48,6 @@ $ cd my-baserow-plugin
 $ docker network create baserow_plugin_default
 $ docker-compose up -d
 ...
-Starting my-baserow-plugin-mjml ... done
 Starting my-baserow-plugin-db   ... done
 Starting my-baserow-plugin-redis   ... done
 Starting my-baserow-plugin-backend ... done

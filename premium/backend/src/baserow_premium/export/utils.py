@@ -1,6 +1,9 @@
 from typing import Union
 
-from xml.sax.saxutils import escape
+# This escape function is not parsing untrusted XML and is not vulnerable to attacks
+# as it is a simple set string replacement calls. We are not parsing any xml here
+# but instead generating strings to be stored in an xml file.
+from xml.sax.saxutils import escape  # nosec
 
 
 def get_unique_name(

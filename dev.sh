@@ -54,16 +54,22 @@ new_tab() {
 launch_tab_and_attach(){
   tab_name=$1
   service_name=$2
-  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose ps -q "$service_name")" | cut -c2-)
+  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" ps -q "$service_name")" | cut -c2-)
   command="docker logs $container_name && docker attach $container_name"
-  new_tab "$tab_name" "$command"
+  if [[ $(docker inspect "$container_name" --format='{{.State.ExitCode}}') -eq 0 ]]; then
+    new_tab "$tab_name" "$command"
+  else
+    echo -e "\n${RED}$service_name crashed on launch!${NC}"
+    docker logs "$container_name"
+    echo -e "\n${RED}$service_name crashed on launch, see above for logs!${NC}"
+  fi
 }
 
 launch_tab_and_exec(){
   tab_name=$1
   service_name=$2
   exec_command=$3
-  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose ps -q "$service_name")" | cut -c2-)
+  container_name=$(docker inspect -f '{{.Name}}' "$(docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" ps -q "$service_name")" | cut -c2-)
   command="docker exec -it $container_name $exec_command"
   new_tab "$tab_name" "$command"
 }
@@ -76,19 +82,36 @@ open terminal tabs which are attached to the running dev containers.
 Usage: ./dev.sh [optional start dev commands] [optional docker-compose up commands]
 
 The ./dev.sh Commands are:
-restart         : Stop the dev environment first before relaunching.
-restart_wipe    : Stop the dev environment, delete the db and relaunch.
-down            : Down the dev environment and don't up after.
-kill            : Kill the dev environment and don't up after.
-build_only      : Build the dev environment and don't up after.
+dev (default)   : Use the dev environment.
+local           : Use the local environment (no source is mounted, non-dev images used).
+all_in_one      : Use the all_in_one environment.
+heroku          : Use the heroku environment.
+cloudron        : Use the cloudron environment.
+restart         : Stop the environment first before relaunching.
+restart_wipe    : Stop the environment, delete all of the compose file named volumes.
+down            : Down the environment and don't up after.
+kill            : Kill the environment and don't up after.
+build_only      : Build the environment and don't up after.
 dont_migrate    : Disable automatic database migration on baserow startup.
 dont_sync       : Disable automatic template sync on baserow startup.
-dont_attach     : Don't attach to the running dev containers after starting them.
+dont_attach     : Don't attach to the running containers after starting them.
 ignore_ownership: Don't exit if there are files in the repo owned by a different user.
+attach_all      : Attach to all launched containers.
+dont_build_deps : When building environments which require other environments to be
+                  built first dev.sh will build them automatically, disable this by
+                  passing this flag.
 help            : Show this message.
 """
 }
 
+function ensure_only_one_env_selected_at_once() {
+  if [ "$env_set" == true ]; then
+    echo "${RED}You cannot select multiple different environments at once"
+    exit 1
+  else
+    env_set=true
+  fi
+}
 dont_attach=false
 down=false
 kill=false
@@ -98,7 +121,17 @@ up=true
 migrate=true
 sync_templates=true
 exit_if_other_owners_found=true
-delete_db_volume=false
+delete_volumes=false
+attach_all=false
+# Dev.sh supported environments
+dev=true
+local=false
+all_in_one=false
+cloudron=false
+heroku=false
+env_set=false
+build_deps=true
+build_dependencies=()
 while true; do
 case "${1:-noneleft}" in
     dont_migrate)
@@ -142,23 +175,67 @@ case "${1:-noneleft}" in
         run=true
     ;;
     build_only)
-        echo "./dev.sh: Only Building Dev Environment (use 'up --build' instead to
-        rebuild and up)"
+        echo "./dev.sh: Disabled docker-compose up at end"
         shift
         build=true
         up=false
     ;;
+    all_in_one)
+        echo "./dev.sh: Switching to all in one image"
+        ensure_only_one_env_selected_at_once
+        all_in_one=true
+        dev=false
+        build_dependencies=(local)
+        shift
+    ;;
+    cloudron)
+        echo "./dev.sh: Building cloudron image"
+        ensure_only_one_env_selected_at_once
+        cloudron=true
+        dev=false
+        build_dependencies=(local all_in_one)
+        shift
+    ;;
+    heroku)
+        echo "./dev.sh: Switching to heroku"
+        ensure_only_one_env_selected_at_once
+        heroku=true
+        dev=false
+        build_dependencies=(local all_in_one)
+        shift
+    ;;
+    dev)
+        echo "./dev.sh: Using dev env"
+        ensure_only_one_env_selected_at_once
+        dev=true
+        shift
+    ;;
+    local)
+        echo "./dev.sh: Using local instead of dev overrides"
+        ensure_only_one_env_selected_at_once
+        local=true
+        dev=false
+        shift
+    ;;
     restart_wipe)
-        echo "./dev.sh: Restarting Dev Env and Wiping Database"
+        echo "./dev.sh: Restarting Env and Wiping baserow_pgdata volume if exists"
         shift
         down=true
         up=true
-        delete_db_volume=true
+        delete_volumes=true
     ;;
     ignore_ownership)
         echo "./dev.sh: Continuing if files in repo are not owned by $USER."
         shift
         exit_if_other_owners_found=false
+    ;;
+    attach_all)
+        shift
+        attach_all=true
+    ;;
+    dont_build_deps)
+        build_deps=false
+        shift
     ;;
     help)
         show_help
@@ -232,47 +309,126 @@ else
   echo "./dev.sh Using the already set value for the env variable SYNC_TEMPLATES_ON_STARTUP = $SYNC_TEMPLATES_ON_STARTUP"
 fi
 
+# Enable buildkit for faster builds with better caching.
+export COMPOSE_DOCKER_CLI_BUILD=1
+export DOCKER_BUILDKIT=1
+
+export WEB_FRONTEND_PORT=${WEB_FRONTEND_PORT:-3000}
+export BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-http://localhost:$WEB_FRONTEND_PORT}
+
+
 echo "./dev.sh running docker-compose commands:
 ------------------------------------------------
 "
 
+CORE_FILE=docker-compose.yml
+
+if [ "$local" = true ] ; then
+  OVERRIDE_FILE=(-f docker-compose.local.yml)
+else
+  OVERRIDE_FILE=(-f docker-compose.dev.yml)
+fi
+
+if [ "$all_in_one" = true ] ; then
+  CORE_FILE=deploy/all-in-one/"$CORE_FILE"
+  OVERRIDE_FILE=()
+fi
+
+if [ "$cloudron" = true ] ; then
+  CORE_FILE=deploy/cloudron/"$CORE_FILE"
+  OVERRIDE_FILE=()
+fi
+
+if [ "$heroku" = true ] ; then
+  CORE_FILE=deploy/heroku/"$CORE_FILE"
+  OVERRIDE_FILE=()
+fi
+
+set -x
+
 if [ "$down" = true ] ; then
 # Remove the containers and remove the anonymous volumes for cleanliness sake.
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml rm -s -v -f
+docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" rm -s -v -f
+docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" down --remove-orphans
 fi
 
 if [ "$kill" = true ] ; then
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml kill
+docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" kill
 fi
 
 if [ "$build" = true ] ; then
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml build "$@"
+  if [ "$build_deps" = true ]; then
+    for dep in "${build_dependencies[@]}"
+    do
+      ${BASH_SOURCE[0]} "$dep" build_only
+    done
+  fi
+
+  docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" build "$@"
 fi
 
-if [ "$delete_db_volume" = true ] ; then
-docker volume rm baserow_pgdata
+if [ "$delete_volumes" = true ] ; then
+  docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" down -v
 fi
 
 if [ "$up" = true ] ; then
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d "$@"
+docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" up -d "$@"
 fi
 
 if [ "$run" = true ] ; then
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml run "$@"
+docker-compose -f "$CORE_FILE" "${OVERRIDE_FILE[@]}" run "$@"
 fi
+
+set +x
 
 if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
 
-  launch_tab_and_attach "backend" "backend"
-  launch_tab_and_attach "web frontend" "web-frontend"
-  launch_tab_and_attach "celery" "celery"
-  launch_tab_and_attach "export worker" "celery-export-worker"
-  launch_tab_and_attach "beat worker" "celery-beat-worker"
+  if [ "$all_in_one" = true ]; then
+    launch_tab_and_attach "baserow_all_in_one" "baserow_all_in_one"
+    launch_tab_and_attach "mailhog" "mailhog"
+  fi
 
-  launch_tab_and_exec "web frontend lint" \
-          "web-frontend" \
-          "/bin/bash /baserow/web-frontend/docker/docker-entrypoint.sh lint-fix"
-  launch_tab_and_exec "backend lint" \
-          "backend" \
-          "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint"
+  if [ "$cloudron" = true ]; then
+    launch_tab_and_attach "baserow_cloudron" "baserow_cloudron"
+    if [ "$attach_all" = true ] ; then
+      launch_tab_and_attach "db" "db"
+      launch_tab_and_attach "mailhog" "mailhog"
+    fi
+  fi
+
+  if [ "$heroku" = true ]; then
+    launch_tab_and_attach "baserow_heroku" "baserow_heroku"
+    if [ "$attach_all" = true ] ; then
+      launch_tab_and_attach "db" "db"
+      launch_tab_and_attach "redis" "redis"
+      launch_tab_and_attach "mailhog" "mailhog"
+    fi
+  fi
+
+  if [ "$local" = true ] || [ "$dev" = true ]; then
+    launch_tab_and_attach "backend" "backend"
+    launch_tab_and_attach "web frontend" "web-frontend"
+    launch_tab_and_attach "celery" "celery"
+    launch_tab_and_attach "export worker" "celery-export-worker"
+    launch_tab_and_attach "beat worker" "celery-beat-worker"
+
+    if [ "$dev" = true ] ; then
+      launch_tab_and_exec "web frontend lint" \
+              "web-frontend" \
+              "/bin/bash /baserow/web-frontend/docker/docker-entrypoint.sh lint-fix"
+      launch_tab_and_exec "backend lint" \
+              "backend" \
+              "/bin/bash /baserow/backend/docker/docker-entrypoint.sh lint-shell"
+    fi
+
+    if [ "$attach_all" = true ] ; then
+      launch_tab_and_attach "caddy" "caddy"
+      launch_tab_and_attach "db" "db"
+      launch_tab_and_attach "redis" "redis"
+      launch_tab_and_attach "mailhog" "mailhog"
+      if [ "$dev" = true ] ; then
+        launch_tab_and_attach "mjml compiler" "mjml-email-compiler"
+      fi
+    fi
+  fi
 fi

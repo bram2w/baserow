@@ -21,7 +21,7 @@ def forward(apps, schema_editor):
                     # No SQL injection here so it's safe to use % operator
                     cursor.execute(
                         (
-                            "DELETE FROM %(table)s "
+                            "DELETE FROM %(table)s "  # nosec
                             "WHERE %(select_column)s NOT IN "
                             "(SELECT id FROM %(option_table)s)"
                         )

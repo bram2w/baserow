@@ -1,11 +1,32 @@
-**Build**
+# Baserow's Cloudron image 
 
-```
-$ docker build -t registry.gitlab.com/bramw/baserow/cloudron:1.8.2 .
-```
+This is the Baserow maintained [Cloudron Image](https://cloudron.io).
 
-**Push**
+Please see our [Install on Cloudron](https://baserow.io/docs/installation/install-on-cloudron)
+guide for more details.
 
-```
-$ docker push registry.gitlab.com/bramw/baserow/cloudron:1.8.2
-```
+## About Baserow
+
+* A spreadsheet database hybrid combining ease of use and powerful data organization.
+* Easily self-hosted with no storage restrictions or sign-up on https://baserow.io to
+  get started immediately.
+* Alternative to Airtable.
+* Open-core with all non-premium features under
+  the [MIT License](https://choosealicense.com/licenses/mit/) allowing commercial and
+  private use.
+* Headless and API first.
+* Uses popular frameworks and tools like [Django](https://www.djangoproject.com/),
+  [Vue.js](https://vuejs.org/) and [PostgreSQL](https://www.postgresql.org/).
+
+## Quick Reference
+
+* **Maintained By**: [baserow.io](https://baserow.io/contact)
+* **Get Support At**: [The Baserow Community Forums](https://community.baserow.io)
+* **Source Code Available At**: [gitlab.com/bramw/baserow](https://gitlab.com/bramw/baserow)
+* **Docs At**: [baserow.io/docs](https://baserow.io/docs)
+* **License**: Open-Core with all non-premium code under the MIT license.
+
+## Supported tags and Dockerfile Links
+
+* [`1.8.3`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/deploy/cloudron/Dockerfile)
+* [`develop_latest`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/deploy/cloudron/Dockerfile)

@@ -83,11 +83,9 @@ In order to simplify the process of creating HTML emails we use MJML. This tool 
 it easy to create responsive emails that work with most email clients. This might seem
 a bit like over engineering to use this for only the password forgot email, but more
 complicated emails are going to be added in the future and we wanted to have a solid 
-base. To make this integrate nicely with Django templates we use the liminispace
-django mjml package.
+base. 
 
 https://mjml.io/
-https://github.com/liminspace/django-mjml
 
 ## Web frontend
 

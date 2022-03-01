@@ -40,6 +40,7 @@ def get_all_field_dependencies(field):
     relationship_table = FieldDependency._meta.db_table
     pk_name = "id"
 
+    # Only pk_name and a table name get formatted in, no user controllable input, safe.
     pks = Field.objects.raw(
         f"""
         WITH RECURSIVE traverse({pk_name}, depth) AS (
@@ -59,7 +60,7 @@ def get_all_field_dependencies(field):
         WHERE depth <= %(max_depth)s
         GROUP BY {pk_name}
         ORDER BY MAX(depth) DESC, {pk_name} ASC
-        """,
+        """,  # nosec
         query_parameters,
     )
     return {item.pk for item in pks}

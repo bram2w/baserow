@@ -18,26 +18,6 @@ experience smooth and useful. In the per container tabs opened by using `./dev.s
 * The bash session you are left in after pressing ctrl-c will have a history populated,
   so you can press up to get the command that the container was running before you
   pressed ctrl-c!
-  
-### Usage
-
-```bash
-./dev.sh starts the baserow development environment and by default attempts to
-open terminal tabs which are attached to the running dev containers.
-
-Usage: ./dev.sh [optional start dev commands] [optional docker-compose up commands]
-
-The ./dev.sh Commands are:
-restart         : Stop the dev environment first before relaunching.
-down            : Down the dev environment and don't up after.
-kill            : Kill the dev environment and don't up after.
-build_only      : Build the dev environment and don't up after.
-dont_migrate    : Disable automatic database migration on baserow startup.
-dont_sync       : Disable automatic template sync on baserow startup.
-dont_attach     : Don't attach to the running dev containers after starting them.
-ignore_ownership: Don't exit if there are files in the repo owned by a different user.
-help            : Show this message.
-```
 
 ### Examples of ./dev.sh usage:
 
@@ -57,6 +37,16 @@ $ ./dev.sh run backend manage migrate
 $ ./dev.sh restart {EXTRA_COMMANDS_PASSED_TO_UP}  
 $ ./dev.sh down # downs the env
 $ ./dev.sh kill # kills (the old stop_dev.sh)
+# WARNING: restart_wipe will detail ALL volumes associated with that environment 
+# permanently. 
+$ ./dev.sh restart_wipe --build
+# Dev.sh also supports running different Baserow setups:
+# The local flag runs the non-dev production images with no code mounting + hot 
+# reloading etc. It however builds fresh new images from your local repo.
+$ ./dev.sh local restart --build
+$ ./dev.sh all_in_one restart --build
+$ ./dev.sh cloudron restart --build
+$ ./dev.sh heroku restart --build
 # Bind to different ports on the host manage incase you are already running them and they clash! (also works with just docker-compose up)
 $ POSTGRES_PORT=5555 ./dev.sh
 ```

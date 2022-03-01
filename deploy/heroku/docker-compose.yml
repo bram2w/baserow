@@ -1,0 +1,65 @@
+version: "3.4"
+services:
+  # A dev / testing /example compose file for testing heroku image works without
+  # heroku
+  baserow_heroku:
+    image: baserow_heroku
+    build:
+      dockerfile: $PWD/heroku.Dockerfile
+      context: $PWD
+      args:
+        - FROM_IMAGE=baserow
+    environment:
+      - PORT=80
+      - BASEROW_PUBLIC_URL=http://localhost
+      - DATABASE_URL=postgresql://baserow:baserow@db:5432/baserow
+      - HEROKU_APP_NAME=test
+      - REDIS_URL=redis://:baserow@redis:6379
+      - MAILGUN_DOMAIN=mailhog
+      - MAILGUN_SMTP_SERVER=mailhog
+      - MAILGUN_SMTP_LOGIN=mailhog
+      - MAILGUN_SMTP_PASSWORD=mailhog
+      - MAILGUN_SMTP_PORT=1025
+      - BASEROW_AMOUNT_OF_WORKERS
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - baserow_heroku_data:/baserow/data
+    healthcheck:
+      test: [ "CMD-SHELL", "/baserow/backend/docker/docker-entrypoint.sh backend-healthcheck" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stdin_open: true
+    tty: true
+  db:
+    # Please ensure the postgres-client's major version in the backend image is kept in
+    # sync with this major version so pg_dump remains compatible.
+    image: postgres:11.3
+    environment:
+      - POSTGRES_USER=${DATABASE_USER:-baserow}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD:-baserow}
+      - POSTGRES_DB=${DATABASE_NAME:-baserow}
+    healthcheck:
+      test: [ "CMD-SHELL", "su postgres -c \"pg_isready -U ${DATABASE_USER:-baserow}\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - heroku_pgdata:/var/lib/postgresql/data
+  mailhog:
+    image: mailhog/mailhog
+    logging:
+      driver: 'none'  # disable saving logs
+    ports:
+      - "8025:8025" # web ui
+  redis:
+    image: redis:6.0
+    command: redis-server --requirepass ${REDIS_PASSWORD:-baserow}
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+
+volumes:
+  heroku_pgdata:
+  baserow_heroku_data:

@@ -1,6 +1,9 @@
 from .base import *  # noqa: F403, F401
 
 
+# This is a hardcoded key for test runs only.
+SECRET_KEY = "test_hardcoded_secret_key"  # nosec
+
 CELERY_BROKER_BACKEND = "memory"
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True

@@ -61,8 +61,10 @@ def fill_table_fields(limit, table):
         f for f in all_kwargs_per_type.items() if f[0] not in ["link_row", "lookup"]
     ]
     for _ in range(limit):
-        field_type_name, all_kwargs = random.choice(allowed_field_list)
-        kwargs = random.choice(all_kwargs)
+        # This is a helper cli command, randomness is not being used for any security
+        # or crypto related reasons.
+        field_type_name, all_kwargs = random.choice(allowed_field_list)  # nosec
+        kwargs = random.choice(all_kwargs)  # nosec
         kwargs.pop("primary", None)
         kwargs["name"] = field_handler.find_next_unused_field_name(
             table, [kwargs["name"]]

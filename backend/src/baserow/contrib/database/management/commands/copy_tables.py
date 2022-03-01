@@ -1,5 +1,7 @@
 import math
-from subprocess import Popen
+
+# See comment below about nosec here.
+from subprocess import Popen  # nosec
 from typing import Callable, Dict, Any
 
 from django.core.management.base import BaseCommand
@@ -7,7 +9,9 @@ from django.db import connections
 
 
 def run(command, env):
-    proc = Popen(command, shell=True, env=env)
+    # Ignoring as this is a CLI admin tool calling Popen, we don't need to worry about
+    # shell injection as to call this tool you must already have shell access...
+    proc = Popen(command, shell=True, env=env)  # nosec
     proc.wait()
 
 

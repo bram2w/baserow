@@ -2,7 +2,7 @@
 
 A view is an abstraction that defines how table data is displayed to a user. More 
 information about this can be found on the 
-[database plugin page](../getting-started/database-plugin.md). This is a tutorial about 
+[database plugin page](../technical/database-plugin.md). This is a tutorial about 
 how to create your own custom table view type for Baserow via a plugin. We are going to
 create a calendar view that doesn't really do anything. In the end the user can create 
 a new calendar view that only shows a hello world message. We expect that you are 

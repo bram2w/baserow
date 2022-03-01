@@ -158,10 +158,9 @@ class FieldType(
         try:
             model_field.get_prep_value("")
             q = q | Q(**{f"{field_name}": ""})
+            return q
         except Exception:
-            pass
-
-        return q
+            return q
 
     def contains_query(self, field_name, value, model_field, field):
         """

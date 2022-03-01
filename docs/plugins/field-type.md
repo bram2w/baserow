@@ -2,7 +2,7 @@
 
 A field is an abstraction that defines how table data is stored per column. More
 information can be found on the
-[database plugin page](../getting-started/database-plugin.md). This is a tutorial about
+[database plugin page](../technical/database-plugin.md). This is a tutorial about
 how to create your own custom table field type for Baserow via a plugin. We are going to
 create a integer field which displays as "hello world". Of course a number field with
 the more features already exists, this is just for example purposes. In the end the user
