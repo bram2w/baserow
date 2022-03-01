@@ -65,6 +65,7 @@ export default {
           this.loading = false
           this.$refs.form.reset()
           this.hide()
+          this.$emit('field-created-callback-done', { newField })
         }
         this.$emit('field-created', { callback, newField, fetchNeeded })
       } catch (error) {

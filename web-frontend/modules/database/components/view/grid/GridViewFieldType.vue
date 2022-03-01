@@ -41,6 +41,36 @@
         @update="$emit('refresh', $event)"
         @delete="$emit('refresh')"
       >
+        <li v-if="!field.primary && !readOnly">
+          <a
+            ref="insertLeftLink"
+            @click="
+              $refs.insertFieldContext.toggle($refs.insertLeftLink, 'left')
+            "
+          >
+            <i class="context__menu-icon fas fa-fw fa-arrow-left"></i>
+            {{ $t('gridViewFieldType.insertLeft') }}
+          </a>
+        </li>
+        <li v-if="!field.primary && !readOnly">
+          <a
+            ref="insertRightLink"
+            @click="
+              $refs.insertFieldContext.toggle($refs.insertRightLink, 'right')
+            "
+          >
+            <i class="context__menu-icon fas fa-fw fa-arrow-right"></i>
+            {{ $t('gridViewFieldType.insertRight') }}
+          </a>
+          <InsertFieldContext
+            ref="insertFieldContext"
+            :table="table"
+            :from-field="field"
+            @field-created="$emit('field-created', $event)"
+            @update-inserted-field-order="updateInsertedFieldOrder"
+          ></InsertFieldContext>
+        </li>
+        <li />
         <li v-if="canFilter">
           <a @click="createFilter($event, view, field)">
             <i class="context__menu-icon fas fa-fw fa-filter"></i>
@@ -118,12 +148,13 @@ import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
+import InsertFieldContext from '@baserow/modules/database/components/field/InsertFieldContext'
 import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewFieldType',
-  components: { FieldContext, GridViewFieldWidthHandle },
+  components: { FieldContext, GridViewFieldWidthHandle, InsertFieldContext },
   mixins: [gridViewHelpers],
   props: {
     table: {
@@ -176,6 +207,10 @@ export default {
     }
   },
   methods: {
+    updateInsertedFieldOrder($event) {
+      this.$emit('update-inserted-field-order', $event)
+      this.$refs.context.hide()
+    },
     async createFilter(event, view, field) {
       // Prevent the event from propagating to the body so that it does not close the
       // view filter context menu right after it has been opened. This is due to the
