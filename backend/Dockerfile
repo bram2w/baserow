@@ -69,7 +69,7 @@ ENV PYTHONPATH $PYTHONPATH:/baserow/backend/src:/baserow/premium/backend/src
 RUN dos2unix /baserow/backend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/backend/docker/docker-entrypoint.sh
 
-HEALTHCHECK CMD ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
+HEALTHCHECK CMD ["/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
 ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh"]
 
 FROM core as dev

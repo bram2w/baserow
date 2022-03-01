@@ -88,7 +88,7 @@ COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
 
 COPY --chown=$UID:$GID Caddyfile /baserow/caddy/Caddyfile
 
-HEALTHCHECK CMD ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
+HEALTHCHECK CMD ["/bin/bash", "/baserow/backend/docker/docker-entrypoint.sh", "backend-healthcheck"]
 
 # ========================
 # = BASEROW

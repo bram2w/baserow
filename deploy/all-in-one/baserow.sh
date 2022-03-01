@@ -312,7 +312,7 @@ case "$1" in
       docker_safe_run /baserow/web-frontend/docker/docker-entrypoint.sh "${@:2}"
     ;;
     *)
-        echo "${@:2}"
+        echo "Command given was $*"
         show_help
         exit 1
     ;;
