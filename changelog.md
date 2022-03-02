@@ -39,6 +39,7 @@
   and BASEROW_CADDY_ADDRESSES now to configure a domain with optional auto https.
 * Add health checks for all services.
 * Ensure error logging is enabled in the Backend even when DEBUG is off.
+* Removed upload file size limit.
 
 ## Released (2022-01-13 1.8.2)
 
