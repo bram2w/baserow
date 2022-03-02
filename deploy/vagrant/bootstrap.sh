@@ -5,7 +5,7 @@ apt-get update
 apt-get install git -y
 
 cd ~
-cp /local_baserow_repo/docs/guides/installation/install-on-ubuntu.md install-on-ubuntu.md
+cp /local_baserow_repo/docs/guides/installation/old-install-on-ubuntu.md install-on-ubuntu.md
 
 # Process the guide to only extract the bash we want
 sed -n '/## HTTPS \/ SSL Support/q;p' install-on-ubuntu.md | # We don't want to setup https or do any upgrade scripts which follow

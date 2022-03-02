@@ -99,6 +99,10 @@ SECRET_KEY= DATABASE_PASSWORD= REDIS_PASSWORD= docker-compose up
 
 ## Upgrading from Baserow 1.8.2's docker-compose file
 
+> If you were previously using a separate api.your_baserow_server.com domain this is no
+> longer needed. Baserow will now work on a single domain accessing the api at
+> YOUR_DOMAIN.com/api.
+
 To upgrade from 1.8.2's docker-compose file from inside the Baserow git repo you need to:
 1. Stop your existing Baserow install when safe to do so:
    `docker-compose down`
