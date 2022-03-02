@@ -9,6 +9,10 @@ from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.trash.handler import TrashHandler
+from baserow.contrib.database.api.utils import (
+    get_include_exclude_fields,
+    extract_field_ids_from_string,
+)
 
 
 def test_get_field_ids_from_dict():
@@ -24,12 +28,11 @@ def test_get_field_ids_from_dict():
 
 
 def test_extract_field_ids_from_string():
-    handler = RowHandler()
-    assert handler.extract_field_ids_from_string(None) == []
-    assert handler.extract_field_ids_from_string("not,something") == []
-    assert handler.extract_field_ids_from_string("field_1,field_2") == [1, 2]
-    assert handler.extract_field_ids_from_string("field_22,test_8,999") == [22, 8, 999]
-    assert handler.extract_field_ids_from_string("is,1,one") == [1]
+    assert extract_field_ids_from_string(None) == []
+    assert extract_field_ids_from_string("not,something") == []
+    assert extract_field_ids_from_string("field_1,field_2") == [1, 2]
+    assert extract_field_ids_from_string("field_22,test_8,999") == [22, 8, 999]
+    assert extract_field_ids_from_string("is,1,one") == [1]
 
 
 @pytest.mark.django_db
@@ -40,42 +43,35 @@ def test_get_include_exclude_fields(data_fixture):
     field_2 = data_fixture.create_text_field(table=table, order=2)
     field_3 = data_fixture.create_text_field(table=table_2, order=3)
 
-    row_handler = RowHandler()
+    assert get_include_exclude_fields(table, include=None, exclude=None) is None
 
-    assert (
-        row_handler.get_include_exclude_fields(table, include=None, exclude=None)
-        is None
-    )
+    assert get_include_exclude_fields(table, include="", exclude="") is None
 
-    assert row_handler.get_include_exclude_fields(table, include="", exclude="") is None
-
-    fields = row_handler.get_include_exclude_fields(table, f"field_{field_1.id}")
+    fields = get_include_exclude_fields(table, f"field_{field_1.id}")
     assert len(fields) == 1
     assert fields[0].id == field_1.id
 
-    fields = row_handler.get_include_exclude_fields(
+    fields = get_include_exclude_fields(
         table, f"field_{field_1.id},field_9999,field_{field_2.id}"
     )
     assert len(fields) == 2
     assert fields[0].id == field_1.id
     assert fields[1].id == field_2.id
 
-    fields = row_handler.get_include_exclude_fields(
-        table, None, f"field_{field_1.id},field_9999"
-    )
+    fields = get_include_exclude_fields(table, None, f"field_{field_1.id},field_9999")
     assert len(fields) == 1
     assert fields[0].id == field_2.id
 
-    fields = row_handler.get_include_exclude_fields(
+    fields = get_include_exclude_fields(
         table, f"field_{field_1.id},field_{field_2.id}", f"field_{field_1.id}"
     )
     assert len(fields) == 1
     assert fields[0].id == field_2.id
 
-    fields = row_handler.get_include_exclude_fields(table, f"field_{field_3.id}")
+    fields = get_include_exclude_fields(table, f"field_{field_3.id}")
     assert len(fields) == 0
 
-    fields = row_handler.get_include_exclude_fields(table, None, f"field_{field_3.id}")
+    fields = get_include_exclude_fields(table, None, f"field_{field_3.id}")
     assert len(fields) == 2
 
 
@@ -500,30 +496,26 @@ def test_get_include_exclude_fields_with_user_field_names(data_fixture):
     row_handler = RowHandler()
 
     assert (
-        row_handler.get_include_exclude_fields(
+        get_include_exclude_fields(
             table, include=None, exclude=None, user_field_names=True
         )
         is None
     )
 
     assert (
-        row_handler.get_include_exclude_fields(
-            table, include="", exclude="", user_field_names=True
-        )
+        get_include_exclude_fields(table, include="", exclude="", user_field_names=True)
         is None
     )
 
-    fields = row_handler.get_include_exclude_fields(
-        table, include="Test_2", user_field_names=True
-    )
+    fields = get_include_exclude_fields(table, include="Test_2", user_field_names=True)
     assert list(fields.values_list("name", flat=True)) == ["Test_2"]
 
-    fields = row_handler.get_include_exclude_fields(
+    fields = get_include_exclude_fields(
         table, "first,field_9999,Test", user_field_names=True
     )
     assert list(fields.values_list("name", flat=True)) == ["first", "Test"]
 
-    fields = row_handler.get_include_exclude_fields(
+    fields = get_include_exclude_fields(
         table, None, "first,field_9999", user_field_names=True
     )
     assert list(fields.values_list("name", flat=True)) == [
@@ -532,12 +524,12 @@ def test_get_include_exclude_fields_with_user_field_names(data_fixture):
         "With Space",
     ]
 
-    fields = row_handler.get_include_exclude_fields(
+    fields = get_include_exclude_fields(
         table, "first,Test", "first", user_field_names=True
     )
     assert list(fields.values_list("name", flat=True)) == ["Test"]
 
-    fields = row_handler.get_include_exclude_fields(
+    fields = get_include_exclude_fields(
         table, 'first,"With Space",Test', user_field_names=True
     )
     assert list(fields.values_list("name", flat=True)) == [

@@ -183,6 +183,10 @@
     "restoreNotification": {
         "restore": "Restore deleted {type}"
     },
+    "copyingNotification": {
+        "title": "Copying...",
+        "content": "Preparing your data"
+    },
     "errorLayout": {
         "notFound": "The page you are looking for has not been found. This might be because URL is incorrect or that you don’t have permission to view this page.",
         "error": "Something went wrong while loading the page. Our developers have been notified of the issue. Please try to refresh or return to the dashboard.",

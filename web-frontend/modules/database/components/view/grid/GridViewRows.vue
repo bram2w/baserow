@@ -10,6 +10,7 @@
       :key="'row-' + '-' + row.id"
       :row="row"
       :fields="fields"
+      :all-field-ids="allFieldIds"
       :field-widths="fieldWidths"
       :include-row-details="includeRowDetails"
       :read-only="readOnly"
@@ -32,6 +33,10 @@ export default {
   mixins: [gridViewHelpers],
   props: {
     fields: {
+      type: Array,
+      required: true,
+    },
+    allFieldIds: {
       type: Array,
       required: true,
     },
