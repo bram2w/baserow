@@ -31,5 +31,5 @@ guide for more details.
 * [`X.Y.Z`](https://gitlab.com/bramw/baserow/-/blob/master/deploy/cloudron/Dockerfile)
   Tagged by Baserow version.
 * [`latest`](https://gitlab.com/bramw/baserow/-/blob/master/deploy/cloudron/Dockerfile)
-* [`develop-latest`](https://gitlab.com/bramw/baserow/-/blob/1.8.3/deploy/cloudron/Dockerfile)
+* [`develop-latest`](https://gitlab.com/bramw/baserow/-/blob/1.9/deploy/cloudron/Dockerfile)
   This is a bleeding edge image from our development branch, use at your own risk.
