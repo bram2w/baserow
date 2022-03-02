@@ -4,6 +4,7 @@ import TemplateSidebar from '@baserow/modules/database/components/sidebar/Templa
 import TableTemplate from '@baserow/modules/database/components/table/TableTemplate'
 import { populateTable } from '@baserow/modules/database/store/table'
 import GridViewRowExpandButton from '@baserow/modules/database/components/view/grid/GridViewRowExpandButton'
+import DatabaseForm from '@baserow/modules/database/components/form/DatabaseForm'
 
 export class DatabaseApplicationType extends ApplicationType {
   static getType() {
@@ -106,11 +107,13 @@ export class DatabaseApplicationType extends ApplicationType {
           tableId: tables[0].id,
         },
       })
+      return true
     } else {
       $store.dispatch('notification/error', {
         title: $i18n.t('applicationType.cantSelectTableTitle'),
         message: $i18n.t('applicationType.cantSelectTableDescription'),
       })
+      return false
     }
   }
 
@@ -136,5 +139,9 @@ export class DatabaseApplicationType extends ApplicationType {
       delete data.tables
     }
     return data
+  }
+
+  getApplicationFormComponent() {
+    return DatabaseForm
   }
 }

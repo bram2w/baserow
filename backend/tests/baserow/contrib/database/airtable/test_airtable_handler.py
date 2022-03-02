@@ -3,17 +3,27 @@ import pytest
 import responses
 import json
 
+from unittest.mock import patch
 from copy import deepcopy
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
-from pytz import UTC, timezone as pytz_timezone
+from pytz import UTC, timezone as pytz_timezone, UnknownTimeZoneError
 
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 
 from baserow.core.user_files.models import UserFile
 from baserow.core.utils import Progress
+from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.airtable.constants import (
+    AIRTABLE_EXPORT_JOB_DOWNLOADING_PENDING,
+)
+from baserow.contrib.database.airtable.exceptions import (
+    AirtableImportJobDoesNotExist,
+    AirtableImportJobAlreadyRunning,
+)
+from baserow.contrib.database.airtable.models import AirtableImportJob
 from baserow.contrib.database.airtable.handler import AirtableHandler
 
 
@@ -247,6 +257,20 @@ def test_to_baserow_database_export():
         baserow_database_export["tables"][1]["rows"][0]["field_fldEB5dp0mNjVZu0VJI"]
         == "2022-01-21T01:00:00+00:00"
     )
+    assert baserow_database_export["tables"][0]["views"] == [
+        {
+            "id": 1,
+            "type": "grid",
+            "name": "Grid",
+            "order": 1,
+            "filter_type": "AND",
+            "filters_disabled": False,
+            "filters": [],
+            "sortings": [],
+            "public": False,
+            "field_options": [],
+        }
+    ]
 
 
 @pytest.mark.django_db
@@ -400,3 +424,85 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
     rows = data_model.objects.all()
     assert rows[0].checkbox is True
     assert rows[1].checkbox is False
+
+
+@pytest.mark.django_db(transaction=True)
+@responses.activate
+@patch("baserow.contrib.database.airtable.handler.run_import_from_airtable")
+def test_create_and_start_airtable_import_job(
+    mock_run_import_from_airtable, data_fixture
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    group_2 = data_fixture.create_group()
+
+    with pytest.raises(UserNotInGroup):
+        AirtableHandler.create_and_start_airtable_import_job(user, group_2, "test")
+
+    job = AirtableHandler.create_and_start_airtable_import_job(user, group, "test")
+    assert job.user_id == user.id
+    assert job.group_id == group.id
+    assert job.airtable_share_id == "test"
+    assert job.progress_percentage == 0
+    assert job.timezone is None
+    assert job.state == "pending"
+    assert job.error == ""
+
+    mock_run_import_from_airtable.delay.assert_called_once()
+    args = mock_run_import_from_airtable.delay.call_args
+    assert args[0][0] == job.id
+
+    job.delete()
+    job = AirtableHandler.create_and_start_airtable_import_job(
+        user, group, "test", timezone="Europe/Amsterdam"
+    )
+    assert job.timezone == "Europe/Amsterdam"
+
+
+@pytest.mark.django_db(transaction=True)
+@responses.activate
+@patch("baserow.contrib.database.airtable.handler.run_import_from_airtable")
+def test_create_and_start_airtable_import_job_with_timezone(
+    mock_run_import_from_airtable, data_fixture
+):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+
+    with pytest.raises(UnknownTimeZoneError):
+        AirtableHandler.create_and_start_airtable_import_job(
+            user, group, "test", timezone="UNKNOWN"
+        )
+
+    assert AirtableImportJob.objects.all().count() == 0
+
+    job = AirtableHandler.create_and_start_airtable_import_job(
+        user, group, "test", timezone="Europe/Amsterdam"
+    )
+    assert job.timezone == "Europe/Amsterdam"
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_create_and_start_airtable_import_job_while_other_job_is_running(data_fixture):
+    user = data_fixture.create_user()
+    group = data_fixture.create_group(user=user)
+    data_fixture.create_airtable_import_job(
+        user=user, state=AIRTABLE_EXPORT_JOB_DOWNLOADING_PENDING
+    )
+
+    with pytest.raises(AirtableImportJobAlreadyRunning):
+        AirtableHandler.create_and_start_airtable_import_job(user, group, "test")
+
+
+@pytest.mark.django_db
+def test_get_airtable_import_job(data_fixture):
+    user = data_fixture.create_user()
+    job_1 = data_fixture.create_airtable_import_job(user=user)
+    job_2 = data_fixture.create_airtable_import_job()
+
+    with pytest.raises(AirtableImportJobDoesNotExist):
+        AirtableHandler.get_airtable_import_job(user, job_2.id)
+
+    job = AirtableHandler.get_airtable_import_job(user, job_1.id)
+    assert isinstance(job, AirtableImportJob)
+    assert job.id == job_1.id

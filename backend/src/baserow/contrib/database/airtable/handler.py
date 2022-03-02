@@ -1,7 +1,7 @@
 import re
 import json
 import requests
-from pytz import UTC, BaseTzInfo
+from pytz import UTC, BaseTzInfo, timezone as pytz_timezone
 from collections import defaultdict
 from typing import List, Tuple, Union, Dict, Optional
 from requests import Response
@@ -10,6 +10,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from datetime import datetime
 
 from django.core.files.storage import Storage
+from django.contrib.auth import get_user_model
+from django.db import transaction
 
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import (
@@ -22,6 +24,8 @@ from baserow.contrib.database.export_serialized import DatabaseExportSerializedS
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.field_types import FieldType, field_type_registry
+from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.models import GridView
 from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.airtable.registry import (
     AirtableColumnType,
@@ -33,7 +37,16 @@ from baserow.contrib.database.airtable.constants import (
     AIRTABLE_EXPORT_JOB_CONVERTING,
 )
 
-from .exceptions import AirtableBaseNotPublic
+from .exceptions import (
+    AirtableBaseNotPublic,
+    AirtableImportJobDoesNotExist,
+    AirtableImportJobAlreadyRunning,
+)
+from .models import AirtableImportJob
+from .tasks import run_import_from_airtable
+
+
+User = get_user_model()
 
 
 BASE_HEADERS = {
@@ -393,6 +406,7 @@ class AirtableHandler:
                 row["id"] = new_id
                 converting_progress.increment(state=AIRTABLE_EXPORT_JOB_CONVERTING)
 
+        view_id = 0
         for table_index, table in enumerate(schema["tableSchemas"]):
             field_mapping = {}
 
@@ -481,12 +495,20 @@ class AirtableHandler:
                 )
                 converting_progress.increment(state=AIRTABLE_EXPORT_JOB_CONVERTING)
 
+            # Create a default grid view because the importing of views doesn't work
+            # yet. It's a bit quick and dirty, but it will be replaced soon.
+            view_id += 1
+            grid_view = GridView(id=view_id, name="Grid", order=1)
+            grid_view.get_field_options = lambda *args, **kwargs: []
+            grid_view_type = view_type_registry.get_by_model(grid_view)
+            exported_views = [grid_view_type.export_serialized(grid_view, None, None)]
+
             exported_table = DatabaseExportSerializedStructure.table(
                 id=table["id"],
                 name=table["name"],
                 order=table_index,
                 fields=exported_fields,
-                views=[],
+                views=exported_views,
                 rows=exported_rows,
             )
             exported_tables.append(exported_table)
@@ -597,3 +619,70 @@ class AirtableHandler:
         )
 
         return databases, id_mapping
+
+    @staticmethod
+    def get_airtable_import_job(user: User, job_id: int) -> AirtableImportJob:
+        """
+        Fetches an Airtable import job from the database if the user has created it.
+        The properties like `progress_percentage` and `progress_state` are
+        automatically updated by the task that does the actual import.
+
+        :param user: The user on whose behalf the job is requested.
+        :param job_id: The id of the job that must be fetched.
+        :raises AirtableImportJobDoesNotExist: If the import job doesn't exist.
+        :return: The fetched Airtable import job instance related to the provided id.
+        """
+
+        try:
+            return AirtableImportJob.objects.select_related(
+                "user", "group", "database", "database__group"
+            ).get(id=job_id, user_id=user.id)
+        except AirtableImportJob.DoesNotExist:
+            raise AirtableImportJobDoesNotExist(
+                f"The job with id {job_id} does not exist."
+            )
+
+    @staticmethod
+    def create_and_start_airtable_import_job(
+        user: User,
+        group: Group,
+        share_id: str,
+        timezone: Optional[str] = None,
+    ) -> AirtableImportJob:
+        """
+        Creates a new Airtable import jobs and starts the asynchronous task that
+        actually does the import.
+
+        :param user: The user on whose behalf the import is started.
+        :param group: The group where the Airtable base be imported to.
+        :param share_id: The Airtable share id of the page that must be fetched. Note
+            that the base must be shared publicly. The id stars with `shr`.
+        :param timezone: The main timezone used for date conversions if needed.
+        :raises AirtableImportJobAlreadyRunning: If another import job is already
+            running. A user can only have one job running simultaneously.
+        :raises UnknownTimeZoneError: When the provided timezone string is incorrect.
+        :return: The newly created Airtable import job.
+        """
+
+        # Validate the provided timezone.
+        if timezone is not None:
+            pytz_timezone(timezone)
+
+        group.has_user(user, raise_error=True)
+
+        # A user can only have one Airtable import job running simultaneously. If one
+        # is already running, we don't want to start a new one.
+        running_jobs = AirtableImportJob.objects.filter(user_id=user.id).is_running()
+        if len(running_jobs) > 0:
+            raise AirtableImportJobAlreadyRunning(
+                f"Another job is already running with id {running_jobs[0].id}."
+            )
+
+        job = AirtableImportJob.objects.create(
+            user=user,
+            group=group,
+            airtable_share_id=share_id,
+            timezone=timezone,
+        )
+        transaction.on_commit(lambda: run_import_from_airtable.delay(job.id))
+        return job

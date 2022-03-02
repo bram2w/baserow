@@ -1,8 +1,8 @@
 <template>
-  <div class="export-table-modal__actions">
-    <div v-if="job !== null" class="export-table-modal__loading-bar">
+  <div class="modal-progress__actions">
+    <div v-if="job !== null" class="modal-progress__loading-bar">
       <div
-        class="export-table-modal__loading-bar-inner"
+        class="modal-progress__loading-bar-inner"
         :style="{
           width: `${job.progress_percentage * 100}%`,
           'transition-duration': [1, 0].includes(job.progress_percentage)
@@ -10,16 +10,13 @@
             : '1s',
         }"
       ></div>
-      <span v-if="jobIsRunning" class="export-table-modal__status-text">
+      <span v-if="jobIsRunning" class="modal-progress__status-text">
         {{ job.status }}
       </span>
     </div>
     <button
       v-if="job === null || job.status !== 'complete'"
-      class="
-        button button--large button--primary
-        export-table-modal__export-button
-      "
+      class="button button--large button--primary modal-progress__export-button"
       :class="{ 'button--loading': loading }"
       :disabled="disabled"
     >
@@ -27,10 +24,7 @@
     </button>
     <DownloadLink
       v-else
-      class="
-        button button--large button--success
-        export-table-modal__export-button
-      "
+      class="button button--large button--success modal-progress__export-button"
       :url="job.url"
       :filename="filename"
       :loading-class="'button--loading'"
