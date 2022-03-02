@@ -28,6 +28,7 @@
 * Fix Django's default index naming scheme causing index name collisions.
 * Workaround bug in Django's schema editor sometimes causing incorrect transaction 
   rollbacks resulting in the connection to the database becoming unusable.
+* Removed upload file size limit.
 
 ## Released (2022-01-13 1.8.2)
 
