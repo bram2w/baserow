@@ -115,7 +115,7 @@ x-common-important-variables: &common-important-variables
   # by paginated API endpoints. Baserow will still work correctly if not enabled, this
   # is purely for giving the correct https url for clients of the API.
   # If you have setup Baserow to use Caddy's auto HTTPS or you have put Baserow behind
-  # a Baserow behind a reverse proxy which:
+  # a reverse proxy which:
   #  * Handles HTTPS
   #  * Strips the X-Forwarded-Proto header from all incoming requests.
   #  * Sets the X-Forwarded-Proto header and sends it to Baserow.
