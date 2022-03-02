@@ -53,7 +53,10 @@ try:
         host="${DATABASE_HOST}",
         port="${DATABASE_PORT}",
     )
-except psycopg2.OperationalError:
+except psycopg2.OperationalError as e:
+    print("Error: Failed to connect to the postgresql database at ${DATABASE_HOST}")
+    print("Please see the error below for more details:")
+    print(e)
     sys.exit(-1)
 sys.exit(0)
 END
@@ -66,7 +69,10 @@ try:
     psycopg2.connect(
         "${DATABASE_URL}"
     )
-except psycopg2.OperationalError:
+except psycopg2.OperationalError as e:
+    print("Error: Failed to connect to the postgresql database at DATABASE_URL")
+    print("Please see the error below for more details:")
+    print(e)
     sys.exit(-1)
 sys.exit(0)
 END

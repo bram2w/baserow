@@ -24,7 +24,7 @@ baserow_ready() {
 wait_for_baserow() {
   until baserow_ready; do
     echo 'Waiting for Baserow to become available, this might take 30+ seconds...'
-    sleep 1
+    sleep 10
   done
   echo "======================================================================="
   echo -e "\e[32mBaserow is now available at ${BASEROW_PUBLIC_URL}\e[0m"

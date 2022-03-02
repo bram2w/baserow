@@ -179,6 +179,69 @@ docker run \
   baserow/baserow:1.8.3
 ```
 
+### With a Postgresql server running on the same host as the Baserow docker container
+
+This is assuming you are using the postgresql server bundled by ubuntu. If not then
+you will have to find the correct locations for the config files for your OS.
+
+1. Find out what version of postgresql is installed by running
+`sudo ls /etc/postgresql/`
+2. Open `/etc/postgresql/YOUR_PSQL_VERSION/main/postgresql.conf` for editing as root
+3. Find the commented out `# listen_addresses` line.
+4. Change it to be:
+`listen_addresses = '*'          # what IP address(es) to listen on;`
+5. Open `/etc/postgresql/YOUR_PSQL_VERSION/main/pg_hba.conf` for editing as root
+6. Add the following line to the end which will allow docker containers to connect.
+`host    all             all             172.17.0.0/16           md5`
+7. Restart postgres to load in the config changes.
+`sudo systemctl restart postgresql`
+8. Check the logs do not have errors by running
+`sudo less /var/log/postgresql/postgresql-YOUR_PSQL_VERSION-main.log`
+9. Run Baserow like so:
+```bash
+docker run \
+  -d \
+  --name baserow \
+  --add-host host.docker.internal:host-gateway \
+  -e BASEROW_PUBLIC_URL=http://localhost \
+  -e DATABASE_HOST=host.docker.internal \
+  -e DATABASE_PORT=5432 \
+  -e DATABASE_NAME=YOUR_DATABASE_NAME \
+  -e DATABASE_USER=YOUR_DATABASE_USERNAME \
+  -e DATABASE_PASSWORD=REPLACE_WITH_YOUR_DATABASE_PASSWORD \
+  --restart unless-stopped \
+  -v baserow_data:/baserow/data \
+  -p 80:80 \
+  -p 443:443 \
+  baserow/baserow:1.8.3
+```
+
+### Supply secrets using files 
+
+The `DATABASE_PASSWORD`, `SECRET_KEY` and `REDIS_PASSWORD` environment variables
+can instead be loaded using a file by using the `*_FILE` variants:
+
+```bash
+echo "your_redis_password" > .your_redis_password
+echo "your_secret_key" > .your_secret_key
+echo "your_pg_password" > .your_pg_password
+docker run \
+  -d \
+  --name baserow \
+  -e BASEROW_PUBLIC_URL=http://localhost \
+  -e REDIS_PASSWORD_FILE=/baserow/.your_redis_password \
+  -e SECRET_KEY_FILE=/baserow/.your_secret_key \
+  -e DATABASE_PASSWORD_FILE=/baserow/.your_pg_password \
+  --restart unless-stopped \
+  -v $PWD/.your_redis_password:/baserow/.your_redis_password \
+  -v $PWD/.your_secret_key:/baserow/.your_secret_key \
+  -v $PWD/.your_pg_password:/baserow/.your_pg_password \
+  -v baserow_data:/baserow/data \
+  -p 80:80 \
+  -p 443:443 \
+  baserow/baserow:1.8.3
+```
+
 ### Start just the embedded database 
 
 If you want to directly access the embedded Postgresql database then you can run:

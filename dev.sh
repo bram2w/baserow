@@ -316,6 +316,9 @@ export DOCKER_BUILDKIT=1
 
 export WEB_FRONTEND_PORT=${WEB_FRONTEND_PORT:-3000}
 export BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-http://localhost:$WEB_FRONTEND_PORT}
+export REDIS_PASSWORD=baserow
+export DATABASE_PASSWORD=baserow
+export SECRET_KEY=baserow
 
 
 echo "./dev.sh running docker-compose commands:
