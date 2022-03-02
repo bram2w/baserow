@@ -11,6 +11,7 @@ export default (client) => {
       publicUrl = false,
       orderBy = '',
       filters = {},
+      includeFields = [],
     }) {
       const include = []
       const params = new URLSearchParams()
@@ -38,6 +39,10 @@ export default (client) => {
 
       if (orderBy) {
         params.append('order_by', orderBy)
+      }
+
+      if (includeFields.length > 0) {
+        params.append('include_fields', includeFields.join(','))
       }
 
       Object.keys(filters).forEach((key) => {

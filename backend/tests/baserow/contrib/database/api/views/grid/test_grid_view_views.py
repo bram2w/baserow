@@ -1672,3 +1672,147 @@ def test_grid_view_link_row_lookup_view(api_client, data_fixture):
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == i2.id
     assert response_json["results"][0]["value"] == "Test 2"
+
+
+@pytest.mark.django_db
+def test_list_rows_include_fields(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    table_2 = data_fixture.create_database_table(database=table.database)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, order=1, name="Horsepower"
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table, order=2, name="For sale"
+    )
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="Link",
+        link_row_table=table_2,
+    )
+    primary_field = data_fixture.create_text_field(table=table_2, primary=True)
+    lookup_model = table_2.get_model()
+    i1 = lookup_model.objects.create(**{f"field_{primary_field.id}": "Test 1"})
+    i2 = lookup_model.objects.create(**{f"field_{primary_field.id}": "Test 2"})
+    i3 = lookup_model.objects.create(**{f"field_{primary_field.id}": "Test 3"})
+
+    grid = data_fixture.create_grid_view(table=table)
+    data_fixture.create_grid_view_field_option(grid, link_row_field, hidden=False)
+
+    model = grid.table.get_model()
+    row_1 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": False,
+        }
+    )
+    getattr(row_1, f"field_{link_row_field.id}").add(i1.id)
+    row_2 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Orange",
+            f"field_{number_field.id}": 100,
+            f"field_{boolean_field.id}": True,
+        }
+    )
+    getattr(row_2, f"field_{link_row_field.id}").add(i2.id)
+    row_3 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Purple",
+            f"field_{number_field.id}": 1000,
+            f"field_{boolean_field.id}": False,
+        }
+    )
+    getattr(row_3, f"field_{link_row_field.id}").add(i3.id)
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    response = api_client.get(
+        url,
+        {
+            "include_fields": f"\
+                field_{text_field.id},\
+                field_{number_field.id},\
+                field_{link_row_field.id}",
+            "exclude_fields": f"field_{number_field.id}",
+        },
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    # Confirm that text_field is included
+    assert response_json["results"][0][f"field_{text_field.id}"] == "Green"
+    assert response_json["results"][1][f"field_{text_field.id}"] == "Orange"
+    assert response_json["results"][2][f"field_{text_field.id}"] == "Purple"
+
+    # Confirm that number_field is excluded
+    assert f"field_{number_field.id}" not in response_json["results"][0]
+    assert f"field_{number_field.id}" not in response_json["results"][1]
+    assert f"field_{number_field.id}" not in response_json["results"][2]
+
+    # Confirm that boolean_field is not returned
+    assert f"field_{boolean_field.id}" not in response_json["results"][0]
+    assert f"field_{boolean_field.id}" not in response_json["results"][1]
+    assert f"field_{boolean_field.id}" not in response_json["results"][2]
+
+    # Confirm that link_row_field is included
+    assert (
+        response_json["results"][0][f"field_{link_row_field.id}"][0]["value"]
+        == "Test 1"
+    )
+    assert (
+        response_json["results"][1][f"field_{link_row_field.id}"][0]["value"]
+        == "Test 2"
+    )
+    assert (
+        response_json["results"][2][f"field_{link_row_field.id}"][0]["value"]
+        == "Test 3"
+    )
+
+    # Confirm that id and order are still returned
+    assert "id" in response_json["results"][0]
+    assert "id" in response_json["results"][1]
+    assert "id" in response_json["results"][2]
+    assert "order" in response_json["results"][0]
+    assert "order" in response_json["results"][1]
+    assert "order" in response_json["results"][2]
+
+    # include_fields is empty
+    response = api_client.get(
+        url,
+        {"include_fields": ""},
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    # Should return response with no fields
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "id" in response_json["results"][0]
+    assert "order" in response_json["results"][0]
+    assert f"field_{text_field.id}" not in response_json["results"][0]
+    assert f"field_{number_field.id}" not in response_json["results"][0]
+    assert f"field_{boolean_field.id}" not in response_json["results"][0]
+
+    # Test invalid fields
+    response = api_client.get(
+        url,
+        {"include_fields": "field_9999"},
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    # Should also return response with no fields
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert "id" in response_json["results"][0]
+    assert "id" in response_json["results"][0]
+    assert "order" in response_json["results"][0]
+    assert f"field_{text_field.id}" not in response_json["results"][0]
+    assert f"field_{number_field.id}" not in response_json["results"][0]
+    assert f"field_{boolean_field.id}" not in response_json["results"][0]

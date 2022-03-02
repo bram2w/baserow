@@ -700,6 +700,13 @@ export class LinkRowFieldType extends FieldType {
     return []
   }
 
+  toHumanReadableString(field, value) {
+    if (value) {
+      return value.map((link) => link.value).join(', ')
+    }
+    return ''
+  }
+
   /**
    * The structure for updating is slightly different than what we need for displaying
    * the value because the display value does not have to be included. Here we convert
@@ -2158,5 +2165,12 @@ export class LookupFieldType extends FormulaFieldType {
 
   getFormComponent() {
     return FieldLookupSubForm
+  }
+
+  toHumanReadableString(field, value) {
+    if (value) {
+      return value.map((link) => link.value).join(', ')
+    }
+    return ''
   }
 }

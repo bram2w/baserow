@@ -12,6 +12,7 @@
       ></Notification>
     </div>
     <div class="bottom-right-notifications">
+      <CopyingNotification v-if="copying"></CopyingNotification>
       <RestoreNotification
         v-for="notification in restoreNotifications"
         :key="notification.id"
@@ -28,6 +29,7 @@ import Notification from '@baserow/modules/core/components/notifications/Notific
 import ConnectingNotification from '@baserow/modules/core/components/notifications/ConnectingNotification'
 import FailedConnectingNotification from '@baserow/modules/core/components/notifications/FailedConnectingNotification'
 import RestoreNotification from '@baserow/modules/core/components/notifications/RestoreNotification'
+import CopyingNotification from '@baserow/modules/core/components/notifications/CopyingNotification'
 
 export default {
   name: 'Notifications',
@@ -36,6 +38,7 @@ export default {
     Notification,
     ConnectingNotification,
     FailedConnectingNotification,
+    CopyingNotification,
   },
   computed: {
     restoreNotifications() {
@@ -47,6 +50,7 @@ export default {
     ...mapState({
       connecting: (state) => state.notification.connecting,
       failedConnecting: (state) => state.notification.failedConnecting,
+      copying: (state) => state.notification.copying,
       notifications: (state) => state.notification.items,
     }),
   },

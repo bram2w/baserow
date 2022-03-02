@@ -70,10 +70,15 @@ export default {
       // If the speed is either a positive or negative, so not 0, we know that we
       // need to start auto scrolling.
       if (speed !== 0) {
-        if (el.autoScrollConfig.orientation === 'horizontal') {
-          scrollElement.scrollLeft += speed
-        } else {
-          scrollElement.scrollTop += speed
+        // Only update the element if the `onScroll` functions returns `true`. This
+        // is because in some cases, scrolling is handled in another way. This is
+        // for example the case with the `GridView`.
+        if (el.autoScrollConfig.onScroll(speed)) {
+          if (el.autoScrollConfig.orientation === 'horizontal') {
+            scrollElement.scrollLeft += speed
+          } else {
+            scrollElement.scrollTop += speed
+          }
         }
         el.autoScrollTimeout = setTimeout(() => {
           autoscrollLoop()
@@ -96,12 +101,14 @@ export default {
   update(el, binding) {
     const defaultEnabled = () => true
     const defaultScrollElement = () => el
+    const defaultOnScroll = () => true
     el.autoScrollConfig = {
       orientation: binding.value.orientation || 'vertical',
       enabled: binding.value.enabled || defaultEnabled,
       speed: binding.value.speed || 3,
       padding: binding.value.padding || 10,
       scrollElement: binding.value.scrollElement || defaultScrollElement,
+      onScroll: binding.value.onScroll || defaultOnScroll,
     }
   },
   unbind(el) {

@@ -8,6 +8,10 @@
     top: 33 + 3px;
     bottom: 48 + 3px;
   }
+
+  &.grid-view--disable-selection {
+    user-select: none;
+  }
 }
 
 .grid-view__left,
@@ -387,6 +391,38 @@
     &.active {
       background-color: $color-primary-100;
     }
+  }
+
+  .grid-view__column--multi-select & {
+    background-color: $color-primary-100;
+
+    &.active {
+      background-color: $color-primary-100;
+    }
+  }
+
+  .grid-view__column--multi-select-top & {
+    top: -2px;
+    z-index: 2;
+    border-top: 2px solid $color-primary-500;
+  }
+
+  .grid-view__column--multi-select-right & {
+    right: -2px;
+    z-index: 2;
+    border-right: 2px solid $color-primary-500;
+  }
+
+  .grid-view__column--multi-select-bottom & {
+    bottom: -2px;
+    z-index: 2;
+    border-bottom: 2px solid $color-primary-500;
+  }
+
+  .grid-view__column--multi-select-left & {
+    left: -2px;
+    z-index: 2;
+    border-left: 2px solid $color-primary-500;
   }
 
   .grid-view__cell--error {

@@ -3,8 +3,6 @@
 > Warning: This guide has been deprecated as of version 1.9 of Baserow. Please follow
 > the [Install on Ubuntu - Upgrade from 1.8.2 Section](install-on-ubuntu.md#migration-steps) 
 > if you installed Baserow 1.8.2 using this guide to upgrade.
-> you have an existing Baserow installation. Or if you do not have an existing install
-> to follow the one of the other supported installation guides instead.
 
 This deprecated and now unsupported guide will walk you through a production
 installation of Baserow. Specifically this document aims to provide a walkthrough for
