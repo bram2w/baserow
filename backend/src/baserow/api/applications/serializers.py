@@ -66,6 +66,7 @@ def get_application_serializer(instance, **kwargs):
     :return: An instantiated serializer for the instance.
     :rtype: ApplicationSerializer
     """
+
     application = application_type_registry.get_by_model(instance.specific_class)
     serializer_class = application.instance_serializer_class
 

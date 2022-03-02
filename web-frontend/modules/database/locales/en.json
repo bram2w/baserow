@@ -513,5 +513,29 @@
         "stdDev": "Standard deviation",
         "stdDevShort": "Std dev",
         "variance": "Variance"
+    },
+    "databaseForm": {
+        "importLabel": "Would you like to import existing data?",
+        "emptyLabel": "Start from scratch",
+        "airtableLabel": "Import from Airtable (beta)"
+    },
+    "importFromAirtable": {
+        "airtableShareLinkTitle": "Share a link to your Base",
+        "airtableShareLinkDescription": "To import your Airtable base, you need to have a shared link to your entire base. In Airtable, click on the share button in the top right corner after opening your base. After that you must choose the \"Access to base\" option. In the share modal you can click on the \"Create a shared link to the whole base\" button and then on “Private read-only link”. Copy the public link and paste it in the input below.",
+        "airtableShareLinkBeta": "Note that this feature is in beta, your tables, fields (except formula, lookup and count) and data will be imported. Your views will not be imported.",
+        "airtableShareLinkPaste": "Paste the link here",
+        "importButtonLabel": "Import from Airtable",
+        "openButtonLabel": "Open imported database",
+        "importError": "Something went wrong",
+        "statePending": "Waiting to start",
+        "stateFailed": "Failed",
+        "stateFinished": "Finished",
+        "stateDownloadingBase": "Downloading base schema",
+        "stateConverting": "Converting to Baserow",
+        "stateDownloadingFiles": "Downloading files",
+        "stateImporting": "Importing",
+        "stateImportingTable": "Importing table {table}",
+        "errorJobAlreadyRunningTitle": "Already running",
+        "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
     }
 }

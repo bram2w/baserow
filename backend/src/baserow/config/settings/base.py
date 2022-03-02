@@ -100,8 +100,8 @@ CELERY_TASK_ROUTES = {
     },
     "baserow.core.trash.tasks.permanently_delete_marked_trash": {"queue": "export"},
 }
-CELERY_SOFT_TIME_LIMIT = 60 * 5
-CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60
+CELERY_SOFT_TIME_LIMIT = 60 * 5  # 5 minutes
+CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60  # 60 seconds
 
 CELERY_REDBEAT_REDIS_URL = REDIS_URL
 # Explicitly set the same value as the default loop interval here so we can use it
@@ -278,6 +278,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table export"},
         {"name": "Database table webhooks"},
         {"name": "Database tokens"},
+        {"name": "Database airtable import"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -489,6 +490,11 @@ BASEROW_BACKEND_LOG_LEVEL = os.getenv("BASEROW_BACKEND_LOG_LEVEL", "INFO")
 BASEROW_BACKEND_DATABASE_LOG_LEVEL = os.getenv(
     "BASEROW_BACKEND_DATABASE_LOG_LEVEL", "ERROR"
 )
+
+BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT = int(
+    os.getenv("BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
+)
+
 
 LOGGING = {
     "version": 1,

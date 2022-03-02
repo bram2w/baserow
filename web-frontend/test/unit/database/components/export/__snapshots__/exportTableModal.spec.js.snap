@@ -1043,15 +1043,12 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
       </div>
        
       <div
-        class="export-table-modal__actions"
+        class="modal-progress__actions"
       >
         <!---->
          
         <button
-          class="
-      button button--large button--primary
-      export-table-modal__export-button
-    "
+          class="button button--large button--primary modal-progress__export-button"
         >
           
     exportTableLoadingBar.export
@@ -2111,15 +2108,12 @@ exports[`Preview exportTableModal Modal with view 1`] = `
       </div>
        
       <div
-        class="export-table-modal__actions"
+        class="modal-progress__actions"
       >
         <!---->
          
         <button
-          class="
-      button button--large button--primary
-      export-table-modal__export-button
-    "
+          class="button button--large button--primary modal-progress__export-button"
         >
           
     exportTableLoadingBar.export
