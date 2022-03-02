@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 
 PROJECT_DIR = os.path.dirname(__file__)
 REQUIREMENTS_DIR = os.path.join(PROJECT_DIR, "requirements")
-VERSION = "1.8.3"
+VERSION = "1.9"
 
 
 def get_requirements(env):

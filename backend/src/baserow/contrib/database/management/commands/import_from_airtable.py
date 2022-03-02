@@ -1,5 +1,4 @@
 import sys
-import re
 from tqdm import tqdm
 from pytz import timezone as pytz_timezone
 from pytz.exceptions import UnknownTimeZoneError
@@ -12,6 +11,7 @@ from baserow.core.models import Group
 from baserow.core.utils import Progress
 from baserow.contrib.database.airtable.handler import AirtableHandler
 from baserow.contrib.database.airtable.exceptions import AirtableBaseNotPublic
+from baserow.contrib.database.airtable.utils import extract_share_id_from_url
 
 
 class Command(BaseCommand):
@@ -67,15 +67,10 @@ class Command(BaseCommand):
             )
             sys.exit(1)
 
-        result = re.search(r"https:\/\/airtable.com\/shr(.*)$", public_base_url)
-
-        if not result:
-            self.stdout.write(
-                self.style.ERROR(
-                    f"Please provide a valid shared Airtable URL (e.g. "
-                    f"https://airtable.com/shrxxxxxxxxxxxxxx)"
-                )
-            )
+        try:
+            share_id = extract_share_id_from_url(public_base_url)
+        except ValueError as e:
+            self.stdout.write(self.style.ERROR(str(e)))
             sys.exit(1)
 
         with tqdm(total=1000) as progress_bar:
@@ -86,8 +81,6 @@ class Command(BaseCommand):
                 progress_bar.update(progress.progress - progress_bar.n)
 
             progress.register_updated_event(progress_updated)
-
-            share_id = f"shr{result.group(1)}"
 
             try:
                 with NamedTemporaryFile() as download_files_buffer:

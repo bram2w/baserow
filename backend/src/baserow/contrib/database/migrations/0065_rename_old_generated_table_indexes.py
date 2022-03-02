@@ -3,6 +3,7 @@ import hashlib
 from tqdm import tqdm
 
 from django.db import migrations, connection
+from django.db.utils import ProgrammingError
 
 
 # noinspection DuplicatedCode
@@ -109,26 +110,37 @@ def _copied_django_index_class_naming_func(table_name, column_names, suffix):
 def forward(apps, schema_editor):
     Table = apps.get_model("database", "Table")
 
-    for table in tqdm(
-        Table.objects.all().order_by("id"), desc="Renaming old table indexes"
-    ):
-        field_names = ["order", "id"]
-        table_name = f"database_table_{table.id}"
-        index_from_old_migration = _copied_django_internal_index_name_calculator(
-            table_name, field_names
-        )
-        new_index_made_by_django = _copied_django_index_class_naming_func(
-            table_name, field_names, "idx"
-        )
-        new_index_name = f"tbl_order_id_{table.id}_idx"
-        schema_editor.execute(
-            f"ALTER INDEX IF EXISTS "
-            f"{index_from_old_migration} RENAME TO {new_index_name}"
-        )
-        schema_editor.execute(
-            f"ALTER INDEX IF EXISTS "
-            f"{new_index_made_by_django} RENAME TO {new_index_name}"
-        )
+    queryset = Table.objects.all().order_by("id")
+    count = queryset.count()
+
+    with tqdm(
+        total=count,
+        desc="Renaming old table indexes",
+    ) as pbar:
+        for table in queryset.iterator():
+            pbar.set_description(f"Updating {table.id}")
+
+            field_names = ["order", "id"]
+            table_name = f"database_table_{table.id}"
+            index_from_old_migration = _copied_django_internal_index_name_calculator(
+                table_name, field_names
+            )
+            new_index_made_by_django = _copied_django_index_class_naming_func(
+                table_name, field_names, "idx"
+            )
+            new_index_name = f"tbl_order_id_{table.id}_idx"
+            schema_editor.execute(
+                f"ALTER INDEX IF EXISTS "
+                f"{index_from_old_migration} RENAME TO {new_index_name}"
+            )
+            try:
+                schema_editor.execute(
+                    f"ALTER INDEX IF EXISTS "
+                    f"{new_index_made_by_django} RENAME TO {new_index_name}"
+                )
+            except ProgrammingError:
+                pass
+            pbar.update(1)
 
 
 # noinspection PyPep8Naming

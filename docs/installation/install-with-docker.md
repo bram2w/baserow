@@ -27,7 +27,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.8.3
+  baserow/baserow:1.9
 ```
 
 * Change `BASEROW_PUBLIC_URL` to `https://YOUR_DOMAIN` or `http://YOUR_IP` to enable
@@ -49,7 +49,7 @@ docker run \
 
 ## Image Feature Overview
 
-The `baserow/baserow:1.8.3` image by default runs all of Baserow's various services in a
+The `baserow/baserow:1.9` image by default runs all of Baserow's various services in a
 single container for ease of use. A quick summary of its features are:
 
 * Runs a Postgres database and Redis server by default internally and stores all data in
@@ -92,7 +92,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.8.3
+  baserow/baserow:1.9
 ```
 
 ### Behind a reverse proxy already handling ssl
@@ -105,7 +105,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 80:80 \
   --restart unless-stopped \
-  baserow/baserow:1.8.3
+  baserow/baserow:1.9
 ```
 
 ### On a nonstandard HTTP port
@@ -118,7 +118,7 @@ docker run \
   -v baserow_data:/baserow/data \
   -p 3001:80 \
   --restart unless-stopped \
-  baserow/baserow:1.8.3
+  baserow/baserow:1.9
 ```
 
 ### With an external PostgresSQL server
@@ -137,7 +137,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.8.3
+  baserow/baserow:1.9
 ```
 
 ### With an external Redis server
@@ -156,7 +156,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.8.3
+  baserow/baserow:1.9
 ```
 
 ### With an external email server
@@ -176,6 +176,69 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
+  baserow/baserow:1.9
+```
+
+### With a Postgresql server running on the same host as the Baserow docker container
+
+This is assuming you are using the postgresql server bundled by ubuntu. If not then
+you will have to find the correct locations for the config files for your OS.
+
+1. Find out what version of postgresql is installed by running
+`sudo ls /etc/postgresql/`
+2. Open `/etc/postgresql/YOUR_PSQL_VERSION/main/postgresql.conf` for editing as root
+3. Find the commented out `# listen_addresses` line.
+4. Change it to be:
+`listen_addresses = '*'          # what IP address(es) to listen on;`
+5. Open `/etc/postgresql/YOUR_PSQL_VERSION/main/pg_hba.conf` for editing as root
+6. Add the following line to the end which will allow docker containers to connect.
+`host    all             all             172.17.0.0/16           md5`
+7. Restart postgres to load in the config changes.
+`sudo systemctl restart postgresql`
+8. Check the logs do not have errors by running
+`sudo less /var/log/postgresql/postgresql-YOUR_PSQL_VERSION-main.log`
+9. Run Baserow like so:
+```bash
+docker run \
+  -d \
+  --name baserow \
+  --add-host host.docker.internal:host-gateway \
+  -e BASEROW_PUBLIC_URL=http://localhost \
+  -e DATABASE_HOST=host.docker.internal \
+  -e DATABASE_PORT=5432 \
+  -e DATABASE_NAME=YOUR_DATABASE_NAME \
+  -e DATABASE_USER=YOUR_DATABASE_USERNAME \
+  -e DATABASE_PASSWORD=REPLACE_WITH_YOUR_DATABASE_PASSWORD \
+  --restart unless-stopped \
+  -v baserow_data:/baserow/data \
+  -p 80:80 \
+  -p 443:443 \
+  baserow/baserow:1.8.3
+```
+
+### Supply secrets using files 
+
+The `DATABASE_PASSWORD`, `SECRET_KEY` and `REDIS_PASSWORD` environment variables
+can instead be loaded using a file by using the `*_FILE` variants:
+
+```bash
+echo "your_redis_password" > .your_redis_password
+echo "your_secret_key" > .your_secret_key
+echo "your_pg_password" > .your_pg_password
+docker run \
+  -d \
+  --name baserow \
+  -e BASEROW_PUBLIC_URL=http://localhost \
+  -e REDIS_PASSWORD_FILE=/baserow/.your_redis_password \
+  -e SECRET_KEY_FILE=/baserow/.your_secret_key \
+  -e DATABASE_PASSWORD_FILE=/baserow/.your_pg_password \
+  --restart unless-stopped \
+  -v $PWD/.your_redis_password:/baserow/.your_redis_password \
+  -v $PWD/.your_secret_key:/baserow/.your_secret_key \
+  -v $PWD/.your_pg_password:/baserow/.your_pg_password \
+  -v baserow_data:/baserow/data \
+  -p 80:80 \
+  -p 443:443 \
   baserow/baserow:1.8.3
 ```
 
@@ -189,7 +252,7 @@ docker run -it \
   --name baserow \
   -p 5432:5432 \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.8.3 \
+  baserow/baserow:1.9 \
   start-only-db 
 # Now get the password from
 docker exec -it baserow cat /baserow/data/.pgpass
@@ -207,7 +270,7 @@ docker run -it \
   --rm \
   --name baserow \
   -v baserow_data:/baserow/data \
-  baserow/baserow:1.8.3 \
+  baserow/baserow:1.9 \
   backend-cmd-with-db manage dbshell
 ```
 
@@ -264,16 +327,16 @@ the command below.
 
 ```bash 
 # First read the help message for this command
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.8.3 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.9 \
    backend-cmd-with-db backup
 
 # By default backs up to the backups folder in the baserow_data volume.
-docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.8.3 \
+docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.9 \
    backend-cmd-with-db backup -f /baserow/data/backups/backup.tar.gz
 
 # Or backup to a file on your host instead run something like:
 docker run -it --rm -v baserow_data:/baserow/data -v $PWD:/baserow/host \
-   baserow/baserow:1.8.3 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
+   baserow/baserow:1.9 backend-cmd-with-db backup -f /baserow/host/backup.tar.gz
 ```
 
 ### Restore only Baserow's Postgres Database
@@ -342,7 +405,7 @@ docker run \
   -p 80:80 \
   -p 443:443 \
   --restart unless-stopped \
-  baserow/baserow:1.8.3
+  baserow/baserow:1.9
 ```
 
 Or you can just store it directly in the volume at `baserow_data/env` meaning it will
@@ -352,7 +415,7 @@ be loaded whenever you mount in this data volume.
 ### Building your own image from Baserow
 
 ```dockerfile
-FROM baserow/baserow:1.8.3
+FROM baserow/baserow:1.9
 
 # Any .sh files found in /baserow/supervisor/env/ will be sourced and loaded at startup
 # useful for storing your own environment variable overrides.

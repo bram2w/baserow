@@ -71,6 +71,7 @@ class EmptyCountViewAggregationType(ViewAggregationType):
         field_type = field_type_registry.get_by_model(field)
         return Count(
             "id",
+            distinct=True,
             filter=field_type.empty_query(field_name, model_field, field),
         )
 

@@ -12,6 +12,7 @@ from .token import TokenFixtures
 from .template import TemplateFixtures
 from .row import RowFixture
 from .webhook import TableWebhookFixture
+from .airtable import AirtableFixtures
 
 
 class Fixtures(
@@ -27,5 +28,6 @@ class Fixtures(
     TemplateFixtures,
     RowFixture,
     TableWebhookFixture,
+    AirtableFixtures,
 ):
     fake = Faker()

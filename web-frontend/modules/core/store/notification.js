@@ -3,6 +3,7 @@ import { uuid } from '@baserow/modules/core/utils/string'
 export const state = () => ({
   connecting: false,
   failedConnecting: false,
+  copying: false,
   items: [],
 })
 
@@ -19,6 +20,9 @@ export const mutations = {
   },
   SET_FAILED_CONNECTING(state, value) {
     state.failedConnecting = value
+  },
+  SET_COPYING(state, value) {
+    state.copying = value
   },
 }
 
@@ -67,6 +71,9 @@ export const actions = {
       commit('SET_CONNECTING', false)
     }
     commit('SET_FAILED_CONNECTING', value)
+  },
+  setCopying({ commit }, value) {
+    commit('SET_COPYING', value)
   },
 }
 

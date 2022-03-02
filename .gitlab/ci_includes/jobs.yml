@@ -116,6 +116,7 @@
       #   cache any future ci pipeline runs.
       docker build \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
+        $CACHE_FROM_BUILD_ARGS \
         $EXTRA_BUILD_ARGS \
         $IMAGE_LABELS \
         --target dev \

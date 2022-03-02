@@ -100,8 +100,8 @@ CELERY_TASK_ROUTES = {
     },
     "baserow.core.trash.tasks.permanently_delete_marked_trash": {"queue": "export"},
 }
-CELERY_SOFT_TIME_LIMIT = 60 * 5
-CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60
+CELERY_SOFT_TIME_LIMIT = 60 * 5  # 5 minutes
+CELERY_TIME_LIMIT = CELERY_SOFT_TIME_LIMIT + 60  # 60 seconds
 
 CELERY_REDBEAT_REDIS_URL = REDIS_URL
 # Explicitly set the same value as the default loop interval here so we can use it
@@ -254,7 +254,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.8.3",
+    "VERSION": "1.9",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -278,6 +278,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table export"},
         {"name": "Database table webhooks"},
         {"name": "Database tokens"},
+        {"name": "Database airtable import"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -402,7 +403,7 @@ MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/baserow/media")
 # Indicates the directory where the user files and user thumbnails are stored.
 USER_FILES_DIRECTORY = "user_files"
 USER_THUMBNAILS_DIRECTORY = "thumbnails"
-USER_FILE_SIZE_LIMIT = 1024 * 1024 * 20  # 20MB
+USER_FILE_SIZE_LIMIT = 1024 * 1024 * 1024 * 1024  # ~1TB
 
 EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
@@ -489,6 +490,11 @@ BASEROW_BACKEND_LOG_LEVEL = os.getenv("BASEROW_BACKEND_LOG_LEVEL", "INFO")
 BASEROW_BACKEND_DATABASE_LOG_LEVEL = os.getenv(
     "BASEROW_BACKEND_DATABASE_LOG_LEVEL", "ERROR"
 )
+
+BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT = int(
+    os.getenv("BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
+)
+
 
 LOGGING = {
     "version": 1,

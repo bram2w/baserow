@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+## Released (2022-03-02 1.9)
+
 * Added accept `image/*` attribute to the form cover and logo upload. 
 * Added management to import a shared Airtable base.
+* Added web-frontend interface to import a shared Airtable base.
 * Fixed adding new fields in the edit row popup that require refresh in Kanban and Form views.
 * Cache model fields when generating model.
 * Fixed `'<' not supported between instances of 'NoneType' and 'int'` error. Blank 
@@ -26,6 +29,7 @@
 * Add footer aggregations to grid view
 * Hide "Export view" button if there is no valid exporter available
 * Fix Django's default index naming scheme causing index name collisions.
+* Added multi-cell selection and copying.
 * Add "insert left" and "insert right" field buttons to grid view head context buttons.
 * Workaround bug in Django's schema editor sometimes causing incorrect transaction 
   rollbacks resulting in the connection to the database becoming unusable.
@@ -39,6 +43,7 @@
   and BASEROW_CADDY_ADDRESSES now to configure a domain with optional auto https.
 * Add health checks for all services.
 * Ensure error logging is enabled in the Backend even when DEBUG is off.
+* Removed upload file size limit.
 
 ## Released (2022-01-13 1.8.2)
 

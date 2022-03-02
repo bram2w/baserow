@@ -79,6 +79,21 @@ function getFilters(getters, rootGetters) {
 }
 
 export const state = () => ({
+  // Indicates if multiple cell selection is active
+  multiSelectActive: false,
+  // Indicates if the user is clicking and holding the mouse over a cell
+  multiSelectHolding: false,
+  /*
+    The indexes for head and tail cells in a multi-select grid.
+    Multi-Select works by tracking four different indexes, these are:
+      - The field and row index for the first cell selected, known as the head.
+      - The field and row index for the last cell selected, known as the tail.
+    All the cells between the head and tail cells are later also calculated as selected.
+  */
+  multiSelectHeadRowIndex: -1,
+  multiSelectHeadFieldIndex: -1,
+  multiSelectTailRowIndex: -1,
+  multiSelectTailFieldIndex: -1,
   // The last used grid id.
   lastGridId: -1,
   // Contains the custom field options per view. Things like the field width are
@@ -297,6 +312,32 @@ export const mutations = {
       }
     })
   },
+  UPDATE_MULTISELECT(state, { position, rowIndex, fieldIndex }) {
+    if (position === 'head') {
+      state.multiSelectHeadRowIndex = rowIndex
+      state.multiSelectHeadFieldIndex = fieldIndex
+    } else if (position === 'tail') {
+      // Limit selection to 200 rows (199 since rows start at index 0)
+      // This limit is set by the backend
+      if (Math.abs(state.multiSelectHeadRowIndex - rowIndex) <= 199) {
+        state.multiSelectTailRowIndex = rowIndex
+        state.multiSelectTailFieldIndex = fieldIndex
+      }
+    }
+  },
+  SET_MULTISELECT_HOLDING(state, value) {
+    state.multiSelectHolding = value
+  },
+  SET_MULTISELECT_ACTIVE(state, value) {
+    state.multiSelectActive = value
+  },
+  CLEAR_MULTISELECT(state) {
+    state.multiSelectHolding = false
+    state.multiSelectHeadRowIndex = -1
+    state.multiSelectHeadFieldIndex = -1
+    state.multiSelectTailRowIndex = -1
+    state.multiSelectTailFieldIndex = -1
+  },
   ADD_FIELD_TO_ROWS_IN_BUFFER(state, { field, value }) {
     const name = `field_${field.id}`
     state.rows.forEach((row) => {
@@ -406,18 +447,28 @@ export const mutations = {
       state.rows.splice(index, 1)
     }
   },
-  SET_FIELD_AGGREGATION_DATA(state, { fieldId, value }) {
-    Vue.set(state.fieldAggregationData, fieldId, {
+  SET_FIELD_AGGREGATION_DATA(state, { fieldId, value: newValue }) {
+    const current = state.fieldAggregationData[fieldId] || {
       loading: false,
-      ...(state.fieldAggregationData[fieldId] || {}),
-      value,
-    })
+    }
+
+    state.fieldAggregationData = {
+      ...state.fieldAggregationData,
+      [fieldId]: { ...current, value: newValue },
+    }
   },
-  SET_FIELD_AGGREGATION_DATA_LOADING(state, { fieldId, value }) {
-    Vue.set(state.fieldAggregationData, fieldId, {
-      ...(state.fieldAggregationData[fieldId] || {}),
-      loading: value,
-    })
+  SET_FIELD_AGGREGATION_DATA_LOADING(
+    state,
+    { fieldId, value: newLoadingValue }
+  ) {
+    const current = state.fieldAggregationData[fieldId] || {
+      value: null,
+    }
+
+    state.fieldAggregationData = {
+      ...state.fieldAggregationData,
+      [fieldId]: { ...current, loading: newLoadingValue },
+    }
   },
 }
 
@@ -1010,6 +1061,104 @@ export const actions = {
   },
   setSelectedCell({ commit }, { rowId, fieldId }) {
     commit('SET_SELECTED_CELL', { rowId, fieldId })
+  },
+  setMultiSelectHolding({ commit }, value) {
+    commit('SET_MULTISELECT_HOLDING', value)
+  },
+  setMultiSelectActive({ commit }, value) {
+    commit('SET_MULTISELECT_ACTIVE', value)
+  },
+  clearMultiSelect({ commit }) {
+    commit('CLEAR_MULTISELECT')
+  },
+  multiSelectStart({ getters, commit }, { rowId, fieldIndex }) {
+    commit('CLEAR_MULTISELECT')
+
+    const rowIndex = getters.getMultiSelectRowIndexById(rowId)
+    // Set the head and tail index to highlight the first cell
+    commit('UPDATE_MULTISELECT', { position: 'head', rowIndex, fieldIndex })
+    commit('UPDATE_MULTISELECT', { position: 'tail', rowIndex, fieldIndex })
+
+    // Update the store to show that the mouse is being held for multi-select
+    commit('SET_MULTISELECT_HOLDING', true)
+    // Do not enable multi-select if only a single cell is selected
+    commit('SET_MULTISELECT_ACTIVE', false)
+  },
+  multiSelectHold({ getters, commit }, { rowId, fieldIndex }) {
+    if (getters.isMultiSelectHolding) {
+      // Unselect single cell
+      commit('SET_SELECTED_CELL', { rowId: -1, fieldId: -1 })
+
+      commit('UPDATE_MULTISELECT', {
+        position: 'tail',
+        rowIndex: getters.getMultiSelectRowIndexById(rowId),
+        fieldIndex,
+      })
+
+      commit('SET_MULTISELECT_ACTIVE', true)
+    }
+  },
+  async exportMultiSelect({ dispatch, getters, commit }, fields) {
+    if (getters.isMultiSelectActive) {
+      const output = []
+      const [minFieldIndex, maxFieldIndex] =
+        getters.getMultiSelectFieldIndexSorted
+
+      let rows = []
+      fields = fields.slice(minFieldIndex, maxFieldIndex + 1)
+
+      if (getters.areMultiSelectRowsWithinBuffer) {
+        rows = getters.getSelectedRows
+      } else {
+        // Fetch rows from backend
+        rows = await dispatch('getMultiSelectedRows', fields)
+      }
+
+      // Loop over selected rows
+      for (const row of rows) {
+        const line = []
+
+        // Loop over selected fields
+        for (const field of fields) {
+          const rawValue = row['field_' + field.id]
+          // Format the value for copying using the field's prepareValueForCopy()
+          const value = this.$registry
+            .get('field', field.type)
+            .toHumanReadableString(field, rawValue)
+          line.push(JSON.stringify(value))
+        }
+        output.push(line.join('\t'))
+      }
+      return output.join('\n')
+    }
+  },
+  /* 
+    This function is called if a user attempts to access rows that are 
+    no longer in the row buffer and need to be fetched from the backend.
+    A user can select some or all fields in a row, and only those fields 
+    will be returned.
+  */
+  async getMultiSelectedRows({ getters, rootGetters }, fields) {
+    const [minRow, maxRow] = getters.getMultiSelectRowIndexSorted
+    const gridId = getters.getLastGridId
+
+    return await GridService(this.$client)
+      .fetchRows({
+        gridId,
+        offset: minRow,
+        limit: maxRow - minRow + 1,
+        search: getters.getServerSearchTerm,
+        publicUrl: getters.isPublic,
+        orderBy: getOrderBy(getters, rootGetters),
+        filters: getFilters(getters, rootGetters),
+        includeFields: fields.map((field) => `field_${field.id}`),
+      })
+      .catch((error) => {
+        throw error
+      })
+      .then(({ data }) => {
+        return data.results
+      })
   },
   setRowHover({ commit }, { row, value }) {
     commit('SET_ROW_HOVER', { row, value })
@@ -1808,6 +1957,59 @@ export const getters = {
       }
     })
     return order
+  },
+  isMultiSelectActive(state) {
+    return state.multiSelectActive
+  },
+  isMultiSelectHolding(state) {
+    return state.multiSelectHolding
+  },
+  getMultiSelectRowIndexSorted(state) {
+    return [
+      Math.min(state.multiSelectHeadRowIndex, state.multiSelectTailRowIndex),
+      Math.max(state.multiSelectHeadRowIndex, state.multiSelectTailRowIndex),
+    ]
+  },
+  getMultiSelectFieldIndexSorted(state) {
+    return [
+      Math.min(
+        state.multiSelectHeadFieldIndex,
+        state.multiSelectTailFieldIndex
+      ),
+      Math.max(
+        state.multiSelectHeadFieldIndex,
+        state.multiSelectTailFieldIndex
+      ),
+    ]
+  },
+  // Get the index of a row given it's row id.
+  // This will calculate the row index from the current buffer position and offset.
+  getMultiSelectRowIndexById: (state) => (rowId) => {
+    const bufferIndex = state.rows.findIndex((r) => r.id === rowId)
+    if (bufferIndex !== -1) {
+      return state.bufferStartIndex + bufferIndex
+    }
+    return -1
+  },
+  // Check if all the multi-select rows are within the row buffer
+  areMultiSelectRowsWithinBuffer(state, getters) {
+    const [minRow, maxRow] = getters.getMultiSelectRowIndexSorted
+
+    return (
+      minRow >= state.bufferStartIndex &&
+      maxRow <= state.bufferStartIndex + state.bufferRequestSize
+    )
+  },
+  // Return all rows within a multi-select grid if they are within the current row buffer
+  getSelectedRows(state, getters) {
+    const [minRow, maxRow] = getters.getMultiSelectRowIndexSorted
+
+    if (getters.areMultiSelectRowsWithinBuffer) {
+      return state.rows.slice(
+        minRow - state.bufferStartIndex,
+        maxRow - state.bufferStartIndex + 1
+      )
+    }
   },
   getAllFieldAggregationData(state) {
     return state.fieldAggregationData

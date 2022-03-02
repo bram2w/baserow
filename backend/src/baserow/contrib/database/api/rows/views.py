@@ -15,10 +15,12 @@ from baserow.api.schemas import get_error_schema
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.user_files.errors import ERROR_USER_FILE_DOES_NOT_EXIST
 from baserow.api.utils import validate_data
+from baserow.contrib.database.api.utils import get_include_exclude_fields
 from baserow.contrib.database.api.fields.errors import (
     ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
     ERROR_ORDER_BY_FIELD_NOT_FOUND,
     ERROR_FILTER_FIELD_NOT_FOUND,
+    ERROR_FIELD_DOES_NOT_EXIST,
 )
 from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
 from baserow.contrib.database.api.rows.serializers import (
@@ -35,6 +37,7 @@ from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
     FilterFieldNotFound,
+    FieldDoesNotExist,
 )
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.rows.handler import RowHandler
@@ -221,7 +224,9 @@ class RowsView(APIView):
                 ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
-            404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
+            404: get_error_schema(
+                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
+            ),
         },
     )
     @map_exceptions(
@@ -232,6 +237,7 @@ class RowsView(APIView):
             OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
             OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,
             FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
             ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
         }
@@ -252,7 +258,7 @@ class RowsView(APIView):
         include = query_params.get("include")
         exclude = query_params.get("exclude")
         user_field_names = query_params.get("user_field_names")
-        fields = RowHandler().get_include_exclude_fields(
+        fields = get_include_exclude_fields(
             table, include, exclude, user_field_names=user_field_names
         )
 

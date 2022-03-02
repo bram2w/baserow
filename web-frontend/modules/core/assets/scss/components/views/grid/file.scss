@@ -28,6 +28,7 @@
   list-style: none;
   margin: 0;
   padding: 0 5px;
+  -moz-user-select: none;
 
   .grid-field-file__cell.active & {
     height: auto;

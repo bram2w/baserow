@@ -1,5 +1,16 @@
 <template>
-  <div>
+  <div
+    v-auto-scroll="{
+      enabled: () => isMultiSelectHolding,
+      orientation: 'horizontal',
+      speed: 4,
+      padding: 10,
+      onScroll: (speed) => {
+        $emit('scroll', { pixelY: 0, pixelX: speed })
+        return false
+      },
+    }"
+  >
     <div class="grid-view__inner" :style="{ 'min-width': width + 'px' }">
       <GridViewHead
         :table="table"
@@ -17,7 +28,19 @@
             $refs.fieldDragging.start($event.field, $event.event)
         "
       ></GridViewHead>
-      <div ref="body" class="grid-view__body">
+      <div
+        ref="body"
+        v-auto-scroll="{
+          enabled: () => isMultiSelectHolding,
+          speed: 4,
+          padding: 10,
+          onScroll: (speed) => {
+            $emit('scroll', { pixelY: speed, pixelX: 0 })
+            return false
+          },
+        }"
+        class="grid-view__body"
+      >
         <div class="grid-view__body-inner">
           <GridViewPlaceholder
             :fields="fields"
@@ -29,6 +52,7 @@
             :table="table"
             :view="view"
             :fields="fieldsToRender"
+            :all-field-ids="allFieldIds"
             :left-offset="fieldsLeftOffset"
             :include-row-details="includeRowDetails"
             :read-only="readOnly"
@@ -75,6 +99,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 import debounce from 'lodash/debounce'
 import ResizeObserver from 'resize-observer-polyfill'
 
@@ -166,6 +191,9 @@ export default {
 
       return width
     },
+    allFieldIds() {
+      return this.fields.map((field) => field.id)
+    },
   },
   watch: {
     fieldOptions: {
@@ -180,6 +208,16 @@ export default {
         this.updateVisibleFieldsInRow()
       },
     },
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        isMultiSelectHolding:
+          this.$options.propsData.storePrefix +
+          'view/grid/isMultiSelectHolding',
+      }),
+    }
   },
   mounted() {
     // When the component first loads, we need to check

@@ -6,9 +6,18 @@
       'grid-view__column--matches-search':
         props.row._.matchSearch &&
         props.row._.fieldSearchMatches.includes(props.field.id.toString()),
+      'grid-view__column--multi-select': props.multiSelectPosition.selected,
+      'grid-view__column--multi-select-top': props.multiSelectPosition.top,
+      'grid-view__column--multi-select-right': props.multiSelectPosition.right,
+      'grid-view__column--multi-select-left': props.multiSelectPosition.left,
+      'grid-view__column--multi-select-bottom':
+        props.multiSelectPosition.bottom,
     }"
     :style="data.style"
     @click="$options.methods.select($event, parent, props.field.id)"
+    @mousedown.left="$options.methods.cellMouseDownLeft($event, listeners)"
+    @mouseover="$options.methods.cellMouseover($event, listeners)"
+    @mouseup.left="$options.methods.cellMouseUpLeft($event, listeners)"
   >
     <component
       :is="$options.methods.getFunctionalComponent(parent, props)"
@@ -113,6 +122,22 @@ export default {
     select(event, parent, fieldId) {
       event.preventFieldCellUnselect = true
       parent.selectCell(fieldId)
+    },
+    cellMouseDownLeft(event, listeners) {
+      if (listeners['cell-mousedown-left']) {
+        listeners['cell-mousedown-left']()
+      }
+    },
+    cellMouseover(event, listeners) {
+      event.preventDefault()
+      if (listeners['cell-mouseover']) {
+        listeners['cell-mouseover']()
+      }
+    },
+    cellMouseUpLeft(event, listeners) {
+      if (listeners['cell-mouseup-left']) {
+        listeners['cell-mouseup-left']()
+      }
     },
     /**
      * Called when the cell field type component needs to cell to be unselected.

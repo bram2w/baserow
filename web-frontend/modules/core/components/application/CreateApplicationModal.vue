@@ -8,6 +8,7 @@
       :is="applicationType.getApplicationFormComponent()"
       ref="applicationForm"
       @submitted="submitted"
+      @hidden="hide()"
     >
       <div class="actions">
         <div class="align-right">
