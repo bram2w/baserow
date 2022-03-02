@@ -12,7 +12,7 @@ on Ubuntu. This document aims to provide a walkthrough for servers running Ubunt
 20.04.4 LTS. These instructions have been tested with a clean install of Ubuntu 
 20.04.4 LTS and a user account with root access or the ability to run Docker containers. 
 
-# Guide 
+## Guide 
 
 ```bash
 # Ensure your system is upto date
@@ -39,12 +39,12 @@ baserow/baserow:1.8.3
 docker logs baserow
 ```
 
-# Further information 
+## Further information 
 
 Please refer to the [Install with Docker](install-with-docker.md) guide for how to
 configure and maintain your Docker based Baserow server.
 
-# Upgrade from Baserow 1.8.2 or earlier
+## Upgrade from Baserow 1.8.2 or earlier
 
 The [Old Install on Ubuntu](old-install-on-ubuntu.md) guide is now deprecated. We are 
 asking any users who wish to run Baserow on Ubuntu to instead install Docker and use our
@@ -55,7 +55,7 @@ Baserow Ubuntu install to use our official Docker images.
 > longer needed. Baserow will now work on a single domain accessing the api at 
 > YOUR_DOMAIN.com/api. 
 
-## Migration Steps
+### Migration Steps
 
 ```bash
 # === Docker Install ===
