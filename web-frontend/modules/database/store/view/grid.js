@@ -406,18 +406,28 @@ export const mutations = {
       state.rows.splice(index, 1)
     }
   },
-  SET_FIELD_AGGREGATION_DATA(state, { fieldId, value }) {
-    Vue.set(state.fieldAggregationData, fieldId, {
+  SET_FIELD_AGGREGATION_DATA(state, { fieldId, value: newValue }) {
+    const current = state.fieldAggregationData[fieldId] || {
       loading: false,
-      ...(state.fieldAggregationData[fieldId] || {}),
-      value,
-    })
+    }
+
+    state.fieldAggregationData = {
+      ...state.fieldAggregationData,
+      [fieldId]: { ...current, value: newValue },
+    }
   },
-  SET_FIELD_AGGREGATION_DATA_LOADING(state, { fieldId, value }) {
-    Vue.set(state.fieldAggregationData, fieldId, {
-      ...(state.fieldAggregationData[fieldId] || {}),
-      loading: value,
-    })
+  SET_FIELD_AGGREGATION_DATA_LOADING(
+    state,
+    { fieldId, value: newLoadingValue }
+  ) {
+    const current = state.fieldAggregationData[fieldId] || {
+      value: null,
+    }
+
+    state.fieldAggregationData = {
+      ...state.fieldAggregationData,
+      [fieldId]: { ...current, loading: newLoadingValue },
+    }
   },
 }
 
