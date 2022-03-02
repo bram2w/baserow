@@ -19,6 +19,7 @@ from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
     RowSerializer,
 )
+from baserow.contrib.database.api.utils import get_include_exclude_field_ids
 from baserow.contrib.database.api.views.errors import ERROR_VIEW_DOES_NOT_EXIST
 from baserow.contrib.database.api.views.grid.serializers import (
     GridViewFieldOptionsSerializer,
@@ -147,6 +148,32 @@ class GridViewView(APIView):
                 description="If provided only rows with data that matches the search "
                 "query are going to be returned.",
             ),
+            OpenApiParameter(
+                name="include_fields",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "All the fields are included in the response by default. You can "
+                    "select a subset of fields by providing the fields query "
+                    "parameter. If you for example provide the following GET "
+                    "parameter `include_fields=field_1,field_2` then only the fields "
+                    "with id `1` and id `2` are going to be selected and included in "
+                    "the response."
+                ),
+            ),
+            OpenApiParameter(
+                name="exclude_fields",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "All the fields are included in the response by default. You can "
+                    "select a subset of fields by providing the exclude_fields query "
+                    "parameter. If you for example provide the following GET "
+                    "parameter `exclude_fields=field_1,field_2` then the fields with "
+                    "id `1` and id `2` are going to be excluded from the selection and "
+                    "response. "
+                ),
+            ),
         ],
         tags=["Database table grid view"],
         operation_id="list_database_table_grid_view_rows",
@@ -179,13 +206,16 @@ class GridViewView(APIView):
                 serializer_name="PaginationSerializerWithGridViewFieldOptions",
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
-            404: get_error_schema(["ERROR_GRID_DOES_NOT_EXIST"]),
+            404: get_error_schema(
+                ["ERROR_GRID_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
+            ),
         },
     )
     @map_exceptions(
         {
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
         }
     )
     @allowed_includes("field_options", "row_metadata")
@@ -200,6 +230,8 @@ class GridViewView(APIView):
         """
 
         search = request.GET.get("search")
+        include_fields = request.GET.get("include_fields")
+        exclude_fields = request.GET.get("exclude_fields")
 
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
@@ -208,6 +240,10 @@ class GridViewView(APIView):
         view.table.database.group.has_user(
             request.user, raise_error=True, allow_if_template=True
         )
+        field_ids = get_include_exclude_field_ids(
+            view.table, include_fields, exclude_fields
+        )
+
         model = view.table.get_model()
         queryset = view_handler.get_queryset(view, search, model)
 
@@ -221,7 +257,10 @@ class GridViewView(APIView):
 
         page = paginator.paginate_queryset(queryset, request, self)
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True
+            model,
+            RowSerializer,
+            is_response=True,
+            field_ids=field_ids,
         )
         serializer = serializer_class(page, many=True)
 
@@ -521,6 +560,32 @@ class PublicGridViewRowsView(APIView):
                     "This works only if two or more filters are provided."
                 ),
             ),
+            OpenApiParameter(
+                name="include_fields",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "All the fields are included in the response by default. You can "
+                    "select a subset of fields by providing the fields query "
+                    "parameter. If you for example provide the following GET "
+                    "parameter `include_fields=field_1,field_2` then only the fields "
+                    "with id `1` and id `2` are going to be selected and included in "
+                    "the response."
+                ),
+            ),
+            OpenApiParameter(
+                name="exclude_fields",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "All the fields are included in the response by default. You can "
+                    "select a subset of fields by providing the exclude_fields query "
+                    "parameter. If you for example provide the following GET "
+                    "parameter `exclude_fields=field_1,field_2` then the fields with "
+                    "id `1` and id `2` are going to be excluded from the selection and "
+                    "response. "
+                ),
+            ),
         ],
         tags=["Database table grid view"],
         operation_id="public_list_database_table_grid_view_rows",
@@ -548,7 +613,9 @@ class PublicGridViewRowsView(APIView):
                 serializer_name="PublicPaginationSerializerWithGridViewFieldOptions",
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
-            404: get_error_schema(["ERROR_GRID_DOES_NOT_EXIST"]),
+            404: get_error_schema(
+                ["ERROR_GRID_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
+            ),
         },
     )
     @map_exceptions(
@@ -560,6 +627,7 @@ class PublicGridViewRowsView(APIView):
             FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
             ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
         }
     )
     @allowed_includes("field_options")
@@ -575,6 +643,8 @@ class PublicGridViewRowsView(APIView):
 
         search = request.GET.get("search")
         order_by = request.GET.get("order_by")
+        include_fields = request.GET.get("include_fields")
+        exclude_fields = request.GET.get("exclude_fields")
 
         view_handler = ViewHandler()
         view = view_handler.get_public_view_by_slug(request.user, slug, GridView)
@@ -586,6 +656,10 @@ class PublicGridViewRowsView(APIView):
         publicly_visible_field_ids = {
             o.field_id for o in publicly_visible_field_options
         }
+
+        field_ids = get_include_exclude_field_ids(
+            view.table, include_fields, exclude_fields
+        )
 
         # We have to still make a model with all fields as the public rows should still
         # be filtered by hidden fields.
@@ -620,9 +694,15 @@ class PublicGridViewRowsView(APIView):
         else:
             paginator = PageNumberPagination()
 
+        field_ids = (
+            list(set(field_ids) & set(publicly_visible_field_ids))
+            if field_ids
+            else publicly_visible_field_ids
+        )
+
         page = paginator.paginate_queryset(queryset, request, self)
         serializer_class = get_row_serializer_class(
-            model, RowSerializer, is_response=True, field_ids=publicly_visible_field_ids
+            model, RowSerializer, is_response=True, field_ids=field_ids
         )
         serializer = serializer_class(page, many=True)
         response = paginator.get_paginated_response(serializer.data)

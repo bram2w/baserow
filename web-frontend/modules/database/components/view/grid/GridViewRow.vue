@@ -69,6 +69,7 @@
       :field="field"
       :row="row"
       :state="state"
+      :multi-select-position="getMultiSelectPosition(row.id, field)"
       :read-only="readOnly"
       :style="{ width: fieldWidths[field.id] + 'px' }"
       @update="$emit('update', $event)"
@@ -78,6 +79,9 @@
       @selected="$emit('selected', $event)"
       @unselected="$emit('unselected', $event)"
       @select-next="$emit('select-next', $event)"
+      @cell-mousedown-left="$emit('cell-mousedown-left', { row, field })"
+      @cell-mouseover="$emit('cell-mouseover', { row, field })"
+      @cell-mouseup-left="$emit('cell-mouseup-left', { row, field })"
     ></GridViewCell>
   </div>
 </template>
@@ -97,6 +101,10 @@ export default {
       required: true,
     },
     fields: {
+      type: Array,
+      required: true,
+    },
+    allFieldIds: {
       type: Array,
       required: true,
     },
@@ -143,6 +151,56 @@ export default {
         rowId,
         fieldId,
       })
+    },
+    // Return an object that represents if a cell is selected,
+    // and it's current position in the selection grid
+    getMultiSelectPosition(rowId, field) {
+      const position = {
+        selected: false,
+        top: false,
+        right: false,
+        bottom: false,
+        left: false,
+      }
+      if (
+        this.$store.getters[this.storePrefix + 'view/grid/isMultiSelectActive']
+      ) {
+        const rowIndex =
+          this.$store.getters[
+            this.storePrefix + 'view/grid/getMultiSelectRowIndexById'
+          ](rowId)
+
+        let fieldIndex = this.allFieldIds.findIndex((id) => field.id === id)
+        fieldIndex += !field.primary ? 1 : 0
+
+        const [minRow, maxRow] =
+          this.$store.getters[
+            this.storePrefix + 'view/grid/getMultiSelectRowIndexSorted'
+          ]
+        const [minField, maxField] =
+          this.$store.getters[
+            this.storePrefix + 'view/grid/getMultiSelectFieldIndexSorted'
+          ]
+
+        if (rowIndex >= minRow && rowIndex <= maxRow) {
+          if (fieldIndex >= minField && fieldIndex <= maxField) {
+            position.selected = true
+            if (rowIndex === minRow) {
+              position.top = true
+            }
+            if (rowIndex === maxRow) {
+              position.bottom = true
+            }
+            if (fieldIndex === minField) {
+              position.left = true
+            }
+            if (fieldIndex === maxField) {
+              position.right = true
+            }
+          }
+        }
+      }
+      return position
     },
     setState(value) {
       this.state = value

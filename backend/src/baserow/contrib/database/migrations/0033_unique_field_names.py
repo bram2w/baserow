@@ -84,7 +84,7 @@ def rename_non_unique_names_in_table(
 
     escaped_name = re.escape(new_name_prefix)
     existing_collisions = set(
-        Field.objects.filter(table_id=table_id, name__regex=fr"^{escaped_name}_\d+$")
+        Field.objects.filter(table_id=table_id, name__regex=rf"^{escaped_name}_\d+$")
         .order_by("name")
         .distinct()
         .values_list("name", flat=True)

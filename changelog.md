@@ -26,6 +26,7 @@
 * Add footer aggregations to grid view
 * Hide "Export view" button if there is no valid exporter available
 * Fix Django's default index naming scheme causing index name collisions.
+* Added multi-cell selection and copying.
 * Add "insert left" and "insert right" field buttons to grid view head context buttons.
 * Workaround bug in Django's schema editor sometimes causing incorrect transaction 
   rollbacks resulting in the connection to the database becoming unusable.
