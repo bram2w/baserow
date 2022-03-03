@@ -34,6 +34,7 @@ BASEROW_AMOUNT_OF_GUNICORN_WORKERS=${BASEROW_AMOUNT_OF_GUNICORN_WORKERS:-3}
 # Celery related variables
 BASEROW_RUN_MINIMAL=${BASEROW_RUN_MINIMAL:-}
 BASEROW_CELERY_BEAT_STARTUP_DELAY=${BASEROW_CELERY_BEAT_STARTUP_DELAY:-15}
+BASEROW_CELERY_BEAT_DEBUG_LEVEL=${BASEROW_CELERY_BEAT_DEBUG_LEVEL:-INFO}
 
 
 # ======================================================
@@ -295,7 +296,7 @@ case "$1" in
       echo "Sleeping for $BASEROW_CELERY_BEAT_STARTUP_DELAY before starting beat to prevent "\
            "startup errors."
       sleep "$BASEROW_CELERY_BEAT_STARTUP_DELAY"
-      exec celery -A baserow beat -l INFO -S redbeat.RedBeatScheduler "${@:2}"
+      exec celery -A baserow beat -l "${BASEROW_CELERY_BEAT_DEBUG_LEVEL}" -S redbeat.RedBeatScheduler "${@:2}"
     ;;
     watch-py)
         # Ensure we watch all possible python source code locations for changes.

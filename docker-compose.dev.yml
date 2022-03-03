@@ -6,6 +6,13 @@ services:
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
 
+  # Override with the dev caddy file which switches Caddy to only be the media file
+  # server in the dev env. Devs will instead directly connect to the backend and
+  # web frontend services.
+  caddy:
+    volumes:
+      - $PWD/Caddyfile.dev:/etc/caddy/Caddyfile
+
   backend:
     image: baserow_backend_dev:latest
     build:
@@ -17,6 +24,8 @@ services:
         # reducing the chance the containers screw up the bind mounted folders.
         UID: $UID
         GID: $GID
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:8000:8000"
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
@@ -35,6 +44,8 @@ services:
         # reducing the chance the containers screw up the bind mounted folders.
         UID: $UID
         GID: $GID
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:3000:3000"
     volumes:
       - ./web-frontend:/baserow/web-frontend
       # Override the above mounts for node_modules so we use the node_modules built

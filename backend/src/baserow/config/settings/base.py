@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     "health_check.cache",
     "health_check.storage",
     "health_check.contrib.migrations",
-    "health_check.contrib.celery_ping",
     "health_check.contrib.psutil",
     "health_check.contrib.redis",
     "baserow.core",
@@ -331,11 +330,11 @@ if "BASEROW_PUBLIC_URL" in os.environ:
     PUBLIC_WEB_FRONTEND_URL = BASEROW_PUBLIC_URL
     if BASEROW_PUBLIC_URL == "http://localhost":
         print(
-            "WARNING: Starting up Baserow with a default BASEROW_PUBLIC_URL of "
+            "WARNING: Baserow is configured to use a BASEROW_PUBLIC_URL of "
             "http://localhost. If you attempt to access Baserow on any other hostname "
             "requests to the backend will fail as they will be from an unknown host. "
             "Please set BASEROW_PUBLIC_URL if you will be accessing Baserow "
-            "from any other URL then http://locahost."
+            "from any other URL then http://localhost."
         )
 else:
     PUBLIC_BACKEND_URL = os.getenv("PUBLIC_BACKEND_URL", "http://localhost:8000")
@@ -344,16 +343,16 @@ else:
     )
     if "PUBLIC_BACKEND_URL" not in os.environ:
         print(
-            "WARNING: Starting up Baserow with a default PUBLIC_BACKEND_URL of "
+            "WARNING: Baserow is configured to use a PUBLIC_BACKEND_URL of "
             "http://localhost:8000. If you attempt to access Baserow on any other "
             "hostname requests to the backend will fail as they will be from an "
             "unknown host."
             "Please ensure you set PUBLIC_BACKEND_URL if you will be accessing "
-            "Baserow from any other URL then http://locahost."
+            "Baserow from any other URL then http://localhost."
         )
     if "PUBLIC_WEB_FRONTEND_URL" not in os.environ:
         print(
-            "WARNING: Starting up Baserow with a default PUBLIC_WEB_FRONTEND_URL "
+            "WARNING: Baserow is configured to use a default PUBLIC_WEB_FRONTEND_URL "
             "of http://localhost:3000. Emails sent by Baserow will use links pointing "
             "to http://localhost:3000 when telling users how to access your server. If "
             "this is incorrect please ensure you have set PUBLIC_WEB_FRONTEND_URL to "
