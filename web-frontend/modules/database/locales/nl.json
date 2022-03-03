@@ -409,7 +409,8 @@
     "viewContext": {
         "exportView": "Weergave exporteren",
         "renameView": "Weergave hernoemen",
-        "deleteView": "Weergave verwijderen"
+        "deleteView": "Weergave verwijderen",
+        "webhooks": "Webhooks"
     },
     "deleteViewModal": {
         "title": "Verwijder {name}",
@@ -428,7 +429,9 @@
     "gridViewFieldType": {
         "createFilter": "Filter maken",
         "sortField": "Sorteren",
-        "hideField": "Veld verbergen"
+        "hideField": "Veld verbergen",
+        "insertLeft": "Links invoegen",
+        "insertRight": "Rechts invoegen"
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "Rij komt niet overeen met filters",
@@ -487,5 +490,52 @@
         "selectApplicationTitle": "Voor welke database wilt je de documentatie zien?",
         "signIn": "Log in om te beginnen",
         "back": "Terug naar dashboard"
+    },
+    "viewAggregationType": {
+        "emptyCount": "Leeg",
+        "notEmptyCount": "Gevuld",
+        "emptyPercentage": "Percentage leeg",
+        "notEmptyPercentage": "Percentage gevuld",
+        "latestDate": "Laatste datum",
+        "checkedPercentage": "Percentage aan",
+        "sum": "Som",
+        "earliestDateShort": "Vroegste",
+        "min": "Min",
+        "max": "Max",
+        "latestDateShort": "Laatste",
+        "uniqueCount": "Uniek",
+        "average": "Gemiddelde",
+        "variance": "Variantie",
+        "checkedCount": "Aangevinkt",
+        "notCheckedPercentage": "Percentage uit",
+        "notCheckedCount": "Uitgevinkt",
+        "earliestDate": "Vroegste datum",
+        "median": "Mediaan",
+        "stdDev": "Standaardafwijking",
+        "stdDevShort": "Std dev"
+    },
+    "databaseForm": {
+        "importLabel": "Wilt u bestaande gegevens importeren?",
+        "emptyLabel": "Begin leeg",
+        "airtableLabel": "Importeren uit Airtable (beta)"
+    },
+    "importFromAirtable": {
+        "airtableShareLinkTitle": "Deel een link naar je Base",
+        "airtableShareLinkDescription": "Om uw Airtable basis te importeren, moet u een gedeelde link hebben naar uw volledige basis. In Airtable, klik op de share knop in de rechter bovenhoek na het openen van uw basis. Daarna moet u de optie \"Access to base\" kiezen. In de share-modal kunt u klikken op de \"Create a shared link to the whole base\" knop en vervolgens op \"Private read-only link\". Kopieer de publieke link en plak deze in de onderstaande invoer.",
+        "airtableShareLinkBeta": "Houd er rekening mee dat deze functie in bèta is, uw tabellen, velden (behalve formule, opzoeken en tellen) en gegevens worden geïmporteerd. Uw weergaven worden niet geïmporteerd.",
+        "airtableShareLinkPaste": "Plak de link hier",
+        "importButtonLabel": "Importeren uit Airtable",
+        "openButtonLabel": "Geïmporteerde database openen",
+        "importError": "Er is iets fout gegaan",
+        "statePending": "Wachten om te beginnen",
+        "stateFailed": "Mislukt",
+        "stateFinished": "Afgerond",
+        "stateDownloadingBase": "Basisschema downloaden",
+        "stateConverting": "Omzetten naar Baserow",
+        "stateDownloadingFiles": "Bestanden downloaden",
+        "stateImporting": "Importeren",
+        "stateImportingTable": "Importeren van tabel {table}",
+        "errorJobAlreadyRunningTitle": "Al bezig",
+        "errorJobAlreadyRunningDescription": "Er loopt al een andere import taak. U moet wachten tot die klaar is voordat u een andere start."
     }
 }

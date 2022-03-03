@@ -133,7 +133,7 @@
         "size": "Permet de définir le nombre de ligne par page.",
         "userFieldNames": "Quand une valeur est fournie pour le paramètre GET `user_field_names`, les noms des champs du résultat seront ceux définis par l'utilisateur.\n\n Si le paramêtre `user_field_names` n'est pas défini, alors les noms des champs seront `field_` suivis par l'identifiant du champ. Par exemple `field_1` fait référence au champ avec l'identifiant `1`.\n\n De plus, quand `user_field_names` est défini, vous devez également fournir les noms définis par l'utilisateur pour les paramètres `order_by`, `include` et `exclude`.",
         "search": "Quand ce paramètre est défini, seules les lignes qui satisfont la recherche seront retournées.",
-        "orderBy": "Ce paramètre permet d'ordonner les lignes du résultat à l'aide d'une liste de champs séparés par une virgule. Par défaut ou s'il est préfixé par un `+` un champ est ordonné par ordre croissant (A-Z), en le préfixant par un `-` il sera ordonné par ordre décroissant (Z-A).\n\n #### Avec `user_field_names` :\n\n `order_by` doit être une liste de noms définis par l'utilisateur des champs sur lesquels s'appuient l'ordre séparés par des virgules. Par exemple si vous fournissez la valeur suivante `order_by=Mon champ,-Mon champ 2` les lignes seront ordonnées par le champ appelé `Mon champ` par ordre croissant. Si certaines lignes ont la même valeur pour `Mon champ` ce sous ensemble sera ordonné par la valeur du champ `Mon champ 2` par ordre décroissant.\n\n Assurez vous que les champs qui commencent par un `+` ou un `-` soit explicitement préfixés par un autre `+` ou `-`. Ex : `+-Nom`.\n\n Le nom des champs contenant des virgules doit être entouré par des guillements : `\"Nom ,\"`. Si le nom des champs contient des guillements, ceux-ci doivent être protégés en utilisant le charactère `\\`. Ex : `Nom \\\"`.\n\n #### Sans `user_field_names` :\n\n `order_by` doit être une liste de `field_` suivi par l'identifiant du champ à ordonner, séparés par des virgules. Par exemple si vous fournissez la valeur suivante pour ce paramètre `order_by=field_1,-field_2` les lignes seront ordonnées par le champ `field_1` par ordre croissant. Si certaines lignes ont la même valeur pour ce champ, ce sous ensemble sera ordonné par la valeur du champ `field_2` par ordre décroissant.",
+        "orderBy": "Ce paramètre permet d'ordonner les lignes du résultat à l'aide d'une liste de champs séparés par une virgule. Par défaut ou s'il est préfixé par un `+` un champ est ordonné par ordre croissant (A-Z), en le préfixant par un `-` il sera ordonné par ordre décroissant (Z-A).\n\n #### Avec `user_field_names` :\n\n `order_by` doit être une liste de noms définis par l'utilisateur des champs sur lesquels s'appuient l'ordre séparés par des virgules. Par exemple si vous fournissez la valeur suivante `order_by=Mon champ,-Mon champ 2` les lignes seront ordonnées par le champ appelé `Mon champ` par ordre croissant. Si certaines lignes ont la même valeur pour `Mon champ` ce sous ensemble sera ordonné par la valeur du champ `Mon champ 2` par ordre décroissant.\n\n Assurez vous que les champs qui commencent par un `+` ou un `-` soit explicitement préfixés par un autre `+` ou `-`. Ex : `+-Nom`.\n\n Le nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n #### Sans `user_field_names` :\n\n `order_by` doit être une liste de `field_` suivi par l'identifiant du champ à ordonner, séparés par des virgules. Par exemple si vous fournissez la valeur suivante pour ce paramètre `order_by=field_1,-field_2` les lignes seront ordonnées par le champ `field_1` par ordre croissant. Si certaines lignes ont la même valeur pour ce champ, ce sous ensemble sera ordonné par la valeur du champ `field_2` par ordre décroissant.",
         "filter": "Ce paramètre permet de filtrer les lignes avec les même filtres que ceux disponibles dans les vues. Plusieurs filtres peuvent être définis simultanéement s'il suivent le même format. La variable `field` permet d'indiquer le champ à filtrer, tandis que `filter` permet de choiser le type de filtre.\n\n Par exemple si vous utilisez la valeur suivante : `filter__field_1__equal=test`, seule les lignes pour lesquelles la valeur du champ `field_1` est égale à *test* seront retournées.",
         "filterLink": "Une liste des filtres disponibles peut être consultée ici.",
         "filterType": "- `AND` : indique que les lignes doivent satisfaire tous les filtres définis.\n- `OR` : indique que les lignes doivent satisfaire au moins l'un des filtres définis pour être retournées.\n\n Cela fonctionne uniquement quand au moins 2 filtres sont définis.",
@@ -409,7 +409,8 @@
     "viewContext": {
         "exportView": "Exporter la vue",
         "renameView": "Renommer la vue",
-        "deleteView": "Supprimer la vue"
+        "deleteView": "Supprimer la vue",
+        "webhooks": "Webhooks"
     },
     "deleteViewModal": {
         "title": "Supprimer la vue {name}",
@@ -428,7 +429,9 @@
     "gridViewFieldType": {
         "createFilter": "Définir un filtre",
         "sortField": "Trier",
-        "hideField": "Cacher un champ"
+        "hideField": "Cacher un champ",
+        "insertRight": "Insérer à droite",
+        "insertLeft": "Insérer à gauche"
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "La ligne est filtrée",
@@ -487,5 +490,52 @@
         "selectApplicationTitle": "Choisissez une base de donnée :",
         "signIn": "S'identifier",
         "back": "Retourner à l'accueil"
+    },
+    "viewAggregationType": {
+        "checkedCount": "Cochées",
+        "notCheckedCount": "Non cochées",
+        "checkedPercentage": "Pourcentage de cochées",
+        "notCheckedPercentage": "Pourcentage de non cochées",
+        "min": "Min",
+        "max": "Max",
+        "earliestDate": "Première date",
+        "earliestDateShort": "Début",
+        "latestDate": "Dernière date",
+        "latestDateShort": "Fin",
+        "uniqueCount": "Unique",
+        "sum": "Somme",
+        "average": "Moyenne",
+        "median": "Médiane",
+        "stdDev": "Écart type",
+        "stdDevShort": "Écart type",
+        "variance": "Variance",
+        "notEmptyPercentage": "Pourcentage de renseignées",
+        "notEmptyCount": "Renseignées",
+        "emptyCount": "Vides",
+        "emptyPercentage": "Pourcentage de vides"
+    },
+    "databaseForm": {
+        "importLabel": "Souhaitez-vous importer des données existantes ?",
+        "airtableLabel": "Importer à partir d'Airtable (beta)",
+        "emptyLabel": "Base de donnée vierge"
+    },
+    "importFromAirtable": {
+        "airtableShareLinkTitle": "Partager un lien vers votre Base",
+        "airtableShareLinkDescription": "Pour importer une base Airtable, vous devez au préalable créer un lien de partage de la base que vous souhaitez copier. Dans Airtable cliquez sur le bouton « share » dans le coin en haut à droite après avoir ouvert votre base. Ensuite, vous devez choisir l'option « Access to base ». Dans la fenêtre modale qui s'ouvre puis cliquez sur le bouton « Create a shared link to the whole base » et enfin cliquez sur « Private read-only link ». Copiez alors le lien publique généré et collez-le dans le champ suivant.",
+        "airtableShareLinkBeta": "Attention : cette fonctionnalité est encore en version beta, vos tables, champs (sauf les formules, les champs rapportés et les calculs) et les données seront importés. En revanche, les vues ne le seront pas.",
+        "airtableShareLinkPaste": "Collez le lien ici",
+        "importButtonLabel": "Importer à partir de Airtable",
+        "openButtonLabel": "Ouvrir la base importée",
+        "importError": "Une erreur est survenue",
+        "statePending": "En attente",
+        "stateFailed": "Échec",
+        "stateFinished": "Terminé",
+        "stateDownloadingBase": "Téléchargement du schéma de la base",
+        "stateConverting": "Conversion vers Baserow",
+        "stateDownloadingFiles": "Téléchargement des fichiers",
+        "stateImporting": "Import en cours",
+        "stateImportingTable": "Import de la table {table}",
+        "errorJobAlreadyRunningTitle": "Déjà en cours",
+        "errorJobAlreadyRunningDescription": "Une autre tâche est déjà en cours. Vous devez attendre que celle-ci finisse avant d'en démarrer une autre."
     }
 }

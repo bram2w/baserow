@@ -409,7 +409,8 @@
     "viewContext": {
         "exportView": "Ansicht exportieren",
         "renameView": "Ansicht umbenennen",
-        "deleteView": "Ansicht löschen"
+        "deleteView": "Ansicht löschen",
+        "webhooks": "Webhooks"
     },
     "deleteViewModal": {
         "title": "Löschen {name}",
@@ -428,7 +429,9 @@
     "gridViewFieldType": {
         "createFilter": "Filter erstellen",
         "sortField": "Sortieren",
-        "hideField": "Feld ausblenden"
+        "hideField": "Feld ausblenden",
+        "insertLeft": "Links einfügen",
+        "insertRight": "Rechts einfügen"
     },
     "gridViewRow": {
         "rowNotMatchingFilters": "Zeile entspricht nicht den Filtern",
@@ -487,5 +490,52 @@
         "selectApplicationTitle": "Für welche Datenbank möchten Sie die Dokumentation sehen?",
         "signIn": "Anmelden, um zu starten",
         "back": "Zurück zum Dashboard"
+    },
+    "viewAggregationType": {
+        "min": "Min",
+        "max": "Max",
+        "earliestDate": "Frühestes Datum",
+        "checkedCount": "Markiert",
+        "notCheckedCount": "Nicht markiert",
+        "checkedPercentage": "Prozent markiert",
+        "notCheckedPercentage": "Prozent nicht markiert",
+        "earliestDateShort": "Früheste",
+        "latestDate": "Letztes Datum",
+        "latestDateShort": "Letztes",
+        "uniqueCount": "Eindeutig",
+        "sum": "Summe",
+        "median": "Median",
+        "stdDev": "Standardabweichung",
+        "variance": "Varianz",
+        "average": "Durchschnitt",
+        "stdDevShort": "Std Abw",
+        "emptyCount": "Leer",
+        "notEmptyCount": "Gefüllt",
+        "emptyPercentage": "Prozent leer",
+        "notEmptyPercentage": "Prozent gefüllt"
+    },
+    "databaseForm": {
+        "importLabel": "Möchten Sie vorhandene Daten importieren?",
+        "emptyLabel": "Neu anfangen",
+        "airtableLabel": "Importieren von Airtable (beta)"
+    },
+    "importFromAirtable": {
+        "airtableShareLinkTitle": "Teilen Sie einen Link zu Ihrer Base",
+        "airtableShareLinkBeta": "Beachten Sie, dass sich diese Funktion noch in Beta befindet. Ihre Tabellen, Felder (außer formula, lookup, und count) und Daten werden importiert. Ihre Views werden nicht importiert.",
+        "airtableShareLinkPaste": "Den Link hier einfügen",
+        "importButtonLabel": "Importieren von Airtable",
+        "openButtonLabel": "Importierte Datenbank öffnen",
+        "importError": "Etwas ist schief gelaufen",
+        "statePending": "Warten",
+        "stateFailed": "Fehlgeschlagen",
+        "stateFinished": "Fertig",
+        "stateDownloadingBase": "Herunterladen das Baseschemas",
+        "stateConverting": "Konvertierung zu Baserow",
+        "stateDownloadingFiles": "Herunterladen von Dateien",
+        "stateImporting": "Importieren",
+        "stateImportingTable": "Tabelle importieren {table}",
+        "airtableShareLinkDescription": "Um Ihre Airtable Base zu importieren, müssen Sie einen Link zu Ihrer gesamten Base haben. Klicken Sie in Airtable auf die \"Share\" taste in der oberen rechten Ecke, nachdem Sie Ihre Base geöffnet haben. Danach müssen Sie die Option \"Access to base\" wählen. Im modal drücken Sie auf \"Create a shared link to the whole base\" und dann auf \"Private read-only link\". Kopieren Sie den Link und fügen Sie ihn in das unten stehende Feld ein.",
+        "errorJobAlreadyRunningTitle": "Schon läuft",
+        "errorJobAlreadyRunningDescription": "Ein weiterer Importauftrag ist bereits in Arbeit. Sie müssen abwarten, bis dieser Vorgang abgeschlossen ist, bevor Sie einen weiteren beginnen."
     }
 }

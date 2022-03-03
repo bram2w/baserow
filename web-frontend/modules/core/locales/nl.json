@@ -240,6 +240,12 @@
         "groupSignupRestrictions": "Aanmeldingsbeperkingen",
         "settingAllowNewAccountsName": "Toestaan aanmaken van nieuwe accounts",
         "settingAllowNewAccountsDescription": "Standaard kan elke gebruiker die je Baserow-domein bezoekt zich aanmelden voor een nieuw account.",
-        "enabled": "ingeschakeld"
+        "enabled": "ingeschakeld",
+        "settingAllowSignupsViaGroupInvitationsName": "Aanmeldingen via groepsuitnodigingen toestaan",
+        "settingAllowSignupsViaGroupInvitationDescription": "Zelfs als het aanmaken van nieuwe accounts is uitgeschakeld, kunnen direct uitgenodigde gebruikers met deze optie toch een account aanmaken."
+    },
+    "copyingNotification": {
+        "title": "Kopiëren...",
+        "content": "Uw gegevens voorbereiden"
     }
 }
