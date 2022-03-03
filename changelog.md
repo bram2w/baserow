@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+* Fixed bug when importing a formula or lookup field with an incorrect empty value.
+* New templates:
+    * Non-profit Organization Management
+    * Elementary School Management
+    * Call Center Log
+    * Individual Medical Record
+    * Trip History
+    * Favorite Food Places
+    * Wedding Client Planner
+* Updated templates:
+    * Holiday Shopping
+    * Company Asset Tracker
+    * Personal Health Log
+    * Recipe Book
+    * Student Planner
+    * Political Campaign Contributions
+
 ## Released (2022-03-02 1.9)
 
 * Added accept `image/*` attribute to the form cover and logo upload. 

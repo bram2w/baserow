@@ -3,7 +3,7 @@ from typing import List, Type, Optional, Any, Union
 
 from dateutil import parser
 from django.db import models
-from django.db.models import Q, JSONField
+from django.db.models import Q, JSONField, Value
 from rest_framework import serializers
 from rest_framework.fields import Field
 
@@ -391,6 +391,23 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
     def collapse_many(self, expr: "BaserowExpression[BaserowFormulaType]"):
         func = formula_function_registry.get("array_agg_unnesting")
         return func.call_and_type_with(expr)
+
+    def placeholder_empty_value(self):
+        """
+        The use of `array_agg_unnesting` in `self.collapse_many` above means that we can
+        never have null values inserted into array fields but instead they should be
+        empty lists.
+
+        This is because during template imports we can run update statements using
+        `array_agg_unnesting` over array fields which have just been filled with empty
+        data and not had their actual values calculated yet. If they instead defaulted
+        to Value(None) (null) these update statements would fail as the use of
+        `jsonb_array_elements` by `array_agg_unnesting` crashes if you give in null
+        instead of [] with
+        `django.db.utils.DataError: cannot extract elements from a scalar`
+        """
+
+        return Value([], output_field=JSONField())
 
     def wrap_at_field_level(self, expr: "BaserowExpression[BaserowFormulaType]"):
         return formula_function_registry.get("error_to_null").call_and_type_with(expr)

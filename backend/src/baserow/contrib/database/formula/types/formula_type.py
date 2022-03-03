@@ -7,6 +7,7 @@ from typing import (
     TypeVar,
 )
 
+from django.db.models import Value, Expression
 from django.utils.functional import classproperty
 
 from baserow.contrib.database.formula.ast import tree
@@ -258,6 +259,14 @@ class BaserowFormulaType(abc.ABC):
             f"cannot perform subtraction on type {arg1.expression_type} and "
             f"{arg2.expression_type}"
         )
+
+    def placeholder_empty_value(self) -> Expression:
+        """
+        Should be a valid value safe to store in a formula field of this type as a
+        placeholder value in an INSERT statement.
+        """
+
+        return Value(None)
 
     def __str__(self) -> str:
         return self.type
