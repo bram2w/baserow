@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Released (2022-03-03 1.9.1)
+
 * Fixed bug when importing a formula or lookup field with an incorrect empty value.
 * New templates:
     * Non-profit Organization Management
