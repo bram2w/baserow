@@ -9,8 +9,8 @@ gunicorn==20.1.0
 uvicorn[standard]==0.15.0
 requests==2.26.0
 itsdangerous==2.0.1
-drf-spectacular==0.13.1
 Pillow==9.0.0
+drf-spectacular==0.21.2
 asgiref==3.4.1
 channels==3.0.4
 channels-redis==3.3.0

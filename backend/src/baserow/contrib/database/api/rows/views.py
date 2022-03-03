@@ -184,7 +184,7 @@ class RowsView(APIView):
             OpenApiParameter(
                 name="user_field_names",
                 location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.NONE,
+                type=OpenApiTypes.BOOL,
                 description=(
                     "A flag query parameter which if provided the returned json "
                     "will use the user specified field names instead of internal "
@@ -311,7 +311,7 @@ class RowsView(APIView):
             OpenApiParameter(
                 name="user_field_names",
                 location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.NONE,
+                type=OpenApiTypes.BOOL,
                 description=(
                     "A flag query parameter which if provided this endpoint will "
                     "expect and return the user specified field names instead of "
@@ -424,7 +424,7 @@ class RowView(APIView):
             OpenApiParameter(
                 name="user_field_names",
                 location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.NONE,
+                type=OpenApiTypes.BOOL,
                 description=(
                     "A flag query parameter which if provided the returned json "
                     "will use the user specified field names instead of internal "
@@ -499,7 +499,7 @@ class RowView(APIView):
             OpenApiParameter(
                 name="user_field_names",
                 location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.NONE,
+                type=OpenApiTypes.BOOL,
                 description=(
                     "A flag query parameter which if provided this endpoint will "
                     "expect and return the user specified field names instead of "
@@ -674,7 +674,7 @@ class RowMoveView(APIView):
             OpenApiParameter(
                 name="user_field_names",
                 location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.NONE,
+                type=OpenApiTypes.BOOL,
                 description=(
                     "A flag query parameter which if provided the returned json "
                     "will use the user specified field names instead of internal "
