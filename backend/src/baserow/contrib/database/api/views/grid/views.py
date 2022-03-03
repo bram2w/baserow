@@ -97,7 +97,7 @@ class GridViewView(APIView):
             OpenApiParameter(
                 name="count",
                 location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.NONE,
+                type=OpenApiTypes.BOOL,
                 description="If provided only the count will be returned.",
             ),
             OpenApiParameter(
@@ -471,7 +471,7 @@ class PublicGridViewRowsView(APIView):
             OpenApiParameter(
                 name="count",
                 location=OpenApiParameter.QUERY,
-                type=OpenApiTypes.NONE,
+                type=OpenApiTypes.BOOL,
                 description="If provided only the count will be returned.",
             ),
             OpenApiParameter(
