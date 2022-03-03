@@ -240,6 +240,12 @@
         "groupSignupRestrictions": "Restriction de création des comptes",
         "settingAllowNewAccountsName": "Autoriser la création de compte",
         "settingAllowNewAccountsDescription": "Par défaut, tout les visiteurs peuvent créer un compte sur votre instance de Baserow.",
-        "enabled": "Autoriser"
+        "enabled": "Autoriser",
+        "settingAllowSignupsViaGroupInvitationsName": "Autoriser la création de compte sur invitation",
+        "settingAllowSignupsViaGroupInvitationDescription": "Cette option permet aux utilisateurs invités par d'autres de créer des comptes même si la création de compte à été désactivée de manière globale."
+    },
+    "copyingNotification": {
+        "title": "Copie en cours...",
+        "content": "Préparation des données"
     }
 }
