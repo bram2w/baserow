@@ -179,7 +179,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.9
+    image: baserow/backend:1.9.1
     restart: unless-stopped
     environment:
       <<: *common-backend-variables
@@ -192,7 +192,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.9
+    image: baserow/web-frontend:1.9.1
     restart: unless-stopped
     environment:
       <<: *common-variables
@@ -202,7 +202,7 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.9
+    image: baserow/backend:1.9.1
     restart: unless-stopped
     environment:
       <<: *common-backend-variables
@@ -219,7 +219,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.9
+    image: baserow/backend:1.9.1
     restart: unless-stopped
     command: celery-exportworker
     # The backend image's baked in healthcheck defaults to the django healthcheck
@@ -236,7 +236,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.9
+    image: baserow/backend:1.9.1
     restart: unless-stopped
     command: celery-beat
     # See https://github.com/sibson/redbeat/issues/129#issuecomment-1057478237
