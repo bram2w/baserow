@@ -21,6 +21,8 @@
 * Upgraded `drf-spectacular`. Flag-style query parameters like `count` will now be displayed
   as `boolean` instead of `any` in the OpenAPI documentation. However, the behavior of these 
   flags is still the same.
+* Fix the Baserow Heroku install filling up the hobby postgres by disabling template 
+  syncing by default.
 
 ## Released (2022-03-02 1.9)
 

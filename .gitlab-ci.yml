@@ -595,7 +595,6 @@ trigger-saas-build:
   only:
     variables:
       - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
-      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
   allow_failure: true
   trigger:
     project: bramw/baserow-saas

@@ -15,5 +15,5 @@ urlpatterns = (
 )
 
 
-if settings.DEBUG:
+if settings.DEBUG and "silk" in settings.INSTALLED_APPS:
     urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
