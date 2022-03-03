@@ -1,5 +1,5 @@
 {
-    {$BASEROW_CADDY_GLOBAL_CONF}
+	{$BASEROW_CADDY_GLOBAL_CONF}
 }
 
 {$BASEROW_CADDY_ADDRESSES} {
@@ -24,5 +24,5 @@
 		}
 	}
 
-	reverse_proxy {$PRIVATE_WEBFRONTEND_URL:localhost:3000}
+	reverse_proxy {$PRIVATE_WEB_FRONTEND_URL:localhost:3000}
 }

@@ -317,6 +317,7 @@ class MappingSerializer:
         self.mapping = mapping
         self.name = name
         self.many = many
+        self.partial = False
 
 
 class CustomFieldRegistryMappingSerializer:
@@ -330,6 +331,7 @@ class CustomFieldRegistryMappingSerializer:
         self.registry = registry
         self.base_class = base_class
         self.many = many
+        self.partial = False
 
 
 class DiscriminatorCustomFieldsMappingSerializer:
@@ -347,6 +349,7 @@ class DiscriminatorCustomFieldsMappingSerializer:
         self.type_field_name = type_field_name
         self.many = many
         self.help_text = help_text
+        self.partial = False
 
 
 class DiscriminatorMappingSerializer:
@@ -361,3 +364,4 @@ class DiscriminatorMappingSerializer:
         self.mapping = mapping
         self.type_field_name = type_field_name
         self.many = many
+        self.partial = False

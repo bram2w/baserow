@@ -1202,3 +1202,36 @@ def test_can_cache_and_uncache_formula_model_field(
     assert isinstance(uncached, BaserowExpressionField)
     assert uncached.__class__ == TextField
     assert str(uncached.expression) == str(formula_model_field.expression)
+
+
+@pytest.mark.django_db
+def test_inserting_a_row_with_lookup_field_immediately_populates_it_with_empty_list(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    target_field = data_fixture.create_text_field(name="target", table=table_b)
+    table_a_model = table_a.get_model(attribute_names=True)
+    table_b_model = table_b.get_model(attribute_names=True)
+    row_1 = table_b_model.objects.create(primary="1", target="target 1")
+    row_2 = table_b_model.objects.create(primary="2", target="target 2")
+
+    row_a = table_a_model.objects.create(primary="a")
+    row_a.link.add(row_1.id)
+    row_a.link.add(row_2.id)
+    row_a.save()
+
+    lookup = FieldHandler().create_field(
+        user,
+        table_a,
+        "lookup",
+        name="lookup",
+        through_field_name="link",
+        target_field_name="target",
+    )
+    model_with_lookup = table_a.get_model()
+    inserted_row = model_with_lookup.objects.create()
+    default_empty_value_for_lookup = getattr(inserted_row, f"field_{lookup.id}")
+    assert default_empty_value_for_lookup is not None
+    assert default_empty_value_for_lookup == "[]"

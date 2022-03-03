@@ -15,6 +15,8 @@ RUN apt-get update && \
     gnupg2 \
     dos2unix \
     tini \
+    nano \
+    vim \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \

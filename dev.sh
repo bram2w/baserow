@@ -314,11 +314,20 @@ fi
 export COMPOSE_DOCKER_CLI_BUILD=1
 export DOCKER_BUILDKIT=1
 
-export WEB_FRONTEND_PORT=${WEB_FRONTEND_PORT:-3000}
-export BASEROW_PUBLIC_URL=${BASEROW_PUBLIC_URL:-http://localhost:$WEB_FRONTEND_PORT}
 export REDIS_PASSWORD=baserow
 export DATABASE_PASSWORD=baserow
 export SECRET_KEY=baserow
+if [[ "$dev" = true ]]; then
+  # Caddy will just be the media server so change its port to match the MEDIA_URL
+  export WEB_FRONTEND_PORT=4000
+  export WEB_FRONTEND_SSL_PORT=4443
+
+  export BASEROW_PUBLIC_URL=
+  export PUBLIC_BACKEND_URL=http://localhost:8000
+  export PUBLIC_WEB_FRONTEND_URL=http://localhost:3000
+
+  export MEDIA_URL=http://localhost:4000/media/
+fi
 
 
 echo "./dev.sh running docker-compose commands:

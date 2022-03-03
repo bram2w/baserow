@@ -244,6 +244,8 @@
         "groupSignupRestrictions": "Einschränkungen bei der Registrierung",
         "settingAllowNewAccountsName": "Erstellen neuer Konten zulassen",
         "settingAllowNewAccountsDescription": "Standardmäßig kann sich jeder Benutzer, der Ihre Baserow-Domain besucht, für ein neues Konto anmelden.",
-        "enabled": "aktiviert"
+        "enabled": "aktiviert",
+        "settingAllowSignupsViaGroupInvitationsName": "Erlaube Registrierungen durch Gruppeneinladungen",
+        "settingAllowSignupsViaGroupInvitationDescription": "Auch wenn die Erstellung von neuen Konten deaktiviert ist können Nutzer:innen durch Setzen dieser Option Nutzer:innen ein Konto erstellen."
     }
 }

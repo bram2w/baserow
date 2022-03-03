@@ -97,13 +97,15 @@ def _baserow_expression_to_django_expression(
         if isinstance(baserow_expression.expression_type, BaserowFormulaInvalidType):
             return Value(None)
         else:
-            # When inserting a row we can't possibly calculate the aggregate result
-            # as there is no row id that can be used to connect it to other tables.
             inserting_aggregate = (
                 baserow_expression.aggregate and model_instance is not None and insert
             )
             if inserting_aggregate:
-                return Value(None)
+                # When inserting a row we can't possibly calculate the aggregate result
+                # as there is no row id that can be used to connect it to other tables.
+                # Instead we need to insert a placeholder empty value which will then
+                # get replaced later on with the correct value by an UPDATE statement.
+                return baserow_expression.expression_type.placeholder_empty_value()
             else:
                 generator = BaserowExpressionToDjangoExpressionGenerator(
                     model, model_instance

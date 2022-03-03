@@ -39,7 +39,10 @@ RUN apt-get update && \
     ca-certificates \
     tini \
     psmisc \
-    gosu && \
+    gosu \
+    nano \
+    vim \
+    && \
     # ========================
     # Install Node
     # ========================
