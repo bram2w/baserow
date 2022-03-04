@@ -283,7 +283,10 @@ class AirtableHandler:
             updated_on=None,
         )
 
-        for column_id, column_value in row["cellValuesByColumnId"].items():
+        # Some empty rows don't have the `cellValuesByColumnId` property because it
+        # doesn't contain values, hence the fallback to prevent failing hard.
+        cell_values = row.get("cellValuesByColumnId", {})
+        for column_id, column_value in cell_values.items():
             if column_id not in column_mapping:
                 continue
 

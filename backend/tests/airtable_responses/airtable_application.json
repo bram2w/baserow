@@ -210,7 +210,6 @@
                 },
                 "sel5ekvuoNVvl03olMO":{
                   "id":"sel5ekvuoNVvl03olMO",
-                  "color":"cyan",
                   "name":"Option 2"
                 }
               },
@@ -770,6 +769,10 @@
               ],
               "fldZBmr4L45mhjILhlA":2
             }
+          },
+          {
+            "id":"recWkle1IOXcLmhILm1",
+            "createdTime":"2022-01-17T17:59:13.000Z"
           }
         ],
         "viewDatas":[
