@@ -232,7 +232,7 @@ def test_to_baserow_database_export():
         "order": 1,
         "primary": False,
     }
-    assert len(baserow_database_export["tables"][0]["rows"]) == 2
+    assert len(baserow_database_export["tables"][0]["rows"]) == 3
     assert baserow_database_export["tables"][0]["rows"][0] == {
         "id": 1,
         "order": "1.00000000000000000000",
@@ -252,6 +252,12 @@ def test_to_baserow_database_export():
         "field_fldG9y88Zw7q7u4Z7i4": "Bram 2",
         "field_fldFh5wIL430N62LN6t": [2, 3, 1],
         "field_fldZBmr4L45mhjILhlA": "2",
+    }
+    assert baserow_database_export["tables"][0]["rows"][2] == {
+        "id": 3,
+        "order": "3.00000000000000000000",
+        "created_on": "2022-01-17T17:59:13+00:00",
+        "updated_on": None,
     }
     assert (
         baserow_database_export["tables"][1]["rows"][0]["field_fldEB5dp0mNjVZu0VJI"]
