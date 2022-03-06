@@ -19,7 +19,7 @@
             value="US"
           ></DropdownItem>
           <DropdownItem
-            :name="$t('fieldDateSubForm.dateFormatISO') + ' (2020-20-02)'"
+            :name="$t('fieldDateSubForm.dateFormatISO') + ' (2020-02-20)'"
             value="ISO"
           ></DropdownItem>
         </Dropdown>
