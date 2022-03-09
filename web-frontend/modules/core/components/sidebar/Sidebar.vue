@@ -100,7 +100,7 @@
           </li>
           <template v-if="hasSelectedGroup && !isCollapsed">
             <li class="tree__item margin-top-2">
-              <div class="tree__action">
+              <div class="tree__action tree__action--has-options">
                 <a
                   ref="groupSelectToggle"
                   class="tree__link tree__link--group"
@@ -112,9 +112,33 @@
                       0
                     )
                   "
-                  >{{ selectedGroup.name }}</a
                 >
+                  <Editable
+                    ref="rename"
+                    :value="selectedGroup.name"
+                    @change="renameGroup(selectedGroup, $event)"
+                  ></Editable
+                ></a>
+                <a
+                  ref="contextLink"
+                  class="tree__options"
+                  @click="
+                    $refs.context.toggle(
+                      $refs.contextLink,
+                      'bottom',
+                      'right',
+                      0
+                    )
+                  "
+                >
+                  <i class="fas fa-ellipsis-v"></i>
+                </a>
                 <GroupsContext ref="groupSelect"></GroupsContext>
+                <GroupContext
+                  ref="context"
+                  :group="selectedGroup"
+                  @rename="enableRename()"
+                ></GroupContext>
               </div>
             </li>
             <li v-if="selectedGroup.permissions === 'ADMIN'" class="tree__item">
@@ -227,9 +251,11 @@ import SidebarAdminItem from '@baserow/modules/core/components/sidebar/SidebarAd
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
 import CreateApplicationContext from '@baserow/modules/core/components/application/CreateApplicationContext'
 import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
+import GroupContext from '@baserow/modules/core/components/group/GroupContext'
 import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
 import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
+import editGroup from '@baserow/modules/core/mixins/editGroup'
 
 export default {
   name: 'Sidebar',
@@ -239,10 +265,12 @@ export default {
     SidebarAdminItem,
     SidebarApplication,
     GroupsContext,
+    GroupContext,
     CreateGroupModal,
     GroupMembersModal,
     TrashModal,
   },
+  mixins: [editGroup],
   computed: {
     /**
      * Because all the applications that belong to the user are in the store we will

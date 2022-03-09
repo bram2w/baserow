@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Added group context menu to sidebar.
 * Fixed Airtable import bug where the import would fail if a row is empty.
 
 ## Released (2022-03-03 1.9.1)
