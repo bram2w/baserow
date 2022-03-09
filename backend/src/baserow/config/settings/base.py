@@ -323,9 +323,8 @@ if os.getenv("AWS_S3_ENDPOINT_URL", "") != "":
 if os.getenv("AWS_S3_CUSTOM_DOMAIN", "") != "":
     AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
 
-EXTRA_ALLOWED_HOSTS_TO_ATTEMPT_ADDING = []
-if "BASEROW_PUBLIC_URL" in os.environ:
-    BASEROW_PUBLIC_URL = os.getenv("BASEROW_PUBLIC_URL")
+BASEROW_PUBLIC_URL = os.getenv("BASEROW_PUBLIC_URL")
+if BASEROW_PUBLIC_URL:
     PUBLIC_BACKEND_URL = BASEROW_PUBLIC_URL
     PUBLIC_WEB_FRONTEND_URL = BASEROW_PUBLIC_URL
     if BASEROW_PUBLIC_URL == "http://localhost":
@@ -369,20 +368,6 @@ if PUBLIC_BACKEND_HOSTNAME:
 
 if PRIVATE_BACKEND_HOSTNAME:
     ALLOWED_HOSTS.append(PRIVATE_BACKEND_HOSTNAME)
-
-for extra_host in EXTRA_ALLOWED_HOSTS_TO_ATTEMPT_ADDING:
-    try:
-        hostname = urlparse(extra_host).hostname
-        if hostname is not None:
-            ALLOWED_HOSTS.append(hostname)
-    except ValueError:
-        hostname = None
-    if hostname is None:
-        print(
-            f"Not adding {extra_host} as an ALLOWED_HOST as it is not a valid url, "
-            f"this is expected and OK for extra PUBLIC_BASEROW_URLS used to "
-            f"configure caddy."
-        )
 
 FROM_EMAIL = os.getenv("FROM_EMAIL", "no-reply@localhost")
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
