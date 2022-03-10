@@ -166,6 +166,12 @@ export class KanbanViewType extends PremiumViewType {
     fieldType,
     storePrefix = ''
   ) {
+    const value = fieldType.getEmptyValue(field)
+    await dispatch(
+      storePrefix + 'view/kanban/addField',
+      { field, value },
+      { root: true }
+    )
     await dispatch(
       storePrefix + 'view/kanban/setFieldOptionsOfField',
       {

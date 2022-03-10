@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Fixed Airtable import bug where the import would fail if a row is empty.
+* Fixed the reactivity of the row values of newly created fields in some cases.
 
 ## Released (2022-03-03 1.9.1)
 

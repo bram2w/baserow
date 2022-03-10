@@ -340,13 +340,15 @@ export const mutations = {
   },
   ADD_FIELD_TO_ROWS_IN_BUFFER(state, { field, value }) {
     const name = `field_${field.id}`
-    state.rows.forEach((row) => {
+    // We have to replace all the rows by using the map function to make it
+    // reactive and update immediately. If we don't do this, the value in the
+    // field components of the grid and modal don't always have the correct value
+    // binding.
+    state.rows = state.rows.map((row) => {
       if (!Object.prototype.hasOwnProperty.call(row, name)) {
-        // We have to use the Vue.set function here to make it reactive immediately.
-        // If we don't do this the value in the field components of the grid and modal
-        // don't have the correct value and will act strange.
-        Vue.set(row, name, value)
+        row[`field_${field.id}`] = value
       }
+      return { ...row }
     })
   },
   DECREASE_ORDERS_IN_BUFFER_LOWER_THAN(state, existingOrder) {
@@ -1132,10 +1134,10 @@ export const actions = {
       return output.join('\n')
     }
   },
-  /* 
-    This function is called if a user attempts to access rows that are 
+  /*
+    This function is called if a user attempts to access rows that are
     no longer in the row buffer and need to be fetched from the backend.
-    A user can select some or all fields in a row, and only those fields 
+    A user can select some or all fields in a row, and only those fields
     will be returned.
   */
   async getMultiSelectedRows({ getters, rootGetters }, fields) {

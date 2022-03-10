@@ -203,13 +203,16 @@ export default ({ service, customPopulateRow }) => {
     },
     ADD_FIELD_TO_ALL_ROWS(state, { field, value }) {
       const name = `field_${field.id}`
-      state.rows.forEach((row) => {
+      // We have to replace all the rows by using the map function to make it
+      // reactive and update immediately. If we don't do this, the value in the
+      // field components of the grid and modal don't always have the correct value
+      // binding.
+      state.rows = state.rows.map((row) => {
         if (row !== null && !Object.prototype.hasOwnProperty.call(row, name)) {
-          // We have to use the Vue.set function here to make it reactive immediately.
-          // If we don't do this the value in the field components of the view and modal
-          // don't have the correct value and will act strange.
-          Vue.set(row, name, value)
+          row[`field_${field.id}`] = value
+          return { ...row }
         }
+        return row
       })
     },
     START_ROW_DRAG(state, { index }) {

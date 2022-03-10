@@ -492,6 +492,12 @@ export default {
         if (index >= 0) {
           // If the row already exists in the buffer, then only update the position.
           this.buffer[index].position = position
+
+          // If the row object has changed, it needs to be updated in the buffer in
+          // order to maintain reactivity.
+          if (this.buffer[index].row !== row) {
+            this.buffer[index].row = row
+          }
         } else {
           // If the row does not yet exists in the buffer, then we can find the first
           // empty slot and place it there.
