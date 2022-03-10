@@ -5,6 +5,7 @@
 * Added group context menu to sidebar.
 * Fixed Airtable import bug where the import would fail if a row is empty.
 * Pin backend python dependencies using pip-tools.
+* Fixed the reactivity of the row values of newly created fields in some cases.
 
 ## Released (2022-03-03 1.9.1)
 

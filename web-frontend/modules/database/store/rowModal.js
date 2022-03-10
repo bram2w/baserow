@@ -49,6 +49,9 @@ export const actions = {
     commit('SET_EXISTS', true)
     commit('REPLACE_ROW', row)
   },
+  replace({ commit }, { row }) {
+    commit('REPLACE_ROW', row)
+  },
   updated({ commit, getters }, { values }) {
     if (values.id === getters.id && !getters.exists) {
       commit('UPDATE_ROW', values)
