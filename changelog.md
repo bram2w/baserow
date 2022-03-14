@@ -4,6 +4,7 @@
 
 * Added group context menu to sidebar.
 * Fixed Airtable import bug where the import would fail if a row is empty.
+* Fixed a problem where a form view with link row fields sends duplicate lookup requests.
 * Pin backend python dependencies using pip-tools.
 * Fixed the reactivity of the row values of newly created fields in some cases.
 
