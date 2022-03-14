@@ -171,6 +171,7 @@ class FileFieldResponseSerializer(
         return instance[name]
 
 
+@extend_schema_field(OpenApiTypes.NONE)
 class MustBeEmptyField(serializers.Field):
     def __init__(self, error_message, *args, **kwargs):
         def validator(value):

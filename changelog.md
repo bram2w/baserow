@@ -29,6 +29,7 @@
 * Upgraded `drf-spectacular`. Flag-style query parameters like `count` will now be displayed
   as `boolean` instead of `any` in the OpenAPI documentation. However, the behavior of these 
   flags is still the same.
+* Fixed API docs enum warnings. Removed `number_type` is no longer displayed in the API docs.
 * Fix the Baserow Heroku install filling up the hobby postgres by disabling template 
   syncing by default.
 
