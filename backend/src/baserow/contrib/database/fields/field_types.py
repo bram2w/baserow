@@ -321,7 +321,8 @@ class NumberFieldType(FieldType):
             "The number_type option has been removed and can no longer be provided. "
             "Instead set number_decimal_places to 0 for an integer or 1-5 for a "
             "decimal."
-        )
+        ),
+        "_spectacular_annotation": {"exclude_fields": ["number_type"]},
     }
 
     def prepare_value_for_db(self, instance, value):
