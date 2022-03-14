@@ -105,7 +105,7 @@ export default {
   /**
    * When the component is first created, we immediately fetch the first page.
    */
-  async created() {
+  async fetch() {
     if (!this.fetchOnOpen) {
       this.fetched = true
       this.results = await this.fetch(this.page, this.query)
