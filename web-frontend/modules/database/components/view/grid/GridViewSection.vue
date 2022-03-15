@@ -52,7 +52,7 @@
             :table="table"
             :view="view"
             :fields="fieldsToRender"
-            :all-field-ids="allFieldIds"
+            :all-fields="fields"
             :left-offset="fieldsLeftOffset"
             :include-row-details="includeRowDetails"
             :read-only="readOnly"
@@ -190,9 +190,6 @@ export default {
       }
 
       return width
-    },
-    allFieldIds() {
-      return this.fields.map((field) => field.id)
     },
   },
   watch: {
