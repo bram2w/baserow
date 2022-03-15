@@ -10,7 +10,7 @@
       :key="'row-' + '-' + row.id"
       :row="row"
       :fields="fields"
-      :all-field-ids="allFieldIds"
+      :all-fields="allFields"
       :field-widths="fieldWidths"
       :include-row-details="includeRowDetails"
       :read-only="readOnly"
@@ -36,7 +36,7 @@ export default {
       type: Array,
       required: true,
     },
-    allFieldIds: {
+    allFields: {
       type: Array,
       required: true,
     },
@@ -66,7 +66,7 @@ export default {
   computed: {
     fieldWidths() {
       const fieldWidths = {}
-      this.fields.forEach((field) => {
+      this.allFields.forEach((field) => {
         fieldWidths[field.id] = this.getFieldWidth(field.id)
       })
       return fieldWidths

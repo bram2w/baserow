@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Fixed bug where the arrow keys of a selected cell didn't work when they were not
+  rendered.
 * Added group context menu to sidebar.
 * Fixed Airtable import bug where the import would fail if a row is empty.
 * Fixed a problem where a form view with link row fields sends duplicate lookup requests.

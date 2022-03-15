@@ -64,14 +64,17 @@
     rendered, which happens a lot when scrolling.
     -->
     <GridViewCell
-      v-for="field in fields"
-      :key="'row-field-' + row.id + '-' + field.id.toString()"
+      v-for="field in fieldsToRender"
+      :key="'row-field-' + row.id.toString() + '-' + field.id.toString()"
       :field="field"
       :row="row"
       :state="state"
       :multi-select-position="getMultiSelectPosition(row.id, field)"
       :read-only="readOnly"
-      :style="{ width: fieldWidths[field.id] + 'px' }"
+      :style="{
+        width: fieldWidths[field.id] + 'px',
+        ...getSelectedCellStyle(field),
+      }"
       @update="$emit('update', $event)"
       @edit="$emit('edit', $event)"
       @select="$emit('select', $event)"
@@ -104,7 +107,7 @@ export default {
       type: Array,
       required: true,
     },
-    allFieldIds: {
+    allFields: {
       type: Array,
       required: true,
     },
@@ -142,6 +145,47 @@ export default {
         .getRowExpandButtonComponent(),
     }
   },
+  computed: {
+    /**
+     * This component already accepts a `fields` property containing the fields that
+     * must be rendered based on the viewport width and horizontal scroll offset,
+     * meaning it only renders the fields that are in the viewport. Because a selected
+     * field must always be rendered, this computed property checks if there is a
+     * selected field and if so, it's added to the array. This doesn't influence the
+     * position of the other cells because the position will be absolute. The selected
+     * field must always be rendered, otherwise the arrow keys and other functionality
+     * won't work.
+     */
+    fieldsToRender() {
+      // If the row doesn't have a selected field, we can safely return the fields
+      // because we just want to render the fields inside of the view port.
+      if (!this.row._.selected) {
+        return this.fields
+      }
+
+      // Check if the selected field exists in the all fields array, so not just the to
+      // be rendered ones.
+      const selectedField = this.allFields.find(
+        (field) => field.id === this.row._.selectedFieldId
+      )
+
+      // If it doesn't exist or if it's already in the fields array, we don't have to
+      // add it because it's already rendered.
+      if (
+        selectedField === undefined ||
+        this.fields.find((field) => field.id === selectedField.id) !== undefined
+      ) {
+        return this.fields
+      }
+
+      // If the selected field exists in all fields, but not in fields it must be added
+      // to the fields array because we want to render it. It won't influence the other
+      // cells because it's positioned absolute.
+      const fields = this.fields.slice()
+      fields.unshift(selectedField)
+      return fields
+    },
+  },
   methods: {
     isCellSelected(fieldId) {
       return this.row._.selected && this.row._.selectedFieldId === fieldId
@@ -170,7 +214,8 @@ export default {
             this.storePrefix + 'view/grid/getMultiSelectRowIndexById'
           ](rowId)
 
-        let fieldIndex = this.allFieldIds.findIndex((id) => field.id === id)
+        const allFieldIds = this.allFields.map((field) => field.id)
+        let fieldIndex = allFieldIds.findIndex((id) => field.id === id)
         fieldIndex += !field.primary ? 1 : 0
 
         const [minRow, maxRow] =
@@ -223,6 +268,58 @@ export default {
 
       event.preventDefault()
       this.$emit('row-dragging', { row, event })
+    },
+    /**
+     * Returns an object with additional styling if the field is selected and outside
+     * of the viewport. This is because selected fields must always be rendered because
+     * otherwise certain functionality won't work.
+     */
+    getSelectedCellStyle(field) {
+      const exists = this.fields.find((f) => f.id === field.id) !== undefined
+
+      // If the field already exists in the field list it means that it's already
+      // rendered. In that case we don't have to provide any other styling because it's
+      // already in the position it's supposed to be in.
+      if (exists) {
+        return {}
+      }
+
+      // If the field doesn't exist in the fields array, it's being rendered because
+      // it's selected. In that case, the element must be positioned without influencing
+      // the other cells.
+      const styling = { position: 'absolute' }
+
+      const selectedFieldIndex = this.allFields.findIndex(
+        (field) => field.id === this.row._.selectedFieldId
+      )
+      const firstVisibleFieldIndex = this.allFields.findIndex(
+        (field) => field.id === this.fields[0].id
+      )
+      const lastVisibleFieldIndex = this.allFields.findIndex(
+        (field) => field.id === this.fields[this.fields.length - 1].id
+      )
+
+      // Positions the selected field cell on the right position without influencing the
+      // position of the rendered cells. This is needed because other components depend
+      // on the cell to be in the right position, for example when using the arrow key
+      // navigation.
+      if (selectedFieldIndex < firstVisibleFieldIndex) {
+        // If the selected field must be positioned before the other fields
+        let spaceBetween = 0
+        for (let i = selectedFieldIndex; i < firstVisibleFieldIndex; i++) {
+          spaceBetween += this.fieldWidths[this.allFields[i].id]
+        }
+        styling.left = -spaceBetween + 'px'
+      } else if (selectedFieldIndex > lastVisibleFieldIndex) {
+        // If the selected field must be positioned after the other fields.
+        let spaceBetween = 0
+        for (let i = lastVisibleFieldIndex; i < selectedFieldIndex; i++) {
+          spaceBetween += this.fieldWidths[this.allFields[i].id]
+        }
+        styling.right = -spaceBetween + 'px'
+      }
+
+      return styling
     },
   },
 }
