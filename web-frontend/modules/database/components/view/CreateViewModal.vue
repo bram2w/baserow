@@ -60,13 +60,13 @@ export default {
       this.hideError()
 
       try {
-        await this.$store.dispatch('view/create', {
+        const { view } = await this.$store.dispatch('view/create', {
           type: this.viewType.type,
           table: this.table,
           values,
         })
         this.loading = false
-        this.$emit('created')
+        this.$emit('created', view)
         this.hide()
       } catch (error) {
         this.loading = false
