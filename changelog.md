@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Select new view immediately after creation.
 * Added group context menu to sidebar.
 * Fixed Airtable import bug where the import would fail if a row is empty.
 * Pin backend python dependencies using pip-tools.

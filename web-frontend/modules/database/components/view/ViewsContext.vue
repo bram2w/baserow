@@ -44,7 +44,7 @@
           :key="type"
           :table="table"
           :view-type="viewType"
-          @created="scrollViewDropdownToBottom()"
+          @created="selectedView"
         ></CreateViewLink>
       </div>
     </div>
@@ -132,12 +132,6 @@ export default {
           selectedViewItem
         )
       }
-    },
-    /**
-     * This method scrolls the ViewDropdown to the bottom
-     */
-    scrollViewDropdownToBottom() {
-      this.$refs.dropdown.scrollTop = this.$refs.dropdown.scrollHeight
     },
     /**
      * This method filters the view elements and returns the currently selected
