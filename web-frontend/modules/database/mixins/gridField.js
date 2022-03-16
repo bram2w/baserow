@@ -146,7 +146,11 @@ export default {
             .get('field', this.field.type)
             .getEmptyValue(this.field)
           const oldValue = this.value
-          if (value !== oldValue && !this.readOnly) {
+          if (
+            value !== oldValue &&
+            !this.readOnly &&
+            !this.field._.type.isReadOnly
+          ) {
             this.$emit('update', value, oldValue)
           }
         }

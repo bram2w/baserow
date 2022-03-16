@@ -10,6 +10,7 @@
 * Fixed a problem where a form view with link row fields sends duplicate lookup requests.
 * Pin backend python dependencies using pip-tools.
 * Fixed the reactivity of the row values of newly created fields in some cases.
+* Fixed a bug that made it possible to delete created on/modified by fields on the web frontend.
 
 ## Released (2022-03-03 1.9.1)
 
