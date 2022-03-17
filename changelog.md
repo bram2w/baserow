@@ -11,6 +11,7 @@
 * Pin backend python dependencies using pip-tools.
 * Fixed the reactivity of the row values of newly created fields in some cases.
 * Fixed a bug that made it possible to delete created on/modified by fields on the web frontend.
+* Allow the setting of max request page size via environment variable.
 
 ## Released (2022-03-03 1.9.1)
 
