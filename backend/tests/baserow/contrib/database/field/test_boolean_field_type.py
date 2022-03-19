@@ -21,6 +21,8 @@ def test_alter_boolean_field_column_type(data_fixture):
         "yes": True,
         "on": True,
         "YES": True,
+        "checked": True,
+        "Checked": True,
         "": False,
         "f": False,
         "n": False,
