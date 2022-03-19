@@ -539,6 +539,26 @@ class BooleanFieldType(FieldType):
     type = "boolean"
     model_class = BooleanField
 
+    # lowercase serializers.BooleanField.TRUE_VALUES + "checked" keyword
+    # WARNING: these values are prone to SQL injection
+    TRUE_VALUES = ["t", "true", "on", "y", "yes", 1, "checked"]
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        """
+        Prepare value for Boolean field.
+        Convert to True if the text value is equal (case-insensitive) to
+        'checked' or to one of the serializers.BooleanField.TRUE_VALUES.
+        """
+
+        true_values = ",".join(["'%s'" % v for v in self.TRUE_VALUES])
+        return f"""
+            IF lower(p_in::text) IN ({true_values}) THEN
+                p_in = TRUE;
+            ELSE
+                p_in = FALSE;
+            END IF;
+        """
+
     def get_serializer_field(self, instance, **kwargs):
         return serializers.BooleanField(
             **{"required": False, "default": False, **kwargs}

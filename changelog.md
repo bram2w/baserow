@@ -12,6 +12,7 @@
 * Fixed the reactivity of the row values of newly created fields in some cases.
 * Fixed a bug that made it possible to delete created on/modified by fields on the web frontend.
 * Allow the setting of max request page size via environment variable.
+* Boolean field converts the word `checked` to `True` value
 
 ## Released (2022-03-03 1.9.1)
 
@@ -80,6 +81,7 @@
 * Add health checks for all services.
 * Ensure error logging is enabled in the Backend even when DEBUG is off.
 * Removed upload file size limit.
+* Boolean field converts the word `checked` to `True` value
 
 ## Released (2022-01-13 1.8.2)
 
