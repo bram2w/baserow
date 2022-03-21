@@ -2,29 +2,47 @@
 !includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
 ' Visit http://www.plantuml.com/ and paste in this document to edit and re-render.
 
-Person(customer, "Customer")
+Person(customer, "User/Anonymous User")
+Person(apicustomer, "API User", "Using an API/JWT token")
 
-
-Boundary(boundary0, "backend") {
-    Container(api, "API", "python/Django", "")
-    Container(worker, "Celery worker", "python", "worker should run as a daemon")
+Boundary(boundary0, "backend apps") {
+    Container(api, "backend", "python/Django/gunicorn", "The Baserow Django server")
+    Container(worker, "celery worker", "celery", "handles important async tasks like broadcasting realtime collab events, sending emails etc")
+    Container(export_worker, "celery export worker", "celery", "handles lower priority async tasks including view/table exports, trash cleanup etc. (badly named)")
 }
 Boundary(boundary1, "web frontend") {
-    Container(webfrontend, "web", "Vue.js/Nuxt.js", "output the server side rendered initial DOM provided by Nuxt")
+    Container(webfrontend_server, "nuxt server", "Nuxt.js", "renders the initial page itself in the server (SSR)")
+    Container(webfrontend_client, "nuxt client", "Nuxt.js", "Nuxt running client side after the SSR")
 }
 Boundary(boundary2, "backend dependencies") {
     Container(db, "database", "PostgreSQL", "persistent storage")
-    Container(redis, "Redis", "", "asynchronous tasks and the real time collaboration")
-    Container(smtp_server, "SMTP Email Server", "", "Sends emails using SMTP to users")
+    Container(redis, "Redis", "Redis", "asynchronous tasks, the real time collaboration and model caching")
+    Container(smtp_server, "SMTP Email Server", "user configured", "Sends emails using SMTP to users")
+}
+Boundary(boundary3, "external servers") {
+    Container(webhook_http_target_server, "Webhook Target Server", "http server", "a user configured http server")
+    Container(external_data_source, "External Database Software", "???", "supported external databases Baserow can import from")
+    Container(baserow_io, "Baserow.io", "http server", "The official Baserow.io server")
 }
 
 
-Rel(customer, webfrontend, "visits Baserow using browser", "https")
-Rel(webfrontend, api, "calls api for initial render", "https")
-Rel(customer, api, "calls api directly after page load", "https")
-Rel(api, db, "write/read data", "tcp")
-Rel(api, redis, "write/read data", "tcp")
-Rel(worker, redis, "execute asynchronous tasks", "tcp")
+
+Rel(customer, webfrontend_server, "on initial page load downloads server side rendered page", "https")
+Rel(webfrontend_server, api, "api requests to render the initial page on the server", "https")
+Rel(customer, webfrontend_client, "user interactions after the initial request", "https")
+
+Rel(webfrontend_client, api, "api queries", "https")
+BiRel(webfrontend_client, api, "real time collaboration", "WebSocket")
+
+Rel(apicustomer, api, "direct api queries", "https/WebSocket")
+
+Rel(api, db, "reading/writing user table data, Baserow data etc", "tcp")
+BiRel(api, redis, "submitting async tasks, broadcasting realtime events, caching models", "tcp")
+Rel(worker, redis, "loads tasks using and broadcast realtime events to other gunicorn workers", "tcp")
+Rel(export_worker, redis, "loads tasks using", "tcp")
+Rel(export_worker, db, "reading user tables for exports, trashed related read/writes", "tcp")
 Rel(worker, smtp_server, "send email", "smtp")
-BiRel(customer, api, "real time collaboration", "WebSocket")
+Rel(export_worker, webhook_http_target_server, "send webhook events", "http")
+Rel(export_worker, external_data_source, "import into Baserow from external site", "http")
+Rel(export_worker, baserow_io, "periodic license checks (only queries if user has explicitly added a Baserow license)", "http")
 @enduml
