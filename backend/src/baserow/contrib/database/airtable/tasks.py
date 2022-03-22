@@ -31,7 +31,10 @@ def run_import_from_airtable(self, job_id: int):
     from baserow.core.utils import Progress
     from baserow.contrib.database.airtable.models import AirtableImportJob
     from baserow.contrib.database.airtable.handler import AirtableHandler
-    from baserow.contrib.database.airtable.exceptions import AirtableBaseNotPublic
+    from baserow.contrib.database.airtable.exceptions import (
+        AirtableShareIsNotABase,
+        AirtableBaseNotPublic,
+    )
     from baserow.contrib.database.airtable.constants import (
         AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED,
         AIRTABLE_EXPORT_JOB_DOWNLOADING_FINISHED,
@@ -102,6 +105,8 @@ def run_import_from_airtable(self, job_id: int):
             SoftTimeLimitExceeded: "The import job took too long and was timed out.",
             RequestException: "The Airtable server could not be reached.",
             AirtableBaseNotPublic: "The Airtable base is not publicly shared.",
+            AirtableShareIsNotABase: "The shared link is not a base. It's probably a "
+            "view and the Airtable import tool only supports shared bases.",
         }
         error = "Something went wrong while importing the Airtable base."
 
@@ -110,7 +115,6 @@ def run_import_from_airtable(self, job_id: int):
                 error = error_message
                 break
 
-        logger.error(e)
         job.state = AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED
         job.error = str(e)
         job.human_readable_error = error
@@ -124,6 +128,8 @@ def run_import_from_airtable(self, job_id: int):
             )
         )
 
-    # Delete the import job cached entry because the transaction has been committed
-    # and the AirtableImportJob entry now contains the latest data.
-    cache.delete(airtable_import_job_progress_key(job.id))
+        raise e
+    finally:
+        # Delete the import job cached entry because the transaction has been committed
+        # and the AirtableImportJob entry now contains the latest data.
+        cache.delete(airtable_import_job_progress_key(job.id))

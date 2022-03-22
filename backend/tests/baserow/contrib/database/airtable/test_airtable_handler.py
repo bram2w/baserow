@@ -20,6 +20,7 @@ from baserow.contrib.database.airtable.constants import (
     AIRTABLE_EXPORT_JOB_DOWNLOADING_PENDING,
 )
 from baserow.contrib.database.airtable.exceptions import (
+    AirtableShareIsNotABase,
     AirtableImportJobDoesNotExist,
     AirtableImportJobAlreadyRunning,
 )
@@ -430,6 +431,28 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
     rows = data_model.objects.all()
     assert rows[0].checkbox is True
     assert rows[1].checkbox is False
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
+    group = data_fixture.create_group()
+    base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
+    storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
+
+    with open(os.path.join(base_path, "airtable_view.html"), "rb") as file:
+        responses.add(
+            responses.GET,
+            "https://airtable.com/shrXxmp0WmqsTkFWTzv",
+            status=200,
+            body=file.read(),
+            headers={"Set-Cookie": "brw=test;"},
+        )
+
+    with pytest.raises(AirtableShareIsNotABase):
+        AirtableHandler.import_from_airtable_to_group(
+            group, "shrXxmp0WmqsTkFWTzv", timezone=UTC, storage=storage
+        )
 
 
 @pytest.mark.django_db(transaction=True)
