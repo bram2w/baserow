@@ -377,7 +377,7 @@ export class CheckedPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getRawType() {
-    return 'not_empty_count'
+    return 'empty_count'
   }
 
   getName() {

@@ -14,6 +14,7 @@
 * Allow the setting of max request page size via environment variable.
 * Boolean field converts the word `checked` to `True` value.
 * Fixed a bug where the backend would fail hard updating token permissions for deleted tables.
+* Fixed the unchecked percent aggregation calculation
 
 ## Released (2022-03-03 1.9.1)
 
