@@ -12,6 +12,7 @@
 * Fixed the reactivity of the row values of newly created fields in some cases.
 * Fixed a bug that made it possible to delete created on/modified by fields on the web frontend.
 * Allow the setting of max request page size via environment variable.
+* Raise Airtable import task error and fixed a couple of minor import bugs.
 
 ## Released (2022-03-03 1.9.1)
 

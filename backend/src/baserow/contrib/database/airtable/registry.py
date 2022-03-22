@@ -8,13 +8,14 @@ from baserow.contrib.database.fields.models import Field
 
 class AirtableColumnType(Instance):
     def to_baserow_field(
-        self, raw_airtable_column: dict, timezone: BaseTzInfo
+        self, raw_airtable_table: dict, raw_airtable_column: dict, timezone: BaseTzInfo
     ) -> Union[Field, None]:
         """
         Converts the raw Airtable column to a Baserow field object. It should be
         possible to pass this object directly into the FieldType::export_serialized
         method to convert it to the Baserow export format.
 
+        :param raw_airtable_table: The raw Airtable table data related to the column.
         :param raw_airtable_column: The raw Airtable column values that must be
             converted.
         :param timezone: The main timezone used for date conversions if needed.
@@ -58,12 +59,13 @@ class AirtableColumnTypeRegistry(Registry):
     name = "airtable_column"
 
     def from_airtable_column_to_serialized(
-        self, raw_airtable_column: dict, timezone: BaseTzInfo
+        self, raw_airtable_table: dict, raw_airtable_column: dict, timezone: BaseTzInfo
     ) -> Union[Tuple[Field, AirtableColumnType], Tuple[None, None]]:
         """
         Tries to find a Baserow field that matches that raw Airtable column data. If
         None is returned, the column is not compatible with Baserow and must be ignored.
 
+        :param raw_airtable_table: The raw Airtable table data related to the column.
         :param raw_airtable_column: The raw Airtable column data that must be
         :param timezone: The main timezone used for date conversions if needed.
         :return: The related Baserow field and AirtableColumnType that should be used
@@ -74,7 +76,7 @@ class AirtableColumnTypeRegistry(Registry):
             type_name = raw_airtable_column.get("type", "")
             airtable_column_type = self.get(type_name)
             baserow_field = airtable_column_type.to_baserow_field(
-                raw_airtable_column, timezone
+                raw_airtable_table, raw_airtable_column, timezone
             )
 
             if baserow_field is None:

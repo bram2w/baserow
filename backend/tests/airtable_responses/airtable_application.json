@@ -154,6 +154,17 @@
             }
           },
           {
+              "id":"fldcQaeerse7xuhUEuHL",
+              "name":"Link to same table (not supported, will be ignored)",
+              "type":"foreignKey",
+              "typeOptions":{
+                  "foreignTableId":"tbl7glLIGtH8C8zGCzb",
+                  "relationship":"many",
+                  "unreversed":true,
+                  "symmetricColumnId":"fldcQaeerse7xuhUEuHL"
+              }
+          },
+          {
             "id":"fldcOCTbMILJBgAMBxv",
             "name":"Name lookup (from Users)",
             "type":"lookup",

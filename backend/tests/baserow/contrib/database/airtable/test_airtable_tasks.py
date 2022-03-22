@@ -18,6 +18,7 @@ from baserow.contrib.database.airtable.constants import (
     AIRTABLE_EXPORT_JOB_DOWNLOADING_PENDING,
 )
 from baserow.contrib.database.airtable.cache import airtable_import_job_progress_key
+from baserow.contrib.database.airtable.exceptions import AirtableShareIsNotABase
 
 
 @pytest.mark.django_db(transaction=True, databases=["default", "default-copy"])
@@ -115,7 +116,9 @@ def test_run_import_from_airtable_failing_import(
     mock_import_from_airtable_to_group.side_effect = update_progress_slow
 
     job = data_fixture.create_airtable_import_job()
-    run_import_from_airtable(job.id)
+
+    with pytest.raises(Exception):
+        run_import_from_airtable(job.id)
 
     job.refresh_from_db()
     assert job.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED
@@ -141,7 +144,9 @@ def test_run_import_from_airtable_failing_time_limit(
     mock_import_from_airtable_to_group.side_effect = update_progress_slow
 
     job = data_fixture.create_airtable_import_job()
-    run_import_from_airtable(job.id)
+
+    with pytest.raises(SoftTimeLimitExceeded):
+        run_import_from_airtable(job.id)
 
     job.refresh_from_db()
     assert job.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED
@@ -164,12 +169,41 @@ def test_run_import_from_airtable_failing_connection_error(
     mock_import_from_airtable_to_group.side_effect = update_progress_slow
 
     job = data_fixture.create_airtable_import_job()
-    run_import_from_airtable(job.id)
+
+    with pytest.raises(ConnectionError):
+        run_import_from_airtable(job.id)
 
     job.refresh_from_db()
     assert job.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED
     assert job.error == "connection error"
     assert job.human_readable_error == "The Airtable server could not be reached."
+
+
+@pytest.mark.django_db(transaction=True)
+@responses.activate
+@patch(
+    "baserow.contrib.database.airtable.handler.AirtableHandler"
+    ".import_from_airtable_to_group"
+)
+def test_run_import_shared_view(mock_import_from_airtable_to_group, data_fixture):
+    def update_progress_slow(*args, **kwargs):
+        raise AirtableShareIsNotABase("The `shared_id` is not a base.")
+
+    mock_import_from_airtable_to_group.side_effect = update_progress_slow
+
+    job = data_fixture.create_airtable_import_job()
+
+    with pytest.raises(AirtableShareIsNotABase):
+        run_import_from_airtable(job.id)
+
+    job.refresh_from_db()
+    assert job.state == AIRTABLE_EXPORT_JOB_DOWNLOADING_FAILED
+    assert job.error == "The `shared_id` is not a base."
+    assert (
+        job.human_readable_error
+        == "The shared link is not a base. It's probably a view and the Airtable "
+        "import tool only supports shared bases."
+    )
 
 
 @pytest.mark.django_db
@@ -181,6 +215,9 @@ def test_run_import_from_airtable_failing_connection_error(
 def test_run_import_from_airtable_with_timezone(
     mock_import_from_airtable_to_group, data_fixture
 ):
+    database = data_fixture.create_database_application()
+    mock_import_from_airtable_to_group.return_value = [database], {}
+
     job = data_fixture.create_airtable_import_job(timezone="Europe/Amsterdam")
 
     with pytest.raises(AirtableImportJob.DoesNotExist):
