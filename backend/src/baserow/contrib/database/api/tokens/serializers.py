@@ -17,6 +17,8 @@ class TokenPermissionsField(serializers.Field):
             'ids like [["database", 1], ["table", 1]].'
         ),
         "invalid_instance_type": "The instance type can only be a database or table.",
+        "invalid_table_id": "The table id {instance_id} is not valid.",
+        "invalid_database_id": "The database id {instance_id} is not valid.",
     }
     valid_types = ["create", "read", "update", "delete"]
 
@@ -102,8 +104,12 @@ class TokenPermissionsField(serializers.Field):
             if isinstance(value, list):
                 for index, (instance_type, instance_id) in enumerate(value):
                     if instance_type == "database":
+                        if instance_id not in databases:
+                            self.fail("invalid_database_id", instance_id=instance_id)
                         data[key][index] = databases[instance_id]
                     elif instance_type == "table":
+                        if instance_id not in tables:
+                            self.fail("invalid_table_id", instance_id=instance_id)
                         data[key][index] = tables[instance_id]
 
         return {

@@ -12,6 +12,7 @@ from django.shortcuts import reverse
 
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.models import Token, TokenPermission
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -209,8 +210,8 @@ def test_get_token(api_client, data_fixture):
     assert len(response_json["permissions"]["read"]) == 1
     assert response_json["permissions"]["read"][0] == ["database", database_2.id]
     assert len(response_json["permissions"]["update"]) == 2
-    assert response_json["permissions"]["update"][0] == ["database", database_1.id]
-    assert response_json["permissions"]["update"][1] == ["table", table_3.id]
+    assert response_json["permissions"]["update"][0] == ["table", table_3.id]
+    assert response_json["permissions"]["update"][1] == ["database", database_1.id]
     assert response_json["permissions"]["delete"] is False
 
     TokenHandler().update_token_permissions(
@@ -227,8 +228,8 @@ def test_get_token(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json["permissions"]["create"]) == 2
-    assert response_json["permissions"]["create"][0] == ["database", database_1.id]
-    assert response_json["permissions"]["create"][1] == ["database", database_2.id]
+    assert response_json["permissions"]["create"][0] == ["database", database_2.id]
+    assert response_json["permissions"]["create"][1] == ["database", database_1.id]
     assert response_json["permissions"]["read"] is False
     assert response_json["permissions"]["update"] is True
     assert len(response_json["permissions"]["delete"]) == 1
@@ -525,3 +526,90 @@ def test_delete_token(api_client, data_fixture):
 
     assert Token.objects.all().count() == 2
     assert TokenPermission.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_trashing_table_hides_restores_tokens(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    group_1 = data_fixture.create_group(user=user)
+    token_1 = data_fixture.create_token(user=user, group=group_1)
+
+    database_1 = data_fixture.create_database_application(group=group_1)
+    database_2 = data_fixture.create_database_application(group=group_1)
+    table_1 = data_fixture.create_database_table(
+        database=database_1, create_table=False
+    )
+    table_2 = data_fixture.create_database_table(
+        database=database_1, create_table=False
+    )
+
+    TokenHandler().update_token_permissions(
+        user,
+        token_1,
+        create=[database_1, table_1, table_2, database_2],
+        read=[database_1, table_1, table_2, database_2],
+        update=[database_1, table_1, table_2, database_2],
+        delete=[database_1, table_1, table_2, database_2],
+    )
+
+    def assert_all_permission_types_for_token_are(value):
+        url = reverse("api:database:tokens:item", kwargs={"token_id": token_1.id})
+        response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK
+        # permissions must be the same, ignoring order
+        permissions = response_json["permissions"]
+        sorted_value = sorted(value)
+        assert sorted(permissions["update"]) == sorted_value
+        assert sorted(permissions["create"]) == sorted_value
+        assert sorted(permissions["delete"]) == sorted_value
+        assert sorted(permissions["read"]) == sorted_value
+
+    assert_all_permission_types_for_token_are(
+        [
+            ["table", table_1.id],
+            ["table", table_2.id],
+            ["database", database_2.id],
+            ["database", database_1.id],
+        ]
+    )
+
+    TrashHandler.trash(user, group_1, database_1, table_1)
+
+    assert_all_permission_types_for_token_are(
+        [
+            ["table", table_2.id],
+            ["database", database_2.id],
+            ["database", database_1.id],
+        ]
+    )
+
+    TrashHandler.trash(user, group_1, database_1, database_1)
+
+    assert_all_permission_types_for_token_are(
+        [
+            ["table", table_2.id],
+            ["database", database_2.id],
+        ]
+    )
+
+    TrashHandler.restore_item(user, "application", database_1.id)
+
+    assert_all_permission_types_for_token_are(
+        [
+            ["table", table_2.id],
+            ["database", database_2.id],
+            ["database", database_1.id],
+        ]
+    )
+
+    TrashHandler.restore_item(user, "table", table_1.id)
+
+    assert_all_permission_types_for_token_are(
+        [
+            ["table", table_2.id],
+            ["table", table_1.id],
+            ["database", database_2.id],
+            ["database", database_1.id],
+        ]
+    )
