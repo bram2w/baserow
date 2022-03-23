@@ -12,6 +12,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q, Count
 from django.core.files.storage import default_storage
 from django.utils import translation
+from tqdm import tqdm
 
 from baserow.core.utils import ChildProgressBuilder
 from baserow.core.user.utils import normalize_email_address
@@ -900,7 +901,11 @@ class CoreHandler:
         # Loop over the JSON template files in the directory to see which database
         # templates need to be created or updated.
         templates = list(Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json"))
-        for template_file_path in templates:
+        for template_file_path in tqdm(
+            templates,
+            desc="Syncing Baserow templates. Disable this on startup by setting the "
+            "env variable SYNC_TEMPLATES_ON_STARTUP=false",
+        ):
             content = Path(template_file_path).read_text()
             parsed_json = json.loads(content)
 

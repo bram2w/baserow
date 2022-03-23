@@ -5,6 +5,7 @@
 * Added group context menu to sidebar.
 * Fixed Airtable import bug where the import would fail if a row is empty.
 * Pin backend python dependencies using pip-tools.
+* Add loading bar when syncing templates to make it obvious Baserow is still loading.
 
 ## Released (2022-03-03 1.9.1)
 

@@ -42,6 +42,7 @@ RUN apt-get update && \
     gosu \
     nano \
     vim \
+    gawk \
     && \
     # ========================
     # Install Node
@@ -50,13 +51,6 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    # ========================
-    # Install ETS for nicer logging
-    # ======================= \
-    curl -o ets.tar.gz -sL https://github.com/zmwangx/ets/releases/download/v0.2.1/ets_0.2.1_linux_amd64.tar.gz && \
-    tar -xf ets.tar.gz && \
-    mv ets /usr/bin/ && \
-    rm ets.tar.gz && \
     # ========================
     # Install Caddy
     # ========================
