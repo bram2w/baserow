@@ -1,4 +1,5 @@
 import pytest
+from pytest_unordered import unordered
 
 from rest_framework.status import (
     HTTP_200_OK,
@@ -210,8 +211,9 @@ def test_get_token(api_client, data_fixture):
     assert len(response_json["permissions"]["read"]) == 1
     assert response_json["permissions"]["read"][0] == ["database", database_2.id]
     assert len(response_json["permissions"]["update"]) == 2
-    assert response_json["permissions"]["update"][0] == ["table", table_3.id]
-    assert response_json["permissions"]["update"][1] == ["database", database_1.id]
+    assert response_json["permissions"]["update"] == unordered(
+        [["table", table_3.id], ["database", database_1.id]]
+    )
     assert response_json["permissions"]["delete"] is False
 
     TokenHandler().update_token_permissions(
@@ -228,8 +230,9 @@ def test_get_token(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json["permissions"]["create"]) == 2
-    assert response_json["permissions"]["create"][0] == ["database", database_2.id]
-    assert response_json["permissions"]["create"][1] == ["database", database_1.id]
+    assert response_json["permissions"]["create"] == unordered(
+        [["database", database_1.id], ["database", database_2.id]]
+    )
     assert response_json["permissions"]["read"] is False
     assert response_json["permissions"]["update"] is True
     assert len(response_json["permissions"]["delete"]) == 1
@@ -559,11 +562,11 @@ def test_trashing_table_hides_restores_tokens(api_client, data_fixture):
         assert response.status_code == HTTP_200_OK
         # permissions must be the same, ignoring order
         permissions = response_json["permissions"]
-        sorted_value = sorted(value)
-        assert sorted(permissions["update"]) == sorted_value
-        assert sorted(permissions["create"]) == sorted_value
-        assert sorted(permissions["delete"]) == sorted_value
-        assert sorted(permissions["read"]) == sorted_value
+        unordered_value = unordered(value)
+        assert permissions["update"] == unordered_value
+        assert permissions["create"] == unordered_value
+        assert permissions["delete"] == unordered_value
+        assert permissions["read"] == unordered_value
 
     assert_all_permission_types_for_token_are(
         [
