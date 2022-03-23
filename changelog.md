@@ -16,6 +16,7 @@
 * Fixed a bug where the backend would fail hard updating token permissions for deleted tables.
 * Fixed the unchecked percent aggregation calculation
 * Raise Airtable import task error and fixed a couple of minor import bugs.
+* Add loading bar when syncing templates to make it obvious Baserow is still loading.
 
 ## Released (2022-03-03 1.9.1)
 
