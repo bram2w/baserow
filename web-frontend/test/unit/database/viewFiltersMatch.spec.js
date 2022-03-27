@@ -6,6 +6,7 @@ import {
   DateEqualViewFilterType,
   DateNotEqualViewFilterType,
   DateEqualsTodayViewFilterType,
+  DateEqualsDaysAgoViewFilterType,
   MultipleSelectHasFilterType,
   MultipleSelectHasNotFilterType,
   HasFileTypeViewFilterType,
@@ -294,6 +295,49 @@ const dateToday = [
   },
 ]
 
+const dateDaysAgo = [
+  {
+    rowValue: moment().tz('Europe/Berlin').subtract(1, 'days').format(),
+    filterValue: 'Europe/Berlin?1',
+    expected: true,
+  },
+  {
+    rowValue: '1970-08-11T23:30:37.940086Z',
+    filterValue: 'Europe/Berlin?2',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().subtract(3, 'days').format(),
+    filterValue: 'UTC?3',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?1',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: 'Mars/Noland?1',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'days').format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'days').format(),
+    filterValue: '',
+    expected: true,
+  },
+]
+
 const multipleSelectValuesHas = [
   {
     rowValue: [
@@ -484,6 +528,13 @@ describe('All Tests', () => {
       values.filterValue,
       {}
     )
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateDaysAgo)('DateDaysAgo', (values) => {
+    const result = new DateEqualsDaysAgoViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
     expect(result).toBe(values.expected)
   })
 
