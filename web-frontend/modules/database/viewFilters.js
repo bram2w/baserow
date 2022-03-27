@@ -7,6 +7,7 @@ import ViewFilterTypeSelectOptions from '@baserow/modules/database/components/vi
 import ViewFilterTypeBoolean from '@baserow/modules/database/components/view/ViewFilterTypeBoolean'
 import ViewFilterTypeDate from '@baserow/modules/database/components/view/ViewFilterTypeDate'
 import ViewFilterTypeTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeTimeZone'
+import ViewFilterTypeNumberWithTimeZone from '@baserow/modules/database/components/view/ViewFilterTypeNumberWithTimeZone'
 import ViewFilterTypeLinkRow from '@baserow/modules/database/components/view/ViewFilterTypeLinkRow'
 import { trueString } from '@baserow/modules/database/utils/constants'
 import { isNumeric } from '@baserow/modules/core/utils/string'
@@ -635,6 +636,102 @@ export class DateEqualsTodayViewFilterType extends ViewFilterType {
     }
 
     return rowValue === today
+  }
+}
+
+export class DateEqualsDaysAgoViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'date_equals_days_ago'
+  }
+
+  getSeparator() {
+    return '?'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isDaysAgo')
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumberWithTimeZone
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
+  }
+
+  getExample() {
+    const tzone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+    const daysAgo = 1
+    return `${tzone}${this.getSeparator()}${daysAgo}`
+  }
+
+  getValidNumberWithTimezone(rawValue = null) {
+    let tzone, daysAgo, rawDaysAgo
+    // keep the original filter timezone if any, otherwise take the default from the browser
+    if (rawValue) {
+      ;[tzone, rawDaysAgo] = rawValue.split(this.getSeparator())
+      daysAgo = parseInt(rawDaysAgo)
+    } else {
+      tzone = new Intl.DateTimeFormat().resolvedOptions().timeZone
+    }
+    daysAgo = isNaN(daysAgo) ? '' : daysAgo
+    return `${tzone}${this.getSeparator()}${daysAgo}`
+  }
+
+  getDefaultValue() {
+    return this.getValidNumberWithTimezone()
+  }
+
+  prepareValue(value) {
+    return this.getValidNumberWithTimezone(value)
+  }
+
+  getSliceLength() {
+    // 10: YYYY-MM-DD, 7: YYYY-MM, 4: YYYY
+    return 10
+  }
+
+  matches(rowValue, filterValue, field) {
+    if (rowValue === null) {
+      rowValue = ''
+    }
+
+    const separator = this.getSeparator()
+    if (filterValue.includes(separator) === -1) {
+      return true
+    }
+
+    const [rawTimezone, rawDaysAgo] = filterValue.split(separator)
+    const timezone = moment.tz.zone(rawTimezone) ? rawTimezone : 'UTC'
+    const daysAgo = parseInt(rawDaysAgo)
+
+    // an invalid daysAgo will result in an empty filter
+    if (isNaN(daysAgo)) {
+      return true
+    }
+
+    const sliceLength = this.getSliceLength()
+    const format = 'YYYY-MM-DD'.slice(0, sliceLength)
+    const when = moment()
+      .tz(timezone)
+      .subtract(parseInt(daysAgo), 'days')
+      .format(format)
+
+    if (field.timezone) {
+      rowValue = moment.utc(rowValue).tz(field.timezone).format(format)
+    } else {
+      rowValue = rowValue.toString().toLowerCase().trim()
+      rowValue = rowValue.slice(0, sliceLength)
+    }
+
+    return rowValue === when
   }
 }
 

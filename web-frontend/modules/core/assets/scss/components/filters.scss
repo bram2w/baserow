@@ -88,11 +88,24 @@
   flex: 0 0;
 }
 
+.filters__multi-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-direction: row;
+}
+
 .filters__value-input {
   width: 130px;
   padding-top: 0;
   padding-bottom: 0;
   line-height: 30px;
+}
+
+.filters__combined_value-input {
+  &.filters__value-input--small {
+    width: 50px;
+  }
 }
 
 .filters__value-timezone {

@@ -10,6 +10,7 @@
 * Fixed a problem where a form view with link row fields sends duplicate lookup requests.
 * Pin backend python dependencies using pip-tools.
 * Fixed the reactivity of the row values of newly created fields in some cases.
+* Added `is days ago` filter to date field.
 * Fixed a bug that made it possible to delete created on/modified by fields on the web frontend.
 * Allow the setting of max request page size via environment variable.
 * Boolean field converts the word `checked` to `True` value.
