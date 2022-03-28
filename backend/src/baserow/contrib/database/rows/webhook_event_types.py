@@ -1,9 +1,10 @@
 from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
+    remap_serialized_row_to_user_field_names,
     RowSerializer,
 )
 from baserow.contrib.database.webhooks.registries import WebhookEventType
-
+from baserow.contrib.database.ws.rows.signals import before_row_update
 from .signals import row_created, row_updated, row_deleted
 
 
@@ -32,13 +33,29 @@ class RowUpdatedEventType(RowEventType):
     type = "row.updated"
     signal = row_updated
 
+    def get_test_call_before_return(self, table, row, model):
+        return {
+            before_row_update: before_row_update(
+                row=row,
+                model=model,
+                sender=None,
+                user=None,
+                table=None,
+                updated_field_ids=None,
+            )
+        }
+
     def get_payload(
         self, event_id, webhook, model, table, row, before_return, **kwargs
     ):
         payload = super().get_payload(event_id, webhook, model, table, row, **kwargs)
-        payload["old_values"] = self.get_row_serializer(webhook, model)(
-            before_return
-        ).data
+        old_values = dict(before_return)[before_row_update]
+
+        if webhook.use_user_field_names:
+            old_values = remap_serialized_row_to_user_field_names(old_values, model)
+
+        payload["old_values"] = old_values
+
         return payload
 
 
