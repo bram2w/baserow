@@ -1,6 +1,9 @@
 import logging
+from copy import deepcopy
+from typing import Dict
 
 from rest_framework import serializers
+from django.db.models.base import ModelBase
 
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
@@ -205,6 +208,23 @@ def get_example_row_metadata_field_serializer():
         "additional metadata about that row. A row might not have metadata and will "
         "not be present as a key if so.",
     )
+
+
+def remap_serialized_row_to_user_field_names(serialized_row: Dict, model: ModelBase):
+    """
+    Remap the values of a row from field ids to the user defined field names.
+
+    :param serialized_row: The row whose fields to remap.
+    :param model: The model for which to generate a serializer.
+    """
+
+    new_row = deepcopy(serialized_row)
+    for field_id, field_object in model._field_objects.items():
+        name = f"field_{field_id}"
+        if name in new_row:
+            new_name = field_object["field"].name
+            new_row[new_name] = new_row.pop(name)
+    return new_row
 
 
 example_pagination_row_serializer_class = get_example_pagination_serializer_class(
