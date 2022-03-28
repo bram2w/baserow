@@ -127,6 +127,7 @@ gunicorn            : Start Baserow backend django using a prod ready gunicorn s
                            unless SYNC_TEMPLATES_ON_STARTUP is set to something other
                            than 'true'.
                          * Binds to BASEROW_BACKEND_BIND_ADDRESS which defaults to 0.0.0.0
+gunicorn-wsgi       : Same as gunicorn but runs a wsgi server which does not support WS
 celery-worker       : Start the celery worker queue which runs important async tasks
 celery-exportworker : Start the celery worker queue which runs slower async tasks
 celery-beat         : Start the celery beat service used to schedule periodic jobs
@@ -176,6 +177,42 @@ attachable_exec(){
     exec bash --init-file <(echo "history -s $*; $*")
 }
 
+run_backend_server(){
+  wait_for_postgres
+  run_setup_commands_if_configured
+
+  if [[ -n "$BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER" ]]; then
+    EXTRA_GUNICORN_ARGS=(--forwarded-allow-ips='*')
+  else
+    EXTRA_GUNICORN_ARGS=()
+  fi
+
+  if [[ "$1" = "wsgi" ]]; then
+    STARTUP_ARGS=(baserow.config.wsgi:application)
+  elif [[ "$1" = "asgi" ]]; then
+    STARTUP_ARGS=(-k uvicorn.workers.UvicornWorker baserow.config.asgi:application)
+  else
+    echo -e "\e[31mUnknown run_backend_server argument $1 \e[0m" >&2
+    exit 1
+  fi
+  # Gunicorn args explained in order:
+  #
+  # 1. See https://docs.gunicorn.org/en/stable/faq.html#blocking-os-fchmod for
+  #    why we set worker-tmp-dir to /dev/shm by default.
+  # 2. Log to stdout
+  # 3. Log requests to stdout
+  exec gunicorn --workers="$BASEROW_AMOUNT_OF_GUNICORN_WORKERS" \
+    --worker-tmp-dir "${TMPDIR:-/dev/shm}" \
+    --log-file=- \
+    --access-logfile=- \
+    --capture-output \
+    "${EXTRA_GUNICORN_ARGS[@]}" \
+    -b "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}":"${BASEROW_BACKEND_PORT}" \
+    --log-level="${BASEROW_BACKEND_LOG_LEVEL}" \
+    "${STARTUP_ARGS[@]}" \
+    "${@:2}"
+}
+
 # ======================================================
 # COMMANDS
 # ======================================================
@@ -197,29 +234,10 @@ case "$1" in
         attachable_exec python /baserow/backend/src/baserow/manage.py runserver "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}:${BASEROW_BACKEND_PORT}"
     ;;
     gunicorn)
-        wait_for_postgres
-        run_setup_commands_if_configured
-
-        if [[ -n "$BASEROW_ENABLE_SECURE_PROXY_SSL_HEADER" ]]; then
-          EXTRA_GUNICORN_ARGS=(--forwarded-allow-ips='*')
-        else
-          EXTRA_GUNICORN_ARGS=()
-        fi
-        # Gunicorn args explained in order:
-        #
-        # 1. See https://docs.gunicorn.org/en/stable/faq.html#blocking-os-fchmod for
-        #    why we set worker-tmp-dir to /dev/shm by default.
-        # 2. Log to stdout
-        # 3. Log requests to stdout
-        exec gunicorn --workers="$BASEROW_AMOUNT_OF_GUNICORN_WORKERS" \
-          --worker-tmp-dir "${TMPDIR:-/dev/shm}" \
-          --log-file=- \
-          --access-logfile=- \
-          --capture-output \
-          "${EXTRA_GUNICORN_ARGS[@]}" \
-          -b "${BASEROW_BACKEND_BIND_ADDRESS:-0.0.0.0}":"${BASEROW_BACKEND_PORT}" \
-          --log-level="${BASEROW_BACKEND_LOG_LEVEL}" \
-          -k uvicorn.workers.UvicornWorker baserow.config.asgi:application "${@:2}"
+      run_backend_server asgi "${@:2}"
+    ;;
+    gunicorn-wsgi)
+      run_backend_server wsgi "${@:2}"
     ;;
     backend-healthcheck)
       echo "Running backend healthcheck..."
