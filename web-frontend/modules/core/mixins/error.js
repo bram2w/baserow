@@ -39,6 +39,21 @@ export default {
         this.error.title = title
         this.error.message = message
       }
+
+      this.$nextTick(() => this.focusOnError())
+    },
+    /**
+     * Combined with the Error component, this method make sure
+     * to scroll to the error message after an error is returned from the backend.
+     * It is particularly useful for small screen devices or for long
+     * forms, helping the user to see the error message even if the
+     * it is outside of the current viewport.
+     */
+    focusOnError() {
+      const error = this.$el.querySelector('[data-error]')
+      if (error) {
+        error.scrollIntoView({ behavior: 'smooth' })
+      }
     },
     hideError() {
       this.error.visible = false

@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit">
-    <div class="control">
+    <FormElement :error="fieldHasErrors('name')" class="control">
       <label class="control__label">
         <i class="fas fa-font"></i>
         {{ $t('tableForm.name') }}
@@ -9,16 +9,16 @@
         <input
           ref="name"
           v-model="values.name"
-          :class="{ 'input--error': $v.values.name.$error }"
+          :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input input--large"
           @blur="$v.values.name.$touch()"
         />
-        <div v-if="$v.values.name.$error" class="error">
+        <div v-if="fieldHasErrors('name')" class="error">
           {{ $t('error.requiredField') }}
         </div>
       </div>
-    </div>
+    </FormElement>
     <slot></slot>
   </form>
 </template>

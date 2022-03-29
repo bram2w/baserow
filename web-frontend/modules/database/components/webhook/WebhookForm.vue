@@ -19,7 +19,7 @@
     </div>
     <div class="row">
       <div class="col col-12">
-        <div class="control">
+        <FormElement :error="fieldHasErrors('name')" class="control">
           <label class="control__label">
             {{ $t('webhookForm.inputLabels.name') }}
           </label>
@@ -27,14 +27,14 @@
             <input
               v-model="values.name"
               class="input"
-              :class="{ 'input--error': $v.values.name.$error }"
+              :class="{ 'input--error': fieldHasErrors('name') }"
               @blur="$v.values.name.$touch()"
             />
-            <div v-if="$v.values.name.$error" class="error">
+            <div v-if="fieldHasErrors('name')" class="error">
               {{ $t('error.requiredField') }}
             </div>
           </div>
-        </div>
+        </FormElement>
       </div>
       <div class="col col-12">
         <div class="control">
@@ -65,7 +65,7 @@
         </div>
       </div>
       <div class="col col-8">
-        <div class="control">
+        <FormElement :error="fieldHasErrors('url')" class="control">
           <label class="control__label">
             {{ $t('webhookForm.inputLabels.url') }}
           </label>
@@ -74,12 +74,12 @@
               v-model="values.url"
               :placeholder="$t('webhookForm.inputLabels.url')"
               class="input"
-              :class="{ 'input--error': $v.values.url.$error }"
+              :class="{ 'input--error': fieldHasErrors('url') }"
               @blur="$v.values.url.$touch()"
             />
             <div
               v-if="
-                $v.values.url.$error &&
+                fieldHasErrors('url') &&
                 (!$v.values.url.required || !$v.values.url.url)
               "
               class="error"
@@ -97,7 +97,7 @@
               }}
             </div>
           </div>
-        </div>
+        </FormElement>
       </div>
     </div>
     <div class="control">

@@ -2,7 +2,7 @@
   <form @submit.prevent="submit">
     <div class="row">
       <div class="col col-12">
-        <div class="control">
+        <FormElement class="control">
           <label class="control__label">{{
             $t('exportTableForm.viewLabel')
           }}</label>
@@ -14,7 +14,7 @@
               @input="values.exporter_type = firstExporterType"
             ></ExportTableDropdown>
           </div>
-        </div>
+        </FormElement>
         <ExporterTypeChoices
           v-model="values.exporter_type"
           :exporter-types="exporterTypes"

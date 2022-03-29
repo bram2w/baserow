@@ -19,6 +19,7 @@
 * Raise Airtable import task error and fixed a couple of minor import bugs.
 * Add loading bar when syncing templates to make it obvious Baserow is still loading.
 * Fixed bug where old values are missing in the update trigger of the webhook.
+* Scroll to the first error message if the form submission fail
 
 ## Released (2022-03-03 1.9.1)
 

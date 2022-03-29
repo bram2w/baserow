@@ -1,5 +1,9 @@
 <template>
-  <div v-if="error.visible" class="alert alert--error alert--has-icon">
+  <div
+    v-if="error.visible"
+    data-error
+    class="alert alert--error alert--has-icon"
+  >
     <div class="alert__icon">
       <i class="fas fa-exclamation"></i>
     </div>

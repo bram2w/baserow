@@ -1,22 +1,22 @@
 <template>
   <form @submit.prevent="submit">
-    <div class="control">
+    <FormElement :error="fieldHasErrors('name')" class="control">
       <label class="control__label">{{ $t('apiTokenForm.nameLabel') }}</label>
       <div class="control__elements">
         <input
           ref="name"
           v-model="values.name"
-          :class="{ 'input--error': $v.values.name.$error }"
+          :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input input--large"
           @blur="$v.values.name.$touch()"
         />
-        <div v-if="$v.values.name.$error" class="error">
+        <div v-if="fieldHasErrors('name')" class="error">
           {{ $t('error.requiredField') }}
         </div>
       </div>
-    </div>
-    <div class="control">
+    </FormElement>
+    <FormElement :error="fieldHasErrors('group')" class="control">
       <label class="control__label">{{ $t('apiTokenForm.groupLabel') }}</label>
       <Dropdown
         v-model="values.group"
@@ -31,11 +31,11 @@
         ></DropdownItem>
       </Dropdown>
       <div class="control__elements">
-        <div v-if="$v.values.group.$error" class="error">
+        <div v-if="fieldHasErrors('group')" class="error">
           {{ $t('error.requiredField') }}
         </div>
       </div>
-    </div>
+    </FormElement>
     <slot></slot>
   </form>
 </template>
