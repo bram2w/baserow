@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit">
-    <div class="control">
+    <FormElement :error="fieldHasErrors('password')" class="control">
       <label class="control__label">{{
         $t('changePasswordForm.newPassword')
       }}</label>
@@ -10,24 +10,24 @@
           :validation-state="$v.values.password"
         />
       </div>
-    </div>
-    <div class="control">
+    </FormElement>
+    <FormElement :error="fieldHasErrors('passwordConfirm')" class="control">
       <label class="control__label">{{
         $t('changePasswordForm.repeatPassword')
       }}</label>
       <div class="control__elements">
         <input
           v-model="values.passwordConfirm"
-          :class="{ 'input--error': $v.values.passwordConfirm.$error }"
+          :class="{ 'input--error': fieldHasErrors('passwordConfirm') }"
           type="password"
           class="input input--large"
           @blur="$v.values.passwordConfirm.$touch()"
         />
-        <div v-if="$v.values.passwordConfirm.$error" class="error">
+        <div v-if="fieldHasErrors('passwordConfirm')" class="error">
           {{ $t('changePasswordForm.error.doesntMatch') }}
         </div>
       </div>
-    </div>
+    </FormElement>
     <div class="actions">
       <div class="align-right">
         <button

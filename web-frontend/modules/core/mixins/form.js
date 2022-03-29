@@ -61,6 +61,19 @@ export default {
         return result
       }, {})
     },
+    /**
+     * Combined with the FormElement component, this method make sure
+     * to scroll to the first error field after a fail form submit.
+     * It is particularly useful for small screen devices or for long
+     * forms, helping the user to see the error message even if the
+     * it is outside of the current viewport.
+     */
+    focusOnFirstError() {
+      const firstError = this.$el.querySelector('[data-form-error]')
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
     submit() {
       this.$v.$touch()
 
@@ -74,7 +87,15 @@ export default {
 
       if (this.isFormValid()) {
         this.$emit('submitted', this.getFormValues())
+      } else {
+        this.$nextTick(() => this.focusOnFirstError())
       }
+    },
+    /**
+     * Returns true if the field value has no errors
+     */
+    fieldHasErrors(fieldName) {
+      return this.$v.values[fieldName].$error
     },
     /**
      * Returns true is everything is valid.

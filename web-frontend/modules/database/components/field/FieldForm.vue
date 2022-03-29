@@ -1,11 +1,11 @@
 <template>
   <form class="context__form" @submit.prevent="submit">
-    <div class="control">
+    <FormElement :error="fieldHasErrors('name')" class="control">
       <div class="control__elements">
         <input
           ref="name"
           v-model="values.name"
-          :class="{ 'input--error': $v.values.name.$error }"
+          :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
           class="input"
           :placeholder="$t('fieldForm.name')"
@@ -41,7 +41,7 @@
           {{ $t('error.nameTooLong') }}
         </div>
       </div>
-    </div>
+    </FormElement>
     <div v-if="forcedType === null" class="control">
       <div class="control__elements">
         <Dropdown
