@@ -789,7 +789,7 @@ docker-file-hadolint:
     # Ignore the version pinning as we want security upgrades ASAP in our docker images.
     - |
       docker run --rm -i -v "$(pwd)":/opt/hadolint/. -w /opt/hadolint \
-        hadolint/hadolint:latest-debian \
+        hadolint/hadolint:2.9.3-debian \
         hadolint --ignore DL3008 -f gitlab_codeclimate \
         backend/Dockerfile \
         web-frontend/Dockerfile \
