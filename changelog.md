@@ -21,6 +21,7 @@
 * Fixed bug where old values are missing in the update trigger of the webhook.
 * Scroll to the first error message if the form submission fail
 * Improved backup_baserow spltting multiselect through tables in separate batches.
+* Fixed a bug that truncated characters for email in the sidebar 
 
 ## Released (2022-03-03 1.9.1)
 
