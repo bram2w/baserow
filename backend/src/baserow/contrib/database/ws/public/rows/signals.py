@@ -13,7 +13,10 @@ from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_type_registry
-from baserow.contrib.database.ws.rows.signals import RealtimeRowMessages
+from baserow.contrib.database.ws.rows.signals import (
+    before_row_update,
+    RealtimeRowMessages,
+)
 from baserow.ws.registries import page_registry
 
 
@@ -125,7 +128,6 @@ def public_before_row_update(
         updated_field_ids=updated_field_ids,
     )
     return {
-        "old_row": _serialize_row(model, row),
         "old_row_public_views": row_checker.get_public_views_where_row_is_visible(row),
         "caching_row_checker": row_checker,
     }
@@ -136,7 +138,7 @@ def public_row_updated(
     sender, row, user, table, model, before_return, updated_field_ids, **kwargs
 ):
     before_return_dict = dict(before_return)[public_before_row_update]
-    serialized_old_row = before_return_dict["old_row"]
+    serialized_old_row = dict(before_return)[before_row_update]
     serialized_updated_row = _serialize_row(model, row)
 
     old_row_public_views = before_return_dict["old_row_public_views"]
