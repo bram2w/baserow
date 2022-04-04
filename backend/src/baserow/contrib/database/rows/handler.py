@@ -371,7 +371,9 @@ class RowHandler:
 
         with transaction.atomic():
             try:
-                row = model.objects.select_for_update().get(id=row_id)
+                row = (
+                    model.objects.select_for_update().enhance_by_fields().get(id=row_id)
+                )
             except model.DoesNotExist:
                 raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
 
