@@ -1123,10 +1123,10 @@ class LinkRowFieldType(FieldType):
         # Store the current table's model into the manytomany_models object so that the
         # related ManyToMany field can use that one. Otherwise we end up in a recursive
         # loop.
-        manytomany_models[instance.table.id] = model
+        manytomany_models[instance.table_id] = model
 
         # Check if the related table model is already in the manytomany_models.
-        related_model = manytomany_models.get(instance.link_row_table.id)
+        related_model = manytomany_models.get(instance.link_row_table_id)
 
         # If we do not have a related table model already we can generate a new one.
         if not related_model:
@@ -1143,8 +1143,8 @@ class LinkRowFieldType(FieldType):
         for related_field in related_model._field_objects.values():
             if (
                 isinstance(related_field["field"], self.model_class)
-                and related_field["field"].link_row_related_field
-                and related_field["field"].link_row_related_field.id == instance.id
+                and related_field["field"].link_row_related_field_id
+                and related_field["field"].link_row_related_field_id == instance.id
             ):
                 related_name = related_field["name"]
 
@@ -1337,8 +1337,8 @@ class LinkRowFieldType(FieldType):
         return those ids in a list.
         """
 
-        model_name = f"table_{instance.link_row_table.id}"
-        count_name = f"table_{instance.link_row_table.id}_count"
+        model_name = f"table_{instance.link_row_table_id}"
+        count_name = f"table_{instance.link_row_table_id}_count"
 
         if model_name not in cache:
             cache[model_name] = instance.link_row_table.get_model(field_ids=[])
