@@ -7,7 +7,7 @@ from baserow.contrib.database.fields.models import FormulaField
 class TypeFormulaRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = FormulaField
-        fields = ("formula",)
+        fields = ("formula", "name")
 
 
 class TypeFormulaResultSerializer(serializers.ModelSerializer):

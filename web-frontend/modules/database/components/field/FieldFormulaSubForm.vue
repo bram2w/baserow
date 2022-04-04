@@ -46,6 +46,12 @@ export default {
     FormulaAdvancedEditContext,
   },
   mixins: [form, fieldSubForm],
+  props: {
+    name: {
+      required: true,
+      type: String,
+    },
+  },
   data() {
     return {
       allowedValues: ['formula'],
@@ -58,7 +64,7 @@ export default {
       errorFromServer: null,
       localFormulaType: null,
       localArrayFormulaType: null,
-      initialFormula: null,
+      formulaTypeRefreshNeeded: false,
       refreshingFormula: false,
     }
   },
@@ -100,22 +106,6 @@ export default {
         return null
       }
     },
-    formulaChanged() {
-      return (
-        this.initialFormula !== null &&
-        this.values.formula !== this.initialFormula
-      )
-    },
-    updatingExistingFormula() {
-      return !!this.defaultValues.id
-    },
-    formulaTypeRefreshNeeded() {
-      return (
-        this.formulaChanged &&
-        !this.parsingError &&
-        this.updatingExistingFormula
-      )
-    },
   },
   watch: {
     defaultValues(newValue, oldValue) {
@@ -123,6 +113,9 @@ export default {
     },
     'values.formula'(newValue, oldValue) {
       this.parseFormula(newValue)
+      if (newValue !== oldValue) {
+        this.formulaTypeRefreshNeeded = true
+      }
     },
   },
   methods: {
@@ -135,9 +128,6 @@ export default {
       }
       try {
         parseBaserowFormula(value)
-        if (!this.initialFormula) {
-          this.initialFormula = this.values.formula
-        }
         this.parsingError = null
         return true
       } catch (e) {
@@ -184,10 +174,15 @@ export default {
       this.values.formula = formula
     },
     async refreshFormulaType() {
+      if (!this.name) {
+        this.$emit('validate')
+        return
+      }
       try {
         this.refreshingFormula = true
         const { data } = await FormulaService(this.$client).type(
-          this.defaultValues.id,
+          this.table.id,
+          this.name,
           this.values.formula
         )
         // eslint-disable-next-line camelcase
@@ -208,12 +203,14 @@ export default {
         this.localFormulaType = formula_type
         // eslint-disable-next-line camelcase
         this.localArrayFormulaType = array_formula_type
+        this.formulaTypeRefreshNeeded = false
       } catch (e) {
         if (!this.handleErrorByForm(e)) {
           notifyIf(e, 'field')
+        } else {
+          this.formulaTypeRefreshNeeded = false
         }
       }
-      this.initialFormula = this.values.formula
       this.refreshingFormula = false
     },
   },

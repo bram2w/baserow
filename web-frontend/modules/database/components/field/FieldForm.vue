@@ -68,7 +68,9 @@
         :is="getFormComponent(values.type)"
         ref="childForm"
         :table="table"
+        :name="values.name"
         :default-values="defaultValues"
+        @validate="$v.$touch"
       />
     </template>
     <slot></slot>

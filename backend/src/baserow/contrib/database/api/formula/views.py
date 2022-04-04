@@ -11,10 +11,11 @@ from baserow.api.errors import (
 )
 from baserow.api.schemas import get_error_schema
 from baserow.contrib.database.api.fields.errors import (
-    ERROR_FIELD_DOES_NOT_EXIST,
     ERROR_WITH_FORMULA,
     ERROR_FIELD_SELF_REFERENCE,
-    ERROR_FIELD_CIRCULAR_REFERENCE,
+)
+from baserow.contrib.database.api.tables.errors import (
+    ERROR_TABLE_DOES_NOT_EXIST,
 )
 from baserow.contrib.database.api.formula.serializers import (
     TypeFormulaRequestSerializer,
@@ -22,14 +23,11 @@ from baserow.contrib.database.api.formula.serializers import (
 )
 from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
-    CircularFieldDependencyError,
 )
-from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
-from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
-from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.fields.models import FormulaField
 from baserow.contrib.database.formula import BaserowFormulaException
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.exceptions import UserNotInGroup
 
 
@@ -39,17 +37,16 @@ class TypeFormulaView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name="field_id",
+                name="table_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The formula field id to type.",
+                description="The table id of the formula field to type.",
             ),
         ],
         tags=["Database table fields"],
         operation_id="type_formula_field",
-        description="Calculates and returns the new type of the specified formula field"
-        " if it's formula is changed to the specified value. Does not change the state "
-        "of the field in any way.",
+        description="Calculates and returns the type of the specified formula value. "
+        "Does not change the state of the field in any way.",
         request=TypeFormulaRequestSerializer,
         responses={
             200: TypeFormulaResultSerializer,
@@ -59,36 +56,32 @@ class TypeFormulaView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_WITH_FORMULA",
                     "ERROR_FIELD_SELF_REFERENCE",
-                    "ERROR_FIELD_CIRCULAR_REFERENCE",
                 ]
             ),
-            404: get_error_schema(["ERROR_FIELD_DOES_NOT_EXIST"]),
+            404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
         },
     )
     @transaction.atomic
     @map_exceptions(
         {
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             BaserowFormulaException: ERROR_WITH_FORMULA,
             SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
-            CircularFieldDependencyError: ERROR_FIELD_CIRCULAR_REFERENCE,
         }
     )
     @validate_body(TypeFormulaRequestSerializer)
-    def post(self, request, field_id, data):
+    def post(self, request, table_id, data):
         """
-        Given a formula value for a formula field returns the type of that formula
-        value.
+        Given a formula value for a table returns the type of that formula value.
         """
 
-        field = FieldHandler().get_field(field_id, field_model=FormulaField)
-        field.table.database.group.has_user(request.user, raise_error=True)
+        table = TableHandler().get_table(table_id)
+        table.database.group.has_user(request.user, raise_error=True)
 
-        field = field.specific
-        field.formula = data["formula"]
-        field_lookup_cache = FieldCache()
-        field.recalculate_internal_fields(field_lookup_cache=field_lookup_cache)
-        FieldDependencyHandler.check_for_circular_references(field, field_lookup_cache)
+        field = FormulaField(
+            formula=data["formula"], table=table, name=data["name"], order=0
+        )
+        field.recalculate_internal_fields(raise_if_invalid=True)
 
         return Response(TypeFormulaResultSerializer(field).data)
