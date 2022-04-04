@@ -983,6 +983,10 @@ class LinkRowFieldType(FieldType):
                 for object in remote_model._field_objects.values()
                 if object["field"].primary
             )
+            # Because we only need the primary value for serialization, we only have
+            # to select and enhance that one. This will improve the performance of
+            # large related tables significantly.
+            related_queryset = related_queryset.only(primary_field_object["name"])
             related_queryset = primary_field_object["type"].enhance_queryset(
                 related_queryset,
                 primary_field_object["field"],
