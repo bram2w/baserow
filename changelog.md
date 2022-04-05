@@ -24,6 +24,7 @@
 * Fixed a bug that truncated characters for email in the sidebar
 * **breaking change** The API endpoint `/api/database/formula/<field_id>/type/` now requires
   `table_id` instead of `field_id`, and also `name` in the request body.
+* Added support in dev.sh for KDE's Konsole terminal emulator.
 
 ## Released (2022-03-03 1.9.1)
 
