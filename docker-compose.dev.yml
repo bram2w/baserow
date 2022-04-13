@@ -15,6 +15,9 @@ services:
 
   backend:
     image: baserow_backend_dev:latest
+    environment:
+      - BASEROW_BACKEND_DEBUGGER_ENABLED=${BASEROW_BACKEND_DEBUGGER_ENABLED:-True}
+      - BASEROW_BACKEND_DEBUGGER_PORT=${BASEROW_BACKEND_DEBUGGER_PORT:-5678}
     build:
       dockerfile: ./backend/Dockerfile
       context: .
@@ -26,6 +29,7 @@ services:
         GID: $GID
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:8000:8000"
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${BASEROW_BACKEND_DEBUGGER_PORT:-5678}:${BASEROW_BACKEND_DEBUGGER_PORT:-5678}"
     volumes:
       - ./backend:/baserow/backend
       - ./premium/backend/:/baserow/premium/backend
@@ -136,15 +140,15 @@ services:
   mailhog:
     image: mailhog/mailhog
     logging:
-      driver: 'none'  # disable saving logs
+      driver: 'none' # disable saving logs
     ports:
       - "8025:8025" # web ui
     networks:
       local:
 
-  # When switching between dev and local the media files in the media volume will be
-  # owned by different users. Ensure that we chown them to the user appropriate for the
-  # environment here.
+        # When switching between dev and local the media files in the media volume will be
+        # owned by different users. Ensure that we chown them to the user appropriate for the
+        # environment here.
   volume-permissions-fixer:
     image: bash:4.4
     command: chown ${UID:-1000}:${GID:-1000} -R /baserow/media
