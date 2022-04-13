@@ -44,6 +44,8 @@ click==8.0.4
     #   pip-tools
 coverage==6.2
     # via -r dev.in
+debugpy==1.5.1
+    # via -r dev.in
 django==3.2.12
     # via
     #   -c base.txt

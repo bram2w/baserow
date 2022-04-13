@@ -27,3 +27,4 @@ bandit==1.7.2
 pip-tools==6.5.1
 autopep8==1.5.7
 pytest-unordered==0.4.1
+debugpy==1.5.1
