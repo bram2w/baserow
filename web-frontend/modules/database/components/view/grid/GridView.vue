@@ -804,7 +804,8 @@ export default {
       Cancels multi-select if it's currently active.
       This function checks if a mouse click event is triggered
       outside of GridViewRows. This is done by ensuring that the
-      target element's class is either 'grid-view' or 'grid-view__rows'.
+      target element's class is either 'grid-view', 'grid-view__row',
+      or 'grid-view__rows'.
     */
     cancelMultiSelect(event) {
       if (
@@ -812,7 +813,9 @@ export default {
           this.storePrefix + 'view/grid/isMultiSelectActive'
         ] &&
         (!isElement(this.$el, event.target) ||
-          !['grid-view__rows', 'grid-view'].includes(event.target.classList[0]))
+          !['grid-view__row', 'grid-view__rows', 'grid-view'].includes(
+            event.target.classList[0]
+          ))
       ) {
         this.$store.dispatch(
           this.storePrefix + 'view/grid/setMultiSelectActive',
