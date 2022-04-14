@@ -10,7 +10,7 @@ aioredis==1.3.1
     # via channels-redis
 amqp==5.1.0
     # via kombu
-antlr4-python3-runtime==4.8.0
+antlr4-python3-runtime==4.9.3
     # via -r base.in
 asgiref==3.4.1
     # via
