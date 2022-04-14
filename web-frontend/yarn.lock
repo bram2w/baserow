@@ -1354,15 +1354,15 @@
     core-js-compat "^3.12.1"
     regenerator-runtime "^0.13.7"
 
-"@nuxt/builder@2.15.7":
-  version "2.15.7"
-  resolved "https://registry.yarnpkg.com/@nuxt/builder/-/builder-2.15.7.tgz#4703c9d21756128f4ebfbf14e7b099bee7463626"
-  integrity sha512-vVZvcgvhL05Omp9AuqdDz2zfhBOmCXpVyt1IBUqR99QaorLICGg2iIHC42exj9yN3rBrpURQwb1OrIgt5o5KDQ==
+"@nuxt/builder@2.15.8":
+  version "2.15.8"
+  resolved "https://registry.yarnpkg.com/@nuxt/builder/-/builder-2.15.8.tgz#66ead4be0a2ce6932a2b7e521cfe1621e49290e7"
+  integrity sha512-WVhN874LFMdgRiJqpxmeKI+vh5lhCUBVOyR9PhL1m1V/GV3fb+Dqc1BKS6XgayrWAWavPLveCJmQ/FID0puOfQ==
   dependencies:
     "@nuxt/devalue" "^1.2.5"
-    "@nuxt/utils" "2.15.7"
-    "@nuxt/vue-app" "2.15.7"
-    "@nuxt/webpack" "2.15.7"
+    "@nuxt/utils" "2.15.8"
+    "@nuxt/vue-app" "2.15.8"
+    "@nuxt/webpack" "2.15.8"
     chalk "^4.1.1"
     chokidar "^3.5.1"
     consola "^2.15.3"
@@ -1375,13 +1375,13 @@
     serialize-javascript "^5.0.1"
     upath "^2.0.1"
 
-"@nuxt/cli@2.15.7":
-  version "2.15.7"
-  resolved "https://registry.yarnpkg.com/@nuxt/cli/-/cli-2.15.7.tgz#21fb8a969bc5e222aa95289fcccc44f9ff7c5549"
-  integrity sha512-rbJqmHuN+ZftSpQNzgiaGP2L2pt45kCbWjCmLUF9pPYQ1pysl9GHVb+1LFf1Wn4wczJckH3Jc9Pl9r2KsLAteA==
+"@nuxt/cli@2.15.8":
+  version "2.15.8"
+  resolved "https://registry.yarnpkg.com/@nuxt/cli/-/cli-2.15.8.tgz#3b946ee08c7b5b3223c8952873c65727e775ec30"
+  integrity sha512-KcGIILW/dAjBKea1DHsuLCG1sNzhzETShwT23DhXWO304qL8ljf4ndYKzn2RenzauGRGz7MREta80CbJCkLSHw==
   dependencies:
-    "@nuxt/config" "2.15.7"
-    "@nuxt/utils" "2.15.7"
+    "@nuxt/config" "2.15.8"
+    "@nuxt/utils" "2.15.8"
     boxen "^5.0.1"
     chalk "^4.1.1"
     compression "^1.7.4"

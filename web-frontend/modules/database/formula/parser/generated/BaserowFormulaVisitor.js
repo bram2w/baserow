@@ -1,118 +1,112 @@
-// Generated from BaserowFormula.g4 by ANTLR 4.8
+// Generated from BaserowFormula.g4 by ANTLR 4.9
 // jshint ignore: start
-var antlr4 = require('antlr4/index');
+import antlr4 from 'antlr4';
 
 // This class defines a complete generic visitor for a parse tree produced by BaserowFormula.
 
-function BaserowFormulaVisitor() {
-	antlr4.tree.ParseTreeVisitor.call(this);
-	return this;
+export default class BaserowFormulaVisitor extends antlr4.tree.ParseTreeVisitor {
+
+	// Visit a parse tree produced by BaserowFormula#root.
+	visitRoot(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#FieldReference.
+	visitFieldReference(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#StringLiteral.
+	visitStringLiteral(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#Brackets.
+	visitBrackets(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#BooleanLiteral.
+	visitBooleanLiteral(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#RightWhitespaceOrComments.
+	visitRightWhitespaceOrComments(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#DecimalLiteral.
+	visitDecimalLiteral(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#LeftWhitespaceOrComments.
+	visitLeftWhitespaceOrComments(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#FunctionCall.
+	visitFunctionCall(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#FieldByIdReference.
+	visitFieldByIdReference(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#LookupFieldReference.
+	visitLookupFieldReference(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#IntegerLiteral.
+	visitIntegerLiteral(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#BinaryOp.
+	visitBinaryOp(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#ws_or_comment.
+	visitWs_or_comment(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#func_name.
+	visitFunc_name(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#field_reference.
+	visitField_reference(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+	// Visit a parse tree produced by BaserowFormula#identifier.
+	visitIdentifier(ctx) {
+	  return this.visitChildren(ctx);
+	}
+
+
+
 }
-
-BaserowFormulaVisitor.prototype = Object.create(antlr4.tree.ParseTreeVisitor.prototype);
-BaserowFormulaVisitor.prototype.constructor = BaserowFormulaVisitor;
-
-// Visit a parse tree produced by BaserowFormula#root.
-BaserowFormulaVisitor.prototype.visitRoot = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#FieldReference.
-BaserowFormulaVisitor.prototype.visitFieldReference = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#StringLiteral.
-BaserowFormulaVisitor.prototype.visitStringLiteral = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#Brackets.
-BaserowFormulaVisitor.prototype.visitBrackets = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#BooleanLiteral.
-BaserowFormulaVisitor.prototype.visitBooleanLiteral = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#RightWhitespaceOrComments.
-BaserowFormulaVisitor.prototype.visitRightWhitespaceOrComments = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#DecimalLiteral.
-BaserowFormulaVisitor.prototype.visitDecimalLiteral = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#LeftWhitespaceOrComments.
-BaserowFormulaVisitor.prototype.visitLeftWhitespaceOrComments = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#FunctionCall.
-BaserowFormulaVisitor.prototype.visitFunctionCall = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#FieldByIdReference.
-BaserowFormulaVisitor.prototype.visitFieldByIdReference = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#LookupFieldReference.
-BaserowFormulaVisitor.prototype.visitLookupFieldReference = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#IntegerLiteral.
-BaserowFormulaVisitor.prototype.visitIntegerLiteral = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#BinaryOp.
-BaserowFormulaVisitor.prototype.visitBinaryOp = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#ws_or_comment.
-BaserowFormulaVisitor.prototype.visitWs_or_comment = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#func_name.
-BaserowFormulaVisitor.prototype.visitFunc_name = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#field_reference.
-BaserowFormulaVisitor.prototype.visitField_reference = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-// Visit a parse tree produced by BaserowFormula#identifier.
-BaserowFormulaVisitor.prototype.visitIdentifier = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
-
-exports.BaserowFormulaVisitor = BaserowFormulaVisitor;

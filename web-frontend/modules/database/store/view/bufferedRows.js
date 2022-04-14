@@ -47,7 +47,9 @@ export default ({ service, customPopulateRow }) => {
     if (customPopulateRow) {
       customPopulateRow(row)
     }
-    row._ ??= {}
+    if (row._ == null) {
+      row._ = {}
+    }
     // Matching rows for front-end only search is not yet properly
     // supported and tested in this store mixin. Only server-side search
     // implementation is finished.

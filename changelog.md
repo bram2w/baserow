@@ -27,6 +27,7 @@
 * Added support in dev.sh for KDE's Konsole terminal emulator.
 * Fixed a bug that truncated characters for email in the sidebar.
 * Fixed a bug that would sometimes cancel multi-cell selection.
+* Upgraded node runtime to v16.14.0
 
 ## Released (2022-03-03 1.9.1)
 

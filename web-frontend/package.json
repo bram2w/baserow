@@ -5,6 +5,9 @@
   "description": "Baserow: open source no-code database web frontend.",
   "author": "Bram Wiepjes (Baserow)",
   "license": "MIT",
+  "engines": {
+    "node": ">=16.14.0 <17"
+  },
   "scripts": {
     "build": "nuxt build",
     "build-local": "nuxt build --config-file ./config/nuxt.config.local.js",
@@ -18,7 +21,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.3",
     "@nuxtjs/i18n": "^7.2.0",
-    "antlr4": "4.8.0",
+    "antlr4": "4.9.3",
     "async-mutex": "^0.3.1",
     "axios": "^0.25.0",
     "bignumber.js": "^9.0.1",
@@ -32,7 +35,7 @@
     "moment-timezone": "^0.5.33",
     "node-sass": "^6.0.1",
     "normalize-scss": "^7.0.1",
-    "nuxt": "^2.15.7",
+    "nuxt": "^2.15.8",
     "nuxt-env": "^0.1.0",
     "papaparse": "^5.3.1",
     "resize-observer-polyfill": "^1.5.1",

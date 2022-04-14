@@ -15,7 +15,7 @@ RUN mkdir -p /workspace/src && chown -R $UID:$GID /workspace
 USER $UID:$GID
 WORKDIR /workspace
 
-ENV ANTLR_VERSION 4.8
+ENV ANTLR_VERSION 4.9
 ENV CLASSPATH .:/workspace/antlr-${ANTLR_VERSION}-complete.jar:$CLASSPATH
 
 RUN wget -q http://www.antlr.org/download/antlr-${ANTLR_VERSION}-complete.jar \
