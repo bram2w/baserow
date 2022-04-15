@@ -527,6 +527,9 @@ BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT = int(
     os.getenv("BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT", 60 * 30)  # 30 minutes
 )
 
+# A comma separated list of feature flags used to enable in-progress or not ready
+# features for developers. See docs/development/feature-flags.md for more info.
+FEATURE_FLAGS = [flag.strip() for flag in os.getenv("FEATURE_FLAGS", "").split(",")]
 
 LOGGING = {
     "version": 1,
