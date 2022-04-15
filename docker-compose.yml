@@ -135,6 +135,7 @@ x-common-variables: &common-variables
   PRIVATE_WEB_FRONTEND_URL: http://web-frontend:3000
   PUBLIC_BACKEND_URL:
   PUBLIC_WEB_FRONTEND_URL:
+  FEATURE_FLAGS:
 
 x-common-backend-variables: &common-backend-variables
   <<: *backend-required-variables

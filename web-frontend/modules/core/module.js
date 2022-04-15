@@ -83,6 +83,10 @@ export default function CoreModule(options) {
           key: 'DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS',
           default: false,
         },
+        {
+          key: 'FEATURE_FLAGS',
+          default: '',
+        },
       ],
     },
   ])
@@ -154,6 +158,7 @@ export default function CoreModule(options) {
     src: path.resolve(__dirname, 'plugins/realTimeHandler.js'),
   })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/auth.js') })
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/featureFlags.js') })
 
   this.extendRoutes((configRoutes) => {
     // Remove all the routes created by nuxt.
