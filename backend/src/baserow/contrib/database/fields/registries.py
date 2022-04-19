@@ -919,6 +919,10 @@ class FieldType(
                 dependant_path_to_starting_table,
             )
 
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        ViewHandler().field_value_updated(field)
+
     def row_of_dependency_deleted(
         self,
         field,
@@ -1052,6 +1056,10 @@ class FieldType(
                 dependant_path_to_starting_table,
                 update_collector,
             )
+
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        ViewHandler().field_updated(field)
 
     def field_dependency_deleted(
         self, field, deleted_field, via_path_to_starting_table, update_collector

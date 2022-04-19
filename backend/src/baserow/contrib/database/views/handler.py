@@ -1,8 +1,10 @@
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Any, List, Optional, Iterable, Tuple
+from typing import Dict, Any, List, Optional, Iterable, Tuple, Union
+from redis.exceptions import LockNotOwnedError
 
 from django.core.exceptions import FieldDoesNotExist, ValidationError
+from django.core.cache import cache
 from django.db import models as django_models
 from django.db.models import F, Count
 
@@ -167,6 +169,9 @@ class ViewHandler:
         view = set_allowed_attrs(view_values, allowed_fields, view)
         view.save()
 
+        if "filters_disabled" in view_values:
+            view_type.after_filter_update(view)
+
         view_updated.send(self, view=view, user=user)
 
         return view
@@ -313,6 +318,41 @@ class ViewHandler:
         for view_type in view_type_registry.get_all():
             view_type.after_field_type_change(field)
 
+    def field_value_updated(self, updated_fields: Union[Iterable[Field], Field]):
+        """
+        Called after a field value has been modified because of a row creation,
+        modification, deletion. This method is called for each directly or indirectly
+        affected list of fields.
+
+        Calls the `.after_field_value_update(updated_fields)` of each view type.
+
+        :param updated_fields: The field or list of fields that are affected.
+        """
+
+        if not isinstance(updated_fields, list):
+            updated_fields = [updated_fields]
+
+        # Call each view types hook
+        for view_type in view_type_registry.get_all():
+            view_type.after_field_value_update(updated_fields)
+
+    def field_updated(self, updated_fields: Union[Iterable[Field], Field]):
+        """
+        Called for each field modification. This include indirect modification when
+        fields depends from another (like formula fields or lookup fields).
+
+        Calls the `.after_field_update(updated_fields)` of each view type.
+
+        :param updated_fields: The field or list of fields that are updated.
+        """
+
+        if not isinstance(updated_fields, list):
+            updated_fields = [updated_fields]
+
+        # Call each view types hook
+        for view_type in view_type_registry.get_all():
+            view_type.after_field_update(updated_fields)
+
     def _get_filter_builder(
         self, view: View, model: GeneratedTableModel
     ) -> FilterBuilder:
@@ -380,7 +420,7 @@ class ViewHandler:
         :param base_queryset: The base queryset from where to select the view filter
             object. This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
-        :raises ViewFilterDoesNotExist: The the requested view does not exists.
+        :raises ViewFilterDoesNotExist: The requested view does not exists.
         :return: The requested view filter instance.
         :type: ViewFilter
         """
@@ -462,6 +502,9 @@ class ViewHandler:
             view=view, field=field, type=view_filter_type.type, value=value
         )
 
+        # Call view type hooks
+        view_type.after_filter_update(view)
+
         view_filter_created.send(self, view_filter=view_filter, user=user)
 
         return view_filter
@@ -513,6 +556,10 @@ class ViewHandler:
         view_filter.type = type_name
         view_filter.save()
 
+        # Call view type hooks
+        view_type = view_type_registry.get_by_model(view_filter.view.specific_class)
+        view_type.after_filter_update(view_filter.view)
+
         view_filter_updated.send(self, view_filter=view_filter, user=user)
 
         return view_filter
@@ -532,6 +579,10 @@ class ViewHandler:
 
         view_filter_id = view_filter.id
         view_filter.delete()
+
+        # Call view type hooks
+        view_type = view_type_registry.get_by_model(view_filter.view.specific_class)
+        view_type.after_filter_update(view_filter.view)
 
         view_filter_deleted.send(
             self, view_filter_id=view_filter_id, view_filter=view_filter, user=user
@@ -838,18 +889,221 @@ class ViewHandler:
             queryset = queryset.search_all_fields(search, only_search_by_field_ids)
         return queryset
 
+    def _get_aggregation_lock_cache_key(self, view: View):
+        """
+        Returns the aggregation lock cache key for the specified view.
+        """
+
+        return f"_aggregation__{view.pk}_lock"
+
+    def _get_aggregation_value_cache_key(self, view: View, name: str):
+        """
+        Returns the aggregation value cache key for the specified view and name.
+        """
+
+        return f"aggregation_value__{view.pk}_{name}"
+
+    def _get_aggregation_version_cache_key(self, view: View, name: str):
+        """
+        Returns the aggregation version cache key for the specified view and name.
+        """
+
+        return f"aggregation_version__{view.pk}_{name}"
+
+    def clear_full_aggregation_cache(self, view: View):
+        """
+        Clears the cache key for the specified view.
+        """
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        aggregations = view_type.get_aggregations(view)
+        cached_names = [agg[0].db_column for agg in aggregations]
+        self.clear_aggregation_cache(view, cached_names)
+
+    def clear_aggregation_cache(self, view: View, names: Union[List[str], str]):
+        """
+        Increments the version in cache for the specified view/name.
+        """
+
+        if not isinstance(names, list):
+            names = [names]
+
+        for name in names:
+            cache_key = self._get_aggregation_version_cache_key(view, name)
+            try:
+                cache.incr(cache_key, 1)
+            except ValueError:
+                # No cache key, we create one
+                cache.set(cache_key, 2)
+
+    def _get_aggregations_to_compute(
+        self,
+        view: View,
+        aggregations: Iterable[Tuple[django_models.Field, str]],
+        no_cache: bool = False,
+    ) -> Tuple[Dict[str, Any], Dict[str, Tuple[django_models.Field, str, int]]]:
+        """
+        Figure out which aggregation needs to be computed and which one is cached.
+
+        Returns a tuple with:
+          - a dict of field_name -> cached values for values that are in the cache
+          - a dict of values that need to be computed. keys are field name and values
+            are a tuple with:
+            - The field instance which aggregation needs to be computed
+            - The aggregation_type
+            - The current version
+        """
+
+        if not no_cache:
+            names = [agg[0].db_column for agg in aggregations]
+            # Get value and version cache all at once
+            cached_keys = [
+                self._get_aggregation_value_cache_key(view, name) for name in names
+            ] + [self._get_aggregation_version_cache_key(view, name) for name in names]
+            cached = cache.get_many(cached_keys)
+        else:
+            # We don't want to use cache for search query
+            cached = {}
+
+        valid_cached_values = {}
+        need_computation = {}
+
+        # Try to get field value from cache or add it to the need_computation list
+        for (field_instance, aggregation_type_name) in aggregations:
+            cached_value = cached.get(
+                self._get_aggregation_value_cache_key(view, field_instance.db_column),
+                {"version": 0},
+            )
+            cached_version = cached.get(
+                self._get_aggregation_version_cache_key(view, field_instance.db_column),
+                1,
+            )
+
+            # If the value version and the current version are the same we don't
+            # need to recompute the value.
+            if cached_value["version"] == cached_version:
+                valid_cached_values[field_instance.db_column] = cached_value["value"]
+            else:
+                need_computation[field_instance.db_column] = {
+                    "instance": field_instance,
+                    "aggregation_type": aggregation_type_name,
+                    "version": cached_version,
+                }
+
+        return (valid_cached_values, need_computation)
+
+    def get_view_field_aggregations(
+        self,
+        view: View,
+        model: Union[GeneratedTableModel, None] = None,
+        with_total: bool = False,
+        search=None,
+    ) -> Dict[str, Any]:
+        """
+        Returns a dict of aggregation for all aggregation configured for the view in
+        parameters. Unless the search parameter is set to a non empty string,
+        the aggregations values are cached when computed and must be
+        invalidated when necessary.
+        The dict keys are field names and value are aggregation values. The total is
+        included in result if the with_total is specified.
+
+        :param view: The view to get the field aggregation for.
+        :param model: The model for this view table to generate the aggregation
+            query from, if not specified then the model will be generated
+            automatically.
+        :param with_total: Whether the total row count should be returned in the
+            result.
+        :param search: the search string to considerate. If the search parameter is
+            defined, we don't use the cache so we recompute aggregation on the fly.
+        :raises FieldAggregationNotSupported: When the view type doesn't support
+            field aggregation.
+        :returns: A dict of aggregation value
+        """
+
+        view_type = view_type_registry.get_by_model(view.specific_class)
+
+        # Check if view supports field aggregation
+        if not view_type.can_aggregate_field:
+            raise FieldAggregationNotSupported(
+                f"Field aggregation is not supported for {view_type.type} views."
+            )
+
+        aggregations = view_type.get_aggregations(view)
+
+        (
+            values,
+            need_computation,
+        ) = self._get_aggregations_to_compute(view, aggregations, no_cache=search)
+
+        use_lock = hasattr(cache, "lock")
+        used_lock = False
+        if not search and use_lock and (need_computation or with_total):
+            # Lock the cache to avoid many updates when many queries arrive at same
+            # times which happens when multiple users are on the same view.
+            # This lock is optional. It avoid processing but doesn't break anything
+            # if it fails so the timeout is low.
+            cache_lock = cache.lock(
+                self._get_aggregation_lock_cache_key(view), timeout=10
+            )
+
+            cache_lock.acquire()
+            # We update the cache here because maybe it has changed in the meantime
+            (values, need_computation) = self._get_aggregations_to_compute(
+                view, aggregations, no_cache=search
+            )
+            used_lock = True
+
+        # Do we need to compute some aggregations?
+        if need_computation or with_total:
+            db_result = self.get_field_aggregations(
+                view,
+                [
+                    (n["instance"], n["aggregation_type"])
+                    for n in need_computation.values()
+                ],
+                model,
+                with_total=with_total,
+                search=search,
+            )
+
+            if not search:
+                to_cache = {}
+                for key, value in db_result.items():
+                    # We don't cache total value
+                    if key != "total":
+                        to_cache[self._get_aggregation_value_cache_key(view, key)] = {
+                            "value": value,
+                            "version": need_computation[key]["version"],
+                        }
+
+                # Let's cache the newly computed values
+                cache.set_many(to_cache)
+
+            # Merged cached values and computed one
+            values.update(db_result)
+
+        if used_lock:
+            try:
+                cache_lock.release()
+            except LockNotOwnedError:
+                # If the lock release fails, it might be because of the timeout
+                # and it's been stolen so we don't really care
+                pass
+
+        return values
+
     def get_field_aggregations(
         self,
         view: View,
         aggregations: Iterable[Tuple[django_models.Field, str]],
-        model: Table = None,
+        model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
+        search: Union[str, None] = None,
     ) -> Dict[str, Any]:
         """
-        Returns a dict of aggregation for given (field, aggregation_type) couple.
-        Each dict key is the name of the field suffixed with two `_` then the
-        aggregation type. ex: "field_42__empty_count" for the empty count
-        aggregation of field with id 42.
+        Returns a dict of aggregation for given (field, aggregation_type) couple list.
+        The dict keys are field names and value are aggregation values. The total is
+        included in result if the with_total is specified.
 
         :param view: The view to get the field aggregation for.
         :param aggregations: A list of (field_instance, aggregation_type).
@@ -857,12 +1111,13 @@ class ViewHandler:
             query from, if not specified then the model will be generated
             automatically.
         :param with_total: Whether the total row count should be returned in the
-             result.
+            result.
+        :param search: the search string to considerate.
         :raises FieldAggregationNotSupported: When the view type doesn't support
             field aggregation.
-        :raises FieldNotInTable: When the field does not belong to the specified
+        :raises FieldNotInTable: When one of the field doesn't belong to the specified
             view.
-        :returns: A dict of aggregation value
+        :returns: A dict of aggregation values
         """
 
         if model is None:
@@ -878,12 +1133,16 @@ class ViewHandler:
                 f"Field aggregation is not supported for {view_type.type} views."
             )
 
-        # Apply filters to have accurate aggregation
+        # Apply filters and search to have accurate aggregations
         if view_type.can_filter:
             queryset = self.apply_filters(view, queryset)
+        if search is not None:
+            queryset = queryset.search_all_fields(search)
 
         aggregation_dict = {}
+
         for (field_instance, aggregation_type_name) in aggregations:
+            field_name = field_instance.db_column
 
             # Check whether the field belongs to the table.
             if field_instance.table_id != view.table_id:
@@ -892,24 +1151,20 @@ class ViewHandler:
                     f"{view.table.id}."
                 )
 
-            # Prepare data for .get_aggregation call
             field = model._field_objects[field_instance.id]["field"]
-            field_name = field_instance.db_column
             model_field = model._meta.get_field(field_name)
+
             aggregation_type = view_aggregation_type_registry.get(aggregation_type_name)
 
-            # Add the aggregation for the field
-            aggregation_dict[
-                f"{field_name}__{aggregation_type_name}"
-            ] = aggregation_type.get_aggregation(field_name, model_field, field)
+            aggregation_dict[field_name] = aggregation_type.get_aggregation(
+                field_name, model_field, field
+            )
 
+        # Add total to allow further calculation on the client if required
         if with_total:
-            # Add total to allow further calculation on the client
             aggregation_dict["total"] = Count("id", distinct=True)
 
-        result = queryset.aggregate(**aggregation_dict)
-
-        return result
+        return queryset.aggregate(**aggregation_dict)
 
     def rotate_view_slug(self, user, view):
         """

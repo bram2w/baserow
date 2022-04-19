@@ -24,7 +24,10 @@ def test_import_export_grid_view(data_fixture):
     field = data_fixture.create_text_field(table=grid_view.table)
     imported_field = data_fixture.create_text_field(table=grid_view.table)
     field_option = data_fixture.create_grid_view_field_option(
-        grid_view=grid_view, field=field
+        grid_view=grid_view,
+        field=field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty",
     )
     view_filter = data_fixture.create_view_filter(
         view=grid_view, field=field, value="test", type="equal"
@@ -65,6 +68,10 @@ def test_import_export_grid_view(data_fixture):
     assert field_option.width == imported_field_option.width
     assert field_option.hidden == imported_field_option.hidden
     assert field_option.order == imported_field_option.order
+    assert field_option.aggregation_type == imported_field_option.aggregation_type
+    assert (
+        field_option.aggregation_raw_type == imported_field_option.aggregation_raw_type
+    )
 
 
 @pytest.mark.django_db

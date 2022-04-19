@@ -64,8 +64,8 @@ describe('Field footer component', () => {
 
     expect(wrapper2.element).toMatchSnapshot()
 
-    mockServer.getFieldAggregationData(view.id, 2, 'not_empty_count', {
-      value: 256,
+    mockServer.getAllFieldAggregationData(view.id, {
+      field_2: 256,
     })
 
     // let's fetch the data for this field
@@ -90,8 +90,8 @@ describe('Field footer component', () => {
       id: 2,
     }
 
-    mockServer.getFieldAggregationData(view.id, 3, 'not_empty_count', {
-      value: 256,
+    mockServer.getAllFieldAggregationData(view.id, {
+      field_3: 256,
     })
     mockServer.updateFieldOptions(view.id, {
       3: {
@@ -128,8 +128,8 @@ describe('Field footer component', () => {
 
     expect(wrapper.element).toMatchSnapshot()
 
-    mockServer.getFieldAggregationData(view.id, 3, 'empty_count', {
-      value: 10,
+    mockServer.getAllFieldAggregationData(view.id, {
+      field_3: 10,
     })
     mockServer.updateFieldOptions(view.id, {
       3: {

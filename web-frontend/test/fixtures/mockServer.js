@@ -133,6 +133,15 @@ export class MockServer {
     }
   }
 
+  getAllFieldAggregationData(viewId, result, error = false) {
+    const mock = this.mock.onGet(`/database/views/grid/${viewId}/aggregations/`)
+    if (error) {
+      mock.replyOnce(500)
+    } else {
+      mock.replyOnce(200, result)
+    }
+  }
+
   resetMockEndpoints() {
     this.mock.reset()
   }

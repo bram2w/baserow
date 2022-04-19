@@ -177,6 +177,9 @@ export class NotEmptyCountViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { rowCount }) {
+    if (rowCount === 0) {
+      return null
+    }
     return rowCount - value
   }
 
@@ -227,6 +230,9 @@ export class CheckedCountViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { rowCount }) {
+    if (rowCount === 0) {
+      return null
+    }
     return rowCount - value
   }
 
@@ -279,6 +285,9 @@ export class EmptyPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { rowCount }) {
+    if (rowCount === 0) {
+      return null
+    }
     return `${Math.round((value / rowCount) * 100)}%`
   }
 
@@ -331,6 +340,9 @@ export class NotEmptyPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { rowCount }) {
+    if (rowCount === 0) {
+      return null
+    }
     return `${Math.round(((rowCount - value) / rowCount) * 100)}%`
   }
 
@@ -363,6 +375,9 @@ export class NotCheckedPercentageViewAggregationType extends ViewAggregationType
   }
 
   getValue(value, { rowCount }) {
+    if (rowCount === 0) {
+      return null
+    }
     return `${Math.round((value / rowCount) * 100)}%`
   }
 
@@ -395,6 +410,9 @@ export class CheckedPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { rowCount }) {
+    if (rowCount === 0) {
+      return null
+    }
     return `${Math.round(((rowCount - value) / rowCount) * 100)}%`
   }
 

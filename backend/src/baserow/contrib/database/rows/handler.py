@@ -307,6 +307,10 @@ class RowHandler:
                 )
         update_collector.apply_updates_and_get_updated_fields()
 
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        ViewHandler().field_value_updated(updated_fields)
+
         return instance
 
     # noinspection PyMethodMayBeStatic
@@ -425,6 +429,10 @@ class RowHandler:
             # query for the rows updated values instead.
             row.refresh_from_db(fields=model.fields_requiring_refresh_after_update())
 
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        ViewHandler().field_value_updated(updated_fields)
+
         row_updated.send(
             self,
             row=row,
@@ -492,6 +500,10 @@ class RowHandler:
                 )
         update_collector.apply_updates_and_get_updated_fields()
 
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        ViewHandler().field_value_updated(updated_fields)
+
         row_updated.send(
             self,
             row=row,
@@ -551,6 +563,10 @@ class RowHandler:
                     dependant_field, row, update_collector, path_to_starting_table
                 )
         update_collector.apply_updates_and_get_updated_fields()
+
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        ViewHandler().field_value_updated(updated_fields)
 
         row_deleted.send(
             self,
