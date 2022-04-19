@@ -49,7 +49,6 @@
           ></GridViewPlaceholder>
           <GridViewRows
             ref="rows"
-            :table="table"
             :view="view"
             :fields="fieldsToRender"
             :all-fields="fields"

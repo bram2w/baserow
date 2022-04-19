@@ -202,6 +202,9 @@ export default (context) => {
   store.registerModule('template/view/gallery', galleryStore)
   store.registerModule('template/view/form', formStore)
 
+  app.$registry.registerNamespace('viewDecorator')
+  app.$registry.registerNamespace('decoratorValueProvider')
+
   app.$registry.register('application', new DatabaseApplicationType(context))
   app.$registry.register('view', new GridViewType(context))
   app.$registry.register('view', new GalleryViewType(context))

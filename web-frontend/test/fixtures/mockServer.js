@@ -36,10 +36,15 @@ export class MockServer {
     return { id: 1, name: 'Test Table 1' }
   }
 
-  createGridView(application, table, { filters = [], sortings = [] }) {
+  createGridView(
+    application,
+    table,
+    { filters = [], sortings = [], decorations = [] }
+  ) {
     return createGridView(this.mock, application, table, {
       filters,
       sortings,
+      decorations,
     })
   }
 

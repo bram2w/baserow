@@ -151,8 +151,7 @@
     },
     "kanbanViewStakedBy": {
         "title": "Gruppen Feld",
-        "chooseField": "Nach welchem einzelnen Feld sollen die Karten gestapelt werden?",
-        "addSelectField": "einzelnes Auswahlfeld hinzufügen"
+        "chooseField": "Nach welchem einzelnen Feld sollen die Karten gestapelt werden?"
     },
     "kanbanViewStack": {
         "uncategorized": "Unkategorisiert",

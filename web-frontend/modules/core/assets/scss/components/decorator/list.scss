@@ -1,0 +1,22 @@
+.decorator-list {
+  padding: 12px;
+}
+
+.decorator-list__item {
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 3px;
+
+  &:not(:last-child) {
+    margin-bottom: 6px;
+  }
+
+  &:hover {
+    background-color: $color-neutral-100;
+  }
+
+  &--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

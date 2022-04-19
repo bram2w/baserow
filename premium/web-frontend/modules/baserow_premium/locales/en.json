@@ -1,21 +1,21 @@
 {
     "premium": {
-        "user":{
+        "user": {
             "isStaff": "Is staff",
             "isGroupAdmin": "Is group admin",
             "active": "Active",
             "deactivated": "Deactivated"
         },
-        "adminType":{
+        "adminType": {
             "dashboard": "Dashboard",
             "users": "Users",
             "groups": "Groups",
             "licenses": "Licenses"
         },
-        "viewType":{
+        "viewType": {
             "kanban": "Kanban"
         },
-        "exporterType":{
+        "exporterType": {
             "json": "Export to JSON",
             "xml": "Export to XML"
         }
@@ -151,8 +151,7 @@
     },
     "kanbanViewStakedBy": {
         "title": "Group field",
-        "chooseField": "Which single select field should the cards be stacked by?",
-        "addSelectField": "add single select field"
+        "chooseField": "Which single select field should the cards be stacked by?"
     },
     "kanbanViewStack": {
         "uncategorized": "Uncategorized",
@@ -220,5 +219,22 @@
         "storeUsage": "Storage usage",
         "disconnectLicense": "Disconnect license",
         "disconnectDescription": "If you disconnect this license while it's active, the related users won’t have access to the plan anymore. It will effectively remove the license. Please contact our support team at {contact} if you want to use this license in another self hosted instance."
+    },
+    "viewDecoratorType": {
+        "leftBorderColor": "Left border",
+        "leftBorderColorDescription": "Color the left border of a row",
+        "backgroundColor": "Background color",
+        "backgroundColorDescription": "Color the background of a row",
+        "onlyForPremium": "Available in the premium version",
+        "onlyOneDecoratorPerView": "You can only have one decoration of that type for a view"
+    },
+    "decoratorValueProviderType": {
+        "singleSelectColor": "Single select",
+        "singleSelectColorDescription": "Color rows the same as a single select value",
+        "conditionalColor": "Conditions",
+        "conditionalColorDescription": "Color rows when they match the conditions"
+    },
+    "singleSelectColorValueProviderForm": {
+        "chooseAColor": "Which single select field should the row be colored by?"
     }
 }

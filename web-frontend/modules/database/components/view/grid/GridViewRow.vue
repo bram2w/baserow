@@ -1,102 +1,121 @@
 <template>
-  <div
-    class="grid-view__row"
-    :class="{
-      'grid-view__row--selected': row._.selectedBy.length > 0,
-      'grid-view__row--loading': row._.loading,
-      'grid-view__row--hover': row._.hover,
-      'grid-view__row--warning':
-        !row._.matchFilters || !row._.matchSortings || !row._.matchSearch,
-    }"
-    @mouseover="$emit('row-hover', { row, value: true })"
-    @mouseleave="$emit('row-hover', { row, value: false })"
-    @contextmenu.prevent="$emit('row-context', { row, event: $event })"
+  <RecursiveWrapper
+    :components="
+      wrapperDecorations.map((comp) => ({
+        ...comp,
+        props: comp.propsFn(row),
+      }))
+    "
   >
-    <template v-if="includeRowDetails">
-      <div
-        v-if="!row._.matchFilters || !row._.matchSortings || !row._.matchSearch"
-        class="grid-view__row-warning"
-      >
-        <template v-if="!row._.matchFilters">
-          {{ $t('gridViewRow.rowNotMatchingFilters') }}
-        </template>
-        <template v-else-if="!row._.matchSearch">
-          {{ $t('gridViewRow.rowNotMatchingSearch') }}
-        </template>
-        <template v-else-if="!row._.matchSortings">{{
-          $t('gridViewRow.rowHasMoved')
-        }}</template>
-      </div>
-      <div
-        class="grid-view__column"
-        :style="{ width: gridViewRowDetailsWidth + 'px' }"
-      >
+    <div
+      class="grid-view__row"
+      :class="{
+        'grid-view__row--selected': row._.selectedBy.length > 0,
+        'grid-view__row--loading': row._.loading,
+        'grid-view__row--hover': row._.hover,
+        'grid-view__row--warning':
+          !row._.matchFilters || !row._.matchSortings || !row._.matchSearch,
+      }"
+      @mouseover="$emit('row-hover', { row, value: true })"
+      @mouseleave="$emit('row-hover', { row, value: false })"
+      @contextmenu.prevent="$emit('row-context', { row, event: $event })"
+    >
+      <template v-if="includeRowDetails">
         <div
-          class="grid-view__row-info"
-          :class="{
-            'grid-view__row-info--matches-search':
-              row._.matchSearch && row._.fieldSearchMatches.includes('row_id'),
-          }"
+          v-if="
+            !row._.matchFilters || !row._.matchSortings || !row._.matchSearch
+          "
+          class="grid-view__row-warning"
+        >
+          <template v-if="!row._.matchFilters">
+            {{ $t('gridViewRow.rowNotMatchingFilters') }}
+          </template>
+          <template v-else-if="!row._.matchSearch">
+            {{ $t('gridViewRow.rowNotMatchingSearch') }}
+          </template>
+          <template v-else-if="!row._.matchSortings">{{
+            $t('gridViewRow.rowHasMoved')
+          }}</template>
+        </div>
+        <div
+          class="grid-view__column"
+          :style="{ width: gridViewRowDetailsWidth + 'px' }"
         >
           <div
-            class="grid-view__row-count"
-            :class="{ 'grid-view__row-count--small': row.id > 9999 }"
-            :title="row.id"
+            class="grid-view__row-info"
+            :class="{
+              'grid-view__row-info--matches-search':
+                row._.matchSearch &&
+                row._.fieldSearchMatches.includes('row_id'),
+            }"
           >
-            {{ row.id }}
+            <div
+              class="grid-view__row-count"
+              :class="{ 'grid-view__row-count--small': row.id > 9999 }"
+              :title="row.id"
+            >
+              {{ row.id }}
+            </div>
+            <div
+              v-if="!readOnly && canDrag"
+              class="grid-view__row-drag"
+              @mousedown="startDragging($event, row)"
+            ></div>
+            <component
+              :is="rowExpandButton"
+              :row="row"
+              @edit-modal="$emit('edit-modal', row)"
+            ></component>
+            <component
+              :is="dec.component"
+              v-for="dec in firstCellDecorations"
+              :key="dec.decoration.id"
+              :value="dec.propsFn(row).value"
+            />
           </div>
-          <div
-            v-if="!readOnly && canDrag"
-            class="grid-view__row-drag"
-            @mousedown="startDragging($event, row)"
-          ></div>
-          <component
-            :is="rowExpandButton"
-            :row="row"
-            @edit-modal="$emit('edit-modal', row)"
-          ></component>
         </div>
-      </div>
-    </template>
-    <!--
+      </template>
+      <!--
     Somehow re-declaring all the events instead of using v-on="$listeners" speeds
     everything up because the rows don't need to be updated everytime a new one is
     rendered, which happens a lot when scrolling.
     -->
-    <GridViewCell
-      v-for="field in fieldsToRender"
-      :key="'row-field-' + row.id.toString() + '-' + field.id.toString()"
-      :field="field"
-      :row="row"
-      :state="state"
-      :multi-select-position="getMultiSelectPosition(row.id, field)"
-      :read-only="readOnly"
-      :style="{
-        width: fieldWidths[field.id] + 'px',
-        ...getSelectedCellStyle(field),
-      }"
-      @update="$emit('update', $event)"
-      @edit="$emit('edit', $event)"
-      @select="$emit('select', $event)"
-      @unselect="$emit('unselect', $event)"
-      @selected="$emit('selected', $event)"
-      @unselected="$emit('unselected', $event)"
-      @select-next="$emit('select-next', $event)"
-      @cell-mousedown-left="$emit('cell-mousedown-left', { row, field })"
-      @cell-mouseover="$emit('cell-mouseover', { row, field })"
-      @cell-mouseup-left="$emit('cell-mouseup-left', { row, field })"
-    ></GridViewCell>
-  </div>
+      <GridViewCell
+        v-for="field in fieldsToRender"
+        :key="'row-field-' + row.id.toString() + '-' + field.id.toString()"
+        :field="field"
+        :row="row"
+        :state="state"
+        :multi-select-position="getMultiSelectPosition(row.id, field)"
+        :read-only="readOnly"
+        :style="{
+          width: fieldWidths[field.id] + 'px',
+          ...getSelectedCellStyle(field),
+        }"
+        @update="$emit('update', $event)"
+        @edit="$emit('edit', $event)"
+        @select="$emit('select', $event)"
+        @unselect="$emit('unselect', $event)"
+        @selected="$emit('selected', $event)"
+        @unselected="$emit('unselected', $event)"
+        @select-next="$emit('select-next', $event)"
+        @cell-mousedown-left="$emit('cell-mousedown-left', { row, field })"
+        @cell-mouseover="$emit('cell-mouseover', { row, field })"
+        @cell-mouseup-left="$emit('cell-mouseup-left', { row, field })"
+      ></GridViewCell>
+    </div>
+  </RecursiveWrapper>
 </template>
 
 <script>
 import GridViewCell from '@baserow/modules/database/components/view/grid/GridViewCell'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import GridViewRowExpandButton from '@baserow/modules/database/components/view/grid/GridViewRowExpandButton'
+import RecursiveWrapper from '@baserow/modules/database/components/RecursiveWrapper'
 
 export default {
   name: 'GridViewRow',
-  components: { GridViewRowExpandButton, GridViewCell },
+  components: { GridViewRowExpandButton, GridViewCell, RecursiveWrapper },
   mixins: [gridViewHelpers],
   props: {
     row: {
@@ -106,6 +125,11 @@ export default {
     fields: {
       type: Array,
       required: true,
+    },
+    decorations: {
+      type: Array,
+      required: false,
+      default: () => [],
     },
     allFields: {
       type: Array,
@@ -184,6 +208,12 @@ export default {
       const fields = this.fields.slice()
       fields.unshift(selectedField)
       return fields
+    },
+    firstCellDecorations() {
+      return this.decorations.filter(({ place }) => place === 'first_cell')
+    },
+    wrapperDecorations() {
+      return this.decorations.filter(({ place }) => place === 'wrapper')
     },
   },
   methods: {

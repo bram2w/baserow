@@ -388,6 +388,9 @@
     "viewSort": {
         "sort": "Sort | 1 Sort | {count} Sorts"
     },
+    "viewDecorator": {
+        "decorator": "Color | 1 Color | {count} Colors"
+    },
     "viewRotateSlugModal": {
         "title": "Refresh URL",
         "refreshWarning": "Are you sure that you want to refresh the URL of {viewName}? After refreshing, a new URL will be generated and it will not be possible to access the {viewTypeSharingLinkName} via the old URL. Everyone that you have shared the URL with, won't be able to access the {viewTypeSharingLinkName}.",
@@ -537,5 +540,11 @@
         "stateImportingTable": "Importing table {table}",
         "errorJobAlreadyRunningTitle": "Already running",
         "errorJobAlreadyRunningDescription": "Another import job is already running. You need to wait for that one to finish before starting another."
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "add single select field"
+    },
+    "viewDecoratorContext": {
+        "addDecorator": "add decorator"
     }
 }

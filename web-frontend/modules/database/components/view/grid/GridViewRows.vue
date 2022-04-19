@@ -7,17 +7,18 @@
   >
     <GridViewRow
       v-for="row in rows"
-      :key="'row-' + '-' + row.id"
+      :key="`row-${row.id}`"
       :row="row"
       :fields="fields"
       :all-fields="allFields"
       :field-widths="fieldWidths"
       :include-row-details="includeRowDetails"
+      :decorations="augmentedDecorations"
       :read-only="readOnly"
       :can-drag="view.sortings.length === 0"
       :store-prefix="storePrefix"
       v-on="$listeners"
-    ></GridViewRow>
+    />
   </div>
 </template>
 
@@ -45,10 +46,6 @@ export default {
       required: false,
       default: 0,
     },
-    table: {
-      type: Object,
-      required: true,
-    },
     view: {
       type: Object,
       required: true,
@@ -70,6 +67,41 @@ export default {
         fieldWidths[field.id] = this.getFieldWidth(field.id)
       })
       return fieldWidths
+    },
+    augmentedDecorations() {
+      return this.view.decorations
+        .filter(({ value_provider: valPro }) => valPro)
+        .map((decoration) => {
+          const deco = { decoration }
+
+          deco.decorationType = this.$registry.get(
+            'viewDecorator',
+            decoration.type
+          )
+
+          deco.component = deco.decorationType.getComponent()
+          deco.place = deco.decorationType.getPlace()
+
+          deco.valueProviderType = this.$registry.get(
+            'decoratorValueProvider',
+            decoration.value_provider
+          )
+          deco.propsFn = (row) => {
+            return {
+              value: deco.valueProviderType.getValue({
+                row,
+                fields: this.allFields,
+                options: decoration.value_provider_conf,
+              }),
+            }
+          }
+
+          return deco
+        })
+        .filter(
+          ({ decorationType }) =>
+            !decorationType.isDeactivated({ view: this.view })
+        )
     },
   },
   beforeCreate() {

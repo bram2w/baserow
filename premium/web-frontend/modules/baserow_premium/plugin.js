@@ -15,6 +15,16 @@ import { PremiumDatabaseApplicationType } from '@baserow_premium/applicationType
 import { registerRealtimeEvents } from '@baserow_premium/realtime'
 import { KanbanViewType } from '@baserow_premium/viewTypes'
 
+import {
+  LeftBorderColorViewDecoratorType,
+  BackgroundColorViewDecoratorType,
+} from '@baserow_premium/viewDecorators'
+
+import {
+  SingleSelectColorValueProviderType,
+  ConditionalColorValueProviderType,
+} from '@baserow_premium/decoratorValueProviders'
+
 import en from '@baserow_premium/locales/en.json'
 import fr from '@baserow_premium/locales/fr.json'
 import nl from '@baserow_premium/locales/nl.json'
@@ -50,6 +60,24 @@ export default (context) => {
   app.$registry.register('exporter', new JSONTableExporter(context))
   app.$registry.register('exporter', new XMLTableExporter(context))
   app.$registry.register('view', new KanbanViewType(context))
+
+  app.$registry.register(
+    'viewDecorator',
+    new LeftBorderColorViewDecoratorType(context)
+  )
+  app.$registry.register(
+    'viewDecorator',
+    new BackgroundColorViewDecoratorType(context)
+  )
+
+  app.$registry.register(
+    'decoratorValueProvider',
+    new SingleSelectColorValueProviderType(context)
+  )
+  app.$registry.register(
+    'decoratorValueProvider',
+    new ConditionalColorValueProviderType(context)
+  )
 
   registerRealtimeEvents(app.$realtime)
 

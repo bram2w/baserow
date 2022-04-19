@@ -537,5 +537,8 @@
         "stateImportingTable": "Import de la table {table}",
         "errorJobAlreadyRunningTitle": "Déjà en cours",
         "errorJobAlreadyRunningDescription": "Une autre tâche est déjà en cours. Vous devez attendre que celle-ci finisse avant d'en démarrer une autre."
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "Ajouter une liste déroulante"
     }
 }
