@@ -125,6 +125,12 @@ class AllProvidedMultipleSelectValuesMustBeSelectOption(Exception):
     field.
     """
 
+    def __init__(self, ids, *args, **kwargs):
+        if not isinstance(ids, list):
+            ids = [ids]
+        self.ids = ids
+        super().__init__(*args, **kwargs)
+
 
 class InvalidLookupThroughField(Exception):
     """

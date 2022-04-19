@@ -444,7 +444,7 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"][f"field_{field.id}"][0]["code"] == "incorrect_type"
+    assert response_json["detail"][f"field_{field.id}"][0]["code"] == "invalid"
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -455,7 +455,7 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"][f"field_{field.id}"][0]["code"] == "does_not_exist"
+    assert response_json["detail"] == "The provided value is not a valid option."
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -466,7 +466,7 @@ def test_single_select_field_type_api_row_views(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response_json["detail"][f"field_{field.id}"][0]["code"] == "does_not_exist"
+    assert response_json["detail"] == "The provided value is not a valid option."
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),

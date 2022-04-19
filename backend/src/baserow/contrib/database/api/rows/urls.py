@@ -1,6 +1,6 @@
 from django.urls import re_path
 
-from .views import RowsView, RowView, RowMoveView
+from .views import RowsView, RowView, RowMoveView, BatchRowsView
 
 
 app_name = "baserow.contrib.database.api.rows"
@@ -11,6 +11,11 @@ urlpatterns = [
         r"table/(?P<table_id>[0-9]+)/(?P<row_id>[0-9]+)/$",
         RowView.as_view(),
         name="item",
+    ),
+    re_path(
+        r"table/(?P<table_id>[0-9]+)/batch/$",
+        BatchRowsView.as_view(),
+        name="batch",
     ),
     re_path(
         r"table/(?P<table_id>[0-9]+)/(?P<row_id>[0-9]+)/move/$",

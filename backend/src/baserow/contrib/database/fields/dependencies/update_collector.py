@@ -58,6 +58,8 @@ class PathBasedUpdateStatementCollector:
                 path_to_starting_table_id_column = (
                     "__".join(path_to_starting_table) + "__id"
                 )
+            if isinstance(starting_row_id, list):
+                path_to_starting_table_id_column += "__in"
             qs = qs.filter(**{path_to_starting_table_id_column: starting_row_id})
         qs.update(**self.update_statements)
 
@@ -117,7 +119,6 @@ class CachingFieldUpdateCollector(FieldCache):
             used if self.starting_row_id is set so only rows which join back to the
             starting row via this path are updated.
         """
-
         self._updated_fields_per_table[field.table_id][field.id] = field
         self._update_statement_collector.add_update_statement(
             field, update_statement, via_path_to_starting_table

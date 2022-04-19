@@ -418,8 +418,12 @@ if PRIVATE_BACKEND_HOSTNAME:
 
 FROM_EMAIL = os.getenv("FROM_EMAIL", "no-reply@localhost")
 RESET_PASSWORD_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
-# How many rows can be requested at once.
+
 ROW_PAGE_SIZE_LIMIT = int(os.getenv("BASEROW_ROW_PAGE_SIZE_LIMIT", 200))
+BATCH_ROWS_SIZE_LIMIT = int(
+    os.getenv("BATCH_ROWS_SIZE_LIMIT", 200)
+)  # How many rows can be modified at once.
+
 TRASH_PAGE_SIZE_LIMIT = 200  # How many trash entries can be requested at once.
 ROW_COMMENT_PAGE_SIZE_LIMIT = 200  # How many row comments can be requested at once.
 

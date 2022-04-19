@@ -77,7 +77,7 @@ class SubmitFormViewView(APIView):
             "on the fields that are in the form and the rules per field. If valid, "
             "a new row will be created in the table."
         ),
-        request=get_example_row_serializer_class(False),
+        request=get_example_row_serializer_class(example_type="post"),
         responses={
             200: FormViewSubmittedSerializer,
             404: get_error_schema(["ERROR_FORM_DOES_NOT_EXIST"]),

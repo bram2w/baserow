@@ -3,6 +3,7 @@ from typing import Dict, Union, Tuple, Callable, Optional, Type
 
 from django.utils.encoding import force_str
 from rest_framework import status
+from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework.request import Request
 from rest_framework.serializers import ModelSerializer
@@ -120,6 +121,8 @@ def validate_data(
     data,
     partial=False,
     exception_to_raise=RequestBodyValidationException,
+    many=False,
+    return_validated=False,
 ):
     """
     Validates the provided data via the provided serializer class. If the data doesn't
@@ -132,6 +135,10 @@ def validate_data(
     :type data: dict
     :param partial: Whether the data is a partial update.
     :type partial: bool
+    :param many: Indicates whether the serializer should be constructed as a list.
+    :type many: bool
+    :param return_validated: Returns validated_data from DRF serializer
+    :type return_validated: bool
     :return: The data after being validated by the serializer.
     :rtype: dict
     """
@@ -146,10 +153,13 @@ def validate_data(
         else:
             return {"error": force_str(error), "code": error.code}
 
-    serializer = serializer_class(data=data, partial=partial)
+    serializer = serializer_class(data=data, partial=partial, many=many)
     if not serializer.is_valid():
         detail = serialize_errors_recursive(serializer.errors)
         raise exception_to_raise(detail)
+
+    if return_validated:
+        return serializer.validated_data
 
     return serializer.data
 
@@ -252,7 +262,12 @@ def type_from_data_or_registry(
 
 
 def get_serializer_class(
-    model, field_names, field_overrides=None, base_class=None, meta_ref_name=None
+    model,
+    field_names,
+    field_overrides=None,
+    base_class=None,
+    meta_ref_name=None,
+    required_fields=None,
 ):
     """
     Generates a model serializer based on the provided field names and field overrides.
@@ -269,6 +284,9 @@ def get_serializer_class(
     :param meta_ref_name: Optionally a custom ref name can be set. If not provided,
         then the class name of the model and base class are used.
     :type meta_ref_name: str
+    :param required_fields: List of field names that should be present even when
+        performing partial validation.
+    :type required_fields: list[str]
     :return: The generated model serializer containing the provided fields.
     :rtype: ModelSerializer
     """
@@ -303,6 +321,16 @@ def get_serializer_class(
     if field_overrides:
         attrs.update(field_overrides)
 
+    def validate(self, value):
+        if required_fields:
+            for field_name in required_fields:
+                if field_name not in value:
+                    raise serializers.ValidationError(
+                        {f"{field_name}": "This field is required."}
+                    )
+        return value
+
+    attrs["validate"] = validate
     return type(str(model_.__name__ + "Serializer"), (base_class,), attrs)
 
 

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from django.db import transaction
 from django.dispatch import receiver
@@ -39,7 +39,9 @@ def before_row_update(sender, row, user, table, model, updated_field_ids, **kwar
     # Generate a serialized version of the row before it is updated. The
     # `row_updated` receiver needs this serialized version because it can't serialize
     # the old row after it has been updated.
-    return get_row_serializer_class(model, RowSerializer, is_response=True)(row).data
+    return get_row_serializer_class(model, RowSerializer, is_response=True)(
+        row, many=isinstance(row, list)
+    ).data
 
 
 @receiver(row_signals.row_updated)
@@ -57,6 +59,29 @@ def row_updated(
                 )(row).data,
                 metadata=row_metadata_registry.generate_and_merge_metadata_for_row(
                     table, row.id
+                ),
+            ),
+            getattr(user, "web_socket_id", None),
+            table_id=table.id,
+        )
+    )
+
+
+@receiver(row_signals.rows_updated)
+def rows_updated(
+    sender, rows, user, table, model, before_return, updated_field_ids, **kwargs
+):
+    table_page_type = page_registry.get("table")
+    transaction.on_commit(
+        lambda: table_page_type.broadcast(
+            RealtimeRowMessages.rows_updated(
+                table_id=table.id,
+                serialized_rows_before_update=dict(before_return)[before_row_update],
+                serialized_rows=get_row_serializer_class(
+                    model, RowSerializer, is_response=True
+                )(rows, many=True).data,
+                metadata=row_metadata_registry.generate_and_merge_metadata_for_rows(
+                    table, [row.id for row in rows]
                 ),
             ),
             getattr(user, "web_socket_id", None),
@@ -135,5 +160,23 @@ class RealtimeRowMessages:
             # view.
             "row_before_update": serialized_row_before_update,
             "row": serialized_row,
+            "metadata": metadata,
+        }
+
+    @staticmethod
+    def rows_updated(
+        table_id: int,
+        serialized_rows_before_update: List[Dict[str, Any]],
+        serialized_rows: List[Dict[str, Any]],
+        metadata: Dict[int, Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        return {
+            "type": "rows_updated",
+            "table_id": table_id,
+            # The web-frontend expects a serialized version of the rows before it
+            # was updated in order to estimate what position the row had in the
+            # view.
+            "rows_before_update": serialized_rows_before_update,
+            "rows": serialized_rows,
             "metadata": metadata,
         }

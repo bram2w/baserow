@@ -21,8 +21,12 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_ORDER_BY_FIELD_NOT_FOUND,
     ERROR_FILTER_FIELD_NOT_FOUND,
     ERROR_FIELD_DOES_NOT_EXIST,
+    ERROR_INVALID_SELECT_OPTION_VALUES,
 )
-from baserow.contrib.database.api.rows.errors import ERROR_ROW_DOES_NOT_EXIST
+from baserow.contrib.database.api.rows.errors import (
+    ERROR_ROW_DOES_NOT_EXIST,
+    ERROR_ROW_IDS_NOT_UNIQUE,
+)
 from baserow.contrib.database.api.rows.serializers import (
     example_pagination_row_serializer_class,
 )
@@ -38,8 +42,9 @@ from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotPossible,
     FilterFieldNotFound,
     FieldDoesNotExist,
+    AllProvidedMultipleSelectValuesMustBeSelectOption,
 )
-from baserow.contrib.database.rows.exceptions import RowDoesNotExist
+from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotUnique
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
@@ -58,8 +63,10 @@ from .serializers import (
     MoveRowQueryParamsSerializer,
     CreateRowQueryParamsSerializer,
     RowSerializer,
+    get_batch_row_serializer_class,
     get_example_row_serializer_class,
     get_row_serializer_class,
+    get_example_batch_rows_serializer_class,
 )
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
@@ -336,11 +343,19 @@ class RowsView(APIView):
             "purposes, the field_ID must be replaced with the actual id of the field "
             "or the name of the field if `user_field_names` is provided."
         ),
-        request=get_example_row_serializer_class(False, user_field_names=True),
+        request=get_example_row_serializer_class(
+            example_type="post", user_field_names=True
+        ),
         responses={
-            200: get_example_row_serializer_class(True, user_field_names=True),
+            200: get_example_row_serializer_class(
+                example_type="get", user_field_names=True
+            ),
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_INVALID_SELECT_OPTION_VALUES",
+                ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
             404: get_error_schema(
@@ -354,6 +369,7 @@ class RowsView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+            AllProvidedMultipleSelectValuesMustBeSelectOption: ERROR_INVALID_SELECT_OPTION_VALUES,
             UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
         }
@@ -366,6 +382,7 @@ class RowsView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
+
         TokenHandler().check_table_permissions(request, "create", table, False)
         user_field_names = "user_field_names" in request.GET
         model = table.get_model()
@@ -446,7 +463,9 @@ class RowView(APIView):
             "depends on the fields type."
         ),
         responses={
-            200: get_example_row_serializer_class(True, user_field_names=True),
+            200: get_example_row_serializer_class(
+                example_type="get", user_field_names=True
+            ),
             400: get_error_schema(
                 ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
@@ -471,6 +490,7 @@ class RowView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
+
         TokenHandler().check_table_permissions(request, "read", table, False)
         user_field_names = "user_field_names" in request.GET
         model = table.get_model()
@@ -525,11 +545,19 @@ class RowView(APIView):
             "the field_ID must be replaced with the actual id of the field or the name "
             "of the field if `user_field_names` is provided."
         ),
-        request=get_example_row_serializer_class(False, user_field_names=True),
+        request=get_example_row_serializer_class(
+            example_type="patch", user_field_names=True
+        ),
         responses={
-            200: get_example_row_serializer_class(True, user_field_names=True),
+            200: get_example_row_serializer_class(
+                example_type="get", user_field_names=True
+            ),
             400: get_error_schema(
-                ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_INVALID_SELECT_OPTION_VALUES",
+                ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
             404: get_error_schema(
@@ -543,6 +571,7 @@ class RowView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+            AllProvidedMultipleSelectValuesMustBeSelectOption: ERROR_INVALID_SELECT_OPTION_VALUES,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
             UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
         }
@@ -554,6 +583,7 @@ class RowView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
+
         TokenHandler().check_table_permissions(request, "update", table, False)
         user_field_names = "user_field_names" in request.GET
 
@@ -639,6 +669,7 @@ class RowView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
+
         TokenHandler().check_table_permissions(request, "delete", table, False)
         RowHandler().delete_row(request.user, table, row_id)
 
@@ -691,7 +722,9 @@ class RowMoveView(APIView):
         "parameter is not provided, then the row will be moved to the end.",
         request=None,
         responses={
-            200: get_example_row_serializer_class(True, user_field_names=True),
+            200: get_example_row_serializer_class(
+                example_type="get", user_field_names=True
+            ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
             404: get_error_schema(
@@ -713,6 +746,7 @@ class RowMoveView(APIView):
         """Moves the row to another position."""
 
         table = TableHandler().get_table(table_id)
+
         TokenHandler().check_table_permissions(request, "update", table, False)
 
         user_field_names = "user_field_names" in request.GET
@@ -733,3 +767,118 @@ class RowMoveView(APIView):
         )
         serializer = serializer_class(row)
         return Response(serializer.data)
+
+
+class BatchRowsView(APIView):
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        exclude=True,
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Updates the rows in the table.",
+            ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.BOOL,
+                description=(
+                    "A flag query parameter which if provided this endpoint will "
+                    "expect and return the user specified field names instead of "
+                    "internal Baserow field names (field_123 etc)."
+                ),
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="batch_update_database_table_rows",
+        description=(
+            "Updates existing rows in the table if the user has access to the "
+            "related table's group. The accepted body fields are depending on the "
+            "fields that the table has. For a complete overview of fields use the "
+            "**list_database_table_fields** endpoint to list them all. None of the "
+            "fields are required, if they are not provided the value is not going to "
+            "be updated. "
+            "When you want to update a value for the field with id `10`, the key must "
+            "be named `field_10`. Or if the GET parameter `user_field_names` is "
+            "provided the key of the field to update must be the name of the field. "
+            "Multiple different fields to update can be provided for each row. In "
+            "the examples below you will find all the different field types, the "
+            "numbers/ids in the example are just there for example purposes, "
+            "the field_ID must be replaced with the actual id of the field or the name "
+            "of the field if `user_field_names` is provided."
+        ),
+        request=get_example_batch_rows_serializer_class(
+            example_type="patch_batch", user_field_names=True
+        ),
+        responses={
+            200: get_example_batch_rows_serializer_class(
+                example_type="get", user_field_names=True
+            ),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_ROW_IDS_NOT_UNIQUE",
+                    "ERROR_INVALID_SELECT_OPTION_VALUES",
+                ]
+            ),
+            401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
+            404: get_error_schema(
+                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_ROW_DOES_NOT_EXIST"]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+            RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
+            AllProvidedMultipleSelectValuesMustBeSelectOption: ERROR_INVALID_SELECT_OPTION_VALUES,
+            NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+            UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
+        }
+    )
+    def patch(self, request, table_id):
+        """
+        Updates all provided rows at once for the table with
+        the given table_id.
+        """
+
+        table = TableHandler().get_table(table_id)
+        TokenHandler().check_table_permissions(request, "update", table, False)
+        model = table.get_model()
+
+        user_field_names = "user_field_names" in request.GET
+
+        row_validation_serializer = get_row_serializer_class(
+            model,
+            user_field_names=user_field_names,
+            include_id=True,
+            required_fields=["id"],
+        )
+        validation_serializer = get_batch_row_serializer_class(
+            row_validation_serializer
+        )
+        data = validate_data(
+            validation_serializer, request.data, partial=True, return_validated=True
+        )
+
+        try:
+            rows = RowHandler().update_rows(request.user, table, data["items"], model)
+        except ValidationError as e:
+            raise RequestBodyValidationException(detail=e.message)
+
+        response_row_serializer_class = get_row_serializer_class(
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
+        )
+        response_serializer_class = get_batch_row_serializer_class(
+            response_row_serializer_class
+        )
+        response_serializer = response_serializer_class({"items": rows})
+        return Response(response_serializer.data)

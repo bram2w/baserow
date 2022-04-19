@@ -183,6 +183,32 @@ export const registerRealtimeEvents = (realtime) => {
     store.dispatch('rowModal/updated', { values: data.row })
   })
 
+  realtime.registerEvent('rows_updated', async (context, data) => {
+    // TODO: Rewrite
+    // This is currently a naive implementation of batch rows updates.
+    const { app, store } = context
+    for (const viewType of Object.values(app.$registry.getAll('view'))) {
+      for (let i = 0; i < data.rows.length; i++) {
+        const row = data.rows[i]
+        const rowBeforeUpdate = data.rows_before_update[i]
+
+        await viewType.rowUpdated(
+          context,
+          data.table_id,
+          store.getters['field/getAll'],
+          store.getters['field/getPrimary'],
+          rowBeforeUpdate,
+          row,
+          data.metadata,
+          'page/'
+        )
+      }
+    }
+    for (let i = 0; i < data.rows.length; i++) {
+      store.dispatch('rowModal/updated', { values: data.rows[i] })
+    }
+  })
+
   realtime.registerEvent('row_deleted', (context, data) => {
     const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {

@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict
 from decimal import Decimal
 from math import floor, ceil
 
@@ -7,17 +8,19 @@ from django.db.models import Max, F
 from django.db.models.fields.related import ManyToManyField
 
 from baserow.core.trash.handler import TrashHandler
-from .exceptions import RowDoesNotExist
+from .exceptions import RowDoesNotExist, RowIdsNotUnique
 from .signals import (
     before_row_update,
     before_row_delete,
     row_created,
     row_updated,
+    rows_updated,
     row_deleted,
 )
 from baserow.contrib.database.fields.dependencies.update_collector import (
     CachingFieldUpdateCollector,
 )
+from baserow.core.utils import get_non_unique_values
 
 
 class RowHandler:
@@ -45,9 +48,58 @@ class RowHandler:
             if field_id in values or field["name"] in values
         }
 
+    def prepare_rows_in_bulk(self, fields, rows):
+        """
+        Prepares a set of values in bulk for all rows so that they can be created or
+        updated in the database. It will check if the values can actually be set and
+        prepares them based on their field type.
+
+        :param fields: The returned fields object from the get_model method.
+        :type fields: dict
+        :param values: The rows and their values that need to be prepared.
+        :type values: dict
+        :return: The prepared values for all rows in the same structure as it was
+            passed in.
+        :rtype: dict
+        """
+
+        field_ids = {}
+        prepared_values_by_field = defaultdict(dict)
+
+        # organize values by field name
+        for index, row in enumerate(rows):
+            for field_id, field in fields.items():
+                field_name = field["name"]
+                field_ids[field_name] = field_id
+                if field_name in row:
+                    prepared_values_by_field[field_name][index] = row[field_name]
+
+        # bulk-prepare values per field
+        for field_name, batch_values in prepared_values_by_field.items():
+            field = fields[field_ids[field_name]]
+            field_type = field["type"]
+            prepared_values_by_field[
+                field_name
+            ] = field_type.prepare_value_for_db_in_bulk(
+                field["field"],
+                batch_values,
+            )
+
+        # replace original values to keep ordering
+        prepared_rows = []
+        for index, row in enumerate(rows):
+            new_values = row
+            for field_id, field in fields.items():
+                field_name = field["name"]
+                if field_name in row:
+                    new_values[field_name] = prepared_values_by_field[field_name][index]
+            prepared_rows.append(new_values)
+
+        return prepared_rows
+
     def extract_field_ids_from_dict(self, values):
         """
-        Extracts the field ids from a dict containing the values that need to
+        Extracts the field ids from a dict containing the values that need to be
         updated. For example keys like 'field_2', '3', 4 will be seen ass field ids.
 
         :param values: The values where to extract the fields ids from.
@@ -157,7 +209,7 @@ class RowHandler:
         try:
             row = model.objects.get(id=row_id)
         except model.DoesNotExist:
-            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+            raise RowDoesNotExist(row_id)
 
         return row
 
@@ -198,7 +250,7 @@ class RowHandler:
 
         row_exists = model.objects.filter(id=row_id).exists()
         if not row_exists and raise_error:
-            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+            raise RowDoesNotExist(row_id)
         else:
             return row_exists
 
@@ -379,7 +431,7 @@ class RowHandler:
                     model.objects.select_for_update().enhance_by_fields().get(id=row_id)
                 )
             except model.DoesNotExist:
-                raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+                raise RowDoesNotExist(row_id)
 
             updated_fields = []
             updated_field_ids = set()
@@ -445,6 +497,130 @@ class RowHandler:
 
         return row
 
+    def update_rows(self, user, table, rows, model=None):
+        """
+        Updates field values in batch based on provided rows with the new values.
+
+        :param user: The user of whose behalf the change is made.
+        :type user: User
+        :param table: The table for which the row must be updated.
+        :type table: Table
+        :param rows: The list of rows with new values that should be set.
+        :type rows: list
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :type model: Model
+        :raises RowIdsNotUnique: When trying to update the same row multiple times.
+        :raises RowDoesNotExist: When any of the rows don't exist.
+        :return: The updated row instances.
+        :rtype: list[Model]
+        """
+
+        group = table.database.group
+        group.has_user(user, raise_error=True)
+
+        if not model:
+            model = table.get_model()
+
+        rows = self.prepare_rows_in_bulk(model._field_objects, rows)
+        row_ids = [row["id"] for row in rows]
+
+        non_unique_ids = get_non_unique_values(row_ids)
+        if len(non_unique_ids) > 0:
+            raise RowIdsNotUnique(non_unique_ids)
+
+        rows_by_id = {}
+        for row in rows:
+            row_id = row.pop("id")
+            rows_by_id[row_id] = row
+
+        rows_to_update = model.objects.select_for_update().filter(id__in=row_ids)
+
+        if len(rows_to_update) != len(rows):
+            db_rows_ids = [db_row.id for db_row in rows_to_update]
+            raise RowDoesNotExist(sorted(list(set(row_ids) - set(db_rows_ids))))
+
+        updated_field_ids = set()
+        for obj in rows_to_update:
+            row_values = rows_by_id[obj.id]
+            for field_id, field in model._field_objects.items():
+                if field_id in row_values or field["name"] in row_values:
+                    updated_field_ids.add(field_id)
+
+        before_return = before_row_update.send(
+            self,
+            row=list(rows_to_update),
+            user=user,
+            table=table,
+            model=model,
+            updated_field_ids=updated_field_ids,
+        )
+
+        for obj in rows_to_update:
+            row_values = rows_by_id[obj.id]
+            values, manytomany_values = self.extract_manytomany_values(
+                row_values, model
+            )
+
+            for name, value in values.items():
+                setattr(obj, name, value)
+
+            for name, value in manytomany_values.items():
+                getattr(obj, name).set(value)
+
+            fields_with_pre_save = model.fields_requiring_refresh_after_update()
+            for field_name in fields_with_pre_save:
+                setattr(
+                    obj,
+                    field_name,
+                    model._meta.get_field(field_name).pre_save(obj, add=False),
+                )
+
+        # For now all fields that don't represent a relationship will be used in
+        # the bulk_update() call. This could be optimized in the future if we can
+        # select just fields that need to be updated (fields that are passed in +
+        # read only fields that need updating too)
+        bulk_update_fields = [
+            field["name"]
+            for field in model._field_objects.values()
+            if not isinstance(model._meta.get_field(field["name"]), ManyToManyField)
+        ]
+        if len(bulk_update_fields) > 0:
+            model.objects.bulk_update(rows_to_update, bulk_update_fields)
+
+        updated_fields = [field["field"] for field in model._field_objects.values()]
+        update_collector = CachingFieldUpdateCollector(
+            table, starting_row_id=row_ids, existing_model=model
+        )
+        for field in updated_fields:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in field.dependant_fields_with_types(update_collector):
+                dependant_field_type.row_of_dependency_updated(
+                    dependant_field,
+                    rows_to_update[0],
+                    update_collector,
+                    path_to_starting_table,
+                )
+        update_collector.apply_updates_and_get_updated_fields()
+
+        rows_to_return = list(
+            model.objects.all().enhance_by_fields().filter(id__in=row_ids)
+        )
+        rows_updated.send(
+            self,
+            rows=rows_to_return,
+            user=user,
+            table=table,
+            model=model,
+            before_return=before_return,
+            updated_field_ids=updated_field_ids,
+        )
+
+        return rows_to_return
+
     def move_row(self, user, table, row_id, before=None, model=None):
         """
         Moves the row related to the row_id before another row or to the end if no
@@ -474,7 +650,7 @@ class RowHandler:
         try:
             row = model.objects.select_for_update().get(id=row_id)
         except model.DoesNotExist:
-            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+            raise RowDoesNotExist(row_id)
 
         before_return = before_row_update.send(
             self, row=row, user=user, table=table, model=model, updated_field_ids=[]
@@ -540,7 +716,7 @@ class RowHandler:
         try:
             row = model.objects.get(id=row_id)
         except model.DoesNotExist:
-            raise RowDoesNotExist(f"The row with id {row_id} does not exist.")
+            raise RowDoesNotExist(row_id)
 
         before_return = before_row_delete.send(
             self, row=row, user=user, table=table, model=model

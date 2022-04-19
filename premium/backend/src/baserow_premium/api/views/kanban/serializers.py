@@ -20,7 +20,7 @@ class KanbanViewExampleResponseStackSerializer(serializers.Serializer):
     results = serializers.ListSerializer(
         help_text="All the rows that belong in this group related with the provided "
         "`limit` and `offset`.",
-        child=get_example_row_serializer_class(True, False)(),
+        child=get_example_row_serializer_class(example_type="get")(),
     )
 
 

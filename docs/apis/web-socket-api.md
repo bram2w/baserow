@@ -145,6 +145,7 @@ are subscribed to the page.
 * `field_restored`
 * `row_created`
 * `row_updated`
+* `rows_updated`
 * `row_deleted`
 * `before_row_update`
 * `before_row_delete`

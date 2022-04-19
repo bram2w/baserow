@@ -37,7 +37,7 @@ class FieldType(
     """
     This abstract class represents a custom field type that can be added to the
     field type registry. It must be extended so customisation can be done. Each field
-    type will have his own model that must extend the Field model, this is needed so
+    type will have its own model that must extend the Field model, this is needed so
     that the user can set custom settings per field instance he has created.
 
     Example:
@@ -93,6 +93,23 @@ class FieldType(
         """
 
         return value
+
+    def prepare_value_for_db_in_bulk(self, instance, values_by_row):
+        """
+        This method will work for every `prepare_value_for_db` that doesn't
+        execute a query. Fields that do should override this method.
+
+        :param instance: The field instance.
+        :type instance: Field
+        :param values_by_row: The values that needs to be inserted or updated,
+            indexed by row id as dict(index, values).
+        :return: The modified values in the same structure as it was passed in.
+        """
+
+        for row_index, value in values_by_row.items():
+            values_by_row[row_index] = self.prepare_value_for_db(instance, value)
+
+        return values_by_row
 
     def enhance_queryset(self, queryset, field, name):
         """

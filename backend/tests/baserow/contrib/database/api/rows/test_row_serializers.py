@@ -183,17 +183,20 @@ def test_get_table_serializer(data_fixture):
 
 @pytest.mark.django_db
 def test_get_example_row_serializer_class():
-    request_serializer = get_example_row_serializer_class()
-    response_serializer = get_example_row_serializer_class(add_id=True)
+    request_serializer = get_example_row_serializer_class(example_type="post")
+    response_serializer = get_example_row_serializer_class(example_type="get")
 
-    assert len(request_serializer._declared_fields) == (
-        len(field_type_registry.registry.values())
+    num_request_fields = len(request_serializer._declared_fields)
+    num_response_fields = len(response_serializer._declared_fields)
+    num_readonly_fields = len(
+        [ftype for ftype in field_type_registry.registry.values() if ftype.read_only]
     )
-    assert len(response_serializer._declared_fields) == (
-        len(request_serializer._declared_fields) + 2  # fields + id + order
-    )
-    assert len(response_serializer._declared_fields) == (
-        len(field_type_registry.registry.values()) + 2  # fields + id + order
+    num_extra_response_fields = 2  # id + order
+    num_difference = num_readonly_fields + num_extra_response_fields
+
+    assert num_request_fields == num_response_fields - num_difference
+    assert num_response_fields == (
+        len(field_type_registry.registry.values()) + num_extra_response_fields
     )
 
     assert isinstance(
