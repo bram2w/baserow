@@ -59,20 +59,30 @@ def test_view_empty_count_aggregation(data_fixture):
                 "empty_count",
             ),
             (
+                boolean_field,
+                "empty_count",
+            ),
+            (
+                number_field,
+                "empty_count",
+            ),
+        ],
+    )
+
+    assert result[f"field_{text_field.id}"] == 2
+    assert result[f"field_{boolean_field.id}"] == 2
+    assert result[f"field_{number_field.id}"] == 1
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
+            (
                 text_field,
                 "not_empty_count",
             ),
             (
                 boolean_field,
-                "empty_count",
-            ),
-            (
-                boolean_field,
                 "not_empty_count",
-            ),
-            (
-                number_field,
-                "empty_count",
             ),
             (
                 number_field,
@@ -80,15 +90,9 @@ def test_view_empty_count_aggregation(data_fixture):
             ),
         ],
     )
-
-    assert result[f"field_{text_field.id}__empty_count"] == 2
-    assert result[f"field_{text_field.id}__not_empty_count"] == 2
-
-    assert result[f"field_{boolean_field.id}__empty_count"] == 2
-    assert result[f"field_{boolean_field.id}__not_empty_count"] == 2
-
-    assert result[f"field_{number_field.id}__empty_count"] == 1
-    assert result[f"field_{number_field.id}__not_empty_count"] == 3
+    assert result[f"field_{text_field.id}"] == 2
+    assert result[f"field_{boolean_field.id}"] == 2
+    assert result[f"field_{number_field.id}"] == 3
 
     result = view_handler.get_field_aggregations(
         grid_view,
@@ -123,6 +127,13 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
             )
         )
 
+    result_empty = view_handler.get_field_aggregations(
+        grid_view, aggregation_query, model=model, with_total=True
+    )
+
+    aggregation_query = []
+    for field in model._field_objects.values():
+
         aggregation_query.append(
             (
                 field["field"],
@@ -130,16 +141,15 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
             )
         )
 
-    result = view_handler.get_field_aggregations(
-        grid_view, aggregation_query, model=model, with_total=True
+    result_not_emtpy = view_handler.get_field_aggregations(
+        grid_view, aggregation_query, model=model
     )
 
     for field in model._field_objects.values():
-        field_id = field["field"].id
         assert (
-            result[f"field_{field_id}__empty_count"]
-            + result[f"field_{field_id}__not_empty_count"]
-            == result["total"]
+            result_empty[field["field"].db_column]
+            + result_not_emtpy[field["field"].db_column]
+            == result_empty["total"]
         )
 
 
@@ -178,9 +188,9 @@ def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
             field_type = field["type"].type
 
             if field_type in ["url", "email", "rating", "phone_number"]:
-                assert result[f"field_{field_id}__unique_count"] == 2
+                assert result[f"field_{field_id}"] == 2
             else:
-                assert result[f"field_{field_id}__unique_count"] == 1
+                assert result[f"field_{field_id}"] == 1
 
 
 @pytest.mark.django_db
@@ -199,13 +209,13 @@ def test_view_number_aggregation(data_fixture):
     for i in range(30):
         model.objects.create(
             **{
-                f"field_{number_field.id}": random.randint(0, 100),
+                number_field.db_column: random.randint(0, 100),
             }
         )
 
     model.objects.create(
         **{
-            f"field_{number_field.id}": None,
+            number_field.db_column: None,
         }
     )
 
@@ -216,45 +226,87 @@ def test_view_number_aggregation(data_fixture):
                 number_field,
                 "min",
             ),
+        ],
+    )
+    assert result[number_field.db_column] == 1
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "max",
             ),
+        ],
+    )
+    assert result[number_field.db_column] == 94
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "sum",
             ),
+        ],
+    )
+
+    assert result[number_field.db_column] == 1546
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "average",
             ),
+        ],
+    )
+    assert round(result[number_field.db_column], 2) == Decimal("51.53")
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "median",
             ),
+        ],
+    )
+    assert round(result[number_field.db_column], 2) == Decimal("52.5")
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "std_dev",
             ),
+        ],
+    )
+    assert round(result[number_field.db_column], 2) == Decimal("26.73")
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "variance",
             ),
+        ],
+    )
+    assert round(result[number_field.db_column], 2) == Decimal("714.72")
+
+    result = view_handler.get_field_aggregations(
+        grid_view,
+        [
             (
                 number_field,
                 "decile",
             ),
         ],
     )
-
-    assert result[f"field_{number_field.id}__min"] == 1
-    assert result[f"field_{number_field.id}__max"] == 94
-    assert result[f"field_{number_field.id}__sum"] == 1546
-    assert round(result[f"field_{number_field.id}__median"], 2) == Decimal("52.5")
-    assert round(result[f"field_{number_field.id}__average"], 2) == Decimal("51.53")
-    assert round(result[f"field_{number_field.id}__std_dev"], 2) == Decimal("26.73")
-    assert round(result[f"field_{number_field.id}__variance"], 2) == Decimal("714.72")
-    assert result[f"field_{number_field.id}__decile"] == [
+    assert result[number_field.db_column] == [
         19.5,
         22.8,
         33.7,

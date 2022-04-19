@@ -545,8 +545,8 @@ def test_update_field_options(send_mock, data_fixture):
 def test_grid_view_aggregation_type_field_option(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    grid_view = data_fixture.create_grid_view(table=table)
     field_1 = data_fixture.create_text_field(table=table)
+    grid_view = data_fixture.create_grid_view(table=table)
 
     # Fake incompatible field
     empty_count = view_aggregation_type_registry.get("empty_count")

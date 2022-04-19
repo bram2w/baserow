@@ -13,6 +13,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.signals import row_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import RelatedTableTrashedException
@@ -238,6 +239,9 @@ class RowTrashableItemType(TrashableItemType):
                     path_to_starting_table,
                 )
         update_collector.apply_updates_and_get_updated_fields()
+
+        ViewHandler().field_value_updated(updated_fields)
+
         row_created.send(
             self,
             row=trashed_item,

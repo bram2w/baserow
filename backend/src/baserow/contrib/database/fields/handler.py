@@ -435,6 +435,9 @@ class FieldHandler:
             )
 
         updated_fields = update_collector.apply_updates_and_get_updated_fields()
+
+        ViewHandler().field_updated(field)
+
         field_updated.send(
             self,
             field=field,
@@ -762,6 +765,8 @@ class FieldHandler:
                 )
             if apply_and_send_updates:
                 updated_fields = update_collector.apply_updates_and_get_updated_fields()
+                ViewHandler().field_updated(updated_fields)
+
                 field_restored.send(
                     self, field=field, user=None, related_fields=updated_fields
                 )

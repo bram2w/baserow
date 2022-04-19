@@ -1,4 +1,4 @@
-from typing import Callable, Union, List
+from typing import TYPE_CHECKING, Callable, Union, List, Iterable, Tuple
 
 from django.contrib.auth.models import User as DjangoUser
 from django.db import models as django_models
@@ -20,6 +20,9 @@ from baserow.core.registry import (
     MapAPIExceptionsInstanceMixin,
 )
 from baserow.contrib.database.fields import models as field_models
+
+if TYPE_CHECKING:
+    from baserow.contrib.database.views.models import View
 
 from .exceptions import (
     ViewTypeAlreadyRegistered,
@@ -399,6 +402,52 @@ class ViewType(
             "An exportable or publicly sharable view must implement "
             "`get_hidden_field_options`"
         )
+
+    def get_aggregations(
+        self, view: "View"
+    ) -> Iterable[Tuple[django_models.Field, str]]:
+        """
+        Should return the aggregation list for the specified view.
+
+        returns a list of tuple (Field, aggregation_type)
+        """
+
+        raise NotImplementedError(
+            "If the view supports field aggregation it must implement "
+            "`get_aggregations` method."
+        )
+
+    def after_field_value_update(
+        self, updated_fields: Union[Iterable[field_models.Field], field_models.Field]
+    ):
+        """
+        Triggered for each field table value modification. This method is generally
+        called after a row modification, creation, deletion and is called for each
+        directly or indirectly modified field value. The method can be called multiple
+        times for an event but with different fields. This hook gives a view type the
+        opportunity to react on any value change for a field.
+
+        :param update_fields: a unique or a list of affected field.
+        """
+
+    def after_field_update(
+        self, updated_fields: Union[Iterable[field_models.Field], field_models.Field]
+    ):
+        """
+        Triggered after a field has been updated, created, deleted. This method is
+        called for each group of field directly or indirectly modified this way.
+        This hook gives a view type the opportunity to react on any change for a field.
+
+        :param update_fields: a unique or a list of modified field.
+        """
+
+    def after_filter_update(self, view: "View"):
+        """
+        Triggered after a view filter change. This hook gives a view type the
+        opportunity to react on any filter update.
+
+        :param view: the view which filter has changed.
+        """
 
 
 class ViewTypeRegistry(

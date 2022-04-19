@@ -69,7 +69,10 @@ from baserow.contrib.database.fields.exceptions import (
 from baserow.core.exceptions import UserNotInGroup
 from .errors import ERROR_GRID_DOES_NOT_EXIST
 from .serializers import GridViewFilterSerializer
-from .schemas import field_aggregation_response_schema
+from .schemas import (
+    field_aggregation_response_schema,
+    field_aggregations_response_schema,
+)
 
 
 def get_available_aggregation_type():
@@ -343,6 +346,98 @@ class GridViewView(APIView):
         return Response(serializer.data)
 
 
+class GridViewFieldAggregationsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+
+        return super().get_permissions()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Select the view you want the aggregations for.",
+            ),
+            OpenApiParameter(
+                name="search",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "If provided the aggregations are calculated only for matching "
+                    "rows."
+                ),
+            ),
+            OpenApiParameter(
+                name="include",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "if `include` is set to `total`, the total row count will be "
+                    "returned with the result."
+                ),
+            ),
+        ],
+        tags=["Database table grid view"],
+        operation_id="get_database_table_grid_view_field_aggregations",
+        description=(
+            "Returns all field aggregations values previously defined for this grid "
+            "view. If filters exist for this view, the aggregations are computed only "
+            "on filtered rows."
+            "You need to have read permissions on the view to request aggregations."
+        ),
+        responses={
+            200: field_aggregations_response_schema,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                ]
+            ),
+            404: get_error_schema(
+                [
+                    "ERROR_GRID_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
+        }
+    )
+    @allowed_includes("total")
+    def get(self, request, view_id, total):
+        """
+        Returns the aggregation values for the specified view considering the filters
+        and the search term defined for this grid view.
+        Also returns the total count to be able to make percentage on client side if
+        asked.
+        """
+
+        search = request.GET.get("search")
+        view_handler = ViewHandler()
+        view = view_handler.get_view(view_id, GridView)
+
+        # Check permission
+        view.table.database.group.has_user(
+            request.user, raise_error=True, allow_if_template=True
+        )
+
+        # Compute aggregation
+        # Note: we can't optimize model by giving a model with just
+        # the aggregated field because we may need other fields for filtering
+        result = view_handler.get_view_field_aggregations(
+            view, with_total=total, search=search
+        )
+
+        return Response(result)
+
+
 class GridViewFieldAggregationView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -388,12 +483,11 @@ class GridViewFieldAggregationView(APIView):
         tags=["Database table grid view"],
         operation_id="get_database_table_grid_view_field_aggregation",
         description=(
-            "Computes an aggregation of all values for a specific field from the selected "
-            "grid view. You can select the aggregation type by specifying "
+            "Computes the aggregation of all the values for a specified field from the "
+            "selected grid view. You must select the aggregation type by setting "
             "the `type` GET parameter. If filters are configured for the selected "
             "view, the aggregation is calculated only on filtered rows. "
-            "The total count of rows is also always returned with the result."
-            "You need to have read permissions on the view to request aggregations."
+            "You need to have read permissions on the view to request an aggregation."
         ),
         responses={
             200: field_aggregation_response_schema,
@@ -426,7 +520,8 @@ class GridViewFieldAggregationView(APIView):
         """
         Returns the aggregation value for the specified view/field considering
         the filters configured for this grid view.
-        Also return the total count to be able to make percentage on client side.
+        Also returns the total count to be able to make percentage on client side if
+        asked.
         """
 
         view_handler = ViewHandler()
@@ -448,7 +543,7 @@ class GridViewFieldAggregationView(APIView):
         )
 
         result = {
-            "value": aggregations[f"field_{field_instance.id}__{aggregation_type}"],
+            "value": aggregations[field_instance.db_column],
         }
 
         if total:

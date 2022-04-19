@@ -101,14 +101,20 @@ export default (client) => {
     fetchPublicViewInfo(viewSlug) {
       return client.get(`/database/views/grid/${viewSlug}/public/info/`)
     },
-    fetchFieldAggregation(gridId, fieldId, rawType) {
+    fetchFieldAggregations({ gridId, search, signal = null }) {
       const params = new URLSearchParams()
-      params.append('type', rawType)
 
-      return client.get(
-        `/database/views/grid/${gridId}/aggregation/${fieldId}/`,
-        { params }
-      )
+      if (search) {
+        params.append('search', search)
+      }
+
+      const config = { params }
+
+      if (signal !== null) {
+        config.signal = signal
+      }
+
+      return client.get(`/database/views/grid/${gridId}/aggregations/`, config)
     },
   }
 }

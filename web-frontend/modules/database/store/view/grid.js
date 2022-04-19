@@ -490,6 +490,9 @@ let lastRefreshRequest = null
 let lastRefreshRequestSource = null
 let lastSource = null
 
+// We want to cancel previous aggregation request before creating a new one.
+const lastAggregationRequest = { request: null, controller: null }
+
 export const actions = {
   /**
    * This action calculates which rows we would like to have in the buffer based on
@@ -888,9 +891,28 @@ export const actions = {
    * backend with the changed values. If the request fails the action is reverted.
    */
   async updateFieldOptionsOfField(
-    { commit, getters },
+    { commit, getters, dispatch },
     { field, values, oldValues, readOnly = false }
   ) {
+    const previousOptions = getters.getAllFieldOptions[field.id]
+    let needAggregationValueUpdate = false
+
+    /**
+     * If the aggregation raw type has changed, we delete the corresponding the
+     * aggregation value from the store.
+     */
+    if (
+      Object.prototype.hasOwnProperty.call(values, 'aggregation_raw_type') &&
+      values.aggregation_raw_type !== previousOptions.aggregation_raw_type
+    ) {
+      needAggregationValueUpdate = true
+      commit('SET_FIELD_AGGREGATION_DATA', { fieldId: field.id, value: null })
+      commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
+        fieldId: field.id,
+        value: true,
+      })
+    }
+
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
@@ -912,6 +934,10 @@ export const actions = {
           values: oldValues,
         })
         throw error
+      } finally {
+        if (needAggregationValueUpdate && values.aggregation_type) {
+          dispatch('fetchAllFieldAggregationData', { view: { id: gridId } })
+        }
       }
     }
   },
@@ -919,7 +945,7 @@ export const actions = {
    * Updates the field options of a given field in the store. So no API request to
    * the backend is made.
    */
-  setFieldOptionsOfField({ commit }, { field, values }) {
+  setFieldOptionsOfField({ commit, getters }, { field, values }) {
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
@@ -956,61 +982,100 @@ export const actions = {
   forceUpdateAllFieldOptions({ commit }, fieldOptions) {
     commit('UPDATE_ALL_FIELD_OPTIONS', fieldOptions)
   },
-  async fetchFieldAggregationData({ commit, getters }, { view, fieldId }) {
-    const options = getters.getAllFieldOptions[fieldId]
+  /**
+   * Fetch all field aggregation data from the server for this view. Set loading state
+   * to true while doing the query. Do nothing if this is a public view or if there is
+   * no aggregation at all. If the query goes in error, the values are set to `null`
+   * to prevent wrong information.
+   * If a request is already in progress, it is aborted in favour of the new one.
+   */
+  async fetchAllFieldAggregationData({ getters, commit }, { view }) {
     const isPublic = getters.isPublic
+    const search = getters.getActiveSearchTerm
 
-    if (!options?.aggregation_raw_type || isPublic) {
+    if (isPublic) {
       return
     }
 
-    commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
-      fieldId,
-      value: true,
-    })
-    commit('SET_FIELD_AGGREGATION_DATA', {
-      fieldId,
-      value: null,
-    })
-
-    try {
-      const {
-        data: { value },
-      } = await GridService(this.$client).fetchFieldAggregation(
-        view.id,
-        fieldId,
-        options.aggregation_raw_type
-      )
-
-      commit('SET_FIELD_AGGREGATION_DATA', {
-        fieldId,
-        value,
-      })
-    } catch (e) {
-      // Emptied the value
-      commit('SET_FIELD_AGGREGATION_DATA', {
-        fieldId,
-        value: null,
-      })
-      throw e
-    } finally {
-      commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
-        fieldId,
-        value: false,
-      })
-    }
-  },
-  fetchAllFieldAggregationData({ dispatch, getters }, { view }) {
     const fieldOptions = getters.getAllFieldOptions
 
-    return Promise.all(
-      Object.keys(fieldOptions).map((fieldId) => {
-        return dispatch('fetchFieldAggregationData', {
-          view,
+    let atLeastOneAggregation = false
+
+    Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+      if (options.aggregation_raw_type) {
+        commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
           fieldId,
+          value: true,
         })
+        atLeastOneAggregation = true
+      }
+    })
+
+    if (!atLeastOneAggregation) {
+      return
+    }
+
+    try {
+      if (lastAggregationRequest.request !== null) {
+        lastAggregationRequest.controller.abort()
+      }
+
+      lastAggregationRequest.controller = new AbortController()
+      lastAggregationRequest.request = GridService(
+        this.$client
+      ).fetchFieldAggregations({
+        gridId: view.id,
+        search,
+        signal: lastAggregationRequest.controller.signal,
       })
-    )
+
+      const { data } = await lastAggregationRequest.request
+      lastAggregationRequest.request = null
+
+      Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+        if (options.aggregation_raw_type) {
+          commit('SET_FIELD_AGGREGATION_DATA', {
+            fieldId,
+            value: data[`field_${fieldId}`],
+          })
+        }
+      })
+
+      Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+        if (options.aggregation_raw_type) {
+          commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
+            fieldId,
+            value: false,
+          })
+        }
+      })
+    } catch (error) {
+      if (!axios.isCancel(error)) {
+        lastAggregationRequest.request = null
+
+        // Emptied the values
+        Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+          if (options.aggregation_raw_type) {
+            commit('SET_FIELD_AGGREGATION_DATA', {
+              fieldId,
+              value: null,
+            })
+          }
+        })
+
+        // Remove loading state
+        Object.entries(fieldOptions).forEach(([fieldId, options]) => {
+          if (options.aggregation_raw_type) {
+            commit('SET_FIELD_AGGREGATION_DATA_LOADING', {
+              fieldId,
+              value: false,
+            })
+          }
+        })
+
+        throw error
+      }
+    }
   },
   /**
    * Updates the order of all the available field options. The provided order parameter

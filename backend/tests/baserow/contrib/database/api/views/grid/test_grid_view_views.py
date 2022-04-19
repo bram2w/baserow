@@ -1,7 +1,9 @@
+from decimal import Decimal
 from typing import List, Dict, Any
 
 import pytest
 from django.shortcuts import reverse
+from django.core.cache import cache
 from rest_framework import serializers
 from rest_framework.fields import Field
 from rest_framework.status import (
@@ -537,7 +539,7 @@ def test_field_aggregation(api_client, data_fixture):
         }
     )
 
-    # Count empty "Color" field
+    # Count empty boolean field
     response = api_client.get(
         url + f"?type=empty_count",
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
@@ -574,7 +576,7 @@ def test_field_aggregation(api_client, data_fixture):
 
     assert response_json == {"value": 1, "total": 4}
 
-    # Does it works with filter
+    # Does it work with filter
     data_fixture.create_view_filter(
         view=grid, field=number_field, type="higher_than", value="10"
     )
@@ -588,6 +590,705 @@ def test_field_aggregation(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
 
     assert response_json == {"value": 1}
+
+
+@pytest.mark.django_db
+def test_view_aggregations(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, order=1, name="Horsepower"
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table, order=2, name="For sale"
+    )
+    grid = data_fixture.create_grid_view(table=table)
+    grid_2 = data_fixture.create_grid_view()
+
+    # Test missing grid view
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": 9999},
+    )
+    response = api_client.get(
+        url,
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_GRID_DOES_NOT_EXIST"
+
+    # Test user not authorized
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid_2.id},
+    )
+    response = api_client.get(
+        url + f"?type=empty_count",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    # Test missing auth token
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid.id},
+    )
+    response = api_client.get(url)
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid.id},
+    )
+
+    # Test normal response with no data and no aggregation
+    response = api_client.get(
+        url,
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {}
+
+    field_option1 = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=text_field,
+        aggregation_type="",
+        aggregation_raw_type="",
+    )
+
+    field_option2 = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=number_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="sum",
+    )
+
+    field_option3 = data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=boolean_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="empty_count",
+    )
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") is None
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") is None
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") is None
+    assert (
+        cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") is None
+    )
+
+    # Test normal response with no data and no cache
+    response = api_client.get(
+        url,
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {number_field.db_column: None, boolean_field.db_column: 0}
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": None,
+        "version": 1,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") is None
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": 0,
+        "version": 1,
+    }
+    assert (
+        cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") is None
+    )
+
+    # Test normal response that use cache
+    cache.set(
+        f"aggregation_value__{grid.id}_{number_field.db_column}",
+        {"value": "sentinel", "version": 1},
+    )
+    cache.set(
+        f"aggregation_value__{grid.id}_{boolean_field.db_column}",
+        {"value": "sentinel", "version": 1},
+    )
+
+    response = api_client.get(
+        url,
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {
+        number_field.db_column: "sentinel",
+        boolean_field.db_column: "sentinel",
+    }
+
+    cache.set(
+        f"aggregation_value__{grid.id}_{number_field.db_column}",
+        {"value": "sentinel", "version": 1},
+    )
+    cache.set(
+        f"aggregation_value__{grid.id}_{boolean_field.db_column}",
+        {"value": "sentinel", "version": 3},
+    )
+    cache.set(
+        f"aggregation_version__{grid.id}_{boolean_field.db_column}",
+        3,
+    )
+
+    # Add data through the API to trigger cache update
+    api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{text_field.id}": "Green",
+            f"field_{number_field.id}": 10,
+            f"field_{boolean_field.id}": True,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": "sentinel",
+        "version": 1,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 2
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": "sentinel",
+        "version": 3,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 4
+
+    api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{text_field.id}": "",
+            f"field_{number_field.id}": 0,
+            f"field_{boolean_field.id}": False,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    api_client.post(
+        reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+        {
+            f"field_{text_field.id}": None,
+            f"field_{number_field.id}": 1200,
+            f"field_{boolean_field.id}": False,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    # Test normal response with data
+    response = api_client.get(
+        url,
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+
+    assert response_json == {number_field.db_column: 1210.0, boolean_field.db_column: 2}
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": 1210.0,
+        "version": 4,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 4
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": 2,
+        "version": 6,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 6
+
+    # with total
+    response = api_client.get(
+        url + f"?include=total",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert response_json == {
+        number_field.db_column: 1210.0,
+        boolean_field.db_column: 2,
+        "total": 3,
+    }
+
+    # Does it work with filter
+    response = api_client.get(
+        url + f"?include=total&search=GREE",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json == {
+        number_field.db_column: 10.0,
+        boolean_field.db_column: 0,
+        "total": 1,
+    }
+
+    # But cache shouldn't be modified after a search as we don't use the cache
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 4
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 6
+
+    # Does it work with filter (use API to trigger cache update)
+    response = api_client.post(
+        reverse("api:database:views:list_filters", kwargs={"view_id": grid.id}),
+        {"field": number_field.id, "type": "higher_than", "value": "10"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    # Cache should be invalidated on filter change
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal(1210),
+        "version": 4,
+    }
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": 2,
+        "version": 6,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 5
+    assert cache.get(f"aggregation_version__{grid.id}_{boolean_field.db_column}") == 7
+
+    response = api_client.get(
+        url + f"?include=total",
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json == {
+        number_field.db_column: 1200.0,
+        boolean_field.db_column: 1,
+        "total": 1,
+    }
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal(1200),
+        "version": 5,
+    }
+    assert cache.get(f"aggregation_value__{grid.id}_{boolean_field.db_column}") == {
+        "value": 1,
+        "version": 7,
+    }
+
+
+@pytest.mark.django_db
+def test_view_aggregations_cache_invalidation_with_dependant_fields(
+    api_client, data_fixture
+):
+    """
+    Here we want a complex situation where we need to invalidate the cache of a
+    dependant field in another table. Should be the more extreme scenario.
+    We create two tables with a link row field from table2 to table1, a lookup field on
+    table 2 to the number field on table 1 and a formula that sum the values of
+    table 2's lookup field.
+    """
+
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(user=user, database=table.database)
+    number_field = data_fixture.create_number_field(
+        table=table, order=1, name="Horsepower"
+    )
+    grid = data_fixture.create_grid_view(table=table)
+    grid2 = data_fixture.create_grid_view(table=table2)
+
+    linkrowfield = FieldHandler().create_field(
+        user,
+        table2,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table,
+    )
+
+    lookup_field = FieldHandler().create_field(
+        user,
+        table2,
+        "lookup",
+        name="lookup_field",
+        through_field_id=linkrowfield.id,
+        target_field_id=number_field.id,
+    )
+
+    sum_formula_on_lookup_field = FieldHandler().create_field(
+        user,
+        table2,
+        "formula",
+        name="sum",
+        formula='sum(field("lookup_field"))',
+    )
+
+    # Create some aggregations
+    data_fixture.create_grid_view_field_option(
+        grid_view=grid,
+        field=number_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="sum",
+    )
+
+    data_fixture.create_grid_view_field_option(
+        grid_view=grid2,
+        field=sum_formula_on_lookup_field,
+        aggregation_type="whatever",
+        aggregation_raw_type="sum",
+    )
+
+    # Define some utilities functions
+    def add_value_to_table1(value):
+        # Add data through the API to trigger cache update
+        response = api_client.post(
+            reverse("api:database:rows:list", kwargs={"table_id": table.id}),
+            {
+                f"field_{number_field.id}": value,
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        return response.json()
+
+    def update_value_of_table1(row, value):
+        api_client.patch(
+            reverse(
+                "api:database:rows:item",
+                kwargs={"table_id": table.id, "row_id": row["id"]},
+            ),
+            {f"field_{number_field.id}": value},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    def delete_row_of_table1(row):
+        api_client.delete(
+            reverse(
+                "api:database:rows:item",
+                kwargs={"table_id": table.id, "row_id": row["id"]},
+            ),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    def add_link_to_table2(links):
+        # Add data through the API to trigger cache update
+        response = api_client.post(
+            reverse("api:database:rows:list", kwargs={"table_id": table2.id}),
+            {
+                f"field_{linkrowfield.id}": [link["id"] for link in links],
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        return response.json()
+
+    def check_table_2_aggregation_values(value_to_check, ident):
+        response = api_client.get(
+            url2,
+            **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+        )
+        response_json = response.json()
+
+        assert response_json == value_to_check, ident
+
+    url = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid.id},
+    )
+    url2 = reverse(
+        "api:database:views:grid:field-aggregations",
+        kwargs={"view_id": grid2.id},
+    )
+
+    row1 = add_value_to_table1(1)
+    row2 = add_value_to_table1(10)
+    row3 = add_value_to_table1(100)
+    row4 = add_value_to_table1(1000)
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") is None
+    assert (
+        cache.get(
+            f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+        )
+        is None
+    )
+
+    api_client.get(
+        url,
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal(1111),
+        "version": 5,
+    }
+    assert (
+        cache.get(
+            f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+        )
+        is None
+    )
+
+    check_table_2_aggregation_values(
+        {sum_formula_on_lookup_field.db_column: None}, "with no link"
+    )
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal(1111),
+        "version": 5,
+    }
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {"value": None, "version": 5}
+
+    cache.set(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}",
+        {"value": "sentinel", "version": 0},
+    )
+
+    # Add few links
+    add_link_to_table2([row1, row2])
+
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {"value": "sentinel", "version": 0}
+
+    add_link_to_table2([row2, row3])
+    add_link_to_table2([row3, row4])
+    add_link_to_table2([row4])
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal(1111),
+        "version": 5,
+    }
+
+    check_table_2_aggregation_values(
+        {sum_formula_on_lookup_field.db_column: 2221}, "after link addition"
+    )
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal(1111),
+        "version": 5,
+    }
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {
+        "value": Decimal(2221),
+        "version": 17,
+    }
+
+    update_value_of_table1(row2, 10000)
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal(1111),
+        "version": 5,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 6
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {
+        "value": Decimal(2221),
+        "version": 17,
+    }
+    assert (
+        cache.get(
+            f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+        )
+        == 18
+    )
+
+    check_table_2_aggregation_values(
+        {sum_formula_on_lookup_field.db_column: 22201}, "after table 1 value update"
+    )
+
+    # Delete row3 from table1
+    api_client.delete(
+        reverse(
+            "api:database:rows:item",
+            kwargs={"table_id": table.id, "row_id": row3["id"]},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal("1111"),
+        "version": 5,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 7
+
+    # Should increment cache version
+    assert (
+        cache.get(
+            f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+        )
+        == 19
+    )
+
+    check_table_2_aggregation_values(
+        {sum_formula_on_lookup_field.db_column: 22001}, "after row deletion"
+    )
+
+    assert cache.get(f"aggregation_value__{grid.id}_{number_field.db_column}") == {
+        "value": Decimal("1111"),
+        "version": 5,
+    }
+    assert cache.get(f"aggregation_version__{grid.id}_{number_field.db_column}") == 7
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {
+        "value": Decimal(22001),
+        "version": 19,
+    }
+
+    # Restore delete row
+    api_client.patch(
+        reverse(
+            "api:trash:restore",
+        ),
+        {
+            "trash_item_type": "row",
+            "trash_item_id": row3["id"],
+            "parent_trash_item_id": table.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert (
+        cache.get(
+            f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+        )
+        == 20
+    )
+
+    check_table_2_aggregation_values(
+        {sum_formula_on_lookup_field.db_column: 22201}, "after row restoration"
+    )
+
+    # Should store the new value/version in cache
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {
+        "value": Decimal(22201),
+        "version": 20,
+    }
+
+    # Update number field
+    api_client.patch(
+        reverse(
+            "api:database:fields:item",
+            kwargs={"field_id": number_field.id},
+        ),
+        {"number_decimal_places": 1},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    # Cache version should be incremented
+    assert (
+        cache.get(
+            f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+        )
+        == 21
+    )
+
+    check_table_2_aggregation_values(
+        {sum_formula_on_lookup_field.db_column: 22201}, "after field modification"
+    )
+
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {
+        "value": Decimal(22201),
+        "version": 21,
+    }
+
+    # Delete number field
+    api_client.delete(
+        reverse(
+            "api:database:fields:item",
+            kwargs={"field_id": number_field.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {
+        "value": Decimal(22201),
+        "version": 21,
+    }
+    assert (
+        cache.get(
+            f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+        )
+        == 22
+    )
+
+    check_table_2_aggregation_values({}, "after field deletion")
+
+    # No modification as the field and the aggregation don't exist
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {
+        "value": Decimal(22201),
+        "version": 21,
+    }
+    assert (
+        cache.get(
+            f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+        )
+        == 22
+    )
+
+    # Restore deleted field
+    resp = api_client.patch(
+        reverse(
+            "api:trash:restore",
+        ),
+        {
+            "trash_item_type": "field",
+            "trash_item_id": number_field.id,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response = api_client.get(
+        url,
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
+    )
+    assert response.json() == {number_field.db_column: 11101}
+
+    # The field aggregation has been automatically deleted so no aggregations anymore
+    check_table_2_aggregation_values({}, "after field restoration")
+
+    # Still no modifications
+    assert cache.get(
+        f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+    ) == {
+        "value": Decimal(22201),
+        "version": 21,
+    }
+    assert (
+        cache.get(
+            f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
+        )
+        == 22
+    )
 
 
 @pytest.mark.django_db
