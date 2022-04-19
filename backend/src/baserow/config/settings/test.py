@@ -2,6 +2,7 @@ from copy import deepcopy
 
 from .base import *  # noqa: F403, F401
 
+TESTS = True
 
 # This is a hardcoded key for test runs only.
 SECRET_KEY = "test_hardcoded_secret_key"  # nosec
