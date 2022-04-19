@@ -537,5 +537,8 @@
         "airtableShareLinkDescription": "Um Ihre Airtable Base zu importieren, müssen Sie einen Link zu Ihrer gesamten Base haben. Klicken Sie in Airtable auf die \"Share\" taste in der oberen rechten Ecke, nachdem Sie Ihre Base geöffnet haben. Danach müssen Sie die Option \"Access to base\" wählen. Im modal drücken Sie auf \"Create a shared link to the whole base\" und dann auf \"Private read-only link\". Kopieren Sie den Link und fügen Sie ihn in das unten stehende Feld ein.",
         "errorJobAlreadyRunningTitle": "Schon läuft",
         "errorJobAlreadyRunningDescription": "Ein weiterer Importauftrag ist bereits in Arbeit. Sie müssen abwarten, bis dieser Vorgang abgeschlossen ist, bevor Sie einen weiteren beginnen."
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "einzelnes Auswahlfeld hinzufügen"
     }
 }

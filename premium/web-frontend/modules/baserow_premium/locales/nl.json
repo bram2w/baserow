@@ -151,8 +151,7 @@
     },
     "kanbanViewStakedBy": {
         "title": "Groepsveld",
-        "chooseField": "Op welk enkelvoudig keuzeveld moeten de kaarten gestapeld worden?",
-        "addSelectField": "enkelvoudig keuzeveld toevoegen"
+        "chooseField": "Op welk enkelvoudig keuzeveld moeten de kaarten gestapeld worden?"
     },
     "kanbanViewStack": {
         "uncategorized": "Zonder categorie",

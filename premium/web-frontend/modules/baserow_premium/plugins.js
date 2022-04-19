@@ -6,6 +6,6 @@ export class PremiumPlugin extends BaserowPlugin {
   }
 
   static hasValidPremiumLicense(additionalUserData) {
-    return additionalUserData.premium.valid_license
+    return additionalUserData?.premium?.valid_license
   }
 }

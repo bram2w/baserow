@@ -1,0 +1,23 @@
+.value-provider-item {
+  position: relative;
+}
+
+.value-provider-item__title {
+  @extend %ellipsis;
+
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+  line-height: 140%;
+}
+
+.value-provider-item__icon {
+  margin-right: 4px;
+}
+
+.value-provider-item__description {
+  white-space: normal;
+  font-size: 13px;
+  line-height: 140%;
+  color: $color-neutral-600;
+}

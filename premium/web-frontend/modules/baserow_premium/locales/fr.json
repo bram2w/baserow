@@ -151,8 +151,7 @@
     },
     "kanbanViewStakedBy": {
         "title": "Champ de regroupement",
-        "chooseField": "Par quel champ de type « liste déroulante » souhaitez-vous regrouper vos cartes ?",
-        "addSelectField": "Ajouter une liste déroulante"
+        "chooseField": "Par quel champ de type « liste déroulante » souhaitez-vous regrouper vos cartes ?"
     },
     "kanbanViewStack": {
         "uncategorized": "Sans catégorie",

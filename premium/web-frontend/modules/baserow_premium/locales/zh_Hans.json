@@ -151,8 +151,7 @@
     },
     "kanbanViewStakedBy": {
         "title": "",
-        "chooseField": "",
-        "addSelectField": ""
+        "chooseField": ""
     },
     "kanbanViewStack": {
         "uncategorized": "",

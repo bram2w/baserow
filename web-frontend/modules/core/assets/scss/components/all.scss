@@ -12,6 +12,7 @@
 @import 'modal';
 @import 'context';
 @import 'select';
+@import 'choose_select';
 @import 'dropdown';
 @import 'tooltip';
 @import 'markdown';
@@ -43,6 +44,11 @@
 @import 'views/grid/aggregation';
 @import 'views/gallery';
 @import 'views/sharing';
+@import 'decorator/list';
+@import 'decorator/item';
+@import 'decorator/context';
+@import 'decorator/value_provider_list';
+@import 'decorator/value_provider_item';
 @import 'array_field';
 @import 'views/form';
 @import 'box_page';

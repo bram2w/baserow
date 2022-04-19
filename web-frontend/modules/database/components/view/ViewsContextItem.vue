@@ -70,12 +70,16 @@ export default {
   },
   computed: {
     deactivatedText() {
-      return this.$registry.get('view', this.view.type).getDeactivatedText()
+      return this.$registry
+        .get('view', this.view.type)
+        .getDeactivatedText({ view: this.view })
     },
     deactivated() {
       return (
         !this.readOnly &&
-        this.$registry.get('view', this.view.type).isDeactivated()
+        this.$registry
+          .get('view', this.view.type)
+          .isDeactivated({ view: this.view })
       )
     },
   },

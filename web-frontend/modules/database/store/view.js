@@ -2,6 +2,7 @@ import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import { uuid } from '@baserow/modules/core/utils/string'
 import ViewService from '@baserow/modules/database/services/view'
 import FilterService from '@baserow/modules/database/services/filter'
+import DecorationService from '@baserow/modules/database/services/decoration'
 import SortService from '@baserow/modules/database/services/sort'
 import { clone } from '@baserow/modules/core/utils/object'
 
@@ -19,6 +20,11 @@ export function populateSort(sort) {
     loading: false,
   }
   return sort
+}
+
+export function populateDecoration(decoration) {
+  decoration._ = { loading: false }
+  return decoration
 }
 
 export function populateView(view, registry) {
@@ -44,6 +50,14 @@ export function populateView(view, registry) {
     })
   } else {
     view.sortings = []
+  }
+
+  if (Object.prototype.hasOwnProperty.call(view, 'decorations')) {
+    view.decorations.forEach((decoration) => {
+      populateDecoration(decoration)
+    })
+  } else {
+    view.decorations = []
   }
 
   return type.populate(view)
@@ -127,6 +141,33 @@ export const mutations = {
   },
   SET_FILTER_LOADING(state, { filter, value }) {
     filter._.loading = value
+  },
+  ADD_DECORATION(state, { view, decoration }) {
+    view.decorations.push({
+      type: null,
+      value_provider: null,
+      value_provider_conf: null,
+      ...decoration,
+    })
+  },
+  FINALIZE_DECORATION(state, { view, oldId, id }) {
+    const index = view.decorations.findIndex((item) => item.id === oldId)
+    if (index !== -1) {
+      view.decorations[index].id = id
+      view.decorations[index]._.loading = false
+    }
+  },
+  DELETE_DECORATION(state, { view, id }) {
+    const index = view.decorations.findIndex((item) => item.id === id)
+    if (index !== -1) {
+      view.decorations.splice(index, 1)
+    }
+  },
+  UPDATE_DECORATION(state, { decoration, values }) {
+    Object.assign(decoration, decoration, values)
+  },
+  SET_DECORATION_LOADING(state, { decoration, value }) {
+    decoration._.loading = value
   },
   ADD_SORT(state, { view, sort }) {
     view.sortings.push(sort)
@@ -357,7 +398,7 @@ export const actions = {
   },
   /**
    * Creates a new filter and adds it to the store right away. If the API call succeeds
-   * the row ID will be added, but if it fails it will be removed from the store.
+   * the filter ID will be added, but if it fails it will be removed from the store.
    */
   async createFilter(
     { commit },
@@ -486,7 +527,7 @@ export const actions = {
     }
   },
   /**
-   * Forcefully delete an existing field without making a request to the backend.
+   * Forcefully delete an existing filter without making a request to the backend.
    */
   forceDeleteFilter({ commit }, { view, filter }) {
     commit('DELETE_FILTER', { view, id: filter.id })
@@ -499,6 +540,111 @@ export const actions = {
     getters.getAll.forEach((view) => {
       commit('DELETE_FIELD_FILTERS', { view, fieldId: field.id })
     })
+  },
+
+  /**
+   * Creates a new decoration and adds it to the store right away. If the API call succeeds
+   * the decorator ID will be updatede, but if it fails it will be removed from the store.
+   */
+  async createDecoration({ commit }, { view, values, readOnly = false }) {
+    const decoration = { ...values }
+    populateDecoration(decoration)
+    decoration.id = uuid()
+    decoration._.loading = !readOnly
+
+    commit('ADD_DECORATION', { view, decoration })
+
+    try {
+      if (!readOnly) {
+        const { data } = await DecorationService(this.$client).create(
+          view.id,
+          values
+        )
+        commit('FINALIZE_DECORATION', {
+          view,
+          oldId: decoration.id,
+          id: data.id,
+        })
+      }
+    } catch (error) {
+      commit('DELETE_DECORATION', { view, id: decoration.id })
+      throw error
+    }
+
+    return { decoration }
+  },
+  /**
+   * Forcefully create a new view decoration without making a request to the backend.
+   */
+  forceCreateDecoration({ commit }, { view, values }) {
+    const decoration = { ...values }
+    populateDecoration(decoration)
+    commit('ADD_DECORATION', { view, decoration })
+  },
+  /**
+   * Updates the decoration values in the store right away. If the API call fails the
+   * changes will be undone.
+   */
+  async updateDecoration(
+    { dispatch, commit },
+    { decoration, values, readOnly = false }
+  ) {
+    commit('SET_DECORATION_LOADING', { decoration, value: true })
+
+    const oldValues = {}
+    const newValues = {}
+    Object.keys(values).forEach((name) => {
+      if (Object.prototype.hasOwnProperty.call(decoration, name)) {
+        oldValues[name] = decoration[name]
+        newValues[name] = values[name]
+      }
+    })
+
+    dispatch('forceUpdateDecoration', { decoration, values: newValues })
+
+    try {
+      if (!readOnly) {
+        await DecorationService(this.$client).update(decoration.id, values)
+      }
+      commit('SET_DECORATION_LOADING', { decoration, value: false })
+    } catch (error) {
+      dispatch('forceUpdateDecoration', { decoration, values: oldValues })
+      commit('SET_DECORATION_LOADING', { decoration, value: false })
+      throw error
+    }
+  },
+  /**
+   * Forcefully update an existing view decoration without making a request to the
+   * backend.
+   */
+  forceUpdateDecoration({ commit }, { decoration, values }) {
+    commit('UPDATE_DECORATION', { decoration, values })
+  },
+  /**
+   * Deletes an existing decoration. A request to the server will be made first and
+   * after that it will be deleted.
+   */
+  async deleteDecoration(
+    { dispatch, commit },
+    { view, decoration, readOnly = false }
+  ) {
+    commit('SET_DECORATION_LOADING', { decoration, value: true })
+
+    try {
+      if (!readOnly) {
+        await DecorationService(this.$client).delete(decoration.id)
+      }
+      dispatch('forceDeleteDecoration', { view, decoration })
+    } catch (error) {
+      commit('SET_DECORATION_LOADING', { decoration, value: false })
+      throw error
+    }
+  },
+  /**
+   * Forcefully delete an existing decoration without making a request to the backend.
+   */
+  forceDeleteDecoration({ commit }, { view, decoration }) {
+    commit('DELETE_DECORATION', { view, id: decoration.id })
   },
   /**
    * Changes the loading state of a specific sort.

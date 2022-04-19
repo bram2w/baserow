@@ -1,5 +1,9 @@
 <template>
-  <div class="context" :class="{ 'visibility-hidden': !open || !updatedOnce }">
+  <div
+    class="context"
+    :class="{ 'visibility-hidden': !open || !updatedOnce }"
+    @click="onClick($event)"
+  >
     <slot v-if="openedOnce"></slot>
   </div>
 </template>
@@ -25,6 +29,7 @@ export default {
       updatedOnce: false,
       // If opened once, should stay in DOM to keep nested content
       openedOnce: false,
+      insideEvent: new Set(),
     }
   },
   methods: {
@@ -71,6 +76,14 @@ export default {
       } else {
         this.hide()
       }
+    },
+    /**
+     * Add the event to the `insideEvent` map. This allow to be sure a click event has
+     * been triggered from an element inside this context, even if the element has
+     * been removed after in the meantime.
+     */
+    onClick(event) {
+      this.insideEvent.add(event)
     },
     /**
      * Calculate the position, show the context menu and register a click event on the
@@ -122,24 +135,33 @@ export default {
       updatePosition()
 
       this.$el.clickOutsideEvent = (event) => {
-        if (
-          // Check if the context menu is still open
-          this.open &&
-          // If the prop allows it to be closed by clicking outside.
-          this.hideOnClickOutside &&
-          // If the click was outside the context element because we want to ignore
-          // clicks inside it.s
-          !isElement(this.$el, event.target) &&
-          // If the click was not on the opener because he can trigger the toggle
-          // method.
-          !isElement(this.opener, event.target) &&
-          // If the click was not inside one of the context children of this context
-          // menu.
-          !this.moveToBody.children.some((child) => {
-            return isElement(child.$el, event.target)
-          })
-        ) {
-          this.hide()
+        // If the event is from current context or any element inside current context
+        // the current event should be in the insideEvent map, even if the element
+        // has been removed from the DOM in the meantime
+        const insideContext = this.insideEvent.has(event)
+        if (insideContext) {
+          this.insideEvent.delete(event)
+        }
+
+        // Check if the context menu is still open
+        if (this.open) {
+          if (
+            // If the prop allows it to be closed by clicking outside.
+            this.hideOnClickOutside &&
+            // If the click was outside the context element because we want to ignore
+            // clicks inside it or any child of this element
+            !insideContext &&
+            // If the click was not on the opener because he can trigger the toggle
+            // method.
+            !isElement(this.opener, event.target) &&
+            // If the click was not inside one of the context children of this context
+            // menu.
+            !this.moveToBody.children.some((child) => {
+              return isElement(child.$el, event.target)
+            })
+          ) {
+            this.hide()
+          }
         }
       }
       document.body.addEventListener('click', this.$el.clickOutsideEvent)
@@ -170,6 +192,8 @@ export default {
       if (emit) {
         this.$emit('hidden')
       }
+
+      this.insideEvent = new Set()
 
       document.body.removeEventListener('click', this.$el.clickOutsideEvent)
       window.removeEventListener('scroll', this.$el.updatePositionEvent, true)

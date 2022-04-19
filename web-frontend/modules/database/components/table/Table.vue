@@ -103,6 +103,24 @@
         >
           <ShareViewLink :view="view" :read-only="readOnly"></ShareViewLink>
         </li>
+        <li
+          v-if="
+            $featureFlags.includes('row-coloring') &&
+            hasCompatibleDecorator &&
+            !readOnly
+          "
+          class="header__filter-item"
+        >
+          <ViewDecoratorMenu
+            :view="view"
+            :table="table"
+            :fields="fields"
+            :primary="primary"
+            :read-only="readOnly"
+            :disable-sort="disableSort"
+            @changed="refresh()"
+          ></ViewDecoratorMenu>
+        </li>
       </ul>
       <component
         :is="getViewHeaderComponent(view)"
@@ -145,6 +163,7 @@ import ViewsContext from '@baserow/modules/database/components/view/ViewsContext
 import ViewContext from '@baserow/modules/database/components/view/ViewContext'
 import ViewFilter from '@baserow/modules/database/components/view/ViewFilter'
 import ViewSort from '@baserow/modules/database/components/view/ViewSort'
+import ViewDecoratorMenu from '@baserow/modules/database/components/view/ViewDecoratorMenu'
 import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
 import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLink'
@@ -158,6 +177,7 @@ export default {
     ShareViewLink,
     EditableViewName,
     ViewsContext,
+    ViewDecoratorMenu,
     ViewFilter,
     ViewSort,
     ViewSearch,
@@ -239,6 +259,14 @@ export default {
       return (
         this.view !== undefined &&
         Object.prototype.hasOwnProperty.call(this.view, '_')
+      )
+    },
+    hasCompatibleDecorator() {
+      return (
+        this.view !== undefined &&
+        this.$registry
+          .getOrderedList('viewDecorator')
+          .some((deco) => deco.isCompatible(this.view))
       )
     },
   },

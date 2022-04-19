@@ -6,43 +6,25 @@
     <div class="kanban-view__stacked-by-description">
       {{ $t('kanbanViewStakedBy.chooseField') }}
     </div>
-    <Radio
-      v-for="field in singleSelectFields"
-      :key="field.id"
-      v-model="singleSelectField"
-      :value="field.id"
-      :loading="loading && field.id === singleSelectField"
-      :disabled="loading || readOnly"
+    <ChooseSingleSelectField
+      :view="view"
+      :table="table"
+      :fields="allFields"
+      :value="view.single_select_field"
+      :read-only="readOnly"
+      :loading="loading"
       @input="update"
-      >{{ field.name }}</Radio
-    >
-    <div v-if="!readOnly" class="margin-top-2">
-      <a
-        ref="createFieldContextLink"
-        class="margin-right-auto"
-        @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
-      >
-        <i class="fas fa-plus"></i>
-        {{ $t('kanbanViewStakedBy.addSelectField') }}
-      </a>
-      <CreateFieldContext
-        ref="createFieldContext"
-        :table="table"
-        :forced-type="forcedFieldType"
-        @field-created="$event.callback()"
-      ></CreateFieldContext>
-    </div>
+    />
   </div>
 </template>
 
 <script>
 import kanbanViewHelper from '@baserow_premium/mixins/kanbanViewHelper'
-import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
-import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
+import ChooseSingleSelectField from '@baserow/modules/database/components/field/ChooseSingleSelectField.vue'
 
 export default {
   name: 'KanbanViewStackedBy',
-  components: { CreateFieldContext },
+  components: { ChooseSingleSelectField },
   mixins: [kanbanViewHelper],
   props: {
     table: {
@@ -74,22 +56,11 @@ export default {
   data() {
     return {
       loading: false,
-      singleSelectField: this.view.single_select_field,
     }
   },
   computed: {
-    singleSelectFields() {
-      const allFields = [this.primary].concat(this.fields)
-      const singleSelectFieldType = SingleSelectFieldType.getType()
-      return allFields.filter((field) => field.type === singleSelectFieldType)
-    },
-    forcedFieldType() {
-      return SingleSelectFieldType.getType()
-    },
-  },
-  watch: {
-    'view.single_select_field'(value) {
-      this.singleSelectField = value
+    allFields() {
+      return [this.primary, ...this.fields]
     },
   },
   methods: {

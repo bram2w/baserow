@@ -537,5 +537,8 @@
         "stateImportingTable": "Importeren van tabel {table}",
         "errorJobAlreadyRunningTitle": "Al bezig",
         "errorJobAlreadyRunningDescription": "Er loopt al een andere import taak. U moet wachten tot die klaar is voordat u een andere start."
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "enkelvoudig keuzeveld toevoegen"
     }
 }

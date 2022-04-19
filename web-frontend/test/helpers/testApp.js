@@ -95,6 +95,7 @@ export class TestApp {
       $route: {
         params: {},
       },
+      $featureFlags: { includes: () => true },
     }
     this._vueContext = bootstrapVueContext()
     this.store = _createBaserowStoreAndRegistry(

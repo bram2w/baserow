@@ -1,0 +1,30 @@
+.decorator-item {
+  display: flex;
+  border-radius: 3px;
+  width: 100%;
+}
+
+.decorator-item__image {
+  margin-right: 12px;
+}
+
+.decorator-item__content {
+  min-width: 0;
+}
+
+.decorator-item__title {
+  @extend %ellipsis;
+
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+  line-height: 140%;
+}
+
+.decorator-item__description {
+  @extend %ellipsis;
+
+  font-size: 13px;
+  line-height: 140%;
+  color: $color-neutral-600;
+}

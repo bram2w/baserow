@@ -93,7 +93,7 @@ import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEdi
 export class FieldType extends Registerable {
   /**
    * The font awesome 5 icon name that is used as convenience for the user to
-   * recognize certain view types. If you for example want the database
+   * recognize certain field types. If you for example want the database
    * icon, you must return 'database' here. This will result in the classname
    * 'fas fa-database'.
    */
@@ -1647,7 +1647,7 @@ export class SingleSelectFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'chevron-circle-down '
+    return 'chevron-circle-down'
   }
 
   getName() {

@@ -107,6 +107,8 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
           </li>
            
           <!---->
+           
+          <!---->
         </ul>
          
         <ul
@@ -163,7 +165,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
         >
           <div
             class="scrollbars"
-            style="left: 260px;"
+            style="left: 270px;"
           >
             <!---->
              
@@ -172,18 +174,18 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
            
           <div
             class="grid-view__left"
-            style="width: 260px;"
+            style="width: 270px;"
           >
             <div
               class="grid-view__inner"
-              style="min-width: 260px;"
+              style="min-width: 270px;"
             >
               <div
                 class="grid-view__head"
               >
                 <div
                   class="grid-view__column"
-                  style="width: 60px;"
+                  style="width: 70px;"
                 />
                  
                 <div
@@ -231,7 +233,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 >
                   <div
                     class="grid-view__placeholder"
-                    style="height: 33px; width: 260px;"
+                    style="height: 33px; width: 270px;"
                   >
                     <div
                       class="grid-view__placeholder-column"
@@ -250,7 +252,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                        
                       <div
                         class="grid-view__column"
-                        style="width: 60px;"
+                        style="width: 70px;"
                       >
                         <div
                           class="grid-view__row-info"
@@ -260,8 +262,8 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                             title="1"
                           >
                             
-          1
-        
+            1
+          
                           </div>
                            
                           <!---->
@@ -273,6 +275,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                               class="fas fa-expand"
                             />
                           </a>
+                           
                         </div>
                       </div>
                        
@@ -329,17 +332,17 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
            
           <div
             class="grid-view__divider"
-            style="left: 260px;"
+            style="left: 270px;"
           />
            
           <div
             class="grid-view__divider-width"
-            style="left: 260px;"
+            style="left: 270px;"
           />
            
           <div
             class="grid-view__right"
-            style="left: 260px;"
+            style="left: 270px;"
           >
             <div
               class="grid-view__inner"
@@ -571,12 +574,12 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
           >
             <div
               class="grid-view__row-dragging"
-              style="width: 860px; top: 0px;"
+              style="width: 870px; top: 0px;"
             />
              
             <div
               class="grid-view__row-target"
-              style="width: 860px; top: 0px;"
+              style="width: 870px; top: 0px;"
             />
           </div>
            
