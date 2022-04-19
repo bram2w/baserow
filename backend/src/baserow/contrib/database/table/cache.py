@@ -26,6 +26,7 @@ from typing import Dict, Any
 
 from django.conf import settings
 from django.core.cache import caches
+from django.core.exceptions import ImproperlyConfigured
 
 from baserow.version import VERSION as BASEROW_VERSION
 
@@ -84,7 +85,15 @@ def set_cached_model_field_attrs(table_id: int, field_attrs: Dict[str, Any]):
 
 def clear_generated_model_cache():
     print("Clearing Baserow's internal generated model cache...")
-    generated_models_cache.clear()
+    if hasattr(generated_models_cache, "delete_pattern"):
+        generated_models_cache.delete_pattern("full_table_model_*")
+    elif settings.TESTS:
+        # Just clear the entire cache in tests
+        generated_models_cache.clear()
+    else:
+        raise ImproperlyConfigured(
+            "Baserow must be run with a redis cache outside of " "tests."
+        )
     print("Done clearing cache.")
 
 
