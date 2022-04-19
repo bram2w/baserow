@@ -12,9 +12,7 @@ from rest_framework.status import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.table.cache import (
-    invalidate_table_model_cache_and_related_models,
-)
+from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.test_utils.helpers import setup_interesting_test_table
 
@@ -224,7 +222,7 @@ def test_list_rows(api_client, data_fixture):
     number_field_type = field_type_registry.get("number")
     old_can_order_by = number_field_type._can_order_by
     number_field_type._can_order_by = False
-    invalidate_table_model_cache_and_related_models(table.id)
+    invalidate_table_in_model_cache(table.id, invalidate_related_tables=True)
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(
         f"{url}?order_by=-field_{field_2.id}",
@@ -239,7 +237,7 @@ def test_list_rows(api_client, data_fixture):
         f"number does not support filtering."
     )
     number_field_type._can_order_by = old_can_order_by
-    invalidate_table_model_cache_and_related_models(table.id)
+    invalidate_table_in_model_cache(table.id, invalidate_related_tables=True)
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.get(

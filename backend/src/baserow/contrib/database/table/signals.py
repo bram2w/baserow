@@ -1,9 +1,7 @@
 from django.db.models.signals import post_delete
 from django.dispatch import Signal, receiver
 
-from baserow.contrib.database.table.cache import (
-    invalidate_table_model_cache_and_related_models,
-)
+from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.table.models import Table
 
 table_created = Signal()
@@ -14,4 +12,4 @@ tables_reordered = Signal()
 
 @receiver(post_delete, sender=Table)
 def invalidate_model_cache_when_table_deleted(sender, instance, **kwargs):
-    invalidate_table_model_cache_and_related_models(instance.id)
+    invalidate_table_in_model_cache(instance.id, invalidate_related_tables=True)

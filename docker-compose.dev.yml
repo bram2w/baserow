@@ -6,6 +6,10 @@ services:
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
 
+  redis:
+    ports:
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:${REDIS_PORT:-6379}:6379"
+
   # Override with the dev caddy file which switches Caddy to only be the media file
   # server in the dev env. Devs will instead directly connect to the backend and
   # web frontend services.
