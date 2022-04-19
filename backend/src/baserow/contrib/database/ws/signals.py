@@ -2,7 +2,7 @@ from django.conf import settings
 
 from .table.signals import table_created, table_updated, table_deleted
 from .views.signals import view_created, views_reordered, view_updated, view_deleted
-from .rows.signals import row_created, row_updated, row_deleted
+from .rows.signals import row_created, row_updated, rows_updated, row_deleted
 from .fields.signals import field_created, field_updated, field_deleted
 
 if settings.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
@@ -57,6 +57,7 @@ __all__ = [
     "view_deleted",
     "row_created",
     "row_updated",
+    "rows_updated",
     "row_deleted",
     "field_created",
     "field_updated",

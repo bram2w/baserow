@@ -90,7 +90,9 @@ class GalleryViewView(APIView):
         ),
         responses={
             200: get_example_pagination_serializer_class(
-                get_example_row_serializer_class(add_id=True, user_field_names=False),
+                get_example_row_serializer_class(
+                    example_type="get", user_field_names=False
+                ),
                 additional_fields={
                     "field_options": FieldOptionsField(
                         serializer_class=GalleryViewFieldOptionsSerializer,

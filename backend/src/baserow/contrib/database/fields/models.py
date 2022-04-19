@@ -133,7 +133,9 @@ class Field(
         from baserow.contrib.database.fields.registries import field_type_registry
 
         result = []
-        for field_dependency in self.dependants.select_related("dependant").all():
+        for field_dependency in (
+            self.dependants.select_related("dependant").order_by("id").all()
+        ):
             dependant_field = field_cache.lookup_specific(field_dependency.dependant)
             if dependant_field is None:
                 # If somehow the dependant is trashed it will be None. We can't really

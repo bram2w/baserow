@@ -118,6 +118,10 @@ def public_row_deleted(
 def public_before_row_update(
     sender, row, user, table, model, updated_field_ids, **kwargs
 ):
+    # TODO: Batch row updates are not yet supported for public grid.
+    # For now, this signal call will be ignored.
+    if isinstance(row, list):
+        return
     # Generate a serialized version of the row before it is updated. The
     # `row_updated` receiver needs this serialized version because it can't serialize
     # the old row after it has been updated.

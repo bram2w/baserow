@@ -35,8 +35,10 @@ class InvalidUserFileNameError(Exception):
 class UserFileDoesNotExist(Exception):
     """Raised when a user file with the provided name or id does not exist."""
 
-    def __init__(self, name_or_id, *args, **kwargs):
-        self.name_or_id = name_or_id
+    def __init__(self, file_names_or_ids, *args, **kwargs):
+        if not isinstance(file_names_or_ids, list):
+            file_names_or_ids = [file_names_or_ids]
+        self.file_names_or_ids = file_names_or_ids
         super().__init__(*args, **kwargs)
 
 

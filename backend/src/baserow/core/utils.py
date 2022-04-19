@@ -86,6 +86,19 @@ def set_allowed_attrs(values, allowed_fields, instance):
     return instance
 
 
+def get_non_unique_values(values: List) -> List:
+    """
+    Assembles all values that are not unique in the provided list
+    """
+    unique_values = set()
+    non_unique_values = set()
+    for value in values:
+        if value in unique_values:
+            non_unique_values.add(value)
+        unique_values.add(value)
+    return list(non_unique_values)
+
+
 def to_pascal_case(value):
     """
     Converts the value string to PascalCase.

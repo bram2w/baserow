@@ -476,7 +476,9 @@ def test_file_field_type(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_USER_FILE_DOES_NOT_EXIST"
-    assert response_json["detail"] == "The user file not_existing.jpg does not exist."
+    assert (
+        response_json["detail"] == "The user files ['not_existing.jpg'] do not exist."
+    )
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -1236,9 +1238,10 @@ def test_multiple_select_field_type(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["error"] == "ERROR_INVALID_SELECT_OPTION_VALUES"
     assert (
-        response_json["detail"][f"field_{field_1_id}"][0][0]["code"] == "does_not_exist"
+        response_json["detail"]
+        == "The provided select option ids [999999] are not valid select options."
     )
 
     response = api_client.post(

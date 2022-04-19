@@ -21,6 +21,22 @@ def _parse_date(date):
     return parse_date(date)
 
 
+def is_dict_subset(subset: dict, superset: dict) -> bool:
+    if isinstance(subset, dict):
+        return all(
+            key in superset and is_dict_subset(val, superset[key])
+            for key, val in subset.items()
+        )
+
+    if isinstance(subset, list) or isinstance(subset, set):
+        return all(
+            any(is_dict_subset(subitem, superitem) for superitem in superset)
+            for subitem in subset
+        )
+
+    return subset == superset
+
+
 def setup_interesting_test_table(data_fixture, user_kwargs=None):
     """
     Constructs a testing table with every field type, their sub types and any other

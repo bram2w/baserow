@@ -1165,7 +1165,7 @@ class LinkRowFieldType(FieldType):
 
         # Trigger the newly created pending operations of all the models related to the
         # created ManyToManyField. They need to be called manually because normally
-        # they are triggered when a new new model is registered. Not triggering them
+        # they are triggered when a new model is registered. Not triggering them
         # can cause a memory leak because everytime a table model is generated, it will
         # register new pending operations.
         apps = model._meta.apps
@@ -1505,16 +1505,7 @@ class FileFieldType(FieldType):
     model_class = FileField
     can_be_in_form_view = False
 
-    def prepare_value_for_db(self, instance, value):
-        if value is None:
-            return []
-
-        if not isinstance(value, list):
-            raise ValidationError("The provided value must be a list.")
-
-        if len(value) == 0:
-            return []
-
+    def _extract_file_names(self, value):
         # Validates the provided object and extract the names from it. We need the name
         # to validate if the file actually exists and to get the 'real' properties
         # from it.
@@ -1530,6 +1521,19 @@ class FileFieldType(FieldType):
                 raise ValidationError("The provided `visible_name` must be a string.")
 
             provided_files.append(o)
+        return provided_files
+
+    def prepare_value_for_db(self, instance, value):
+        if value is None:
+            return []
+
+        if not isinstance(value, list):
+            raise ValidationError("The provided value must be a list.")
+
+        if len(value) == 0:
+            return []
+
+        provided_files = self._extract_file_names(value)
 
         # Create a list of the serialized UserFiles in the originally provided order
         # because that is also the order we need to store the serialized versions in.
@@ -1547,13 +1551,43 @@ class FileFieldType(FieldType):
                     file.get("visible_name") or user_file.original_name
                 )
             except StopIteration:
-                raise UserFileDoesNotExist(
-                    file["name"], f"The provided file {file['name']} does not exist."
-                )
+                raise UserFileDoesNotExist(file["name"])
 
             user_files.append(serialized)
 
         return user_files
+
+    def prepare_value_for_db_in_bulk(self, instance, values_by_row):
+        provided_names_by_row = defaultdict(list)
+        unique_names = set()
+
+        for row_index, value in values_by_row.items():
+            provided_names_by_row[row_index] = self._extract_file_names(value)
+            unique_names.update(pn["name"] for pn in provided_names_by_row[row_index])
+
+        if len(unique_names) == 0:
+            return values_by_row
+
+        files = UserFile.objects.all().name(*unique_names)
+        if len(files) != len(unique_names):
+            invalid_names = sorted(
+                list(unique_names - set((file.name) for file in files))
+            )
+            raise UserFileDoesNotExist(invalid_names)
+
+        user_files_by_name = dict((file.name, file) for file in files)
+        for row_index, value in values_by_row.items():
+            serialized_files = []
+            for file_names in provided_names_by_row[row_index]:
+                user_file = user_files_by_name[file_names.get("name")]
+                serialized = user_file.serialize()
+                serialized["visible_name"] = (
+                    file_names.get("visible_name") or user_file.original_name
+                )
+                serialized_files.append(serialized)
+            values_by_row[row_index] = serialized_files
+
+        return values_by_row
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -1722,9 +1756,8 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
-        field_serializer = serializers.PrimaryKeyRelatedField(
+        field_serializer = serializers.IntegerField(
             **{
-                "queryset": SelectOption.objects.filter(field=instance),
                 "required": required,
                 "allow_null": not required,
                 **kwargs,
@@ -1764,6 +1797,19 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         # If the select option is not found or if it does not belong to the right field
         # then the provided value is invalid and a validation error can be raised.
         raise ValidationError(f"The provided value is not a valid option.")
+
+    def prepare_value_for_db_in_bulk(self, instance, values_by_row):
+        unique_values = {value for value in values_by_row.values()}
+
+        selected_ids = SelectOption.objects.filter(
+            field=instance, id__in=unique_values
+        ).values_list("id", flat=True)
+
+        if len(selected_ids) != len(unique_values):
+            invalid_ids = sorted(list(unique_values - set(selected_ids)))
+            raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
+
+        return values_by_row
 
     def get_serializer_help_text(self, instance):
         return (
@@ -1981,9 +2027,8 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
-        field_serializer = serializers.PrimaryKeyRelatedField(
+        field_serializer = serializers.IntegerField(
             **{
-                "queryset": SelectOption.objects.filter(field=instance),
                 "required": required,
                 "allow_null": not required,
                 **kwargs,
@@ -2023,15 +2068,30 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         options = SelectOption.objects.filter(field=instance, id__in=value)
 
         if len(options) != len(value):
-            raise AllProvidedMultipleSelectValuesMustBeSelectOption
+            raise AllProvidedMultipleSelectValuesMustBeSelectOption(value)
 
         return value
 
+    def prepare_value_for_db_in_bulk(self, instance, values_by_row):
+        unique_values = set()
+        for row_index, value in values_by_row.items():
+            unique_values.update(value)
+
+        selected_ids = SelectOption.objects.filter(
+            field=instance, id__in=unique_values
+        ).values_list("id", flat=True)
+
+        if len(selected_ids) != len(unique_values):
+            invalid_ids = sorted(list(unique_values - set(selected_ids)))
+            raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
+
+        return values_by_row
+
     def get_serializer_help_text(self, instance):
         return (
-            "This field accepts a list of `integer` each of which representing the"
+            "This field accepts a list of `integer` each of which representing the "
             "chosen select option id related to the field. Available ids can be found"
-            "when getting or listing the field. The response represents chosen field,"
+            "when getting or listing the field. The response represents chosen field, "
             "but also the value and color is exposed."
         )
 

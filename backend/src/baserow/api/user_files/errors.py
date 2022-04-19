@@ -32,5 +32,5 @@ ERROR_INVALID_USER_FILE_NAME_ERROR = (
 ERROR_USER_FILE_DOES_NOT_EXIST = (
     "ERROR_USER_FILE_DOES_NOT_EXIST",
     HTTP_400_BAD_REQUEST,
-    "The user file {e.name_or_id} does not exist.",
+    "The user files {e.file_names_or_ids} do not exist.",
 )
