@@ -9,7 +9,7 @@ from baserow.contrib.database.fields.mixins import (
     DATE_TIME_FORMAT_CHOICES,
 )
 from baserow.contrib.database.table.cache import (
-    invalidate_table_model_cache_and_related_models,
+    invalidate_table_in_model_cache,
 )
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_TYPE_CHOICES,
@@ -123,7 +123,9 @@ class Field(
         return name
 
     def invalidate_table_model_cache(self):
-        return invalidate_table_model_cache_and_related_models(self.table_id)
+        return invalidate_table_in_model_cache(
+            self.table_id, invalidate_related_tables=True
+        )
 
     def dependant_fields_with_types(
         self, field_cache, starting_via_path_to_starting_table=None

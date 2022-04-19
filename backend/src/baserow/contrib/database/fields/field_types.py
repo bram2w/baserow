@@ -57,7 +57,7 @@ from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.models import UserFile
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
-from baserow.contrib.database.table.cache import invalidate_single_table_in_model_cache
+from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from .dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
     CircularFieldDependencyError,
@@ -1469,7 +1469,7 @@ class LinkRowFieldType(FieldType):
         self,
         field: Field,
     ):
-        invalidate_single_table_in_model_cache(field.link_row_table_id)
+        invalidate_table_in_model_cache(field.link_row_table_id)
 
 
 class EmailFieldType(CharFieldMatchingRegexFieldType):
