@@ -198,7 +198,7 @@ def test_trashed_group_not_returned_by_views(api_client, data_fixture):
     trashed_group = data_fixture.create_group(user=user)
     visible_group = data_fixture.create_group(user=user)
 
-    CoreHandler().delete_group(user=user, group=trashed_group)
+    CoreHandler().delete_group_by_id(user, trashed_group.id)
 
     response = api_client.get(
         reverse("api:groups:list"), **{"HTTP_AUTHORIZATION": f"JWT {token}"}

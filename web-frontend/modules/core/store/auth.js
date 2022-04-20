@@ -3,6 +3,7 @@ import jwtDecode from 'jwt-decode'
 import AuthService from '@baserow/modules/core/services/auth'
 import { setToken, unsetToken } from '@baserow/modules/core/utils/auth'
 import { unsetGroupCookie } from '@baserow/modules/core/utils/group'
+import { v4 as uuidv4 } from 'uuid'
 
 export const state = () => ({
   refreshing: false,
@@ -10,6 +11,7 @@ export const state = () => ({
   user: null,
   additional: {},
   webSocketId: null,
+  untrustedClientSessionId: uuidv4(),
 })
 
 export const mutations = {
@@ -185,6 +187,9 @@ export const getters = {
   },
   isStaff(state) {
     return state.user ? state.user.is_staff : false
+  },
+  getUntrustedClientSessionId(state) {
+    return state.untrustedClientSessionId
   },
   /**
    * Returns the amount of seconds it will take before the tokes expires.

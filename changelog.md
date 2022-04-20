@@ -33,6 +33,7 @@
 * Fixed DONT_UPDATE_FORMULAS_AFTER_MIGRATION env var not working correctly.
 * Stopped the generated model cache clear operation also deleting all other redis keys.
 * Added Spanish and Italian languages.
+* Added undo/redo.
 
 ## Released (2022-03-03 1.9.1)
 

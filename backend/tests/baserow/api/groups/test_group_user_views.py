@@ -171,7 +171,7 @@ def test_delete_group_user(api_client, data_fixture):
 def test_if_group_trashed_then_group_user_is_trashed(api_client, data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token(email="test1@test.nl")
     trashed_group = data_fixture.create_group(user=user_1)
-    CoreHandler().delete_group(user=user_1, group=trashed_group)
+    CoreHandler().delete_group_by_id(user_1, trashed_group.id)
 
     response = api_client.get(
         reverse("api:groups:users:list", kwargs={"group_id": trashed_group.id}),

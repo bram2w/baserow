@@ -18,6 +18,7 @@ import authStore from '@baserow/modules/core/store/auth'
 import groupStore from '@baserow/modules/core/store/group'
 import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
+import undoRedoStore from '@baserow/modules/core/store/undoRedo'
 
 import en from '@baserow/modules/core/locales/en.json'
 import fr from '@baserow/modules/core/locales/fr.json'
@@ -64,4 +65,5 @@ export default (context, inject) => {
   store.registerModule('group', groupStore)
   store.registerModule('notification', notificationStore)
   store.registerModule('sidebar', sidebarStore)
+  store.registerModule('undoRedo', undoRedoStore)
 }

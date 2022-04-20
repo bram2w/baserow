@@ -1,8 +1,8 @@
 import datetime
 import os
 from urllib.parse import urlparse, urljoin
-import dj_database_url
 
+import dj_database_url
 from corsheaders.defaults import default_headers
 
 from baserow.version import VERSION
@@ -234,8 +234,12 @@ REST_FRAMEWORK = {
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
+CLIENT_SESSION_ID_HEADER = "ClientSessionId"
+MAX_CLIENT_SESSION_ID_LENGTH = 256
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "WebSocketId",
+    CLIENT_SESSION_ID_HEADER,
 ]
 
 
