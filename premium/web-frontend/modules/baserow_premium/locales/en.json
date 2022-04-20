@@ -43,7 +43,7 @@
             "expired": "The provided license has expired.",
             "duplicateTitle": "Duplicate",
             "duplicate": "The provided license is already registered to this instance.",
-            "instanceMismatchTitle": "Instance mistmatch",
+            "instanceMismatchTitle": "Instance mismatch",
             "instanceMismatch": "The provided license does not belong to this instance."
         }
     },

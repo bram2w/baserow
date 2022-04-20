@@ -178,6 +178,8 @@ import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
 import nl from '@baserow/modules/database/locales/nl.json'
 import de from '@baserow/modules/database/locales/de.json'
+import es from '@baserow/modules/database/locales/es.json'
+import it from '@baserow/modules/database/locales/it.json'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -189,6 +191,8 @@ export default (context) => {
     i18n.mergeLocaleMessage('fr', fr)
     i18n.mergeLocaleMessage('nl', nl)
     i18n.mergeLocaleMessage('de', de)
+    i18n.mergeLocaleMessage('es', es)
+    i18n.mergeLocaleMessage('it', it)
   }
 
   store.registerModule('table', tableStore)
