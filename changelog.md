@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* Shared public forms now don't allow creating new options
+  for single and multiple select fields.
 * Fixed bug where the arrow keys of a selected cell didn't work when they were not
   rendered.
 * Select new view immediately after creation.

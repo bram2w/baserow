@@ -17,6 +17,7 @@
           :read-only="false"
           :required="field.required"
           :touched="field._.touched"
+          v-bind="getFieldComponentProperties()"
           @update="$emit('input', $event)"
           @touched="field._.touched = true"
         />
@@ -50,6 +51,11 @@ export default {
       return this.$registry
         .get('field', this.field.field.type)
         .getFormViewFieldComponent()
+    },
+    getFieldComponentProperties() {
+      return this.$registry
+        .get('field', this.field.field.type)
+        .getFormViewFieldComponentProperties()
     },
     focus() {
       this.$el.scrollIntoView({ behavior: 'smooth' })
