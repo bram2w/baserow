@@ -1,13 +1,13 @@
-from django.db import transaction
-from itsdangerous.exc import BadSignature, BadTimeSignature, SignatureExpired
+from typing import List
 
 from django.conf import settings
-
-from drf_spectacular.utils import extend_schema
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.db import transaction
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from itsdangerous.exc import BadSignature, BadTimeSignature, SignatureExpired
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.views import (
     ObtainJSONWebTokenView as RegularObtainJSONWebToken,
@@ -27,20 +27,31 @@ from baserow.api.groups.invitations.errors import (
 )
 from baserow.api.schemas import get_error_schema
 from baserow.api.user.registries import user_data_registry
+from baserow.core.action.handler import ActionHandler
+from baserow.core.action.registries import ActionScopeStr
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
     GroupInvitationEmailMismatch,
     GroupInvitationDoesNotExist,
 )
 from baserow.core.models import GroupInvitation, Template
-from baserow.core.user.handler import UserHandler
 from baserow.core.user.exceptions import (
     UserAlreadyExist,
     UserNotFound,
     InvalidPassword,
     DisabledSignupError,
 )
-
+from baserow.core.user.handler import UserHandler
+from baserow.api.sessions import get_untrusted_client_session_id
+from .errors import (
+    ERROR_ALREADY_EXISTS,
+    ERROR_USER_NOT_FOUND,
+    ERROR_INVALID_OLD_PASSWORD,
+    ERROR_DISABLED_SIGNUP,
+    ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET,
+)
+from .exceptions import ClientSessionIdHeaderNotSetException
+from .schemas import create_user_response_schema, authenticate_user_schema
 from .serializers import (
     AccountSerializer,
     RegisterSerializer,
@@ -50,15 +61,9 @@ from .serializers import (
     ChangePasswordBodyValidationSerializer,
     NormalizedEmailWebTokenSerializer,
     DashboardSerializer,
+    UndoRedoRequestSerializer,
+    UndoRedoResponseSerializer,
 )
-from .errors import (
-    ERROR_ALREADY_EXISTS,
-    ERROR_USER_NOT_FOUND,
-    ERROR_INVALID_OLD_PASSWORD,
-    ERROR_DISABLED_SIGNUP,
-)
-from .schemas import create_user_response_schema, authenticate_user_schema
-
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -381,3 +386,94 @@ class DashboardView(APIView):
             {"group_invitations": group_invitations}
         )
         return Response(dashboard_serializer.data)
+
+
+class UndoView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name=settings.CLIENT_SESSION_ID_HEADER,
+                location=OpenApiParameter.HEADER,
+                type=OpenApiTypes.UUID,
+                required=True,
+                description="The particular client session to undo actions for. The "
+                "actions must have been performed with this same header set with the "
+                "same value for them to be undoable by this endpoint.",
+            )
+        ],
+        tags=["User"],
+        request=UndoRedoRequestSerializer,
+        operation_id="undo",
+        description=(
+            "undoes the latest undoable action performed by the user making the "
+            f"request. a {settings.CLIENT_SESSION_ID_HEADER} header must be provided "
+            f"and only actions which were performed the same user with the same "
+            f"{settings.CLIENT_SESSION_ID_HEADER} value set on the api request that "
+            f"performed the action will be undone."
+            f"Additionally the {settings.CLIENT_SESSION_ID_HEADER} header must "
+            f"be between 1 and {settings.MAX_CLIENT_SESSION_ID_LENGTH} characters long "
+            f"and must only contain alphanumeric or the - characters."
+        ),
+        responses={200: UndoRedoResponseSerializer},
+    )
+    @validate_body(UndoRedoRequestSerializer)
+    @map_exceptions(
+        {ClientSessionIdHeaderNotSetException: ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET}
+    )
+    @transaction.atomic
+    def patch(self, request, data: List[ActionScopeStr]):
+        session_id = get_untrusted_client_session_id(request.user)
+        if session_id is None:
+            raise ClientSessionIdHeaderNotSetException()
+        undone_action = ActionHandler.undo(request.user, data, session_id)
+        serializer = UndoRedoResponseSerializer(undone_action)
+        return Response(serializer.data, status=200)
+
+
+class RedoView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name=settings.CLIENT_SESSION_ID_HEADER,
+                location=OpenApiParameter.HEADER,
+                type=OpenApiTypes.UUID,
+                required=True,
+                description="The particular client session to redo actions for. The "
+                "actions must have been performed with this same header set with the "
+                "same value for them to be redoable by this endpoint.",
+            )
+        ],
+        tags=["User"],
+        request=UndoRedoRequestSerializer,
+        operation_id="redo",
+        description=(
+            "Redoes the latest redoable action performed by the user making the "
+            f"request. a {settings.CLIENT_SESSION_ID_HEADER} header must be provided "
+            f"and only actions which were performed the same user with the same "
+            f"{settings.CLIENT_SESSION_ID_HEADER} value set on the api request that "
+            f"performed the action will be redone."
+            f"Additionally the {settings.CLIENT_SESSION_ID_HEADER} header must "
+            f"be between 1 and {settings.MAX_CLIENT_SESSION_ID_LENGTH} characters long "
+            f"and must only contain alphanumeric or the - characters."
+        ),
+        responses={200: UndoRedoResponseSerializer},
+    )
+    @validate_body(UndoRedoRequestSerializer)
+    @map_exceptions(
+        {ClientSessionIdHeaderNotSetException: ERROR_CLIENT_SESSION_ID_HEADER_NOT_SET}
+    )
+    @transaction.atomic
+    def patch(self, request, data: List[ActionScopeStr]):
+        session_id = get_untrusted_client_session_id(request.user)
+        if session_id is None:
+            raise ClientSessionIdHeaderNotSetException()
+        redone_action = ActionHandler.redo(
+            request.user,
+            data,
+            session_id,
+        )
+        return Response(UndoRedoResponseSerializer(redone_action).data, status=200)

@@ -217,7 +217,12 @@
           </template>
         </ul>
       </div>
-      <div class="sidebar__foot">
+      <div
+        class="sidebar__foot"
+        :class="{
+          'sidebar__foot--with-undo-redo': enableUndoRedo,
+        }"
+      >
         <div class="sidebar__logo">
           <img
             height="14"
@@ -225,18 +230,40 @@
             alt="Baserow logo"
           />
         </div>
-        <a
-          class="sidebar__collapse-link"
-          @click="$store.dispatch('sidebar/toggleCollapsed')"
-        >
-          <i
-            class="fas"
-            :class="{
-              'fa-angle-double-right': isCollapsed,
-              'fa-angle-double-left': !isCollapsed,
-            }"
-          ></i>
-        </a>
+        <div class="sidebar__foot-links">
+          <template v-if="enableUndoRedo">
+            <a
+              class="sidebar__foot-link"
+              :class="{
+                'sidebar__foot-link--loading': undoLoading,
+              }"
+              @click="undo(false)"
+            >
+              <i class="fas fa-undo-alt"></i>
+            </a>
+            <a
+              class="sidebar__foot-link"
+              :class="{
+                'sidebar__foot-link--loading': redoLoading,
+              }"
+              @click="redo(false)"
+            >
+              <i class="fas fa-redo-alt"></i>
+            </a>
+          </template>
+          <a
+            class="sidebar__foot-link"
+            @click="$store.dispatch('sidebar/toggleCollapsed')"
+          >
+            <i
+              class="fas"
+              :class="{
+                'fa-angle-double-right': isCollapsed,
+                'fa-angle-double-left': !isCollapsed,
+              }"
+            ></i>
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -256,7 +283,7 @@ import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroup
 import GroupMembersModal from '@baserow/modules/core/components/group/GroupMembersModal'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
 import editGroup from '@baserow/modules/core/mixins/editGroup'
-
+import undoRedo from '@baserow/modules/core/mixins/undoRedo'
 export default {
   name: 'Sidebar',
   components: {
@@ -270,8 +297,11 @@ export default {
     GroupMembersModal,
     TrashModal,
   },
-  mixins: [editGroup],
+  mixins: [editGroup, undoRedo],
   computed: {
+    enableUndoRedo() {
+      return this.$featureFlags.includes('undo')
+    },
     /**
      * Because all the applications that belong to the user are in the store we will
      * filter on the selected group here.

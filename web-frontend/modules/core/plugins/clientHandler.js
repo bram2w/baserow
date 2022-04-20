@@ -291,6 +291,8 @@ export default function ({ store, app }, inject) {
     if (store.getters['auth/isAuthenticated']) {
       const token = store.getters['auth/token']
       config.headers.Authorization = `JWT ${token}`
+      config.headers.ClientSessionId =
+        store.getters['auth/getUntrustedClientSessionId']
     }
     if (store.getters['auth/webSocketId'] !== null) {
       const webSocketId = store.getters['auth/webSocketId']

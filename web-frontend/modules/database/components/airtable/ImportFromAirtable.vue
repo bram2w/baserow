@@ -85,6 +85,46 @@ export default {
       pollInterval: null,
     }
   },
+  computed: {
+    jobHasSucceeded() {
+      return this.job !== null && this.job.state === 'finished'
+    },
+    jobIsRunning() {
+      return (
+        this.job !== null && !['failed', 'finished'].includes(this.job.state)
+      )
+    },
+    jobHasFailed() {
+      return this.job !== null && this.job.state === 'failed'
+    },
+    humanReadableState() {
+      if (this.job === null) {
+        return ''
+      }
+
+      const importingTablePrefix = 'importing-table-'
+      if (this.job.state.startsWith(importingTablePrefix)) {
+        const table = this.job.state.replace(importingTablePrefix, '')
+        return this.$t('importFromAirtable.stateImportingTable', { table })
+      }
+
+      const translations = {
+        pending: this.$t('importFromAirtable.statePending'),
+        failed: this.$t('importFromAirtable.stateFailed'),
+        finished: this.$t('importFromAirtable.stateFinished'),
+        'downloading-base': this.$t('importFromAirtable.stateDownloadingBase'),
+        converting: this.$t('importFromAirtable.stateConverting'),
+        'downloading-files': this.$t(
+          'importFromAirtable.stateDownloadingFiles'
+        ),
+        importing: this.$t('importFromAirtable.stateImporting'),
+      }
+      return translations[this.job.state]
+    },
+    ...mapGetters({
+      selectedGroupId: 'group/selectedId',
+    }),
+  },
   beforeDestroy() {
     this.stopPollIfRunning()
   },
@@ -154,46 +194,6 @@ export default {
         this.$emit('hidden')
       }
     },
-  },
-  computed: {
-    jobHasSucceeded() {
-      return this.job !== null && this.job.state === 'finished'
-    },
-    jobIsRunning() {
-      return (
-        this.job !== null && !['failed', 'finished'].includes(this.job.state)
-      )
-    },
-    jobHasFailed() {
-      return this.job !== null && this.job.state === 'failed'
-    },
-    humanReadableState() {
-      if (this.job === null) {
-        return ''
-      }
-
-      const importingTablePrefix = 'importing-table-'
-      if (this.job.state.startsWith(importingTablePrefix)) {
-        const table = this.job.state.replace(importingTablePrefix, '')
-        return this.$t('importFromAirtable.stateImportingTable', { table })
-      }
-
-      const translations = {
-        pending: this.$t('importFromAirtable.statePending'),
-        failed: this.$t('importFromAirtable.stateFailed'),
-        finished: this.$t('importFromAirtable.stateFinished'),
-        'downloading-base': this.$t('importFromAirtable.stateDownloadingBase'),
-        converting: this.$t('importFromAirtable.stateConverting'),
-        'downloading-files': this.$t(
-          'importFromAirtable.stateDownloadingFiles'
-        ),
-        importing: this.$t('importFromAirtable.stateImporting'),
-      }
-      return translations[this.job.state]
-    },
-    ...mapGetters({
-      selectedGroupId: 'group/selectedId',
-    }),
   },
   validations: {
     airtableUrl: {

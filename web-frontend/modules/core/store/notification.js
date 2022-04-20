@@ -1,9 +1,12 @@
 import { uuid } from '@baserow/modules/core/utils/string'
+import { UNDO_REDO_STATES } from '@baserow/modules/core/utils/undoRedoConstants'
 
 export const state = () => ({
   connecting: false,
   failedConnecting: false,
   copying: false,
+  // See UNDO_REDO_STATES for all possible values.
+  undoRedoState: UNDO_REDO_STATES.HIDDEN,
   items: [],
 })
 
@@ -23,6 +26,9 @@ export const mutations = {
   },
   SET_COPYING(state, value) {
     state.copying = value
+  },
+  SET_UNDO_REDO_STATE(state, value) {
+    state.undoRedoState = value
   },
 }
 
@@ -75,9 +81,16 @@ export const actions = {
   setCopying({ commit }, value) {
     commit('SET_COPYING', value)
   },
+  setUndoRedoState({ commit }, value) {
+    commit('SET_UNDO_REDO_STATE', value)
+  },
 }
 
-export const getters = {}
+export const getters = {
+  undoRedoState(state) {
+    return state.undoRedoState
+  },
+}
 
 export default {
   namespaced: true,

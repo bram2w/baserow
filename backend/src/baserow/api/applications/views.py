@@ -11,7 +11,7 @@ from baserow.api.applications.errors import (
 )
 from baserow.api.decorators import validate_body, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP, ERROR_GROUP_DOES_NOT_EXIST
-from baserow.api.schemas import get_error_schema
+from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
 from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.core.exceptions import (
@@ -31,6 +31,8 @@ from .serializers import (
     OrderApplicationsSerializer,
     get_application_serializer,
 )
+from baserow.core.actions import CreateApplicationActionType
+from baserow.core.action.registries import action_type_registry
 
 application_type_serializers = {
     application_type.type: (
@@ -146,7 +148,8 @@ class ApplicationsView(APIView):
                 type=OpenApiTypes.INT,
                 description="Creates an application for the group related to the "
                 "provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Applications"],
         operation_id="create_application",
@@ -179,7 +182,7 @@ class ApplicationsView(APIView):
         """Creates a new application for a user."""
 
         group = CoreHandler().get_group(group_id)
-        application = CoreHandler().create_application(
+        application = action_type_registry.get_by_type(CreateApplicationActionType).do(
             request.user, group, data["type"], name=data["name"]
         )
 

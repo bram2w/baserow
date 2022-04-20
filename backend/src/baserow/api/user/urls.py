@@ -10,6 +10,8 @@ from .views import (
     ObtainJSONWebToken,
     RefreshJSONWebToken,
     VerifyJSONWebToken,
+    UndoView,
+    RedoView,
 )
 
 
@@ -30,5 +32,7 @@ urlpatterns = [
         r"^change-password/$", ChangePasswordView.as_view(), name="change_password"
     ),
     re_path(r"^dashboard/$", DashboardView.as_view(), name="dashboard"),
+    re_path(r"^undo/$", UndoView.as_view(), name="undo"),
+    re_path(r"^redo/$", RedoView.as_view(), name="redo"),
     re_path(r"^$", UserView.as_view(), name="index"),
 ]

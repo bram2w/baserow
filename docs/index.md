@@ -56,6 +56,8 @@ Baserow provides various APIs detailed below:
 * [Formula Technical Guide](technical/formula-technical-guide.md): A more technical
   guide about formulas aimed at developers who want to understand and work with
   internals of Baserow formulas.
+- [Undo Redo Technical Guide](technical/undo-redo-guide.md): How Baserow implements 
+  undo redo technically.
 
 ## Development
 

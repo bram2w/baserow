@@ -212,7 +212,7 @@ def test_restore_group(group_restored_mock, data_fixture):
 
     handler = CoreHandler()
 
-    handler.delete_group(user, group)
+    handler.delete_group_by_id(user, group.id)
 
     assert Group.objects.count() == 0
 
@@ -242,6 +242,8 @@ def test_update_group(send_mock, data_fixture):
     group = data_fixture.create_group(user=user_1)
 
     handler = CoreHandler()
+
+    group = handler.get_group_for_update(group.id)
     handler.update_group(user=user_1, group=group, name="New name")
 
     send_mock.assert_called_once()
@@ -255,7 +257,7 @@ def test_update_group(send_mock, data_fixture):
     with pytest.raises(UserNotInGroup):
         handler.update_group(user=user_2, group=group, name="New name")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="The group is not an instance of Group"):
         handler.update_group(user=user_2, group=object(), name="New name")
 
 
@@ -311,6 +313,9 @@ def test_delete_group(send_mock, data_fixture):
     group_3 = data_fixture.create_group(user=user_2)
 
     handler = CoreHandler()
+
+    group_1 = handler.get_group_for_update(group_1.id)
+    group_3 = handler.get_group_for_update(group_3.id)
     handler.delete_group(user, group_1)
 
     assert group_1.trashed

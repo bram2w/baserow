@@ -187,6 +187,21 @@
         "title": "Copying...",
         "content": "Preparing your data"
     },
+    "undoRedoNotification": {
+        "undoingTitle": "Undoing...",
+        "undoingText": "Undoing your action",
+        "undoneTitle": "Undone",
+        "undoneText": "Action is undone",
+        "noMoreUndo": "No more actions to undo",
+        "skippingUndoDueToError": "Undo failed due to unknown error, skipping it.",
+        "redoingTitle": "Redoing...",
+        "redoingText": "Redoing your action",
+        "redoneTitle": "Redone",
+        "redoneText": "Action is redone",
+        "noMoreRedo": "No more actions to redo",
+        "skippingRedoDueToError": "Redo failed due to unknown error, skipping it.",
+        "failed": "Failed"
+    },
     "errorLayout": {
         "notFound": "The page you are looking for has not been found. This might be because URL is incorrect or that you don’t have permission to view this page.",
         "error": "Something went wrong while loading the page. Our developers have been notified of the issue. Please try to refresh or return to the dashboard.",

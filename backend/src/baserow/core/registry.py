@@ -1,4 +1,5 @@
 import contextlib
+from typing import TypeVar, Generic, Dict, List, ValuesView, Tuple, Type
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -201,7 +202,11 @@ class ImportExportMixin:
         raise NotImplementedError("The import_serialized method must be implemented.")
 
 
-class Registry(object):
+T = TypeVar("T", bound=Instance)
+K = TypeVar("K")
+
+
+class Registry(Generic[T]):
     name = None
     """The unique name that is used when raising exceptions."""
 
@@ -218,9 +223,9 @@ class Registry(object):
                 "InstanceModelRegistry to raise proper errors."
             )
 
-        self.registry = {}
+        self.registry: Dict[str, T] = {}
 
-    def get(self, type_name):
+    def get(self, type_name: str) -> T:
         """
         Returns a registered instance of the given type name.
 
@@ -239,7 +244,10 @@ class Registry(object):
 
         return self.registry[type_name]
 
-    def get_all(self):
+    def get_by_type(self, instance_type: Type[K]) -> K:
+        return self.get(instance_type.type)
+
+    def get_all(self) -> ValuesView[T]:
         """
         Returns all registered instances
 
@@ -249,7 +257,7 @@ class Registry(object):
 
         return self.registry.values()
 
-    def get_types(self):
+    def get_types(self) -> List[str]:
         """
         Returns a list of available type names.
 
@@ -259,7 +267,7 @@ class Registry(object):
 
         return list(self.registry.keys())
 
-    def get_types_as_tuples(self):
+    def get_types_as_tuples(self) -> List[Tuple[str, str]]:
         """
         Returns a list of available type names.
 
@@ -269,7 +277,7 @@ class Registry(object):
 
         return [(k, k) for k in self.registry.keys()]
 
-    def register(self, instance):
+    def register(self, instance: T):
         """
         Registers a new instance in the registry.
 
@@ -290,7 +298,7 @@ class Registry(object):
 
         self.registry[instance.type] = instance
 
-    def unregister(self, value):
+    def unregister(self, value: T):
         """
         Removes a registered instance from the registry. An instance or type name can be
         provided as value.
