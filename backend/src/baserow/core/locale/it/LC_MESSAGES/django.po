@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-10-28 20:39+0000\n"
-"PO-Revision-Date: 2022-01-30 00:54+0000\n"
-"Last-Translator: Allan Nordhøy <epost@anotheragency.no>\n"
+"PO-Revision-Date: 2022-03-22 20:00+0000\n"
+"Last-Translator: Sara Cinacchi <sara.cinacchi@gmail.com>\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/baserow/"
 "backend-core/it/>\n"
 "Language: it\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.11-dev\n"
+"X-Generator: Weblate 4.12-dev\n"
 
 #: src/baserow/core/emails.py:88
 #, python-format
@@ -107,7 +107,7 @@ msgstr "Reimposta password -Baserow"
 #: src/baserow/core/user/handler.py:155
 #, python-format
 msgid "%(name)s's group"
-msgstr "%(name)s  del gruppo"
+msgstr "%(name)s del gruppo"
 
 #~ msgid "Group invitation"
 #~ msgstr "Invitation à un groupe"
