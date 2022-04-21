@@ -20,6 +20,7 @@ from .signals import (
 from baserow.contrib.database.fields.dependencies.update_collector import (
     CachingFieldUpdateCollector,
 )
+from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.core.utils import get_non_unique_values
 
 
@@ -344,23 +345,25 @@ class RowHandler:
                 fields=model.fields_requiring_refresh_after_insert()
             )
 
-        updated_fields = [field["field"] for field in model._field_objects.values()]
         update_collector = CachingFieldUpdateCollector(
             table, starting_row_id=instance.id, existing_model=model
         )
-        for field in updated_fields:
-            for (
-                dependant_field,
-                dependant_field_type,
-                path_to_starting_table,
-            ) in field.dependant_fields_with_types(update_collector):
-                dependant_field_type.row_of_dependency_created(
-                    dependant_field, instance, update_collector, path_to_starting_table
-                )
+        updated_field_ids = [field_id for field_id in model._field_objects.keys()]
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+            updated_field_ids, update_collector
+        ):
+            dependant_field_type.row_of_dependency_created(
+                dependant_field, instance, update_collector, path_to_starting_table
+            )
         update_collector.apply_updates_and_get_updated_fields()
 
         from baserow.contrib.database.views.handler import ViewHandler
 
+        updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
 
         return instance
@@ -466,15 +469,16 @@ class RowHandler:
             update_collector = CachingFieldUpdateCollector(
                 table, starting_row_id=row.id, existing_model=model
             )
-            for field in updated_fields:
-                for (
-                    dependant_field,
-                    dependant_field_type,
-                    path_to_starting_table,
-                ) in field.dependant_fields_with_types(update_collector):
-                    dependant_field_type.row_of_dependency_updated(
-                        dependant_field, row, update_collector, path_to_starting_table
-                    )
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in FieldDependencyHandler.get_dependant_fields_with_type(
+                updated_field_ids, update_collector
+            ):
+                dependant_field_type.row_of_dependency_updated(
+                    dependant_field, row, update_collector, path_to_starting_table
+                )
             update_collector.apply_updates_and_get_updated_fields()
             # We need to refresh here as ExpressionFields might have had their values
             # updated. Django does not support UPDATE .... RETURNING and so we need to
@@ -606,6 +610,11 @@ class RowHandler:
                 )
         update_collector.apply_updates_and_get_updated_fields()
 
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        updated_fields = [o["field"] for o in model._field_objects.values()]
+        ViewHandler().field_value_updated(updated_fields)
+
         rows_to_return = list(
             model.objects.all().enhance_by_fields().filter(id__in=row_ids)
         )
@@ -648,7 +657,7 @@ class RowHandler:
             model = table.get_model()
 
         try:
-            row = model.objects.select_for_update().get(id=row_id)
+            row = model.objects.select_for_update().enhance_by_fields().get(id=row_id)
         except model.DoesNotExist:
             raise RowDoesNotExist(row_id)
 
@@ -659,25 +668,25 @@ class RowHandler:
         row.order = self.get_order_before_row(before, model)
         row.save()
 
-        updated_fields = [
-            field["field"] for field_id, field in model._field_objects.items()
-        ]
         update_collector = CachingFieldUpdateCollector(
             table, starting_row_id=row.id, existing_model=model
         )
-        for field in updated_fields:
-            for (
-                dependant_field,
-                dependant_field_type,
-                path_to_starting_table,
-            ) in field.dependant_fields_with_types(update_collector):
-                dependant_field_type.row_of_dependency_moved(
-                    dependant_field, row, update_collector, path_to_starting_table
-                )
+        updated_field_ids = [field_id for field_id in model._field_objects.keys()]
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+            updated_field_ids, update_collector
+        ):
+            dependant_field_type.row_of_dependency_moved(
+                dependant_field, row, update_collector, path_to_starting_table
+            )
         update_collector.apply_updates_and_get_updated_fields()
 
         from baserow.contrib.database.views.handler import ViewHandler
 
+        updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
 
         row_updated.send(
@@ -725,23 +734,26 @@ class RowHandler:
         row_id = row.id
 
         TrashHandler.trash(user, group, table.database, row, parent_id=table.id)
-        updated_fields = [field["field"] for field in model._field_objects.values()]
+
         update_collector = CachingFieldUpdateCollector(
             table, starting_row_id=row.id, existing_model=model
         )
-        for field in updated_fields:
-            for (
-                dependant_field,
-                dependant_field_type,
-                path_to_starting_table,
-            ) in field.dependant_fields_with_types(update_collector):
-                dependant_field_type.row_of_dependency_deleted(
-                    dependant_field, row, update_collector, path_to_starting_table
-                )
+        updated_field_ids = [field_id for field_id in model._field_objects.keys()]
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+            updated_field_ids, update_collector
+        ):
+            dependant_field_type.row_of_dependency_deleted(
+                dependant_field, row, update_collector, path_to_starting_table
+            )
         update_collector.apply_updates_and_get_updated_fields()
 
         from baserow.contrib.database.views.handler import ViewHandler
 
+        updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
 
         row_deleted.send(

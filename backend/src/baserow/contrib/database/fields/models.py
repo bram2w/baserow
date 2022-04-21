@@ -17,6 +17,7 @@ from baserow.contrib.database.formula import (
     BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
 )
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
+
 from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
@@ -130,28 +131,13 @@ class Field(
     def dependant_fields_with_types(
         self, field_cache, starting_via_path_to_starting_table=None
     ):
-        from baserow.contrib.database.fields.registries import field_type_registry
+        from baserow.contrib.database.fields.dependencies.handler import (
+            FieldDependencyHandler,
+        )
 
-        result = []
-        for field_dependency in (
-            self.dependants.select_related("dependant").order_by("id").all()
-        ):
-            dependant_field = field_cache.lookup_specific(field_dependency.dependant)
-            if dependant_field is None:
-                # If somehow the dependant is trashed it will be None. We can't really
-                # trigger any updates for it so ignore it.
-                continue
-            dependant_field_type = field_type_registry.get_by_model(dependant_field)
-            if field_dependency.via is not None:
-                via_path_to_starting_table = (
-                    starting_via_path_to_starting_table or []
-                ) + [field_dependency.via]
-            else:
-                via_path_to_starting_table = starting_via_path_to_starting_table
-            result.append(
-                (dependant_field, dependant_field_type, via_path_to_starting_table)
-            )
-        return result
+        return FieldDependencyHandler.get_dependant_fields_with_type(
+            [self.id], field_cache, starting_via_path_to_starting_table
+        )
 
     def save(self, *args, **kwargs):
         kwargs.pop("field_lookup_cache", None)
