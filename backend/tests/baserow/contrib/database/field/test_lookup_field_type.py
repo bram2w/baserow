@@ -1593,3 +1593,173 @@ def test_converting_away_from_lookup_field_deletes_parent_formula_field(
 
     assert LookupField.objects.count() == 0
     assert FormulaField.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_can_modify_row_containing_lookup_diamond_dep(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(user=user, database=table.database)
+    table3 = data_fixture.create_database_table(user=user, database=table.database)
+    table_primary_field = data_fixture.create_text_field(
+        name="primaryfield", table=table, primary=True
+    )
+    data_fixture.create_text_field(name="primaryfield", table=table3, primary=True)
+    data_fixture.create_text_field(name="primaryfield", table=table2, primary=True)
+
+    FieldHandler().create_field(
+        user,
+        table2,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table,
+    )
+    FieldHandler().create_field(
+        user,
+        table3,
+        "link_row",
+        name="a",
+        link_row_table=table2,
+    )
+    FieldHandler().create_field(
+        user,
+        table3,
+        "link_row",
+        name="b",
+        link_row_table=table2,
+    )
+
+    table2_model = table2.get_model(attribute_names=True)
+    table2_row1 = table2_model.objects.create(primaryfield="table2_row1", order=0)
+    table2_row2 = table2_model.objects.create(primaryfield="table2_row2", order=1)
+
+    table_model = table.get_model(attribute_names=True)
+
+    starting_row = table_model.objects.create(primaryfield="table1_primary_row_1")
+    table2_row1.linkrowfield.add(starting_row.id)
+    table2_row1.save()
+    table2_row2.linkrowfield.add(starting_row.id)
+    table2_row2.save()
+
+    table3_model = table3.get_model(attribute_names=True)
+    table3_row_1 = table3_model.objects.create(primaryfield="table3_row_1")
+    table3_row_2 = table3_model.objects.create(primaryfield="table3_row_2")
+
+    table3_row_1.a.add(table2_row1.id)
+    table3_row_1.save()
+
+    table3_row_2.b.add(table2_row2.id)
+    table3_row_2.save()
+
+    FieldHandler().create_field(
+        user,
+        table2,
+        "formula",
+        name="middle_lookup",
+        formula="""join(lookup('linkrowfield', 'primaryfield'), " ")""",
+    )
+    FieldHandler().create_field(
+        user,
+        table3,
+        "formula",
+        name="final_lookup",
+        formula="""join(lookup('a', 'middle_lookup'), " ")+join(lookup('b',
+        'middle_lookup'), " ")""",
+    )
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table2.id})
+        + f"?include=middle_lookup&user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": table2_row1.id,
+                "linkrowfield": [
+                    {"id": starting_row.id, "value": "table1_primary_row_1"}
+                ],
+                "middle_lookup": "table1_primary_row_1",
+                "order": "0.00000000000000000000",
+            },
+            {
+                "id": table2_row2.id,
+                "linkrowfield": [
+                    {"id": starting_row.id, "value": "table1_primary_row_1"}
+                ],
+                "middle_lookup": "table1_primary_row_1",
+                "order": "1.00000000000000000000",
+            },
+        ],
+    }
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table3.id})
+        + f"?include=final_lookup&user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "a": [{"id": 1, "value": "table2_row1"}],
+                "b": [],
+                "final_lookup": "table1_primary_row_1",
+                "id": 1,
+                "order": "1.00000000000000000000",
+            },
+            {
+                "a": [],
+                "b": [{"id": 2, "value": "table2_row2"}],
+                "final_lookup": "table1_primary_row_1",
+                "id": 2,
+                "order": "1.00000000000000000000",
+            },
+        ],
+    }
+    response = api_client.patch(
+        reverse(
+            "api:database:rows:item",
+            kwargs={"table_id": table.id, "row_id": starting_row.id},
+        ),
+        {
+            f"field_{table_primary_field.id}": "changed",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response = api_client.get(
+        reverse("api:database:rows:list", kwargs={"table_id": table3.id})
+        + f"?include=final_lookup&user_field_names=true",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "a": [{"id": table2_row1.id, "value": "table2_row1"}],
+                "b": [],
+                "final_lookup": "changed",
+                "id": table3_row_1.id,
+                "order": "1.00000000000000000000",
+            },
+            {
+                "a": [],
+                "b": [{"id": table2_row2.id, "value": "table2_row2"}],
+                "final_lookup": "changed",
+                "id": table3_row_2.id,
+                "order": "1.00000000000000000000",
+            },
+        ],
+    }
