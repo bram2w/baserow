@@ -35,7 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=150)
+    name = serializers.CharField(min_length=2, max_length=150)
     email = serializers.EmailField(
         help_text="The email address is also going to be the username."
     )
@@ -75,7 +75,7 @@ class AccountSerializer(serializers.Serializer):
     This serializer must be kept in sync with `UserSerializer`.
     """
 
-    first_name = serializers.CharField(min_length=1, max_length=32)
+    first_name = serializers.CharField(min_length=2, max_length=150)
     language = serializers.CharField(
         source="profile.language",
         required=False,

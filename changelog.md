@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Fixed invalid `first_name` validation in the account form modal.
 * Fixed bug where the arrow keys of a selected cell didn't work when they were not
   rendered.
 * Select new view immediately after creation.
