@@ -5,4 +5,9 @@ export const DATABASE_ACTION_SCOPES = {
       table: tableId,
     }
   },
+  view(viewId) {
+    return {
+      view: viewId,
+    }
+  },
 }

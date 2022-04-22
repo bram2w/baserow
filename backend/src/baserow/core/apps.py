@@ -28,12 +28,30 @@ class CoreConfig(AppConfig):
         action_type_registry.register(UpdateGroupActionType())
         action_type_registry.register(CreateApplicationActionType())
 
+        from baserow.contrib.database.views.actions import (
+            CreateViewFilterActionType,
+            UpdateViewFilterActionType,
+            DeleteViewFilterActionType,
+            CreateViewSortActionType,
+            UpdateViewSortActionType,
+            DeleteViewSortActionType,
+        )
+
+        action_type_registry.register(CreateViewFilterActionType())
+        action_type_registry.register(UpdateViewFilterActionType())
+        action_type_registry.register(DeleteViewFilterActionType())
+        action_type_registry.register(CreateViewSortActionType())
+        action_type_registry.register(UpdateViewSortActionType())
+        action_type_registry.register(DeleteViewSortActionType())
+
         from baserow.core.action.scopes import (
             RootActionScopeType,
             GroupActionScopeType,
             ApplicationActionScopeType,
+            ViewActionScopeType,
         )
 
         action_scope_registry.register(RootActionScopeType())
         action_scope_registry.register(GroupActionScopeType())
         action_scope_registry.register(ApplicationActionScopeType())
+        action_scope_registry.register(ViewActionScopeType())
