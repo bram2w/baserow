@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any
+from typing import Any, List
 
 from django.contrib.auth.models import AbstractUser
 
@@ -188,6 +188,62 @@ class UpdateGroupActionType(ActionType):
             group,
             name=params.new_group_name,
         )
+
+
+class OrderGroupsActionType(ActionType):
+    type = "order_groups"
+
+    @dataclasses.dataclass
+    class Params:
+        original_order: List[int]
+        new_order: List[int]
+
+    @classmethod
+    def do(cls, user: AbstractUser, group_ids: List[int]) -> None:
+        """
+        Changes the order of groups for a user.
+        See baserow.core.handler.CoreHandler.order_groups for more details. Undoing
+        this action restores the original order of groups prior to this action being
+        performed, redoing this restores the new order set initially.
+
+        :param user: The user ordering the groups.
+        :param group_ids: The ids of the groups to order.
+        """
+
+        original_order = CoreHandler().get_groups_order(user)
+
+        CoreHandler().order_groups(user, group_ids)
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(
+                original_order,
+                new_order=group_ids,
+            ),
+            scope=cls.scope(),
+        )
+
+    @classmethod
+    def scope(cls) -> ActionScopeStr:
+        return RootActionScopeType.value()
+
+    @classmethod
+    def undo(
+        cls,
+        user: AbstractUser,
+        params: Params,
+        action_to_undo: Action,
+    ):
+        CoreHandler().order_groups(user, params.original_order)
+
+    @classmethod
+    def redo(
+        cls,
+        user: AbstractUser,
+        params: Params,
+        action_to_redo: Action,
+    ):
+        CoreHandler().order_groups(user, params.new_order)
 
 
 class CreateApplicationActionType(ActionType):

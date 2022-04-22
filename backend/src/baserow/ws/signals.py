@@ -93,6 +93,17 @@ def group_user_deleted(sender, group_user, user, **kwargs):
     )
 
 
+@receiver(signals.groups_reordered)
+def groups_reordered(sender, group_ids, user, **kwargs):
+    transaction.on_commit(
+        lambda: broadcast_to_users.delay(
+            [user.id],
+            {"type": "groups_reordered", "group_ids": group_ids},
+            getattr(user, "web_socket_id", None),
+        )
+    )
+
+
 @receiver(signals.application_created)
 def application_created(sender, application, user, **kwargs):
     transaction.on_commit(

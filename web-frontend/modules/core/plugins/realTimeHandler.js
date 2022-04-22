@@ -223,6 +223,10 @@ export class RealTimeHandler {
       }
     })
 
+    this.registerEvent('groups_reordered', ({ store }, data) => {
+      store.dispatch('group/forceOrder', data.group_ids)
+    })
+
     this.registerEvent('application_created', ({ store }, data) => {
       store.dispatch('application/forceCreate', data.application)
     })
