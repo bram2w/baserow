@@ -746,15 +746,13 @@ class CoreHandler:
         Application.order_objects(queryset, order)
         applications_reordered.send(self, group=group, order=order, user=user)
 
-    def delete_application(self, user, application):
+    def delete_application(self, user: AbstractUser, application: Application):
         """
         Deletes an existing application instance if the user has access to the
         related group. The `application_deleted` signal is also called.
 
         :param user: The user on whose behalf the application is deleted.
-        :type user: User
         :param application: The application instance that needs to be deleted.
-        :type application: Application
         :raises ValueError: If one of the provided parameters is invalid.
         """
 

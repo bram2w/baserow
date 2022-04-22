@@ -236,3 +236,43 @@ class CreateApplicationActionType(ActionType):
         TrashHandler.restore_item(
             user, "application", params.application_id, parent_trash_item_id=None
         )
+
+
+class DeleteApplicationActionType(ActionType):
+    type = "delete_application"
+
+    @dataclasses.dataclass
+    class Params:
+        application_id: int
+
+    @classmethod
+    def do(cls, user: AbstractUser, application: Application) -> None:
+        """
+        Deletes an existing application instance if the user has access to the
+        related group. The `application_deleted` signal is also called.
+        See baserow.core.handler.CoreHandler.delete_application for further details.
+        Undoing this action restores the application and redoing trashes it.
+
+        :param user: The user on whose behalf the application is deleted.
+        :param application: The application instance that needs to be deleted.
+        """
+
+        CoreHandler().delete_application(user, application)
+
+        params = cls.Params(application.id)
+        cls.register_action(user, params, cls.scope(application.group.id))
+
+    @classmethod
+    def scope(cls, group_id) -> ActionScopeStr:
+        return GroupActionScopeType.value(group_id)
+
+    @classmethod
+    def undo(cls, user, params: Params, action_being_undone: Action):
+        TrashHandler.restore_item(
+            user, "application", params.application_id, parent_trash_item_id=None
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        application = CoreHandler().get_application(params.application_id)
+        CoreHandler().delete_application(user, application)
