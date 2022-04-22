@@ -1,8 +1,10 @@
 import pytest
 import string
+
 from pytz import timezone
 from freezegun import freeze_time
 from datetime import datetime
+from pytest_unordered import unordered
 
 from django.http import HttpRequest
 from rest_framework.request import Request
@@ -116,15 +118,14 @@ def test_create_token(data_fixture):
     permissions = TokenPermission.objects.all()
     assert permissions.count() == 4
 
-    permissions_types = {"create", "read", "update", "delete"}
-    for i in range(4):
-        assert permissions[i].token_id == token.id
-        try:
-            permissions_types.remove(permissions[i].type)
-        except KeyError:
-            assert False, f"Permission type '{permissions[i].type}' not found"
-        assert permissions[i].database_id is None
-        assert permissions[i].table_id is None
+    permissions_types = []
+    for perm in permissions:
+        assert perm.token_id == token.id
+        assert perm.database_id is None
+        assert perm.table_id is None
+        permissions_types.append(perm.type)
+
+    assert permissions_types == unordered(["create", "read", "update", "delete"])
 
 
 @pytest.mark.django_db
