@@ -9,8 +9,12 @@ from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import (
     action_type_registry,
 )
-from baserow.core.actions import CreateGroupActionType, UpdateGroupActionType
-from baserow.core.handler import GroupForUpdate
+from baserow.core.actions import (
+    CreateGroupActionType,
+    UpdateGroupActionType,
+    OrderGroupsActionType,
+)
+from baserow.core.handler import GroupForUpdate, CoreHandler
 from baserow.core.models import Group
 
 
@@ -71,3 +75,81 @@ def test_can_undo_updating_group(data_fixture, django_assert_num_queries):
     ActionHandler.undo(user, [RootActionScopeType.value()], session_id)
     updated_group.refresh_from_db()
     assert updated_group.name == "test"
+
+
+@pytest.mark.django_db
+def test_can_undo_ordering_group(data_fixture, django_assert_num_queries):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+
+    group_user = action_type_registry.get_by_type(CreateGroupActionType).do(
+        user, "test"
+    )
+
+    group2_user = action_type_registry.get_by_type(CreateGroupActionType).do(
+        user, "test2"
+    )
+
+    action_type_registry.get_by_type(OrderGroupsActionType).do(
+        user, [group_user.group.id, group2_user.group.id]
+    )
+
+    order_original = CoreHandler().get_groups_order(user)
+
+    assert order_original == [group_user.group.id, group2_user.group.id]
+
+    order_new = [group2_user.group.id, group_user.group.id]
+
+    action_type_registry.get_by_type(OrderGroupsActionType).do(user, order_new)
+
+    order = CoreHandler().get_groups_order(user)
+
+    assert order == order_new
+
+    ActionHandler.undo(user, [RootActionScopeType.value()], session_id)
+
+    order = CoreHandler().get_groups_order(user)
+
+    assert order == order_original
+
+
+@pytest.mark.django_db
+def test_can_undo_redo_ordering_group(data_fixture, django_assert_num_queries):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+
+    group_user = action_type_registry.get_by_type(CreateGroupActionType).do(
+        user, "test"
+    )
+
+    group2_user = action_type_registry.get_by_type(CreateGroupActionType).do(
+        user, "test2"
+    )
+
+    action_type_registry.get_by_type(OrderGroupsActionType).do(
+        user, [group_user.group.id, group2_user.group.id]
+    )
+
+    order_original = CoreHandler().get_groups_order(user)
+
+    assert order_original == [group_user.group.id, group2_user.group.id]
+
+    order_new = [group2_user.group.id, group_user.group.id]
+
+    action_type_registry.get_by_type(OrderGroupsActionType).do(user, order_new)
+
+    order = CoreHandler().get_groups_order(user)
+
+    assert order == order_new
+
+    ActionHandler.undo(user, [RootActionScopeType.value()], session_id)
+
+    order = CoreHandler().get_groups_order(user)
+
+    assert order == order_original
+
+    ActionHandler.redo(user, [RootActionScopeType.value()], session_id)
+
+    order = CoreHandler().get_groups_order(user)
+
+    assert order == order_new

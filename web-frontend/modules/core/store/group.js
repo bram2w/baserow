@@ -145,6 +145,12 @@ export const actions = {
     commit('UPDATE_ITEM', { id: group.id, values })
   },
   /**
+   * Forcefully reorders the items in the store without making a call to the server.
+   */
+  forceOrder({ commit }, order) {
+    commit('ORDER_ITEMS', order)
+  },
+  /**
    * Updates the order of the groups for the current user.
    */
   async order({ commit, getters }, { order, oldOrder }) {

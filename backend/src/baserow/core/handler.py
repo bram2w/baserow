@@ -3,7 +3,7 @@ import json
 import hashlib
 from io import BytesIO
 from pathlib import Path
-from typing import NewType, cast
+from typing import NewType, cast, List
 from urllib.parse import urlparse, urljoin
 
 from django.contrib.auth.models import AbstractUser
@@ -61,6 +61,7 @@ from .signals import (
     group_deleted,
     group_user_updated,
     group_user_deleted,
+    groups_reordered,
 )
 from .emails import GroupInvitationEmail
 
@@ -272,20 +273,32 @@ class CoreHandler:
             self, group_id=group_id, group=group, group_users=group_users, user=user
         )
 
-    def order_groups(self, user, group_ids):
+    def order_groups(self, user: AbstractUser, group_ids: List[int]):
         """
         Changes the order of groups for a user.
 
         :param user: The user on whose behalf the ordering is done.
-        :type: user: User
         :param group_ids: A list of group ids ordered the way they need to be ordered.
-        :type group_ids: List[int]
         """
 
         for index, group_id in enumerate(group_ids):
             GroupUser.objects.filter(user=user, group_id=group_id).update(
                 order=index + 1
             )
+        groups_reordered.send(self, user=user, group_ids=group_ids)
+
+    def get_groups_order(self, user: AbstractUser) -> List[int]:
+        """
+        Returns the order of groups for a user.
+
+        :param user: The user on whose behalf the ordering is done.
+        :return: A list of group ids ordered the way they need to be ordered.
+        """
+
+        return [
+            group_user.group_id
+            for group_user in GroupUser.objects.filter(user=user).order_by("order")
+        ]
 
     def get_group_user(self, group_user_id, base_queryset=None):
         """

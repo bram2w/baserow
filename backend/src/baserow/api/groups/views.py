@@ -35,6 +35,7 @@ from baserow.core.actions import (
     DeleteGroupActionType,
     CreateGroupActionType,
     UpdateGroupActionType,
+    OrderGroupsActionType,
 )
 
 
@@ -237,6 +238,7 @@ class GroupOrderView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
+        parameters=[CLIENT_SESSION_ID_SCHEMA_PARAMETER],
         tags=["Groups"],
         operation_id="order_groups",
         description=(
@@ -254,5 +256,7 @@ class GroupOrderView(APIView):
     def post(self, request, data):
         """Updates to order of some groups for a user."""
 
-        CoreHandler().order_groups(request.user, data["groups"])
+        action_type_registry.get_by_type(OrderGroupsActionType).do(
+            request.user, data["groups"]
+        )
         return Response(status=204)

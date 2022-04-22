@@ -20,12 +20,14 @@ class CoreConfig(AppConfig):
             UpdateGroupActionType,
             CreateGroupActionType,
             DeleteGroupActionType,
+            OrderGroupsActionType,
             CreateApplicationActionType,
         )
 
         action_type_registry.register(CreateGroupActionType())
         action_type_registry.register(DeleteGroupActionType())
         action_type_registry.register(UpdateGroupActionType())
+        action_type_registry.register(OrderGroupsActionType())
         action_type_registry.register(CreateApplicationActionType())
 
         from baserow.core.action.scopes import (
