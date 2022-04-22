@@ -17,7 +17,6 @@ import { mapState } from 'vuex'
 
 import Table from '@baserow/modules/database/components/table/Table'
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
-import { DATABASE_ACTION_SCOPES } from '@baserow/modules/database/utils/undoRedoConstants'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -30,6 +29,7 @@ export default {
    * way it will not be highlighted the left sidebar.
    */
   beforeRouteLeave(to, from, next) {
+    this.$store.dispatch('view/unselect')
     this.$store.dispatch('table/unselect')
     next()
   },
@@ -141,10 +141,6 @@ export default {
   },
   mounted() {
     this.$realtime.subscribe('table', { table_id: this.table.id })
-    this.$store.dispatch(
-      'undoRedo/updateCurrentScopeSet',
-      DATABASE_ACTION_SCOPES.table(this.table.id)
-    )
   },
   beforeDestroy() {
     this.$realtime.subscribe(null)

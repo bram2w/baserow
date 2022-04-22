@@ -6,6 +6,16 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.views.actions import (
+    CreateViewFilterActionType,
+    CreateViewSortActionType,
+    DeleteViewFilterActionType,
+    DeleteViewSortActionType,
+    UpdateViewFilterActionType,
+    UpdateViewSortActionType,
+)
+from baserow.core.action.registries import action_type_registry
 
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -26,7 +36,7 @@ from baserow.api.utils import (
     DiscriminatorCustomFieldsMappingSerializer,
     CustomFieldRegistryMappingSerializer,
 )
-from baserow.api.schemas import get_error_schema
+from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.pagination import PageNumberPagination
 from baserow.core.exceptions import UserNotInGroup
@@ -530,7 +540,8 @@ class ViewFiltersView(APIView):
                 type=OpenApiTypes.INT,
                 description="Creates a filter for the view related to the provided "
                 "value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table view filters"],
         operation_id="create_database_table_view_filter",
@@ -572,13 +583,15 @@ class ViewFiltersView(APIView):
     def post(self, request, data, view_id):
         """Creates a new filter for the provided view."""
 
-        view_handler = ViewHandler()
-        view = view_handler.get_view(view_id)
-        # We can safely assume the field exists because the CreateViewFilterSerializer
-        # has already checked that.
-        field = Field.objects.get(pk=data["field"])
-        view_filter = view_handler.create_filter(
-            request.user, view, field, data["type"], data["value"]
+        view = ViewHandler().get_view(view_id)
+        field = FieldHandler().get_field(data["field"])
+
+        view_filter = action_type_registry.get_by_type(CreateViewFilterActionType).do(
+            request.user,
+            view,
+            field,
+            data["type"],
+            data["value"],
         )
 
         serializer = ViewFilterSerializer(view_filter)
@@ -629,7 +642,8 @@ class ViewFilterView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Updates the view filter related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table view filters"],
         operation_id="update_database_table_view_filter",
@@ -679,7 +693,13 @@ class ViewFilterView(APIView):
         if "type" in data:
             data["type_name"] = data.pop("type")
 
-        view_filter = handler.update_filter(request.user, view_filter, **data)
+        view_filter = action_type_registry.get_by_type(UpdateViewFilterActionType).do(
+            request.user,
+            view_filter,
+            data.get("field"),
+            data.get("type_name"),
+            data.get("value"),
+        )
 
         serializer = ViewFilterSerializer(view_filter)
         return Response(serializer.data)
@@ -691,7 +711,8 @@ class ViewFilterView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Deletes the filter related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table view filters"],
         operation_id="delete_database_table_view_filter",
@@ -715,8 +736,11 @@ class ViewFilterView(APIView):
     def delete(self, request, view_filter_id):
         """Deletes an existing filter if the user belongs to the group."""
 
-        view = ViewHandler().get_filter(request.user, view_filter_id)
-        ViewHandler().delete_filter(request.user, view)
+        view_filter = ViewHandler().get_filter(request.user, view_filter_id)
+
+        action_type_registry.get_by_type(DeleteViewFilterActionType).do(
+            request.user, view_filter
+        )
 
         return Response(status=204)
 
@@ -774,7 +798,8 @@ class ViewSortingsView(APIView):
                 type=OpenApiTypes.INT,
                 description="Creates a sort for the view related to the provided "
                 "value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table view sortings"],
         operation_id="create_database_table_view_sort",
@@ -816,12 +841,12 @@ class ViewSortingsView(APIView):
     def post(self, request, data, view_id):
         """Creates a new sort for the provided view."""
 
-        view_handler = ViewHandler()
-        view = view_handler.get_view(view_id)
-        # We can safely assume the field exists because the CreateViewSortSerializer
-        # has already checked that.
-        field = Field.objects.get(pk=data["field"])
-        view_sort = view_handler.create_sort(request.user, view, field, data["order"])
+        view = ViewHandler().get_view(view_id)
+        field = FieldHandler().get_field(data["field"])
+
+        view_sort = action_type_registry.get_by_type(CreateViewSortActionType).do(
+            request.user, view, field, data["order"]
+        )
 
         serializer = ViewSortSerializer(view_sort)
         return Response(serializer.data)
@@ -871,7 +896,8 @@ class ViewSortView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Updates the view sort related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table view sortings"],
         operation_id="update_database_table_view_sort",
@@ -918,7 +944,12 @@ class ViewSortView(APIView):
             # UpdateViewSortSerializer has already checked that.
             data["field"] = Field.objects.get(pk=data["field"])
 
-        view_sort = handler.update_sort(request.user, view_sort, **data)
+        view_sort = action_type_registry.get_by_type(UpdateViewSortActionType).do(
+            request.user,
+            view_sort,
+            data.get("field"),
+            data.get("order"),
+        )
 
         serializer = ViewSortSerializer(view_sort)
         return Response(serializer.data)
@@ -930,7 +961,8 @@ class ViewSortView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Deletes the sort related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table view sortings"],
         operation_id="delete_database_table_view_sort",
@@ -954,8 +986,10 @@ class ViewSortView(APIView):
     def delete(self, request, view_sort_id):
         """Deletes an existing sort if the user belongs to the group."""
 
-        view = ViewHandler().get_sort(request.user, view_sort_id)
-        ViewHandler().delete_sort(request.user, view)
+        view_sort = ViewHandler().get_sort(request.user, view_sort_id)
+        action_type_registry.get_by_type(DeleteViewSortActionType).do(
+            request.user, view_sort
+        )
 
         return Response(status=204)
 

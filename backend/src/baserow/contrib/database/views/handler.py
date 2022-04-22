@@ -7,6 +7,7 @@ from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.core.cache import cache
 from django.db import models as django_models
 from django.db.models import F, Count
+from django.contrib.auth.models import AbstractUser
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
@@ -449,22 +450,26 @@ class ViewHandler:
 
         return view_filter
 
-    def create_filter(self, user, view, field, type_name, value):
+    def create_filter(
+        self,
+        user: AbstractUser,
+        view: View,
+        field: Field,
+        type_name: str,
+        value: str,
+        primary_key: Optional[int] = None,
+    ) -> ViewFilter:
         """
         Creates a new view filter. The rows that are visible in a view should always
         be filtered by the related view filters.
 
         :param user: The user on whose behalf the view filter is created.
-        :type user: User
         :param view: The view for which the filter needs to be created.
-        :type: View
         :param field: The field that the filter should compare the value with.
-        :type field: Field
         :param type_name: The filter type, allowed values are the types in the
             view_filter_type_registry `equal`, `not_equal` etc.
-        :type type_name: str
         :param value: The value that the filter must apply to.
-        :type value: str
+        :param primary_key: An optional primary key to give to the new view filter.
         :raises ViewFilterNotSupported: When the provided view does not support
             filtering.
         :raises ViewFilterTypeNotAllowedForField: When the field does not support the
@@ -472,7 +477,6 @@ class ViewHandler:
         :raises FieldNotInTable:  When the provided field does not belong to the
             provided view's table.
         :return: The created view filter instance.
-        :rtype: ViewFilter
         """
 
         group = view.table.database.group
@@ -499,7 +503,11 @@ class ViewHandler:
             )
 
         view_filter = ViewFilter.objects.create(
-            view=view, field=field, type=view_filter_type.type, value=value
+            pk=primary_key,
+            view=view,
+            field=field,
+            type=view_filter_type.type,
+            value=value,
         )
 
         # Call view type hooks
@@ -509,31 +517,36 @@ class ViewHandler:
 
         return view_filter
 
-    def update_filter(self, user, view_filter, **kwargs):
+    def update_filter(
+        self,
+        user: AbstractUser,
+        view_filter: ViewFilter,
+        field: Field = None,
+        type_name: str = None,
+        value: str = None,
+    ) -> ViewFilter:
         """
         Updates the values of an existing view filter.
 
         :param user: The user on whose behalf the view filter is updated.
-        :type user: User
         :param view_filter: The view filter that needs to be updated.
-        :type view_filter: ViewFilter
-        :param kwargs: The values that need to be updated, allowed values are
-            `field`, `value` and `type_name`.
-        :type kwargs: dict
+        :param field: The model of the field to filter by.
+        :param type_name: Indicates how the field's value must be compared
+        to the filter's value.
+        :param value: The filter value that must be compared to the field's value.
         :raises ViewFilterTypeNotAllowedForField: When the field does not supports the
             filter type.
         :raises FieldNotInTable: When the provided field does not belong to the
             view's table.
         :return: The updated view filter instance.
-        :rtype: ViewFilter
         """
 
         group = view_filter.view.table.database.group
         group.has_user(user, raise_error=True)
 
-        type_name = kwargs.get("type_name", view_filter.type)
-        field = kwargs.get("field", view_filter.field)
-        value = kwargs.get("value", view_filter.value)
+        type_name = type_name if type_name is not None else view_filter.type
+        field = field if field is not None else view_filter.field
+        value = value if value is not None else view_filter.value
         view_filter_type = view_filter_type_registry.get(type_name)
         field_type = field_type_registry.get_by_model(field.specific_class)
 
@@ -555,10 +568,6 @@ class ViewHandler:
         view_filter.value = value
         view_filter.type = type_name
         view_filter.save()
-
-        # Call view type hooks
-        view_type = view_type_registry.get_by_model(view_filter.view.specific_class)
-        view_type.after_filter_update(view_filter.view)
 
         view_filter_updated.send(self, view_filter=view_filter, user=user)
 
@@ -709,24 +718,27 @@ class ViewHandler:
 
         return view_sort
 
-    def create_sort(self, user, view, field, order):
+    def create_sort(
+        self,
+        user: AbstractUser,
+        view: View,
+        field: Field,
+        order: str,
+        primary_key: Optional[int] = None,
+    ) -> ViewSort:
         """
         Creates a new view sort.
 
         :param user: The user on whose behalf the view sort is created.
-        :type user: User
         :param view: The view for which the sort needs to be created.
-        :type: View
         :param field: The field that needs to be sorted.
-        :type field: Field
         :param order: The desired order, can either be ascending (A to Z) or
             descending (Z to A).
-        :type order: str
+        :param primary_key: An optional primary key to give to the new view sort.
         :raises ViewSortNotSupported: When the provided view does not support sorting.
         :raises FieldNotInTable:  When the provided field does not belong to the
             provided view's table.
         :return: The created view sort instance.
-        :rtype: ViewSort
         """
 
         group = view.table.database.group
@@ -758,35 +770,39 @@ class ViewHandler:
                 f"A sort with the field {field.pk} already exists."
             )
 
-        view_sort = ViewSort.objects.create(view=view, field=field, order=order)
+        view_sort = ViewSort.objects.create(
+            pk=primary_key, view=view, field=field, order=order
+        )
 
         view_sort_created.send(self, view_sort=view_sort, user=user)
 
         return view_sort
 
-    def update_sort(self, user, view_sort, **kwargs):
+    def update_sort(
+        self,
+        user: AbstractUser,
+        view_sort: ViewSort,
+        field: Optional[Field] = None,
+        order: Optional[str] = None,
+    ) -> ViewSort:
         """
         Updates the values of an existing view sort.
 
         :param user: The user on whose behalf the view sort is updated.
-        :type user: User
         :param view_sort: The view sort that needs to be updated.
-        :type view_sort: ViewSort
-        :param kwargs: The values that need to be updated, allowed values are
-            `field` and `order`.
-        :type kwargs: dict
+        :param field: The field that must be sorted on.
+        :param order: Indicates the sort order direction.
         :raises ViewSortFieldNotSupported: When the field does not support sorting.
         :raises FieldNotInTable:  When the provided field does not belong to the
             provided view's table.
         :return: The updated view sort instance.
-        :rtype: ViewSort
         """
 
         group = view_sort.view.table.database.group
         group.has_user(user, raise_error=True)
 
-        field = kwargs.get("field", view_sort.field)
-        order = kwargs.get("order", view_sort.order)
+        field = field if field is not None else view_sort.field
+        order = order if order is not None else view_sort.order
 
         # If the field has changed we need to check if the field belongs to the table.
         if (

@@ -3,6 +3,7 @@ import axios from 'axios'
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import TableService from '@baserow/modules/database/services/table'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import { DATABASE_ACTION_SCOPES } from '@baserow/modules/database/utils/undoRedoConstants'
 
 export function populateTable(table) {
   table._ = {
@@ -180,7 +181,12 @@ export const actions = {
     await dispatch('forceSelect', { database, table })
     return { database, table }
   },
-  forceSelect({ commit }, { database, table }) {
+  forceSelect({ commit, dispatch }, { database, table }) {
+    dispatch(
+      'undoRedo/updateCurrentScopeSet',
+      DATABASE_ACTION_SCOPES.table(table.id),
+      { root: true }
+    )
     commit('SET_SELECTED', { database, table })
   },
   /**
@@ -220,6 +226,11 @@ export const actions = {
    * Unselect the selected table.
    */
   unselect({ commit, dispatch, getters }) {
+    dispatch(
+      'undoRedo/updateCurrentScopeSet',
+      DATABASE_ACTION_SCOPES.table(null),
+      { root: true }
+    )
     commit('UNSELECT')
   },
 }
