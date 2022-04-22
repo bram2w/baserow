@@ -276,3 +276,50 @@ class DeleteApplicationActionType(ActionType):
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         application = CoreHandler().get_application(params.application_id)
         CoreHandler().delete_application(user, application)
+
+
+class UpdateApplicationActionType(ActionType):
+    type = "update_application"
+
+    @dataclasses.dataclass
+    class Params:
+        application_id: int
+        original_name: str
+        new_name: str
+
+    @classmethod
+    def do(cls, user: AbstractUser, application: Application, name: str) -> Application:
+        """
+        Updates an existing application instance.
+        See baserow.core.handler.CoreHandler.update_application for further details.
+        Undoing this action trashes the application and redoing restores it.
+
+        :param user: The user on whose behalf the application is updated.
+        :param application: The application instance that needs to be updated.
+        :param name: The new name of the application.
+        :raises ValueError: If one of the provided parameters is invalid.
+        :return: The updated application instance.
+        """
+
+        original_name = application.name
+
+        application = CoreHandler().update_application(user, application, name)
+
+        params = cls.Params(application.id, original_name, name)
+        cls.register_action(user, params, cls.scope(application.group.id))
+
+        return application
+
+    @classmethod
+    def scope(cls, group_id) -> ActionScopeStr:
+        return GroupActionScopeType.value(group_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        application = CoreHandler().get_application(params.application_id)
+        CoreHandler().update_application(user, application, params.original_name)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        application = CoreHandler().get_application(params.application_id)
+        CoreHandler().update_application(user, application, params.new_name)
