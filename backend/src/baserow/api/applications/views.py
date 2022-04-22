@@ -31,7 +31,10 @@ from .serializers import (
     OrderApplicationsSerializer,
     get_application_serializer,
 )
-from baserow.core.actions import CreateApplicationActionType
+from baserow.core.actions import (
+    CreateApplicationActionType,
+    DeleteApplicationActionType,
+)
 from baserow.core.action.registries import action_type_registry
 
 application_type_serializers = {
@@ -286,7 +289,8 @@ class ApplicationView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Deletes the application related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Applications"],
         operation_id="delete_application",
@@ -318,7 +322,10 @@ class ApplicationView(APIView):
         application = CoreHandler().get_application(
             application_id, base_queryset=Application.objects.select_for_update()
         )
-        CoreHandler().delete_application(request.user, application)
+
+        action_type_registry.get_by_type(DeleteApplicationActionType).do(
+            request.user, application
+        )
 
         return Response(status=204)
 
