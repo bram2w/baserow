@@ -793,10 +793,11 @@ def test_update_database_application(send_mock, data_fixture):
     handler = CoreHandler()
 
     with pytest.raises(UserNotInGroup):
-        handler.update_application(user=user_2, application=database, name="Test 1")
-
-    with pytest.raises(ValueError):
-        handler.update_application(user=user_2, application=object(), name="Test 1")
+        handler.update_application(
+            user=user_2,
+            application=database,
+            name="Test database",
+        )
 
     handler.update_application(user=user, application=database, name="Test 1")
 

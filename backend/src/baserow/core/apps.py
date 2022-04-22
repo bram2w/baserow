@@ -21,6 +21,7 @@ class CoreConfig(AppConfig):
             CreateGroupActionType,
             DeleteGroupActionType,
             CreateApplicationActionType,
+            UpdateApplicationActionType,
             DeleteApplicationActionType,
         )
 
@@ -28,6 +29,7 @@ class CoreConfig(AppConfig):
         action_type_registry.register(DeleteGroupActionType())
         action_type_registry.register(UpdateGroupActionType())
         action_type_registry.register(CreateApplicationActionType())
+        action_type_registry.register(UpdateApplicationActionType())
         action_type_registry.register(DeleteApplicationActionType())
 
         from baserow.contrib.database.views.actions import (

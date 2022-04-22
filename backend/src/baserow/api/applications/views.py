@@ -34,6 +34,7 @@ from .serializers import (
 from baserow.core.actions import (
     CreateApplicationActionType,
     DeleteApplicationActionType,
+    UpdateApplicationActionType,
 )
 from baserow.core.action.registries import action_type_registry
 
@@ -242,7 +243,8 @@ class ApplicationView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Updates the application related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Applications"],
         operation_id="update_application",
@@ -277,9 +279,11 @@ class ApplicationView(APIView):
         application = CoreHandler().get_application(
             application_id, base_queryset=Application.objects.select_for_update()
         )
-        application = CoreHandler().update_application(
+
+        application = action_type_registry.get_by_type(UpdateApplicationActionType).do(
             request.user, application, name=data["name"]
         )
+
         return Response(get_application_serializer(application).data)
 
     @extend_schema(

@@ -692,27 +692,22 @@ class CoreHandler:
 
         return instance
 
-    def update_application(self, user, application, **kwargs):
+    def update_application(
+        self, user: AbstractUser, application: Application, name: str
+    ) -> Application:
         """
         Updates an existing application instance.
 
         :param user: The user on whose behalf the application is updated.
-        :type user: User
         :param application: The application instance that needs to be updated.
-        :type application: Application
-        :param kwargs: The fields that need to be updated.
-        :type kwargs: object
-        :raises ValueError: If one of the provided parameters is invalid.
+        :param name: The new name of the application.
         :return: The updated application instance.
-        :rtype: Application
         """
-
-        if not isinstance(application, Application):
-            raise ValueError("The application is not an instance of Application.")
 
         application.group.has_user(user, raise_error=True)
 
-        application = set_allowed_attrs(kwargs, ["name"], application)
+        application.name = name
+
         application.save()
 
         application_updated.send(self, application=application, user=user)
