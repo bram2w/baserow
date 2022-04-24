@@ -8,5 +8,10 @@ export default (client) => {
     delete(userId) {
       return client.delete(`/admin/users/${userId}/`)
     },
+    impersonate(userId) {
+      return client.post(`/admin/users/impersonate/`, {
+        user: userId,
+      })
+    },
   })
 }

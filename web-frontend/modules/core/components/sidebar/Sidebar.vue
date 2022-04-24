@@ -1,6 +1,11 @@
 <template>
   <div class="sidebar">
     <div class="sidebar__inner">
+      <component
+        :is="component"
+        v-for="(component, index) in sidebarTopComponents"
+        :key="index"
+      ></component>
       <a
         ref="userContextAnchor"
         class="sidebar__user"
@@ -318,6 +323,11 @@ export default {
       return Object.values(this.adminTypes)
         .slice()
         .sort((a, b) => a.getOrder() - b.getOrder())
+    },
+    sidebarTopComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .map((plugin) => plugin.getSidebarTopComponent())
+        .filter((component) => component !== null)
     },
     /**
      * Indicates whether the current user is visiting an admin page.

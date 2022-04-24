@@ -6,6 +6,8 @@ import en from './locales/en.json'
 import fr from './locales/fr.json'
 
 export default function () {
+  this.addPlugin({ src: path.resolve(__dirname, 'middleware.js') })
+
   this.nuxt.hook('i18n:extend-messages', (additionalMessages) => {
     additionalMessages.push({ en, fr })
   })
@@ -26,4 +28,6 @@ export default function () {
   // imports the original. We do this so that we can use the existing variables,
   // mixins, placeholders etc.
   this.options.css[0] = path.resolve(__dirname, 'assets/scss/default.scss')
+
+  this.options.router.middleware.push('impersonate')
 }

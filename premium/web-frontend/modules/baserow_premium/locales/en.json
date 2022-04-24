@@ -87,7 +87,8 @@
     },
     "editUserContext": {
         "changePassword": "Change password",
-        "delete": "Permanently delete"
+        "delete": "Permanently delete",
+        "impersonate": "Impersonate"
     },
     "changePasswordForm": {
         "newPassword": "New password",
