@@ -36,6 +36,17 @@
             {{ $t('action.activate') }}
           </a>
         </li>
+        <li v-if="user.id !== userId && !user.is_staff">
+          <a
+            :class="{
+              'context__menu-item--loading': impersonateLoading,
+            }"
+            @click.prevent="impersonate"
+          >
+            <i class="context__menu-icon fas fa-fw fa-user-friends"></i>
+            {{ $t('editUserContext.impersonate') }}
+          </a>
+        </li>
         <li>
           <a @click.prevent="showDeleteModal">
             <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
@@ -64,6 +75,8 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ChangePasswordModal from '@baserow_premium/components/admin/users/modals/ChangeUserPasswordModal'
@@ -88,7 +101,13 @@ export default {
   data() {
     return {
       loading: false,
+      impersonateLoading: false,
     }
+  },
+  computed: {
+    ...mapGetters({
+      userId: 'auth/getUserId',
+    }),
   },
   methods: {
     showChangePasswordModal() {
@@ -127,6 +146,14 @@ export default {
     },
     async deactivate() {
       await this.changeIsActive(false)
+    },
+    impersonate() {
+      this.impersonateLoading = true
+      let url = this.$nuxt.$router.resolve({ name: 'dashboard' }).href
+      // Adding the `__impersonate-user` query parameter impersonates the user when the
+      // page first loads.
+      url += '?__impersonate-user=' + this.user.id
+      window.location.href = url
     },
   },
 }

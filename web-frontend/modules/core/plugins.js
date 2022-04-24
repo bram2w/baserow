@@ -16,4 +16,12 @@ export class BaserowPlugin extends Registerable {
    * used for submitting an analytical event.
    */
   userCreated(user, context) {}
+
+  /**
+   * Every registered plugin can have a component that's rendered at the top of the
+   * left sidebar.
+   */
+  getSidebarTopComponent() {
+    return null
+  }
 }
