@@ -775,20 +775,21 @@ def test_conversion_single_select_to_multiple_select_field(
     assert SingleSelectField.objects.all().count() == 0
 
     rows = list(model.objects.all().enhance_by_fields())
+    row_0, row_1, *_, row_7 = rows
     # Check first row
-    row_multi_select_field_list_0 = getattr(rows[0], f"field_{field.id}").all()
+    row_multi_select_field_list_0 = getattr(row_0, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_0) == 1
     assert row_multi_select_field_list_0[0].id == select_options[0].id
     assert row_multi_select_field_list_0[0].value == select_options[0].value
 
     # Check second row
-    row_multi_select_field_list_1 = getattr(rows[1], f"field_{field.id}").all()
+    row_multi_select_field_list_1 = getattr(row_1, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_1) == 1
     assert row_multi_select_field_list_1[0].id == select_options[1].id
     assert row_multi_select_field_list_1[0].value == select_options[1].value
 
     # Check empty row
-    row_multi_select_field_list_7 = getattr(rows[6], f"field_{field.id}").all()
+    row_multi_select_field_list_7 = getattr(row_7, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_7) == 0
 
 
@@ -874,32 +875,33 @@ def test_conversion_multiple_select_to_single_select_field(data_fixture):
 
     # Check first row
     rows = list(model.objects.all().enhance_by_fields())
-    row_single_select_field_list_0 = getattr(rows[0], f"field_{field.id}")
+    row_0, row_1, row_2, row_3, row_4, row_5 = rows
+    row_single_select_field_list_0 = getattr(row_0, f"field_{field.id}")
     assert row_single_select_field_list_0.id == select_options[0].id
     assert row_single_select_field_list_0.value == select_options[0].value
 
     # Check second row
-    row_single_select_field_list_1 = getattr(rows[1], f"field_{field.id}")
+    row_single_select_field_list_1 = getattr(row_1, f"field_{field.id}")
     assert row_single_select_field_list_1.id == select_options[1].id
     assert row_single_select_field_list_1.value == select_options[1].value
 
     # Check third row
-    row_single_select_field_list_2 = getattr(rows[2], f"field_{field.id}")
+    row_single_select_field_list_2 = getattr(row_2, f"field_{field.id}")
     assert row_single_select_field_list_2.id == select_options[2].id
     assert row_single_select_field_list_2.value == select_options[2].value
 
     # Check fourth row
-    row_single_select_field_list_3 = getattr(rows[3], f"field_{field.id}")
+    row_single_select_field_list_3 = getattr(row_3, f"field_{field.id}")
     assert row_single_select_field_list_3.id == select_options[1].id
     assert row_single_select_field_list_3.value == select_options[1].value
 
     # Check fifth row
-    row_single_select_field_list_4 = getattr(rows[4], f"field_{field.id}")
+    row_single_select_field_list_4 = getattr(row_4, f"field_{field.id}")
     assert row_single_select_field_list_4.id == select_options[2].id
     assert row_single_select_field_list_4.value == select_options[2].value
 
     # Check sixth row
-    row_single_select_field_list_5 = getattr(rows[5], f"field_{field.id}")
+    row_single_select_field_list_5 = getattr(row_5, f"field_{field.id}")
     assert row_single_select_field_list_5.id == select_options[0].id
     assert row_single_select_field_list_5.value == select_options[0].value
 
@@ -983,11 +985,12 @@ def test_converting_multiple_select_field_value(
     model = table.get_model()
     rows = model.objects.all()
     assert len(SelectOption.objects.all()) == 3
-    cell_1 = getattr(rows[0], f"field_{multiple_select_field.id}")
-    cell_2 = getattr(rows[1], f"field_{multiple_select_field.id}")
-    cell_3 = getattr(rows[2], f"field_{multiple_select_field.id}")
-    cell_4 = getattr(rows[3], f"field_{multiple_select_field.id}")
-    cell_5 = getattr(rows[4], f"field_{multiple_select_field.id}")
+    row_0, row_1, row_2, row_3, row_4 = rows
+    cell_1 = getattr(row_0, f"field_{multiple_select_field.id}")
+    cell_2 = getattr(row_1, f"field_{multiple_select_field.id}")
+    cell_3 = getattr(row_2, f"field_{multiple_select_field.id}")
+    cell_4 = getattr(row_3, f"field_{multiple_select_field.id}")
+    cell_5 = getattr(row_4, f"field_{multiple_select_field.id}")
     assert len(cell_1.all()) == 2
     assert len(cell_2.all()) == 1
     assert len(cell_3.all()) == 0
@@ -1072,34 +1075,36 @@ def test_conversion_number_to_multiple_select_field(
     assert len(select_options) == 6
     assert MultipleSelectField.objects.all().first().id == field.id
 
-    rows = list(model.objects.all().enhance_by_fields())
+    row_0, row_1, row_2, row_3, row_4, row_5 = list(
+        model.objects.all().enhance_by_fields()
+    )
     # Check first row
-    row_multi_select_field_list_0 = getattr(rows[0], f"field_{field.id}").all()
+    row_multi_select_field_list_0 = getattr(row_0, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_0) == 1
     assert row_multi_select_field_list_0[0].value == "1"
 
     # Check second row
-    row_multi_select_field_list_1 = getattr(rows[1], f"field_{field.id}").all()
+    row_multi_select_field_list_1 = getattr(row_1, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_1) == 1
     assert row_multi_select_field_list_1[0].value == "2"
 
     # Check third row
-    row_multi_select_field_list_2 = getattr(rows[2], f"field_{field.id}").all()
+    row_multi_select_field_list_2 = getattr(row_2, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_2) == 1
     assert row_multi_select_field_list_2[0].value == "3"
 
     # Check fourth row
-    row_multi_select_field_list_3 = getattr(rows[3], f"field_{field.id}").all()
+    row_multi_select_field_list_3 = getattr(row_3, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_3) == 1
     assert row_multi_select_field_list_3[0].value == "4"
 
     # Check fifth row
-    row_multi_select_field_list_4 = getattr(rows[4], f"field_{field.id}").all()
+    row_multi_select_field_list_4 = getattr(row_4, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_4) == 1
     assert row_multi_select_field_list_4[0].value == "5"
 
     # Check third row
-    row_multi_select_field_list_5 = getattr(rows[5], f"field_{field.id}").all()
+    row_multi_select_field_list_5 = getattr(row_5, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_5) == 1
     assert row_multi_select_field_list_5[0].value == "6"
 
@@ -1498,9 +1503,7 @@ def test_convert_multiple_select_to_text(data_fixture):
     assert len(SelectOption.objects.all()) == 0
 
     model = table.get_model()
-    rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
+    row_1, row_2 = model.objects.all()
 
     cell_1 = getattr(row_1, f"field_{field.id}")
     cell_2 = getattr(row_2, f"field_{field.id}")
@@ -1564,13 +1567,7 @@ def test_convert_multiple_select_to_text_with_comma_and_quotes(data_fixture):
     )
 
     model = table.get_model()
-    rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
-    row_3 = rows[2]
-    row_4 = rows[3]
-    row_5 = rows[4]
-    row_6 = rows[5]
+    row_1, row_2, row_3, row_4, row_5, row_6 = model.objects.all()
 
     cell_1 = getattr(row_1, f"field_{field.id}")
     cell_2 = getattr(row_2, f"field_{field.id}")
@@ -1595,13 +1592,8 @@ def test_convert_multiple_select_to_text_with_comma_and_quotes(data_fixture):
     assert len(SelectOption.objects.all()) == 4
 
     model = table.get_model()
-    rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
-    row_3 = rows[2]
-    row_4 = rows[3]
-    row_5 = rows[4]
-    row_6 = rows[5]
+    row_1, row_2, row_3, row_4, row_5, row_6 = model.objects.all()
+
     cell_1 = getattr(row_1, f"field_{field.id}").all()
     cell_2 = getattr(row_2, f"field_{field.id}").all()
     cell_3 = getattr(row_3, f"field_{field.id}").all()
@@ -1696,23 +1688,23 @@ def test_conversion_to_multiple_select_field_with_select_options(data_fixture):
     assert len(select_options) == 2
     model = table.get_model()
 
-    rows = list(model.objects.all().enhance_by_fields())
+    row_0, row_1, row_2, row_3 = list(model.objects.all().enhance_by_fields())
     # Check first row
-    row_multi_select_field_list_0 = getattr(rows[0], f"field_{field.id}").all()
+    row_multi_select_field_list_0 = getattr(row_0, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_0) == 1
     assert row_multi_select_field_list_0[0].value == "Option 1"
 
     # Check second row
-    row_multi_select_field_list_1 = getattr(rows[1], f"field_{field.id}").all()
+    row_multi_select_field_list_1 = getattr(row_1, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_1) == 0
 
     # Check third row
-    row_multi_select_field_list_2 = getattr(rows[2], f"field_{field.id}").all()
+    row_multi_select_field_list_2 = getattr(row_2, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_2) == 1
     assert row_multi_select_field_list_2[0].value == "Option 3"
 
     # Check fourth row
-    row_multi_select_field_list_3 = getattr(rows[3], f"field_{field.id}").all()
+    row_multi_select_field_list_3 = getattr(row_3, f"field_{field.id}").all()
     assert len(row_multi_select_field_list_3) == 0
 
 
@@ -1915,9 +1907,7 @@ def test_conversion_to_multiple_select_with_option_value_too_large(
     assert len(select_options) == 2
 
     model = table.get_model()
-    rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
+    row_1, row_2 = model.objects.all()
     cell_1 = getattr(row_1, f"field_{field_1.id}").all()
     cell_2 = getattr(row_2, f"field_{field_1.id}").all()
 
@@ -1976,8 +1966,7 @@ def test_conversion_to_multiple_select_with_same_option_value_on_same_row(
 
     model = table.get_model()
     rows = model.objects.all()
-    row_1 = rows[0]
-    row_2 = rows[1]
+    row_1, row_2 = rows
     cell_1 = getattr(row_1, f"field_{field_1.id}").all()
     cell_2 = getattr(row_2, f"field_{field_1.id}").all()
 

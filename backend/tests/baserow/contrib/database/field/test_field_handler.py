@@ -393,10 +393,11 @@ def test_update_field(send_mock, data_fixture):
     assert not hasattr(field, "text_default")
 
     model = table.get_model()
-    rows = model.objects.all()
-    assert getattr(rows[0], f"field_{field.id}") is None
-    assert getattr(rows[1], f"field_{field.id}") == 100
-    assert getattr(rows[2], f"field_{field.id}") == 10
+    row_0, row_1, row_2 = model.objects.all()
+
+    assert getattr(row_0, f"field_{field.id}") is None
+    assert getattr(row_1, f"field_{field.id}") == 100
+    assert getattr(row_2, f"field_{field.id}") == 10
 
     # Change the field type to a decimal and test if the values have been changed.
     field = handler.update_field(
@@ -413,10 +414,10 @@ def test_update_field(send_mock, data_fixture):
     assert field.number_negative is True
 
     model = table.get_model()
-    rows = model.objects.all()
-    assert getattr(rows[0], f"field_{field.id}") is None
-    assert getattr(rows[1], f"field_{field.id}") == Decimal("100.00")
-    assert getattr(rows[2], f"field_{field.id}") == Decimal("10.00")
+    row_0, row_1, row_2 = model.objects.all()
+    assert getattr(row_0, f"field_{field.id}") is None
+    assert getattr(row_1, f"field_{field.id}") == Decimal("100.00")
+    assert getattr(row_2, f"field_{field.id}") == Decimal("10.00")
 
     # Change the field type to a boolean and test if the values have been changed.
     field = handler.update_field(
@@ -429,10 +430,10 @@ def test_update_field(send_mock, data_fixture):
     assert not hasattr(field, "number_negative")
 
     model = table.get_model()
-    rows = model.objects.all()
-    assert getattr(rows[0], f"field_{field.id}") is False
-    assert getattr(rows[1], f"field_{field.id}") is False
-    assert getattr(rows[2], f"field_{field.id}") is False
+    row_0, row_1, row_2 = model.objects.all()
+    assert getattr(row_0, f"field_{field.id}") is False
+    assert getattr(row_1, f"field_{field.id}") is False
+    assert getattr(row_2, f"field_{field.id}") is False
 
     with pytest.raises(ReservedBaserowFieldNameException):
         handler.update_field(user=user, field=field, name="order")

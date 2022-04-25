@@ -123,13 +123,14 @@ def test_date_field_type(data_fixture):
 
     model = table.get_model(attribute_names=True)
     rows = model.objects.all()
+    row_0, row_1, row_2 = rows
 
-    assert rows[0].date is None
-    assert rows[0].datetime is None
-    assert rows[1].date == datetime(2020, 4, 1, tzinfo=timezone("UTC"))
-    assert rows[1].datetime == date(2020, 4, 1)
-    assert rows[2].date is None
-    assert rows[2].datetime == date(2020, 4, 1)
+    assert row_0.date is None
+    assert row_0.datetime is None
+    assert row_1.date == datetime(2020, 4, 1, tzinfo=timezone("UTC"))
+    assert row_1.datetime == date(2020, 4, 1)
+    assert row_2.date is None
+    assert row_2.datetime == date(2020, 4, 1)
 
     field_handler.delete_field(user=user, field=date_field_1)
     field_handler.delete_field(user=user, field=date_field_2)
@@ -282,64 +283,65 @@ def test_converting_date_field_value(data_fixture):
 
     model = table.get_model()
     rows = model.objects.all()
+    row_0, row_1, row_2, row_3 = rows
 
-    assert getattr(rows[0], f"field_{date_field_eu.id}") == date(2021, 7, 22)
-    assert getattr(rows[0], f"field_{date_field_us.id}") == date(2021, 7, 22)
-    assert getattr(rows[0], f"field_{date_field_iso.id}") == date(2021, 7, 22)
-    assert getattr(rows[0], f"field_{date_field_eu_12.id}") == (
+    assert getattr(row_0, f"field_{date_field_eu.id}") == date(2021, 7, 22)
+    assert getattr(row_0, f"field_{date_field_us.id}") == date(2021, 7, 22)
+    assert getattr(row_0, f"field_{date_field_iso.id}") == date(2021, 7, 22)
+    assert getattr(row_0, f"field_{date_field_eu_12.id}") == (
         datetime(2021, 7, 22, 12, 45, 0, tzinfo=utc)
     )
-    assert getattr(rows[0], f"field_{date_field_us_12.id}") == (
+    assert getattr(row_0, f"field_{date_field_us_12.id}") == (
         datetime(2021, 7, 22, 12, 45, 0, tzinfo=utc)
     )
-    assert getattr(rows[0], f"field_{date_field_iso_12.id}") == (
+    assert getattr(row_0, f"field_{date_field_iso_12.id}") == (
         datetime(2021, 7, 22, 12, 45, 0, tzinfo=utc)
     )
-    assert getattr(rows[0], f"field_{date_field_eu_24.id}") == (
+    assert getattr(row_0, f"field_{date_field_eu_24.id}") == (
         datetime(2021, 7, 22, 12, 45, 0, tzinfo=utc)
     )
-    assert getattr(rows[0], f"field_{date_field_us_24.id}") == (
+    assert getattr(row_0, f"field_{date_field_us_24.id}") == (
         datetime(2021, 7, 22, 12, 45, 0, tzinfo=utc)
     )
-    assert getattr(rows[0], f"field_{date_field_iso_24.id}") == (
+    assert getattr(row_0, f"field_{date_field_iso_24.id}") == (
         datetime(2021, 7, 22, 12, 45, 0, tzinfo=utc)
-    )
-
-    assert getattr(rows[1], f"field_{date_field_eu.id}") == date(2021, 7, 22)
-    assert getattr(rows[1], f"field_{date_field_us.id}") == date(2021, 7, 22)
-    assert getattr(rows[1], f"field_{date_field_iso.id}") == date(2021, 7, 22)
-    assert getattr(rows[1], f"field_{date_field_eu_12.id}") == (
-        datetime(2021, 7, 22, 0, 45, 0, tzinfo=utc)
-    )
-    assert getattr(rows[1], f"field_{date_field_us_12.id}") == (
-        datetime(2021, 7, 22, 0, 45, 0, tzinfo=utc)
-    )
-    assert getattr(rows[1], f"field_{date_field_iso_12.id}") == (
-        datetime(2021, 7, 22, 0, 45, 0, tzinfo=utc)
-    )
-    assert getattr(rows[1], f"field_{date_field_eu_24.id}") == (
-        datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
-    )
-    assert getattr(rows[1], f"field_{date_field_us_24.id}") == (
-        datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
-    )
-    assert getattr(rows[1], f"field_{date_field_iso_24.id}") == (
-        datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
     )
 
-    assert getattr(rows[2], f"field_{date_field_eu.id}") == date(2021, 7, 22)
-    assert getattr(rows[2], f"field_{date_field_us.id}") == date(2021, 7, 22)
-    assert getattr(rows[2], f"field_{date_field_iso.id}") == date(2021, 7, 22)
-    assert getattr(rows[2], f"field_{date_field_eu_12.id}") is None
-    assert getattr(rows[2], f"field_{date_field_us_12.id}") is None
-    assert getattr(rows[2], f"field_{date_field_iso_12.id}") is None
-    assert getattr(rows[2], f"field_{date_field_eu_24.id}") == (
+    assert getattr(row_1, f"field_{date_field_eu.id}") == date(2021, 7, 22)
+    assert getattr(row_1, f"field_{date_field_us.id}") == date(2021, 7, 22)
+    assert getattr(row_1, f"field_{date_field_iso.id}") == date(2021, 7, 22)
+    assert getattr(row_1, f"field_{date_field_eu_12.id}") == (
+        datetime(2021, 7, 22, 0, 45, 0, tzinfo=utc)
+    )
+    assert getattr(row_1, f"field_{date_field_us_12.id}") == (
+        datetime(2021, 7, 22, 0, 45, 0, tzinfo=utc)
+    )
+    assert getattr(row_1, f"field_{date_field_iso_12.id}") == (
+        datetime(2021, 7, 22, 0, 45, 0, tzinfo=utc)
+    )
+    assert getattr(row_1, f"field_{date_field_eu_24.id}") == (
         datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
     )
-    assert getattr(rows[2], f"field_{date_field_us_24.id}") == (
+    assert getattr(row_1, f"field_{date_field_us_24.id}") == (
         datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
     )
-    assert getattr(rows[2], f"field_{date_field_iso_24.id}") == (
+    assert getattr(row_1, f"field_{date_field_iso_24.id}") == (
+        datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
+    )
+
+    assert getattr(row_2, f"field_{date_field_eu.id}") == date(2021, 7, 22)
+    assert getattr(row_2, f"field_{date_field_us.id}") == date(2021, 7, 22)
+    assert getattr(row_2, f"field_{date_field_iso.id}") == date(2021, 7, 22)
+    assert getattr(row_2, f"field_{date_field_eu_12.id}") is None
+    assert getattr(row_2, f"field_{date_field_us_12.id}") is None
+    assert getattr(row_2, f"field_{date_field_iso_12.id}") is None
+    assert getattr(row_2, f"field_{date_field_eu_24.id}") == (
+        datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
+    )
+    assert getattr(row_2, f"field_{date_field_us_24.id}") == (
+        datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
+    )
+    assert getattr(row_2, f"field_{date_field_iso_24.id}") == (
         datetime(2021, 7, 22, 7, 45, 0, tzinfo=utc)
     )
 
@@ -355,25 +357,25 @@ def test_converting_date_field_value(data_fixture):
     f'field_{date_field_iso_24.id}': '10-04-19 12:00:17'
     """
 
-    assert getattr(rows[3], f"field_{date_field_eu.id}") == date(2018, 8, 20)
-    assert getattr(rows[3], f"field_{date_field_us.id}") == date(2017, 3, 3)
-    assert getattr(rows[3], f"field_{date_field_iso.id}") == date(2017, 4, 19)
-    assert getattr(rows[3], f"field_{date_field_eu_12.id}") == (
+    assert getattr(row_3, f"field_{date_field_eu.id}") == date(2018, 8, 20)
+    assert getattr(row_3, f"field_{date_field_us.id}") == date(2017, 3, 3)
+    assert getattr(row_3, f"field_{date_field_iso.id}") == date(2017, 4, 19)
+    assert getattr(row_3, f"field_{date_field_eu_12.id}") == (
         datetime(2017, 12, 2, 2, 39, 58, tzinfo=utc)
     )
-    assert getattr(rows[3], f"field_{date_field_us_12.id}") == (
+    assert getattr(row_3, f"field_{date_field_us_12.id}") == (
         datetime(2018, 6, 9, 15, 28, 14, tzinfo=utc)
     )
-    assert getattr(rows[3], f"field_{date_field_iso_12.id}") == (
+    assert getattr(row_3, f"field_{date_field_iso_12.id}") == (
         datetime(2010, 4, 20, 0, 0, 35, tzinfo=utc)
     )
-    assert getattr(rows[3], f"field_{date_field_eu_24.id}") == (
+    assert getattr(row_3, f"field_{date_field_eu_24.id}") == (
         datetime(2010, 4, 20, 0, 0, 35, tzinfo=utc)
     )
-    assert getattr(rows[3], f"field_{date_field_us_24.id}") == (
+    assert getattr(row_3, f"field_{date_field_us_24.id}") == (
         datetime(2018, 2, 27, 15, 35, 20, 311000, tzinfo=utc)
     )
-    assert getattr(rows[3], f"field_{date_field_iso_24.id}") == (
+    assert getattr(row_3, f"field_{date_field_iso_24.id}") == (
         datetime(10, 4, 19, 12, 0, tzinfo=utc)
     )
 
@@ -407,18 +409,19 @@ def test_converting_date_field_value(data_fixture):
 
     model = table.get_model()
     rows = model.objects.all()
+    row_0, _, row_2, _ = rows
 
-    assert getattr(rows[0], f"field_{date_field_eu.id}") == "22/07/2021"
-    assert getattr(rows[0], f"field_{date_field_us.id}") == "07/22/2021"
-    assert getattr(rows[0], f"field_{date_field_iso.id}") == "2021-07-22"
-    assert getattr(rows[0], f"field_{date_field_eu_12.id}") == "22/07/2021 12:45PM"
-    assert getattr(rows[0], f"field_{date_field_us_12.id}") == "07/22/2021 12:45PM"
-    assert getattr(rows[0], f"field_{date_field_iso_12.id}") == "2021-07-22 12:45PM"
-    assert getattr(rows[0], f"field_{date_field_eu_24.id}") == "22/07/2021 12:45"
-    assert getattr(rows[0], f"field_{date_field_us_24.id}") == "07/22/2021 12:45"
-    assert getattr(rows[0], f"field_{date_field_iso_24.id}") == "2021-07-22 12:45"
+    assert getattr(row_0, f"field_{date_field_eu.id}") == "22/07/2021"
+    assert getattr(row_0, f"field_{date_field_us.id}") == "07/22/2021"
+    assert getattr(row_0, f"field_{date_field_iso.id}") == "2021-07-22"
+    assert getattr(row_0, f"field_{date_field_eu_12.id}") == "22/07/2021 12:45PM"
+    assert getattr(row_0, f"field_{date_field_us_12.id}") == "07/22/2021 12:45PM"
+    assert getattr(row_0, f"field_{date_field_iso_12.id}") == "2021-07-22 12:45PM"
+    assert getattr(row_0, f"field_{date_field_eu_24.id}") == "22/07/2021 12:45"
+    assert getattr(row_0, f"field_{date_field_us_24.id}") == "07/22/2021 12:45"
+    assert getattr(row_0, f"field_{date_field_iso_24.id}") == "2021-07-22 12:45"
 
-    assert getattr(rows[2], f"field_{date_field_eu_12.id}") is None
+    assert getattr(row_2, f"field_{date_field_eu_12.id}") is None
 
 
 @pytest.mark.django_db
