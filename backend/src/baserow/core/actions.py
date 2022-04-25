@@ -5,7 +5,10 @@ from django.contrib.auth.models import AbstractUser
 
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionType, ActionScopeStr
-from baserow.core.action.scopes import RootActionScopeType, GroupActionScopeType
+from baserow.core.action.scopes import (
+    RootActionScopeType,
+    GroupActionScopeType,
+)
 from baserow.core.handler import GroupForUpdate, CoreHandler
 from baserow.core.models import GroupUser, Group, Application
 from baserow.core.trash.handler import TrashHandler

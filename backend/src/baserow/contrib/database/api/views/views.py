@@ -14,8 +14,8 @@ from baserow.contrib.database.views.actions import (
     DeleteViewSortActionType,
     UpdateViewFilterActionType,
     UpdateViewSortActionType,
+    OrderViewsActionType,
 )
-from baserow.core.action.registries import action_type_registry
 
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
@@ -39,6 +39,7 @@ from baserow.api.utils import (
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.pagination import PageNumberPagination
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from baserow.contrib.database.api.fields.serializers import LinkRowValueSerializer
 from baserow.contrib.database.api.fields.errors import (
@@ -97,7 +98,6 @@ from .errors import (
     ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
     ERROR_CANNOT_SHARE_VIEW_TYPE,
 )
-
 
 view_field_options_mapping_serializer = MappingSerializer(
     "ViewFieldOptions",
@@ -452,6 +452,7 @@ class OrderViewsView(APIView):
                 description="Updates the order of the views in the table related to "
                 "the provided value.",
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table views"],
         operation_id="order_database_table_views",
@@ -483,7 +484,9 @@ class OrderViewsView(APIView):
         """Updates to order of the views in a table."""
 
         table = TableHandler().get_table(table_id)
-        ViewHandler().order_views(request.user, table, data["view_ids"])
+        action_type_registry.get_by_type(OrderViewsActionType).do(
+            request.user, table, data["view_ids"]
+        )
         return Response(status=204)
 
 
