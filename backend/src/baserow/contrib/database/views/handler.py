@@ -1,6 +1,7 @@
 from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, Any, List, Optional, Iterable, Tuple, Union
+
 from redis.exceptions import LockNotOwnedError
 
 from django.core.exceptions import FieldDoesNotExist, ValidationError
@@ -177,17 +178,14 @@ class ViewHandler:
 
         return view
 
-    def order_views(self, user, table, order):
+    def order_views(self, user: AbstractUser, table: Table, order: List[int]):
         """
         Updates the order of the views in the given table. The order of the views
         that are not in the `order` parameter set set to `0`.
 
         :param user: The user on whose behalf the views are ordered.
-        :type user: User
         :param table: The table of which the views must be updated.
-        :type table: Table
         :param order: A list containing the view ids in the desired order.
-        :type order: list
         :raises ViewNotInTable: If one of the view ids in the order does not belong
             to the table.
         """
@@ -204,6 +202,26 @@ class ViewHandler:
 
         View.order_objects(queryset, order)
         views_reordered.send(self, table=table, order=order, user=user)
+
+    def get_views_order(self, user: AbstractUser, table: Table):
+        """
+        Returns the order of the views in the given table.
+
+        :param user: The user on whose behalf the views are ordered.
+        :param table: The table of which the views must be updated.
+        :raises ViewNotInTable: If one of the view ids in the order does not belong
+            to the table.
+        """
+
+        group = table.database.group
+        group.has_user(user, raise_error=True)
+
+        queryset = View.objects.filter(table_id=table.id)
+
+        order = queryset.values_list("id", flat=True)
+        order = list(order)
+
+        return order
 
     def delete_view(self, user, view):
         """

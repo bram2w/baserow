@@ -1,8 +1,12 @@
 import dataclasses
-from typing import Optional
+from typing import Optional, List
+
+from baserow.contrib.database.action.scopes import TableActionScopeType
 from baserow.contrib.database.fields.handler import FieldHandler
 
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
 from baserow.core.action.models import Action
@@ -444,3 +448,61 @@ class DeleteViewSortActionType(ActionType):
         view_sort = ViewHandler().get_sort(user, params.view_sort_id)
 
         ViewHandler().delete_sort(user, view_sort)
+
+
+class OrderViewsActionType(ActionType):
+    type = "order_views"
+
+    @dataclasses.dataclass
+    class Params:
+        table_id: int
+        original_order: List[int]
+        new_order: List[int]
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        table: Table,
+        order: List[int],
+    ):
+        """
+        Updates the order of the views in the given table.
+        See baserow.contrib.views.handler.ViewsHandler.order_views for further details.
+        The order of the views that are not in the `order` parameter set set to `0`.
+        Undoing this action restores the original order of the views.
+        Redoing this action reorders the views to the new order.
+
+        :param user: The user ordering the views.
+        :param table: The table to order the views in.
+        :param order: The new order of the views.
+        """
+
+        original_order = ViewHandler().get_views_order(user, table)
+
+        ViewHandler().order_views(user, table, order)
+
+        params = cls.Params(table.id, original_order, order)
+        cls.register_action(user, params, cls.scope(table.id))
+
+    @classmethod
+    def scope(cls, table_id: int) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        table = TableHandler().get_table(params.table_id)
+        ViewHandler().order_views(
+            user,
+            table,
+            params.original_order,
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        table = TableHandler().get_table(params.table_id)
+        ViewHandler().order_views(
+            user,
+            table,
+            params.new_order,
+        )
