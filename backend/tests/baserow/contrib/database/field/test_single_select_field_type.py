@@ -223,14 +223,15 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
     assert getattr(row_4, f"field_{field.id}_id") == select_options[0].id
 
     model = table.get_model()
+    row_0, row_1, row_2, row_3 = model.objects.all()
 
     with django_assert_num_queries(2):
         rows = list(model.objects.all().enhance_by_fields())
 
-    assert getattr(rows[0], f"field_{field.id}") is None
-    assert getattr(rows[1], f"field_{field.id}").id == select_options[0].id
-    assert getattr(rows[2], f"field_{field.id}").id == select_options[1].id
-    assert getattr(rows[3], f"field_{field.id}").id == select_options[0].id
+    assert getattr(row_0, f"field_{field.id}") is None
+    assert getattr(row_1, f"field_{field.id}").id == select_options[0].id
+    assert getattr(row_2, f"field_{field.id}").id == select_options[1].id
+    assert getattr(row_3, f"field_{field.id}").id == select_options[0].id
 
     row.refresh_from_db()
     assert getattr(row, f"field_{field.id}") is None
@@ -239,11 +240,11 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
     field = field_handler.update_field(user=user, field=field, new_type_name="text")
     assert field.select_options.all().count() == 0
     model = table.get_model()
-    rows = model.objects.all().enhance_by_fields()
-    assert getattr(rows[0], f"field_{field.id}") is None
-    assert getattr(rows[1], f"field_{field.id}") == "Option 3"
-    assert getattr(rows[2], f"field_{field.id}") == "Option 4"
-    assert getattr(rows[3], f"field_{field.id}") == "Option 3"
+    row_0, row_1, row_2, row_3 = model.objects.all().enhance_by_fields()
+    assert getattr(row_0, f"field_{field.id}") is None
+    assert getattr(row_1, f"field_{field.id}") == "Option 3"
+    assert getattr(row_2, f"field_{field.id}") == "Option 4"
+    assert getattr(row_3, f"field_{field.id}") == "Option 3"
 
     field = field_handler.update_field(
         user=user,
@@ -256,12 +257,12 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
     )
     assert field.select_options.all().count() == 2
     model = table.get_model()
-    rows = model.objects.all().enhance_by_fields()
+    row_0, row_1, row_2, row_3 = model.objects.all().enhance_by_fields()
     select_options = field.select_options.all()
-    assert getattr(rows[0], f"field_{field.id}") is None
-    assert getattr(rows[1], f"field_{field.id}").id == select_options[1].id
-    assert getattr(rows[2], f"field_{field.id}") is None
-    assert getattr(rows[3], f"field_{field.id}").id == select_options[1].id
+    assert getattr(row_0, f"field_{field.id}") is None
+    assert getattr(row_1, f"field_{field.id}").id == select_options[1].id
+    assert getattr(row_2, f"field_{field.id}") is None
+    assert getattr(row_3, f"field_{field.id}").id == select_options[1].id
 
     row_4 = row_handler.update_row(
         user=user, table=table, row_id=row_4.id, values={f"field_{field.id}": None}
@@ -272,22 +273,22 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
     field = field_handler.update_field(user=user, field=field, new_type_name="text")
     assert field.select_options.all().count() == 0
     model = table.get_model()
-    rows = model.objects.all().enhance_by_fields()
-    assert getattr(rows[0], f"field_{field.id}") is None
-    assert getattr(rows[1], f"field_{field.id}") == "option 3"
-    assert getattr(rows[2], f"field_{field.id}") is None
-    assert getattr(rows[3], f"field_{field.id}") is None
+    row_0, row_1, row_2, row_3 = model.objects.all().enhance_by_fields()
+    assert getattr(row_0, f"field_{field.id}") is None
+    assert getattr(row_1, f"field_{field.id}") == "option 3"
+    assert getattr(row_2, f"field_{field.id}") is None
+    assert getattr(row_3, f"field_{field.id}") is None
 
     field = field_handler.update_field(
         user=user, field=field, new_type_name="single_select"
     )
     assert field.select_options.all().count() == 0
     model = table.get_model()
-    rows = model.objects.all().enhance_by_fields()
-    assert getattr(rows[0], f"field_{field.id}") is None
-    assert getattr(rows[1], f"field_{field.id}") is None
-    assert getattr(rows[2], f"field_{field.id}") is None
-    assert getattr(rows[3], f"field_{field.id}") is None
+    row_0, row_1, row_2, row_3 = model.objects.all().enhance_by_fields()
+    assert getattr(row_0, f"field_{field.id}") is None
+    assert getattr(row_1, f"field_{field.id}") is None
+    assert getattr(row_2, f"field_{field.id}") is None
+    assert getattr(row_3, f"field_{field.id}") is None
 
 
 @pytest.mark.django_db

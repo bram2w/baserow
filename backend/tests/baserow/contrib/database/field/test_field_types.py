@@ -180,16 +180,16 @@ def test_valid_url(data_fixture):
     # values went.
     field_handler.update_field(user=user, field=field, new_type_name="url")
     rows = model.objects.all()
-    i = 0
-    for url in valid_urls:
-        assert rows[i].url == url
-        assert rows[i].name == url
-        i += 1
+    valid_urls_rows = rows[: len(valid_urls)]
+    invalid_urls_rows = rows[len(valid_urls) :]
 
-    for _ in invalid_urls:
-        assert rows[i].url == ""
-        assert rows[i].name == ""
-        i += 1
+    for url, row in zip(valid_urls, valid_urls_rows):
+        assert row.url == url
+        assert row.name == url
+
+    for row in invalid_urls_rows:
+        assert row.url == ""
+        assert row.name == ""
 
 
 @pytest.mark.django_db
@@ -258,16 +258,15 @@ def test_valid_email(data_fixture):
     # values went.
     field_handler.update_field(user=user, field=field, new_type_name="email")
     rows = model.objects.all()
-    i = 0
-    for email in valid_emails:
-        assert rows[i].email == email
-        assert rows[i].name == email
-        i += 1
+    valid_emails_rows = rows[: len(valid_emails)]
+    invalid_emails_rows = rows[len(valid_emails) :]
+    for email, row in zip(valid_emails, valid_emails_rows):
+        assert row.email == email
+        assert row.name == email
 
-    for _ in invalid_emails:
-        assert rows[i].email == ""
-        assert rows[i].name == ""
-        i += 1
+    for row in invalid_emails_rows:
+        assert row.email == ""
+        assert row.name == ""
 
 
 @pytest.mark.django_db
@@ -340,30 +339,31 @@ def test_email_field_type(data_fixture):
 
     model = table.get_model(attribute_names=True)
     rows = model.objects.all()
+    row_0, row_1, row_2, row_3, row_4, row_5 = rows
 
-    assert rows[0].name == "a.very.STRANGE@email.address.coM"
-    assert rows[0].email == "test@test.nl"
-    assert rows[0].number == ""
+    assert row_0.name == "a.very.STRANGE@email.address.coM"
+    assert row_0.email == "test@test.nl"
+    assert row_0.number == ""
 
-    assert rows[1].name == ""
-    assert rows[1].email == "some@user.com"
-    assert rows[1].number == ""
+    assert row_1.name == ""
+    assert row_1.email == "some@user.com"
+    assert row_1.number == ""
 
-    assert rows[2].name == ""
-    assert rows[2].email == "bram@test.nl"
-    assert rows[2].number == ""
+    assert row_2.name == ""
+    assert row_2.email == "bram@test.nl"
+    assert row_2.number == ""
 
-    assert rows[3].name == ""
-    assert rows[3].email == "something@example.com"
-    assert rows[3].number == ""
+    assert row_3.name == ""
+    assert row_3.email == "something@example.com"
+    assert row_3.number == ""
 
-    assert rows[4].name == "testing@nowhere.org"
-    assert rows[4].email == ""
-    assert rows[4].number == ""
+    assert row_4.name == "testing@nowhere.org"
+    assert row_4.email == ""
+    assert row_4.number == ""
 
-    assert rows[5].name == ""
-    assert rows[5].email == ""
-    assert rows[5].number == ""
+    assert row_5.name == ""
+    assert row_5.email == ""
+    assert row_5.number == ""
 
     field_handler.delete_field(user=user, field=field_2)
     assert len(EmailField.objects.all()) == 2
@@ -479,23 +479,24 @@ def test_phone_number_field_type(data_fixture):
 
     model = table.get_model(attribute_names=True)
     rows = model.objects.all()
+    row_0, row_1, row_2, row_3, _ = rows
 
-    assert rows[0].name == "+45(1424) 322314 324234"
-    assert rows[0].phonenumber == max_length_phone_number
-    assert rows[0].number == "1234534532"
-    assert rows[0].email == ""
+    assert row_0.name == "+45(1424) 322314 324234"
+    assert row_0.phonenumber == max_length_phone_number
+    assert row_0.number == "1234534532"
+    assert row_0.email == ""
 
-    assert rows[1].name == ""
-    assert rows[1].phonenumber == "1234567890 NnXx,+._*()#=;/ -"
-    assert rows[1].number == "0"
+    assert row_1.name == ""
+    assert row_1.phonenumber == "1234567890 NnXx,+._*()#=;/ -"
+    assert row_1.number == "0"
 
-    assert rows[2].name == max_length_phone_number
-    assert rows[2].phonenumber == ""
-    assert rows[2].number == "-10230450"
+    assert row_2.name == max_length_phone_number
+    assert row_2.phonenumber == ""
+    assert row_2.number == "-10230450"
 
-    assert rows[3].name == ""
-    assert rows[3].phonenumber == ""
-    assert rows[3].number == ""
+    assert row_3.name == ""
+    assert row_3.phonenumber == ""
+    assert row_3.number == ""
 
     field_handler.delete_field(user=user, field=phone_number_field)
     assert len(PhoneNumberField.objects.all()) == 3

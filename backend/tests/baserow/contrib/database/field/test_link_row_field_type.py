@@ -316,10 +316,11 @@ def test_link_row_field_type_rows(data_fixture):
     customer_rows = customers_model.objects.all()
 
     assert customer_rows.count() == 3
+    row_1, row_2, row_3 = customer_rows
 
-    customers_row_1 = customer_rows[0]
-    customers_row_2 = customer_rows[1]
-    customers_row_3 = customer_rows[2]
+    customers_row_1 = row_1
+    customers_row_2 = row_2
+    customers_row_3 = row_3
 
     customer_row_1_all = getattr(customers_row_1, f"field_{related_field.id}").all()
     customer_row_2_all = getattr(customers_row_2, f"field_{related_field.id}").all()

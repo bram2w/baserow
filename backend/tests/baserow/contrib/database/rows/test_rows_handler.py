@@ -226,13 +226,14 @@ def test_create_row(send_mock, data_fixture):
 
     rows = model.objects.all()
     assert len(rows) == 7
-    assert rows[0].id == row_7.id
-    assert rows[1].id == row_1.id
-    assert rows[2].id == row_5.id
-    assert rows[3].id == row_3.id
-    assert rows[4].id == row_4.id
-    assert rows[5].id == row_6.id
-    assert rows[6].id == row_2.id
+    rows_0, rows_1, rows_2, rows_3, rows_4, rows_5, rows_6 = rows
+    assert rows_0.id == row_7.id
+    assert rows_1.id == row_1.id
+    assert rows_2.id == row_5.id
+    assert rows_3.id == row_3.id
+    assert rows_4.id == row_4.id
+    assert rows_5.id == row_6.id
+    assert rows_6.id == row_2.id
 
     row_2.delete()
     row_8 = handler.create_row(user, table=table)

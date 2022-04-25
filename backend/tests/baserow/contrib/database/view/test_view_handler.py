@@ -712,8 +712,9 @@ def test_apply_filters(data_fixture):
     filter_2.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 2
-    assert rows[0].id == row_1.id
-    assert rows[1].id == row_2.id
+    rows_0, rows_1 = rows
+    assert rows_0.id == row_1.id
+    assert rows_1.id == row_2.id
 
     filter_2.delete()
 
@@ -731,9 +732,10 @@ def test_apply_filters(data_fixture):
     filter_1.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 3
-    assert rows[0].id == row_1.id
-    assert rows[1].id == row_2.id
-    assert rows[2].id == row_3.id
+    rows_0, rows_1, rows_2 = rows
+    assert rows_0.id == row_1.id
+    assert rows_1.id == row_2.id
+    assert rows_2.id == row_3.id
 
     grid_view.filter_type = "AND"
     filter_1.value = "1"
@@ -742,8 +744,9 @@ def test_apply_filters(data_fixture):
     filter_1.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 2
-    assert rows[0].id == row_1.id
-    assert rows[1].id == row_3.id
+    rows_0, rows_1 = rows
+    assert rows_0.id == row_1.id
+    assert rows_1.id == row_3.id
 
     grid_view.filter_type = "AND"
     filter_1.value = "1"
@@ -752,8 +755,9 @@ def test_apply_filters(data_fixture):
     filter_1.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 2
-    assert rows[0].id == row_2.id
-    assert rows[1].id == row_4.id
+    rows_0, rows_1 = rows
+    assert rows_0.id == row_2.id
+    assert rows_1.id == row_4.id
 
     grid_view.filter_type = "AND"
     filter_1.value = "False"
@@ -762,16 +766,18 @@ def test_apply_filters(data_fixture):
     filter_1.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
     assert len(rows) == 2
-    assert rows[0].id == row_2.id
-    assert rows[1].id == row_4.id
+    rows_0, rows_1 = rows
+    assert rows_0.id == row_2.id
+    assert rows_1.id == row_4.id
 
     grid_view.filters_disabled = True
     grid_view.save()
     rows = view_handler.apply_filters(grid_view, model.objects.all())
-    assert rows[0].id == row_1.id
-    assert rows[1].id == row_2.id
-    assert rows[2].id == row_3.id
-    assert rows[3].id == row_4.id
+    rows_0, rows_1, rows_2, rows_3 = rows
+    assert rows_0.id == row_1.id
+    assert rows_1.id == row_2.id
+    assert rows_2.id == row_3.id
+    assert rows_3.id == row_4.id
 
 
 @pytest.mark.django_db

@@ -543,40 +543,37 @@ def test_create_row(api_client, data_fixture):
     assert model.objects.all().count() == 5
     rows = model.objects.all()
 
-    row_1 = rows[0]
+    row_1, row_2, row_5, row_3, row_4 = rows
+
     assert row_1.id == response_json_row_1["id"]
     assert getattr(row_1, f"field_{text_field.id}") == "white"
     assert getattr(row_1, f"field_{number_field.id}") is None
     assert getattr(row_1, f"field_{boolean_field.id}") is False
     assert getattr(row_1, f"field_{text_field_2.id}") is None
 
-    row_2 = rows[1]
     assert row_2.id == response_json_row_2["id"]
     assert getattr(row_2, f"field_{text_field.id}") == "white"
     assert getattr(row_2, f"field_{number_field.id}") is None
     assert getattr(row_2, f"field_{boolean_field.id}") is False
     assert getattr(row_2, f"field_{text_field_2.id}") == ""
 
-    row_5 = rows[2]
-    assert row_5.id == response_json_row_5["id"]
-    assert getattr(row_5, f"field_{text_field.id}") == "Red"
-    assert getattr(row_5, f"field_{number_field.id}") == 480
-    assert getattr(row_5, f"field_{boolean_field.id}") is False
-    assert getattr(row_5, f"field_{text_field_2.id}") == ""
-
-    row_3 = rows[3]
     assert row_3.id == response_json_row_3["id"]
     assert getattr(row_3, f"field_{text_field.id}") == "Green"
     assert getattr(row_3, f"field_{number_field.id}") == 120
     assert getattr(row_3, f"field_{boolean_field.id}") is True
     assert getattr(row_3, f"field_{text_field_2.id}") == "Not important"
 
-    row_4 = rows[4]
     assert row_4.id == response_json_row_4["id"]
     assert getattr(row_4, f"field_{text_field.id}") == "Purple"
     assert getattr(row_4, f"field_{number_field.id}") == 240
     assert getattr(row_4, f"field_{boolean_field.id}") is True
     assert getattr(row_4, f"field_{text_field_2.id}") == ""
+
+    assert row_5.id == response_json_row_5["id"]
+    assert getattr(row_5, f"field_{text_field.id}") == "Red"
+    assert getattr(row_5, f"field_{number_field.id}") == 480
+    assert getattr(row_5, f"field_{boolean_field.id}") is False
+    assert getattr(row_5, f"field_{text_field_2.id}") == ""
 
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
 

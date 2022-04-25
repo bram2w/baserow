@@ -419,18 +419,18 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
     assert isinstance(user_fields[0].specific, TextField)
 
     user_model = all_tables[0].get_model(attribute_names=True)
-    rows = user_model.objects.all()
-    assert rows[0].id == 1
-    assert str(rows[0].order) == "1.00000000000000000000"
-    assert rows[0].name == "Bram 1"
-    assert rows[0].email == "bram@email.com"
-    assert str(rows[0].number) == "1"
-    assert [r.id for r in rows[0].data.all()] == [1]
+    row_0, row_1, _ = user_model.objects.all()
+    assert row_0.id == 1
+    assert str(row_0.order) == "1.00000000000000000000"
+    assert row_0.name == "Bram 1"
+    assert row_0.email == "bram@email.com"
+    assert str(row_0.number) == "1"
+    assert [r.id for r in row_0.data.all()] == [1]
 
     data_model = all_tables[1].get_model(attribute_names=True)
-    rows = data_model.objects.all()
-    assert rows[0].checkbox is True
-    assert rows[1].checkbox is False
+    row_0, row_1, *_ = data_model.objects.all()
+    assert row_0.checkbox is True
+    assert row_1.checkbox is False
 
 
 @pytest.mark.django_db
