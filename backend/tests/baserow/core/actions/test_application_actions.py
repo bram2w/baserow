@@ -4,11 +4,42 @@ from baserow.core.action.scopes import GroupActionScopeType
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
-    CreateApplicationActionType,
     UpdateApplicationActionType,
     DeleteApplicationActionType,
+    OrderApplicationsActionType,
+    CreateApplicationActionType,
 )
 from baserow.core.models import Application
+
+
+@pytest.mark.django_db
+def test_can_undo_redo_order_applications(data_fixture, django_assert_num_queries):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    group = data_fixture.create_group(user=user)
+    application_1 = data_fixture.create_database_application(group=group, order=1)
+    application_2 = data_fixture.create_database_application(group=group, order=2)
+
+    action_type_registry.get_by_type(OrderApplicationsActionType).do(
+        user, group, application_ids_in_order=[application_2.id, application_1.id]
+    )
+
+    def check_queryset():
+        return list(
+            Application.objects.all().order_by("order").values_list("id", flat=True)
+        )
+
+    assert check_queryset() == [application_2.id, application_1.id]
+
+    ActionHandler.undo(
+        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert check_queryset() == [application_1.id, application_2.id]
+
+    ActionHandler.redo(
+        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+    )
+    assert check_queryset() == [application_2.id, application_1.id]
 
 
 @pytest.mark.django_db

@@ -727,24 +727,24 @@ class CoreHandler:
 
         return application
 
-    def order_applications(self, user, group, order):
+    def order_applications(
+        self, user: User, group: Group, order: List[int]
+    ) -> List[int]:
         """
         Updates the order of the applications in the given group. The order of the
         applications that are not in the `order` parameter set set to `0`.
 
         :param user: The user on whose behalf the tables are ordered.
-        :type user: User
         :param group: The group of which the applications must be updated.
-        :type group: Group
         :param order: A list containing the application ids in the desired order.
-        :type order: list
         :raises ApplicationNotInGroup: If one of the applications ids in the order does
             not belong to the database.
+        :return: The old order of application ids.
         """
 
         group.has_user(user, raise_error=True)
 
-        queryset = Application.objects.filter(group_id=group.id)
+        queryset = Application.objects.filter(group_id=group.id).order_by("order")
         application_ids = queryset.values_list("id", flat=True)
 
         for application_id in order:
@@ -753,6 +753,8 @@ class CoreHandler:
 
         Application.order_objects(queryset, order)
         applications_reordered.send(self, group=group, order=order, user=user)
+
+        return application_ids
 
     def delete_application(self, user: AbstractUser, application: Application):
         """
