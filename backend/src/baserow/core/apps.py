@@ -24,6 +24,7 @@ class CoreConfig(AppConfig):
             CreateApplicationActionType,
             UpdateApplicationActionType,
             DeleteApplicationActionType,
+            OrderApplicationsActionType,
         )
 
         action_type_registry.register(CreateGroupActionType())
@@ -49,6 +50,7 @@ class CoreConfig(AppConfig):
         action_type_registry.register(CreateViewSortActionType())
         action_type_registry.register(UpdateViewSortActionType())
         action_type_registry.register(DeleteViewSortActionType())
+        action_type_registry.register(OrderApplicationsActionType())
 
         from baserow.core.action.scopes import (
             RootActionScopeType,

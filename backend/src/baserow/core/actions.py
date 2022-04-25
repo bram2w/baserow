@@ -246,6 +246,57 @@ class OrderGroupsActionType(ActionType):
         CoreHandler().order_groups(user, params.new_order)
 
 
+class OrderApplicationsActionType(ActionType):
+    type = "order_applications"
+
+    @dataclasses.dataclass
+    class Params:
+        group_id: int
+        original_application_ids: List[int]
+        new_application_ids: List[int]
+
+    @classmethod
+    def do(
+        cls, user: AbstractUser, group: Group, application_ids_in_order: List[int]
+    ) -> Any:
+        """
+        Reorders the applications of a given group in the desired order. The index of
+        the id in the list will be the new order. See
+        `baserow.core.handler.CoreHandler.order_applications` for further details. When
+        undone re-orders the applications back to the old order, when redone reorders
+        to the new order.
+
+        :param user: The user on whose behalf the applications are reordered.
+        :param group: The group where the applications are in.
+        :param application_ids_in_order: A list of ids in the new order.
+        """
+
+        old_ids_in_order = list(
+            CoreHandler().order_applications(user, group, application_ids_in_order)
+        )
+
+        params = cls.Params(
+            group_id=group.id,
+            original_application_ids=old_ids_in_order,
+            new_application_ids=application_ids_in_order,
+        )
+        cls.register_action(user, params, cls.scope(group.id))
+
+    @classmethod
+    def scope(cls, group_id) -> ActionScopeStr:
+        return GroupActionScopeType.value(group_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        group = CoreHandler().get_group_for_update(params.group_id)
+        CoreHandler().order_applications(user, group, params.original_application_ids)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        group = CoreHandler().get_group_for_update(params.group_id)
+        CoreHandler().order_applications(user, group, params.new_application_ids)
+
+
 class CreateApplicationActionType(ActionType):
     type = "create_application"
 

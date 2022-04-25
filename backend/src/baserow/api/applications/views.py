@@ -35,6 +35,7 @@ from baserow.core.actions import (
     CreateApplicationActionType,
     DeleteApplicationActionType,
     UpdateApplicationActionType,
+    OrderApplicationsActionType,
 )
 from baserow.core.action.registries import action_type_registry
 
@@ -346,6 +347,7 @@ class OrderApplicationsView(APIView):
                 description="Updates the order of the applications in the group "
                 "related to the provided value.",
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Applications"],
         operation_id="order_applications",
@@ -377,5 +379,7 @@ class OrderApplicationsView(APIView):
         """Updates to order of the applications in a table."""
 
         group = CoreHandler().get_group(group_id)
-        CoreHandler().order_applications(request.user, group, data["application_ids"])
+        action_type_registry.get_by_type(OrderApplicationsActionType).do(
+            request.user, group, data["application_ids"]
+        )
         return Response(status=204)
