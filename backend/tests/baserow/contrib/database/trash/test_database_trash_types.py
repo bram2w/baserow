@@ -31,7 +31,7 @@ from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
-def test_delete_row(data_fixture):
+def test_delete_row_by_id(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(name="Car", user=user)
     data_fixture.create_text_field(table=table, name="Name", text_default="Test")
@@ -204,7 +204,7 @@ def test_can_trash_row_with_blank_primary_file_field(
 
 
 @pytest.mark.django_db
-def test_delete_row_perm(data_fixture):
+def test_delete_row_by_id_perm(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(name="Car", user=user)
     data_fixture.create_text_field(table=table, name="Name", text_default="Test")
@@ -226,7 +226,7 @@ def test_delete_row_perm(data_fixture):
 
 
 @pytest.mark.django_db
-def test_cant_delete_row_perm_without_tableid(data_fixture):
+def test_cant_delete_row_by_id_perm_without_tableid(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(name="Car", user=user)
     data_fixture.create_text_field(table=table, name="Name", text_default="Test")

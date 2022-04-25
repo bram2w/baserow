@@ -20,12 +20,8 @@ def test_migration_fixes_duplicate_field_names(data_fixture, reset_schema_after_
     database = data_fixture.create_database_application(user=user)
 
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
-    table = TableHandler().create_table(
-        user=user, database=database, name="test", order=0
-    )
-    other_table = TableHandler().create_table(
-        user=user, database=database, name="test", order=1
-    )
+    table = TableHandler().create_table(user=user, database=database, name="test")
+    other_table = TableHandler().create_table(user=user, database=database, name="test")
 
     TextField = old_state.apps.get_model("database", "TextField")
     Field = old_state.apps.get_model("database", "Field")
@@ -88,9 +84,7 @@ def test_migration_handles_existing_fields_with_underscore_number(
     database = data_fixture.create_database_application(user=user)
 
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
-    table = TableHandler().create_table(
-        user=user, database=database, name="test", order=0
-    )
+    table = TableHandler().create_table(user=user, database=database, name="test")
 
     TextField = old_state.apps.get_model("database", "TextField")
     Field = old_state.apps.get_model("database", "Field")
@@ -153,9 +147,7 @@ def test_backwards_migration_restores_field_names(
     database = data_fixture.create_database_application(user=user)
 
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
-    table = TableHandler().create_table(
-        user=user, database=database, name="test", order=0
-    )
+    table = TableHandler().create_table(user=user, database=database, name="test")
 
     TextField = old_state.apps.get_model("database", "TextField")
     Field = old_state.apps.get_model("database", "Field")
@@ -198,12 +190,8 @@ def test_migration_fixes_duplicate_field_names_and_reserved_names(
     database = data_fixture.create_database_application(user=user)
 
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
-    table = TableHandler().create_table(
-        user=user, database=database, name="test", order=0
-    )
-    other_table = TableHandler().create_table(
-        user=user, database=database, name="test", order=1
-    )
+    table = TableHandler().create_table(user=user, database=database, name="test")
+    other_table = TableHandler().create_table(user=user, database=database, name="test")
 
     TextField = old_state.apps.get_model("database", "TextField")
     Field = old_state.apps.get_model("database", "Field")

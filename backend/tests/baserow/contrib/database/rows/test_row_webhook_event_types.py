@@ -89,7 +89,7 @@ def test_row_updated_event_type(data_fixture):
         "row.updated"
     ).get_test_call_before_return(table, row, model)
 
-    row = RowHandler().update_row(
+    row = RowHandler().update_row_by_id(
         user=user,
         table=table,
         row_id=row.id,

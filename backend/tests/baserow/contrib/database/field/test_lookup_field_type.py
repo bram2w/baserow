@@ -1441,7 +1441,7 @@ def test_deleting_related_link_row_field_still_lets_you_create_edit_rows(
         values={f"field_{table_primary_field.id}": "bbb"},
     )
     RowHandler().create_row(user, table2, values={})
-    RowHandler().update_row(user, table, row_id=table_row.id, values={})
+    RowHandler().update_row_by_id(user, table, row_id=table_row.id, values={})
 
 
 @pytest.mark.django_db
@@ -1525,7 +1525,7 @@ def test_deleting_related_table_still_lets_you_create_edit_rows(
         table,
         values={f"field_{table_primary_field.id}": "bbb"},
     )
-    RowHandler().update_row(user, table, row_id=table_row.id, values={})
+    RowHandler().update_row_by_id(user, table, row_id=table_row.id, values={})
 
 
 @pytest.mark.django_db

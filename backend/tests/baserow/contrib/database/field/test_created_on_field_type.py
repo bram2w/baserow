@@ -68,7 +68,7 @@ def test_created_on_field_type(data_fixture):
 
     # Trying to update the the created_on field will raise error
     with pytest.raises(ValidationError):
-        row_handler.update_row(
+        row_handler.update_row_by_id(
             user=user,
             row_id=row.id,
             table=table,
@@ -76,7 +76,7 @@ def test_created_on_field_type(data_fixture):
         )
 
     with pytest.raises(ValidationError):
-        row_handler.update_row(
+        row_handler.update_row_by_id(
             user=user,
             table=table,
             row_id=row.id,
@@ -87,7 +87,7 @@ def test_created_on_field_type(data_fixture):
     # the created_on field.
     row_create_datetime_before_update = row.create_datetime
     row_create_date_before_update = row.create_date
-    row_handler.update_row(
+    row_handler.update_row_by_id(
         user=user,
         table=table,
         row_id=row.id,

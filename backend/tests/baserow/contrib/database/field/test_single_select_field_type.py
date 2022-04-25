@@ -263,7 +263,7 @@ def test_single_select_field_type_rows(data_fixture, django_assert_num_queries):
     assert getattr(rows[2], f"field_{field.id}") is None
     assert getattr(rows[3], f"field_{field.id}").id == select_options[1].id
 
-    row_4 = row_handler.update_row(
+    row_4 = row_handler.update_row_by_id(
         user=user, table=table, row_id=row_4.id, values={f"field_{field.id}": None}
     )
     assert getattr(row_4, f"field_{field.id}") is None

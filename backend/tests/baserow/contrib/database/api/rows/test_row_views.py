@@ -1179,7 +1179,7 @@ def test_move_row(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_row(api_client, data_fixture):
+def test_delete_row_by_id(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table()

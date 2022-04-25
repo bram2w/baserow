@@ -285,13 +285,13 @@ def test_link_row_field_type_rows(data_fixture):
     assert customers_row_2.id in row_1_ids
     assert customers_row_1.id in row_2_ids
 
-    row = row_handler.update_row(
+    row = row_handler.update_row_by_id(
         user=user,
         table=example_table,
         row_id=row.id,
         values={f"field_{link_row_field.id}": [customers_row_3.id]},
     )
-    row_2 = row_handler.update_row(
+    row_2 = row_handler.update_row_by_id(
         user=user,
         table=example_table,
         row_id=row_2.id,

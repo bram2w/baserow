@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, Type
 
 from django.db import models
 from django.db.models import Q, F
@@ -363,7 +363,7 @@ class Table(
         add_dependencies=True,
         managed=False,
         use_cache=True,
-    ) -> GeneratedTableModel:
+    ) -> Type[GeneratedTableModel]:
         """
         Generates a temporary Django model based on available fields that belong to
         this table. Note that the model will not be registered with the apps because

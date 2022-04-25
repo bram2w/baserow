@@ -242,7 +242,7 @@ def setup_interesting_test_table(data_fixture, user_kwargs=None):
     file_link_row_id = name_to_field_id["file_link_row"]
     with freeze_time("2021-01-02 12:00"):
         handler = RowHandler()
-        row = handler.update_row(
+        row = handler.update_row_by_id(
             user,
             table,
             row.id,

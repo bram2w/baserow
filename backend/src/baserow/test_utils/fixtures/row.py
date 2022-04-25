@@ -44,7 +44,7 @@ class RowFixture:
                     values={field_id: values_to_update},
                 )
             else:
-                row = row_handler.update_row(
+                row = row_handler.update_row_by_id(
                     user=user,
                     table=table,
                     model=model,

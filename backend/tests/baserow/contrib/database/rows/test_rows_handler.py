@@ -305,20 +305,20 @@ def test_update_row(send_mock, data_fixture):
     row = handler.create_row(user=user, table=table)
 
     with pytest.raises(UserNotInGroup):
-        handler.update_row(user=user_2, table=table, row_id=row.id, values={})
+        handler.update_row_by_id(user=user_2, table=table, row_id=row.id, values={})
 
     with pytest.raises(RowDoesNotExist):
-        handler.update_row(user=user, table=table, row_id=99999, values={})
+        handler.update_row_by_id(user=user, table=table, row_id=99999, values={})
 
     with pytest.raises(ValidationError):
-        handler.update_row(
+        handler.update_row_by_id(
             user=user, table=table, row_id=row.id, values={price_field.id: -10.99}
         )
 
     with patch(
         "baserow.contrib.database.rows.signals.before_row_update.send"
     ) as before_send_mock:
-        handler.update_row(
+        handler.update_row_by_id(
             user=user,
             table=table,
             row_id=row.id,
@@ -362,12 +362,12 @@ def test_move_row(before_send_mock, send_mock, data_fixture):
     row_3 = handler.create_row(user=user, table=table)
 
     with pytest.raises(UserNotInGroup):
-        handler.move_row(user=user_2, table=table, row_id=row_1.id)
+        handler.move_row_by_id(user=user_2, table=table, row_id=row_1.id)
 
     with pytest.raises(RowDoesNotExist):
-        handler.move_row(user=user, table=table, row_id=99999)
+        handler.move_row_by_id(user=user, table=table, row_id=99999)
 
-    handler.move_row(user=user, table=table, row_id=row_1.id)
+    handler.move_row_by_id(user=user, table=table, row_id=row_1.id)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -388,7 +388,7 @@ def test_move_row(before_send_mock, send_mock, data_fixture):
     assert send_mock.call_args[1]["model"]._generated_table_model
     assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
 
-    handler.move_row(user=user, table=table, row_id=row_1.id, before=row_3)
+    handler.move_row_by_id(user=user, table=table, row_id=row_1.id, before=row_3)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -417,13 +417,13 @@ def test_delete_row(before_send_mock, send_mock, data_fixture):
     handler.create_row(user=user, table=table)
 
     with pytest.raises(UserNotInGroup):
-        handler.delete_row(user=user_2, table=table, row_id=row.id)
+        handler.delete_row_by_id(user=user_2, table=table, row_id=row.id)
 
     with pytest.raises(RowDoesNotExist):
-        handler.delete_row(user=user, table=table, row_id=99999)
+        handler.delete_row_by_id(user=user, table=table, row_id=99999)
 
     row_id = row.id
-    handler.delete_row(user=user, table=table, row_id=row.id)
+    handler.delete_row_by_id(user=user, table=table, row_id=row.id)
     assert model.objects.all().count() == 1
     assert model.trash.all().count() == 1
     row.refresh_from_db()
@@ -474,7 +474,7 @@ def test_restore_row(send_mock, data_fixture):
         },
     )
 
-    handler.delete_row(user, table, row_1.id)
+    handler.delete_row_by_id(user, table, row_1.id)
     TrashHandler.restore_item(user, "row", row_1.id, parent_trash_item_id=table.id)
 
     assert len(send_mock.call_args) == 2

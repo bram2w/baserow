@@ -288,7 +288,7 @@ def test_multiple_select_field_type_rows(data_fixture, django_assert_num_queries
     row.refresh_from_db()
     assert len(getattr(row, f"field_{field.id}").all()) == 0
 
-    row_4 = row_handler.update_row(
+    row_4 = row_handler.update_row_by_id(
         user=user, table=table, row_id=row_4.id, values={f"field_{field.id}": []}
     )
     assert len(getattr(row_4, f"field_{field.id}").all()) == 0
@@ -931,7 +931,7 @@ def test_converting_multiple_select_field_value(
     # We have to add option_2 in a separate request so we have the guarantee that the
     # m2m through table id for option_2 is greater than option_1 for the ordering
     # assertion to be correct later.
-    row_handler.update_row(
+    row_handler.update_row_by_id(
         user=user,
         table=table,
         row_id=row.id,
@@ -1361,7 +1361,7 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
         },
     )
 
-    row_handler.update_row(
+    row_handler.update_row_by_id(
         user=user,
         table=table,
         row_id=row.id,
