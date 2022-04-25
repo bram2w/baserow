@@ -1,4 +1,8 @@
+from typing import Any, cast, NewType, List, Tuple, Optional, Type
+
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.db.models import QuerySet
 
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
 from baserow.contrib.database.fields.exceptions import (
@@ -16,10 +20,10 @@ from baserow.contrib.database.fields.handler import (
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.models import Database
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import extract_allowed, set_allowed_attrs
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from .exceptions import (
     TableDoesNotExist,
@@ -28,23 +32,25 @@ from .exceptions import (
     InitialTableDataLimitExceeded,
     InitialTableDataDuplicateName,
 )
-from .models import Table
+from .models import GeneratedTableModel, Table
 from .signals import table_created, table_updated, table_deleted, tables_reordered
 
 
+TableForUpdate = NewType("TableForUpdate", Table)
+
+
 class TableHandler:
-    def get_table(self, table_id, base_queryset=None):
+    def get_table(
+        self, table_id: int, base_queryset: Optional[QuerySet] = None
+    ) -> Table:
         """
         Selects a table with a given id from the database.
 
         :param table_id: The identifier of the table that must be returned.
-        :type table_id: int
         :param base_queryset: The base queryset from where to select the table
             object from. This can for example be used to do a `select_related`.
-        :type base_queryset: Queryset
         :raises TableDoesNotExist: When the table with the provided id does not exist.
         :return: The requested table of the provided id.
-        :rtype: Table
         """
 
         if base_queryset is None:
@@ -60,38 +66,53 @@ class TableHandler:
 
         return table
 
+    def get_table_for_update(self, table_id: int) -> TableForUpdate:
+        """
+        Provide a type hint for tables that need to be updated.
+        :param table_id: The id of the table that needs to be updated.
+        :return: The table that needs to be updated.
+        """
+
+        return cast(
+            TableForUpdate,
+            self.get_table(table_id, base_queryset=Table.objects.select_for_update()),
+        )
+
+    def get_tables_order(self, database: Database) -> List[int]:
+        """
+        Returns the tables in the database ordered by the order field.
+
+        :param database: The database that the tables belong to.
+        :return: A list containing the order of the tables in the database.
+        """
+
+        return [table.id for table in database.table_set.order_by("order")]
+
     def create_table(
         self,
-        user,
-        database,
-        fill_example=False,
-        data=None,
-        first_row_header=True,
-        **kwargs,
-    ):
+        user: AbstractUser,
+        database: Database,
+        name: str,
+        fill_example: bool = False,
+        data: Optional[List[List[str]]] = None,
+        first_row_header: bool = True,
+    ) -> Table:
         """
         Creates a new table and a primary text field.
 
         :param user: The user on whose behalf the table is created.
-        :type user: User
         :param database: The database that the table instance belongs to.
-        :type database: Database
+        :param name: The name of the table is created.
         :param fill_example: Indicates whether an initial view, some fields and
             some rows should be added. Works only if no data is provided.
-        :type fill_example: bool
         :param data: A list containing all the rows that need to be inserted is
             expected. All the values of the row are going to be converted to a string
             and will be inserted in the database.
-        :type: initial_data: None or list[list[str]
         :param first_row_header: Indicates if the first row are the fields. The names
             of these rows are going to be used as fields.
-        :type first_row_header: bool
-        :param kwargs: The fields that need to be set upon creation.
-        :type kwargs: object
         :raises MaxFieldLimitExceeded: When the data contains more columns
             than the field limit.
         :return: The created table instance.
-        :rtype: Table
         """
 
         database.group.has_user(user, raise_error=True)
@@ -103,10 +124,11 @@ class TableHandler:
                     f"Fields count exceeds the limit of {settings.MAX_FIELD_LIMIT}"
                 )
 
-        table_values = extract_allowed(kwargs, ["name"])
         last_order = Table.get_last_order(database)
         table = Table.objects.create(
-            database=database, order=last_order, **table_values
+            database=database,
+            order=last_order,
+            name=name,
         )
 
         if data is not None:
@@ -138,18 +160,17 @@ class TableHandler:
 
         return table
 
-    def normalize_initial_table_data(self, data, first_row_header):
+    def normalize_initial_table_data(
+        self, data: List[List[str]], first_row_header: bool
+    ) -> Tuple[List, List]:
         """
         Normalizes the provided initial table data. The amount of columns will be made
         equal for each row. The header and the rows will also be separated.
 
         :param data: A list containing all the provided rows.
-        :type data: list
         :param first_row_header: Indicates if the first row is the header. For each
             of these header columns a field is going to be created.
-        :type first_row_header: bool
         :return: A list containing the field names and a list containing all the rows.
-        :rtype: list, list
         :raises InvalidInitialTableData: When the data doesn't contain a column or row.
         :raises MaxFieldNameLengthExceeded: When the provided name is too long.
         """
@@ -200,23 +221,25 @@ class TableHandler:
 
         return fields, data
 
-    def fill_initial_table_data(self, user, table, fields, data, model):
+    def fill_initial_table_data(
+        self,
+        user: AbstractUser,
+        table: Table,
+        fields: List[str],
+        data: List[List[Any]],
+        model: Type[GeneratedTableModel],
+    ):
         """
         Fills the provided table with the normalized data that needs to be created upon
         creation of the table.
 
         :param user: The user on whose behalf the table is created.
-        :type user: User`
         :param table: The newly created table where the initial data has to be inserted
             into.
-        :type table: Table
         :param fields: A list containing the field names.
-        :type fields: list
         :param data: A list containing the rows that need to be inserted.
-        :type data: list
         :param model: The generated table model of the table that needs to be filled
             with initial data.
-        :type model: TableModel
         """
 
         ViewHandler().create_view(user, table, GridViewType.type, name="Grid")
@@ -233,15 +256,13 @@ class TableHandler:
         ]
         model.objects.bulk_create(bulk_data)
 
-    def fill_example_table_data(self, user, table):
+    def fill_example_table_data(self, user: AbstractUser, table: Table):
         """
         Fills the table with some initial example data. A new table is expected that
         already has the primary field named 'name'.
 
         :param user: The user on whose behalf the table is filled.
-        :type: user: User
         :param table: The table that needs the initial data.
-        :type table: User
         """
 
         view_handler = ViewHandler()
@@ -265,19 +286,30 @@ class TableHandler:
         model.objects.create(name="Tesla", active=True, order=1)
         model.objects.create(name="Amazon", active=False, order=2)
 
-    def update_table(self, user, table, **kwargs):
+    def update_table_by_id(self, user: AbstractUser, table_id: int, name: str) -> Table:
         """
         Updates an existing table instance.
 
         :param user: The user on whose behalf the table is updated.
-        :type user: User
-        :param table: The table instance that needs to be updated.
-        :type table: Table
-        :param kwargs: The fields that need to be updated.
-        :type kwargs: object
+        :param table_id: The id of the table that needs to be updated.
+        :param name: The name to be updated.
         :raises ValueError: When the provided table is not an instance of Table.
         :return: The updated table instance.
-        :rtype: Table
+        """
+        table = self.get_table_for_update(table_id)
+        return self.update_table(user, table, name)
+
+    def update_table(
+        self, user: AbstractUser, table: TableForUpdate, name: str
+    ) -> TableForUpdate:
+        """
+        Updates an existing table instance.
+
+        :param user: The user on whose behalf the table is updated.
+        :param table: The table instance that needs to be updated.
+        :param name: The name to be updated.
+        :raises ValueError: When the provided table is not an instance of Table.
+        :return: The updated table instance.
         """
 
         if not isinstance(table, Table):
@@ -285,24 +317,21 @@ class TableHandler:
 
         table.database.group.has_user(user, raise_error=True)
 
-        table = set_allowed_attrs(kwargs, ["name"], table)
+        table.name = name
         table.save()
 
         table_updated.send(self, table=table, user=user)
 
         return table
 
-    def order_tables(self, user, database, order):
+    def order_tables(self, user: AbstractUser, database: Database, order: List[int]):
         """
         Updates the order of the tables in the given database. The order of the views
         that are not in the `order` parameter set set to `0`.
 
         :param user: The user on whose behalf the tables are ordered.
-        :type user: User
         :param database: The database of which the views must be updated.
-        :type database: Database
         :param order: A list containing the table ids in the desired order.
-        :type order: list
         :raises TableNotInDatabase: If one of the table ids in the order does not belong
             to the database.
         """
@@ -320,15 +349,28 @@ class TableHandler:
         Table.order_objects(queryset, order)
         tables_reordered.send(self, database=database, order=order, user=user)
 
-    def delete_table(self, user, table):
+    def delete_table_by_id(self, user: AbstractUser, table_id: int):
         """
-        Deletes an existing table instance if the user has access to the related group.
+        Moves to the trash an existing an existing table instance if the user
+        has access to the related group.
         The table deleted signals are also fired.
 
         :param user: The user on whose behalf the table is deleted.
-        :type user: User
+        :param table_id: The table id of the table that needs to be deleted.
+        :raises ValueError: When the provided table is not an instance of Table.
+        """
+
+        table = self.get_table_for_update(table_id)
+        self.delete_table(user, table)
+
+    def delete_table(self, user: AbstractUser, table: TableForUpdate):
+        """
+        Moves to the trash an existing table instance if the user has access
+        to the related group.
+        The table deleted signals are also fired.
+
+        :param user: The user on whose behalf the table is deleted.
         :param table: The table instance that needs to be deleted.
-        :type table: Table
         :raises ValueError: When the provided table is not an instance of Table.
         """
 

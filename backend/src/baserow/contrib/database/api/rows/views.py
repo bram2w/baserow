@@ -11,7 +11,7 @@ from baserow.api.decorators import map_exceptions, validate_query_parameters
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.api.pagination import PageNumberPagination
-from baserow.api.schemas import get_error_schema
+from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.user_files.errors import ERROR_USER_FILE_DOES_NOT_EXIST
 from baserow.api.utils import validate_data
@@ -44,6 +44,12 @@ from baserow.contrib.database.fields.exceptions import (
     FieldDoesNotExist,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
 )
+from baserow.contrib.database.rows.actions import (
+    CreateRowActionType,
+    DeleteRowActionType,
+    MoveRowActionType,
+)
+from baserow.core.action.registries import action_type_registry
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotUnique
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
@@ -325,6 +331,7 @@ class RowsView(APIView):
                     "internal Baserow field names (field_123 etc)."
                 ),
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="create_database_table_row",
@@ -400,11 +407,11 @@ class RowsView(APIView):
         )
 
         try:
-            row = RowHandler().create_row(
+            row = action_type_registry.get_by_type(CreateRowActionType).do(
                 request.user,
                 table,
                 data,
-                model,
+                model=model,
                 before=before,
                 user_field_names=user_field_names,
             )
@@ -587,12 +594,12 @@ class RowView(APIView):
         TokenHandler().check_table_permissions(request, "update", table, False)
         user_field_names = "user_field_names" in request.GET
 
-        field_names = None
-        field_ids = None
+        field_ids, field_names = None, None
         if user_field_names:
             field_names = request.data.keys()
         else:
             field_ids = RowHandler().extract_field_ids_from_dict(request.data)
+
         model = table.get_model()
         validation_serializer = get_row_serializer_class(
             model,
@@ -603,16 +610,16 @@ class RowView(APIView):
         data = validate_data(validation_serializer, request.data)
 
         try:
-            row = RowHandler().update_row(
+            row = RowHandler().update_row_by_id(
                 request.user,
                 table,
                 row_id,
                 data,
-                model,
+                model=model,
                 user_field_names=user_field_names,
             )
-        except ValidationError as e:
-            raise RequestBodyValidationException(detail=e.message)
+        except ValidationError as exc:
+            raise RequestBodyValidationException(detail=exc.message)
 
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True, user_field_names=user_field_names
@@ -635,6 +642,7 @@ class RowView(APIView):
                 type=OpenApiTypes.INT,
                 description="Deletes the row related to the value.",
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="delete_database_table_row",
@@ -669,9 +677,11 @@ class RowView(APIView):
         """
 
         table = TableHandler().get_table(table_id)
-
         TokenHandler().check_table_permissions(request, "delete", table, False)
-        RowHandler().delete_row(request.user, table, row_id)
+
+        action_type_registry.get_by_type(DeleteRowActionType).do(
+            request.user, table, row_id
+        )
 
         return Response(status=204)
 
@@ -712,6 +722,7 @@ class RowMoveView(APIView):
                     "Baserow field names (field_123 etc). "
                 ),
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="move_database_table_row",
@@ -752,13 +763,17 @@ class RowMoveView(APIView):
         user_field_names = "user_field_names" in request.GET
 
         model = table.get_model()
+
+        row_handler = RowHandler()
+
         before_id = query_params.get("before_id")
         before = (
-            RowHandler().get_row(request.user, table, before_id, model)
+            row_handler.get_row(request.user, table, before_id, model=model)
             if before_id
             else None
         )
-        row = RowHandler().move_row(
+
+        row = action_type_registry.get_by_type(MoveRowActionType).do(
             request.user, table, row_id, before=before, model=model
         )
 

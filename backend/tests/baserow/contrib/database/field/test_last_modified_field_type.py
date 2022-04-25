@@ -70,7 +70,7 @@ def test_last_modified_field_type(data_fixture):
 
     # Trying to update the the last_modified field will raise error
     with pytest.raises(ValidationError):
-        row_handler.update_row(
+        row_handler.update_row_by_id(
             user=user,
             row_id=row.id,
             table=table,
@@ -78,7 +78,7 @@ def test_last_modified_field_type(data_fixture):
         )
 
     with pytest.raises(ValidationError):
-        row_handler.update_row(
+        row_handler.update_row_by_id(
             user=user,
             table=table,
             row_id=row.id,
@@ -89,7 +89,7 @@ def test_last_modified_field_type(data_fixture):
     # the last_modified datetime field.
     row_last_datetime_before_update = row.last_datetime
     with freeze_time(time_to_freeze):
-        row_handler.update_row(
+        row_handler.update_row_by_id(
             user=user,
             table=table,
             row_id=row.id,

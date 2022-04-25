@@ -95,7 +95,7 @@ def test_row_updated(mock_broadcast_to_channel_group, data_fixture):
     field = data_fixture.create_text_field(table=table)
     field_2 = data_fixture.create_text_field(table=table)
     row = table.get_model().objects.create()
-    RowHandler().update_row(
+    RowHandler().update_row_by_id(
         user=user, table=table, row_id=row.id, values={f"field_{field.id}": "Test"}
     )
 
@@ -115,7 +115,7 @@ def test_row_updated(mock_broadcast_to_channel_group, data_fixture):
     row.refresh_from_db()
     setattr(row, f"field_{field_2.id}", "Second")
     row.save()
-    RowHandler().update_row(
+    RowHandler().update_row_by_id(
         user=user, table=table, row_id=row.id, values={f"field_{field.id}": "First"}
     )
 
@@ -141,7 +141,7 @@ def test_row_updated_with_metadata(mock_broadcast_to_channel_group, data_fixture
     with register_instance_temporarily(
         row_metadata_registry, test_populates_with_row_id_metadata()
     ):
-        RowHandler().update_row(
+        RowHandler().update_row_by_id(
             user=user, table=table, row_id=row.id, values={f"field_{field.id}": "Test"}
         )
 
@@ -169,7 +169,7 @@ def test_row_deleted(mock_broadcast_to_channel_group, data_fixture):
     )
     row = table.get_model().objects.create(**{f"field_{field.id}": "Value"})
     row_id = row.id
-    RowHandler().delete_row(user=user, table=table, row_id=row_id)
+    RowHandler().delete_row_by_id(user=user, table=table, row_id=row_id)
 
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args

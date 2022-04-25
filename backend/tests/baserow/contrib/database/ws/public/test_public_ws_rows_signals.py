@@ -180,7 +180,7 @@ def test_when_row_deleted_public_views_receive_restricted_row_deleted_ws_event(
             f"field_{hidden_field.id}": "Hidden",
         },
     )
-    RowHandler().delete_row(user, table, row.id, model)
+    RowHandler().delete_row_by_id(user, table, row.id, model)
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
@@ -270,7 +270,7 @@ def test_when_row_deleted_public_views_receive_row_deleted_only_when_filters_mat
             f"field_{hidden_field.id}": "Hidden",
         },
     )
-    RowHandler().delete_row(user, table, row.id, model)
+    RowHandler().delete_row_by_id(user, table, row.id, model)
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
@@ -342,7 +342,7 @@ def test_given_row_not_visible_in_public_view_when_updated_to_be_visible_event_s
     )
     assert row_checker.get_public_views_where_row_is_visible(initially_hidden_row) == []
 
-    RowHandler().update_row(
+    RowHandler().update_row_by_id(
         user,
         table,
         initially_hidden_row.id,
@@ -425,7 +425,7 @@ def test_given_row_visible_in_public_view_when_updated_to_be_not_visible_event_s
     ]
 
     # Update the row so it is no longer visible
-    RowHandler().update_row(
+    RowHandler().update_row_by_id(
         user,
         table,
         initially_visible_row.id,
@@ -511,7 +511,7 @@ def test_given_row_visible_in_public_view_when_updated_to_still_be_visible_event
     ]
 
     # Update the row so it is still visible but changed
-    RowHandler().update_row(
+    RowHandler().update_row_by_id(
         user,
         table,
         initially_visible_row.id,
@@ -755,7 +755,7 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
 
     # Move the visible row behind the invisible one
     with transaction.atomic():
-        RowHandler().move_row(
+        RowHandler().move_row_by_id(
             user, table, visible_moving_row.id, before=invisible_row, model=model
         )
 
@@ -843,7 +843,7 @@ def test_given_row_invisible_in_public_view_when_moved_no_update_sent(
 
     # Move the invisible row
     with transaction.atomic():
-        RowHandler().move_row(
+        RowHandler().move_row_by_id(
             user, table, invisible_moving_row.id, before=visible_row, model=model
         )
 

@@ -53,6 +53,37 @@ class DatabaseConfig(AppConfig):
     def ready(self):
         self.prevent_generated_model_for_registering()
 
+        from baserow.core.action.registries import (
+            action_type_registry,
+            action_scope_registry,
+        )
+
+        from .action.scopes import TableActionScopeType
+
+        action_scope_registry.register(TableActionScopeType())
+
+        from .table.actions import (
+            CreateTableActionType,
+            DeleteTableActionType,
+            OrderTableActionType,
+            UpdateTableActionType,
+        )
+
+        action_type_registry.register(CreateTableActionType())
+        action_type_registry.register(DeleteTableActionType())
+        action_type_registry.register(OrderTableActionType())
+        action_type_registry.register(UpdateTableActionType())
+
+        from .rows.actions import (
+            CreateRowActionType,
+            DeleteRowActionType,
+            MoveRowActionType,
+        )
+
+        action_type_registry.register(CreateRowActionType())
+        action_type_registry.register(DeleteRowActionType())
+        action_type_registry.register(MoveRowActionType())
+
         from .views.registries import (
             view_type_registry,
             view_filter_type_registry,

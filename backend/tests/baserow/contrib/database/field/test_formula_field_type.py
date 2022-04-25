@@ -1093,7 +1093,7 @@ def test_can_insert_and_update_rows_with_formula_referencing_single_select(
         "value": option_a.value,
     }
 
-    row = RowHandler().update_row(
+    row = RowHandler().update_row_by_id(
         user=user,
         table=table,
         row_id=row.id,

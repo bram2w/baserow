@@ -93,7 +93,7 @@ def test_row_creation(data_fixture):
         (4, 0),
     ]
 
-    row_handler.update_row(
+    row_handler.update_row_by_id(
         user_field_names=True,
         user=user,
         row_id=row1.id,
@@ -113,7 +113,7 @@ def test_row_creation(data_fixture):
             row_handler.create_row(
                 user=user, table=table, values={"rating": invalid_value}, model=model
             )
-            row_handler.update_row(
+            row_handler.update_row_by_id(
                 user=user,
                 row_id=row1.id,
                 table=table,
@@ -253,7 +253,7 @@ def test_rating_field_modification(data_fixture):
     ]
 
     # Change boolean field to test conversion back with value != [0,1]
-    row_handler.update_row(
+    row_handler.update_row_by_id(
         user=user,
         row_id=row3.id,
         table=table,

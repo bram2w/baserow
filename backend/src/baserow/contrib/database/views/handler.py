@@ -1268,7 +1268,7 @@ class ViewHandler:
 
         table = form.table
 
-        if not model:
+        if model is None:
             model = table.get_model()
 
         if not enabled_field_options:

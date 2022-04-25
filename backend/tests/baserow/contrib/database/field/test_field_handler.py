@@ -103,7 +103,7 @@ def test_can_convert_between_all_fields(data_fixture):
                             # Faker produces subtypes of date / datetime which baserow
                             # does not want, instead just convert to str.
                             random_value = str(random_value)
-                        row_handler.update_row(
+                        row_handler.update_row_by_id(
                             user=user,
                             table=table,
                             row_id=row.id,
