@@ -286,7 +286,7 @@ class OrderApplicationsActionType(ActionType):
         cls.register_action(user, params, cls.scope(group.id))
 
     @classmethod
-    def scope(cls, group_id) -> ActionScopeStr:
+    def scope(cls, group_id: int) -> ActionScopeStr:
         return GroupActionScopeType.value(group_id)
 
     @classmethod
@@ -333,7 +333,7 @@ class CreateApplicationActionType(ActionType):
         return application
 
     @classmethod
-    def scope(cls, group_id) -> ActionScopeStr:
+    def scope(cls, group_id: int) -> ActionScopeStr:
         return GroupActionScopeType.value(group_id)
 
     @classmethod
@@ -373,7 +373,7 @@ class DeleteApplicationActionType(ActionType):
         cls.register_action(user, params, cls.scope(application.group.id))
 
     @classmethod
-    def scope(cls, group_id) -> ActionScopeStr:
+    def scope(cls, group_id: int) -> ActionScopeStr:
         return GroupActionScopeType.value(group_id)
 
     @classmethod
@@ -421,7 +421,7 @@ class UpdateApplicationActionType(ActionType):
         return application
 
     @classmethod
-    def scope(cls, group_id) -> ActionScopeStr:
+    def scope(cls, group_id: int) -> ActionScopeStr:
         return GroupActionScopeType.value(group_id)
 
     @classmethod
