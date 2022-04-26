@@ -1,9 +1,12 @@
+from typing import Any, Dict
 from django.db import transaction
 from django.db.models import ObjectDoesNotExist
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.views import APIView
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -77,6 +80,7 @@ from baserow.contrib.database.views.exceptions import (
     CannotShareViewTypeError,
     ViewDecorationDoesNotExist,
     ViewDecorationNotSupported,
+    NoAuthorizationToPubliclySharedView,
 )
 
 from .serializers import (
@@ -93,8 +97,11 @@ from .serializers import (
     ViewDecorationSerializer,
     CreateViewDecorationSerializer,
     UpdateViewDecorationSerializer,
+    PublicViewAuthRequestSerializer,
+    PublicViewAuthResponseSerializer,
 )
 from .errors import (
+    ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
     ERROR_VIEW_DOES_NOT_EXIST,
     ERROR_VIEW_NOT_IN_TABLE,
     ERROR_VIEW_FILTER_DOES_NOT_EXIST,
@@ -110,6 +117,7 @@ from .errors import (
     ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
     ERROR_CANNOT_SHARE_VIEW_TYPE,
 )
+from .utils import get_public_view_authorization_token
 
 view_field_options_mapping_serializer = MappingSerializer(
     "ViewFieldOptions",
@@ -1470,6 +1478,7 @@ class PublicViewLinkRowFieldLookupView(APIView):
         ),
         responses={
             200: get_example_pagination_serializer_class(LinkRowValueSerializer),
+            401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),
             404: get_error_schema(
                 ["ERROR_VIEW_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
             ),
@@ -1479,11 +1488,17 @@ class PublicViewLinkRowFieldLookupView(APIView):
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+            NoAuthorizationToPubliclySharedView: ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
         }
     )
-    def get(self, request, slug, field_id):
+    def get(self, request: Request, slug: str, field_id: int) -> Response:
+
         handler = ViewHandler()
-        view = handler.get_public_view_by_slug(request.user, slug).specific
+        view = handler.get_public_view_by_slug(
+            request.user,
+            slug,
+            authorization_token=get_public_view_authorization_token(request),
+        ).specific
         view_type = view_type_registry.get_by_model(view)
 
         if not view_type.can_share:
@@ -1496,8 +1511,8 @@ class PublicViewLinkRowFieldLookupView(APIView):
             field_option = queryset.get(
                 field_id=field_id, field__content_type=link_row_field_content_type
             )
-        except ObjectDoesNotExist:
-            raise FieldDoesNotExist("The view field option does not exist.")
+        except ObjectDoesNotExist as exc:
+            raise FieldDoesNotExist("The view field option does not exist.") from exc
 
         search = request.GET.get("search")
         link_row_field = field_option.field.specific
@@ -1535,3 +1550,68 @@ class PublicViewLinkRowFieldLookupView(APIView):
             many=True,
         )
         return paginator.get_paginated_response(serializer.data)
+
+
+class PublicViewAuthView(APIView):
+    """
+    This view is used to authenticate an user against a password
+    protected shared view.
+    The user must provide the same password that the owner of the view
+    has set up for the public shared link, otherwise an AuthenticationFailed
+    error is returned.
+    """
+
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="slug",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.STR,
+                required=True,
+                description="The slug of the grid view to get public information "
+                "about.",
+            )
+        ],
+        tags=["Database table views"],
+        operation_id="public_view_token_auth",
+        description=(
+            "Returns a valid never-expiring JWT token for this public shared view "
+            "if the password provided matches with the one saved by the view's owner."
+        ),
+        request=PublicViewAuthRequestSerializer,
+        responses={
+            200: PublicViewAuthResponseSerializer,
+            401: {"description": "The password provided for this view is incorrect"},
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @validate_body(PublicViewAuthRequestSerializer)
+    @map_exceptions(
+        {
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request: Request, slug: str, data: Dict[str, Any]) -> Response:
+        """
+        Get the requested view and check the provided password.
+
+        :param request: The request object.
+        :param slug: The slug of the view to get public information about.
+        :param data: The request data containing the password to access this view.
+        :return: A valid JWT token if the password is correct, otherwise raise an
+            AuthenticationFailed exception.
+        """
+
+        handler = ViewHandler()
+        view = handler.get_public_view_by_slug(
+            request.user, slug, raise_authorization_error=False
+        )
+
+        if not view.check_public_view_password(data["password"]):
+            raise AuthenticationFailed()
+
+        access_token = handler.encode_public_view_token(view)
+        serializer = PublicViewAuthResponseSerializer({"access_token": access_token})
+        return Response(serializer.data)

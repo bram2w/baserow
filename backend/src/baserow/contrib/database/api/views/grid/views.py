@@ -3,6 +3,7 @@ from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -32,6 +33,7 @@ from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
     ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST,
+    ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
 )
 from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_DOES_NOT_EXIST,
@@ -40,8 +42,12 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_FILTER_FIELD_NOT_FOUND,
     ERROR_FIELD_NOT_IN_TABLE,
 )
+from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.rows.registries import row_metadata_registry
-from baserow.contrib.database.views.exceptions import ViewDoesNotExist
+from baserow.contrib.database.views.exceptions import (
+    NoAuthorizationToPubliclySharedView,
+    ViewDoesNotExist,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GridView
 from baserow.contrib.database.views.registries import (
@@ -712,6 +718,7 @@ class PublicGridViewRowsView(APIView):
                 serializer_name="PublicPaginationSerializerWithGridViewFieldOptions",
             ),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),
             404: get_error_schema(
                 ["ERROR_GRID_DOES_NOT_EXIST", "ERROR_FIELD_DOES_NOT_EXIST"]
             ),
@@ -727,10 +734,11 @@ class PublicGridViewRowsView(APIView):
             ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+            NoAuthorizationToPubliclySharedView: ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
         }
     )
     @allowed_includes("field_options")
-    def get(self, request, slug, field_options):
+    def get(self, request: Request, slug: str, field_options: bool) -> Response:
         """
         Lists all the rows of a grid view, paginated either by a page or offset/limit.
         If the limit get parameter is provided the limit/offset pagination will be used
@@ -746,7 +754,12 @@ class PublicGridViewRowsView(APIView):
         exclude_fields = request.GET.get("exclude_fields")
 
         view_handler = ViewHandler()
-        view = view_handler.get_public_view_by_slug(request.user, slug, GridView)
+        view = view_handler.get_public_view_by_slug(
+            request.user,
+            slug,
+            GridView,
+            authorization_token=get_public_view_authorization_token(request),
+        )
         view_type = view_type_registry.get_by_model(view)
 
         publicly_visible_field_options = view_type.get_visible_field_options_in_order(
@@ -840,6 +853,7 @@ class PublicGridViewInfoView(APIView):
         responses={
             200: PublicGridViewInfoSerializer,
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),
             404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
         },
     )
@@ -847,13 +861,19 @@ class PublicGridViewInfoView(APIView):
         {
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            NoAuthorizationToPubliclySharedView: ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
         }
     )
     @transaction.atomic
-    def get(self, request, slug):
+    def get(self, request: Request, slug: str) -> Response:
 
         handler = ViewHandler()
-        view = handler.get_public_view_by_slug(request.user, slug, view_model=GridView)
+        view = handler.get_public_view_by_slug(
+            request.user,
+            slug,
+            view_model=GridView,
+            authorization_token=get_public_view_authorization_token(request),
+        )
         grid_view_type = view_type_registry.get_by_model(view)
         field_options = grid_view_type.get_visible_field_options_in_order(view)
 

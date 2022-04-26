@@ -522,3 +522,10 @@
   height: 14px;
   margin-bottom: 20px;
 }
+
+.public-view-auth__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}

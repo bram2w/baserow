@@ -180,6 +180,11 @@
         "content": "Connection to the server has failed. Please refresh the page.",
         "action": "Refresh page"
     },
+    "AuthorizationErrorNotification": {
+        "title": "Authorization error",
+        "content": "It looks like you do not have the permissions to see this resource.",
+        "action": "Refresh page"
+    },
     "restoreNotification": {
         "restore": "Restore deleted {type}"
     },

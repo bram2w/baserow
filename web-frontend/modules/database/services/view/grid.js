@@ -1,3 +1,5 @@
+import addPublicAuthTokenHeader from '@baserow/modules/database/utils/publicView'
+
 export default (client) => {
   return {
     fetchRows({
@@ -9,6 +11,7 @@ export default (client) => {
       includeRowMetadata = true,
       search = false,
       publicUrl = false,
+      publicAuthToken = null,
       orderBy = '',
       filters = {},
       includeFields = [],
@@ -57,6 +60,10 @@ export default (client) => {
         config.cancelToken = cancelToken
       }
 
+      if (publicAuthToken) {
+        addPublicAuthTokenHeader(config, publicAuthToken)
+      }
+
       const url = publicUrl ? 'public/rows/' : ''
       return client.get(`/database/views/grid/${gridId}/${url}`, config)
     },
@@ -65,6 +72,7 @@ export default (client) => {
       search,
       cancelToken = null,
       publicUrl = false,
+      publicAuthToken = null,
       filters = {},
     }) {
       const params = new URLSearchParams()
@@ -86,6 +94,10 @@ export default (client) => {
         config.cancelToken = cancelToken
       }
 
+      if (publicAuthToken) {
+        addPublicAuthTokenHeader(config, publicAuthToken)
+      }
+
       const url = publicUrl ? 'public/rows/' : ''
       return client.get(`/database/views/grid/${gridId}/${url}`, config)
     },
@@ -98,8 +110,12 @@ export default (client) => {
 
       return client.post(`/database/views/grid/${gridId}/`, data)
     },
-    fetchPublicViewInfo(viewSlug) {
-      return client.get(`/database/views/grid/${viewSlug}/public/info/`)
+    fetchPublicViewInfo(viewSlug, publicAuthToken = null) {
+      const config = {}
+      if (publicAuthToken) {
+        addPublicAuthTokenHeader(config, publicAuthToken)
+      }
+      return client.get(`/database/views/grid/${viewSlug}/public/info/`, config)
     },
     fetchFieldAggregations({ gridId, search, signal = null }) {
       const params = new URLSearchParams()

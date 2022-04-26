@@ -1,4 +1,5 @@
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import (
     GridView,
     GridViewFieldOptions,
@@ -133,3 +134,30 @@ class ViewFixtures:
             kwargs["order"] = 0
 
         return ViewDecoration.objects.create(**kwargs)
+
+    def create_public_password_protected_grid_view(
+        self, user=None, password=None, **kwargs
+    ):
+        view = self.create_grid_view(user=user, public=True, **kwargs)
+        if password:
+            view.set_password(password)
+            view.save()
+        return view
+
+    def create_public_password_protected_grid_view_with_token(
+        self, user=None, password=None, **kwargs
+    ):
+        view = self.create_public_password_protected_grid_view(
+            user=user, password=password, **kwargs
+        )
+        token = ViewHandler().encode_public_view_token(view)
+        return view, token
+
+    def create_public_password_protected_form_view(
+        self, user=None, password=None, **kwargs
+    ):
+        view = self.create_form_view(user=user, public=True, **kwargs)
+        if password:
+            view.set_password(password)
+            view.save()
+        return view

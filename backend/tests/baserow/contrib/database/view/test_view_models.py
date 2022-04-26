@@ -57,3 +57,23 @@ def test_rotate_view_slug(data_fixture):
     old_slug = str(form_view.slug)
     form_view.rotate_slug()
     assert str(form_view.slug) != old_slug
+
+
+@pytest.mark.django_db
+def test_public_view_password(data_fixture):
+    form_view = data_fixture.create_form_view()
+    # empty password means no password protection
+    assert form_view.public_view_has_password is False
+    assert form_view.check_public_view_password("whatever") is True
+    # define a password and test it
+    password = "12345678"
+    form_view.set_password(password)
+    assert form_view.public_view_has_password is True
+    assert form_view.check_public_view_password("4321") is False
+    assert form_view.check_public_view_password(password) is True
+    # define a password using the static method
+    password = "justanothercoolpassword"
+    form_view.public_view_password = type(form_view).make_password(password)
+    assert form_view.public_view_has_password is True
+    assert form_view.check_public_view_password("4321") is False
+    assert form_view.check_public_view_password(password) is True

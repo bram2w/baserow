@@ -4,6 +4,7 @@ import { UNDO_REDO_STATES } from '@baserow/modules/core/utils/undoRedoConstants'
 export const state = () => ({
   connecting: false,
   failedConnecting: false,
+  authorizationError: false,
   copying: false,
   // See UNDO_REDO_STATES for all possible values.
   undoRedoState: UNDO_REDO_STATES.HIDDEN,
@@ -23,6 +24,9 @@ export const mutations = {
   },
   SET_FAILED_CONNECTING(state, value) {
     state.failedConnecting = value
+  },
+  SET_AUTHORIZATION_ERROR(state, value) {
+    state.authorizationError = value
   },
   SET_COPYING(state, value) {
     state.copying = value
@@ -77,6 +81,9 @@ export const actions = {
       commit('SET_CONNECTING', false)
     }
     commit('SET_FAILED_CONNECTING', value)
+  },
+  setAuthorizationError({ commit }, value) {
+    commit('SET_AUTHORIZATION_ERROR', value)
   },
   setCopying({ commit }, value) {
     commit('SET_COPYING', value)

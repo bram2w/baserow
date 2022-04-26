@@ -55,6 +55,12 @@ async def test_join_page_as_anonymous_user(data_fixture):
     public_form_view_which_cant_be_subbed = data_fixture.create_form_view(
         user_1, table=table_1, public=True
     )
+    (
+        password_protected_grid_view,
+        public_view_token,
+    ) = data_fixture.create_public_password_protected_grid_view_with_token(  # nosec
+        user_1, table=table_1, password="99999999"
+    )
 
     communicator_1 = WebsocketCommunicator(
         application,
@@ -109,3 +115,61 @@ async def test_join_page_as_anonymous_user(data_fixture):
     await communicator_1.send_json_to({"page": ""})
     assert communicator_1.output_queue.qsize() == 0
     await communicator_1.disconnect()
+
+    # Can't join a password protected view page without a token
+    await communicator_1.send_json_to(
+        {"page": "view", "slug": password_protected_grid_view.slug}
+    )
+    assert communicator_1.output_queue.qsize() == 0
+    await communicator_1.disconnect()
+
+    # Can't join a password protected view page with an invalid token
+    await communicator_1.send_json_to(
+        {
+            "page": "view",
+            "slug": password_protected_grid_view.slug,
+            "token": "invalid token",
+        }
+    )
+    assert communicator_1.output_queue.qsize() == 0
+    await communicator_1.disconnect()
+
+    # Can connect to a password protected view page with a valid token
+    communicator_2 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={ANONYMOUS_USER_TOKEN}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+
+    await communicator_2.connect()
+    await communicator_2.receive_json_from()
+    await communicator_2.send_json_to(
+        {
+            "page": "view",
+            "slug": password_protected_grid_view.slug,
+            "token": public_view_token,
+        }
+    )
+    response = await communicator_2.receive_json_from(0.1)
+    assert response["type"] == "page_add"
+    assert response["page"] == "view"
+    assert response["parameters"]["slug"] == password_protected_grid_view.slug
+    await communicator_2.disconnect()
+
+    # the owner of the view can still connect to the password protected view page
+    communicator_3 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={token_1}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+    await communicator_3.connect()
+    await communicator_3.receive_json_from()
+
+    await communicator_3.send_json_to(
+        {"page": "view", "slug": password_protected_grid_view.slug}
+    )
+    response = await communicator_3.receive_json_from(0.1)
+    assert response["type"] == "page_add"
+    assert response["page"] == "view"
+    assert response["parameters"]["slug"] == password_protected_grid_view.slug
+    await communicator_3.disconnect()

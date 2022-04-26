@@ -1,15 +1,18 @@
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, Any, List, Optional, Iterable, Tuple, Union
+from typing import Dict, Any, List, Optional, Iterable, Tuple, Type, Union
+
+import jwt
 
 from redis.exceptions import LockNotOwnedError
 
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.core.cache import cache
 from django.db import models as django_models
 from django.db.models import F, Count
 from django.db.models.query import QuerySet
-from django.contrib.auth.models import AbstractUser
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FilterBuilder
@@ -18,6 +21,7 @@ from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import row_created
+from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     extract_allowed,
@@ -40,6 +44,7 @@ from .exceptions import (
     CannotShareViewTypeError,
     ViewDecorationNotSupported,
     ViewDecorationDoesNotExist,
+    NoAuthorizationToPubliclySharedView,
 )
 from .models import View, ViewDecoration, ViewFilter, ViewSort
 from .registries import (
@@ -64,10 +69,11 @@ from .signals import (
     view_field_options_updated,
 )
 from .validators import EMPTY_VALUES
-from ..table.models import Table, GeneratedTableModel
 
 
 class ViewHandler:
+    PUBLIC_VIEW_TOKEN_ALGORITHM = "HS256"  # nosec
+
     def get_view(self, view_id, view_model=None, base_queryset=None):
         """
         Selects a view and checks if the user has access to that view. If everything
@@ -173,6 +179,7 @@ class ViewHandler:
             "name",
             "filter_type",
             "filters_disabled",
+            "public_view_password",
         ] + view_type.allowed_fields
         view = set_allowed_attrs(view_values, allowed_fields, view)
         view.save()
@@ -1378,40 +1385,67 @@ class ViewHandler:
 
         return view
 
-    def get_public_view_by_slug(self, user, slug, view_model=None):
+    def get_public_view_by_slug(
+        self,
+        user: Union[AbstractUser, AnonymousUser],
+        slug: str,
+        view_model: Optional[Type[View]] = None,
+        authorization_token: Optional[str] = None,
+        raise_authorization_error: bool = True,
+    ) -> View:
         """
-        Returns the view with the provided slug if it is public or if the user has
-        access to the views group.
+        Returns the view with the provided slug if it is public, if the user has
+        access to the views group or provided a valid token in case the view is
+        password protected.
 
         :param user: The user on whose behalf the view is requested.
-        :type user: User
         :param slug: The slug of the view.
-        :type slug: str
         :param view_model: If provided that models objects are used to select the
             view. This can for example be useful when you want to select a GridView or
             other child of the View model.
-        :type view_model: Type[View]
+        :param authorization_token: The token to use to access the view if the view is
+            password protected and the user does not belong to the correct group.
+        :param raise_authorization_error: Whether to raise an error if the user doesn't
+            have access to the password protected sahred view.
+        :raises ViewDoesNotExist: Raised if the view does not exist, it has been
+            trashed or the view is not public and the user doesn't belong to the group.
+        :raises NoAuthorizationToPubliclySharedView: raised if the view is public but
+            password protected and the user belongs to another group and doesn't provide
+            a valid permission_token.
         :return: The requested view with matching slug.
-        :rtype: View
         """
 
-        if not view_model:
+        if view_model is None:
             view_model = View
 
         try:
             view = view_model.objects.select_related("table__database__group").get(
                 slug=slug
             )
-        except (view_model.DoesNotExist, ValidationError):
-            raise ViewDoesNotExist("The view does not exist.")
+        except (view_model.DoesNotExist, ValidationError) as exc:
+            raise ViewDoesNotExist("The view does not exist.") from exc
 
         if TrashHandler.item_has_a_trashed_parent(view.table, check_item_also=True):
             raise ViewDoesNotExist("The view does not exist.")
 
-        if not view.public and (
-            not user or not view.table.database.group.has_user(user)
-        ):
-            raise ViewDoesNotExist("The view does not exist.")
+        user_in_group = user and view.table.database.group.has_user(user)
+
+        if not user_in_group:
+            if not view.public:
+                raise ViewDoesNotExist("The view does not exist.")
+
+            token_is_valid_for_this_view = (
+                authorization_token
+                and self.is_public_view_token_valid(view, authorization_token)
+            )
+            if (
+                view.public_view_has_password
+                and not token_is_valid_for_this_view
+                and raise_authorization_error
+            ):
+                raise NoAuthorizationToPubliclySharedView(
+                    "The view is password protected."
+                )
 
         return view
 
@@ -1540,6 +1574,60 @@ class ViewHandler:
                 row_copy.pop(f"field_{hidden_field_option.field_id}", None)
             restricted_rows.append(row_copy)
         return restricted_rows
+
+    def _get_public_view_jwt_secret(self, view: View) -> str:
+        """
+        This method provides the secret to encode and decode the (non-expiring) JWT
+        token used in password protected public views.
+        By changing the `slug` or the `public_view_password`, previous tokens cannot
+        be decoded anymore so the user will be forced to the password input page.
+        Server's SECRET_KEY is used to be sure that the JWT cannot be guessed.
+        :param view: The public view to restric access to.
+        :return: A string to use as secret to encode/decode JWT for the view.
+        """
+
+        return f"{view.slug}-{view.public_view_password}-{settings.SECRET_KEY}"
+
+    def encode_public_view_token(self, view: View) -> str:
+        """
+        Create a non-expiring JWT token that authorize public requests for this view.
+        :param view: The public view to restric access to.
+        :return: A string to use as JWT token to authorize the access for the view.
+        """
+
+        secret = self._get_public_view_jwt_secret(view)
+        return jwt.encode(
+            {"slug_id": view.slug},
+            key=secret,
+            algorithm=self.PUBLIC_VIEW_TOKEN_ALGORITHM,
+        )
+
+    def decode_public_view_token(self, view: View, token: str) -> Dict[str, Any]:
+        """
+        Decode the token using the view's secret.
+        :param view: The public view to restric access to.
+        :param token: The JWT token to decode.
+        :return: The payload decoded or, if invalid, a jwt.InvalidTokenError is raised.
+        """
+
+        secret = self._get_public_view_jwt_secret(view)
+        return jwt.decode(
+            token, key=secret, algorithms=[self.PUBLIC_VIEW_TOKEN_ALGORITHM]
+        )
+
+    def is_public_view_token_valid(self, view: View, token: str) -> bool:
+        """
+        Verify if the token provided is valid for the public view or not.
+        :param view: The public view to restric access to.
+        :param token: The JWT token to decode.
+        :return: True if the token is valid for the view, False otherwise.
+        """
+
+        try:
+            self.decode_public_view_token(view, token)
+            return True
+        except jwt.InvalidTokenError:
+            return False
 
 
 class CachingPublicViewRowChecker:

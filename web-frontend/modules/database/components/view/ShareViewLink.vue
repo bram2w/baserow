@@ -7,9 +7,9 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
       <i class="header__filter-icon fas fa-share-square"></i>
-      <span class="header__filter-name">{{
-        $t('shareViewLink.shareView', { viewTypeSharingLinkName })
-      }}</span>
+      <span class="header__filter-name">
+        {{ $t('shareViewLink.shareView', { viewTypeSharingLinkName }) }}
+      </span>
     </a>
     <Context ref="context">
       <a
@@ -33,9 +33,7 @@
           }}
         </div>
         <div class="view-sharing__shared-link-content">
-          <div class="view-sharing__shared-link-box">
-            {{ shareUrl }}
-          </div>
+          <div class="view-sharing__shared-link-box">{{ shareUrl }}</div>
           <a
             v-tooltip="$t('shareViewLink.copyURL')"
             class="view-sharing__shared-link-action"
@@ -44,6 +42,47 @@
             <i class="fas fa-copy"></i>
             <Copied ref="copied"></Copied>
           </a>
+          <a
+            v-if="!readOnly"
+            v-tooltip="$t('shareViewLink.generateNewUrl')"
+            class="view-sharing__shared-link-action"
+            @click.prevent="$refs.rotateSlugModal.show()"
+          >
+            <i class="fas fa-sync"></i>
+            <ViewRotateSlugModal
+              ref="rotateSlugModal"
+              :view="view"
+            ></ViewRotateSlugModal>
+          </a>
+        </div>
+        <div class="view-sharing__shared-link-options">
+          <div class="view-sharing__option-password">
+            <SwitchInput
+              :value="view.public_view_has_password"
+              :large="true"
+              @input="toggleShareViewPassword"
+            >
+            </SwitchInput>
+            <div class="margin-left-2">
+              <i
+                class="fas margin-right-1"
+                :class="[
+                  view.public_view_has_password ? 'fa-lock' : 'fa-globe',
+                ]"
+              ></i>
+              <span>{{ $t(optionPasswordText) }}</span>
+            </div>
+            <a
+              v-if="view.public_view_has_password"
+              class="view-sharing__option-change-password"
+              @click.stop="$refs.enablePasswordModal.show"
+            >
+              {{ $t('shareViewLink.ChangePassword') }}
+              <i class="fas fa-pen"></i>
+            </a>
+            <EnablePasswordModal ref="enablePasswordModal" :view="view" />
+            <DisablePasswordModal ref="disablePasswordModal" :view="view" />
+          </div>
         </div>
         <div v-if="!readOnly" class="view-sharing__shared-link-foot">
           <a
@@ -53,14 +92,6 @@
             <i class="fas fa-times"></i>
             {{ $t('shareViewLink.disableLink') }}
           </a>
-          <a @click.prevent="$refs.rotateSlugModal.show()">
-            <i class="fas fa-sync"></i>
-            {{ $t('shareViewLink.generateNewUrl') }}
-          </a>
-          <ViewRotateSlugModal
-            ref="rotateSlugModal"
-            :view="view"
-          ></ViewRotateSlugModal>
         </div>
       </div>
     </Context>
@@ -70,11 +101,17 @@
 <script>
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 import ViewRotateSlugModal from '@baserow/modules/database/components/view/ViewRotateSlugModal'
+import EnablePasswordModal from '@baserow/modules/database/components/view/public/EnablePasswordModal'
+import DisablePasswordModal from '@baserow/modules/database/components/view/public/DisablePasswordModal'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'ShareViewLink',
-  components: { ViewRotateSlugModal },
+  components: {
+    ViewRotateSlugModal,
+    EnablePasswordModal,
+    DisablePasswordModal,
+  },
   props: {
     view: {
       type: Object,
@@ -99,6 +136,11 @@ export default {
           params: { slug: this.view.slug },
         }).href
       )
+    },
+    optionPasswordText() {
+      return this.view.public_view_has_password
+        ? 'shareViewLink.DisablePassword'
+        : 'shareViewLink.EnablePassword'
     },
     viewType() {
       return this.$registry.get('view', this.view.type)
@@ -126,6 +168,13 @@ export default {
       }
 
       this.$store.dispatch('view/setItemLoading', { view, value: false })
+    },
+    toggleShareViewPassword() {
+      if (this.view.public_view_has_password) {
+        this.$refs.disablePasswordModal.show()
+      } else {
+        this.$refs.enablePasswordModal.show()
+      }
     },
   },
 }

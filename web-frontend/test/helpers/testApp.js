@@ -80,10 +80,17 @@ export class TestApp {
     }
     // Various stub and mock attributes which will be injected into components
     // mounted using TestApp.
+    const cookieStorage = {}
+    this.cookieStorage = cookieStorage
     this._app = {
       $realtime: this._realtime,
       $cookies: {
-        set(name, id, value) {},
+        set(name, id, value) {
+          cookieStorage[name] = value
+        },
+        get(name) {
+          return cookieStorage[name]
+        },
       },
       $env: {
         PUBLIC_WEB_FRONTEND_URL: 'https://localhost/',
