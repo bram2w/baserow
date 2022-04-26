@@ -34,6 +34,18 @@ def test_import_export_grid_view(data_fixture):
     )
     view_sort = data_fixture.create_view_sort(view=grid_view, field=field, order="ASC")
 
+    view_decoration = data_fixture.create_view_decoration(
+        view=grid_view,
+        value_provider_conf={
+            "field_id": field.id,
+            "other": [
+                {"field": field.id, "other": 1},
+                {"answer": 42, "field_id": field.id},
+                {"field": {"non_int": True}},
+            ],
+        },
+    )
+
     id_mapping = {"database_fields": {field.id: imported_field.id}}
 
     grid_view_type = view_type_registry.get("grid")
@@ -60,6 +72,23 @@ def test_import_export_grid_view(data_fixture):
     assert view_sort.id != imported_view_sort.id
     assert imported_field.id == imported_view_sort.field_id
     assert view_sort.order == imported_view_sort.order
+
+    imported_view_decoration = imported_grid_view.viewdecoration_set.all().first()
+    assert view_decoration.id != imported_view_decoration.id
+    assert view_decoration.type == imported_view_decoration.type
+    assert (
+        view_decoration.value_provider_type
+        == imported_view_decoration.value_provider_type
+    )
+    assert imported_view_decoration.value_provider_conf == {
+        "field_id": imported_field.id,
+        "other": [
+            {"field": imported_field.id, "other": 1},
+            {"answer": 42, "field_id": imported_field.id},
+            {"field": {"non_int": True}},
+        ],
+    }
+    assert view_decoration.order == imported_view_decoration.order
 
     imported_field_options = imported_grid_view.get_field_options()
     imported_field_option = imported_field_options[0]

@@ -70,7 +70,7 @@ export default {
     },
     augmentedDecorations() {
       return this.view.decorations
-        .filter(({ value_provider: valPro }) => valPro)
+        .filter(({ value_provider_type: valPro }) => valPro)
         .map((decoration) => {
           const deco = { decoration }
 
@@ -84,7 +84,7 @@ export default {
 
           deco.valueProviderType = this.$registry.get(
             'decoratorValueProvider',
-            decoration.value_provider
+            decoration.value_provider_type
           )
           deco.propsFn = (row) => {
             return {

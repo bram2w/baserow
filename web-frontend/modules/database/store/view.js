@@ -146,7 +146,7 @@ export const mutations = {
   ADD_DECORATION(state, { view, decoration }) {
     view.decorations.push({
       type: null,
-      value_provider: null,
+      value_provider_type: null,
       value_provider_conf: null,
       ...decoration,
     })
@@ -219,6 +219,7 @@ export const actions = {
     try {
       const { data } = await ViewService(this.$client).fetchAll(
         table.id,
+        true,
         true,
         true
       )

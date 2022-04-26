@@ -1,7 +1,11 @@
-.value-provider-list.value-provider-list--row {
+.value-provider-list--row {
   display: flex;
   flex-wrap: nowrap;
   width: 100%;
+}
+
+.value-provider-list--read-only {
+  opacity: 0.8;
 }
 
 .value-provider-list__item {
@@ -46,5 +50,10 @@
     &:not(:last-child) {
       margin-bottom: 0;
     }
+  }
+
+  .value-provider-list--read-only &:hover {
+    cursor: default;
+    background-color: transparent;
   }
 }

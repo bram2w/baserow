@@ -47,6 +47,7 @@ class GridViewType(ViewType):
     field_options_serializer_class = GridViewFieldOptionsSerializer
     can_aggregate_field = True
     can_share = True
+    can_decorate = True
     when_shared_publicly_requires_realtime_events = True
 
     api_exceptions_map = {

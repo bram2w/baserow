@@ -54,6 +54,7 @@ def test_create_form_view(api_client, data_fixture):
     assert form.submit_action_redirect_url == ""
     assert "filters" not in response_json
     assert "sortings" not in response_json
+    assert "decorations" not in response_json
 
     response = api_client.post(
         reverse("api:database:views:list", kwargs={"table_id": table.id}),

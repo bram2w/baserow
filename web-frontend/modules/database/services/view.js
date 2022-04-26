@@ -1,6 +1,11 @@
 export default (client) => {
   return {
-    fetchAll(tableId, includeFilters = false, includeSortings = false) {
+    fetchAll(
+      tableId,
+      includeFilters = false,
+      includeSortings = false,
+      includeDecorations = false
+    ) {
       const config = {
         params: {},
       }
@@ -12,6 +17,10 @@ export default (client) => {
 
       if (includeSortings) {
         include.push('sortings')
+      }
+
+      if (includeDecorations) {
+        include.push('decorations')
       }
 
       if (include.length > 0) {
@@ -23,7 +32,12 @@ export default (client) => {
     create(tableId, values) {
       return client.post(`/database/views/table/${tableId}/`, values)
     },
-    get(viewId, includeFilters = false, includeSortings = false) {
+    get(
+      viewId,
+      includeFilters = false,
+      includeSortings = false,
+      includeDecorations = false
+    ) {
       const config = {
         params: {},
       }
@@ -34,6 +48,10 @@ export default (client) => {
 
       if (includeSortings) {
         include.push('sortings')
+      }
+
+      if (includeDecorations) {
+        include.push('decorations')
       }
 
       if (include.length > 0) {

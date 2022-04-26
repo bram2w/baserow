@@ -147,6 +147,24 @@ export class MockServer {
     }
   }
 
+  createDecoration(view, values, result) {
+    this.mock
+      .onPost(`/database/views/${view.id}/decorations/`, values)
+      .replyOnce(200, result)
+  }
+
+  updateDecoration(decoration, values, result) {
+    this.mock
+      .onPatch(`/database/views/decoration/${decoration.id}/`, values)
+      .replyOnce(200, result)
+  }
+
+  deleteDecoration(decoration) {
+    this.mock
+      .onDelete(`/database/views/decoration/${decoration.id}/`)
+      .replyOnce(200)
+  }
+
   resetMockEndpoints() {
     this.mock.reset()
   }

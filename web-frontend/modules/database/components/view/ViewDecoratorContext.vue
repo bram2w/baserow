@@ -17,11 +17,11 @@
               <ViewDecoratorItem :decorator-type="dec.decoratorType" />
             </div>
             <div
-              v-show="dec.decoration.value_provider"
+              v-show="dec.decoration.value_provider_type"
               class="decorator-context__decorator-header-select"
             >
               <Picker
-                v-if="dec.decoration.value_provider"
+                v-if="dec.decoration.value_provider_type"
                 :icon="dec.valueProviderType.getIconClass()"
                 :name="dec.valueProviderType.getName()"
                 @select="selectValueProvider(dec.decoration, $event)"
@@ -60,7 +60,7 @@
             :view="view"
             :table="table"
             :fields="allFields"
-            :read-only="readOnly"
+            :read-only="readOnly || dec.decoration._.loading"
             :options="dec.decoration.value_provider_conf"
             @update="updateDecorationOptions(dec.decoration, $event)"
           />
@@ -68,6 +68,7 @@
             v-else
             :decoration="dec.decoration"
             :direction="'row'"
+            :read-only="readOnly || dec.decoration._.loading"
             @select="selectValueProvider(dec.decoration, $event)"
           />
         </div>
@@ -152,10 +153,10 @@ export default {
           decoration.type
         )
 
-        if (decoration.value_provider) {
+        if (decoration.value_provider_type) {
           deco.valueProviderType = this.$registry.get(
             'decoratorValueProvider',
-            decoration.value_provider
+            decoration.value_provider_type
           )
         }
 
@@ -188,7 +189,7 @@ export default {
       await this.$store.dispatch('view/updateDecoration', {
         view: this.view,
         values: {
-          value_provider: valueProviderType.getType(),
+          value_provider_type: valueProviderType.getType(),
           value_provider_conf: valueProviderType.getDefaultConfiguration({
             view: this.view,
             fields: this.fields,
@@ -200,7 +201,8 @@ export default {
     async addDecoration(decoratorType) {
       const decoration = {
         type: decoratorType.getType(),
-        value_provider: null,
+        value_provider_type: '',
+        value_provider_conf: {},
       }
       await this.$store.dispatch('view/createDecoration', {
         view: this.view,

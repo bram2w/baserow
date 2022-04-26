@@ -158,6 +158,9 @@ are subscribed to the page.
 * `view_sort_created`
 * `view_sort_updated`
 * `view_sort_deleted`
+* `view_decoration_created`
+* `view_decoration_updated`
+* `view_decoration_deleted`
 * `view_field_options_updated`
 * `views_reordered`
 

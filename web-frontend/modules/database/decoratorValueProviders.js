@@ -58,7 +58,13 @@ export class DecoratorValueProviderType extends Registerable {
   }
 
   /**
-   * Should return the component that allow to configure the value provider.
+   * Returns the component that allows the user to configure the value provider.
+   * This component is responsible for creating the `value_provider_conf` object.
+   *
+   * If you want to reference fields in this object, you must use the key name
+   * `field_id` to allow import/export to replace automatically any field id by the new
+   * field id. `field_id`s can be anywhere in this object and this object can be as
+   * deep as you need.
    */
   getFormComponent() {
     throw new Error(
@@ -73,6 +79,20 @@ export class DecoratorValueProviderType extends Registerable {
    */
   getDefaultConfiguration({ fields, view }) {
     return {}
+  }
+
+  /**
+   * Returns the value of this provider for the given row considering the configuration.
+   *
+   * @param {array} row the row
+   * @param {object} options the configuration of the value provider
+   * @param {array} fields the array of the fields of the current view
+   *
+   */
+  getValue({ options, fields, row }) {
+    throw new Error(
+      'Not implemented error. This value provider should return a value.'
+    )
   }
 
   getOrder() {

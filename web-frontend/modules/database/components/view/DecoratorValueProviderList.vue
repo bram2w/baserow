@@ -1,14 +1,20 @@
 <template>
-  <div class="value-provider-list" :class="`value-provider-list--${direction}`">
+  <div
+    class="value-provider-list"
+    :class="{
+      [`value-provider-list--${direction}`]: true,
+      'value-provider-list--read-only': readOnly,
+    }"
+  >
     <div
       v-for="valueProviderType in availableValueProviderTypes"
       :key="valueProviderType.getType()"
       class="value-provider-list__item"
       :class="{
         'value-provider-list__item--selected':
-          valueProviderType.getType() === decoration.value_provider,
+          valueProviderType.getType() === decoration.value_provider_type,
       }"
-      @click="$emit('select', valueProviderType.getType())"
+      @click="!readOnly && $emit('select', valueProviderType.getType())"
     >
       <DecoratorValueProviderItem :value-provider-type="valueProviderType" />
     </div>
@@ -30,6 +36,11 @@ export default {
       type: String,
       required: false,
       default: 'column',
+    },
+    readOnly: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   computed: {

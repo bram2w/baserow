@@ -119,6 +119,14 @@ class GridViewAggregationDoesNotSupportField(Exception):
         )
 
 
+class ViewDecorationDoesNotExist(Exception):
+    """Raised when trying to get a view decoration that does not exist."""
+
+
+class ViewDecorationNotSupported(Exception):
+    """Raised when the view type does not support aggregations."""
+
+
 class FormViewFieldTypeIsNotSupported(Exception):
     """Raised when someone tries to enable an unsupported form view field."""
 
