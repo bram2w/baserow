@@ -163,6 +163,13 @@ export class FieldType extends Registerable {
     return this.getRowEditFieldComponent()
   }
 
+  /*
+   * Optional properties for the FormViewFieldComponent
+   */
+  getFormViewFieldComponentProperties() {
+    return {}
+  }
+
   /**
    * This component should represent the field's value in a row card display. To
    * improve performance, this component should be a functional component.
@@ -1671,6 +1678,12 @@ export class SingleSelectFieldType extends FieldType {
     return RowEditFieldSingleSelect
   }
 
+  getFormViewFieldComponentProperties() {
+    return {
+      'allow-create-options': false,
+    }
+  }
+
   getCardComponent() {
     return RowCardFieldSingleSelect
   }
@@ -1804,6 +1817,12 @@ export class MultipleSelectFieldType extends FieldType {
 
   getRowEditFieldComponent() {
     return RowEditFieldMultipleSelect
+  }
+
+  getFormViewFieldComponentProperties() {
+    return {
+      'allow-create-options': false,
+    }
   }
 
   getCardComponent() {
