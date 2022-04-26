@@ -50,4 +50,9 @@ export const routes = [
     path: '/public/grid/:slug',
     component: path.resolve(__dirname, 'pages/publicGridView.vue'),
   },
+  {
+    name: 'database-public-view-auth',
+    path: '/public/auth/:slug',
+    component: path.resolve(__dirname, 'pages/publicViewLogin.vue'),
+  },
 ]

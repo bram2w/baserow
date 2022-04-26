@@ -316,16 +316,14 @@ export default function ({ store, app }, inject) {
       )
 
       // Add the error message in the response to the error object.
-      if (
-        error.response &&
-        typeof error.response.data === 'object' &&
-        'error' in error.response.data &&
-        'detail' in error.response.data
-      ) {
-        error.handler.setError(
-          error.response.data.error,
-          error.response.data.detail
-        )
+      const rspCode = error.response?.status
+      const rspData = error.response?.data || {}
+
+      if (rspCode === 401) {
+        store.dispatch('notification/setAuthorizationError', true)
+        error.handler.handled()
+      } else if ('error' in rspData && 'detail' in rspData) {
+        error.handler.setError(rspData.error, rspData.detail)
       }
 
       return Promise.reject(error)

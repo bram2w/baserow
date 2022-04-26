@@ -220,10 +220,12 @@ class ViewSerializer(serializers.ModelSerializer):
             "sortings",
             "decorations",
             "filters_disabled",
+            "public_view_has_password",
         )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
+            "public_view_has_password": {"read_only": True},
         }
 
     def __init__(self, *args, **kwargs):
@@ -272,10 +274,30 @@ class CreateViewSerializer(serializers.ModelSerializer):
 
 
 class UpdateViewSerializer(serializers.ModelSerializer):
+    def _update_public_view_password(self, new_public_view_password):
+        """
+        An empty string disables password protection.
+        A non-empty string will be encrypted and used to check user authorization.
+        """
+
+        if new_public_view_password:
+            return View.make_password(new_public_view_password)
+        else:
+            return ""
+
+    def to_internal_value(self, data):
+        public_view_password = data.pop("public_view_password", None)
+        updated_view = super().to_internal_value(data)
+        if public_view_password is not None:
+            updated_view["public_view_password"] = self._update_public_view_password(
+                public_view_password
+            )
+        return updated_view
+
     class Meta:
         ref_name = "view_update"
         model = View
-        fields = ("name", "filter_type", "filters_disabled")
+        fields = ("name", "filter_type", "filters_disabled", "public_view_password")
         extra_kwargs = {
             "name": {"required": False},
             "filter_type": {"required": False},
@@ -287,3 +309,11 @@ class OrderViewsSerializer(serializers.Serializer):
     view_ids = serializers.ListField(
         child=serializers.IntegerField(), help_text="View ids in the desired order."
     )
+
+
+class PublicViewAuthRequestSerializer(serializers.Serializer):
+    password = serializers.CharField()
+
+
+class PublicViewAuthResponseSerializer(serializers.Serializer):
+    access_token = serializers.CharField()

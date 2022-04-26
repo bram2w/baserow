@@ -79,6 +79,7 @@ import gridStore from '@baserow/modules/database/store/view/grid'
 import galleryStore from '@baserow/modules/database/store/view/gallery'
 import formStore from '@baserow/modules/database/store/view/form'
 import rowModal from '@baserow/modules/database/store/rowModal'
+import publicStore from '@baserow/modules/database/store/view/public'
 
 import { registerRealtimeEvents } from '@baserow/modules/database/realtime'
 import { CSVTableExporterType } from '@baserow/modules/database/exporterTypes'
@@ -202,6 +203,7 @@ export default (context) => {
   store.registerModule('page/view/grid', gridStore)
   store.registerModule('page/view/gallery', galleryStore)
   store.registerModule('page/view/form', formStore)
+  store.registerModule('page/view/public', publicStore)
   store.registerModule('template/view/grid', gridStore)
   store.registerModule('template/view/gallery', galleryStore)
   store.registerModule('template/view/form', formStore)

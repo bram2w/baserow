@@ -5,6 +5,9 @@
       <FailedConnectingNotification
         v-if="failedConnecting"
       ></FailedConnectingNotification>
+      <AuthorizationErrorNotification
+        v-if="unauthorized"
+      ></AuthorizationErrorNotification>
       <Notification
         v-for="notification in normalNotifications"
         :key="notification.id"
@@ -34,6 +37,7 @@ import ConnectingNotification from '@baserow/modules/core/components/notificatio
 import FailedConnectingNotification from '@baserow/modules/core/components/notifications/FailedConnectingNotification'
 import RestoreNotification from '@baserow/modules/core/components/notifications/RestoreNotification'
 import CopyingNotification from '@baserow/modules/core/components/notifications/CopyingNotification'
+import AuthorizationErrorNotification from '@baserow/modules/core/components/notifications/AuthorizationErrorNotification'
 import UndoRedoNotification from '@baserow/modules/core/components/notifications/UndoRedoNotification'
 import { UNDO_REDO_STATES } from '@baserow/modules/core/utils/undoRedoConstants'
 
@@ -45,6 +49,7 @@ export default {
     ConnectingNotification,
     FailedConnectingNotification,
     CopyingNotification,
+    AuthorizationErrorNotification,
     UndoRedoNotification,
   },
   computed: {
@@ -58,6 +63,7 @@ export default {
       return this.notifications.filter((n) => n.type !== 'restore')
     },
     ...mapState({
+      unauthorized: (state) => state.notification.authorizationError,
       connecting: (state) => state.notification.connecting,
       failedConnecting: (state) => state.notification.failedConnecting,
       copying: (state) => state.notification.copying,

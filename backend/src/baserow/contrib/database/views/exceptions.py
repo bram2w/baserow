@@ -137,3 +137,7 @@ class FormViewFieldTypeIsNotSupported(Exception):
             *args,
             **kwargs,
         )
+
+
+class NoAuthorizationToPubliclySharedView(Exception):
+    """Raised when someone tries to acess a view without a valid authorization token."""

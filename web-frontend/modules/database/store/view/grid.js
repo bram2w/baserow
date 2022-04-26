@@ -133,7 +133,10 @@ export const state = () => ({
   // entirely out. When false no server filter will be applied and rows which do not
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
+  // if this grid is shared publicly or not
   public: false,
+  // The token needed to authorize the access to password protected public URL
+  publicAuthToken: null,
   fieldAggregationData: {},
 })
 
@@ -152,8 +155,9 @@ export const mutations = {
     state.activeSearchTerm = ''
     state.hideRowsNotMatchingSearch = true
   },
-  SET_PUBLIC(state, newPublicValue) {
-    state.public = newPublicValue
+  SET_PUBLIC(state, { isPublic, publicAuthToken }) {
+    state.public = isPublic
+    state.publicAuthToken = publicAuthToken
   },
   SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
     state.activeSearchTerm = activeSearchTerm
@@ -609,6 +613,7 @@ export const actions = {
           cancelToken: lastSource.token,
           search: getters.getServerSearchTerm,
           publicUrl: getters.isPublic,
+          publicAuthToken: getters.getPublicAuthToken,
           orderBy: getOrderBy(getters, rootGetters),
           filters: getFilters(getters, rootGetters),
         })
@@ -769,6 +774,7 @@ export const actions = {
       includeFieldOptions: true,
       search: getters.getServerSearchTerm,
       publicUrl: getters.isPublic,
+      publicAuthToken: getters.getPublicAuthToken,
       orderBy: getOrderBy(getters, rootGetters),
       filters: getFilters(getters, rootGetters),
     })
@@ -815,6 +821,7 @@ export const actions = {
         search: getters.getServerSearchTerm,
         cancelToken: lastRefreshRequestSource.token,
         publicUrl: getters.isPublic,
+        publicAuthToken: getters.getPublicAuthToken,
         filters: getFilters(getters, rootGetters),
       })
       .then((response) => {
@@ -838,6 +845,7 @@ export const actions = {
             cancelToken: lastRefreshRequestSource.token,
             search: getters.getServerSearchTerm,
             publicUrl: getters.isPublic,
+            publicAuthToken: getters.getPublicAuthToken,
             orderBy: getOrderBy(getters, rootGetters),
             filters: getFilters(getters, rootGetters),
           })
@@ -1216,6 +1224,7 @@ export const actions = {
         limit: maxRow - minRow + 1,
         search: getters.getServerSearchTerm,
         publicUrl: getters.isPublic,
+        publicAuthToken: getters.getPublicAuthToken,
         orderBy: getOrderBy(getters, rootGetters),
         filters: getFilters(getters, rootGetters),
         includeFields: fields.map((field) => `field_${field.id}`),
@@ -1926,8 +1935,8 @@ export const actions = {
       commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
     }
   },
-  setPublic({ commit }, newPublicValue) {
-    commit('SET_PUBLIC', newPublicValue)
+  setPublic({ commit }, { isPublic, publicAuthToken = null }) {
+    commit('SET_PUBLIC', { isPublic, publicAuthToken })
   },
 }
 
@@ -1937,6 +1946,9 @@ export const getters = {
   },
   isPublic(state) {
     return state.public
+  },
+  getPublicAuthToken(state) {
+    return state.publicAuthToken
   },
   getLastGridId(state) {
     return state.lastGridId

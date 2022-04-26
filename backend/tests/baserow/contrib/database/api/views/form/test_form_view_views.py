@@ -1,6 +1,11 @@
 import pytest
 
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+)
 
 from django.shortcuts import reverse
 
@@ -661,3 +666,145 @@ def test_test_enable_form_view_file_field_options(api_client, data_fixture):
         response_json["detail"]
         == "The file field type is not compatible with the form view."
     )
+
+
+@pytest.mark.django_db
+def test_submit_password_protected_form_view_requires_authorization(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    password = "87654321"
+    form_view = data_fixture.create_public_password_protected_form_view(
+        table=table,
+        password=password,
+        submit_action_message="Test",
+        submit_action_redirect_url="https://baserow.io",
+    )
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form_view, text_field, required=True, enabled=True, order=1
+    )
+    data_fixture.create_form_view_field_option(
+        form_view, number_field, required=False, enabled=True, order=2
+    )
+
+    # without a valid token it is not possible to submit form data
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form_view.slug})
+    response = api_client.get(url, format="json")
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    response = api_client.post(
+        reverse("api:database:views:form:submit", kwargs={"slug": form_view.slug}),
+        {
+            f"field_{text_field.id}": "Valid",
+            f"field_{number_field.id}": 0,
+        },
+        format="json",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+    # Get the authorization token
+    response = api_client.post(
+        reverse("api:database:views:public_auth", kwargs={"slug": form_view.slug}),
+        {"password": password},
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    public_view_token = response_json.get("access_token", None)
+    assert public_view_token is not None
+
+    # Add the token in the header
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form_view.slug})
+    response = api_client.get(
+        url, format="json", HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}"
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        url,
+        {
+            f"field_{text_field.id}": "Valid",
+            f"field_{number_field.id}": 0,
+        },
+        format="json",
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "submit_action": "MESSAGE",
+        "submit_action_message": "Test",
+        "submit_action_redirect_url": "https://baserow.io",
+    }
+
+    # The original user can always submit forms, even if password protected
+    url = reverse("api:database:views:form:submit", kwargs={"slug": form_view.slug})
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.post(
+        url,
+        {
+            f"field_{text_field.id}": "More Valid",
+            f"field_{number_field.id}": 1,
+        },
+        format="json",
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "submit_action": "MESSAGE",
+        "submit_action_message": "Test",
+        "submit_action_redirect_url": "https://baserow.io",
+    }
+
+
+@pytest.mark.django_db
+def test_changing_password_of_a_public_password_protected_form_view_invalidate_previous_tokens(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    password = "12345678"
+    form_view = data_fixture.create_public_password_protected_form_view(
+        user=user, password=password
+    )
+
+    # Get the authorization token
+    response = api_client.post(
+        reverse("api:database:views:public_auth", kwargs={"slug": form_view.slug}),
+        {"password": password},
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    public_view_token = response_json.get("access_token", None)
+    assert public_view_token is not None
+
+    # Get access using the token
+    response = api_client.get(
+        reverse("api:database:views:form:submit", kwargs={"slug": form_view.slug}),
+        format="json",
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # Changing password invalidate tokens
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": form_view.id}),
+        {"public_view_password": "Just another original password"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # Previous tokens are now invalid
+    response = api_client.get(
+        reverse("api:database:views:form:submit", kwargs={"slug": form_view.slug}),
+        format="json",
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {public_view_token}",
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED

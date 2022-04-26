@@ -26,9 +26,8 @@ export class RealTimeHandler {
     this.reconnect = reconnect
     this.anonymous = anonymous
 
-    const token = anonymous
-      ? 'anonymous'
-      : this.context.store.getters['auth/token']
+    const jwtToken = this.context.store.getters['auth/token']
+    const token = anonymous ? jwtToken || 'anonymous' : jwtToken
 
     // If the user is already connected to the web socket, we don't have to do
     // anything.

@@ -40,6 +40,7 @@
 * Stopped the generated model cache clear operation also deleting all other redis keys.
 * Added Spanish and Italian languages.
 * Added undo/redo.
+* Added password protection for publicly shared grids and forms.
 
 ## Released (2022-03-03 1.9.1)
 

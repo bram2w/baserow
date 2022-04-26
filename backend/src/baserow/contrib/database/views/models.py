@@ -1,5 +1,6 @@
 import secrets
 
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 
@@ -82,9 +83,59 @@ class View(
         help_text="Indicates whether the view is publicly accessible to visitors.",
         db_index=True,
     )
+    public_view_password = models.CharField(
+        max_length=128,
+        blank=True,
+        help_text="The password required to access the public view URL.",
+    )
+
+    @property
+    def public_view_has_password(self) -> bool:
+        """
+        Indicates whether the public view is password protected or not.
+        :return True if the public view is password protected, False otherwise.
+        """
+
+        return self.public_view_password != ""
 
     def rotate_slug(self):
+        """
+        Rotates the slug used address this view.
+        """
+
         self.slug = secrets.token_urlsafe()
+
+    @staticmethod
+    def make_password(password: str) -> str:
+        """
+        Makes a password hash from the given password.
+
+        :param password: The password to hash.
+        :return: The hashed password.
+        """
+
+        return make_password(password)
+
+    def set_password(self, password: str) -> None:
+        """
+        Sets the public view password.
+
+        :param password: The password to set.
+        """
+
+        self.public_view_password = View.make_password(password)
+
+    def check_public_view_password(self, password: str) -> bool:
+        """
+        Checks if the given password matches the public view password.
+
+        :param password: The password to check.
+        :return True if the password matches, False otherwise.
+        """
+
+        if not self.public_view_has_password:
+            return True
+        return check_password(password, self.public_view_password)
 
     class Meta:
         ordering = ("order",)

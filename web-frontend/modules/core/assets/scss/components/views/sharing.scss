@@ -107,3 +107,30 @@
 .view-sharing__shared-link-disable {
   color: $color-error-500;
 }
+
+.view-sharing__shared-link-options {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.view-sharing__option-password {
+  display: flex;
+  align-items: center;
+}
+
+p.box__description {
+  margin-bottom: 15px;
+}
+
+.view-sharing__option-change-password {
+  margin-left: 12px;
+
+  &:hover {
+    text-decoration: none;
+    color: $color-primary-900;
+  }
+
+  i {
+    margin-left: 5px;
+  }
+}
