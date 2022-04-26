@@ -1,5 +1,8 @@
 export default (client) => {
   return {
+    get(tableId, rowId) {
+      return client.get(`/database/rows/table/${tableId}/${rowId}/`)
+    },
     fetchAll({ tableId, page = 1, size = 10, search = null }) {
       const config = {
         params: {

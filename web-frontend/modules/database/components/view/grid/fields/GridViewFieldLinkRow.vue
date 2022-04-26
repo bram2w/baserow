@@ -1,10 +1,12 @@
 <template>
   <div class="grid-view__cell grid-field-many-to-many__cell active">
     <div class="grid-field-many-to-many__list">
-      <div
+      <component
+        :is="publicGrid || readOnly ? 'span' : 'a'"
         v-for="item in value"
         :key="item.id"
         class="grid-field-many-to-many__item"
+        @click.prevent="showForeignRowModal(item)"
       >
         <span
           class="grid-field-many-to-many__name"
@@ -17,14 +19,18 @@
             item.value || $t('gridViewFieldLinkRow.unnamed', { value: item.id })
           }}
         </span>
+        <span
+          v-if="itemLoadingId === item.id"
+          class="grid-field-many-to-many__loading"
+        ></span>
         <a
-          v-if="!readOnly"
+          v-else-if="!readOnly"
           class="grid-field-many-to-many__remove"
-          @click.prevent="removeValue($event, value, item.id)"
+          @click.prevent.stop="removeValue($event, value, item.id)"
         >
           <i class="fas fa-times"></i>
         </a>
-      </div>
+      </component>
       <a
         v-if="!readOnly"
         class="
@@ -42,22 +48,40 @@
       @selected="addValue(value, $event)"
       @hidden="hideModal"
     ></SelectRowModal>
+    <ForeignRowEditModal
+      ref="rowEditModal"
+      :table-id="field.link_row_table"
+      @hidden="hideModal"
+    ></ForeignRowEditModal>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 import { isElement } from '@baserow/modules/core/utils/dom'
 import gridField from '@baserow/modules/database/mixins/gridField'
 import linkRowField from '@baserow/modules/database/mixins/linkRowField'
 import SelectRowModal from '@baserow/modules/database/components/row/SelectRowModal'
+import ForeignRowEditModal from '@baserow/modules/database/components/row/ForeignRowEditModal'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'GridViewFieldLinkRow',
-  components: { SelectRowModal },
+  components: { ForeignRowEditModal, SelectRowModal },
   mixins: [gridField, linkRowField],
   data() {
     return {
       modalOpen: false,
+      itemLoadingId: -1,
+    }
+  },
+  beforeCreate() {
+    this.$options.computed = {
+      ...(this.$options.computed || {}),
+      ...mapGetters({
+        publicGrid: this.$options.propsData.storePrefix + 'view/grid/isPublic',
+      }),
     }
   },
   methods: {
@@ -81,7 +105,10 @@ export default {
      * inside one of these contexts.
      */
     canUnselectByClickingOutside(event) {
-      return !isElement(this.$refs.selectModal.$el, event.target)
+      return (
+        !isElement(this.$refs.selectModal.$el, event.target) &&
+        !isElement(this.$refs.rowEditModal.$refs.modal.$el, event.target)
+      )
     },
     /**
      * Prevent unselecting the field cell by changing the event. Because the deleted
@@ -107,7 +134,7 @@ export default {
      * While the modal is open, all key combinations related to the field must be
      * ignored.
      */
-    canKeyDown(event) {
+    canKeyDown() {
       return !this.modalOpen
     },
     canPaste() {
@@ -118,6 +145,22 @@ export default {
     },
     canEmpty() {
       return !this.modalOpen
+    },
+    async showForeignRowModal(item) {
+      // It's not possible to open the related row when the view is shared publicly
+      // because the visitor doesn't have the right permissions.
+      if (this.publicGrid || this.readOnly) {
+        return
+      }
+
+      this.itemLoadingId = item.id
+      try {
+        await this.$refs.rowEditModal.show(item.id)
+        this.modalOpen = true
+      } catch (error) {
+        notifyIf(error)
+      }
+      this.itemLoadingId = -1
     },
   },
 }

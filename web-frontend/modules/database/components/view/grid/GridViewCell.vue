@@ -52,6 +52,7 @@
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
       :selected="parent.isCellSelected(props.field.id)"
+      :store-prefix="props.storePrefix"
       :read-only="props.readOnly"
       @update="(...args) => $options.methods.update(listeners, props, ...args)"
       @edit="(...args) => $options.methods.edit(listeners, props, ...args)"

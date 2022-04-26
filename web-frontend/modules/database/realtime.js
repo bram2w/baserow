@@ -180,7 +180,10 @@ export const registerRealtimeEvents = (realtime) => {
       )
     }
 
-    store.dispatch('rowModal/updated', { values: data.row })
+    store.dispatch('rowModal/updated', {
+      tableId: data.table_id,
+      values: data.row,
+    })
   })
 
   realtime.registerEvent('rows_updated', async (context, data) => {

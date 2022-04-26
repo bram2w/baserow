@@ -21,6 +21,10 @@ export default {
       type: Boolean,
       required: true,
     },
+    storePrefix: {
+      type: String,
+      required: true,
+    },
   },
   data() {
     return {
