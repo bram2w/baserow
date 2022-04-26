@@ -16,6 +16,8 @@
 * Added `is days ago` filter to date field.
 * Fixed a bug that made it possible to delete created on/modified by fields on the web frontend.
 * Allow the setting of max request page size via environment variable.
+* Introduced read only lookup of foreign row by clicking on a link row relationship in 
+  the grid view row modal.
 * Boolean field converts the word `checked` to `True` value.
 * Fixed a bug where the backend would fail hard updating token permissions for deleted tables.
 * Fixed the unchecked percent aggregation calculation

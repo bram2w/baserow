@@ -76,10 +76,10 @@
         </div>
       </template>
       <!--
-    Somehow re-declaring all the events instead of using v-on="$listeners" speeds
-    everything up because the rows don't need to be updated everytime a new one is
-    rendered, which happens a lot when scrolling.
-    -->
+      Somehow re-declaring all the events instead of using v-on="$listeners" speeds
+      everything up because the rows don't need to be updated everytime a new one is
+      rendered, which happens a lot when scrolling.
+      -->
       <GridViewCell
         v-for="field in fieldsToRender"
         :key="'row-field-' + row.id.toString() + '-' + field.id.toString()"
@@ -88,6 +88,7 @@
         :state="state"
         :multi-select-position="getMultiSelectPosition(row.id, field)"
         :read-only="readOnly"
+        :store-prefix="storePrefix"
         :style="{
           width: fieldWidths[field.id] + 'px',
           ...getSelectedCellStyle(field),
