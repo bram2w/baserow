@@ -55,7 +55,12 @@ from baserow.contrib.database.fields.exceptions import (
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.views.registries import view_type_registry
-from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
+from baserow.contrib.database.views.models import (
+    View,
+    ViewFilter,
+    ViewSort,
+    ViewDecoration,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.exceptions import (
     ViewDoesNotExist,
@@ -70,6 +75,8 @@ from baserow.contrib.database.views.exceptions import (
     UnrelatedFieldError,
     ViewDoesNotSupportFieldOptions,
     CannotShareViewTypeError,
+    ViewDecorationDoesNotExist,
+    ViewDecorationNotSupported,
 )
 
 from .serializers import (
@@ -83,6 +90,9 @@ from .serializers import (
     ViewSortSerializer,
     CreateViewSortSerializer,
     UpdateViewSortSerializer,
+    ViewDecorationSerializer,
+    CreateViewDecorationSerializer,
+    UpdateViewDecorationSerializer,
 )
 from .errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
@@ -94,6 +104,8 @@ from .errors import (
     ERROR_VIEW_SORT_NOT_SUPPORTED,
     ERROR_VIEW_SORT_FIELD_ALREADY_EXISTS,
     ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED,
+    ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
+    ERROR_VIEW_DECORATION_NOT_SUPPORTED,
     ERROR_UNRELATED_FIELD,
     ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
     ERROR_CANNOT_SHARE_VIEW_TYPE,
@@ -130,8 +142,9 @@ class ViewsView(APIView):
                 type=OpenApiTypes.STR,
                 description=(
                     "A comma separated list of extra attributes to include on each "
-                    "view in the response. The supported attributes are `filters` and "
-                    "`sortings`. For example `include=filters,sortings` will add the "
+                    "view in the response. The supported attributes are `filters`, "
+                    "`sortings` and `decorations`. "
+                    "For example `include=filters,sortings` will add the "
                     "attributes `filters` and `sortings` to every returned view, "
                     "containing a list of the views filters and sortings respectively."
                 ),
@@ -163,8 +176,8 @@ class ViewsView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         }
     )
-    @allowed_includes("filters", "sortings")
-    def get(self, request, table_id, filters, sortings):
+    @allowed_includes("filters", "sortings", "decorations")
+    def get(self, request, table_id, filters, sortings, decorations):
         """
         Responds with a list of serialized views that belong to the table if the user
         has access to that group.
@@ -182,9 +195,16 @@ class ViewsView(APIView):
         if sortings:
             views = views.prefetch_related("viewsort_set")
 
+        if decorations:
+            views = views.prefetch_related("viewdecoration_set")
+
         data = [
             view_type_registry.get_serializer(
-                view, ViewSerializer, filters=filters, sortings=sortings
+                view,
+                ViewSerializer,
+                filters=filters,
+                sortings=sortings,
+                decorations=decorations,
             ).data
             for view in views
         ]
@@ -205,8 +225,8 @@ class ViewsView(APIView):
                 type=OpenApiTypes.STR,
                 description=(
                     "A comma separated list of extra attributes to include on each "
-                    "view in the response. The supported attributes are `filters` and "
-                    "`sortings`. "
+                    "view in the response. The supported attributes are `filters`, "
+                    "`sortings` and `decorations`. "
                     "For example `include=filters,sortings` will add the attributes "
                     "`filters` and `sortings` to every returned view, containing "
                     "a list of the views filters and sortings respectively."
@@ -248,8 +268,8 @@ class ViewsView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         }
     )
-    @allowed_includes("filters", "sortings")
-    def post(self, request, data, table_id, filters, sortings):
+    @allowed_includes("filters", "sortings", "decorations")
+    def post(self, request, data, table_id, filters, sortings, decorations):
         """Creates a new view for a user."""
 
         type_name = data.pop("type")
@@ -260,7 +280,11 @@ class ViewsView(APIView):
             view = ViewHandler().create_view(request.user, table, type_name, **data)
 
         serializer = view_type_registry.get_serializer(
-            view, ViewSerializer, filters=filters, sortings=sortings
+            view,
+            ViewSerializer,
+            filters=filters,
+            sortings=sortings,
+            decorations=decorations,
         )
         return Response(serializer.data)
 
@@ -282,8 +306,8 @@ class ViewView(APIView):
                 type=OpenApiTypes.STR,
                 description=(
                     "A comma separated list of extra attributes to include on the "
-                    "returned view. The supported attributes are are `filters` and "
-                    "`sortings`. "
+                    "returned view. The supported attributes are `filters`, "
+                    "`sortings` and `decorations`. "
                     "For example `include=filters,sortings` will add the attributes "
                     "`filters` and `sortings` to every returned view, containing "
                     "a list of the views filters and sortings respectively."
@@ -311,14 +335,18 @@ class ViewView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         }
     )
-    @allowed_includes("filters", "sortings")
-    def get(self, request, view_id, filters, sortings):
+    @allowed_includes("filters", "sortings", "decorations")
+    def get(self, request, view_id, filters, sortings, decorations):
         """Selects a single view and responds with a serialized version."""
 
         view = ViewHandler().get_view(view_id)
         view.table.database.group.has_user(request.user, raise_error=True)
         serializer = view_type_registry.get_serializer(
-            view, ViewSerializer, filters=filters, sortings=sortings
+            view,
+            ViewSerializer,
+            filters=filters,
+            sortings=sortings,
+            decorations=decorations,
         )
         return Response(serializer.data)
 
@@ -336,8 +364,8 @@ class ViewView(APIView):
                 type=OpenApiTypes.STR,
                 description=(
                     "A comma separated list of extra attributes to include on the "
-                    "returned view. The supported attributes are `filters` and "
-                    "`sortings`. "
+                    "returned view. The supported attributes are `filters`, "
+                    "`sortings` and `decorations`. "
                     "For example `include=filters,sortings` will add the attributes "
                     "`filters` and `sortings` to every returned view, containing "
                     "a list of the views filters and sortings respectively."
@@ -375,8 +403,8 @@ class ViewView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         }
     )
-    @allowed_includes("filters", "sortings")
-    def patch(self, request, view_id, filters, sortings):
+    @allowed_includes("filters", "sortings", "decorations")
+    def patch(self, request, view_id, filters, sortings, decorations):
         """Updates the view if the user belongs to the group."""
 
         view = (
@@ -397,7 +425,11 @@ class ViewView(APIView):
             view = ViewHandler().update_view(request.user, view, **data)
 
         serializer = view_type_registry.get_serializer(
-            view, ViewSerializer, filters=filters, sortings=sortings
+            view,
+            ViewSerializer,
+            filters=filters,
+            sortings=sortings,
+            decorations=decorations,
         )
         return Response(serializer.data)
 
@@ -743,6 +775,253 @@ class ViewFilterView(APIView):
 
         action_type_registry.get_by_type(DeleteViewFilterActionType).do(
             request.user, view_filter
+        )
+
+        return Response(status=204)
+
+
+class ViewDecorationsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description=(
+                    "Returns only decoration of the view given to the provided "
+                    "value."
+                ),
+            )
+        ],
+        tags=["Database table view decorations"],
+        operation_id="list_database_table_view_decorations",
+        description=(
+            "Lists all decorations of the view related to the provided `view_id` if "
+            "the user has access to the related database's group. A view can have "
+            "multiple decorations. View decorators can be used to decorate rows. This "
+            "can, for example, be used to change the border or background color of "
+            "a row if it matches certain conditions."
+        ),
+        responses={
+            200: ViewDecorationSerializer(many=True),
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def get(self, request, view_id):
+        """
+        Responds with a list of serialized decorations that belong to the view
+        if the user has access to that group.
+        """
+
+        view = ViewHandler().get_view(view_id)
+        view.table.database.group.has_user(request.user, raise_error=True)
+        decorations = ViewDecoration.objects.filter(view=view)
+        serializer = ViewDecorationSerializer(decorations, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Creates a decoration for the view related to the given "
+                "value.",
+            )
+        ],
+        tags=["Database table view decorations"],
+        operation_id="create_database_table_view_decoration",
+        description=(
+            "Creates a new decoration for the view related to the provided `view_id` "
+            "parameter if the authorized user has access to the related database's "
+            "group."
+        ),
+        request=CreateViewDecorationSerializer(),
+        responses={
+            200: ViewDecorationSerializer(),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @validate_body(CreateViewDecorationSerializer)
+    @map_exceptions(
+        {
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDecorationNotSupported: ERROR_VIEW_DECORATION_NOT_SUPPORTED,
+        }
+    )
+    def post(self, request, data, view_id):
+        """Creates a new decoration for the provided view."""
+
+        view_handler = ViewHandler()
+        view = view_handler.get_view(view_id)
+
+        group = view.table.database.group
+        group.has_user(request.user, raise_error=True)
+
+        # We can safely assume the field exists because the
+        # CreateViewDecorationSerializer has already checked that.
+        view_decoration = view_handler.create_decoration(
+            view,
+            data["type"],
+            data.get("value_provider_type", None),
+            data.get("value_provider_conf", None),
+            user=request.user,
+        )
+
+        serializer = ViewDecorationSerializer(view_decoration)
+        return Response(serializer.data)
+
+
+class ViewDecorationView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_decoration_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description=("Returns the view decoration related to the provided id."),
+            )
+        ],
+        tags=["Database table view decorations"],
+        operation_id="get_database_table_view_decoration",
+        description=(
+            "Returns the existing view decoration if the current user has access to "
+            "the related database's group."
+        ),
+        responses={
+            200: ViewDecorationSerializer(),
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_VIEW_DECORATION_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            ViewDecorationDoesNotExist: ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
+        }
+    )
+    def get(self, request, view_decoration_id):
+        """Selects a single decoration and responds with a serialized version."""
+
+        view_decoration = ViewHandler().get_decoration(view_decoration_id)
+
+        group = view_decoration.view.table.database.group
+        group.has_user(request.user, raise_error=True)
+
+        serializer = ViewDecorationSerializer(view_decoration)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_decoration_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Updates the view decoration related to the provided value.",
+            )
+        ],
+        tags=["Database table view decorations"],
+        operation_id="update_database_table_view_decoration",
+        description=(
+            "Updates the existing decoration if the authorized user has access to the "
+            "related database's group."
+        ),
+        request=UpdateViewDecorationSerializer(),
+        responses={
+            200: ViewDecorationSerializer(),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                ]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DECORATION_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @validate_body(UpdateViewDecorationSerializer)
+    @map_exceptions(
+        {
+            ViewDecorationDoesNotExist: ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def patch(self, request, data, view_decoration_id):
+        """Updates the view decoration if the user belongs to the group."""
+
+        handler = ViewHandler()
+        view_decoration = handler.get_decoration(
+            view_decoration_id,
+            base_queryset=ViewDecoration.objects.select_for_update(),
+        )
+
+        group = view_decoration.view.table.database.group
+        group.has_user(request.user, raise_error=True)
+
+        view_decoration = handler.update_decoration(
+            view_decoration, user=request.user, **data
+        )
+
+        serializer = ViewDecorationSerializer(view_decoration)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_decoration_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Deletes the decoration related to the provided value.",
+            )
+        ],
+        tags=["Database table view decorations"],
+        operation_id="delete_database_table_view_decoration",
+        description=(
+            "Deletes the existing decoration if the authorized user has access to the "
+            "related database's group."
+        ),
+        responses={
+            204: None,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_VIEW_decoration_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ViewDecorationDoesNotExist: ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def delete(self, request, view_decoration_id):
+        """Deletes an existing decoration if the user belongs to the group."""
+
+        view_decoration = ViewHandler().get_decoration(view_decoration_id)
+
+        group = view_decoration.view.table.database.group
+        group.has_user(request.user, raise_error=True)
+
+        ViewHandler().delete_decoration(
+            view_decoration,
+            user=request.user,
         )
 
         return Response(status=204)

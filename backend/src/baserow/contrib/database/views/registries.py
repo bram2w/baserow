@@ -94,6 +94,12 @@ class ViewType(
     to compute fields aggregation for this view type.
     """
 
+    can_decorate = False
+    """
+    Indicates if the view supports decoration. If not, it will not be possible
+    to create decoration for this view type.
+    """
+
     can_share = False
     """
     Indicates if the view supports being shared via a public link.
@@ -187,6 +193,18 @@ class ViewType(
                 for sort in view.viewsort_set.all()
             ]
 
+        if self.can_decorate:
+            serialized["decorations"] = [
+                {
+                    "id": deco.id,
+                    "type": deco.type,
+                    "value_provider_type": deco.value_provider_type,
+                    "value_provider_conf": deco.value_provider_conf,
+                    "order": deco.order,
+                }
+                for deco in view.viewdecoration_set.all()
+            ]
+
         if self.can_share:
             serialized["public"] = view.public
 
@@ -217,18 +235,22 @@ class ViewType(
         :rtype: View
         """
 
-        from .models import ViewFilter, ViewSort
+        from .models import ViewFilter, ViewSort, ViewDecoration
 
         if "database_views" not in id_mapping:
             id_mapping["database_views"] = {}
             id_mapping["database_view_filters"] = {}
             id_mapping["database_view_sortings"] = {}
+            id_mapping["database_view_decorations"] = {}
 
         serialized_copy = serialized_values.copy()
         view_id = serialized_copy.pop("id")
         serialized_copy.pop("type")
         filters = serialized_copy.pop("filters") if self.can_filter else []
         sortings = serialized_copy.pop("sortings") if self.can_sort else []
+        decorations = (
+            serialized_copy.pop("decorations", []) if self.can_decorate else []
+        )
         view = self.model_class.objects.create(table=table, **serialized_copy)
         id_mapping["database_views"][view_id] = view.id
 
@@ -253,14 +275,47 @@ class ViewType(
                 ] = view_filter_object.id
 
         if self.can_sort:
-            for view_sort in sortings:
-                view_sort_copy = view_sort.copy()
+            for view_decoration in sortings:
+                view_sort_copy = view_decoration.copy()
                 view_sort_id = view_sort_copy.pop("id")
                 view_sort_copy["field_id"] = id_mapping["database_fields"][
                     view_sort_copy["field_id"]
                 ]
                 view_sort_object = ViewSort.objects.create(view=view, **view_sort_copy)
                 id_mapping["database_view_sortings"][view_sort_id] = view_sort_object.id
+
+        if self.can_decorate:
+
+            def _update_field_id(node):
+                """Update field ids deeply inside a deep object."""
+
+                if isinstance(node, list):
+                    return [_update_field_id(subnode) for subnode in node]
+                if isinstance(node, dict):
+                    res = {}
+                    for key, value in node.items():
+                        if key in ["field_id", "field"] and isinstance(value, int):
+                            res[key] = id_mapping["database_fields"][value]
+                        else:
+                            res[key] = _update_field_id(value)
+                    return res
+                return node
+
+            for view_decoration in decorations:
+                view_decoration_copy = view_decoration.copy()
+                view_decoration_id = view_decoration_copy.pop("id")
+
+                # Deeply update field ids to new one in value provider conf
+                view_decoration_copy["value_provider_conf"] = _update_field_id(
+                    view_decoration_copy["value_provider_conf"]
+                )
+
+                view_decoration_object = ViewDecoration.objects.create(
+                    view=view, **view_decoration_copy
+                )
+                id_mapping["database_view_decorations"][
+                    view_decoration_id
+                ] = view_decoration_object.id
 
         return view
 

@@ -18,6 +18,11 @@ view_filter_deleted = Signal()
 view_sort_created = Signal()
 view_sort_updated = Signal()
 view_sort_deleted = Signal()
+
+view_decoration_created = Signal()
+view_decoration_updated = Signal()
+view_decoration_deleted = Signal()
+
 view_field_options_updated = Signal()
 
 

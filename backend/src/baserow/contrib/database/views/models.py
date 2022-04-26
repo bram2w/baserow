@@ -209,6 +209,48 @@ class ViewFilter(ParentFieldTrashableModelMixin, models.Model):
         return view_filter_type_registry.get(self.type).get_preload_values(self)
 
 
+class ViewDecoration(OrderableMixin, models.Model):
+    view = models.ForeignKey(
+        View,
+        on_delete=models.CASCADE,
+        help_text="The view to which the decoration applies. Each view can have his own "
+        "decorations.",
+    )
+    type = models.CharField(
+        max_length=255,
+        help_text=(
+            "The decorator type. This is then interpreted by the frontend to "
+            "display the decoration."
+        ),
+    )
+    value_provider_type = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="The value provider for that gives the value to the decorator.",
+    )
+    value_provider_conf = models.JSONField(
+        default=dict,
+        help_text="The configuration consumed by the value provider.",
+    )
+    # The default value is the maximum value of the small integer field because a newly
+    # created decoration must always be last.
+    order = models.SmallIntegerField(
+        default=32767,
+        help_text="The position of the decorator has within the view, lowest first. If "
+        "there is another decorator with the same order value then the decorator "
+        "with the lowest id must be shown first.",
+    )
+
+    @classmethod
+    def get_last_order(cls, view):
+        queryset = ViewDecoration.objects.filter(view=view)
+        return cls.get_highest_order_of_queryset(queryset) + 1
+
+    class Meta:
+        ordering = ("order", "id")
+
+
 class ViewSort(ParentFieldTrashableModelMixin, models.Model):
     view = models.ForeignKey(
         View,

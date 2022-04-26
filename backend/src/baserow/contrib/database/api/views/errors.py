@@ -66,6 +66,16 @@ ERROR_AGGREGATION_TYPE_DOES_NOT_EXIST = (
     HTTP_400_BAD_REQUEST,
     "The specified aggregation type does not exist.",
 )
+ERROR_VIEW_DECORATION_DOES_NOT_EXIST = (
+    "ERROR_VIEW_DECORATION_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The view decoration does not exist.",
+)
+ERROR_VIEW_DECORATION_NOT_SUPPORTED = (
+    "ERROR_VIEW_DECORATION_NOT_SUPPORTED",
+    HTTP_400_BAD_REQUEST,
+    "Decoration is not supported for the view type.",
+)
 ERROR_CANNOT_SHARE_VIEW_TYPE = (
     "ERROR_CANNOT_SHARE_VIEW_TYPE",
     HTTP_400_BAD_REQUEST,

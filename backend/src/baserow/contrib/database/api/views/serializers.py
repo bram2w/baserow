@@ -10,7 +10,12 @@ from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_filter_type_registry,
 )
-from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
+from baserow.contrib.database.views.models import (
+    View,
+    ViewFilter,
+    ViewSort,
+    ViewDecoration,
+)
 
 
 class FieldOptionsField(serializers.Field):
@@ -156,11 +161,50 @@ class UpdateViewSortSerializer(serializers.ModelSerializer):
         extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
 
 
+class ViewDecorationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewDecoration
+        fields = (
+            "id",
+            "view",
+            "type",
+            "value_provider_type",
+            "value_provider_conf",
+            "order",
+        )
+        extra_kwargs = {"id": {"read_only": True}}
+
+
+class CreateViewDecorationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewDecoration
+        fields = ("type", "value_provider_type", "value_provider_conf", "order")
+        extra_kwargs = {
+            "value_provider_type": {"required": False, "default": ""},
+            "value_provider_conf": {"required": False, "default": dict},
+        }
+
+
+class UpdateViewDecorationSerializer(serializers.ModelSerializer):
+    class Meta(CreateViewDecorationSerializer.Meta):
+        model = ViewDecoration
+        fields = ("type", "value_provider_type", "value_provider_conf", "order")
+        extra_kwargs = {
+            "type": {"required": False},
+            "value_provider_type": {"required": False},
+            "value_provider_conf": {"required": False},
+            "order": {"required": False},
+        }
+
+
 class ViewSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
     table = TableSerializer()
     filters = ViewFilterSerializer(many=True, source="viewfilter_set", required=False)
     sortings = ViewSortSerializer(many=True, source="viewsort_set", required=False)
+    decorations = ViewDecorationSerializer(
+        many=True, source="viewdecoration_set", required=False
+    )
 
     class Meta:
         model = View
@@ -174,6 +218,7 @@ class ViewSerializer(serializers.ModelSerializer):
             "filter_type",
             "filters",
             "sortings",
+            "decorations",
             "filters_disabled",
         )
         extra_kwargs = {
@@ -185,18 +230,23 @@ class ViewSerializer(serializers.ModelSerializer):
         context = kwargs.setdefault("context", {})
         context["include_filters"] = kwargs.pop("filters", False)
         context["include_sortings"] = kwargs.pop("sortings", False)
+        context["include_decorations"] = kwargs.pop("decorations", False)
         super().__init__(*args, **kwargs)
 
     def to_representation(self, instance):
         # We remove the fields in to_representation rather than __init__ as otherwise
-        # drf-spectacular will not know that filters and sortings exist as optional
-        # return fields. This way the fields are still dynamic and also show up in the
-        # OpenAPI specification.
+        # drf-spectacular will not know that filters, sortings and decorations exist as
+        # optional return fields.
+        # This way the fields are still dynamic and also show up in the OpenAPI
+        # specification.
         if not self.context["include_filters"]:
             self.fields.pop("filters", None)
 
         if not self.context["include_sortings"]:
             self.fields.pop("sortings", None)
+
+        if not self.context["include_decorations"]:
+            self.fields.pop("decorations", None)
 
         return super().to_representation(instance)
 

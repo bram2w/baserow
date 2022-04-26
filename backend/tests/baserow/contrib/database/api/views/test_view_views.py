@@ -123,10 +123,11 @@ def test_get_view(api_client, data_fixture):
     assert not response_json["filters_disabled"]
     assert "filters" not in response_json
     assert "sortings" not in response_json
+    assert "decorations" not in response_json
 
     url = reverse("api:database:views:item", kwargs={"view_id": view.id})
     response = api_client.get(
-        "{}?include=filters,sortings".format(url),
+        "{}?include=filters,sortings,decorations".format(url),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -140,6 +141,7 @@ def test_get_view(api_client, data_fixture):
     assert response_json["filters"][0]["type"] == view_filter.type
     assert response_json["filters"][0]["value"] == view_filter.value
     assert response_json["sortings"] == []
+    assert response_json["decorations"] == []
 
     response = api_client.delete(
         reverse("api:groups:item", kwargs={"group_id": view.table.database.group.id}),

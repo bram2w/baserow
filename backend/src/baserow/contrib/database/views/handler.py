@@ -8,6 +8,7 @@ from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.core.cache import cache
 from django.db import models as django_models
 from django.db.models import F, Count
+from django.db.models.query import QuerySet
 from django.contrib.auth.models import AbstractUser
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
@@ -37,8 +38,10 @@ from .exceptions import (
     ViewDoesNotSupportFieldOptions,
     FieldAggregationNotSupported,
     CannotShareViewTypeError,
+    ViewDecorationNotSupported,
+    ViewDecorationDoesNotExist,
 )
-from .models import View, ViewFilter, ViewSort
+from .models import View, ViewDecoration, ViewFilter, ViewSort
 from .registries import (
     view_type_registry,
     view_filter_type_registry,
@@ -55,6 +58,9 @@ from .signals import (
     view_sort_created,
     view_sort_updated,
     view_sort_deleted,
+    view_decoration_created,
+    view_decoration_updated,
+    view_decoration_deleted,
     view_field_options_updated,
 )
 from .validators import EMPTY_VALUES
@@ -876,6 +882,150 @@ class ViewHandler:
 
         view_sort_deleted.send(
             self, view_sort_id=view_sort_id, view_sort=view_sort, user=user
+        )
+
+    def create_decoration(
+        self,
+        view: View,
+        type: str,
+        value_provider_type: str,
+        value_provider_conf: Dict[str, Any],
+        user: Union["AbstractUser", None] = None,
+    ) -> ViewDecoration:
+        """
+        Creates a new view decoration.
+
+        :param view: The view for which the filter needs to be created.
+        :param type: The type of the decorator.
+        :param value_provider_type: The value provider that provides the value to the
+            decorator.
+        :param value_provider_conf: The configuration used by the value provider to
+            compute the values for the decorator.
+        :param user: Optional user who have created the decoration.
+        :return: The created view decoration instance.
+        """
+
+        # Check if view supports decoration
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        if not view_type.can_decorate:
+            raise ViewDecorationNotSupported(
+                f"Decoration is not supported for {view_type.type} views."
+            )
+
+        last_order = ViewDecoration.get_last_order(view)
+
+        view_decoration = ViewDecoration.objects.create(
+            view=view,
+            type=type,
+            value_provider_type=value_provider_type,
+            value_provider_conf=value_provider_conf,
+            order=last_order,
+        )
+
+        view_decoration_created.send(self, view_decoration=view_decoration, user=user)
+
+        return view_decoration
+
+    def get_decoration(
+        self,
+        view_decoration_id: int,
+        base_queryset: QuerySet = None,
+    ) -> ViewDecoration:
+        """
+        Returns an existing view decoration with the given id.
+
+        :param view_decoration_id: The id of the view decoration.
+        :param base_queryset: The base queryset from where to select the view decoration
+            object from. This can for example be used to do a `select_related`.
+        :raises ViewDecorationDoesNotExist: The requested view decoration does not
+            exists.
+        :return: The requested view decoration instance.
+        """
+
+        if base_queryset is None:
+            base_queryset = ViewDecoration.objects
+
+        try:
+            view_decoration = base_queryset.select_related(
+                "view__table__database__group"
+            ).get(pk=view_decoration_id)
+        except ViewDecoration.DoesNotExist:
+            raise ViewDecorationDoesNotExist(
+                f"The view decoration with id {view_decoration_id} does not exist."
+            )
+
+        if TrashHandler.item_has_a_trashed_parent(
+            view_decoration.view.table, check_item_also=True
+        ):
+            raise ViewDecorationDoesNotExist(
+                f"The view decoration with id {view_decoration_id} does not exist."
+            )
+
+        return view_decoration
+
+    def update_decoration(
+        self,
+        view_decoration: ViewDecoration,
+        user: Union["AbstractUser", None] = None,
+        **kwargs: Dict[str, Any],
+    ) -> ViewDecoration:
+        """
+        Updates the values of an existing view decoration.
+
+        :param view_decoration: The view decoration that needs to be updated.
+        :param kwargs: The values that need to be updated, allowed values are
+            `type`, `value_provider_type`, `value_provider_conf` and `order`.
+        :param user: Optional user who have updated the decoration.
+        :raises ViewDecorationDoesNotExist: The requested view decoration does not
+            exists.
+        :return: The updated view decoration instance.
+        """
+
+        decoration_type = kwargs.get("type", view_decoration.type)
+        value_provider_type = kwargs.get(
+            "value_provider_type", view_decoration.value_provider_type
+        )
+        value_provider_conf = kwargs.get(
+            "value_provider_conf", view_decoration.value_provider_conf
+        )
+        order = kwargs.get("order", view_decoration.order)
+
+        view_decoration.type = decoration_type
+        view_decoration.value_provider_type = value_provider_type
+        view_decoration.value_provider_conf = value_provider_conf
+        view_decoration.order = order
+        view_decoration.save()
+
+        view_decoration_updated.send(self, view_decoration=view_decoration, user=user)
+
+        return view_decoration
+
+    def delete_decoration(
+        self,
+        view_decoration: ViewDecoration,
+        user: Union["AbstractUser", None] = None,
+    ):
+        """
+        Deletes an existing view decoration.
+
+        :param view_decoration: The view decoration instance that needs to be deleted.
+        :param user: Optional user who have deleted the decoration.
+        :raises ViewDecorationDoesNotExist: The requested view decoration does not
+            exists.
+        """
+
+        group = view_decoration.view.table.database.group
+        group.has_user(user, raise_error=True)
+
+        view_decoration_id = view_decoration.id
+        view_decoration.delete()
+
+        view_decoration_deleted.send(
+            self,
+            view_decoration_id=view_decoration_id,
+            view_decoration=view_decoration,
+            view_filter=view_decoration,
+            user=user,
         )
 
     def get_queryset(

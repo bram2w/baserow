@@ -39,7 +39,7 @@ export class FakeDecoratorType extends ViewDecoratorType {
 
 export class FakeValueProviderType extends DecoratorValueProviderType {
   static getType() {
-    return 'fake_value_provider'
+    return 'fake_value_provider_type'
   }
 
   getName() {
@@ -90,7 +90,7 @@ describe('GridViewRows component with decoration', () => {
     try {
       store.$registry.unregister(
         'decoratorValueProvider',
-        'fake_value_provider'
+        'fake_value_provider_type'
       )
     } catch {}
   })
@@ -187,13 +187,15 @@ describe('GridViewRows component with decoration', () => {
     const { table, fields, view } = await populateStore([
       {
         type: 'fake_decorator',
-        value_provider: 'fake_value_provider',
+        value_provider_type: 'fake_value_provider_type',
         value_provider_conf: {},
+        _: { loading: false },
       },
       {
         type: 'fake_decorator',
-        value_provider: '',
+        value_provider_type: '',
         value_provider_conf: {},
+        _: { loading: false },
       },
     ])
 

@@ -274,6 +274,7 @@ def test_to_baserow_database_export():
             "filters_disabled": False,
             "filters": [],
             "sortings": [],
+            "decorations": [],
             "public": False,
             "field_options": [],
         }

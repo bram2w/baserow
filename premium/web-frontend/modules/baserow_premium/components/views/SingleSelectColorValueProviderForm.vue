@@ -8,7 +8,7 @@
       :table="table"
       :fields="selectFields"
       :value="value"
-      @input="$emit('update', { field: $event })"
+      @input="$emit('update', { field_id: $event })"
     />
   </div>
 </template>
@@ -46,7 +46,7 @@ export default {
       return this.fields.filter(({ type }) => type === 'single_select')
     },
     value() {
-      return this.options && this.options.field
+      return this.options && this.options.field_id
     },
   },
 }

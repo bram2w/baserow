@@ -8,6 +8,7 @@ from baserow.contrib.database.views.models import (
     FormViewFieldOptions,
     ViewFilter,
     ViewSort,
+    ViewDecoration,
 )
 
 
@@ -114,3 +115,21 @@ class ViewFixtures:
             kwargs["order"] = "ASC"
 
         return ViewSort.objects.create(**kwargs)
+
+    def create_view_decoration(self, user=None, **kwargs):
+        if "view" not in kwargs:
+            kwargs["view"] = self.create_grid_view(user)
+
+        if "type" not in kwargs:
+            kwargs["type"] = "left_border_color"
+
+        if "value_provider_type" not in kwargs:
+            kwargs["value_provider_type"] = "single_select_color"
+
+        if "value_provider_conf" not in kwargs:
+            kwargs["value_provider_conf"] = {}
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        return ViewDecoration.objects.create(**kwargs)

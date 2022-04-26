@@ -1547,9 +1547,10 @@ def test_create_grid_view(api_client, data_fixture):
     assert response_json["filters_disabled"] == grid.filters_disabled
     assert "filters" not in response_json
     assert "sortings" not in response_json
+    assert "decorations" not in response_json
 
     response = api_client.post(
-        "{}?include=filters,sortings".format(
+        "{}?include=filters,sortings,decorations".format(
             reverse("api:database:views:list", kwargs={"table_id": table.id})
         ),
         {
@@ -1569,6 +1570,7 @@ def test_create_grid_view(api_client, data_fixture):
     assert response_json["filters_disabled"] is False
     assert response_json["filters"] == []
     assert response_json["sortings"] == []
+    assert response_json["decorations"] == []
 
     response = api_client.post(
         "{}".format(reverse("api:database:views:list", kwargs={"table_id": table.id})),
@@ -1584,6 +1586,7 @@ def test_create_grid_view(api_client, data_fixture):
     assert response_json["filters_disabled"] is False
     assert "filters" not in response_json
     assert "sortings" not in response_json
+    assert "decorations" not in response_json
 
     # Can't create a public non sharable view.
     response = api_client.post(
@@ -1665,6 +1668,7 @@ def test_update_grid_view(api_client, data_fixture):
     assert response_json["filters_disabled"]
     assert "filters" not in response_json
     assert "sortings" not in response_json
+    assert "decorations" not in response_json
 
     view.refresh_from_db()
     assert view.filter_type == "OR"
@@ -1673,7 +1677,7 @@ def test_update_grid_view(api_client, data_fixture):
     filter_1 = data_fixture.create_view_filter(view=view)
     url = reverse("api:database:views:item", kwargs={"view_id": view.id})
     response = api_client.patch(
-        "{}?include=filters,sortings".format(url),
+        "{}?include=filters,sortings,decorations".format(url),
         {"filter_type": "AND"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -1685,6 +1689,7 @@ def test_update_grid_view(api_client, data_fixture):
     assert response_json["filters_disabled"] is True
     assert response_json["filters"][0]["id"] == filter_1.id
     assert response_json["sortings"] == []
+    assert response_json["decorations"] == []
 
     # Can't make a non sharable view public.
     response = api_client.patch(

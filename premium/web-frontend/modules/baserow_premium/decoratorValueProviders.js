@@ -35,14 +35,14 @@ export class SingleSelectColorValueProviderType extends DecoratorValueProviderTy
   }
 
   getValue({ options, fields, row }) {
-    const value = row[`field_${options.field}`]
+    const value = row[`field_${options.field_id}`]
     return value?.color || ''
   }
 
   getDefaultConfiguration({ fields }) {
     const firstSelectField = fields.find(({ type }) => type === 'single_select')
     return {
-      field: firstSelectField?.id,
+      field_id: firstSelectField?.id,
     }
   }
 }
