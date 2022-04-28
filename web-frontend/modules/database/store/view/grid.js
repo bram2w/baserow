@@ -1508,7 +1508,7 @@ export const actions = {
 
     // Store the before value of the field that gets updated
     // in case we need to rollback changes
-    valuesBeforeOptimisticUpdate[field.id] = oldValue
+    valuesBeforeOptimisticUpdate[`field_${field.id}`] = oldValue
 
     let fieldsToCallOnRowChange = [...fields, primary]
 
