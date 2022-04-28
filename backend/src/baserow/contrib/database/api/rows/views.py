@@ -795,6 +795,122 @@ class BatchRowsView(APIView):
                 name="table_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
+                description="Creates the rows in the table.",
+            ),
+            OpenApiParameter(
+                name="before",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="If provided then the newly created rows will be "
+                "positioned before the row with the provided id.",
+            ),
+            OpenApiParameter(
+                name="user_field_names",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.BOOL,
+                description=(
+                    "A flag query parameter which if provided this endpoint will "
+                    "expect and return the user specified field names instead of "
+                    "internal Baserow field names (field_123 etc)."
+                ),
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="batch_create_database_table_rows",
+        description=(
+            "Creates new rows in the table if the user has access to the related "
+            "table's group. The accepted body fields are depending on the fields "
+            "that the table has. For a complete overview of fields use the "
+            "**list_database_table_fields** to list them all. None of the fields are "
+            "required, if they are not provided the value is going to be `null` or "
+            "`false` or some default value is that is set. If you want to add a value "
+            "for the field with for example id `10`, the key must be named `field_10`. "
+            "Or instead if the `user_field_names` GET param is provided the key must "
+            "be the name of the field. Of course multiple fields can be provided in "
+            "one request. In the examples below you will find all the different field "
+            "types, the numbers/ids in the example are just there for example "
+            "purposes, the field_ID must be replaced with the actual id of the field "
+            "or the name of the field if `user_field_names` is provided."
+        ),
+        request=get_example_batch_rows_serializer_class(
+            example_type="post", user_field_names=True
+        ),
+        responses={
+            200: get_example_batch_rows_serializer_class(
+                example_type="get", user_field_names=True
+            ),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_ROW_IDS_NOT_UNIQUE",
+                    "ERROR_INVALID_SELECT_OPTION_VALUES",
+                ]
+            ),
+            401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
+            404: get_error_schema(
+                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_ROW_DOES_NOT_EXIST"]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+            RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
+            AllProvidedMultipleSelectValuesMustBeSelectOption: ERROR_INVALID_SELECT_OPTION_VALUES,
+            NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+            UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request, table_id):
+        """
+        Creates new rows for the given table_id. Also the post data is validated
+        according to the tables field types.
+        """
+
+        table = TableHandler().get_table(table_id)
+        TokenHandler().check_table_permissions(request, "create", table, False)
+        model = table.get_model()
+
+        user_field_names = "user_field_names" in request.GET
+        before_row_id = request.query_params.get("before")
+
+        row_validation_serializer = get_row_serializer_class(
+            model, user_field_names=user_field_names
+        )
+        validation_serializer = get_batch_row_serializer_class(
+            row_validation_serializer
+        )
+        data = validate_data(
+            validation_serializer, request.data, partial=True, return_validated=True
+        )
+
+        try:
+            rows = RowHandler().create_rows(
+                request.user, table, data["items"], before_row_id, model
+            )
+        except ValidationError as e:
+            raise RequestBodyValidationException(detail=e.message)
+
+        response_row_serializer_class = get_row_serializer_class(
+            model, RowSerializer, is_response=True, user_field_names=user_field_names
+        )
+        response_serializer_class = get_batch_row_serializer_class(
+            response_row_serializer_class
+        )
+        response_serializer = response_serializer_class({"items": rows})
+        return Response(response_serializer.data)
+
+    @extend_schema(
+        exclude=True,
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
                 description="Updates the rows in the table.",
             ),
             OpenApiParameter(

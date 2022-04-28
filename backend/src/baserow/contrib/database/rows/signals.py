@@ -7,6 +7,7 @@ before_row_update = Signal()
 before_row_delete = Signal()
 
 row_created = Signal()
+rows_created = Signal()
 row_updated = Signal()
 rows_updated = Signal()
 row_deleted = Signal()

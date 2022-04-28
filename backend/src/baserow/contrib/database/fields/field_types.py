@@ -1799,15 +1799,25 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         raise ValidationError(f"The provided value is not a valid option.")
 
     def prepare_value_for_db_in_bulk(self, instance, values_by_row):
-        unique_values = {value for value in values_by_row.values()}
+        unique_values = {value for value in values_by_row.values() if value is not None}
 
-        selected_ids = SelectOption.objects.filter(
+        select_options = SelectOption.objects.filter(
             field=instance, id__in=unique_values
-        ).values_list("id", flat=True)
+        )
+
+        options_by_id = {}
+        selected_ids = []
+        for option in select_options:
+            options_by_id[option.id] = option
+            selected_ids.append(option.id)
 
         if len(selected_ids) != len(unique_values):
             invalid_ids = sorted(list(unique_values - set(selected_ids)))
             raise AllProvidedMultipleSelectValuesMustBeSelectOption(invalid_ids)
+
+        for row_index, value in values_by_row.items():
+            if value is not None:
+                values_by_row[row_index] = options_by_id[value]
 
         return values_by_row
 
@@ -2507,7 +2517,9 @@ class FormulaFieldType(FieldType):
         update_collector,
         via_path_to_starting_table,
     ):
-        self._refresh_row_values(field, update_collector, via_path_to_starting_table)
+        self._refresh_row_values_if_not_in_starting_table(
+            field, update_collector, via_path_to_starting_table
+        )
         super().row_of_dependency_updated(
             field,
             starting_row,
@@ -2515,22 +2527,29 @@ class FormulaFieldType(FieldType):
             via_path_to_starting_table,
         )
 
-    def _refresh_row_values(self, field, update_collector, via_path_to_starting_table):
+    def _refresh_row_values_if_not_in_starting_table(
+        self, field, update_collector, via_path_to_starting_table
+    ):
         if (
             via_path_to_starting_table is not None
             and len(via_path_to_starting_table) > 0
         ):
-            update_statement = (
-                FormulaHandler.baserow_expression_to_update_django_expression(
-                    field.cached_typed_internal_expression,
-                    update_collector.get_model(field.table),
-                )
+            self._refresh_row_values(
+                field, update_collector, via_path_to_starting_table
             )
-            update_collector.add_field_with_pending_update_statement(
-                field,
-                update_statement,
-                via_path_to_starting_table=via_path_to_starting_table,
+
+    def _refresh_row_values(self, field, update_collector, via_path_to_starting_table):
+        update_statement = (
+            FormulaHandler.baserow_expression_to_update_django_expression(
+                field.cached_typed_internal_expression,
+                update_collector.get_model(field.table),
             )
+        )
+        update_collector.add_field_with_pending_update_statement(
+            field,
+            update_statement,
+            via_path_to_starting_table=via_path_to_starting_table,
+        )
 
     def field_dependency_created(
         self, field, created_field, via_path_to_starting_table, update_collector
@@ -2614,6 +2633,10 @@ class FormulaFieldType(FieldType):
         )
         model.objects_and_trash.all().update(**{f"{field.db_column}": expr})
 
+    def after_rows_created(self, field: FormulaField, rows, update_collector):
+        if field.requires_refresh_after_insert:
+            self._refresh_row_values(field, update_collector, [])
+
     def after_update(
         self,
         from_field,
@@ -2636,7 +2659,9 @@ class FormulaFieldType(FieldType):
         super().after_import_serialized(field, field_cache)
 
     def after_rows_imported(self, field, via_path_to_starting_table, update_collector):
-        self._refresh_row_values(field, update_collector, via_path_to_starting_table)
+        self._refresh_row_values_if_not_in_starting_table(
+            field, update_collector, via_path_to_starting_table
+        )
         super().after_rows_imported(field, via_path_to_starting_table, update_collector)
 
     def check_can_order_by(self, field):

@@ -679,6 +679,16 @@ class FieldType(
                 dependant_field, dependency_path, update_collector
             )
 
+    def after_rows_created(self, field, rows, update_collector):
+        """
+        Immediately after a row has been created with a field of this type this
+        method is called. This is useful fields that need to register some sort of
+        update statement with the update_collector to correctly set their value after
+        the row has been created.
+        """
+
+        pass
+
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         """
         Exports the value to a the value of a row to serialized value that is also JSON
