@@ -34,6 +34,27 @@ def row_created(sender, row, before, user, table, model, **kwargs):
     )
 
 
+@receiver(row_signals.rows_created)
+def rows_created(sender, rows, before, user, table, model, **kwargs):
+    table_page_type = page_registry.get("table")
+    transaction.on_commit(
+        lambda: table_page_type.broadcast(
+            RealtimeRowMessages.rows_created(
+                table_id=table.id,
+                serialized_rows=get_row_serializer_class(
+                    model, RowSerializer, is_response=True
+                )(rows, many=True).data,
+                metadata=row_metadata_registry.generate_and_merge_metadata_for_rows(
+                    table, [row.id for row in rows]
+                ),
+                before=before,
+            ),
+            getattr(user, "web_socket_id", None),
+            table_id=table.id,
+        )
+    )
+
+
 @receiver(row_signals.before_row_update)
 def before_row_update(sender, row, user, table, model, updated_field_ids, **kwargs):
     # Generate a serialized version of the row before it is updated. The
@@ -141,6 +162,21 @@ class RealtimeRowMessages:
             "type": "row_created",
             "table_id": table_id,
             "row": serialized_row,
+            "metadata": metadata,
+            "before_row_id": before.id if before else None,
+        }
+
+    @staticmethod
+    def rows_created(
+        table_id: int,
+        serialized_rows: List[Dict[str, Any]],
+        metadata: Dict[str, Any],
+        before: Optional[GeneratedTableModel],
+    ) -> Dict[str, Any]:
+        return {
+            "type": "rows_created",
+            "table_id": table_id,
+            "rows": serialized_rows,
             "metadata": metadata,
             "before_row_id": before.id if before else None,
         }

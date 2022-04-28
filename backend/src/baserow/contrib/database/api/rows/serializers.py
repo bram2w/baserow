@@ -112,7 +112,11 @@ def get_row_serializer_class(
         field_overrides["id"] = serializers.IntegerField()
 
     return get_serializer_class(
-        model, field_names, field_overrides, base_class, required_fields=required_fields
+        model,
+        field_names,
+        field_overrides,
+        base_class,
+        required_fields=required_fields,
     )
 
 

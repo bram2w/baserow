@@ -339,6 +339,7 @@ SPECTACULAR_SETTINGS = {
             "date_after",
             "date_not_equal",
             "date_equals_today",
+            "date_equals_days_ago",
             "date_equals_month",
             "date_equals_day_of_month",
             "date_equals_year",

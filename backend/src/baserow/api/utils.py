@@ -328,6 +328,7 @@ def get_serializer_class(
                     raise serializers.ValidationError(
                         {f"{field_name}": "This field is required."}
                     )
+
         return value
 
     attrs["validate"] = validate

@@ -165,6 +165,23 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('rows_created', (context, data) => {
+    const { app, store } = context
+    for (const viewType of Object.values(app.$registry.getAll('view'))) {
+      for (let i = 0; i < data.rows.length; i++) {
+        viewType.rowCreated(
+          context,
+          data.table_id,
+          store.getters['field/getAll'],
+          store.getters['field/getPrimary'],
+          data.rows[i],
+          data.metadata,
+          'page/'
+        )
+      }
+    }
+  })
+
   realtime.registerEvent('row_updated', async (context, data) => {
     const { app, store } = context
     for (const viewType of Object.values(app.$registry.getAll('view'))) {
