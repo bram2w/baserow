@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import datetime, date
 from decimal import Decimal
 from random import randrange, randint, sample
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple, TYPE_CHECKING
 
 import pytz
 from dateutil import parser
@@ -104,7 +104,10 @@ from .models import (
     Field,
     LookupField,
 )
-from .registries import FieldType, field_type_registry
+from .registries import FieldType, ReadOnlyFieldType, field_type_registry
+
+if TYPE_CHECKING:
+    from baserow.contrib.database.table.models import GeneratedTableModel
 
 
 class TextFieldMatchingRegexFieldType(FieldType, ABC):
@@ -413,7 +416,7 @@ class NumberFieldType(FieldType):
         return contains_filter(*args)
 
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
-        value = getattr(row, field_name)
+        value = self.get_internal_value_from_db(row, field_name)
         return value if value is None else str(value)
 
     def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
@@ -571,7 +574,8 @@ class BooleanFieldType(FieldType):
         return fake.pybool()
 
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
-        return "true" if getattr(row, field_name) else "false"
+        value = self.get_internal_value_from_db(row, field_name)
+        return "true" if value else "false"
 
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, files_zip, storage
@@ -620,10 +624,10 @@ class DateFieldType(FieldType):
         if type(value) == str:
             try:
                 value = parser.parse(value)
-            except ParserError:
+            except ParserError as exc:
                 raise ValidationError(
                     "The provided string could not converted to a" "date."
-                )
+                ) from exc
 
         if type(value) == date:
             value = make_aware(datetime(value.year, value.month, value.day), utc)
@@ -744,7 +748,7 @@ class DateFieldType(FieldType):
         )
 
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
-        value = getattr(row, field_name)
+        value = self.get_internal_value_from_db(row, field_name)
 
         if value is None:
             return value
@@ -779,8 +783,7 @@ class DateFieldType(FieldType):
         )
 
 
-class CreatedOnLastModifiedBaseFieldType(DateFieldType):
-    read_only = True
+class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
     can_be_in_form_view = False
     allowed_fields = DateFieldType.allowed_fields + ["timezone"]
     serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
@@ -790,19 +793,6 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
     source_field_name = None
     model_field_kwargs = {}
     populate_from_field = None
-
-    def prepare_value_for_db(self, instance, value):
-        """
-        Since the LastModified and CreatedOnFieldTypes are read only fields, we raise a
-        ValidationError when there is a value present.
-        """
-
-        if not value:
-            return value
-
-        raise ValidationError(
-            f"Field of type {self.type} is read only and should not be set manually."
-        )
 
     def get_export_value(self, value, field_object):
         if value is None:
@@ -903,9 +893,6 @@ class CreatedOnLastModifiedBaseFieldType(DateFieldType):
             to_model.objects.all().update(
                 **{f"{to_field.db_column}": models.F(self.source_field_name)}
             )
-
-    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
-        return None
 
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, files_zip, storage
@@ -1008,6 +995,20 @@ class LinkRowFieldType(FieldType):
             )
 
         return self._get_and_map_pk_values(field_object, value, map_to_export_value)
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> List[int]:
+        """
+        Returns the list of ids for the related rows.
+
+        :param row: The table row instance
+        :param field_name: The name of the field.
+        :return: A list of related rows ids.
+        """
+
+        related_rows = getattr(row, field_name)
+        return list(related_rows.values_list("id", flat=True))
 
     def get_human_readable_value(self, value, field_object):
         def map_to_human_readable_value(inner_value, inner_field_object):
@@ -1676,7 +1677,7 @@ class FileFieldType(FieldType):
         file_names = []
         user_file_handler = UserFileHandler()
 
-        for file in getattr(row, field_name):
+        for file in self.get_internal_value_from_db(row, field_name):
             # Check if the user file object is already in the cache and if not,
             # it must be fetched and added to to it.
             cache_entry = f"user_file_{file['name']}"
@@ -1780,6 +1781,11 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         return queryset.prefetch_related(
             models.Prefetch(name, queryset=SelectOption.objects.using("default").all())
         )
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> int:
+        return getattr(row, f"{field_name}_id")
 
     def prepare_value_for_db(self, instance, value):
         if value is None:
@@ -2011,9 +2017,6 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             q={f"select_option_value_{field_name}__icontains": value},
         )
 
-    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
-        return getattr(row, field_name + "_id")
-
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, files_zip, storage
     ):
@@ -2045,6 +2048,12 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
             }
         )
         return serializers.ListSerializer(child=field_serializer, required=required)
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> List[int]:
+        related_objects = getattr(row, field_name)
+        return list(related_objects.values_list("id", flat=True))
 
     def get_response_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -2319,11 +2328,9 @@ class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
         return fake.phone_number()
 
 
-class FormulaFieldType(FieldType):
+class FormulaFieldType(ReadOnlyFieldType):
     type = "formula"
     model_class = FormulaField
-
-    read_only = True
 
     can_be_primary_field = False
     can_be_in_form_view = False
@@ -2444,18 +2451,6 @@ class FormulaFieldType(FieldType):
             value,
             {"field": field_instance, "type": field_type, "name": field_object["name"]},
         )
-
-    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
-        # We don't want to export the per row formula values as they can all and
-        # should be derived from the formula itself.
-        return None
-
-    def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
-    ):
-        # We don't want to import any per row formula values as they can all and
-        # should be derived from the formula itself.
-        pass
 
     def contains_query(self, field_name, value, model_field, field: FormulaField):
         (

@@ -78,11 +78,13 @@ class DatabaseConfig(AppConfig):
             CreateRowActionType,
             DeleteRowActionType,
             MoveRowActionType,
+            UpdateRowActionType,
         )
 
         action_type_registry.register(CreateRowActionType())
         action_type_registry.register(DeleteRowActionType())
         action_type_registry.register(MoveRowActionType())
+        action_type_registry.register(UpdateRowActionType())
 
         from .views.registries import (
             view_type_registry,

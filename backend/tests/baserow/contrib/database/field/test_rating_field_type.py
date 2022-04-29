@@ -72,7 +72,7 @@ def test_row_creation(data_fixture):
     field_handler = FieldHandler()
     row_handler = RowHandler()
 
-    field_handler.create_field(
+    rating_field = field_handler.create_field(
         user=user, table=table, type_name="rating", name="rating"
     )
     assert len(RatingField.objects.all()) == 1
@@ -94,11 +94,10 @@ def test_row_creation(data_fixture):
     ]
 
     row_handler.update_row_by_id(
-        user_field_names=True,
         user=user,
         row_id=row1.id,
         table=table,
-        values={"rating": 1},
+        values={rating_field.id: 1},
     )
 
     assert [(f.id, f.rating) for f in model.objects.all()] == [
@@ -257,8 +256,7 @@ def test_rating_field_modification(data_fixture):
         user=user,
         row_id=row3.id,
         table=table,
-        user_field_names=True,
-        values={"boolean": 3},
+        values={boolean_field.id: 3},
     )
 
     # Convert back field to original type

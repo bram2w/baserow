@@ -107,12 +107,12 @@ class RowHandler:
 
         return prepared_rows
 
-    def extract_field_ids_from_dict(self, values: Dict[str, Any]) -> List[int]:
+    def extract_field_ids_from_keys(self, keys: List[str]) -> List[int]:
         """
-        Extracts the field ids from a dict containing the values that need to be
-        updated. For example keys like 'field_2', '3', 4 will be seen ass field ids.
+        Extracts the field ids from a list of field names.
+        For example keys like 'field_2', '3', 4 will be seen ass field ids.
 
-        :param values: The values where to extract the fields ids from.
+        :param keys: The list of field names.
         :return: A list containing the field ids as integers.
         """
 
@@ -120,9 +120,44 @@ class RowHandler:
         # @TODO improve this function
         return [
             int(re.sub("[^0-9]", "", str(key)))
-            for key in values.keys()
+            for key in keys
             if str(key).isnumeric() or field_pattern.match(str(key))
         ]
+
+    def extract_field_ids_from_dict(self, values: Dict[str, Any]) -> List[int]:
+        """
+        Extracts the field ids from a dict containing the values that need to
+        updated. For example keys like 'field_2', '3', 4 will be seen ass field ids.
+
+        :param values: The values where to extract the fields ids from.
+        :return: A list containing the field ids as integers.
+        """
+
+        return self.extract_field_ids_from_keys(values.keys())
+
+    def get_internal_values_for_fields(
+        self,
+        row: GeneratedTableModel,
+        fields_keys: List[str],
+    ) -> Dict[str, Any]:
+        """
+        Gets the current values of the row before the update.
+
+        :param row: The row instance.
+        :param fields_keys: The fields keys that need to be exported.
+        :return: The current values of the row before the update.
+        """
+
+        values = {}
+        for field_id in self.extract_field_ids_from_keys(fields_keys):
+            field = row._field_objects[field_id]
+            field_type = field["type"]
+            if field_type.read_only:
+                continue
+            field_name = f"field_{field_id}"
+            field_value = field_type.get_internal_value_from_db(row, field_name)
+            values[field_name] = field_value
+        return values
 
     def extract_manytomany_values(self, values, model):
         """
@@ -238,7 +273,7 @@ class RowHandler:
         table: Table,
         row_id: int,
         enhance_by_fields: bool = False,
-        model: Type[GeneratedTableModel] = None,
+        model: Optional[Type[GeneratedTableModel]] = None,
     ) -> GeneratedTableModelForUpdate:
         """
         Fetches a single row from the provided table and lock it for update.
@@ -491,9 +526,7 @@ class RowHandler:
             row = self.get_row_for_update(
                 user, table, row_id, enhance_by_fields=True, model=model
             )
-            return self.update_row(
-                user, table, row, values, model=model, user_field_names=user_field_names
-            )
+            return self.update_row(user, table, row, values, model=model)
 
     def update_row(
         self,
@@ -502,7 +535,6 @@ class RowHandler:
         row: GeneratedTableModelForUpdate,
         values: Dict[str, Any],
         model: Optional[Type[GeneratedTableModel]] = None,
-        user_field_names: bool = False,
     ) -> GeneratedTableModelForUpdate:
         """
         Updates one or more values of the provided row_id.
@@ -513,8 +545,6 @@ class RowHandler:
         :param values: The values that must be updated. The keys must be the field ids.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
-        :param user_field_names: Whether or not the values are keyed by the internal
-            Baserow field name (field_1,field_2 etc) or by the user field names.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         :return: The updated row instance.
         """
@@ -540,10 +570,6 @@ class RowHandler:
             model=model,
             updated_field_ids=updated_field_ids,
         )
-        if user_field_names:
-            values = self.map_user_field_name_dict_to_internal(
-                model._field_objects, values
-            )
         values = self.prepare_values(model._field_objects, values)
         values, manytomany_values = self.extract_manytomany_values(values, model)
 
@@ -957,11 +983,8 @@ class RowHandler:
         Deletes an existing row of the given table and with row_id.
 
         :param user: The user of whose behalf the change is made.
-        :type user: User
         :param table: The table for which the row must be deleted.
-        :type table: Table
         :param row_id: The id of the row that must be deleted.
-        :type row_id: int
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
         :raises RowDoesNotExist: When the row with the provided id does not exist.
