@@ -475,6 +475,7 @@ class ViewView(APIView):
         """Deletes an existing view if the user belongs to the group."""
 
         view = ViewHandler().get_view(view_id)
+
         ViewHandler().delete_view(request.user, view)
 
         return Response(status=204)

@@ -154,7 +154,8 @@
         "application": "application",
         "table": "table",
         "field": "champ",
-        "row": "ligne"
+        "row": "ligne",
+        "view": "vue"
     },
     "webhook": {
         "request": "Requête",

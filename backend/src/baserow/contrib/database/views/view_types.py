@@ -171,7 +171,7 @@ class GridViewType(ViewType):
         """
 
         field_options = (
-            GridViewFieldOptions.objects.filter(field=field)
+            GridViewFieldOptions.objects_and_trash.filter(field=field)
             .exclude(aggregation_raw_type="")
             .select_related("grid_view")
         )

@@ -9,6 +9,7 @@ from rest_framework.status import (
 
 from django.shortcuts import reverse
 
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import ViewSort
 from baserow.contrib.database.views.registries import (
     view_type_registry,
@@ -454,3 +455,61 @@ def test_list_views_including_sortings(api_client, data_fixture):
     assert response_json[0]["sortings"][1]["id"] == sort_2.id
     assert len(response_json[1]["sortings"]) == 1
     assert response_json[1]["sortings"][0]["id"] == sort_3.id
+
+
+@pytest.mark.django_db
+def test_cant_get_view_sort_when_view_trashed(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_form_view(table=table)
+
+    ViewHandler().delete_view(user, view)
+
+    url = reverse("api:database:views:sort_item", kwargs={"view_sort_id": view.id})
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_cant_update_view_sort_when_view_trashed(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_number_field(user, table=table)
+
+    view_sort = ViewHandler().create_sort(user, view, field, "asc")
+    ViewHandler().delete_view(user, view)
+
+    url = reverse(
+        "api:database:views:sort_item",
+        kwargs={"view_sort_id": view_sort.id},
+    )
+
+    response = api_client.patch(
+        url,
+        {"order": "ASC"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_cant_delete_view_sort_when_view_trashed(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_number_field(user, table=table)
+
+    view_sort = ViewHandler().create_sort(user, view, field, "asc")
+    ViewHandler().delete_view(user, view)
+
+    url = reverse(
+        "api:database:views:sort_item",
+        kwargs={"view_sort_id": view_sort.id},
+    )
+
+    response = api_client.delete(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    assert response.status_code == HTTP_404_NOT_FOUND

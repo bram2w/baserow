@@ -2,10 +2,12 @@ import pytest
 import random
 from decimal import Decimal
 
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.contrib.database.views.exceptions import FieldAggregationNotSupported
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.core.trash.handler import TrashHandler
 
 from baserow.test_utils.helpers import setup_interesting_test_table
 
@@ -353,3 +355,79 @@ def test_view_aggregation_errors(data_fixture):
                 ),
             ],
         )
+
+
+@pytest.mark.django_db
+def test_aggregation_is_updated_when_view_is_trashed(data_fixture):
+    """
+    Test that aggregation is updated when view is trashed
+
+    The following scenario is tested:
+    - Create two views
+    - Creat a field in both views
+    - Create and aggregation in both views
+    - Trash that view
+    - Change the field type to a different type that is
+      incompatible with the aggregation
+    - Restore the view
+    - Check that the aggregation is updated
+    """
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view_one = data_fixture.create_grid_view(table=table)
+    grid_view_two = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_number_field(user=user, table=table)
+    application = table.database
+
+    view_handler = ViewHandler()
+
+    model = table.get_model()
+
+    model.objects.create(**{field.db_column: 1})
+    model.objects.create(**{field.db_column: 2})
+
+    view_handler.update_field_options(
+        view=grid_view_one,
+        field_options={
+            field.id: {
+                "aggregation_type": "sum",
+                "aggregation_raw_type": "sum",
+            }
+        },
+    )
+
+    view_handler.update_field_options(
+        view=grid_view_two,
+        field_options={
+            field.id: {
+                "aggregation_type": "sum",
+                "aggregation_raw_type": "sum",
+            }
+        },
+    )
+
+    # Verify both views have an aggregation
+    aggregations_view_one = view_handler.get_view_field_aggregations(grid_view_one)
+    aggregations_view_two = view_handler.get_view_field_aggregations(grid_view_two)
+
+    assert field.db_column in aggregations_view_one
+    assert field.db_column in aggregations_view_two
+
+    # Trash the view and verify that the aggregation is not retreivable anymore
+    TrashHandler().trash(user, application.group, application, trash_item=grid_view_one)
+    aggregations = view_handler.get_view_field_aggregations(grid_view_one)
+    assert field.db_column not in aggregations
+
+    # Update the field and verify that the aggregation is removed from the
+    # not trashed view
+    FieldHandler().update_field(user, field, new_type_name="text")
+    aggregations_not_trashed_view = view_handler.get_view_field_aggregations(
+        grid_view_two
+    )
+    assert field.db_column not in aggregations_not_trashed_view
+
+    # Restore the view and verify that the aggregation
+    # is also removed from the restored view
+    TrashHandler().restore_item(user, "view", grid_view_one.id)
+    aggregations_restored_view = view_handler.get_view_field_aggregations(grid_view_one)
+    assert field.db_column not in aggregations_restored_view

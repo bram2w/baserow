@@ -154,7 +154,8 @@
         "application": "applicazione",
         "table": "tabella",
         "field": "campo",
-        "row": "riga"
+        "row": "riga",
+        "view": "vista"
     },
     "webhook": {
         "request": "Richiesta",

@@ -154,7 +154,8 @@
         "application": "",
         "table": "",
         "field": "",
-        "row": ""
+        "row": "",
+        "view": ""
     },
     "webhook": {
         "request": "",

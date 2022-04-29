@@ -1409,3 +1409,23 @@ def test_trashing_two_linked_tables_after_one_perm_deleted_can_restore(
     TrashHandler.permanently_delete_marked_trash()
 
     assert not TrashEntry.objects.exists()
+
+
+@pytest.mark.django_db
+def test_trash_restore_view(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Table 1", database=database)
+    view = data_fixture.create_grid_view(name="View 1", table=table)
+
+    assert view.trashed is False
+
+    TrashHandler.trash(user, database.group, database, view)
+    view.refresh_from_db()
+
+    assert view.trashed is True
+
+    TrashHandler.restore_item(user, "view", view.id)
+    view.refresh_from_db()
+
+    assert view.trashed is False

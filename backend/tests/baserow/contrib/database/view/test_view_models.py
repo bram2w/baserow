@@ -1,5 +1,13 @@
 import pytest
 
+from baserow.contrib.database.views.models import (
+    ViewFilter,
+    ViewSort,
+    GridViewFieldOptions,
+    GalleryViewFieldOptions,
+    FormViewFieldOptions,
+)
+
 
 @pytest.mark.django_db
 def test_view_get_field_options(data_fixture):
@@ -57,6 +65,144 @@ def test_rotate_view_slug(data_fixture):
     old_slug = str(form_view.slug)
     form_view.rotate_slug()
     assert str(form_view.slug) != old_slug
+
+
+@pytest.mark.django_db
+def test_view_filter_manager_view_trashed(data_fixture):
+    grid_view = data_fixture.create_grid_view()
+    data_fixture.create_view_filter(view=grid_view)
+
+    assert ViewFilter.objects.count() == 1
+
+    grid_view.trashed = True
+    grid_view.save()
+
+    assert ViewFilter.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_view_filter_manager_field_trashed(data_fixture):
+    grid_view = data_fixture.create_grid_view()
+    field = data_fixture.create_text_field(table=grid_view.table)
+    data_fixture.create_view_filter(view=grid_view, field=field)
+
+    assert ViewFilter.objects.count() == 1
+
+    field.trashed = True
+    field.save()
+
+    assert ViewFilter.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_view_sort_manager_view_trashed(data_fixture):
+    grid_view = data_fixture.create_grid_view()
+    data_fixture.create_view_sort(view=grid_view)
+
+    assert ViewSort.objects.count() == 1
+
+    grid_view.trashed = True
+    grid_view.save()
+
+    assert ViewSort.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_view_sort_manager_field_trashed(data_fixture):
+    grid_view = data_fixture.create_grid_view()
+    field = data_fixture.create_text_field(table=grid_view.table)
+    data_fixture.create_view_sort(view=grid_view, field=field)
+
+    assert ViewSort.objects.count() == 1
+
+    field.trashed = True
+    field.save()
+
+    assert ViewSort.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_grid_view_field_options_manager_view_trashed(data_fixture):
+    grid_view = data_fixture.create_grid_view()
+    field = data_fixture.create_text_field(table=grid_view.table)
+    data_fixture.create_grid_view_field_option(grid_view, field)
+
+    assert GridViewFieldOptions.objects.count() == 1
+
+    grid_view.trashed = True
+    grid_view.save()
+
+    assert GridViewFieldOptions.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_grid_view_field_options_manager_field_trashed(data_fixture):
+    grid_view = data_fixture.create_grid_view()
+    field = data_fixture.create_text_field(table=grid_view.table)
+    data_fixture.create_grid_view_field_option(grid_view, field)
+
+    assert GridViewFieldOptions.objects.count() == 1
+
+    field.trashed = True
+    field.save()
+
+    assert GridViewFieldOptions.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_gallery_view_field_options_manager_view_trashed(data_fixture):
+    gallery_view = data_fixture.create_gallery_view()
+    field = data_fixture.create_text_field(table=gallery_view.table)
+    data_fixture.create_gallery_view_field_option(gallery_view, field)
+
+    assert GalleryViewFieldOptions.objects.count() == 1
+
+    gallery_view.trashed = True
+    gallery_view.save()
+
+    assert GalleryViewFieldOptions.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_gallery_view_field_options_manager_field_trashed(data_fixture):
+    gallery_view = data_fixture.create_gallery_view()
+    field = data_fixture.create_text_field(table=gallery_view.table)
+    data_fixture.create_gallery_view_field_option(gallery_view, field)
+
+    assert GalleryViewFieldOptions.objects.count() == 1
+
+    field.trashed = True
+    field.save()
+
+    assert GalleryViewFieldOptions.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_form_view_field_options_manager_view_trashed(data_fixture):
+    form_view = data_fixture.create_form_view()
+    field = data_fixture.create_text_field(table=form_view.table)
+    data_fixture.create_form_view_field_option(form_view, field)
+
+    assert FormViewFieldOptions.objects.count() == 1
+
+    form_view.trashed = True
+    form_view.save()
+
+    assert FormViewFieldOptions.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_form_view_field_options_manager_field_trashed(data_fixture):
+    form_view = data_fixture.create_form_view()
+    field = data_fixture.create_text_field(table=form_view.table)
+    data_fixture.create_form_view_field_option(form_view, field)
+
+    assert FormViewFieldOptions.objects.count() == 1
+
+    field.trashed = True
+    field.save()
+
+    assert FormViewFieldOptions.objects.count() == 0
 
 
 @pytest.mark.django_db
