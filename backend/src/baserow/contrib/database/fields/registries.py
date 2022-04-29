@@ -1,13 +1,17 @@
-from typing import Any, List
+from typing import Any, Dict, List, TYPE_CHECKING, NoReturn, Optional
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models as django_models
 from django.db.models import (
-    Q,
     BooleanField,
     DurationField,
+    Q,
+    QuerySet,
 )
 from django.db.models.fields.related import ManyToManyField, ForeignKey
+from django.forms import ValidationError
 
 from baserow.core.registry import (
     Instance,
@@ -24,6 +28,13 @@ from baserow.core.registry import (
 from .dependencies.types import OptionalFieldDependencies
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 from .models import SelectOption, Field
+
+if TYPE_CHECKING:
+    from baserow.contrib.database.table.models import (
+        GeneratedTableModel,
+        Table,
+        FieldObject,
+    )
 
 
 class FieldType(
@@ -77,7 +88,7 @@ class FieldType(
     """Indicates whether the field allows inserting/updating row values or if it is
     read only."""
 
-    def prepare_value_for_db(self, instance, value):
+    def prepare_value_for_db(self, instance: Field, value: Any) -> Any:
         """
         When a row is created or updated all the values are going to be prepared for the
         database. The value for this field type will run through this method and the
@@ -93,6 +104,23 @@ class FieldType(
         """
 
         return value
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> Any:
+        """
+        This method is the counterpart of `prepare_value_for_db`.
+        It will return the internal value of the field starting from the database value
+        for non read_only fields.
+        It isn't meant to be used for reporting, since ReadOnlyFieldType instances will
+        not return a value.
+
+        :param row: The row instance.
+        :param field_name: The name of the field.
+        :return: The value of the field ready to be JSON serializable.
+        """
+
+        return getattr(row, field_name)
 
     def prepare_value_for_db_in_bulk(self, instance, values_by_row):
         """
@@ -111,7 +139,7 @@ class FieldType(
 
         return values_by_row
 
-    def enhance_queryset(self, queryset, field, name):
+    def enhance_queryset(self, queryset: QuerySet, field: Field, name: str) -> QuerySet:
         """
         This hook can be used to enhance a queryset when fetching multiple rows of a
         table. This is for example used by the grid view endpoint. Many rows can be
@@ -141,19 +169,15 @@ class FieldType(
         field_name: str,
         model_field: django_models.Field,
         field: Field,
-    ):
+    ) -> Q:
         """
         Returns a Q filter which performs an empty filter over the
         provided field for this specific type of field.
 
         :param field_name: The name of the field.
-        :type field_name: str
         :param model_field: The field's actual django field model instance.
-        :type model_field: django_models.Field
         :param field: The related field's instance.
-        :type field: Field
         :return: A Q filter.
-        :rtype: Q
         """
 
         fs = [ManyToManyField, ForeignKey, DurationField, ArrayField]
@@ -548,18 +572,17 @@ class FieldType(
 
         return False
 
-    def export_serialized(self, field, include_allowed_fields=True):
+    def export_serialized(
+        self, field: Field, include_allowed_fields: bool = True
+    ) -> Dict[str, Any]:
         """
         Exports the field to a serialized dict that can be imported by the
         `import_serialized` method. This dict is also JSON serializable.
 
         :param field: The field instance that must be exported.
-        :type field: Field
         :param include_allowed_fields: Indicates whether or not the allowed fields
             should automatically be added to the serialized object.
-        :type include_allowed_fields: bool
         :return: The exported field in as serialized dict.
-        :rtype: dict
         """
 
         serialized = {
@@ -587,21 +610,22 @@ class FieldType(
 
         return serialized
 
-    def import_serialized(self, table, serialized_values, id_mapping):
+    def import_serialized(
+        self,
+        table: "Table",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+    ) -> Field:
         """
         Imported an exported serialized field dict that was exported via the
         `export_serialized` method.
 
         :param table: The table where the field should be added to.
-        :type table: Table
         :param serialized_values: The exported serialized field values that need to
             be imported.
-        :type serialized_values: dict
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
-        :type id_mapping: dict
         :return: The newly created field instance.
-        :rtype: Field
         """
 
         if "database_fields" not in id_mapping:
@@ -689,61 +713,63 @@ class FieldType(
 
         pass
 
-    def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: ZipFile,
+        storage: Optional[Storage] = None,
+    ) -> Any:
         """
         Exports the value to a the value of a row to serialized value that is also JSON
         serializable.
 
         :param row: The row instance that the value must be exported from.
-        :type row: Object
         :param field_name: The name of the field that must be exported.
-        :type field_name: str
         :param cache: An in memory dictionary that is shared between all fields while
             exporting the table. This is for example used by the link row field type
             to prefetch all relations.
-        :type cache: dict
         :param files_zip: A zip file buffer where the files related to the template
             must be copied into.
-        :type files_zip: ZipFile
         :param storage: The storage where the files can be loaded from.
-        :type storage: Storage or None
         :return: The exported value.
-        :rtype: Object
         """
 
-        return getattr(row, field_name)
+        return self.get_internal_value_from_db(row, field_name)
 
     def set_import_serialized_value(
-        self, row, field_name, value, id_mapping, files_zip, storage
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        files_zip: ZipFile,
+        storage: Optional[Storage] = None,
     ):
         """
         Sets an imported and serialized value on a row instance.
 
         :param row: The row instance where the value be set on.
-        :type row: Object
         :param field_name: The name of the field that must be set.
-        :type field_name: str
         :param value: The value that must be set.
-        :type value: Object
         :param files_zip: A zip file buffer where files related to the template can
             be extracted from.
-        :type files_zip: ZipFile
-        :param storage: The storage where the files can be copied to.
-        :type storage: Storage or None
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
-        :type id_mapping: dict
+        :param files_zip: A zip file buffer where the files related to the template
+            must be copied into.
+        :param storage: The storage where the files can be copied to.
         """
 
         setattr(row, field_name, value)
 
-    def get_export_value(self, value, field_object):
+    def get_export_value(self, value: Any, field_object: "FieldObject") -> Any:
         """
         Should convert this field type's internal baserow value to a form suitable
         for exporting to a standalone file.
 
         :param value: The internal value to convert to a suitable export format
-        :type value: Object
         :param field_object: The field object for the field to extract
         :type field_object: FieldObject
         :return: A value suitable to be serialized and stored in a file format for
@@ -752,7 +778,7 @@ class FieldType(
 
         return value
 
-    def get_human_readable_value(self, value: Any, field_object) -> str:
+    def get_human_readable_value(self, value: Any, field_object: "FieldObject") -> str:
         """
         Should convert the value of the provided field to a human readable string for
         display purposes.
@@ -760,7 +786,6 @@ class FieldType(
         :param value: The value of the field extracted from a row to convert to human
             readable form.
         :param field_object: The field object for the field to extract
-        :type field_object: FieldObject
         :return A human readable string.
         """
 
@@ -771,7 +796,9 @@ class FieldType(
             return str(human_readable_value)
 
     # noinspection PyMethodMayBeStatic
-    def get_other_fields_to_trash_restore_always_together(self, field) -> List[Any]:
+    def get_other_fields_to_trash_restore_always_together(
+        self, field: Field
+    ) -> List[Any]:
         """
         When a field of this type is trashed/restored, or the table it is in
         trashed/restored, this method should return any other trashable fields that
@@ -789,7 +816,7 @@ class FieldType(
 
         return []
 
-    def to_baserow_formula_type(self, field):
+    def to_baserow_formula_type(self, field: Field):
         """
         Should return the Baserow Formula Type to use when referencing a field of this
         type in a formula.
@@ -1113,7 +1140,7 @@ class FieldType(
             field, field, field, via_path_to_starting_table, update_collector
         )
 
-    def check_can_order_by(self, field):
+    def check_can_order_by(self, field: Field) -> bool:
         """
         Override this method if this field type can sometimes be ordered or sometimes
         cannot be ordered depending on the individual field state. By default will just
@@ -1130,9 +1157,9 @@ class FieldType(
     def before_field_options_update(
         self,
         field: Field,
-        to_create: List[int] = None,
-        to_update: List[dict] = None,
-        to_delete: List[int] = None,
+        to_create: Optional[List[int]] = None,
+        to_update: Optional[List[dict]] = None,
+        to_delete: Optional[List[int]] = None,
     ):
         """
         Called from `FieldHandler.update_field_select_options()` just before
@@ -1156,6 +1183,62 @@ class FieldType(
         Called before the table the field is in is invalidated in the model cache.
         Usually this method should be overridden to also invalidate the cache of other
         tables models which would be affected by this tables cache being invalidated.
+        """
+
+
+class ReadOnlyFieldHasNoInternalDbValueError(Exception):
+    """
+    Raised when a read only field is trying to get its internal db value.
+    This is because there is no valid value that can be returned which can then pass
+    through "prepare_value_for_db" for a read_only field."
+    """
+
+
+class ReadOnlyFieldType(FieldType):
+    read_only = True
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> NoReturn:
+        """
+        Called when a read only field is trying to get its internal db value.
+        """
+
+        raise ReadOnlyFieldHasNoInternalDbValueError
+
+    def prepare_value_for_db(self, instance: Field, value: Any) -> NoReturn:
+        """
+        Since this is a read only field, no value should be prepared for database,
+        so we raise a ValidationError here.
+        """
+
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
+
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: ZipFile,
+        storage: Optional[Storage] = None,
+    ) -> None:
+        """
+        Since this is a read only field, no value should be prepared for export.
+        """
+
+    def set_import_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        files_zip: ZipFile,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Since this is a read only field, no value should be set with import.
         """
 
 

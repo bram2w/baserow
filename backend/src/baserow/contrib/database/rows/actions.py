@@ -1,4 +1,5 @@
 import dataclasses
+
 from decimal import Decimal
 from typing import Any, Dict, Optional, Type
 
@@ -295,3 +296,94 @@ class MoveRowActionType(ActionType):
         before = get_before_row_from_displacement(row, model, params.rows_displacement)
 
         row_handler.move_row(user, table, row, before=before, model=model)
+
+
+class UpdateRowActionType(ActionType):
+    type = "update_row"
+
+    @dataclasses.dataclass
+    class Params:
+        table_id: int
+        row_id: int
+        original_row_values: Dict[str, Any]
+        new_row_values: Dict[str, Any]
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        table: Table,
+        row_id: int,
+        values: Dict[str, Any],
+        model: Optional[Type[GeneratedTableModel]] = None,
+        user_field_names: bool = False,
+    ) -> GeneratedTableModelForUpdate:
+        """
+        Updates one or more values of the provided row_id.
+        See the baserow.contrib.database.rows.handler.RowHandler.update_row
+        for more information.
+        Undoing this action restores the original values.
+        Redoing set the new values again.
+
+        :param user: The user of whose behalf the change is made.
+        :param table: The table for which the row must be updated.
+        :param row_id: The id of the row that must be updated.
+        :param values: The values that must be updated. The keys must be the field ids.
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :param user_field_names: Whether or not the values are keyed by the internal
+            Baserow field names (field_1,field_2 etc) or by the user field names.
+        :raises RowDoesNotExist: When the row with the provided id does not exist.
+        :return: The updated row instance.
+        """
+
+        if model is None:
+            model = table.get_model()
+
+        row_handler = RowHandler()
+
+        if user_field_names:
+            values = row_handler.map_user_field_name_dict_to_internal(
+                model._field_objects, values
+            )
+
+        row = row_handler.get_row_for_update(
+            user, table, row_id, enhance_by_fields=True, model=model
+        )
+        field_keys = list(values.keys())
+
+        original_row_values = row_handler.get_internal_values_for_fields(
+            row, field_keys
+        )
+
+        updated_row = row_handler.update_row(user, table, row, values, model=model)
+
+        new_row_values = row_handler.get_internal_values_for_fields(row, field_keys)
+
+        params = cls.Params(
+            table.id,
+            row.id,
+            original_row_values,
+            new_row_values,
+        )
+        cls.register_action(user, params, cls.scope(table.id))
+
+        return updated_row
+
+    @classmethod
+    def scope(cls, table_id) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        table = TableHandler().get_table(params.table_id)
+        RowHandler().update_row_by_id(
+            user, table, row_id=params.row_id, values=params.original_row_values
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        table = TableHandler().get_table(params.table_id)
+        RowHandler().update_row_by_id(
+            user, table, row_id=params.row_id, values=params.new_row_values
+        )

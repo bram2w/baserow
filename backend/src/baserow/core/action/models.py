@@ -1,6 +1,9 @@
 import dataclasses
 import json
 
+from datetime import datetime, date
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.db import models
 
@@ -11,6 +14,10 @@ class JSONEncoderSupportingDataClasses(json.JSONEncoder):
     def default(self, o):
         if dataclasses.is_dataclass(o):
             return dataclasses.asdict(o)
+        if isinstance(o, Decimal):
+            return str(o)
+        if isinstance(o, (datetime, date)):
+            return str(o)
         return super().default(o)
 
 

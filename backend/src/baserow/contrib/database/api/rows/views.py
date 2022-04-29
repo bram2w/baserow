@@ -4,6 +4,7 @@ from django.db import transaction
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -48,6 +49,7 @@ from baserow.contrib.database.rows.actions import (
     CreateRowActionType,
     DeleteRowActionType,
     MoveRowActionType,
+    UpdateRowActionType,
 )
 from baserow.core.action.registries import action_type_registry
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotUnique
@@ -533,6 +535,7 @@ class RowView(APIView):
                     "internal Baserow field names (field_123 etc)."
                 ),
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="update_database_table_row",
@@ -583,17 +586,21 @@ class RowView(APIView):
             UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
         }
     )
-    def patch(self, request, table_id, row_id):
+    def patch(self, request: Request, table_id: int, row_id: int) -> Response:
         """
         Updates the row with the given row_id for the table with the given
         table_id. Also the post data is validated according to the tables field types.
+
+        :param request: The request object
+        :param table_id: The id of the table to update the row in
+        :param row_id: The id of the row to update
+        :return: The updated row values serialized as a json object
         """
 
         table = TableHandler().get_table(table_id)
-
         TokenHandler().check_table_permissions(request, "update", table, False)
-        user_field_names = "user_field_names" in request.GET
 
+        user_field_names = "user_field_names" in request.GET
         field_ids, field_names = None, None
         if user_field_names:
             field_names = request.data.keys()
@@ -610,7 +617,7 @@ class RowView(APIView):
         data = validate_data(validation_serializer, request.data)
 
         try:
-            row = RowHandler().update_row_by_id(
+            row = action_type_registry.get_by_type(UpdateRowActionType).do(
                 request.user,
                 table,
                 row_id,
@@ -619,13 +626,12 @@ class RowView(APIView):
                 user_field_names=user_field_names,
             )
         except ValidationError as exc:
-            raise RequestBodyValidationException(detail=exc.message)
+            raise RequestBodyValidationException(detail=exc.message) from exc
 
         serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True, user_field_names=user_field_names
         )
         serializer = serializer_class(row)
-
         return Response(serializer.data)
 
     @extend_schema(
