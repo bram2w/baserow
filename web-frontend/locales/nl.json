@@ -154,7 +154,8 @@
         "application": "applicatie",
         "table": "tabel",
         "field": "veld",
-        "row": "rij"
+        "row": "rij",
+        "view": "weergave"
     },
     "webhook": {
         "request": "Verzoek",

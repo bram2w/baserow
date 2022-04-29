@@ -155,7 +155,8 @@
         "application": "application",
         "table": "table",
         "field": "field",
-        "row": "row"
+        "row": "row",
+        "view": "view"
     },
     "webhook": {
         "request": "Request",

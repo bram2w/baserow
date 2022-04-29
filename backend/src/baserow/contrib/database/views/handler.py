@@ -254,7 +254,8 @@ class ViewHandler:
         group.has_user(user, raise_error=True)
 
         view_id = view.id
-        view.delete()
+
+        TrashHandler().trash(user, group, view.table.database, view)
 
         view_deleted.send(self, view_id=view_id, view=view, user=user)
 
@@ -262,6 +263,14 @@ class ViewHandler:
         """
         Updates the field options with the provided values if the field id exists in
         the table related to the view.
+
+        This will also update views which are trashed. It is up to the caller to
+        ensure that the view is not trashed if they would like to exclude it from
+        the update.
+
+        It is necesarry to do so, because aggregations have to be removed
+        from trashed views as well if the field options change. Otherwise,
+        you might restore a view and the aggregation is invalid on that view.
 
         :param view: The view for which the field options need to be updated.
         :type view: View
@@ -314,7 +323,7 @@ class ViewHandler:
                 raise UnrelatedFieldError(
                     f"The field id {field_id} is not related to the view."
                 )
-            model.objects.update_or_create(
+            model.objects_and_trash.update_or_create(
                 field_id=field_id, defaults=options, **{field_name: view}
             )
 
@@ -470,7 +479,7 @@ class ViewHandler:
             )
 
         if TrashHandler.item_has_a_trashed_parent(
-            view_filter.view.table, check_item_also=True
+            view_filter.view, check_item_also=True
         ):
             raise ViewFilterDoesNotExist(
                 f"The view filter with id {view_filter_id} does not exist."
@@ -650,6 +659,7 @@ class ViewHandler:
         :type queryset: QuerySet
         :raises ValueError: When the queryset's model is not a table model or if the
             table model does not contain the one of the fields.
+        :raises ViewSortDoesNotExist: When the view is trashed
         :param restrict_to_field_ids: Only field ids in this iterable will have their
             view sorts applied in the resulting queryset.
         :type restrict_to_field_ids: Optional[Iterable[int]]
@@ -663,6 +673,9 @@ class ViewHandler:
         # generated table model which is not supported.
         if not hasattr(model, "_field_objects"):
             raise ValueError("A queryset of the table model is required.")
+
+        if view.trashed:
+            raise ViewSortDoesNotExist(f"The view {view.id} is trashed.")
 
         order_by = []
 
@@ -737,9 +750,7 @@ class ViewHandler:
                 f"The view sort with id {view_sort_id} does not exist."
             )
 
-        if TrashHandler.item_has_a_trashed_parent(
-            view_sort.view.table, check_item_also=True
-        ):
+        if TrashHandler.item_has_a_trashed_parent(view_sort.view, check_item_also=True):
             raise ViewSortDoesNotExist(
                 f"The view sort with id {view_sort_id} does not exist."
             )
@@ -823,11 +834,15 @@ class ViewHandler:
         :param view_sort: The view sort that needs to be updated.
         :param field: The field that must be sorted on.
         :param order: Indicates the sort order direction.
+        :raises ViewSortDoesNotExist: When the view used by the filter is trashed.
         :raises ViewSortFieldNotSupported: When the field does not support sorting.
         :raises FieldNotInTable:  When the provided field does not belong to the
             provided view's table.
         :return: The updated view sort instance.
         """
+
+        if view_sort.view.trashed:
+            raise ViewSortDoesNotExist(f"The view {view_sort.view.id} is trashed.")
 
         group = view_sort.view.table.database.group
         group.has_user(user, raise_error=True)

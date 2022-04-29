@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 
 from django.contrib.auth import get_user_model
 from django.db import connection
@@ -14,6 +14,9 @@ from baserow.contrib.database.rows.signals import row_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import View
+from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.signals import view_created
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import RelatedTableTrashedException
@@ -307,3 +310,34 @@ class RowTrashableItemType(TrashableItemType):
                 return primary_value
 
         return "unknown row"
+
+
+class ViewTrashableItemType(TrashableItemType):
+    type = "view"
+    model_class = View
+
+    @property
+    def requires_parent_id(self) -> bool:
+        return False
+
+    def permanently_delete_item(
+        self, trashed_item: View, trash_item_lookup_cache: Dict[str, View] = None
+    ):
+        trashed_item.delete()
+
+    def get_parent(self, trashed_item: View, parent_id: int) -> Optional[View]:
+        return trashed_item.table
+
+    def restore(self, trashed_item: View, trash_entry):
+        super().restore(trashed_item, trash_entry)
+
+        type_name = view_type_registry.get_by_model(trashed_item.specific_class).type
+        view_created.send(
+            self,
+            user=trash_entry.user_who_trashed,
+            view=trashed_item,
+            type_name=type_name,
+        )
+
+    def get_name(self, trashed_item: View) -> str:
+        return trashed_item.name

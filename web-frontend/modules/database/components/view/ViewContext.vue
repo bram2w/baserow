@@ -26,7 +26,6 @@
         </a>
       </li>
     </ul>
-    <DeleteViewModal ref="deleteViewModal" :view="view" />
     <ExportTableModal ref="exportViewModal" :table="table" :view="view" />
     <WebhookModal ref="webhookModal" :table="table" />
   </Context>
@@ -34,16 +33,16 @@
 
 <script>
 import context from '@baserow/modules/core/mixins/context'
+import error from '@baserow/modules/core/mixins/error'
 import viewTypeHasExporterTypes from '@baserow/modules/database/utils/viewTypeHasExporterTypes'
 
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
-import DeleteViewModal from './DeleteViewModal'
 import WebhookModal from '@baserow/modules/database/components/webhook/WebhookModal.vue'
 
 export default {
   name: 'ViewContext',
-  components: { DeleteViewModal, ExportTableModal, WebhookModal },
-  mixins: [context],
+  components: { ExportTableModal, WebhookModal },
+  mixins: [context, error],
   props: {
     view: {
       type: Object,
@@ -67,9 +66,16 @@ export default {
       this.$refs.context.hide()
       this.$emit('enable-rename')
     },
-    deleteView() {
-      this.$refs.context.hide()
-      this.$refs.deleteViewModal.show()
+    async deleteView() {
+      this.setLoading(this.view, true)
+
+      try {
+        await this.$store.dispatch('view/delete', this.view)
+      } catch (error) {
+        this.handleError(error, 'view')
+      }
+
+      this.setLoading(this.view, false)
     },
     exportView() {
       this.$refs.context.hide()

@@ -154,7 +154,8 @@
         "application": "aplicación",
         "table": "tabla",
         "field": "campo",
-        "row": "fila"
+        "row": "fila",
+        "view": "vista"
     },
     "webhook": {
         "request": "Requerimiento",

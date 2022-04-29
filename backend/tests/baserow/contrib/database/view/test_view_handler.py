@@ -1776,3 +1776,55 @@ def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
     with django_assert_num_queries(2):
         # Now should run two queries, one per public view
         assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
+
+
+@pytest.mark.django_db
+def test_cant_get_view_filter_when_view_trashed(data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    view_filter = data_fixture.create_view_filter(user=user, view=grid_view)
+
+    ViewHandler().delete_view(user, grid_view)
+
+    with pytest.raises(ViewFilterDoesNotExist):
+        ViewHandler().get_filter(user, view_filter.id)
+
+
+@pytest.mark.django_db
+def test_cant_apply_sorting_when_view_trashed(data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+
+    ViewHandler().delete_view(user, grid_view)
+
+    with pytest.raises(ViewSortDoesNotExist):
+        ViewHandler().apply_sorting(
+            grid_view,
+            grid_view.table.get_model().objects.all(),
+        )
+
+
+@pytest.mark.django_db
+def test_cant_get_sort_when_view_trashed(data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    field = data_fixture.create_number_field(user, table=grid_view.table)
+
+    view_sort = ViewHandler().create_sort(user, grid_view, field, "asc")
+    ViewHandler().delete_view(user, grid_view)
+
+    with pytest.raises(ViewSortDoesNotExist):
+        ViewHandler().get_sort(user, view_sort.id)
+
+
+@pytest.mark.django_db
+def test_cant_update_sort_when_view_trashed(data_fixture):
+    user = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    field = data_fixture.create_number_field(user, table=grid_view.table)
+
+    view_sort = ViewHandler().create_sort(user, grid_view, field, "asc")
+    ViewHandler().delete_view(user, grid_view)
+
+    with pytest.raises(ViewSortDoesNotExist):
+        ViewHandler().update_sort(user, view_sort, field)

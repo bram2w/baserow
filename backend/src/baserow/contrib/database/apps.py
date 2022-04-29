@@ -270,11 +270,13 @@ class DatabaseConfig(AppConfig):
             TableTrashableItemType,
             RowTrashableItemType,
             FieldTrashableItemType,
+            ViewTrashableItemType,
         )
 
         trash_item_type_registry.register(TableTrashableItemType())
         trash_item_type_registry.register(FieldTrashableItemType())
         trash_item_type_registry.register(RowTrashableItemType())
+        trash_item_type_registry.register(ViewTrashableItemType())
 
         from .formula.ast.function_defs import register_formula_functions
 

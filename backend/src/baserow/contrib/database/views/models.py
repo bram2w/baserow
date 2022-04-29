@@ -3,6 +3,7 @@ import secrets
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
+from django.db.models import Q
 
 from baserow.core.utils import get_model_reference_field_name
 from baserow.core.models import UserFile
@@ -10,6 +11,7 @@ from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     CreatedAndUpdatedOnMixin,
+    TrashableModelMixin,
 )
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
@@ -19,10 +21,6 @@ from baserow.contrib.database.fields.models import Field, FileField
 from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_filter_type_registry,
-)
-from baserow.contrib.database.mixins import (
-    ParentTableTrashableModelMixin,
-    ParentFieldTrashableModelMixin,
 )
 
 FILTER_TYPES = ((FILTER_TYPE_AND, "And"), (FILTER_TYPE_OR, "Or"))
@@ -45,7 +43,7 @@ def get_default_view_content_type():
 
 
 class View(
-    ParentTableTrashableModelMixin,
+    TrashableModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
@@ -228,7 +226,21 @@ class View(
         return field_options
 
 
-class ViewFilter(ParentFieldTrashableModelMixin, models.Model):
+class ViewFilterManager(models.Manager):
+    """
+    Manager for the ViewFilter model.
+    The View can be trashed and the filters are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class ViewFilter(models.Model):
+    objects = ViewFilterManager()
+
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -302,7 +314,21 @@ class ViewDecoration(OrderableMixin, models.Model):
         ordering = ("order", "id")
 
 
-class ViewSort(ParentFieldTrashableModelMixin, models.Model):
+class ViewSortManager(models.Manager):
+    """
+    Manager for the ViewSort model.
+    The View can be trashed and the sorts are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class ViewSort(models.Model):
+    objects = ViewSortManager()
+
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -330,7 +356,22 @@ class GridView(View):
     field_options = models.ManyToManyField(Field, through="GridViewFieldOptions")
 
 
-class GridViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
+class GridViewFieldOptionsManager(models.Manager):
+    """
+    Manager for the GridViewFieldOptions model.
+    The View can be trashed and the field options are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(grid_view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class GridViewFieldOptions(models.Model):
+    objects = GridViewFieldOptionsManager()
+    objects_and_trash = models.Manager()
+
     grid_view = models.ForeignKey(GridView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     # The defaults should match the ones in `afterFieldCreated` of the `GridViewType`
@@ -398,7 +439,21 @@ class GalleryView(View):
     )
 
 
-class GalleryViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
+class GalleryViewFieldOptionsManager(models.Manager):
+    """
+    The View can be trashed and the field options are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(gallery_view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class GalleryViewFieldOptions(models.Model):
+    objects = GalleryViewFieldOptionsManager()
+    objects_and_trash = models.Manager()
+
     gallery_view = models.ForeignKey(GalleryView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     hidden = models.BooleanField(
@@ -477,7 +532,21 @@ class FormView(View):
         )
 
 
-class FormViewFieldOptions(ParentFieldTrashableModelMixin, models.Model):
+class FormViewFieldOptionsManager(models.Manager):
+    """
+    The View can be trashed and the field options are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(form_view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class FormViewFieldOptions(models.Model):
+    objects = FormViewFieldOptionsManager()
+    objects_and_trash = models.Manager()
+
     form_view = models.ForeignKey(FormView, on_delete=models.CASCADE)
     field = models.ForeignKey(Field, on_delete=models.CASCADE)
     name = models.CharField(

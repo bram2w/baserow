@@ -154,7 +154,8 @@
         "application": "Applikation",
         "table": "Tabelle",
         "field": "Feld",
-        "row": "Zeile"
+        "row": "Zeile",
+        "view": "Ansicht"
     },
     "webhook": {
         "request": "Anfrage",
