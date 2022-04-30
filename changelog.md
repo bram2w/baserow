@@ -42,6 +42,7 @@
 * Added undo/redo.
 * Added password protection for publicly shared grids and forms.
 * Made views trashable.
+* Fixed bug where a cell value was not reverted when the request to the backend fails.
 
 ## Released (2022-03-03 1.9.1)
 
