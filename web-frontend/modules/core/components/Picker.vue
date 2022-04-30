@@ -7,8 +7,8 @@
     >
       <i class="dropdown__selected-icon fas" :class="'fa-' + icon" />
       {{ name }}
+      <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
-    <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     <Context ref="pickerContext" class="picker__context">
       <slot :hidePicker="hide" />
     </Context>

@@ -16,6 +16,7 @@
       ref="left"
       class="grid-view__left"
       :fields="leftFields"
+      :all-table-fields="allTableFields"
       :table="table"
       :view="view"
       :include-field-width-handles="false"
@@ -64,6 +65,7 @@
       ref="right"
       class="grid-view__right"
       :fields="visibleFields"
+      :all-table-fields="allTableFields"
       :table="table"
       :view="view"
       :include-add-field="true"
@@ -275,6 +277,9 @@ export default {
     },
     leftWidth() {
       return this.leftFieldsWidth + this.gridViewRowDetailsWidth
+    },
+    allTableFields() {
+      return [this.primary, ...this.fields]
     },
   },
   watch: {

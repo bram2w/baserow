@@ -93,7 +93,7 @@ describe('ViewFilterForm component', () => {
     props = {
       primary: {},
       fields: [],
-      view: { filters: {}, _: {} },
+      view: { filters: [], _: {} },
       readOnly: false,
     },
     listeners = {}

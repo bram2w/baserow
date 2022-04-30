@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Callable, Union, List, Iterable, Tuple
+from typing import TYPE_CHECKING, Callable, Union, List, Iterable, Tuple, Dict, Any
 
 from django.contrib.auth.models import User as DjangoUser
 from django.db import models as django_models
@@ -21,9 +21,6 @@ from baserow.core.registry import (
 )
 from baserow.contrib.database.fields import models as field_models
 
-if TYPE_CHECKING:
-    from baserow.contrib.database.views.models import View
-
 from .exceptions import (
     ViewTypeAlreadyRegistered,
     ViewTypeDoesNotExist,
@@ -31,7 +28,12 @@ from .exceptions import (
     ViewFilterTypeDoesNotExist,
     AggregationTypeDoesNotExist,
     AggregationTypeAlreadyRegistered,
+    DecoratorValueProviderTypeAlreadyRegistered,
+    DecoratorValueProviderTypeDoesNotExist,
 )
+
+if TYPE_CHECKING:
+    from baserow.contrib.database.views.models import View
 
 
 class ViewType(
@@ -285,30 +287,25 @@ class ViewType(
                 id_mapping["database_view_sortings"][view_sort_id] = view_sort_object.id
 
         if self.can_decorate:
-
-            def _update_field_id(node):
-                """Update field ids deeply inside a deep object."""
-
-                if isinstance(node, list):
-                    return [_update_field_id(subnode) for subnode in node]
-                if isinstance(node, dict):
-                    res = {}
-                    for key, value in node.items():
-                        if key in ["field_id", "field"] and isinstance(value, int):
-                            res[key] = id_mapping["database_fields"][value]
-                        else:
-                            res[key] = _update_field_id(value)
-                    return res
-                return node
-
             for view_decoration in decorations:
                 view_decoration_copy = view_decoration.copy()
                 view_decoration_id = view_decoration_copy.pop("id")
 
-                # Deeply update field ids to new one in value provider conf
-                view_decoration_copy["value_provider_conf"] = _update_field_id(
-                    view_decoration_copy["value_provider_conf"]
-                )
+                if view_decoration["value_provider_type"]:
+                    try:
+                        value_provider_type = (
+                            decorator_value_provider_type_registry.get(
+                                view_decoration["value_provider_type"]
+                            )
+                        )
+                    except DecoratorValueProviderTypeDoesNotExist:
+                        pass
+                    else:
+                        view_decoration_copy = (
+                            value_provider_type.set_import_serialized_value(
+                                view_decoration_copy, id_mapping
+                            )
+                        )
 
                 view_decoration_object = ViewDecoration.objects.create(
                     view=view, **view_decoration_copy
@@ -720,8 +717,57 @@ class ViewAggregationTypeRegistry(Registry):
     already_registered_exception_class = AggregationTypeAlreadyRegistered
 
 
+class DecoratorValueProviderType(Instance):
+    """
+    By declaring a new `DecoratorValueProviderType` you can define hooks on events that
+    can affect the decoration value provider configuration.
+    """
+
+    def set_import_serialized_value(
+        self, value: Dict[str, Any], id_mapping: Dict[str, Dict[int, Any]]
+    ) -> Dict[str, Any]:
+        """
+        This method is called before a decorator is imported. It can optionally be
+        modified. If the value_provider_conf for example points to a field or select
+        option id, it can be replaced with the correct value by doing a lookup in the
+        id_mapping.
+
+        :param value: The original exported value.
+        :param id_mapping: The map of exported ids to newly created ids that must be
+            updated when a new instance has been created.
+        :return: The new value that will be imported.
+        """
+
+    def after_field_delete(self, deleted_field: field_models.Field):
+        """
+        Triggered after a field has been deleted.
+        This hook gives the opportunity to react when a field is deleted.
+
+        :param deleted_field: the deleted field.
+        """
+
+    def after_field_type_change(self, field: field_models.Field):
+        """
+        This hook is called after the type of a field has changed and gives the
+        possibility to check compatibility or update configuration.
+
+        :param field: The concerned field.
+        """
+
+
+class DecoratorValueProviderTypeRegistry(Registry):
+    """
+    This registry contains declared decorator value provider if needed.
+    """
+
+    name = "decorator_value_provider_type"
+    does_not_exist_exception_class = DecoratorValueProviderTypeDoesNotExist
+    already_registered_exception_class = DecoratorValueProviderTypeAlreadyRegistered
+
+
 # A default view type registry is created here, this is the one that is used
 # throughout the whole Baserow application to add a new view type.
 view_type_registry = ViewTypeRegistry()
 view_filter_type_registry = ViewFilterTypeRegistry()
 view_aggregation_type_registry = ViewAggregationTypeRegistry()
+decorator_value_provider_type_registry = DecoratorValueProviderTypeRegistry()

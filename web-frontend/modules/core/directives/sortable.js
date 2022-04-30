@@ -16,18 +16,18 @@ import { findScrollableParent } from '@baserow/modules/core/utils/dom'
  * <div
  *   v-for="item in items"
  *   :key="item.id"
- *   v-sortable="{ id: item.id, update: order }"
+ *   v-sortable="{ id: item.id, update: onUpdate }"
  * ></div>
  *
  * export default {
  *   data() {
  *     return {
- *       items: [{'id': 1, order: 1}, {'id': 2, order: 2}, {'id': 3, order: 3}]
+ *       items: [{'id': 25, order: 1}, {'id': 27, order: 2}, {'id': 30, order: 3}]
  *     }
  *   },
  *   methods: {
- *     order(order) {
- *       console.log(order) // [1, 2, 3]
+ *     onUpdate(itemIds) {
+ *       console.log(itemIds) // [25, 27, 30]
  *     },
  *   },
  * }
@@ -76,6 +76,12 @@ export default {
 
       parent = el.parentNode
       scrollableParent = findScrollableParent(parent) || parent
+
+      // If the parent container is not positioned, add the position automatically.
+      if (getComputedStyle(parent).position === 'static') {
+        parent.style.position = 'relative'
+      }
+
       indicator = document.createElement('div')
       indicator.classList.add('sortable-position-indicator')
       parent.insertBefore(indicator, parent.firstChild)

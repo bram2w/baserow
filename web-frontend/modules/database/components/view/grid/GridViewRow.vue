@@ -70,7 +70,7 @@
               :is="dec.component"
               v-for="dec in firstCellDecorations"
               :key="dec.decoration.id"
-              :value="dec.propsFn(row).value"
+              v-bind="dec.propsFn(row)"
             />
           </div>
         </div>

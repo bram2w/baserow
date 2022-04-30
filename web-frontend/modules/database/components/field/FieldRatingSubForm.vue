@@ -6,7 +6,7 @@
       }}</label>
       <div class="control__elements">
         <a
-          :ref="'color-select'"
+          ref="color-select"
           :class="'rating-field__color' + ' background-color--' + values.color"
           @click="openColor()"
         >

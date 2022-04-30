@@ -11,15 +11,22 @@
   <a
     v-else
     class="filters__value-link-row"
-    :class="{ 'filters__value-link-row--disabled': disabled }"
+    :class="{
+      'filters__value-link-row--disabled': disabled,
+      'filters__value-link-row--loading': loading,
+    }"
     @click.prevent="!disabled && $refs.selectModal.show()"
   >
-    <template v-if="valid">
-      {{ name || $t('viewFilterTypeLinkRow.unnamed', { value: filter.value }) }}
+    <template v-if="!loading">
+      <template v-if="valid">
+        {{
+          name || $t('viewFilterTypeLinkRow.unnamed', { value: filter.value })
+        }}
+      </template>
+      <div v-else class="filters__value-link-row-choose">
+        {{ $t('viewFilterTypeLinkRow.choose') }}
+      </div>
     </template>
-    <div v-else class="filters__value-link-row-choose">
-      {{ $t('viewFilterTypeLinkRow.choose') }}
-    </div>
     <SelectRowModal
       v-if="!disabled"
       ref="selectModal"
@@ -35,6 +42,7 @@ import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdow
 import SelectRowModal from '@baserow/modules/database/components/row/SelectRowModal'
 import viewFilter from '@baserow/modules/database/mixins/viewFilter'
 import ViewService from '@baserow/modules/database/services/view'
+import RowService from '@baserow/modules/database/services/row'
 
 export default {
   name: 'ViewFilterTypeLinkRow',
@@ -43,41 +51,55 @@ export default {
   data() {
     return {
       name: '',
+      rowInfo: null,
+      loading: false,
     }
   },
   computed: {
     valid() {
-      return this.isValidValue(this.filter.value)
+      return isNumeric(this.filter.value)
     },
   },
   watch: {
-    'filter.preload_values'(value) {
-      this.setNameFromPreloadValues(value)
+    'filter.value'() {
+      this.setName()
     },
   },
   mounted() {
-    this.setNameFromPreloadValues(this.filter.preload_values)
+    this.setName()
   },
   methods: {
-    setNameFromRow(row, primary) {
-      this.name = this.$registry
-        .get('field', primary.type)
-        .toHumanReadableString(primary, row[`field_${primary.id}`])
-    },
-    setNameFromPreloadValues(values) {
-      if (Object.prototype.hasOwnProperty.call(values, 'display_name')) {
-        this.name = values.display_name
-      }
-    },
-    isValidValue() {
-      if (!isNumeric(this.filter.value)) {
-        return false
-      }
+    async setName() {
+      const { value, preload_values: { display_name: displayName } = {} } =
+        this.filter
 
-      return true
+      if (!value) {
+        this.name = ''
+      } else if (displayName) {
+        // set the name from preload_values
+        this.name = displayName
+      } else if (this.rowInfo) {
+        // Set the name from previous row info
+        const { row, primary } = this.rowInfo
+        this.name = this.$registry
+          .get('field', primary.type)
+          .toHumanReadableString(primary, row[`field_${primary.id}`])
+        this.rowInfo = null
+      } else {
+        // Get the name from server
+        this.loading = true
+        try {
+          this.name = await RowService(this.$client).getName(
+            this.field.link_row_table,
+            value
+          )
+        } finally {
+          this.loading = false
+        }
+      }
     },
     setValue({ row, primary }) {
-      this.setNameFromRow(row, primary)
+      this.rowInfo = { row, primary }
       this.$emit('input', row.id.toString())
     },
     fetchPage(page, search) {
