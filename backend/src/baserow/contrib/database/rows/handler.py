@@ -306,6 +306,31 @@ class RowHandler:
 
         return cast(GeneratedTableModelForUpdate, row)
 
+    def get_row_names(
+        self, table: "Table", row_ids: List[int], model: "GeneratedTableModel" = None
+    ) -> Dict[str, int]:
+        """
+        Returns the row names for all row ids specified in `row_ids` parameter from
+        the given table.
+
+        :param table: The table where the rows must be fetched from.
+        :param row_ids: The id of the rows that must be fetched.
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :return: A dict of the requested rows names. The key are the row ids and the
+            values are the row names.
+        """
+
+        if not model:
+            primary_field = table.field_set.get(primary=True)
+            model = table.get_model(
+                field_ids=[], fields=[primary_field], add_dependencies=False
+            )
+
+        queryset = model.objects.filter(pk__in=row_ids)
+
+        return {row.id: str(row) for row in queryset}
+
     # noinspection PyMethodMayBeStatic
     def has_row(self, user, table, row_id, raise_error=False, model=None):
         """
@@ -313,7 +338,7 @@ class RowHandler:
 
         This method is preferred over using get_row when you do not actually need to
         access any values of the row as it will not construct a full model but instead
-        do a much more effecient query to check only if the row exists or not.
+        do a much more efficient query to check only if the row exists or not.
 
         :param user: The user of whose behalf the row is being checked.
         :type user: User

@@ -51,6 +51,7 @@ from .registries import (
     view_type_registry,
     view_filter_type_registry,
     view_aggregation_type_registry,
+    decorator_value_provider_type_registry,
 )
 from .signals import (
     view_created,
@@ -358,6 +359,11 @@ class ViewHandler:
         # Call view types hook
         for view_type in view_type_registry.get_all():
             view_type.after_field_type_change(field)
+
+        for (
+            decorator_value_provider_type
+        ) in decorator_value_provider_type_registry.get_all():
+            decorator_value_provider_type.after_field_type_change(field)
 
     def field_value_updated(self, updated_fields: Union[Iterable[Field], Field]):
         """

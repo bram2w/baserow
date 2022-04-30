@@ -36,14 +36,7 @@ def test_import_export_grid_view(data_fixture):
 
     view_decoration = data_fixture.create_view_decoration(
         view=grid_view,
-        value_provider_conf={
-            "field_id": field.id,
-            "other": [
-                {"field": field.id, "other": 1},
-                {"answer": 42, "field_id": field.id},
-                {"field": {"non_int": True}},
-            ],
-        },
+        value_provider_conf={"config": 12},
     )
 
     id_mapping = {"database_fields": {field.id: imported_field.id}}
@@ -80,14 +73,10 @@ def test_import_export_grid_view(data_fixture):
         view_decoration.value_provider_type
         == imported_view_decoration.value_provider_type
     )
-    assert imported_view_decoration.value_provider_conf == {
-        "field_id": imported_field.id,
-        "other": [
-            {"field": imported_field.id, "other": 1},
-            {"answer": 42, "field_id": imported_field.id},
-            {"field": {"non_int": True}},
-        ],
-    }
+    assert (
+        imported_view_decoration.value_provider_conf
+        == imported_view_decoration.value_provider_conf
+    )
     assert view_decoration.order == imported_view_decoration.order
 
     imported_field_options = imported_grid_view.get_field_options()

@@ -207,12 +207,11 @@ exports[`GridViewRows component with decoration Should show can add decorator to
                   />
                   
     Fake value provider
-  
+    
+                  <i
+                    class="dropdown__toggle-icon fas fa-caret-down"
+                  />
                 </a>
-                 
-                <i
-                  class="dropdown__toggle-icon fas fa-caret-down"
-                />
                  
               </div>
             </div>
@@ -510,12 +509,11 @@ exports[`GridViewRows component with decoration Should show unavailable decorato
                   />
                   
     Fake value provider
-  
+    
+                  <i
+                    class="dropdown__toggle-icon fas fa-caret-down"
+                  />
                 </a>
-                 
-                <i
-                  class="dropdown__toggle-icon fas fa-caret-down"
-                />
                  
               </div>
             </div>
@@ -762,12 +760,11 @@ exports[`GridViewRows component with decoration View with decoration configured 
                 />
                 
     Fake value provider
-  
+    
+                <i
+                  class="dropdown__toggle-icon fas fa-caret-down"
+                />
               </a>
-               
-              <i
-                class="dropdown__toggle-icon fas fa-caret-down"
-              />
                
             </div>
           </div>

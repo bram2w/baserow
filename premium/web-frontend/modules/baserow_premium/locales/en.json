@@ -237,5 +237,10 @@
     },
     "singleSelectColorValueProviderForm": {
         "chooseAColor": "Which single select field should the row be colored by?"
+    },
+    "conditionalColorValueProviderForm": {
+        "addCondition": "add condition",
+        "colorAlwaysApply": "This color applies by default. You can add conditions by clicking on the \"Add condition\" button.",
+        "addColor": "add color"
     }
 }

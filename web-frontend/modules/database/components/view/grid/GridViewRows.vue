@@ -41,6 +41,10 @@ export default {
       type: Array,
       required: true,
     },
+    allTableFields: {
+      type: Array,
+      required: true,
+    },
     leftOffset: {
       type: Number,
       required: false,
@@ -86,11 +90,12 @@ export default {
             'decoratorValueProvider',
             decoration.value_provider_type
           )
+
           deco.propsFn = (row) => {
             return {
               value: deco.valueProviderType.getValue({
                 row,
-                fields: this.allFields,
+                fields: this.allTableFields,
                 options: decoration.value_provider_conf,
               }),
             }

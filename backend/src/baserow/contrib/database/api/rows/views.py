@@ -10,7 +10,10 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import map_exceptions, validate_query_parameters
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.exceptions import RequestBodyValidationException
+from baserow.api.exceptions import (
+    RequestBodyValidationException,
+    QueryParameterValidationException,
+)
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
@@ -56,6 +59,7 @@ from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotU
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.views.exceptions import (
@@ -80,6 +84,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
+from .schemas import row_names_response_schema
 
 
 class RowsView(APIView):
@@ -426,6 +431,109 @@ class RowsView(APIView):
         serializer = serializer_class(row)
 
         return Response(serializer.data)
+
+
+class RowNamesView(APIView):
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table__{id}",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "A list of comma separated row ids to query from the table with "
+                    "id {id}. For example, if you "
+                    "want the name of row `42` and `43` from table `28` this parameter "
+                    "will be `table__28=42,43`. You can specify multiple rows for "
+                    "different tables but every tables must be in the same database. "
+                    "You need at least read permission on all specified tables."
+                ),
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="list_database_table_row_names",
+        description=(
+            "Returns the names of the given row of the given tables. The name"
+            "of a row is the primary field value for this row. The result can be used"
+            "for example, when you want to display the name of a linked row from "
+            "another table."
+        ),
+        responses={
+            200: row_names_response_schema,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                ]
+            ),
+            401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
+            404: get_error_schema(["ERROR_TABLE_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+        }
+    )
+    def get(self, request):
+        """
+        Returns the names (i.e. primary field value) of specified rows of given tables.
+        Can be used when you want to display a row name referenced from another table.
+        """
+
+        result = {}
+        database = None
+        table_handler = TableHandler()
+        token_handler = TokenHandler()
+        row_handler = RowHandler()
+
+        for name, value in request.GET.items():
+            if not name.startswith("table__"):
+                raise QueryParameterValidationException(
+                    detail='Only table Id prefixed by "table__" are allowed as parameter.',
+                    code="invalid_parameter",
+                )
+
+            try:
+                table_id = int(name[7:])
+            except ValueError:
+                raise QueryParameterValidationException(
+                    detail=(f'Failed to parse table id in "{name}".'),
+                    code="invalid_table_id",
+                )
+
+            try:
+                row_ids = [int(id) for id in value.split(",")]
+            except ValueError:
+                raise QueryParameterValidationException(
+                    detail=(
+                        f'Failed to parse row ids in "{value}" for '
+                        f'"table__{table_id}" parameter.'
+                    ),
+                    code="invalid_row_ids",
+                )
+
+            table_queryset = None
+            if database:
+                # Once we have the database, we want only tables from the same database
+                table_queryset = Table.objects.filter(database=database)
+
+            table = table_handler.get_table(table_id, base_queryset=table_queryset)
+
+            if not database:
+                # Check permission once
+                database = table.database
+                database.group.has_user(request.user, raise_error=True)
+
+            token_handler.check_table_permissions(request, "read", table, False)
+
+            result[table_id] = row_handler.get_row_names(table, row_ids)
+
+        return Response(result)
 
 
 class RowView(APIView):

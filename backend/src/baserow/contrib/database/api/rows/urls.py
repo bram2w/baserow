@@ -1,6 +1,6 @@
 from django.urls import re_path
 
-from .views import RowsView, RowView, RowMoveView, BatchRowsView
+from .views import RowsView, RowView, RowMoveView, RowNamesView, BatchRowsView
 
 
 app_name = "baserow.contrib.database.api.rows"
@@ -21,5 +21,10 @@ urlpatterns = [
         r"table/(?P<table_id>[0-9]+)/(?P<row_id>[0-9]+)/move/$",
         RowMoveView.as_view(),
         name="move",
+    ),
+    re_path(
+        r"names/$",
+        RowNamesView.as_view(),
+        name="names",
     ),
 ]

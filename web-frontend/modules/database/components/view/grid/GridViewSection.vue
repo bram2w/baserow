@@ -52,6 +52,7 @@
             :view="view"
             :fields="fieldsToRender"
             :all-fields="fields"
+            :all-table-fields="allTableFields"
             :left-offset="fieldsLeftOffset"
             :include-row-details="includeRowDetails"
             :read-only="readOnly"
@@ -123,6 +124,10 @@ export default {
   mixins: [gridViewHelpers],
   props: {
     fields: {
+      type: Array,
+      required: true,
+    },
+    allTableFields: {
       type: Array,
       required: true,
     },

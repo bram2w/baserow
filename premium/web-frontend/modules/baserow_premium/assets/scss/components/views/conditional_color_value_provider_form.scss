@@ -1,0 +1,65 @@
+.conditional-color-value-provider-form__color {
+  background-color: $color-neutral-100;
+  padding: 12px 30px;
+  margin: 0 -20px;
+  margin-bottom: 12px;
+
+  & .filters__item {
+    margin-left: 1px;
+  }
+}
+
+.conditional-color-value-provider-form__color-header {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+}
+
+.conditional-color-value-provider-form__color-handle {
+  width: 12px;
+  height: 24px;
+  background-image: radial-gradient($color-neutral-200 40%, transparent 40%);
+  background-size: 4px 4px;
+  background-repeat: repeat;
+  margin-right: 12px;
+  cursor: grab;
+}
+
+.conditional-color-value-provider-form__color-trash-link {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: $color-primary-900;
+  padding: 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-100;
+  }
+}
+
+.conditional-color-value-provider-form__color-color {
+  @extend %option-shadow;
+
+  padding: 6px 9px;
+  text-align: center;
+  color: $color-primary-900;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+.conditional-color-value-provider-form__color-filter--empty {
+  padding: 12px;
+  white-space: normal;
+  text-align: center;
+}
+
+.conditional-color-value-provider-form__color-filters {
+  margin-bottom: 12px;
+}
+
+.conditional-color-value-provider-form__color-filter-add {
+  color: $color-primary-900;
+}

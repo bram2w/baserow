@@ -479,6 +479,10 @@ export const actions = {
 
     commit('ADD_FILTER', { view, filter })
 
+    if (emitEvent) {
+      this.$bus.$emit('view-filter-created', { view, filter })
+    }
+
     try {
       if (!readOnly) {
         const { data } = await FilterService(this.$client).create(
@@ -486,10 +490,6 @@ export const actions = {
           values
         )
         commit('FINALIZE_FILTER', { view, oldId: filter.id, id: data.id })
-      }
-
-      if (emitEvent) {
-        this.$bus.$emit('view-filter-created', { view, filter })
       }
     } catch (error) {
       commit('DELETE_FILTER', { view, id: filter.id })

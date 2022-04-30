@@ -6,6 +6,9 @@ import {
   BackgroundColorViewDecoratorType,
   LeftBorderColorViewDecoratorType,
 } from '@baserow_premium/viewDecorators'
+import { uuid } from '@baserow/modules/core/utils/string'
+import { randomColor } from '@baserow/modules/core/utils/colors'
+import { matchSearchFilters } from '@baserow/modules/database/utils/view'
 
 export class SingleSelectColorValueProviderType extends DecoratorValueProviderType {
   static getType() {
@@ -52,6 +55,41 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
     return 'conditional_color'
   }
 
+  static getDefaultFilterConf(registry, { fields }) {
+    const field = fields[0]
+    const filter = { field: field.id }
+
+    const viewFilterTypes = registry.getAll('viewFilter')
+    const compatibleType = Object.values(viewFilterTypes).find(
+      (viewFilterType) => {
+        return viewFilterType.fieldIsCompatible(field)
+      }
+    )
+
+    filter.type = compatibleType.type
+    const viewFilterType = registry.get('viewFilter', filter.type)
+    filter.value = viewFilterType.getDefaultValue()
+    filter.preload_values = {}
+    filter.id = uuid()
+
+    return filter
+  }
+
+  static getDefaultColorConf(registry, { fields }, noFilter = false) {
+    return {
+      color: randomColor(),
+      operator: 'AND',
+      filters: noFilter
+        ? []
+        : [
+            ConditionalColorValueProviderType.getDefaultFilterConf(registry, {
+              fields,
+            }),
+          ],
+      uid: uuid(),
+    }
+  }
+
   getName() {
     const { i18n } = this.app
     return i18n.t('decoratorValueProviderType.conditionalColor')
@@ -67,6 +105,12 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
   }
 
   getValue({ options, fields, row }) {
+    const { $registry } = this.app
+    for (const { color, filters, operator } of options.colors) {
+      if (matchSearchFilters($registry, operator, filters, fields, row)) {
+        return color
+      }
+    }
     return ''
   }
 
@@ -76,5 +120,17 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
 
   getFormComponent() {
     return ConditionalColorValueProviderForm
+  }
+
+  getDefaultConfiguration({ fields }) {
+    const { $registry } = this.app
+    return {
+      default: null,
+      colors: [
+        ConditionalColorValueProviderType.getDefaultColorConf($registry, {
+          fields,
+        }),
+      ],
+    }
   }
 }

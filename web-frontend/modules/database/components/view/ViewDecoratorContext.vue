@@ -59,8 +59,9 @@
             v-if="dec.valueProviderType"
             :view="view"
             :table="table"
-            :fields="allFields"
-            :read-only="readOnly || dec.decoration._.loading"
+            :primary="primary"
+            :fields="fields"
+            :read-only="readOnly"
             :options="dec.decoration.value_provider_conf"
             @update="updateDecorationOptions(dec.decoration, $event)"
           />
@@ -192,7 +193,7 @@ export default {
           value_provider_type: valueProviderType.getType(),
           value_provider_conf: valueProviderType.getDefaultConfiguration({
             view: this.view,
-            fields: this.fields,
+            fields: this.allFields,
           }),
         },
         decoration,

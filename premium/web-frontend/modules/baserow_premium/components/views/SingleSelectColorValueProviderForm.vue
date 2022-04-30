@@ -15,6 +15,7 @@
 
 <script>
 import ChooseSingleSelectField from '@baserow/modules/database/components/field/ChooseSingleSelectField.vue'
+import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
 
 export default {
   name: 'SingleSelectColorValueProviderForm',
@@ -32,6 +33,10 @@ export default {
       type: Object,
       required: true,
     },
+    primary: {
+      type: Object,
+      required: true,
+    },
     fields: {
       type: Array,
       required: true,
@@ -43,7 +48,9 @@ export default {
   },
   computed: {
     selectFields() {
-      return this.fields.filter(({ type }) => type === 'single_select')
+      return [this.primary, ...this.fields].filter(
+        ({ type }) => type === SingleSelectFieldType.getType()
+      )
     },
     value() {
       return this.options && this.options.field_id
