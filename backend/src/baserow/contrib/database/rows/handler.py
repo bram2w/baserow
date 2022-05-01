@@ -434,10 +434,12 @@ class RowHandler:
         update_collector = CachingFieldUpdateCollector(
             table, starting_row_id=instance.id, existing_model=model
         )
+        field_ids = []
         for field_object in model._field_objects.values():
             field_type = field_object["type"]
             field = field_object["field"]
             fields.append(field)
+            field_ids.append(field.id)
 
             field_type.after_rows_created(
                 field,
@@ -445,14 +447,16 @@ class RowHandler:
                 update_collector,
             )
 
-            for (
-                dependant_field,
-                dependant_field_type,
-                path_to_starting_table,
-            ) in field.dependant_fields_with_types(update_collector):
-                dependant_field_type.row_of_dependency_created(
-                    dependant_field, instance, update_collector, path_to_starting_table
-                )
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+            field_ids, update_collector
+        ):
+            dependant_field_type.row_of_dependency_created(
+                dependant_field, instance, update_collector, path_to_starting_table
+            )
         update_collector.apply_updates_and_get_updated_fields()
 
         if model.fields_requiring_refresh_after_insert():
@@ -710,9 +714,11 @@ class RowHandler:
             starting_row_id=[row.id for row in inserted_rows],
             existing_model=model,
         )
+        field_ids = []
         for field_object in model._field_objects.values():
             field_type = field_object["type"]
             field = field_object["field"]
+            field_ids.append(field.id)
 
             field_type.after_rows_created(
                 field,
@@ -720,17 +726,19 @@ class RowHandler:
                 update_collector,
             )
 
-            for (
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+            field_ids, update_collector
+        ):
+            dependant_field_type.row_of_dependency_created(
                 dependant_field,
-                dependant_field_type,
+                inserted_rows,
+                update_collector,
                 path_to_starting_table,
-            ) in field.dependant_fields_with_types(update_collector):
-                dependant_field_type.row_of_dependency_created(
-                    dependant_field,
-                    inserted_rows,
-                    update_collector,
-                    path_to_starting_table,
-                )
+            )
         update_collector.apply_updates_and_get_updated_fields()
 
         rows_to_return = list(
@@ -841,22 +849,23 @@ class RowHandler:
         if len(bulk_update_fields) > 0:
             model.objects.bulk_update(rows_to_update, bulk_update_fields)
 
-        updated_fields = [field["field"] for field in model._field_objects.values()]
         update_collector = CachingFieldUpdateCollector(
             table, starting_row_id=row_ids, existing_model=model
         )
-        for field in updated_fields:
-            for (
+
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+            updated_field_ids, update_collector
+        ):
+            dependant_field_type.row_of_dependency_updated(
                 dependant_field,
-                dependant_field_type,
+                rows_to_update,
+                update_collector,
                 path_to_starting_table,
-            ) in field.dependant_fields_with_types(update_collector):
-                dependant_field_type.row_of_dependency_updated(
-                    dependant_field,
-                    rows_to_update,
-                    update_collector,
-                    path_to_starting_table,
-                )
+            )
         update_collector.apply_updates_and_get_updated_fields()
 
         from baserow.contrib.database.views.handler import ViewHandler
