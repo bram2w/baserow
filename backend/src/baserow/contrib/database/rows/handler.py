@@ -846,6 +846,11 @@ class RowHandler:
 
         rows_relationships = []
         for obj in rows_to_update:
+            # The `updated_on` field is not updated with `bulk_update`,
+            # so we manually set the value here.
+            obj.updated_on = model._meta.get_field("updated_on").pre_save(
+                obj, add=False
+            )
             row_values = rows_by_id[obj.id]
             values, manytomany_values = self.extract_manytomany_values(
                 row_values, model
@@ -927,7 +932,7 @@ class RowHandler:
             field["name"]
             for field in model._field_objects.values()
             if not isinstance(model._meta.get_field(field["name"]), ManyToManyField)
-        ]
+        ] + ["updated_on"]
         if len(bulk_update_fields) > 0:
             model.objects.bulk_update(rows_to_update, bulk_update_fields)
 

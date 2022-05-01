@@ -80,6 +80,7 @@ from .fields import (
     SingleSelectForeignKey,
     BaserowExpressionField,
     MultipleSelectManyToManyField,
+    BaserowLastModifiedField,
 )
 from .handler import FieldHandler
 from .models import (
@@ -791,6 +792,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
         "timezone": serializers.ChoiceField(choices=pytz.all_timezones, required=True)
     }
     source_field_name = None
+    model_field_class = models.DateTimeField
     model_field_kwargs = {}
     populate_from_field = None
 
@@ -818,7 +820,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
         kwargs["null"] = True
         kwargs["blank"] = True
         kwargs.update(self.model_field_kwargs)
-        return models.DateTimeField(**kwargs)
+        return self.model_field_class(**kwargs)
 
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
@@ -917,6 +919,7 @@ class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
     type = "last_modified"
     model_class = LastModifiedField
     source_field_name = "updated_on"
+    model_field_class = BaserowLastModifiedField
     model_field_kwargs = {"auto_now": True}
 
 

@@ -8,7 +8,12 @@ from django.db.models.fields.related_descriptors import (
 )
 from django.utils.functional import cached_property
 
+
 from baserow.contrib.database.formula import BaserowExpression, FormulaHandler
+
+
+class BaserowLastModifiedField(models.DateTimeField):
+    requires_refresh_after_update = True
 
 
 class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
