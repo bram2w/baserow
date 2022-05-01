@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* Fixed translations in emails sent by Baserow.
 * Fixed invalid `first_name` validation in the account form modal.
 * Shared public forms now don't allow creating new options
   for single and multiple select fields.

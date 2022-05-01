@@ -1,27 +1,31 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-22 08:52+0000\n"
-"PO-Revision-Date: 2022-04-22 10:00+0100\n"
-"Last-Translator: Joey Li <joeyli16@icloud.com>\n"
-"Language-Team: Chinese (Simplified) <https://hosted.weblate.org/projects/"
-"baserow/backend-core/zh_Hans/>\n"
-"Language: zh\n"
+"POT-Creation-Date: 2022-04-22 08:45+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 3.0.1\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/baserow/core/emails.py:96
 #, python-format
 msgid "%(by)s invited you to %(group_name)s - Baserow"
-msgstr "%(by)s 邀请你加入 %(group_name)s - Baserow"
+msgstr ""
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:146
 msgid "Invitation"
-msgstr "邀请"
+msgstr ""
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:151
 #, python-format
@@ -29,11 +33,10 @@ msgid ""
 "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
 "%(group_name)s</strong>."
 msgstr ""
-"<strong>%(first_name)s</strong> 已邀请你加入<strong>%(group_name)s</strong>。"
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:165
 msgid "Accept invitation"
-msgstr "接受邀请"
+msgstr ""
 
 #: src/baserow/core/templates/baserow/core/group_invitation.html:179
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:179
@@ -42,13 +45,11 @@ msgid ""
 "collaborate on projects, customers and more. It gives you the powers of a "
 "developer without leaving your browser."
 msgstr ""
-"Baserow 是一个开源的无代码数据库工具，允许你在项目、客户和其他方面进行协作。"
-"它让你在不离开浏览器的情况下拥有开发者的权力。"
 
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:146
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:165
 msgid "Reset password"
-msgstr "重置密码"
+msgstr ""
 
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:151
 #, python-format
@@ -57,8 +58,6 @@ msgid ""
 "(%(public_web_frontend_hostname)s). If you did not authorize this, you may "
 "simply ignore this email."
 msgstr ""
-"你在 Baserow (%(public_web_frontend_hostname)s) 上的 (%(username)s) 账户正在"
-"请求重置密码。 如果你并未授权本次操作，可以忽略本封邮件。"
 
 #: src/baserow/core/templates/baserow/core/user/reset_password.html:156
 #, python-format
@@ -67,17 +66,12 @@ msgid ""
 "will be able to change your password. This link will expire in %(hours)s "
 "hours."
 msgstr ""
-"要继续重置密码，只需点击下面的按钮，然后你将能够更改你的密码。此链接将"
-"在%(hours)s 小时后失效。"
 
 #: src/baserow/core/user/emails.py:16
 msgid "Reset password - Baserow"
-msgstr "重置密码 - Baserow"
+msgstr ""
 
 #: src/baserow/core/user/handler.py:162
 #, python-format
 msgid "%(name)s's group"
-msgstr "%(name)s 的团队"
-
-#~ msgid "Group invitation"
-#~ msgstr "Invitation à un groupe"
+msgstr ""
