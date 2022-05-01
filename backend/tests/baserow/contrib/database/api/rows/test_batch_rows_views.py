@@ -7,7 +7,7 @@ from rest_framework.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
 )
-
+from freezegun import freeze_time
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -1079,6 +1079,62 @@ def test_batch_update_rows(api_client, data_fixture):
     row_2.refresh_from_db()
     assert getattr(row_1, f"field_{text_field.id}") == "green"
     assert getattr(row_2, f"field_{text_field.id}") == "yellow"
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_batch_update_rows_last_modified_field(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    last_modified_field = data_fixture.create_last_modified_field(
+        table=table, order=1, date_include_time=True
+    )
+    model = table.get_model()
+    row_1 = model.objects.create()
+    row_2 = model.objects.create()
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    request_body = {
+        "items": [
+            {
+                f"id": row_1.id,
+                f"field_{text_field.id}": "green",
+            },
+            {
+                f"id": row_2.id,
+                f"field_{text_field.id}": "yellow",
+            },
+        ]
+    }
+    expected_response_body = {
+        "items": [
+            {
+                f"id": row_1.id,
+                f"field_{text_field.id}": "green",
+                f"field_{last_modified_field.id}": "2022-04-18T00:00:00Z",
+                "order": "1.00000000000000000000",
+            },
+            {
+                f"id": row_2.id,
+                f"field_{text_field.id}": "yellow",
+                f"field_{last_modified_field.id}": "2022-04-18T00:00:00Z",
+                "order": "1.00000000000000000000",
+            },
+        ]
+    }
+
+    with freeze_time("2022-04-18 00:00:00"):
+        response = api_client.patch(
+            url,
+            request_body,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        )
+
+        assert response.status_code == HTTP_200_OK
+        assert response.json() == expected_response_body
 
 
 @pytest.mark.django_db

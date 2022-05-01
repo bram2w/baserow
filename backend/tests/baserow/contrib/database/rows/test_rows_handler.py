@@ -1,5 +1,8 @@
 from decimal import Decimal
 from unittest.mock import patch
+from freezegun import freeze_time
+from datetime import datetime
+from pytz import UTC
 
 import pytest
 from django.core.exceptions import ValidationError
@@ -347,6 +350,40 @@ def test_update_row(send_mock, data_fixture):
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["model"]._generated_table_model
     assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
+
+
+@pytest.mark.django_db
+def test_create_rows_created_on_and_last_modified(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    handler = RowHandler()
+
+    with freeze_time("2020-01-01 12:00"):
+        rows = handler.create_rows(user=user, table=table, rows=[{}])
+        row = rows[0]
+        assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
+        assert row.updated_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
+
+
+@pytest.mark.django_db
+def test_update_rows_created_on_and_last_modified(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    handler = RowHandler()
+
+    with freeze_time("2020-01-01 12:00"):
+        row = table.get_model().objects.create()
+
+    with freeze_time("2020-01-02 12:00"):
+        rows = handler.update_rows(
+            user=user,
+            table=table,
+            rows=[{"id": row.id, f"field_" f"{field.id}": "Test"}],
+        )
+        row = rows[0]
+        assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
+        assert row.updated_on == datetime(2020, 1, 2, 12, 0, tzinfo=UTC)
 
 
 @pytest.mark.django_db
