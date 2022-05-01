@@ -200,7 +200,6 @@ def test_update_form_view(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
-    print(response_json)
     assert response.status_code == HTTP_200_OK
     assert response_json["cover_image"] is None
     assert response_json["logo_image"]["name"] == user_file_2.name

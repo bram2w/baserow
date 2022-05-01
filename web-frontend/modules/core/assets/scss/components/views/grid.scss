@@ -309,7 +309,7 @@
 
     &::after {
       @include loading();
-      @include absolute(50%, auto, auto, 0);
+      @include absolute(50%, auto, auto, 6px);
 
       content: "";
       margin-top: -0.7rem;

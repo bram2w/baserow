@@ -24,7 +24,9 @@ exports[`ViewFilterForm component Default view filter component 1`] = `
     </div>
   </div>
    
-  <div />
+  <div
+    class="filters__items"
+  />
    
   <div
     class="filters_footer"
@@ -48,7 +50,9 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
 <div>
   <!---->
    
-  <div>
+  <div
+    class="filters__items"
+  >
     <div
       class="filters__item"
     >
@@ -702,7 +706,9 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
 <div>
   <!---->
    
-  <div>
+  <div
+    class="filters__items"
+  >
     <div
       class="filters__item"
     >
@@ -997,7 +1003,9 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
 <div>
   <!---->
    
-  <div>
+  <div
+    class="filters__items"
+  >
     <div
       class="filters__item"
     >

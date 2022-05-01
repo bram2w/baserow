@@ -93,21 +93,32 @@ class FieldAggregationNotSupported(Exception):
     """Raised when the view type does not support field aggregation."""
 
 
-class AggregationTypeDoesNotExist(Exception):
+class AggregationTypeDoesNotExist(InstanceTypeDoesNotExist):
     """Raised when trying to get an aggregation type that does not exist."""
 
 
-class AggregationTypeAlreadyRegistered(Exception):
+class AggregationTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
     """Raised when trying to register an aggregation type that exists already."""
 
 
-class DecoratorValueProviderTypeDoesNotExist(Exception):
+class DecoratorValueProviderTypeDoesNotExist(InstanceTypeDoesNotExist):
     """Raised when trying to get a decorator value provider type that does not exist."""
 
 
-class DecoratorValueProviderTypeAlreadyRegistered(Exception):
+class DecoratorValueProviderTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
     """
     Raised when trying to register a decorator value provider type that exists
+    already.
+    """
+
+
+class DecoratorTypeDoesNotExist(InstanceTypeDoesNotExist):
+    """Raised when trying to get a decorator type that does not exist."""
+
+
+class DecoratorTypeAlreadyRegistered(InstanceTypeAlreadyRegistered):
+    """
+    Raised when trying to register a decorator type that exists
     already.
     """
 
@@ -136,6 +147,13 @@ class ViewDecorationDoesNotExist(Exception):
 
 class ViewDecorationNotSupported(Exception):
     """Raised when the view type does not support aggregations."""
+
+
+class DecoratorValueProviderTypeNotCompatible(Exception):
+    """
+    Raised when a value provider type is not compatible with the current
+    decorator.
+    """
 
 
 class FormViewFieldTypeIsNotSupported(Exception):

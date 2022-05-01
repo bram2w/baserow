@@ -12,6 +12,7 @@ class BaserowPremiumConfig(AppConfig):
         from baserow.contrib.database.views.registries import (
             view_type_registry,
             decorator_value_provider_type_registry,
+            decorator_type_registry,
         )
 
         from baserow_premium.row_comments.row_metadata_types import (
@@ -29,6 +30,10 @@ class BaserowPremiumConfig(AppConfig):
             ConditionalColorValueProviderType,
             SelectColorValueProviderType,
         )
+        from .views.decorator_types import (
+            LeftBorderColorDecoratorType,
+            BackgroundColorDecoratorType,
+        )
 
         plugin_registry.register(PremiumPlugin())
 
@@ -41,10 +46,13 @@ class BaserowPremiumConfig(AppConfig):
 
         view_type_registry.register(KanbanViewType())
 
+        decorator_type_registry.register(LeftBorderColorDecoratorType())
+        decorator_type_registry.register(BackgroundColorDecoratorType())
+
+        decorator_value_provider_type_registry.register(SelectColorValueProviderType())
         decorator_value_provider_type_registry.register(
             ConditionalColorValueProviderType()
         )
-        decorator_value_provider_type_registry.register(SelectColorValueProviderType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

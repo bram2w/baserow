@@ -1,6 +1,5 @@
 .filters {
   padding: 12px;
-  width: 550px;
 
   .dropdown__selected {
     @extend %ellipsis;
@@ -22,12 +21,16 @@
   font-size: 13px;
 }
 
+.filters__items {
+  min-width: 540px;
+}
+
 .filters__item {
   position: relative;
   display: grid;
   align-items: center;
-  // 142px = 20 + 82 + 10 * 4 (gaps)
-  grid-template-columns: 20px 82px calc(50% - 142px) 22% 28%;
+  // 142px = 20 + 72 + 10 * 4 (gaps)
+  grid-template-columns: 20px 72px calc(50% - 132px) 22% 28%;
   padding: 6px 0;
   border-radius: 3px;
   margin-left: 5px;
@@ -62,10 +65,8 @@
   }
 }
 
-.filters__operator {
-  span {
-    padding-left: 12px;
-  }
+.filters__operator span {
+  padding-left: 12px;
 }
 
 .filters__value {

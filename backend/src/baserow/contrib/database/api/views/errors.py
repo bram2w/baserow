@@ -80,6 +80,11 @@ ERROR_VIEW_DECORATION_NOT_SUPPORTED = (
     HTTP_400_BAD_REQUEST,
     "Decoration is not supported for the view type.",
 )
+ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE = (
+    "ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE",
+    HTTP_400_BAD_REQUEST,
+    "The value provider is not compatible with the decorator type.",
+)
 ERROR_CANNOT_SHARE_VIEW_TYPE = (
     "ERROR_CANNOT_SHARE_VIEW_TYPE",
     HTTP_400_BAD_REQUEST,

@@ -9,6 +9,8 @@ from baserow.contrib.database.api.serializers import TableSerializer
 from baserow.contrib.database.views.registries import (
     view_type_registry,
     view_filter_type_registry,
+    decorator_value_provider_type_registry,
+    decorator_type_registry,
 )
 from baserow.contrib.database.views.models import (
     View,
@@ -172,27 +174,73 @@ class ViewDecorationSerializer(serializers.ModelSerializer):
             "value_provider_conf",
             "order",
         )
-        extra_kwargs = {"id": {"read_only": True}}
+        extra_kwargs = {
+            "id": {"read_only": True, "required": False},
+            "view": {"required": False},
+            "type": {"required": False},
+            "value_provider_conf": {"required": False},
+        }
 
 
-class CreateViewDecorationSerializer(serializers.ModelSerializer):
+def _only_empty_dict(value):
+    if not (isinstance(value, dict) and not value):
+        raise serializers.ValidationError("This field should be an empty object.")
+
+
+class UpdateViewDecorationSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(
+        choices=lazy(decorator_type_registry.get_types, list)(),
+        required=False,
+        help_text=ViewDecoration._meta.get_field("type").help_text,
+    )
+    value_provider_type = serializers.ChoiceField(
+        choices=lazy(
+            lambda: [""] + decorator_value_provider_type_registry.get_types(),
+            list,
+        )(),
+        required=False,
+        help_text=ViewDecoration._meta.get_field("value_provider_type").help_text,
+    )
+    value_provider_conf = serializers.DictField(
+        required=False,
+        validators=[_only_empty_dict],
+        help_text=ViewDecoration._meta.get_field("value_provider_conf").help_text,
+    )
+
     class Meta:
         model = ViewDecoration
         fields = ("type", "value_provider_type", "value_provider_conf", "order")
         extra_kwargs = {
-            "value_provider_type": {"required": False, "default": ""},
-            "value_provider_conf": {"required": False, "default": dict},
+            "order": {"required": False},
         }
 
 
-class UpdateViewDecorationSerializer(serializers.ModelSerializer):
-    class Meta(CreateViewDecorationSerializer.Meta):
+class CreateViewDecorationSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(
+        choices=lazy(decorator_type_registry.get_types, list)(),
+        required=True,
+        help_text=ViewDecoration._meta.get_field("type").help_text,
+    )
+    value_provider_type = serializers.ChoiceField(
+        choices=lazy(
+            lambda: [""] + decorator_value_provider_type_registry.get_types(),
+            list,
+        )(),
+        default="",
+        required=False,
+        help_text=ViewDecoration._meta.get_field("value_provider_type").help_text,
+    )
+    value_provider_conf = serializers.DictField(
+        required=False,
+        default=dict,
+        validators=[_only_empty_dict],
+        help_text=ViewDecoration._meta.get_field("value_provider_conf").help_text,
+    )
+
+    class Meta:
         model = ViewDecoration
         fields = ("type", "value_provider_type", "value_provider_conf", "order")
         extra_kwargs = {
-            "type": {"required": False},
-            "value_provider_type": {"required": False},
-            "value_provider_conf": {"required": False},
             "order": {"required": False},
         }
 
