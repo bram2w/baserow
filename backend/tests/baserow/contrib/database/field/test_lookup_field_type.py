@@ -125,6 +125,130 @@ def test_can_update_lookup_field_value(
 
 
 @pytest.mark.django_db
+def test_can_batch_create_lookup_field_value(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(user=user, database=table.database)
+    table_primary_field = data_fixture.create_text_field(
+        name="tableprimary", table=table, primary=True
+    )
+    table2_primary_field = data_fixture.create_text_field(
+        name="table2primary", table=table2, primary=True
+    )
+    link_row_field = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    lookup_field = FieldHandler().create_field(
+        user,
+        table,
+        "lookup",
+        name="lookup_field",
+        through_field_id=link_row_field.id,
+        target_field_id=table2_primary_field.id,
+    )
+
+    table2_model = table2.get_model(attribute_names=True)
+    table2_row_1 = table2_model.objects.create(table2primary="row A")
+
+    response = api_client.post(
+        reverse(
+            "api:database:rows:batch",
+            kwargs={"table_id": table.id},
+        ),
+        {
+            "items": [
+                {
+                    f"field_{table_primary_field.id}": "row 1",
+                    f"field_{link_row_field.id}": [table2_row_1.id],
+                }
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"field_{table_primary_field.id}": "row 1",
+                f"field_{link_row_field.id}": [{"id": 1, "value": "row A"}],
+                f"field_{lookup_field.id}": [{"id": 1, "value": "row A"}],
+            }
+        ]
+    }
+
+
+@pytest.mark.django_db
+def test_can_batch_update_lookup_field_value(
+    data_fixture, api_client, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(user=user, database=table.database)
+    table_primary_field = data_fixture.create_text_field(
+        name="tableprimary", table=table, primary=True
+    )
+    table2_primary_field = data_fixture.create_text_field(
+        name="table2primary", table=table2, primary=True
+    )
+    link_row_field = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    lookup_field = FieldHandler().create_field(
+        user,
+        table,
+        "lookup",
+        name="lookup_field",
+        through_field_id=link_row_field.id,
+        target_field_id=table2_primary_field.id,
+    )
+
+    table1_model = table.get_model(attribute_names=True)
+    table1_row_1 = table1_model.objects.create(tableprimary="row 1")
+
+    table2_model = table2.get_model(attribute_names=True)
+    table2_row_1 = table2_model.objects.create(table2primary="row A")
+
+    response = api_client.patch(
+        reverse(
+            "api:database:rows:batch",
+            kwargs={"table_id": table.id},
+        ),
+        {
+            "items": [
+                {"id": table1_row_1.id, f"field_{link_row_field.id}": [table2_row_1.id]}
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"field_{table_primary_field.id}": "row 1",
+                f"field_{link_row_field.id}": [{"id": 1, "value": "row A"}],
+                f"field_{lookup_field.id}": [{"id": 1, "value": "row A"}],
+            }
+        ]
+    }
+
+
+@pytest.mark.django_db
 def test_can_set_sub_type_options_for_lookup_field(
     data_fixture, api_client, django_assert_num_queries
 ):

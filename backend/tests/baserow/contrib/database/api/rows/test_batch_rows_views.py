@@ -11,9 +11,12 @@ from rest_framework.status import (
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.test_utils.helpers import is_dict_subset
 from django.conf import settings
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 
 # Create
@@ -606,6 +609,163 @@ def test_batch_create_rows_dependent_fields(api_client, data_fixture):
     assert is_dict_subset(expected_response_body, response.json())
 
 
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_batch_create_rows_num_of_queries(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    # number field updating another table through link & formula
+    number_field = data_fixture.create_number_field(
+        table=table_b, order=1, name="Number"
+    )
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        order=2,
+        name="Number times two",
+        formula=f"lookup('{link_field.name}', '{number_field.name}')*2",
+        formula_type="number",
+    )
+    FieldDependencyHandler.rebuild_dependencies(formula_field, FieldCache())
+
+    # common fields
+    text_field = data_fixture.create_text_field(
+        table=table_b, order=0, name="Color", text_default="white"
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table_b, order=2, name="For sale"
+    )
+
+    # single and multiple select fields
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table_b)
+    multi_select_option_1 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    multi_select_option_2 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 2",
+        color="blue",
+    )
+    multiple_select_field.select_options.set(
+        [multi_select_option_1, multi_select_option_2]
+    )
+    single_select_field = data_fixture.create_single_select_field(table=table_b)
+    single_select_option_1 = SelectOption.objects.create(
+        field=single_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    single_select_option_2 = SelectOption.objects.create(
+        field=single_select_field,
+        order=1,
+        value="Option 2",
+        color="blue",
+    )
+    single_select_field.select_options.set(
+        [single_select_option_1, single_select_option_2]
+    )
+
+    # file field
+    file_field = data_fixture.create_file_field(table=table_b)
+    file1 = data_fixture.create_user_file(
+        original_name="test.txt",
+        is_image=True,
+    )
+    file2 = data_fixture.create_user_file(
+        original_name="test2.txt",
+        is_image=True,
+    )
+
+    # setup the tables
+    model_b = table_b.get_model()
+    row_b_1 = model_b.objects.create()
+    row_b_2 = model_b.objects.create()
+    row_b_3 = model_b.objects.create()
+    row_b_4 = model_b.objects.create()
+    model = table.get_model()
+    row_1 = model.objects.create()
+    row_2 = model.objects.create()
+    getattr(row_1, f"field_{link_field.id}").set([row_b_1.id, row_b_2.id])
+    getattr(row_2, f"field_{link_field.id}").set([row_b_2.id])
+    row_1.save()
+    row_2.save()
+
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table_b.id})
+
+    with CaptureQueriesContext(connection) as create_one_row_ctx:
+        request_body = {
+            "items": [
+                {
+                    f"field_{number_field.id}": 120,
+                    f"field_{text_field.id}": "Text",
+                    f"field_{boolean_field.id}": True,
+                    f"field_{single_select_field.id}": single_select_option_1.id,
+                    f"field_{multiple_select_field.id}": [multi_select_option_1.id],
+                    f"field_{file_field.id}": [
+                        {"name": file1.name, "visible_name": "new name"}
+                    ],
+                },
+            ]
+        }
+        response = api_client.post(
+            url,
+            request_body,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        )
+
+    with CaptureQueriesContext(connection) as create_multiple_rows_ctx:
+        request_body2 = {
+            "items": [
+                {
+                    f"field_{number_field.id}": 240,
+                    f"field_{text_field.id}": "Text 2",
+                    f"field_{boolean_field.id}": False,
+                    f"field_{single_select_field.id}": single_select_option_1.id,
+                    f"field_{multiple_select_field.id}": [multi_select_option_2.id],
+                    f"field_{file_field.id}": [
+                        {"name": file2.name, "visible_name": "new name 2"}
+                    ],
+                },
+                {
+                    f"field_{number_field.id}": 240,
+                    f"field_{text_field.id}": "Text 3",
+                    f"field_{boolean_field.id}": False,
+                    f"field_{single_select_field.id}": single_select_option_2.id,
+                    f"field_{multiple_select_field.id}": [multi_select_option_2.id],
+                    f"field_{file_field.id}": [
+                        {"name": file2.name, "visible_name": "new name 3"}
+                    ],
+                },
+                {
+                    f"field_{number_field.id}": 500,
+                    f"field_{text_field.id}": "Text 4",
+                    f"field_{boolean_field.id}": False,
+                    f"field_{single_select_field.id}": single_select_option_2.id,
+                    f"field_{multiple_select_field.id}": [multi_select_option_1.id],
+                    f"field_{file_field.id}": [
+                        {"name": file2.name, "visible_name": "new name 4"}
+                    ],
+                },
+            ]
+        }
+        response = api_client.post(
+            url,
+            request_body2,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        )
+
+    assert len(create_one_row_ctx.captured_queries) == len(
+        create_multiple_rows_ctx.captured_queries
+    )
+
+
 # Update
 
 
@@ -988,6 +1148,155 @@ def test_batch_update_rows_different_fields_provided(api_client, data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.api_rows
+def test_batch_update_rows_different_manytomany_provided(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(database=database)
+    table2 = data_fixture.create_database_table(database=database)
+    primary = data_fixture.create_text_field(table=table, name="primary1", primary=True)
+    primary2 = data_fixture.create_text_field(
+        table=table2, name="primary2", primary=True
+    )
+
+    link_row_field_1 = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="link1",
+        link_row_table=table2,
+    )
+    link_row_field_2 = FieldHandler().create_field(
+        user=user,
+        table=table,
+        type_name="link_row",
+        name="link2",
+        link_row_table=table2,
+    )
+
+    model = table.get_model(attribute_names=True)
+    model_1_row_1 = model.objects.create(primary1="row 1")
+    model_1_row_2 = model.objects.create(primary1="row 2")
+    model_1_row_3 = model.objects.create(primary1="row 3")
+
+    model2 = table2.get_model(attribute_names=True)
+    model_2_row_1 = model2.objects.create(primary2="row A")
+    model_2_row_2 = model2.objects.create(primary2="row B")
+
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    response = api_client.patch(
+        url,
+        {
+            "items": [
+                {
+                    f"id": model_1_row_1.id,
+                    f"field_{link_row_field_1.id}": [model_2_row_1.id],
+                },
+                {
+                    f"id": model_1_row_2.id,
+                    f"field_{link_row_field_2.id}": [model_2_row_2.id],
+                },
+                {
+                    f"id": model_1_row_3.id,
+                    f"field_{link_row_field_1.id}": [
+                        model_2_row_1.id,
+                        model_2_row_2.id,
+                    ],
+                    f"field_{link_row_field_2.id}": [
+                        model_2_row_1.id,
+                        model_2_row_2.id,
+                    ],
+                },
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.json() == {
+        "items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"field_{primary.id}": "row 1",
+                f"field_{link_row_field_1.id}": [{"id": 1, "value": "row A"}],
+                f"field_{link_row_field_2.id}": [],
+            },
+            {
+                "id": 2,
+                "order": "1.00000000000000000000",
+                f"field_{primary.id}": "row 2",
+                f"field_{link_row_field_1.id}": [],
+                f"field_{link_row_field_2.id}": [{"id": 2, "value": "row B"}],
+            },
+            {
+                "id": 3,
+                "order": "1.00000000000000000000",
+                f"field_{primary.id}": "row 3",
+                f"field_{link_row_field_1.id}": [
+                    {"id": 1, "value": "row A"},
+                    {"id": 2, "value": "row B"},
+                ],
+                f"field_{link_row_field_2.id}": [
+                    {"id": 1, "value": "row A"},
+                    {"id": 2, "value": "row B"},
+                ],
+            },
+        ]
+    }
+
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    response = api_client.patch(
+        url,
+        {
+            "items": [
+                {
+                    f"id": model_1_row_1.id,
+                    f"field_{link_row_field_2.id}": [model_2_row_1.id],
+                },
+                {
+                    f"id": model_1_row_2.id,
+                    f"field_{link_row_field_1.id}": [model_2_row_2.id],
+                },
+                {f"id": model_1_row_3.id},
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.json() == {
+        "items": [
+            {
+                "id": 1,
+                "order": "1.00000000000000000000",
+                f"field_{primary.id}": "row 1",
+                f"field_{link_row_field_1.id}": [{"id": 1, "value": "row A"}],
+                f"field_{link_row_field_2.id}": [{"id": 1, "value": "row A"}],
+            },
+            {
+                "id": 2,
+                "order": "1.00000000000000000000",
+                f"field_{primary.id}": "row 2",
+                f"field_{link_row_field_1.id}": [{"id": 2, "value": "row B"}],
+                f"field_{link_row_field_2.id}": [{"id": 2, "value": "row B"}],
+            },
+            {
+                "id": 3,
+                "order": "1.00000000000000000000",
+                f"field_{primary.id}": "row 3",
+                f"field_{link_row_field_1.id}": [
+                    {"id": 1, "value": "row A"},
+                    {"id": 2, "value": "row B"},
+                ],
+                f"field_{link_row_field_2.id}": [
+                    {"id": 1, "value": "row A"},
+                    {"id": 2, "value": "row B"},
+                ],
+            },
+        ]
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
 def test_batch_update_rows_user_field_names(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
@@ -1095,7 +1404,6 @@ def test_batch_update_rows_readonly_fields(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-@pytest.mark.field_formula
 @pytest.mark.api_rows
 def test_batch_update_rows_dependent_fields(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
@@ -1279,3 +1587,169 @@ def test_batch_create_rows_dependent_fields_lookup(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert is_dict_subset(expected_response_body, response.json())
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_batch_update_rows_num_of_queries(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    # number field updating another table through link & formula
+    number_field = data_fixture.create_number_field(
+        table=table_b, order=1, name="Number"
+    )
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        order=2,
+        name="Number times two",
+        formula=f"lookup('{link_field.name}', '{number_field.name}')*2",
+        formula_type="number",
+    )
+    FieldDependencyHandler.rebuild_dependencies(formula_field, FieldCache())
+
+    # common fields
+    text_field = data_fixture.create_text_field(
+        table=table_b, order=0, name="Color", text_default="white"
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table_b, order=2, name="For sale"
+    )
+
+    # single and multiple select fields
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table_b)
+    multi_select_option_1 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    multi_select_option_2 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 2",
+        color="blue",
+    )
+    multiple_select_field.select_options.set(
+        [multi_select_option_1, multi_select_option_2]
+    )
+    single_select_field = data_fixture.create_single_select_field(table=table_b)
+    single_select_option_1 = SelectOption.objects.create(
+        field=single_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    single_select_option_2 = SelectOption.objects.create(
+        field=single_select_field,
+        order=1,
+        value="Option 2",
+        color="blue",
+    )
+    single_select_field.select_options.set(
+        [single_select_option_1, single_select_option_2]
+    )
+
+    # file field
+    file_field = data_fixture.create_file_field(table=table_b)
+    file1 = data_fixture.create_user_file(
+        original_name="test.txt",
+        is_image=True,
+    )
+    file2 = data_fixture.create_user_file(
+        original_name="test2.txt",
+        is_image=True,
+    )
+
+    # last modified is readonly but the auto update shouldn't produce n+1 queries
+    last_modified_field = data_fixture.create_last_modified_field(
+        table=table_b, date_include_time=True, timezone="Europe/Berlin"
+    )
+
+    # setup the tables
+    model_b = table_b.get_model()
+    row_b_1 = model_b.objects.create()
+    row_b_2 = model_b.objects.create()
+    row_b_3 = model_b.objects.create()
+    row_b_4 = model_b.objects.create()
+    model = table.get_model()
+    row_1 = model.objects.create()
+    row_2 = model.objects.create()
+    getattr(row_1, f"field_{link_field.id}").set([row_b_1.id, row_b_2.id])
+    getattr(row_2, f"field_{link_field.id}").set([row_b_2.id])
+    row_1.save()
+    row_2.save()
+
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table_b.id})
+
+    with CaptureQueriesContext(connection) as update_one_row_ctx:
+        request_body = {
+            "items": [
+                {
+                    f"id": row_b_1.id,
+                    f"field_{number_field.id}": 120,
+                    f"field_{text_field.id}": "Text",
+                    f"field_{boolean_field.id}": True,
+                    f"field_{single_select_field.id}": single_select_option_1.id,
+                    f"field_{multiple_select_field.id}": [multi_select_option_1.id],
+                    f"field_{file_field.id}": [
+                        {"name": file1.name, "visible_name": "new name"}
+                    ],
+                },
+            ]
+        }
+        response = api_client.patch(
+            url,
+            request_body,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        )
+
+    with CaptureQueriesContext(connection) as update_multiple_rows_ctx:
+        request_body2 = {
+            "items": [
+                {
+                    f"id": row_b_2.id,
+                    f"field_{number_field.id}": 240,
+                    f"field_{text_field.id}": "Text 2",
+                    f"field_{boolean_field.id}": False,
+                    f"field_{single_select_field.id}": single_select_option_1.id,
+                    f"field_{multiple_select_field.id}": [multi_select_option_2.id],
+                    f"field_{file_field.id}": [
+                        {"name": file2.name, "visible_name": "new name 2"}
+                    ],
+                },
+                {
+                    f"id": row_b_3.id,
+                    f"field_{number_field.id}": 240,
+                    f"field_{text_field.id}": "Text 3",
+                    f"field_{boolean_field.id}": False,
+                    f"field_{single_select_field.id}": single_select_option_2.id,
+                    f"field_{multiple_select_field.id}": [multi_select_option_2.id],
+                    f"field_{file_field.id}": [
+                        {"name": file2.name, "visible_name": "new name 3"}
+                    ],
+                },
+                {
+                    f"id": row_b_4.id,
+                    f"field_{number_field.id}": 500,
+                    f"field_{text_field.id}": "Text 4",
+                    f"field_{boolean_field.id}": False,
+                    f"field_{single_select_field.id}": single_select_option_2.id,
+                    f"field_{multiple_select_field.id}": [multi_select_option_1.id],
+                    f"field_{file_field.id}": [
+                        {"name": file2.name, "visible_name": "new name 4"}
+                    ],
+                },
+            ]
+        }
+        response = api_client.patch(
+            url,
+            request_body2,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        )
+
+    assert len(update_one_row_ctx.captured_queries) == len(
+        update_multiple_rows_ctx.captured_queries
+    )
