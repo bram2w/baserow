@@ -290,7 +290,7 @@ class ViewDecoration(OrderableMixin, models.Model):
         max_length=255,
         blank=True,
         default="",
-        help_text="The value provider for that gives the value to the decorator.",
+        help_text="The value provider type that gives the value to the decorator.",
     )
     value_provider_conf = models.JSONField(
         default=dict,

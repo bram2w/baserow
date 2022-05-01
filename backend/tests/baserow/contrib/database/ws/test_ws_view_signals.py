@@ -177,6 +177,7 @@ def test_view_sort_deleted(mock_broadcast_to_channel_group, data_fixture):
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_view_decoration_created(mock_broadcast_to_channel_group, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_text_field(table=table)
@@ -184,8 +185,8 @@ def test_view_decoration_created(mock_broadcast_to_channel_group, data_fixture):
     view_decoration = ViewHandler().create_decoration(
         user=user,
         view=view,
-        type="type",
-        value_provider_type="value_provider_type",
+        decorator_type_name="tmp_decorator_type_1",
+        value_provider_type_name="",
         value_provider_conf={},
     )
 
@@ -199,10 +200,11 @@ def test_view_decoration_created(mock_broadcast_to_channel_group, data_fixture):
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_view_decoration_updated(mock_broadcast_to_channel_group, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user = data_fixture.create_user()
     view_decoration = data_fixture.create_view_decoration(user=user)
     view_decoration = ViewHandler().update_decoration(
-        user=user, view_decoration=view_decoration, type="new_type"
+        user=user, view_decoration=view_decoration, type="tmp_decorator_type_2"
     )
 
     mock_broadcast_to_channel_group.delay.assert_called_once()
@@ -216,6 +218,7 @@ def test_view_decoration_updated(mock_broadcast_to_channel_group, data_fixture):
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_view_decoration_deleted(mock_broadcast_to_channel_group, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user = data_fixture.create_user()
     view_decoration = data_fixture.create_view_decoration(user=user)
     view_id = view_decoration.view.id
@@ -233,6 +236,7 @@ def test_view_decoration_deleted(mock_broadcast_to_channel_group, data_fixture):
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
 def test_view_field_options_updated(mock_broadcast_to_channel_group, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(table=table)

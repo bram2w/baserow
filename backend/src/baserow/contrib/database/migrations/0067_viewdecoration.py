@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         default="",
                         help_text=(
-                            "The value provider for that gives the value to "
+                            "The value provider type that gives the value to "
                             "the decorator."
                         ),
                         max_length=255,

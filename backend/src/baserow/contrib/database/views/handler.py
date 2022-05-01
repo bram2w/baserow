@@ -44,6 +44,7 @@ from .exceptions import (
     CannotShareViewTypeError,
     ViewDecorationNotSupported,
     ViewDecorationDoesNotExist,
+    DecoratorValueProviderTypeNotCompatible,
     NoAuthorizationToPubliclySharedView,
 )
 from .models import View, ViewDecoration, ViewFilter, ViewSort
@@ -51,6 +52,7 @@ from .registries import (
     view_type_registry,
     view_filter_type_registry,
     view_aggregation_type_registry,
+    decorator_type_registry,
     decorator_value_provider_type_registry,
 )
 from .signals import (
@@ -915,8 +917,8 @@ class ViewHandler:
     def create_decoration(
         self,
         view: View,
-        type: str,
-        value_provider_type: str,
+        decorator_type_name: str,
+        value_provider_type_name: str,
         value_provider_conf: Dict[str, Any],
         user: Union["AbstractUser", None] = None,
     ) -> ViewDecoration:
@@ -924,9 +926,9 @@ class ViewHandler:
         Creates a new view decoration.
 
         :param view: The view for which the filter needs to be created.
-        :param type: The type of the decorator.
-        :param value_provider_type: The value provider that provides the value to the
-            decorator.
+        :param decorator_type_name: The type of the decorator.
+        :param value_provider_type_name: The value provider that provides the value
+            to the decorator.
         :param value_provider_conf: The configuration used by the value provider to
             compute the values for the decorator.
         :param user: Optional user who have created the decoration.
@@ -940,12 +942,27 @@ class ViewHandler:
                 f"Decoration is not supported for {view_type.type} views."
             )
 
+        decorator_type = decorator_type_registry.get(decorator_type_name)
+        decorator_type.before_create_decoration(view, user)
+
+        if value_provider_type_name:
+            value_provider_type = decorator_value_provider_type_registry.get(
+                value_provider_type_name
+            )
+            value_provider_type.before_create_decoration(view, user)
+
+            if not value_provider_type.decorator_is_compatible(decorator_type):
+                raise DecoratorValueProviderTypeNotCompatible(
+                    f"Value provider {value_provider_type_name} is not compatible with"
+                    f"the decorator type {decorator_type_name}."
+                )
+
         last_order = ViewDecoration.get_last_order(view)
 
         view_decoration = ViewDecoration.objects.create(
             view=view,
-            type=type,
-            value_provider_type=value_provider_type,
+            type=decorator_type_name,
+            value_provider_type=value_provider_type_name,
             value_provider_conf=value_provider_conf,
             order=last_order,
         )
@@ -1006,11 +1023,13 @@ class ViewHandler:
         :param user: Optional user who have updated the decoration.
         :raises ViewDecorationDoesNotExist: The requested view decoration does not
             exists.
+        :raises DecoratorValueProviderTypeNotCompatible: When the decorator value
+            provided is not compatible with the decorator type.
         :return: The updated view decoration instance.
         """
 
-        decoration_type = kwargs.get("type", view_decoration.type)
-        value_provider_type = kwargs.get(
+        decorator_type_name = kwargs.get("type", view_decoration.type)
+        value_provider_type_name = kwargs.get(
             "value_provider_type", view_decoration.value_provider_type
         )
         value_provider_conf = kwargs.get(
@@ -1018,8 +1037,23 @@ class ViewHandler:
         )
         order = kwargs.get("order", view_decoration.order)
 
-        view_decoration.type = decoration_type
-        view_decoration.value_provider_type = value_provider_type
+        decorator_type = decorator_type_registry.get(decorator_type_name)
+        decorator_type.before_update_decoration(view_decoration, user)
+
+        if value_provider_type_name:
+            value_provider_type = decorator_value_provider_type_registry.get(
+                value_provider_type_name
+            )
+            value_provider_type.before_update_decoration(view_decoration, user)
+
+            if not value_provider_type.decorator_is_compatible(decorator_type):
+                raise DecoratorValueProviderTypeNotCompatible(
+                    f"Value provider {value_provider_type_name} is not compatible with"
+                    f"the decorator type {decorator_type_name}."
+                )
+
+        view_decoration.type = decorator_type_name
+        view_decoration.value_provider_type = value_provider_type_name
         view_decoration.value_provider_conf = value_provider_conf
         view_decoration.order = order
         view_decoration.save()

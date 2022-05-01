@@ -18,6 +18,7 @@
       :fields="fields"
       :view="view"
       :read-only="readOnly"
+      class="filters__items"
       @deleteFilter="deleteFilter($event)"
       @updateFilter="updateFilter($event)"
       @selectOperator="updateView(view, { filter_type: $event })"

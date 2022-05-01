@@ -1,22 +1,49 @@
 from baserow.contrib.database.fields.field_types import (
     SingleSelectFieldType,
 )
-
-from baserow.contrib.database.views.models import ViewDecoration
+from baserow.contrib.database.views.models import (
+    ViewDecoration,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import (
     DecoratorValueProviderType,
     view_filter_type_registry,
 )
 
+from baserow_premium.license.handler import check_active_premium_license
 
-class SelectColorValueProviderType(DecoratorValueProviderType):
+from .decorator_types import BackgroundColorDecoratorType, LeftBorderColorDecoratorType
+from .serializers import (
+    SelectColorValueProviderConfSerializer,
+    ConditionalColorValueProviderConfColorsSerializer,
+)
+
+
+class PremiumDecoratorValueProviderType(DecoratorValueProviderType):
+    def before_create_decoration(self, view, user):
+        if user:
+            check_active_premium_license(user)
+
+    def before_update_decoration(self, view, user):
+        if user:
+            check_active_premium_license(user)
+
+
+class SelectColorValueProviderType(PremiumDecoratorValueProviderType):
     type = "single_select_color"
+
+    compatible_decorator_types = [
+        LeftBorderColorDecoratorType.type,
+        BackgroundColorDecoratorType.type,
+    ]
+
+    value_provider_conf_serializer_class = SelectColorValueProviderConfSerializer
 
     def set_import_serialized_value(self, value, id_mapping) -> str:
         """
         Update the field id with the newly created one.
         """
+
         old_field_id = value["value_provider_conf"].get("field_id", None)
 
         if old_field_id:
@@ -69,8 +96,17 @@ class SelectColorValueProviderType(DecoratorValueProviderType):
                 view_handler.update_decoration(decoration, value_provider_conf=new_conf)
 
 
-class ConditionalColorValueProviderType(DecoratorValueProviderType):
+class ConditionalColorValueProviderType(PremiumDecoratorValueProviderType):
     type = "conditional_color"
+
+    compatible_decorator_types = [
+        LeftBorderColorDecoratorType.type,
+        BackgroundColorDecoratorType.type,
+    ]
+
+    value_provider_conf_serializer_class = (
+        ConditionalColorValueProviderConfColorsSerializer
+    )
 
     def set_import_serialized_value(self, value, id_mapping) -> str:
         """

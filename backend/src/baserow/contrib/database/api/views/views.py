@@ -57,7 +57,10 @@ from baserow.contrib.database.fields.exceptions import (
 )
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
-from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.registries import (
+    view_type_registry,
+    decorator_value_provider_type_registry,
+)
 from baserow.contrib.database.views.models import (
     View,
     ViewFilter,
@@ -66,6 +69,7 @@ from baserow.contrib.database.views.models import (
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.exceptions import (
+    DecoratorValueProviderTypeNotCompatible,
     ViewDoesNotExist,
     ViewNotInTable,
     ViewFilterDoesNotExist,
@@ -116,14 +120,25 @@ from .errors import (
     ERROR_UNRELATED_FIELD,
     ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
     ERROR_CANNOT_SHARE_VIEW_TYPE,
+    ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE,
 )
 from .utils import get_public_view_authorization_token
+
 
 view_field_options_mapping_serializer = MappingSerializer(
     "ViewFieldOptions",
     view_type_registry.get_field_options_serializer_map(),
     "view_type",
 )
+
+
+def get_decoration_mapping_serializer(base_serializer, many=False):
+    return DiscriminatorCustomFieldsMappingSerializer(
+        decorator_value_provider_type_registry,
+        base_serializer,
+        type_field_name="value_provider_type",
+        many=many,
+    )
 
 
 class ViewsView(APIView):
@@ -814,7 +829,7 @@ class ViewDecorationsView(APIView):
             "a row if it matches certain conditions."
         ),
         responses={
-            200: ViewDecorationSerializer(many=True),
+            200: get_decoration_mapping_serializer(ViewDecorationSerializer, many=True),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
         },
@@ -854,9 +869,9 @@ class ViewDecorationsView(APIView):
             "parameter if the authorized user has access to the related database's "
             "group."
         ),
-        request=CreateViewDecorationSerializer(),
+        request=get_decoration_mapping_serializer(CreateViewDecorationSerializer),
         responses={
-            200: ViewDecorationSerializer(),
+            200: get_decoration_mapping_serializer(ViewDecorationSerializer),
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -867,12 +882,18 @@ class ViewDecorationsView(APIView):
         },
     )
     @transaction.atomic
-    @validate_body(CreateViewDecorationSerializer)
+    @validate_body_custom_fields(
+        decorator_value_provider_type_registry,
+        type_attribute_name="value_provider_type",
+        base_serializer_class=CreateViewDecorationSerializer,
+        allow_empty_type=True,
+    )
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
             ViewDecorationNotSupported: ERROR_VIEW_DECORATION_NOT_SUPPORTED,
+            DecoratorValueProviderTypeNotCompatible: ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE,
         }
     )
     def post(self, request, data, view_id):
@@ -917,7 +938,7 @@ class ViewDecorationView(APIView):
             "the related database's group."
         ),
         responses={
-            200: ViewDecorationSerializer(),
+            200: get_decoration_mapping_serializer(ViewDecorationSerializer),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
             404: get_error_schema(["ERROR_VIEW_DECORATION_DOES_NOT_EXIST"]),
         },
@@ -954,9 +975,9 @@ class ViewDecorationView(APIView):
             "Updates the existing decoration if the authorized user has access to the "
             "related database's group."
         ),
-        request=UpdateViewDecorationSerializer(),
+        request=get_decoration_mapping_serializer(UpdateViewDecorationSerializer),
         responses={
-            200: ViewDecorationSerializer(),
+            200: get_decoration_mapping_serializer(ViewDecorationSerializer),
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -966,14 +987,14 @@ class ViewDecorationView(APIView):
         },
     )
     @transaction.atomic
-    @validate_body(UpdateViewDecorationSerializer)
     @map_exceptions(
         {
             ViewDecorationDoesNotExist: ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            DecoratorValueProviderTypeNotCompatible: ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE,
         }
     )
-    def patch(self, request, data, view_decoration_id):
+    def patch(self, request, view_decoration_id):
         """Updates the view decoration if the user belongs to the group."""
 
         handler = ViewHandler()
@@ -984,6 +1005,32 @@ class ViewDecorationView(APIView):
 
         group = view_decoration.view.table.database.group
         group.has_user(request.user, raise_error=True)
+
+        type_name = request.data.get(
+            "value_provider_type", view_decoration.value_provider_type
+        )
+
+        data = {**request.data}
+
+        if (
+            "value_provider_type" in data
+            and data["value_provider_type"] != view_decoration.value_provider_type
+        ):
+            # If the value_provider_type is modified, we want to validate the
+            # configuration with the new type so we add it to the data.
+            data["value_provider_conf"] = data.get(
+                "value_provider_conf", view_decoration.value_provider_conf
+            )
+
+        data = validate_data_custom_fields(
+            type_name,
+            decorator_value_provider_type_registry,
+            data,
+            type_attribute_name="value_provider_type",
+            base_serializer_class=UpdateViewDecorationSerializer,
+            allow_empty_type=True,
+            partial=False,
+        )
 
         view_decoration = handler.update_decoration(
             view_decoration, user=request.user, **data

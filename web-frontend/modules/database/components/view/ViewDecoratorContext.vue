@@ -1,14 +1,14 @@
 <template>
   <Context>
     <ViewDecoratorList
-      v-if="augmentedDecorations.length === 0"
+      v-if="activeDecorations.length === 0"
       :view="view"
       @select="addDecoration($event)"
     />
     <div v-else class="decorator-context">
       <div class="decorator-context__list">
         <div
-          v-for="dec in augmentedDecorations"
+          v-for="dec in activeDecorations"
           :key="dec.decoration.id"
           class="decorator-context__decorator"
         >
@@ -173,6 +173,9 @@ export default {
 
         return deco
       })
+    },
+    activeDecorations() {
+      return this.augmentedDecorations.filter((deco) => !deco.isDeactivated)
     },
   },
   methods: {

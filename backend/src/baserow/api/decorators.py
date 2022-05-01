@@ -201,7 +201,11 @@ def validate_body(serializer_class, partial=False):
 
 
 def validate_body_custom_fields(
-    registry, base_serializer_class=None, type_attribute_name="type", partial=False
+    registry,
+    base_serializer_class=None,
+    type_attribute_name="type",
+    partial=False,
+    allow_empty_type=False,
 ):
     """
     This decorator can validate the request data dynamically using the generated
@@ -229,9 +233,9 @@ def validate_body_custom_fields(
     def validate_decorator(func):
         def func_wrapper(*args, **kwargs):
             request = get_request(args)
-            type_name = request.data.get(type_attribute_name)
+            type_name = request.data.get(type_attribute_name, None)
 
-            if not type_name:
+            if not type_name and not allow_empty_type:
                 # If the type name isn't provided in the data we will raise a machine
                 # readable validation error.
                 raise RequestBodyValidationException(
@@ -252,6 +256,7 @@ def validate_body_custom_fields(
                 base_serializer_class=base_serializer_class,
                 type_attribute_name=type_attribute_name,
                 partial=partial,
+                allow_empty_type=allow_empty_type,
             )
             return func(*args, **kwargs)
 

@@ -10,13 +10,12 @@ from rest_framework.status import (
 from django.shortcuts import reverse
 
 from baserow.contrib.database.views.models import ViewDecoration
-from baserow.contrib.database.views.registries import (
-    view_type_registry,
-)
+from baserow.contrib.database.views.registries import view_type_registry
 
 
 @pytest.mark.django_db
 def test_list_view_decorations(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user, token = data_fixture.create_user_and_token()
     table_1 = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table()
@@ -26,7 +25,7 @@ def test_list_view_decorations(api_client, data_fixture):
     decoration_1 = data_fixture.create_view_decoration(view=view_1, order=1)
     decoration_2 = data_fixture.create_view_decoration(
         view=view_1,
-        type="background_color",
+        type="tmp_decorator_type_2",
         value_provider_type="conditionnal_color",
         order=2,
     )
@@ -77,6 +76,7 @@ def test_list_view_decorations(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_create_view_decoration(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user, token = data_fixture.create_user_and_token()
     table_1 = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table()
@@ -86,8 +86,8 @@ def test_create_view_decoration(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:views:list_decorations", kwargs={"view_id": view_2.id}),
         {
-            "type": "left_border_color",
-            "value_provider_type": "single_select_color",
+            "type": "tmp_decorator_type_1",
+            "value_provider_type": "",
             "value_provider_conf": {},
         },
         format="json",
@@ -99,8 +99,8 @@ def test_create_view_decoration(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:views:list_decorations", kwargs={"view_id": 99999}),
         {
-            "type": "left_border_color",
-            "value_provider_type": "single_select_color",
+            "type": "tmp_decorator_type_1",
+            "value_provider_type": "",
             "value_provider_conf": {},
         },
         format="json",
@@ -114,8 +114,8 @@ def test_create_view_decoration(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:views:list_decorations", kwargs={"view_id": view_1.id}),
         {
-            "type": "left_border_color",
-            "value_provider_type": "single_select_color",
+            "type": "tmp_decorator_type_1",
+            "value_provider_type": "",
             "value_provider_conf": {},
         },
         format="json",
@@ -129,9 +129,96 @@ def test_create_view_decoration(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:views:list_decorations", kwargs={"view_id": view_1.id}),
         {
-            "type": "left_border_color",
-            "value_provider_type": "single_select_color",
-            "value_provider_conf": {"field": 1},
+            "type": "bad_type",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "type": [
+            {"error": '"bad_type" is not a valid choice.', "code": "invalid_choice"}
+        ]
+    }
+
+    response = api_client.post(
+        reverse("api:database:views:list_decorations", kwargs={"view_id": view_1.id}),
+        {
+            "type": "tmp_decorator_type_1",
+            "value_provider_type": "bad_type",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "value_provider_type": [
+            {"error": '"bad_type" is not a valid choice.', "code": "invalid_choice"}
+        ]
+    }
+
+    response = api_client.post(
+        reverse("api:database:views:list_decorations", kwargs={"view_id": view_1.id}),
+        {
+            "type": "tmp_decorator_type_1",
+            "value_provider_type": "",
+            "value_provider_conf": {"foo": "barr"},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"] == {
+        "value_provider_conf": [
+            {"error": "This field should be an empty object.", "code": "invalid"}
+        ]
+    }
+
+    response = api_client.post(
+        reverse("api:database:views:list_decorations", kwargs={"view_id": view_1.id}),
+        {
+            "type": "tmp_decorator_type_1",
+            "value_provider_type": "value_provider_1",
+            "value_provider_conf": {"colors": "error"},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"] == {
+        "value_provider_conf": {
+            "field_id": [{"error": "This field is required.", "code": "required"}]
+        }
+    }
+
+    response = api_client.post(
+        reverse("api:database:views:list_decorations", kwargs={"view_id": view_1.id}),
+        {
+            "type": "tmp_decorator_type_1",
+            "value_provider_type": "value_provider_3",
+            "value_provider_conf": {"field_id": 1},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert (
+        response_json["error"] == "ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE"
+    )
+
+    response = api_client.post(
+        reverse("api:database:views:list_decorations", kwargs={"view_id": view_1.id}),
+        {
+            "type": "tmp_decorator_type_1",
+            "value_provider_type": "value_provider_1",
+            "value_provider_conf": {"field_id": 1},
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -146,21 +233,23 @@ def test_create_view_decoration(api_client, data_fixture):
     assert response_json["value_provider_type"] == first.value_provider_type
     assert response_json["value_provider_conf"] == first.value_provider_conf
 
+    # Test default values
     response = api_client.post(
         reverse("api:database:views:list_decorations", kwargs={"view_id": view_1.id}),
-        {"type": "background_color"},
+        {"type": "tmp_decorator_type_2"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert response_json["type"] == "background_color"
+    assert response_json["type"] == "tmp_decorator_type_2"
     assert response_json["value_provider_type"] == ""
     assert response_json["value_provider_conf"] == {}
 
 
 @pytest.mark.django_db
 def test_get_view_decoration(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user, token = data_fixture.create_user_and_token()
     decoration_1 = data_fixture.create_view_decoration(user=user)
     decoration_2 = data_fixture.create_view_decoration()
@@ -223,7 +312,8 @@ def test_get_view_decoration(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_view_decoration(api_client, data_fixture):
+def test_update_view_decoration_validation(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user, token = data_fixture.create_user_and_token()
     decoration_1 = data_fixture.create_view_decoration(user=user)
     decoration_2 = data_fixture.create_view_decoration()
@@ -233,7 +323,7 @@ def test_update_view_decoration(api_client, data_fixture):
             "api:database:views:decoration_item",
             kwargs={"view_decoration_id": decoration_2.id},
         ),
-        {"type": "left_border_color"},
+        {"type": "tmp_decorator_type_1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -244,7 +334,7 @@ def test_update_view_decoration(api_client, data_fixture):
         reverse(
             "api:database:views:decoration_item", kwargs={"view_decoration_id": 9999}
         ),
-        {"type": "left_border_color"},
+        {"type": "tmp_decorator_type_1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -256,10 +346,148 @@ def test_update_view_decoration(api_client, data_fixture):
             "api:database:views:decoration_item",
             kwargs={"view_decoration_id": decoration_1.id},
         ),
+        {"type": "bad_type"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "type": [
+            {"error": '"bad_type" is not a valid choice.', "code": "invalid_choice"}
+        ]
+    }
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
+        {"type": "tmp_decorator_type_1", "value_provider_type": "bad_type"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "value_provider_type": [
+            {"error": '"bad_type" is not a valid choice.', "code": "invalid_choice"}
+        ]
+    }
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
         {
-            "type": "background_color",
-            "value_provider_type": "conditional_color",
+            "value_provider_type": "value_provider_2",
             "value_provider_conf": {"test": True},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "value_provider_conf": {
+            "description": [{"error": "This field is required.", "code": "required"}]
+        }
+    }
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
+        {
+            "value_provider_type": "value_provider_2",
+            "value_provider_conf": {
+                "test": "should be ignored",
+                "field": [{"filters": []}],
+            },
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "value_provider_conf": {
+            "description": [{"error": "This field is required.", "code": "required"}]
+        }
+    }
+
+
+@pytest.mark.django_db
+def test_update_view_decoration_to_incompatible_type(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
+    user, token = data_fixture.create_user_and_token()
+    decoration_1 = data_fixture.create_view_decoration(user=user)
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
+        {"type": "tmp_decorator_type_3"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert (
+        response_json["error"] == "ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE"
+    )
+
+
+@pytest.mark.django_db
+def test_update_view_decoration_to_compatible_type(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
+    user, token = data_fixture.create_user_and_token()
+    decoration_1 = data_fixture.create_view_decoration(user=user)
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
+        {"type": "tmp_decorator_type_2"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    first = ViewDecoration.objects.get(pk=decoration_1.id)
+    assert first.type == "tmp_decorator_type_2"
+    assert first.value_provider_type == "value_provider_1"
+    assert first.value_provider_conf == {}
+    assert response_json["id"] == first.id
+    assert response_json["view"] == first.view_id
+    assert response_json["type"] == first.type
+    assert response_json["value_provider_type"] == first.value_provider_type
+    assert response_json["value_provider_conf"] == first.value_provider_conf
+    assert response_json["order"] == first.order
+
+
+@pytest.mark.django_db
+def test_update_view_decoration_value_provider(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
+    user, token = data_fixture.create_user_and_token()
+    decoration_1 = data_fixture.create_view_decoration(
+        user=user, type="tmp_decorator_type_2"
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
+        {
+            "value_provider_type": "value_provider_2",
+            "value_provider_conf": {
+                "description": "test",
+            },
             "order": 25,
         },
         format="json",
@@ -267,11 +495,11 @@ def test_update_view_decoration(api_client, data_fixture):
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert ViewDecoration.objects.all().count() == 2
+    assert ViewDecoration.objects.all().count() == 1
     first = ViewDecoration.objects.get(pk=decoration_1.id)
-    assert first.type == "background_color"
-    assert first.value_provider_type == "conditional_color"
-    assert first.value_provider_conf == {"test": True}
+    assert first.type == "tmp_decorator_type_2"
+    assert first.value_provider_type == "value_provider_2"
+    assert first.value_provider_conf == {"description": "test"}
     assert first.order == 25
     assert response_json["id"] == first.id
     assert response_json["view"] == first.view_id
@@ -280,12 +508,13 @@ def test_update_view_decoration(api_client, data_fixture):
     assert response_json["value_provider_conf"] == first.value_provider_conf
     assert response_json["order"] == first.order
 
+    # Change it back the type and expect the value provider to be the same.
     response = api_client.patch(
         reverse(
             "api:database:views:decoration_item",
             kwargs={"view_decoration_id": decoration_1.id},
         ),
-        {"type": "left_border_color"},
+        {"type": "tmp_decorator_type_1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -293,21 +522,60 @@ def test_update_view_decoration(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     first = ViewDecoration.objects.get(pk=decoration_1.id)
 
-    assert first.type == "left_border_color"
-    assert first.value_provider_type == "conditional_color"
-    assert first.value_provider_conf == {"test": True}
+    assert first.type == "tmp_decorator_type_1"
+    assert first.value_provider_type == "value_provider_2"
+    assert first.value_provider_conf == {"description": "test"}
     assert first.order == 25
+    assert response_json["id"] == first.id
+    assert response_json["view"] == first.view_id
     assert response_json["type"] == first.type
     assert response_json["value_provider_type"] == first.value_provider_type
     assert response_json["value_provider_conf"] == first.value_provider_conf
     assert response_json["order"] == first.order
 
+
+@pytest.mark.django_db
+def test_update_view_decoration_incompatible_value_provider_conf(
+    api_client, data_fixture
+):
+    data_fixture.register_temp_decorators_and_value_providers()
+    user, token = data_fixture.create_user_and_token()
+    decoration_1 = data_fixture.create_view_decoration(
+        user=user,
+        type="tmp_decorator_type_1",
+        value_provider_type="value_provider_2",
+        value_provider_conf={"description": "test"},
+    )
+
+    # Change provider type with an incompatible configuration
     response = api_client.patch(
         reverse(
             "api:database:views:decoration_item",
             kwargs={"view_decoration_id": decoration_1.id},
         ),
-        {"value_provider_type": "single_select_color"},
+        {
+            "value_provider_type": "value_provider_1",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "value_provider_conf": {
+            "field_id": [{"error": "This field is required.", "code": "required"}]
+        }
+    }
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
+        {
+            "value_provider_type": "value_provider_1",
+            "value_provider_conf": {"field_id": None},
+        },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -315,26 +583,71 @@ def test_update_view_decoration(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     first = ViewDecoration.objects.get(pk=decoration_1.id)
 
-    assert first.type == "left_border_color"
-    assert first.value_provider_type == "single_select_color"
+    assert first.value_provider_type == "value_provider_1"
+    assert first.value_provider_conf == {"field_id": None}
+    assert response_json["value_provider_type"] == first.value_provider_type
+    assert response_json["value_provider_conf"] == first.value_provider_conf
+
+    # Remove value provider type
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
+        {"value_provider_conf": {"field_id": 3}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
+        {"value_provider_type": ""},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response.json()["detail"] == {
+        "value_provider_conf": [
+            {"error": "This field should be an empty object.", "code": "invalid"}
+        ]
+    }
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:decoration_item",
+            kwargs={"view_decoration_id": decoration_1.id},
+        ),
+        {"value_provider_type": "", "value_provider_conf": {}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    first = ViewDecoration.objects.get(pk=decoration_1.id)
+
+    assert first.type == "tmp_decorator_type_1"
+    assert first.value_provider_type == ""
+    assert first.value_provider_conf == {}
     assert response_json["type"] == first.type
     assert response_json["value_provider_type"] == first.value_provider_type
-
-    response = api_client.patch(
-        reverse(
-            "api:database:views:decoration_item",
-            kwargs={"view_decoration_id": decoration_1.id},
-        ),
-        {"value_provider_conf": {"answer": 42}},
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    response_json = response.json()
-    assert response.status_code == HTTP_200_OK
-    first = ViewDecoration.objects.get(pk=decoration_1.id)
-
-    assert first.value_provider_conf == {"answer": 42}
     assert response_json["value_provider_conf"] == first.value_provider_conf
+
+
+@pytest.mark.django_db
+def test_update_view_decoration_order(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
+    user, token = data_fixture.create_user_and_token()
+    decoration_1 = data_fixture.create_view_decoration(
+        user=user,
+        type="tmp_decorator_type_1",
+        value_provider_type="value_provider_2",
+        value_provider_conf={"description": "test"},
+    )
 
     response = api_client.patch(
         reverse(
@@ -355,6 +668,7 @@ def test_update_view_decoration(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_delete_view_decoration(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user, token = data_fixture.create_user_and_token()
     decoration_1 = data_fixture.create_view_decoration(user=user)
     decoration_2 = data_fixture.create_view_decoration()
@@ -391,6 +705,7 @@ def test_delete_view_decoration(api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_list_views_including_decorations(api_client, data_fixture):
+    data_fixture.register_temp_decorators_and_value_providers()
     user, token = data_fixture.create_user_and_token()
     table_1 = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table()
@@ -399,10 +714,10 @@ def test_list_views_including_decorations(api_client, data_fixture):
     view_3 = data_fixture.create_grid_view(table=table_2, order=1)
     decoration_1 = data_fixture.create_view_decoration(view=view_1, order=0)
     decoration_2 = data_fixture.create_view_decoration(
-        view=view_1, type="background_color", order=1
+        view=view_1, type="tmp_decorator_type_2", order=1
     )
     decoration_3 = data_fixture.create_view_decoration(view=view_2)
-    data_fixture.create_view_decoration(view=view_3, type="background_color")
+    data_fixture.create_view_decoration(view=view_3, type="tmp_decorator_type_2")
 
     response = api_client.get(
         "{}".format(

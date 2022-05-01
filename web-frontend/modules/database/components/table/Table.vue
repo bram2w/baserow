@@ -104,11 +104,7 @@
           <ShareViewLink :view="view" :read-only="readOnly"></ShareViewLink>
         </li>
         <li
-          v-if="
-            $featureFlags.includes('row-coloring') &&
-            hasCompatibleDecorator &&
-            !readOnly
-          "
+          v-if="hasCompatibleDecorator && !readOnly"
           class="header__filter-item"
         >
           <ViewDecoratorMenu

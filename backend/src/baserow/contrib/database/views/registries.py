@@ -30,6 +30,8 @@ from .exceptions import (
     AggregationTypeAlreadyRegistered,
     DecoratorValueProviderTypeAlreadyRegistered,
     DecoratorValueProviderTypeDoesNotExist,
+    DecoratorTypeDoesNotExist,
+    DecoratorTypeAlreadyRegistered,
 )
 
 if TYPE_CHECKING:
@@ -717,11 +719,81 @@ class ViewAggregationTypeRegistry(Registry):
     already_registered_exception_class = AggregationTypeAlreadyRegistered
 
 
-class DecoratorValueProviderType(Instance):
+class DecoratorType(Instance):
+    """
+    By declaring a new `DecoratorType` you allow a new decorator type to be created.
+    """
+
+    def before_create_decoration(self, view, user: Union[DjangoUser, None]):
+        """
+        This hook is called before a new decoration is created with this type.
+
+        :param view: The view where the decoration is created in.
+        :param user: Optionally a user on whose behalf the decoration is created.
+        """
+
+    def before_update_decoration(self, view_decoration, user: Union[DjangoUser, None]):
+        """
+        This hook is called before an existing decoration is updated to this type.
+
+        :param view_decoration: The view decoration that's being updated.
+        :param user: Optionally a user on whose behalf the decoration is updated.
+        """
+
+
+class DecoratorTypeRegistry(Registry):
+    """This registry contains decorators types."""
+
+    name = "decorator"
+    does_not_exist_exception_class = DecoratorTypeDoesNotExist
+    already_registered_exception_class = DecoratorTypeAlreadyRegistered
+
+
+class DecoratorValueProviderType(CustomFieldsInstanceMixin, Instance):
     """
     By declaring a new `DecoratorValueProviderType` you can define hooks on events that
     can affect the decoration value provider configuration.
     """
+
+    value_provider_conf_serializer_class = None
+    compatible_decorator_types: List[Union[str, Callable[[DecoratorType], bool]]] = []
+    """
+    A list of compatible decorator type names. This list can also contain functions,
+    these functions must take one argument which is the decorator type and return
+    whether this type is compatible or not with the value provider.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if not self.value_provider_conf_serializer_class:
+            raise ValueError(
+                f"The decorator value provider type {self.type} does not have a "
+                "value_provider_conf_serializer_class."
+            )
+
+        self.serializer_field_overrides = {
+            "value_provider_conf": self.value_provider_conf_serializer_class(
+                required=False,
+                help_text="The configuration of the value provider",
+            ),
+        }
+
+    def before_create_decoration(self, view, user: Union[DjangoUser, None]):
+        """
+        This hook is called before a new decoration is created with this type.
+
+        :param view: The view where the decoration is created in.
+        :param user: Optionally a user on whose behalf the decoration is created.
+        """
+
+    def before_update_decoration(self, view_decoration, user: Union[DjangoUser, None]):
+        """
+        This hook is called before an existing decoration is updated to this type.
+
+        :param view_decoration: The view decoration that's being updated.
+        :param user: Optionally a user on whose behalf the decoration is updated.
+        """
 
     def set_import_serialized_value(
         self, value: Dict[str, Any], id_mapping: Dict[str, Dict[int, Any]]
@@ -737,6 +809,8 @@ class DecoratorValueProviderType(Instance):
             updated when a new instance has been created.
         :return: The new value that will be imported.
         """
+
+        return value
 
     def after_field_delete(self, deleted_field: field_models.Field):
         """
@@ -754,6 +828,34 @@ class DecoratorValueProviderType(Instance):
         :param field: The concerned field.
         """
 
+    def get_serializer_class(self, *args, **kwargs):
+        # Add meta ref name to avoid name collision
+        return super().get_serializer_class(
+            *args,
+            meta_ref_name=f"Generetad{self.type.capitalize()}{kwargs['base_class'].__name__}",
+            **kwargs,
+        )
+
+    def decorator_is_compatible(self, decorator_type: DecoratorType) -> bool:
+        """
+        Given a particular decorator type returns whether it is compatible
+        with this value_provider type or not.
+
+        :param decorator_type: The decorator type to check.
+        :return: True if the value_provider_type is compatible, False otherwise.
+        """
+
+        return any(
+            callable(t) and t(decorator_type) or t == decorator_type.type
+            for t in self.compatible_decorator_types
+        )
+
+    @property
+    def model_class(self):
+        from baserow.contrib.database.views.models import ViewDecoration
+
+        return ViewDecoration
+
 
 class DecoratorValueProviderTypeRegistry(Registry):
     """
@@ -770,4 +872,5 @@ class DecoratorValueProviderTypeRegistry(Registry):
 view_type_registry = ViewTypeRegistry()
 view_filter_type_registry = ViewFilterTypeRegistry()
 view_aggregation_type_registry = ViewAggregationTypeRegistry()
+decorator_type_registry = DecoratorTypeRegistry()
 decorator_value_provider_type_registry = DecoratorValueProviderTypeRegistry()
