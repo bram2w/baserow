@@ -232,15 +232,15 @@ class GridViewType(ViewType):
         to_clear = defaultdict(list)
         view_map = {}
 
-        for field in updated_fields:
-            field_options = (
-                GridViewFieldOptions.objects.filter(field=field)
-                .exclude(aggregation_raw_type="")
-                .select_related("grid_view")
-            )
-            for options in field_options:
-                to_clear[options.grid_view.id].append(field.db_column)
-                view_map[options.grid_view.id] = options.grid_view
+        field_options = (
+            GridViewFieldOptions.objects.filter(field__in=updated_fields)
+            .exclude(aggregation_raw_type="")
+            .select_related("grid_view", "field")
+        )
+
+        for options in field_options:
+            to_clear[options.grid_view.id].append(options.field.db_column)
+            view_map[options.grid_view.id] = options.grid_view
 
         view_handler = ViewHandler()
         for view_id, names in to_clear.items():
