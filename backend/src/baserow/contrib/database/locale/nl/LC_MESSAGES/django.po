@@ -7,11 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-28 20:39+0000\n"
+"POT-Creation-Date: 2022-04-22 08:46+0000\n"
 "PO-Revision-Date: 2022-02-04 10:29+0000\n"
 "Last-Translator: Cornelia Dieleman <financialswift@gmail.com>\n"
-"Language-Team: Dutch <https://hosted.weblate.org/projects/baserow/"
-"backend-database/nl/>\n"
+"Language-Team: Dutch <https://hosted.weblate.org/projects/baserow/backend-"
+"database/nl/>\n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,20 +19,16 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Weblate 4.11-dev\n"
 
-#: src/baserow/contrib/database/plugins.py:44
+#: src/baserow/contrib/database/plugins.py:45
 #, python-format
 msgid "%(first_name)s's company"
 msgstr "Het bedrijf van %(first_name)s"
 
-#: src/baserow/contrib/database/plugins.py:48
-msgid "Customers"
-msgstr "Klanten"
+#~ msgid "Customers"
+#~ msgstr "Klanten"
 
-#: src/baserow/contrib/database/plugins.py:50
-#: src/baserow/contrib/database/plugins.py:85
-msgid "Grid"
-msgstr "Rooster"
+#~ msgid "Grid"
+#~ msgstr "Rooster"
 
-#: src/baserow/contrib/database/plugins.py:83
-msgid "Projects"
-msgstr "Projecten"
+#~ msgid "Projects"
+#~ msgstr "Projecten"

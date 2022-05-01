@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-28 20:39+0000\n"
+"POT-Creation-Date: 2022-04-22 08:52+0000\n"
 "PO-Revision-Date: 2022-01-30 00:54+0000\n"
 "Last-Translator: Allan Nordhøy <epost@anotheragency.no>\n"
 "Language-Team: Norwegian Bokmål <https://hosted.weblate.org/projects/baserow/"
@@ -19,20 +19,16 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Weblate 4.11-dev\n"
 
-#: src/baserow/contrib/database/plugins.py:44
+#: src/baserow/contrib/database/plugins.py:45
 #, python-format
 msgid "%(first_name)s's company"
 msgstr "%(first_name)s sitt selskap"
 
-#: src/baserow/contrib/database/plugins.py:48
-msgid "Customers"
-msgstr "Kunder"
+#~ msgid "Customers"
+#~ msgstr "Kunder"
 
-#: src/baserow/contrib/database/plugins.py:50
-#: src/baserow/contrib/database/plugins.py:85
-msgid "Grid"
-msgstr "Rutenett"
+#~ msgid "Grid"
+#~ msgstr "Rutenett"
 
-#: src/baserow/contrib/database/plugins.py:83
-msgid "Projects"
-msgstr "Prosjekter"
+#~ msgid "Projects"
+#~ msgstr "Prosjekter"

@@ -7,11 +7,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-28 20:39+0000\n"
+"POT-Creation-Date: 2022-04-22 08:52+0000\n"
 "PO-Revision-Date: 2022-03-26 23:23+0000\n"
 "Last-Translator: Petr S. <petr@stribny.name>\n"
-"Language-Team: Czech <https://hosted.weblate.org/projects/baserow/"
-"backend-database/cs/>\n"
+"Language-Team: Czech <https://hosted.weblate.org/projects/baserow/backend-"
+"database/cs/>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,20 +19,16 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Weblate 4.12-dev\n"
 
-#: src/baserow/contrib/database/plugins.py:44
+#: src/baserow/contrib/database/plugins.py:45
 #, python-format
 msgid "%(first_name)s's company"
 msgstr ""
 
-#: src/baserow/contrib/database/plugins.py:48
-msgid "Customers"
-msgstr "Zákazníci"
+#~ msgid "Customers"
+#~ msgstr "Zákazníci"
 
-#: src/baserow/contrib/database/plugins.py:50
-#: src/baserow/contrib/database/plugins.py:85
-msgid "Grid"
-msgstr "Mřížka"
+#~ msgid "Grid"
+#~ msgstr "Mřížka"
 
-#: src/baserow/contrib/database/plugins.py:83
-msgid "Projects"
-msgstr "Projekty"
+#~ msgid "Projects"
+#~ msgstr "Projekty"
