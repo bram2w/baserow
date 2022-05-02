@@ -184,3 +184,19 @@ class MustBeEmptyField(serializers.Field):
 
     def to_internal_value(self, data):
         return None
+
+
+class UniqueRowValueParamsSerializer(serializers.Serializer):
+    limit = serializers.IntegerField(
+        required=False, help_text="Defines how many values should be returned."
+    )
+    split_comma_separated = serializers.BooleanField(
+        required=False,
+        help_text="Indicates whether the original column values must be splitted by "
+        "comma.",
+        default=False,
+    )
+
+
+class UniqueRowValuesSerializer(serializers.Serializer):
+    values = serializers.ListSerializer(child=serializers.CharField())

@@ -955,6 +955,7 @@ class LinkRowFieldType(FieldType):
     }
     _can_order_by = False
     can_be_primary_field = False
+    can_get_unique_values = False
 
     def enhance_queryset(self, queryset, field, name):
         """
@@ -1508,6 +1509,7 @@ class FileFieldType(FieldType):
     type = "file"
     model_class = FileField
     can_be_in_form_view = False
+    can_get_unique_values = False
 
     def _extract_file_names(self, value):
         # Validates the provided object and extract the names from it. We need the name
@@ -2040,6 +2042,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
 class MultipleSelectFieldType(SelectOptionBaseFieldType):
     type = "multiple_select"
     model_class = MultipleSelectField
+    can_get_unique_values = False
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -2674,7 +2677,7 @@ class LookupFieldType(FormulaFieldType):
         InvalidLookupThroughField: ERROR_INVALID_LOOKUP_THROUGH_FIELD,
         InvalidLookupTargetField: ERROR_INVALID_LOOKUP_TARGET_FIELD,
     }
-
+    can_get_unique_values = False
     allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
         "through_field_id",
         "through_field_name",

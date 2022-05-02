@@ -513,3 +513,93 @@ def test_delete_field(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_CANNOT_DELETE_PRIMARY_FIELD"
+
+
+@pytest.mark.django_db
+def test_unique_row_values(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="11@11.com", password="password", first_name="abcd"
+    )
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, order=0, name="Letter")
+    grid = data_fixture.create_grid_view(table=table)
+    model = grid.table.get_model()
+
+    url = reverse(
+        "api:database:fields:unique_row_values", kwargs={"field_id": text_field.id}
+    )
+
+    # Check for empty values
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    response_json = response.json()
+
+    assert response.status_code == HTTP_200_OK
+    assert response_json["values"] == []
+
+    # Check that values are sorted by frequency
+    values = ["A", "B", "B", "B", "C", "C"]
+    for value in values:
+        model.objects.create(**{f"field_{text_field.id}": value})
+
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    response_json = response.json()
+
+    assert response.status_code == HTTP_200_OK
+    assert response_json["values"] == ["B", "C", "A"]
+
+    # Check that limit is working
+    response = api_client.get(url, {"limit": 1}, HTTP_AUTHORIZATION=f"JWT {token}")
+    response_json = response.json()
+
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json["values"]) == 1
+
+    # Check for non-existent field
+    url = reverse("api:database:fields:unique_row_values", kwargs={"field_id": 9999})
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_unique_row_values_splitted_by_comma(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="11@11.com", password="password", first_name="abcd"
+    )
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, order=0, name="Letter")
+    grid = data_fixture.create_grid_view(table=table)
+    model = grid.table.get_model()
+
+    # Check that values are sorted by frequency
+    values = ["A,B", "C,D,E", "F,E", "G,E", "E", "F", "E,E"]
+    for value in values:
+        model.objects.create(**{f"field_{text_field.id}": value})
+
+    url = reverse(
+        "api:database:fields:unique_row_values", kwargs={"field_id": text_field.id}
+    )
+    response = api_client.get(
+        url, {"split_comma_separated": "true"}, HTTP_AUTHORIZATION=f"JWT {token}"
+    )
+    response_json = response.json()
+
+    assert response.status_code == HTTP_200_OK
+    assert response_json["values"] == ["E", "F", "C", "D", "B", "G", "A"]
+
+
+@pytest.mark.django_db
+def test_unique_row_values_incompatible_field_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="11@11.com", password="password", first_name="abcd"
+    )
+    table = data_fixture.create_database_table(user=user)
+    # The file field is not compatible.
+    file_field = data_fixture.create_file_field(table=table, order=0)
+
+    url = reverse(
+        "api:database:fields:unique_row_values", kwargs={"field_id": file_field.id}
+    )
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"JWT {token}")
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES"

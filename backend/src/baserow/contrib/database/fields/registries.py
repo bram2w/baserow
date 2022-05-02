@@ -84,6 +84,12 @@ class FieldType(
     can_be_in_form_view = True
     """Indicates whether the field is compatible with the form view."""
 
+    can_get_unique_values = True
+    """
+    Indicates whether this field can generate a list of unique values using the
+    `FieldHandler::get_unique_row_values` method.
+    """
+
     read_only = False
     """Indicates whether the field allows inserting/updating row values or if it is
     read only."""

@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.conf import settings
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import permission_classes as method_permission_classes
@@ -6,7 +7,11 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import validate_body_custom_fields, map_exceptions
+from baserow.api.decorators import (
+    validate_body_custom_fields,
+    map_exceptions,
+    validate_query_parameters,
+)
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
@@ -22,6 +27,7 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_INVALID_BASEROW_FIELD_NAME,
     ERROR_FIELD_SELF_REFERENCE,
     ERROR_FIELD_CIRCULAR_REFERENCE,
+    ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
 )
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
@@ -34,6 +40,7 @@ from baserow.contrib.database.fields.exceptions import (
     ReservedBaserowFieldNameException,
     FieldWithSameNameAlreadyExists,
     InvalidBaserowFieldName,
+    IncompatibleFieldTypeForUniqueValues,
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
@@ -50,6 +57,8 @@ from .serializers import (
     UpdateFieldSerializer,
     FieldSerializerWithRelatedFields,
     RelatedFieldsSerializer,
+    UniqueRowValueParamsSerializer,
+    UniqueRowValuesSerializer,
 )
 from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
@@ -394,3 +403,63 @@ class FieldView(APIView):
             updated_fields = FieldHandler().delete_field(request.user, field)
 
         return Response(RelatedFieldsSerializer({}, related_fields=updated_fields).data)
+
+
+class UniqueRowValueFieldView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="field_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns the values related to the provided field.",
+            ),
+            OpenApiParameter(
+                name="limit",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Defines how many values should be returned.",
+            ),
+            OpenApiParameter(
+                name="split_comma_separated",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.BOOL,
+                description="Indicates whether the original column values must be "
+                "splitted by comma.",
+            ),
+        ],
+        tags=["Database table fields"],
+        operation_id="get_database_field_unique_row_values",
+        description=(
+            "Returns a list of all the unique row values for an existing field, sorted "
+            "in order of frequency."
+        ),
+        responses={
+            200: UniqueRowValuesSerializer,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_FIELD_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            IncompatibleFieldTypeForUniqueValues: ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
+        }
+    )
+    @validate_query_parameters(UniqueRowValueParamsSerializer)
+    def get(self, request, field_id, query_params):
+        field = FieldHandler().get_field(field_id)
+        limit = query_params.get("limit")
+        split_comma_separated = query_params.get("split_comma_separated")
+
+        if not limit or limit > settings.UNIQUE_ROW_VALUES_SIZE_LIMIT:
+            limit = settings.UNIQUE_ROW_VALUES_SIZE_LIMIT
+
+        values = FieldHandler().get_unique_row_values(
+            field, limit, split_comma_separated=split_comma_separated
+        )
+
+        return Response(UniqueRowValuesSerializer({"values": values}).data)

@@ -68,6 +68,7 @@
         :is="getFormComponent(values.type)"
         ref="childForm"
         :table="table"
+        :field-type="values.type"
         :name="values.name"
         :default-values="defaultValues"
         @validate="$v.$touch"
