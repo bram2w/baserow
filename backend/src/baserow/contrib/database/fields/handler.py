@@ -1,18 +1,28 @@
 import logging
 from copy import deepcopy
 from typing import Dict, Any, Optional, List
+from psycopg2 import sql
 
 from django.conf import settings
 from django.db import connection
 from django.db.utils import ProgrammingError, DataError
+
 
 from baserow.contrib.database.db.schema import (
     lenient_schema_editor,
     safe_django_schema_editor,
 )
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
+from baserow.contrib.database.fields.models import TextField
+from baserow.contrib.database.fields.field_converters import (
+    MultipleSelectConversionConfig,
+)
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.db.sql_queries import (
+    sql_drop_try_cast,
+    sql_create_try_cast,
+)
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import extract_allowed, set_allowed_attrs
@@ -29,6 +39,7 @@ from .exceptions import (
     ReservedBaserowFieldNameException,
     InvalidBaserowFieldName,
     MaxFieldNameLengthExceeded,
+    IncompatibleFieldTypeForUniqueValues,
 )
 from .models import Field, SelectOption
 from .registries import field_type_registry, field_converter_registry
@@ -784,3 +795,121 @@ class FieldHandler:
                 field_restored.send(self, field=field, user=None, related_fields=[])
             else:
                 raise e
+
+    def get_unique_row_values(
+        self, field: Field, limit: int, split_comma_separated: bool = False
+    ) -> List[str]:
+        """
+        Returns a list of all the unique row values for a field, sorted in order of
+        frequency.
+
+        :param field: The field whose unique values are needed.
+        :param limit: The maximum number of values returned.
+        :param split_comma_separated: Indicates whether the text values must be split by
+            comma.
+        :return: A list containing the unique values sorted by frequency.
+        """
+
+        model = field.table.get_model()
+        field_object = model._field_objects[field.id]
+        field_type = field_object["type"]
+        field = field_object["field"]
+
+        if not field_type.can_get_unique_values:
+            raise IncompatibleFieldTypeForUniqueValues(
+                f"The field type `{field_object['type']}`"
+            )
+
+        # Prepare the old value sql `p_in` to convert prepare the old value to be
+        # converted to string. This is the same psql that's used when converting the
+        # a field type to another type, so we're sure it's converted to the right
+        # "neutral" text value.
+        alter_column_prepare_old_value = field_type.get_alter_column_prepare_old_value(
+            connection, field, TextField()
+        )
+        variables = ()
+
+        # In some cases, the `get_alter_column_prepare_old_value` returns a tuple
+        # where the first part if the psql and the second variables that must be
+        # safely be injected.
+        if isinstance(alter_column_prepare_old_value, tuple):
+            variables = alter_column_prepare_old_value[1]
+            alter_column_prepare_old_value = alter_column_prepare_old_value[0]
+
+        # Create the temporary function try cast function. This function makes sure
+        # the that if the casting fails, the query doesn't fail hard, but falls back
+        # `null`.
+        with connection.cursor() as cursor:
+            cursor.execute(sql_drop_try_cast)
+            cursor.execute(
+                sql_create_try_cast
+                % {
+                    "alter_column_prepare_old_value": alter_column_prepare_old_value
+                    or "",
+                    "alter_column_prepare_new_value": "",
+                    "type": "text",
+                },
+                variables,
+            )
+
+        # If `split_comma_separated` is `True`, then we first need to explode the raw
+        # column values by comma. This means that if one of the values contains a `,
+        # `, it will be treated as two values. This is for example needed when
+        # converting to a multiple select field.
+        if split_comma_separated:
+            subselect = sql.SQL(
+                """
+                    select
+                        trim(
+                            both {trimmed} from
+                            unnest(
+                                regexp_split_to_array(
+                                    pg_temp.try_cast({column}::text), {regex}
+                                )
+                            )
+                        ) as col
+                    from
+                        {table}
+                    WHERE trashed = false
+                """
+            ).format(
+                table=sql.Identifier(model._meta.db_table),
+                trimmed=sql.Literal(
+                    MultipleSelectConversionConfig.trim_empty_and_quote
+                ),
+                column=sql.Identifier(field.db_column),
+                regex=sql.Literal(MultipleSelectConversionConfig.regex_split),
+            )
+        # Alternatively, we just want to select the raw column value.
+        else:
+            subselect = sql.SQL(
+                """
+                SELECT pg_temp.try_cast({column}::text) as col
+                FROM {table}
+                WHERE trashed = false
+                """
+            ).format(
+                table=sql.Identifier(model._meta.db_table),
+                column=sql.Identifier(field.db_column),
+            )
+
+        # Finally, we executed the constructed query and return the results as a list.
+        query = sql.SQL(
+            """
+            select col
+            from ({table_select}) as tmp_table
+            where col != '' and col is NOT NULL
+            group by col
+            order by count(col) DESC
+            limit {limit}
+            """
+        ).format(
+            table_select=subselect,
+            limit=sql.Literal(limit),
+        )
+
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            res = cursor.fetchall()
+
+        return [x[0] for x in res]

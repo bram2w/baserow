@@ -101,3 +101,8 @@ ERROR_INVALID_SELECT_OPTION_VALUES = (
     HTTP_400_BAD_REQUEST,
     "The provided select option ids {e.ids} are not valid select options.",
 )
+ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES = (
+    "ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES",
+    HTTP_400_BAD_REQUEST,
+    "The requested field type is not compatible with generating unique values.",
+)

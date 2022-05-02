@@ -144,3 +144,7 @@ class InvalidLookupTargetField(Exception):
     Raised when a a lookup field is attempted to be created or updated with a target
     field that does not exist or is not in the through fields linked table.
     """
+
+
+class IncompatibleFieldTypeForUniqueValues(Exception):
+    """Raised when the unique values of an incompatible field are requested."""

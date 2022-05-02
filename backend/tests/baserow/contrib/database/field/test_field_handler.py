@@ -18,6 +18,7 @@ from baserow.contrib.database.fields.exceptions import (
     MaxFieldLimitExceeded,
     FieldWithSameNameAlreadyExists,
     ReservedBaserowFieldNameException,
+    IncompatibleFieldTypeForUniqueValues,
 )
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
@@ -1072,3 +1073,85 @@ def test_can_convert_formula_to_numeric_field(data_fixture):
     assert Field.objects.all().count() == 1
     assert NumberField.objects.all().count() == 1
     assert FormulaField.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_get_unique_row_values(data_fixture):
+    table = data_fixture.create_database_table()
+    text_field = data_fixture.create_text_field(table=table, name="text")
+    file_field = data_fixture.create_file_field(table=table, name="file")
+
+    model = table.get_model(attribute_names=True)
+    model.objects.create(text="value5")
+    model.objects.create(text="value1")
+    model.objects.create(text="value1,value2")
+    model.objects.create(text="value2,value3")
+    model.objects.create(text="value4")
+    model.objects.create(text="value5")
+    model.objects.create(text="value5")
+    model.objects.create(text="value3,value5")
+    model.objects.create(text="value3,value5")
+    model.objects.create(text="")
+    model.objects.create(text=None)
+
+    handler = FieldHandler()
+
+    with pytest.raises(IncompatibleFieldTypeForUniqueValues):
+        handler.get_unique_row_values(field=file_field, limit=10)
+
+    values = list(handler.get_unique_row_values(field=text_field, limit=10))
+    assert values == [
+        "value5",
+        "value3,value5",
+        "value2,value3",
+        "value1,value2",
+        "value4",
+        "value1",
+    ]
+
+    values = list(handler.get_unique_row_values(field=text_field, limit=2))
+    assert values == ["value5", "value3,value5"]
+
+    values = list(
+        handler.get_unique_row_values(
+            field=text_field, limit=10, split_comma_separated=True
+        )
+    )
+    assert values == ["value5", "value3", "value2", "value1", "value4"]
+
+    values = list(
+        handler.get_unique_row_values(
+            field=text_field, limit=2, split_comma_separated=True
+        )
+    )
+    assert values == ["value5", "value3"]
+
+
+@pytest.mark.django_db
+def test_get_unique_row_values_single_select(data_fixture):
+    table = data_fixture.create_database_table()
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="single_select"
+    )
+    option_1 = data_fixture.create_select_option(
+        field=single_select_field, value="Option 1"
+    )
+    option_2 = data_fixture.create_select_option(
+        field=single_select_field, value="Option 2"
+    )
+
+    model = table.get_model(attribute_names=True)
+    model.objects.create(singleselect=option_1)
+    model.objects.create(singleselect=option_2)
+    model.objects.create(singleselect=option_1)
+    model.objects.create(singleselect=option_2)
+    model.objects.create(singleselect=option_2)
+    model.objects.create(singleselect=option_2)
+    model.objects.create()
+
+    handler = FieldHandler()
+
+    # By testing the single select field, we actually test if the
+    # `get_alter_column_prepare_old_value` method is being used correctly.
+    values = list(handler.get_unique_row_values(field=single_select_field, limit=10))
+    assert values == ["Option 2", "Option 1"]

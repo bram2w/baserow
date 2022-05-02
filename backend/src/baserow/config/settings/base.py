@@ -437,6 +437,8 @@ BATCH_ROWS_SIZE_LIMIT = int(
 
 TRASH_PAGE_SIZE_LIMIT = 200  # How many trash entries can be requested at once.
 ROW_COMMENT_PAGE_SIZE_LIMIT = 200  # How many row comments can be requested at once.
+# How many unique row values can be requested at once.
+UNIQUE_ROW_VALUES_SIZE_LIMIT = 50
 
 # The amount of rows that can be imported when creating a table.
 INITIAL_TABLE_DATA_LIMIT = None

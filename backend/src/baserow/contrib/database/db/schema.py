@@ -4,6 +4,8 @@ from django.db import connection, transaction
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.backends.utils import strip_quotes
 
+from .sql_queries import sql_drop_try_cast, sql_create_try_cast
+
 
 class PostgresqlLenientDatabaseSchemaEditor:
     """
@@ -18,27 +20,6 @@ class PostgresqlLenientDatabaseSchemaEditor:
         "ALTER COLUMN %(column)s TYPE %(type)s "
         "USING pg_temp.try_cast(%(column)s::text)"
     )
-    sql_drop_try_cast = "DROP FUNCTION IF EXISTS pg_temp.try_cast(text, int)"
-    sql_create_try_cast = """
-        create or replace function pg_temp.try_cast(
-            p_in text,
-            p_default int default null
-        )
-            returns %(type)s
-        as
-        $FUNCTION$
-        begin
-            begin
-                %(alter_column_prepare_old_value)s
-                %(alter_column_prepare_new_value)s
-                return p_in::%(type)s;
-            exception when others then
-                return p_default;
-            end;
-        end;
-        $FUNCTION$
-        language plpgsql;
-    """
 
     def __init__(
         self,
@@ -84,9 +65,9 @@ class PostgresqlLenientDatabaseSchemaEditor:
             quoted_column_name = self.quote_name(new_field.column)
             for key, value in variables.items():
                 variables[key] = value.replace("$FUNCTION$", "")
-            self.execute(self.sql_drop_try_cast)
+            self.execute(sql_drop_try_cast)
             self.execute(
-                self.sql_create_try_cast
+                sql_create_try_cast
                 % {
                     "column": quoted_column_name,
                     "type": new_type,

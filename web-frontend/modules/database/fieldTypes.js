@@ -497,6 +497,24 @@ export class FieldType extends Registerable {
   canBeReferencedByFormulaField() {
     return false
   }
+
+  /**
+   * Determines whether a field type should automatically fetch select options
+   * when switching to a field type that supports select options, like the single or
+   * multiple select.
+   */
+  shouldFetchFieldSelectOptions() {
+    return true
+  }
+
+  /**
+   * Indicates whether this field type accepts single select suggestions splitted by
+   * a comma.  This is for example the case with a multiple select field because
+   * splits old values by comma on conversion.
+   */
+  acceptSplitCommaSeparatedSelectOptions() {
+    return false
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -757,6 +775,10 @@ export class LinkRowFieldType extends FieldType {
 
   canBeReferencedByFormulaField() {
     return true
+  }
+
+  shouldFetchFieldSelectOptions() {
+    return false
   }
 }
 
@@ -1646,6 +1668,10 @@ export class FileFieldType extends FieldType {
   getContainsFilterFunction() {
     return filenameContainsFilter
   }
+
+  shouldFetchFieldSelectOptions() {
+    return false
+  }
 }
 
 export class SingleSelectFieldType extends FieldType {
@@ -1786,6 +1812,10 @@ export class SingleSelectFieldType extends FieldType {
 
   canBeReferencedByFormulaField() {
     return true
+  }
+
+  shouldFetchFieldSelectOptions() {
+    return false
   }
 }
 
@@ -1934,6 +1964,14 @@ export class MultipleSelectFieldType extends FieldType {
 
   getEmptyValue() {
     return []
+  }
+
+  shouldFetchFieldSelectOptions() {
+    return false
+  }
+
+  acceptSplitCommaSeparatedSelectOptions() {
+    return true
   }
 }
 
@@ -2191,5 +2229,9 @@ export class LookupFieldType extends FormulaFieldType {
       return value.map((link) => link.value).join(', ')
     }
     return ''
+  }
+
+  shouldFetchFieldSelectOptions() {
+    return false
   }
 }

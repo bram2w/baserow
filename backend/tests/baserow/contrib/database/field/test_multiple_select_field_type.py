@@ -977,10 +977,16 @@ def test_converting_multiple_select_field_value(
         [option_1.value, option_2.value]
     )
 
-    # converting back to text field should split by comma and
-    # create the necessary select_options
+    # Converting back to multiple select using the unique row values as input,
+    # should automatically add the right options.
+    unique_values = field_handler.get_unique_row_values(
+        field=text_field, limit=10, split_comma_separated=True
+    )
     multiple_select_field = field_handler.update_field(
-        user=user, field=text_field, new_type_name="multiple_select"
+        user=user,
+        field=text_field,
+        new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
     )
     model = table.get_model()
     rows = model.objects.all()
@@ -1066,7 +1072,15 @@ def test_conversion_number_to_multiple_select_field(
 
     assert NumberField.objects.all().first().id == field.id
 
-    field_handler.update_field(user=user, field=field, new_type_name="multiple_select")
+    unique_values = field_handler.get_unique_row_values(
+        field=field, limit=10, split_comma_separated=True
+    )
+    field_handler.update_field(
+        user=user,
+        field=field,
+        new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
+    )
 
     field_type = field_type_registry.get_by_model(field)
     select_options = field.select_options.all()
@@ -1175,7 +1189,15 @@ def test_conversion_email_to_multiple_select_field(data_fixture):
 
     assert EmailField.objects.all().first().id == field.id
 
-    field_handler.update_field(user=user, field=field, new_type_name="multiple_select")
+    unique_values = field_handler.get_unique_row_values(
+        field=field, limit=10, split_comma_separated=True
+    )
+    field_handler.update_field(
+        user=user,
+        field=field,
+        new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
+    )
 
     field_type = field_type_registry.get_by_model(field)
     select_options = field.select_options.all()
@@ -1332,12 +1354,21 @@ def test_conversion_date_to_multiple_select_field(data_fixture):
         "2021-08-31 11:00",
     ]
 
-    for field in all_fields:
+    for index, field in enumerate(all_fields):
         field_handler.update_field(
-            user=user, field=field, new_type_name="multiple_select"
+            user=user,
+            field=field,
+            new_type_name="multiple_select",
+            **{
+                "type": "multiple_select",
+                "select_options": [{"value": all_results[index], "color": "red"}],
+            },
         )
 
-        field_type = field_type_registry.get_by_model(field)
+        field_model = field_handler.get_field(field.id)
+        field_type = field_type_registry.get_by_model(field_model.specific_class)
+        # Update field value after type change
+        # all_fields[index] = field_model.specific
         select_options = field.select_options.all()
         assert field_type.type == "multiple_select"
         assert len(select_options) == 1
@@ -1409,18 +1440,25 @@ def test_convert_long_text_to_multiple_select(data_fixture):
     field = field_handler.create_field(
         user=user, table=table, type_name="long_text", name="Text"
     )
-
+    field_value = "This is a description, with several, commas."
     row_handler.create_row(
         user=user,
         table=table,
-        values={f"field_{field.id}": "This is a description, with several, commas."},
+        values={f"field_{field.id}": field_value},
     )
-
     multiple_select_field = field_handler.update_field(
-        user=user, field=field, new_type_name="multiple_select"
+        user=user,
+        field=field,
+        new_type_name="multiple_select",
+        **{
+            "type": "multiple_select",
+            "select_options": [
+                {"value": value, "color": "red"} for value in field_value.split(", ")
+            ],
+        },
     )
 
-    assert len(SelectOption.objects.all()) == 3
+    assert len(field.select_options.all()) == 3
     model = table.get_model()
     rows = model.objects.all()
 
@@ -1586,8 +1624,14 @@ def test_convert_multiple_select_to_text_with_comma_and_quotes(data_fixture):
     assert cell_6 == '"Option 3,",'
 
     # converting back to multiple select should create 'Option 3,' without quotes
+    unique_values = field_handler.get_unique_row_values(
+        field=field, limit=10, split_comma_separated=True
+    )
     field = field_handler.update_field(
-        user=user, field=field, new_type_name="multiple_select"
+        user=user,
+        field=field,
+        new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
     )
     assert len(SelectOption.objects.all()) == 4
 
@@ -1750,10 +1794,14 @@ def test_conversion_to_multiple_select_with_more_than_threshold_options_in_extra
         },
     )
 
+    unique_values = field_handler.get_unique_row_values(
+        field=field_1, limit=200, split_comma_separated=True
+    )
     field_handler.update_field(
         user=user,
         field=field_1,
         new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
     )
 
     field_type = field_type_registry.get_by_model(field_1)
@@ -1895,10 +1943,16 @@ def test_conversion_to_multiple_select_with_option_value_too_large(
         },
     )
 
+    unique_values = field_handler.get_unique_row_values(
+        field=field_1, limit=10, split_comma_separated=True
+    )
     field_handler.update_field(
         user=user,
         field=field_1,
         new_type_name="multiple_select",
+        select_options=[
+            {"value": value[:255], "color": "blue"} for value in unique_values
+        ],
     )
 
     field_type = field_type_registry.get_by_model(field_1)
@@ -1952,10 +2006,14 @@ def test_conversion_to_multiple_select_with_same_option_value_on_same_row(
         },
     )
 
+    unique_values = field_handler.get_unique_row_values(
+        field=field_1, limit=10, split_comma_separated=True
+    )
     field_handler.update_field(
         user=user,
         field=field_1,
         new_type_name="multiple_select",
+        select_options=[{"value": value, "color": "blue"} for value in unique_values],
     )
 
     field_type = field_type_registry.get_by_model(field_1)
