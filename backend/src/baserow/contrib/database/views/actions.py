@@ -14,6 +14,8 @@ from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.action.scopes import ViewActionScopeType
 from django.contrib.auth.models import AbstractUser
 
+from baserow.core.trash.handler import TrashHandler
+
 
 class CreateViewFilterActionType(ActionType):
     type = "create_view_filter"
@@ -505,4 +507,103 @@ class OrderViewsActionType(ActionType):
             user,
             table,
             params.new_order,
+        )
+
+
+class DeleteViewActionType(ActionType):
+    type = "delete_view"
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+
+    @classmethod
+    def do(cls, user: AbstractUser, view: View):
+        """
+        Trashes an existing view instance.
+        See baserow.contrib.views.handler.ViewsHandler.delete_view for further details.
+        Undoing this action restores the view.
+        Redoing this action deletes the view again.
+
+        :param user: The user deleting the view.
+        :param view: The view to delete.
+        """
+
+        ViewHandler().delete_view(user, view)
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(view.id),
+            scope=cls.scope(int(view.table_id)),
+        )
+
+    @classmethod
+    def scope(cls, table_id: int) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        TrashHandler.restore_item(
+            user,
+            "view",
+            params.view_id,
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        view = ViewHandler().get_view(params.view_id)
+        ViewHandler().delete_view(user, view)
+
+
+class CreateViewActionType(ActionType):
+    type = "create_view"
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+
+    @classmethod
+    def do(cls, user: AbstractUser, table: Table, type_name: str, **kwargs) -> View:
+        """
+        Creates a new view based on the provided type.
+        See baserow.contrib.views.handler.ViewsHandler.create_view for further details.
+        Undoing this action deletes the view.
+        Redoing this action restores the view.
+
+        :param user: The user creating the view.
+        :param table: The table to create the view in.
+        :param type_name: The type of the view.
+        :param kwargs: The parameters of the view.
+        """
+
+        view = ViewHandler().create_view(
+            user,
+            table,
+            type_name,
+            **kwargs,
+        )
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(view.id),
+            scope=cls.scope(table.id),
+        )
+
+        return view
+
+    @classmethod
+    def scope(cls, table_id: int) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        view = ViewHandler().get_view(params.view_id)
+        ViewHandler().delete_view(user, view)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        TrashHandler.restore_item(
+            user,
+            "view",
+            params.view_id,
         )

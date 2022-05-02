@@ -115,16 +115,15 @@ class ViewHandler:
 
         return view
 
-    def create_view(self, user, table, type_name, **kwargs):
+    def create_view(
+        self, user: AbstractUser, table: Table, type_name: str, **kwargs
+    ) -> View:
         """
         Creates a new view based on the provided type.
 
         :param user: The user on whose behalf the view is created.
-        :type user: User
         :param table: The table that the view instance belongs to.
-        :type table: Table
         :param type_name: The type name of the view.
-        :type type_name: str
         :param kwargs: The fields that need to be set upon creation.
         :type kwargs: object
         :return: The created view instance.
@@ -239,14 +238,12 @@ class ViewHandler:
 
         return order
 
-    def delete_view(self, user, view):
+    def delete_view(self, user: AbstractUser, view: View):
         """
-        Deletes an existing view instance.
+        Trashes an existing view instance.
 
         :param user: The user on whose behalf the view is deleted.
-        :type user: User
         :param view: The view instance that needs to be deleted.
-        :type view: View
         :raises ViewDoesNotExist: When the view with the provided id does not exist.
         """
 
