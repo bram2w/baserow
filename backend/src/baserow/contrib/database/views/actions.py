@@ -1,5 +1,7 @@
 import dataclasses
-from typing import Optional, List
+
+from collections import defaultdict
+from typing import Dict, Any, Optional, List
 
 from baserow.contrib.database.action.scopes import TableActionScopeType
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -7,8 +9,9 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
-from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.handler import FieldOptionsDict, ViewHandler
 from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
+from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionScopeStr, ActionType
 from baserow.core.action.scopes import ViewActionScopeType
@@ -55,6 +58,7 @@ class CreateViewFilterActionType(ActionType):
         view_filter = ViewHandler().create_filter(
             user, view, field, filter_type, filter_value
         )
+
         cls.register_action(
             user=user,
             params=cls.Params(
@@ -127,7 +131,7 @@ class UpdateViewFilterActionType(ActionType):
         compared to the field's value.
         """
 
-        original_view_filter_field_id = view_filter.field.id
+        original_view_filter_field_id = view_filter.field_id
         original_view_filter_type = view_filter.type
         original_view_filter_value = view_filter.value
 
@@ -142,11 +146,11 @@ class UpdateViewFilterActionType(ActionType):
                 original_view_filter_field_id,
                 original_view_filter_type,
                 original_view_filter_value,
-                updated_view_filter.field.id,
+                updated_view_filter.field_id,
                 updated_view_filter.type,
                 updated_view_filter.value,
             ),
-            scope=cls.scope(view_filter.view.id),
+            scope=cls.scope(view_filter.view_id),
         )
 
         return updated_view_filter
@@ -201,7 +205,7 @@ class DeleteViewFilterActionType(ActionType):
     def do(
         cls,
         user: AbstractUser,
-        view_filter: View,
+        view_filter: ViewFilter,
     ):
         """
         Deletes an existing view filter.
@@ -214,8 +218,8 @@ class DeleteViewFilterActionType(ActionType):
         """
 
         view_filter_id = view_filter.id
-        view_id = view_filter.view.id
-        field_id = view_filter.field.id
+        view_id = view_filter.view_id
+        field_id = view_filter.field_id
         filter_type = view_filter.type
         filter_value = view_filter.value
 
@@ -448,7 +452,6 @@ class DeleteViewSortActionType(ActionType):
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
         view_sort = ViewHandler().get_sort(user, params.view_sort_id)
-
         ViewHandler().delete_sort(user, view_sort)
 
 
@@ -494,65 +497,205 @@ class OrderViewsActionType(ActionType):
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
         table = TableHandler().get_table(params.table_id)
-        ViewHandler().order_views(
-            user,
-            table,
-            params.original_order,
-        )
+        ViewHandler().order_views(user, table, params.original_order)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
         table = TableHandler().get_table(params.table_id)
-        ViewHandler().order_views(
-            user,
-            table,
-            params.new_order,
-        )
+        ViewHandler().order_views(user, table, params.new_order)
 
 
-class DeleteViewActionType(ActionType):
-    type = "delete_view"
+class UpdateViewFieldOptionsActionType(ActionType):
+    type = "update_view_field_options"
 
     @dataclasses.dataclass
     class Params:
         view_id: int
+        original_field_options: FieldOptionsDict
+        new_field_options: FieldOptionsDict
 
     @classmethod
-    def do(cls, user: AbstractUser, view: View):
+    def do(
+        cls,
+        user: AbstractUser,
+        view: View,
+        field_options: FieldOptionsDict,
+    ):
         """
-        Trashes an existing view instance.
-        See baserow.contrib.views.handler.ViewsHandler.delete_view for further details.
-        Undoing this action restores the view.
-        Redoing this action deletes the view again.
+        Updates the field options for the current view.
+        See baserow.contrib.database.views.handler.ViewHandler.update_field_options
+        for more.
+        Undoing this action restores the original field options.
+        Redoing this action updates the field options to the new ones.
 
-        :param user: The user deleting the view.
-        :param view: The view to delete.
+        :param user: The user creating the filter.
+        :param view: The view of the field_optinos to update.
+        :param field_options: The field options to set.
         """
 
-        ViewHandler().delete_view(user, view)
+        original_field_options = {
+            fo["field_id"]: fo for fo in view.get_field_options().values()
+        }
+
+        ViewHandler().update_field_options(
+            user=user, view=view, field_options=field_options
+        )
+
+        # save only field_options that have changed from the original value
+        new_field_options_to_save = defaultdict(dict)
+        original_field_options_to_save = defaultdict(dict)
+
+        for field_id, new_options in field_options.items():
+            original_options = original_field_options.get(field_id, {})
+            for key, new_value in new_options.items():
+                original_value = original_options.get(key, None)
+                if new_value != original_value:
+                    original_field_options_to_save[field_id][key] = original_value
+                    new_field_options_to_save[field_id][key] = new_value
 
         cls.register_action(
             user=user,
-            params=cls.Params(view.id),
-            scope=cls.scope(int(view.table_id)),
+            params=cls.Params(
+                view.id,
+                dict(original_field_options_to_save),
+                dict(new_field_options_to_save),
+            ),
+            scope=cls.scope(view.id),
         )
 
     @classmethod
-    def scope(cls, table_id: int) -> ActionScopeStr:
-        return TableActionScopeType.value(table_id)
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
-        TrashHandler.restore_item(
-            user,
-            "view",
-            params.view_id,
+        view_handler = ViewHandler()
+        view = view_handler.get_view(params.view_id).specific
+        view_handler.update_field_options(
+            user=user, view=view, field_options=params.original_field_options
         )
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
-        view = ViewHandler().get_view(params.view_id)
-        ViewHandler().delete_view(user, view)
+        view_handler = ViewHandler()
+        view = view_handler.get_view(params.view_id).specific
+        view_handler.update_field_options(
+            user=user, view=view, field_options=params.new_field_options
+        )
+
+
+class RotateViewSlugActionType(ActionType):
+    type = "rotate_view_slug"
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+        original_slug: str
+        new_slug: str
+
+    @classmethod
+    def do(cls, user: AbstractUser, view: View) -> View:
+        """
+        Change the slug for the current view.
+        See baserow.contrib.database.views.handler.ViewHandler.rotate_slug for more.
+        Undoing this action restores the original slug.
+        Redoing this action updates the slug to the new one.
+
+        :param user: The user creating the filter.
+        :param view: The view of the slug to update.
+        """
+
+        original_slug = view.slug
+
+        ViewHandler().rotate_view_slug(user, view)
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(view.id, original_slug, view.slug),
+            scope=cls.scope(view.id),
+        )
+        return view
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        view_handler = ViewHandler()
+        view = view_handler.get_view_for_update(params.view_id)
+        view_handler.update_view_slug(user, view, params.original_slug)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        view_handler = ViewHandler()
+        view = view_handler.get_view_for_update(params.view_id)
+        view_handler.update_view_slug(user, view, params.new_slug)
+
+
+class UpdateViewActionType(ActionType):
+    type = "update_view"
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+        original_data: Dict[str, Any]
+        new_data: Dict[str, Any]
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        view: View,
+        **data,
+    ) -> View:
+        """
+        Updates the current view.
+        See baserow.contrib.database.views.handler.ViewHandler.update_view for more.
+        Undoing this action restores the original values.
+        Redoing this action updates the values to the new ones.
+
+        :param user: The user creating the filter.
+        :param view: The view of the slug to update.
+        :params data: The data to update.
+        """
+
+        def get_prepared_values_for_data(view):
+            return {
+                key: value
+                for key, value in view_type.export_prepared_values(view).items()
+                if key in data
+            }
+
+        view_type = view_type_registry.get_by_model(view)
+        original_data = get_prepared_values_for_data(view)
+
+        view = ViewHandler().update_view(user, view, **data)
+
+        new_data = get_prepared_values_for_data(view)
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(view.id, original_data, new_data),
+            scope=cls.scope(view.id),
+        )
+        return view
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        view_handler = ViewHandler()
+        view = view_handler.get_view_for_update(params.view_id).specific
+        view_handler.update_view(user, view, **params.original_data)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        view_handler = ViewHandler()
+        view = view_handler.get_view_for_update(params.view_id).specific
+        view_handler.update_view(user, view, **params.new_data)
 
 
 class CreateViewActionType(ActionType):
@@ -597,13 +740,48 @@ class CreateViewActionType(ActionType):
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
-        view = ViewHandler().get_view(params.view_id)
-        ViewHandler().delete_view(user, view)
+        ViewHandler().delete_view_by_id(user, params.view_id)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
-        TrashHandler.restore_item(
-            user,
-            "view",
-            params.view_id,
+        TrashHandler.restore_item(user, "view", params.view_id)
+
+
+class DeleteViewActionType(ActionType):
+    type = "delete_view"
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+
+    @classmethod
+    def do(cls, user: AbstractUser, view: View):
+        """
+        Trashes an existing view instance.
+        See baserow.contrib.views.handler.ViewsHandler.delete_view for further details.
+        Undoing this action restores the view.
+        Redoing this action deletes the view again.
+
+        :param user: The user deleting the view.
+        :param view: The view to delete.
+        """
+
+        ViewHandler().delete_view(user, view)
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(view.id),
+            scope=cls.scope(view.table_id),
         )
+
+    @classmethod
+    def scope(cls, table_id: int) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        TrashHandler.restore_item(user, "view", params.view_id)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        ViewHandler().delete_view_by_id(user, params.view_id)

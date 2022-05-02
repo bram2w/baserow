@@ -91,17 +91,28 @@ class View(
     def public_view_has_password(self) -> bool:
         """
         Indicates whether the public view is password protected or not.
-        :return True if the public view is password protected, False otherwise.
+
+        :return: True if the public view is password protected, False otherwise.
         """
 
         return self.public_view_password != ""
 
     def rotate_slug(self):
         """
-        Rotates the slug used address this view.
+        Rotates the slug used to address this view.
         """
 
         self.slug = secrets.token_urlsafe()
+
+    @staticmethod
+    def create_new_slug() -> str:
+        """
+        Create a new slug for a view.
+
+        :return: The new slug.
+        """
+
+        return secrets.token_urlsafe()
 
     @staticmethod
     def make_password(password: str) -> str:
@@ -114,7 +125,7 @@ class View(
 
         return make_password(password)
 
-    def set_password(self, password: str) -> None:
+    def set_password(self, password: str):
         """
         Sets the public view password.
 
@@ -128,7 +139,7 @@ class View(
         Checks if the given password matches the public view password.
 
         :param password: The password to check.
-        :return True if the password matches, False otherwise.
+        :return: True if the password matches, False otherwise.
         """
 
         if not self.public_view_has_password:

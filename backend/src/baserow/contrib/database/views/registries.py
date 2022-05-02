@@ -1,12 +1,23 @@
-from typing import TYPE_CHECKING, Callable, Union, List, Iterable, Tuple, Dict, Any
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Optional,
+    Type,
+    Union,
+    List,
+    Iterable,
+    Tuple,
+)
+from zipfile import ZipFile
 
-from django.contrib.auth.models import User as DjangoUser
+from django.contrib.auth.models import AbstractUser
+from django.core.files.storage import Storage
 from django.db import models as django_models
 from rest_framework.fields import CharField
-
 from rest_framework.serializers import Serializer
 
-from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 from baserow.core.registry import (
     Instance,
     Registry,
@@ -19,7 +30,7 @@ from baserow.core.registry import (
     ImportExportMixin,
     MapAPIExceptionsInstanceMixin,
 )
-from baserow.contrib.database.fields import models as field_models
+from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 
 from .exceptions import (
     ViewTypeAlreadyRegistered,
@@ -34,7 +45,10 @@ from .exceptions import (
     DecoratorTypeAlreadyRegistered,
 )
 
+
 if TYPE_CHECKING:
+    from baserow.contrib.database.fields.models import Field
+    from baserow.contrib.database.table.models import Table
     from baserow.contrib.database.views.models import View
 
 
@@ -153,20 +167,18 @@ class ViewType(
                 ),
             }
 
-    def export_serialized(self, view, files_zip, storage):
+    def export_serialized(
+        self, view: "View", files_zip: ZipFile, storage: Optional[Storage] = None
+    ) -> Dict[str, Any]:
         """
         Exports the view to a serialized dict that can be imported by the
         `import_serialized` method. This dict is also JSON serializable.
 
         :param view: The view instance that must be exported.
-        :type view: View
         :param files_zip: A zip file buffer where the files related to the export
             must be copied into.
-        :type files_zip: ZipFile
         :param storage: The storage where the files can be loaded from.
-        :type storage: Storage or None
         :return: The exported view.
-        :rtype: dict
         """
 
         serialized = {
@@ -215,28 +227,27 @@ class ViewType(
         return serialized
 
     def import_serialized(
-        self, table, serialized_values, id_mapping, files_zip, storage
-    ):
+        self,
+        table: "Table",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        files_zip: ZipFile,
+        storage: Optional[Storage] = None,
+    ) -> "View":
         """
         Imported an exported serialized view dict that was exported via the
         `export_serialized` method. Note that all the fields must be imported first
         because we depend on the new field id to be in the mapping.
 
         :param table: The table where the view should be added to.
-        :type table: Table
         :param serialized_values: The exported serialized view values that need to
             be imported.
-        :type serialized_values: dict
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
-        :type id_mapping: dict
         :param files_zip: A zip file buffer where files related to the export can be
             extracted from.
-        :type files_zip: ZipFile
         :param storage: The storage where the files can be copied to.
-        :type storage: Storage or None
         :return: The newly created view instance.
-        :rtype: View
         """
 
         from .models import ViewFilter, ViewSort, ViewDecoration
@@ -318,7 +329,9 @@ class ViewType(
 
         return view
 
-    def get_visible_fields_and_model(self, view):
+    def get_visible_fields_and_model(
+        self, view: "View"
+    ) -> Tuple[List["Field"], django_models.Model]:
         """
         Returns the field objects for the provided view. Depending on the view type this
         will only return the visible or appropriate fields as different view types can
@@ -334,7 +347,9 @@ class ViewType(
         model = view.table.get_model()
         return model._field_objects.values(), model
 
-    def get_field_options_serializer_class(self, create_if_missing):
+    def get_field_options_serializer_class(
+        self, create_if_missing: bool
+    ) -> Type[Serializer]:
         """
         Generates a serializer that has the `field_options` property as a
         `FieldOptionsField`. This serializer can be used by the API to validate or list
@@ -342,11 +357,9 @@ class ViewType(
 
          :param create_if_missing: Whether or not to create any missing field options
             when looking them up during serialization.
-        :type create_if_missing: bool
         :raises ValueError: When the related view type does not have a field options
             serializer class.
         :return: The generated serializer.
-        :rtype: Serializer
         """
 
         from baserow.contrib.database.api.views.serializers import FieldOptionsField
@@ -394,7 +407,7 @@ class ViewType(
 
         return field_options
 
-    def after_field_type_change(self, field: field_models.Field) -> None:
+    def after_field_type_change(self, field: "Field") -> None:
         """
         This hook is called after the type of a field has changed and gives the
         possibility to check compatibility with view stuff like specific field options.
@@ -402,7 +415,9 @@ class ViewType(
         :param field: The concerned field.
         """
 
-    def prepare_values(self, values: dict, table, user: DjangoUser):
+    def prepare_values(
+        self, values: Dict[str, Any], table: "Table", user: AbstractUser
+    ) -> Dict[str, Any]:
         """
         The prepare_values hook gives the possibility to change the provided values
         just before they are going to be used to create or update the instance. For
@@ -411,22 +426,22 @@ class ViewType(
 
         :param values: The provided values.
         :param table: The table where the view is created in.
-        :type table: Table
         :param user: The user on whose behalf the change is made.
         :return: The updates values.
-        :type: dict
         """
 
         return values
 
-    def view_created(self, view):
+    def view_created(self, view: "View"):
         """
         A hook that's called when a new view is created.
 
         :param view: The newly created view instance.
         """
 
-    def get_visible_field_options_in_order(self, view):
+    def get_visible_field_options_in_order(
+        self, view: "View"
+    ) -> django_models.QuerySet:
         """
         Should return a queryset of all field options which are visible in the
         provided view and in the order they appear in the view.
@@ -442,7 +457,7 @@ class ViewType(
             "`get_visible_field_options_in_order`"
         )
 
-    def get_hidden_field_options(self, view):
+    def get_hidden_field_options(self, view: "View") -> django_models.QuerySet:
         """
         Should return a queryset of all field options which are hidden in the
         provided view.
@@ -472,7 +487,7 @@ class ViewType(
         )
 
     def after_field_value_update(
-        self, updated_fields: Union[Iterable[field_models.Field], field_models.Field]
+        self, updated_fields: Union[Iterable["Field"], "Field"]
     ):
         """
         Triggered for each field table value modification. This method is generally
@@ -484,9 +499,7 @@ class ViewType(
         :param update_fields: a unique or a list of affected field.
         """
 
-    def after_field_update(
-        self, updated_fields: Union[Iterable[field_models.Field], field_models.Field]
-    ):
+    def after_field_update(self, updated_fields: Union[Iterable["Field"], "Field"]):
         """
         Triggered after a field has been updated, created, deleted. This method is
         called for each group of field directly or indirectly modified this way.
@@ -502,6 +515,29 @@ class ViewType(
 
         :param view: the view which filter has changed.
         """
+
+    def export_prepared_values(self, view: "View") -> Dict[str, Any]:
+        """
+        Returns a serializable dict of prepared values for the view fields.
+        This method is the counterpart of `prepare_values`. It is called
+        by undo/redo ActionHandler to store the values in a way that could be
+        restored later on in in the UpdateView handler calling the `prepare_values`
+        method.
+
+        :param view: The view to use for export.
+        :return: A dict of prepared values for the provided fields.
+        """
+
+        values = {
+            "name": view.name,
+            "filter_type": view.filter_type,
+            "filters_disabled": view.filters_disabled,
+            "public_view_password": view.public_view_password,
+        }
+
+        values.update({key: getattr(view, key) for key in self.allowed_fields})
+
+        return values
 
 
 class ViewTypeRegistry(
@@ -551,9 +587,7 @@ class ViewFilterType(Instance):
         view_filter_type_registry.register(ExampleViewFilterType())
     """
 
-    compatible_field_types: List[
-        Union[str, Callable[["field_models.Field"], bool]]
-    ] = []
+    compatible_field_types: List[Union[str, Callable[["Field"], bool]]] = []
     """
     Defines which field types are compatible with the filter. Only the supported ones
     can be used in combination with the field. The values in this list can either be
@@ -670,7 +704,7 @@ class ViewAggregationType(Instance):
         self,
         field_name: str,
         model_field: django_models.Field,
-        field: field_models.Field,
+        field: "Field",
     ) -> django_models.Aggregate:
         """
         Should return the requested django aggregation object based on
@@ -689,7 +723,7 @@ class ViewAggregationType(Instance):
             "Each aggregation type must have his own get_aggregation method."
         )
 
-    def field_is_compatible(self, field: field_models.Field) -> bool:
+    def field_is_compatible(self, field: "Field") -> bool:
         """
         Given a particular instance of a field returns whether the field is supported
         by this aggregation type or not.
@@ -724,7 +758,7 @@ class DecoratorType(Instance):
     By declaring a new `DecoratorType` you allow a new decorator type to be created.
     """
 
-    def before_create_decoration(self, view, user: Union[DjangoUser, None]):
+    def before_create_decoration(self, view, user: Union[AbstractUser, None]):
         """
         This hook is called before a new decoration is created with this type.
 
@@ -732,7 +766,9 @@ class DecoratorType(Instance):
         :param user: Optionally a user on whose behalf the decoration is created.
         """
 
-    def before_update_decoration(self, view_decoration, user: Union[DjangoUser, None]):
+    def before_update_decoration(
+        self, view_decoration, user: Union[AbstractUser, None]
+    ):
         """
         This hook is called before an existing decoration is updated to this type.
 
@@ -779,7 +815,7 @@ class DecoratorValueProviderType(CustomFieldsInstanceMixin, Instance):
             ),
         }
 
-    def before_create_decoration(self, view, user: Union[DjangoUser, None]):
+    def before_create_decoration(self, view, user: Union[AbstractUser, None]):
         """
         This hook is called before a new decoration is created with this type.
 
@@ -787,7 +823,9 @@ class DecoratorValueProviderType(CustomFieldsInstanceMixin, Instance):
         :param user: Optionally a user on whose behalf the decoration is created.
         """
 
-    def before_update_decoration(self, view_decoration, user: Union[DjangoUser, None]):
+    def before_update_decoration(
+        self, view_decoration, user: Union[AbstractUser, None]
+    ):
         """
         This hook is called before an existing decoration is updated to this type.
 
@@ -809,10 +847,9 @@ class DecoratorValueProviderType(CustomFieldsInstanceMixin, Instance):
             updated when a new instance has been created.
         :return: The new value that will be imported.
         """
-
         return value
 
-    def after_field_delete(self, deleted_field: field_models.Field):
+    def after_field_delete(self, deleted_field: "Field"):
         """
         Triggered after a field has been deleted.
         This hook gives the opportunity to react when a field is deleted.
@@ -820,7 +857,7 @@ class DecoratorValueProviderType(CustomFieldsInstanceMixin, Instance):
         :param deleted_field: the deleted field.
         """
 
-    def after_field_type_change(self, field: field_models.Field):
+    def after_field_type_change(self, field: "Field"):
         """
         This hook is called after the type of a field has changed and gives the
         possibility to check compatibility or update configuration.

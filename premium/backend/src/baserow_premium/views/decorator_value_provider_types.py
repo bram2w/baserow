@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from baserow.contrib.database.fields.field_types import (
     SingleSelectFieldType,
 )
@@ -39,7 +41,9 @@ class SelectColorValueProviderType(PremiumDecoratorValueProviderType):
 
     value_provider_conf_serializer_class = SelectColorValueProviderConfSerializer
 
-    def set_import_serialized_value(self, value, id_mapping) -> str:
+    def set_import_serialized_value(
+        self, value: Dict[str, Any], id_mapping: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Update the field id with the newly created one.
         """
@@ -108,7 +112,9 @@ class ConditionalColorValueProviderType(PremiumDecoratorValueProviderType):
         ConditionalColorValueProviderConfColorsSerializer
     )
 
-    def set_import_serialized_value(self, value, id_mapping) -> str:
+    def set_import_serialized_value(
+        self, value: Dict[str, Any], id_mapping: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Update the field ids of each filter with the newly created one.
         """

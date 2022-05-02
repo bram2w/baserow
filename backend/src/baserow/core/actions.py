@@ -143,7 +143,7 @@ class UpdateGroupActionType(ActionType):
         :param group: A LockedGroup obtained from CoreHandler.get_group_for_update on
             which the update will be run.
         :param new_group_name: The new name to give the group.
-        :returns: The updated group.
+        :return: The updated group.
         """
 
         original_group_name = group.name

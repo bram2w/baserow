@@ -86,10 +86,33 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(MoveRowActionType())
         action_type_registry.register(UpdateRowActionType())
 
-        from .views.actions import DeleteViewActionType, CreateViewActionType
+        from baserow.contrib.database.views.actions import (
+            CreateViewActionType,
+            DeleteViewActionType,
+            OrderViewsActionType,
+            UpdateViewActionType,
+            CreateViewFilterActionType,
+            UpdateViewFilterActionType,
+            DeleteViewFilterActionType,
+            CreateViewSortActionType,
+            UpdateViewSortActionType,
+            DeleteViewSortActionType,
+            UpdateViewFieldOptionsActionType,
+            RotateViewSlugActionType,
+        )
 
-        action_type_registry.register(DeleteViewActionType())
         action_type_registry.register(CreateViewActionType())
+        action_type_registry.register(DeleteViewActionType())
+        action_type_registry.register(OrderViewsActionType())
+        action_type_registry.register(UpdateViewActionType())
+        action_type_registry.register(CreateViewFilterActionType())
+        action_type_registry.register(UpdateViewFilterActionType())
+        action_type_registry.register(DeleteViewFilterActionType())
+        action_type_registry.register(CreateViewSortActionType())
+        action_type_registry.register(UpdateViewSortActionType())
+        action_type_registry.register(DeleteViewSortActionType())
+        action_type_registry.register(RotateViewSlugActionType())
+        action_type_registry.register(UpdateViewFieldOptionsActionType())
 
         from .views.registries import (
             view_type_registry,
