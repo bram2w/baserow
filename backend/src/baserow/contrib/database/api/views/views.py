@@ -18,6 +18,8 @@ from baserow.contrib.database.views.actions import (
     UpdateViewFilterActionType,
     UpdateViewSortActionType,
     OrderViewsActionType,
+    CreateViewActionType,
+    DeleteViewActionType,
 )
 
 from drf_spectacular.utils import extend_schema
@@ -255,6 +257,7 @@ class ViewsView(APIView):
                     "a list of the views filters and sortings respectively."
                 ),
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table views"],
         operation_id="create_database_table_view",
@@ -292,7 +295,9 @@ class ViewsView(APIView):
         }
     )
     @allowed_includes("filters", "sortings", "decorations")
-    def post(self, request, data, table_id, filters, sortings, decorations):
+    def post(
+        self, request: Request, data, table_id: int, filters, sortings, decorations
+    ):
         """Creates a new view for a user."""
 
         type_name = data.pop("type")
@@ -300,7 +305,9 @@ class ViewsView(APIView):
         table = TableHandler().get_table(table_id)
 
         with view_type.map_api_exceptions():
-            view = ViewHandler().create_view(request.user, table, type_name, **data)
+            view = action_type_registry.get_by_type(CreateViewActionType).do(
+                request.user, table, type_name, **data
+            )
 
         serializer = view_type_registry.get_serializer(
             view,
@@ -463,7 +470,8 @@ class ViewView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Deletes the view related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table views"],
         operation_id="delete_database_table_view",
@@ -486,12 +494,12 @@ class ViewView(APIView):
             UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
         }
     )
-    def delete(self, request, view_id):
+    def delete(self, request: Request, view_id: int):
         """Deletes an existing view if the user belongs to the group."""
 
         view = ViewHandler().get_view(view_id)
 
-        ViewHandler().delete_view(request.user, view)
+        action_type_registry.get_by_type(DeleteViewActionType).do(request.user, view)
 
         return Response(status=204)
 
