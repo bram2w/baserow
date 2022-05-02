@@ -7,9 +7,9 @@ in Baserow. It can freely use Handlers to do the logic, but it almost certainly
 shouldn't call any other ActionType's unless it is some sort of `meta` ActionAction if
 we ever have one. ActionTypes will be retrieved from a registry given a type and
 triggered by `API` methods (
-e.g. `action_registry.get_by_type(DeleteGroupAction).do(user, group_to_delete)`).
+e.g. `action_type_registry.get_by_type(DeleteGroupAction).do(user, group_to_delete)`).
 
-1. In `backend/src/baserow/core/actions/registries.py` there is a `action_registry`
+1. In `backend/src/baserow/core/actions/registries.py` there is a `action_type_registry`
    which can be used to register `ActionType`'s
 2. An `ActionType` must implement `do`/`undo`/`redo` methods.
     1. `do` Performs the action when a user requests it to happen, it must also save
@@ -94,7 +94,7 @@ category is active.
         1. The `ClientSessionId` header is set on the request
            to `example_client_session_id`
     1. The table update API endpoint will
-       call `action_registry.get(UpdateTableAction).do(user, ...)`
+       call `action_type_registry.get(UpdateTableAction).do(user, ...)`
     2. The change is made and a new Action is stored.
         1. UpdateTableAction sets the `category` of the action to be `group1`
         1. The `ClientSessionId` is found from the request and the session of the action
@@ -118,7 +118,7 @@ category is active.
            the `undone_at` column is null).
         1. It deserializes the parameters for the latest action from the table into the
            action's `Params` dataclass
-        1. It calls `action_registry.get(UpdateTableAction).undo(user, params,
+        1. It calls `action_type_registry.get(UpdateTableAction).undo(user, params,
            action_to_undo)
         1. UpdateTableAction using the params undoes the action
         1. Action.undone_at is set to `timezone.now()` indicating it has now been undone
