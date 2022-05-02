@@ -38,7 +38,6 @@ export default {
   },
   watch: {
     fieldType() {
-      console.log('field type change')
       this.checkFetchOptions()
     },
   },
@@ -52,7 +51,8 @@ export default {
     },
     checkFetchOptions() {
       if (
-        this.fieldType !== '' &&
+        this.fieldType &&
+        this.defaultValues.type &&
         this.defaultValues.type !== this.fieldType &&
         this.$registry
           .get('field', this.defaultValues.type)
