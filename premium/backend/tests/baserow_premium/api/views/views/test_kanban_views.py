@@ -8,8 +8,13 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from baserow_premium.views.models import KanbanView
+from baserow.core.action.handler import ActionHandler
+from baserow.core.action.registries import action_type_registry
+from baserow.core.action.scopes import ViewActionScopeType
+from baserow.contrib.database.views.actions import UpdateViewActionType
 from baserow.contrib.database.views.handler import ViewHandler
+
+from baserow_premium.views.models import KanbanView
 
 
 @pytest.mark.django_db
@@ -879,3 +884,101 @@ def test_update_kanban_view_card_cover_image_field(
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["card_cover_image_field"] == cover_image_file_field.id
+
+
+@pytest.mark.django_db
+def test_can_undo_redo_update_kanban_view(data_fixture, premium_data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    table = premium_data_fixture.create_database_table(user=user)
+    single_select_field_1 = premium_data_fixture.create_single_select_field(table=table)
+    single_select_field_2 = premium_data_fixture.create_single_select_field(table=table)
+    cover_image_file_field_1 = data_fixture.create_file_field(table=table)
+    cover_image_file_field_2 = data_fixture.create_file_field(table=table)
+    kanban_view = premium_data_fixture.create_kanban_view(table=table)
+
+    original_kanban_data = {
+        "name": "Test Original",
+        "filter_type": "AND",
+        "filters_disabled": False,
+        "single_select_field": single_select_field_1,
+        "card_cover_image_field": cover_image_file_field_1,
+    }
+
+    kanban_view = ViewHandler().update_view(user, kanban_view, **original_kanban_data)
+
+    assert kanban_view.name == original_kanban_data["name"]
+    assert kanban_view.filter_type == original_kanban_data["filter_type"]
+    assert kanban_view.filters_disabled == original_kanban_data["filters_disabled"]
+    assert (
+        kanban_view.single_select_field_id
+        == original_kanban_data["single_select_field"].id
+    )
+    assert (
+        kanban_view.card_cover_image_field_id
+        == original_kanban_data["card_cover_image_field"].id
+    )
+
+    new_kanban_data = {
+        "name": "Test New",
+        "filter_type": "OR",
+        "filters_disabled": True,
+        "single_select_field": single_select_field_2,
+        "card_cover_image_field": cover_image_file_field_2,
+    }
+
+    kanban_view = action_type_registry.get_by_type(UpdateViewActionType).do(
+        user, kanban_view, **new_kanban_data
+    )
+
+    assert kanban_view.name == new_kanban_data["name"]
+    assert kanban_view.filter_type == new_kanban_data["filter_type"]
+    assert kanban_view.filters_disabled == new_kanban_data["filters_disabled"]
+    assert (
+        kanban_view.single_select_field_id == new_kanban_data["single_select_field"].id
+    )
+    assert (
+        kanban_view.card_cover_image_field_id
+        == new_kanban_data["card_cover_image_field"].id
+    )
+
+    action_undone = ActionHandler.undo(
+        user, [ViewActionScopeType.value(kanban_view.id)], session_id
+    )
+
+    kanban_view.refresh_from_db()
+    assert action_undone is not None
+    assert action_undone.type == UpdateViewActionType.type
+    assert action_undone.error is None
+
+    assert kanban_view.name == original_kanban_data["name"]
+    assert kanban_view.filter_type == original_kanban_data["filter_type"]
+    assert kanban_view.filters_disabled == original_kanban_data["filters_disabled"]
+    assert (
+        kanban_view.single_select_field_id
+        == original_kanban_data["single_select_field"].id
+    )
+    assert (
+        kanban_view.card_cover_image_field_id
+        == original_kanban_data["card_cover_image_field"].id
+    )
+
+    action_redone = ActionHandler.redo(
+        user, [ViewActionScopeType.value(kanban_view.id)], session_id
+    )
+
+    kanban_view.refresh_from_db()
+    assert action_redone is not None
+    assert action_redone.type == UpdateViewActionType.type
+    assert action_redone.error is None
+
+    assert kanban_view.name == new_kanban_data["name"]
+    assert kanban_view.filter_type == new_kanban_data["filter_type"]
+    assert kanban_view.filters_disabled == new_kanban_data["filters_disabled"]
+    assert (
+        kanban_view.single_select_field_id == new_kanban_data["single_select_field"].id
+    )
+    assert (
+        kanban_view.card_cover_image_field_id
+        == new_kanban_data["card_cover_image_field"].id
+    )

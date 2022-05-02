@@ -1,5 +1,10 @@
 from collections import defaultdict
+from typing import Any, Dict
+
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import AbstractUser
 from django.urls import path, include
+
 from rest_framework.serializers import PrimaryKeyRelatedField
 
 from baserow.api.user_files.serializers import UserFileField
@@ -22,8 +27,10 @@ from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
 from baserow.core.user_files.handler import UserFileHandler
+from baserow.core.user_files.models import UserFile
 from .exceptions import (
     FormViewFieldTypeIsNotSupported,
     GridViewAggregationDoesNotSupportField,
@@ -380,6 +387,19 @@ class GalleryViewType(ViewType):
                 hidden=False
             )
 
+    def export_prepared_values(self, view: GalleryView) -> Dict[str, Any]:
+        """
+        Add `card_cover_image_field` to the exportable fields.
+
+        :param view: The gallery view to export.
+        :return: The prepared values.
+        """
+
+        values = super().export_prepared_values(view)
+        values["card_cover_image_field"] = view.card_cover_image_field_id
+
+        return values
+
 
 class FormViewType(ViewType):
     type = "form"
@@ -543,3 +563,57 @@ class FormViewType(ViewType):
             .filter(enabled=True)
             .order_by("-field__primary", "order", "field__id")
         )
+
+    def prepare_values(
+        self, values: Dict[str, Any], table: Table, user: AbstractUser
+    ) -> Dict[str, Any]:
+        """
+        Prepares the values for the form view.
+        If a serialized version of UserFile is found, it will be converted to a
+        UserFile object.
+
+        :param values: The values to prepare.
+        :param table: The table the form view belongs to.
+        :param user: The user that is submitting the form.
+        :raises: ValidationError if the provided value for images is not
+            compatible with UserFile.
+        :return: The prepared values.
+        """
+
+        for user_file_key in ["cover_image", "logo_image"]:
+            user_file = values.get(user_file_key, None)
+
+            if user_file is None:
+                continue
+
+            if isinstance(user_file, dict):
+                values[user_file_key] = UserFileHandler().get_user_file_by_name(
+                    user_file.get("name", None)
+                )
+
+            elif not isinstance(user_file, UserFile):
+                raise ValidationError(
+                    f"Invalid user file type. '{user_file_key}' should be a UserFile \
+                        instance or the serialized version of it."
+                )
+
+        return super().prepare_values(values, table, user)
+
+    def export_prepared_values(self, view: FormView) -> Dict[str, Any]:
+        """
+        Add form fields to the exportable fields for undo/redo.
+        This is the counterpart of prepare_values. Starting from object instances,
+        it exports data to a serialized version of the object, in a way that
+        prepare_values can be used to import it.
+
+        :param view: The gallery view to export.
+        :return: The prepared values.
+        """
+
+        values = super().export_prepared_values(view)
+
+        for field in ["cover_image", "logo_image"]:
+            user_file = getattr(view, field)
+            values[field] = user_file and user_file.serialize()
+
+        return values

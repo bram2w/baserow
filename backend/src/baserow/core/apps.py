@@ -36,24 +36,6 @@ class CoreConfig(AppConfig):
         action_type_registry.register(DeleteApplicationActionType())
         action_type_registry.register(OrderApplicationsActionType())
 
-        from baserow.contrib.database.views.actions import (
-            CreateViewFilterActionType,
-            UpdateViewFilterActionType,
-            DeleteViewFilterActionType,
-            CreateViewSortActionType,
-            UpdateViewSortActionType,
-            DeleteViewSortActionType,
-            OrderViewsActionType,
-        )
-
-        action_type_registry.register(CreateViewFilterActionType())
-        action_type_registry.register(UpdateViewFilterActionType())
-        action_type_registry.register(DeleteViewFilterActionType())
-        action_type_registry.register(CreateViewSortActionType())
-        action_type_registry.register(UpdateViewSortActionType())
-        action_type_registry.register(DeleteViewSortActionType())
-        action_type_registry.register(OrderViewsActionType())
-
         from baserow.core.action.scopes import (
             RootActionScopeType,
             GroupActionScopeType,

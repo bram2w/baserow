@@ -11,15 +11,18 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.views.actions import (
-    CreateViewFilterActionType,
-    CreateViewSortActionType,
-    DeleteViewFilterActionType,
-    DeleteViewSortActionType,
-    UpdateViewFilterActionType,
-    UpdateViewSortActionType,
-    OrderViewsActionType,
     CreateViewActionType,
     DeleteViewActionType,
+    OrderViewsActionType,
+    UpdateViewActionType,
+    CreateViewFilterActionType,
+    DeleteViewFilterActionType,
+    UpdateViewFilterActionType,
+    CreateViewSortActionType,
+    DeleteViewSortActionType,
+    UpdateViewSortActionType,
+    UpdateViewFieldOptionsActionType,
+    RotateViewSlugActionType,
 )
 
 from drf_spectacular.utils import extend_schema
@@ -401,6 +404,7 @@ class ViewView(APIView):
                     "a list of the views filters and sortings respectively."
                 ),
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table views"],
         operation_id="update_database_table_view",
@@ -434,14 +438,17 @@ class ViewView(APIView):
         }
     )
     @allowed_includes("filters", "sortings", "decorations")
-    def patch(self, request, view_id, filters, sortings, decorations):
+    def patch(
+        self,
+        request: Request,
+        view_id: int,
+        filters: bool,
+        sortings: bool,
+        decorations: bool,
+    ) -> Response:
         """Updates the view if the user belongs to the group."""
 
-        view = (
-            ViewHandler()
-            .get_view(view_id, base_queryset=View.objects.select_for_update())
-            .specific
-        )
+        view = ViewHandler().get_view_for_update(view_id).specific
         view_type = view_type_registry.get_by_model(view)
         data = validate_data_custom_fields(
             view_type.type,
@@ -452,7 +459,9 @@ class ViewView(APIView):
         )
 
         with view_type.map_api_exceptions():
-            view = ViewHandler().update_view(request.user, view, **data)
+            view = action_type_registry.get_by_type(UpdateViewActionType).do(
+                request.user, view, **data
+            )
 
         serializer = view_type_registry.get_serializer(
             view,
@@ -1388,10 +1397,10 @@ class ViewFieldOptionsView(APIView):
             serializer_class = view_type.get_field_options_serializer_class(
                 create_if_missing=True
             )
-        except ValueError:
+        except ValueError as exc:
             raise ViewDoesNotSupportFieldOptions(
                 "The view type does not have a `field_options_serializer_class`"
-            )
+            ) from exc
 
         return Response(serializer_class(view).data)
 
@@ -1402,7 +1411,8 @@ class ViewFieldOptionsView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Updates the field options related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table views"],
         operation_id="update_database_table_view_field_options",
@@ -1430,7 +1440,7 @@ class ViewFieldOptionsView(APIView):
             ViewDoesNotSupportFieldOptions: ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
         }
     )
-    def patch(self, request, view_id):
+    def patch(self, request: Request, view_id: int) -> Response:
         """Updates the field option of the view."""
 
         handler = ViewHandler()
@@ -1442,8 +1452,10 @@ class ViewFieldOptionsView(APIView):
         data = validate_data(serializer_class, request.data)
 
         with view_type.map_api_exceptions():
-            handler.update_field_options(
-                user=request.user, view=view, field_options=data["field_options"]
+            action_type_registry.get_by_type(UpdateViewFieldOptionsActionType).do(
+                request.user,
+                view,
+                field_options=data["field_options"],
             )
 
         serializer = serializer_class(view)
@@ -1462,7 +1474,8 @@ class RotateViewSlugView(APIView):
                 required=True,
                 description="Rotates the slug of the view related to the provided "
                 "value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table views"],
         operation_id="rotate_database_view_slug",
@@ -1492,12 +1505,13 @@ class RotateViewSlugView(APIView):
         }
     )
     @transaction.atomic
-    def post(self, request, view_id):
+    def post(self, request: Request, view_id: int) -> Response:
         """Rotates the slug of a view."""
 
-        handler = ViewHandler()
-        view = ViewHandler().get_view(view_id)
-        view = handler.rotate_view_slug(request.user, view)
+        view = action_type_registry.get_by_type(RotateViewSlugActionType).do(
+            request.user, ViewHandler().get_view_for_update(view_id)
+        )
+
         serializer = view_type_registry.get_serializer(view, ViewSerializer)
         return Response(serializer.data)
 

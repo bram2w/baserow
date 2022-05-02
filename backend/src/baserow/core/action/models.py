@@ -14,9 +14,7 @@ class JSONEncoderSupportingDataClasses(json.JSONEncoder):
     def default(self, o):
         if dataclasses.is_dataclass(o):
             return dataclasses.asdict(o)
-        if isinstance(o, Decimal):
-            return str(o)
-        if isinstance(o, (datetime, date)):
+        if isinstance(o, (Decimal, datetime, date)):
             return str(o)
         return super().default(o)
 
@@ -35,13 +33,13 @@ class Action(models.Model):
     undone_at = models.DateTimeField(null=True, blank=True, db_index=True)
     error = models.TextField(null=True, blank=True)
 
-    def is_undone(self):
+    def is_undone(self) -> bool:
         return self.undone_at is not None
 
-    def has_error(self):
+    def has_error(self) -> bool:
         return self.error is not None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"Action(user={self.user_id}, type={self.type}, scope={self.scope}, "
             f"created_on={self.created_on},  undone_at={self.undone_at}, params="

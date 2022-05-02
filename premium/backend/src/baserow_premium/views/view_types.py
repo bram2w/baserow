@@ -1,3 +1,7 @@
+from typing import Dict, Any
+from zipfile import ZipFile
+
+from django.core.files.storage import Storage
 from django.urls import path, include
 
 from rest_framework.serializers import PrimaryKeyRelatedField
@@ -5,7 +9,9 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 from baserow.contrib.database.fields.models import SingleSelectField, FileField
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
+from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import ViewType
+from baserow.contrib.database.table.models import Table
 from baserow_premium.api.views.kanban.serializers import (
     KanbanViewFieldOptionsSerializer,
 )
@@ -113,7 +119,12 @@ class KanbanViewType(ViewType):
         return serialized
 
     def import_serialized(
-        self, table, serialized_values, id_mapping, files_zip, storage
+        self,
+        table: Table,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        files_zip: ZipFile,
+        storage: Storage,
     ):
         """
         Imports the serialized kanban view field options.
@@ -146,7 +157,7 @@ class KanbanViewType(ViewType):
 
         return kanban_view
 
-    def view_created(self, view):
+    def view_created(self, view: View):
         """
         When a kanban view is created, we want to set the first three fields as visible.
         """
@@ -160,3 +171,12 @@ class KanbanViewType(ViewType):
             KanbanViewFieldOptions.objects.filter(id__in=ids_to_update).update(
                 hidden=False
             )
+
+    def export_prepared_values(self, view: KanbanView) -> Dict[str, Any]:
+
+        values = super().export_prepared_values(view)
+
+        values["single_select_field"] = view.single_select_field_id
+        values["card_cover_image_field"] = view.card_cover_image_field_id
+
+        return values

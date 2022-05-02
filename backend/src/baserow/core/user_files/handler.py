@@ -4,6 +4,7 @@ import mimetypes
 from os.path import join
 from io import BytesIO
 from urllib.parse import urlparse
+from typing import Optional
 
 import advocate
 from advocate.exceptions import UnacceptableAddressException
@@ -14,6 +15,7 @@ from PIL import Image, ImageOps
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db.models import QuerySet
 
 from baserow.core.utils import sha256_hash, stream_size, random_string, truncate_middle
 
@@ -28,6 +30,23 @@ from .models import UserFile
 
 
 class UserFileHandler:
+    def get_user_file_by_name(
+        self, user_file_name: int, base_queryset: Optional[QuerySet] = None
+    ) -> UserFile:
+        """
+        Returns the user file with the provided id.
+
+        :param user_file_id: The id of the user file.
+        :param base_queryset: The base queryset that will be used to get the user file.
+        :raises UserFile.DoesNotExist: If the user file does not exist.
+        :return: The user file.
+        """
+
+        if base_queryset is None:
+            base_queryset = UserFile.objects.all()
+
+        return base_queryset.name(user_file_name).get()
+
     def user_file_path(self, user_file_name):
         """
         Generates the full user file path based on the provided file name. This path
