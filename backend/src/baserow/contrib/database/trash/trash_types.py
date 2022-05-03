@@ -10,7 +10,7 @@ from baserow.contrib.database.fields.dependencies.update_collector import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.rows.signals import row_created
+from baserow.contrib.database.rows.signals import row_created, rows_created
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.contrib.database.table.signals import table_created
 from baserow.contrib.database.views.handler import ViewHandler
@@ -21,6 +21,7 @@ from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import RelatedTableTrashedException
 from baserow.core.trash.registries import TrashableItemType
+from .models import TrashedRows
 
 User = get_user_model()
 
@@ -218,6 +219,9 @@ class RowTrashableItemType(TrashableItemType):
     def get_name(self, trashed_item) -> str:
         return str(trashed_item.id)
 
+    def get_names(self, trashed_item: Any) -> str:
+        return [str(trashed_item) or f"unnamed row {trashed_item.id}"]
+
     def restore(self, trashed_item, trash_entry: TrashEntry):
         super().restore(trashed_item, trash_entry)
 
@@ -296,20 +300,105 @@ class RowTrashableItemType(TrashableItemType):
         table = self._get_table(table_id)
         return table.get_model()
 
-    # noinspection PyMethodMayBeStatic
-    def get_extra_description(self, trashed_item: Any, table) -> Optional[str]:
 
-        model = table.get_model()
-        for field in model._field_objects.values():
-            if field["field"].primary:
-                primary_value = field["type"].get_human_readable_value(
-                    getattr(trashed_item, field["name"]), field
+class RowsTrashableItemType(TrashableItemType):
+    type = "rows"
+    model_class = TrashedRows
+
+    @property
+    def requires_parent_id(self) -> bool:
+        # A row is not unique just with its ID. We also need the table id (parent id)
+        return True
+
+    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+        return self._get_table(parent_id)
+
+    @staticmethod
+    def _get_table(parent_id):
+        try:
+            return Table.objects_and_trash.get(id=parent_id)
+        except Table.DoesNotExist:
+            # The parent table must have been actually deleted, in which case the
+            # row itself no longer exits.
+            raise TrashItemDoesNotExist()
+
+    def get_name(self, trashed_item) -> str:
+        return " "
+
+    def get_names(self, trashed_item) -> list:
+        # When trashing the item, we store the row objects on the `trashed_item`,
+        # so that we can re-use it later and prevent a possibly expensive query.
+        if hasattr(trashed_item, "rows"):
+            rows = trashed_item.rows
+        else:
+            rows = (
+                trashed_item.table.get_model()
+                .objects_and_trash.filter(id__in=trashed_item.row_ids)
+                .enhance_by_fields()
+            )
+        return [str(row) or f"unnamed row {row.id}" for row in rows]
+
+    def restore(self, trashed_item, trash_entry: TrashEntry):
+        table = self._get_table(trashed_item.table_id)
+        table_model = self._get_table_model(trashed_item.table_id)
+        rows_to_restore = table_model.objects_and_trash.filter(
+            id__in=trashed_item.row_ids
+        ).enhance_by_fields()
+        for row in rows_to_restore:
+            row.trashed = False
+        table_model.objects_and_trash.bulk_update(rows_to_restore, ["trashed"])
+        trashed_item.delete()
+
+        update_collector = CachingFieldUpdateCollector(
+            table, existing_model=table_model, starting_row_id=trashed_item.row_ids
+        )
+        updated_fields = [f["field"] for f in table_model._field_objects.values()]
+        for field in updated_fields:
+            for (
+                dependant_field,
+                dependant_field_type,
+                path_to_starting_table,
+            ) in field.dependant_fields_with_types(update_collector):
+                dependant_field_type.row_of_dependency_created(
+                    dependant_field,
+                    rows_to_restore,
+                    update_collector,
+                    path_to_starting_table,
                 )
-                if primary_value is None or primary_value == "":
-                    primary_value = f"unnamed row {trashed_item.id}"
-                return primary_value
+        update_collector.apply_updates_and_get_updated_fields()
 
-        return "unknown row"
+        rows_created.send(
+            self,
+            rows=rows_to_restore,
+            table=table,
+            model=table_model,
+            before=None,
+            user=None,
+        )
+
+    def trash(self, item_to_trash, requesting_user):
+        """
+        Sets trashed=True for all the rows
+        """
+
+        table_model = self._get_table_model(item_to_trash.table_id)
+        table_model.objects.filter(id__in=item_to_trash.row_ids).update(trashed=True)
+        item_to_trash.save()
+
+    def permanently_delete_item(self, trashed_item, trash_item_lookup_cache=None):
+        table_model = self._get_table_model(trashed_item.table_id)
+        delete_qs = table_model.objects_and_trash.filter(id__in=trashed_item.row_ids)
+        delete_qs._raw_delete(delete_qs.db)
+        trashed_item.delete()
+
+    def lookup_trashed_item(
+        self, trashed_entry: TrashEntry, trash_item_lookup_cache=None
+    ):
+        return TrashedRows.objects.get(id=trashed_entry.trash_item_id)
+
+    def _get_table_model(self, table_id):
+        table = self._get_table(table_id)
+        return table.get_model()
 
 
 class ViewTrashableItemType(TrashableItemType):

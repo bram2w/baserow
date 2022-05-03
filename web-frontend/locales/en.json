@@ -156,6 +156,7 @@
         "table": "table",
         "field": "field",
         "row": "row",
+        "rows": "rows",
         "view": "view"
     },
     "webhook": {

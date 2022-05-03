@@ -11,6 +11,7 @@ from django.db.models.fields.related import ManyToManyField, ForeignKey
 
 from baserow.contrib.database.table.models import Table, GeneratedTableModel
 from baserow.core.trash.handler import TrashHandler
+from baserow.contrib.database.trash.models import TrashedRows
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
 from .signals import (
     before_row_update,
@@ -20,6 +21,7 @@ from .signals import (
     row_updated,
     rows_updated,
     row_deleted,
+    rows_deleted,
 )
 from baserow.contrib.database.fields.dependencies.update_collector import (
     CachingFieldUpdateCollector,
@@ -1104,7 +1106,7 @@ class RowHandler:
 
         :param user: The user of whose behalf the change is made.
         :param table: The table for which the row must be deleted.
-        :param row_: The row that must be deleted.
+        :param row: The row that must be deleted.
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
         """
@@ -1148,6 +1150,82 @@ class RowHandler:
             self,
             row_id=row_id,
             row=row,
+            user=user,
+            table=table,
+            model=model,
+            before_return=before_return,
+        )
+
+    def delete_rows(
+        self,
+        user: AbstractUser,
+        table: Table,
+        row_ids: List[int],
+        model: Optional[Type[GeneratedTableModel]] = None,
+    ):
+        """
+        Trashes existing rows of the given table based on row_ids.
+
+        :param user: The user of whose behalf the change is made.
+        :param table: The table for which the row must be deleted.
+        :param row_ids: The ids of the rows that must be deleted.
+        :param model:
+        :param model: If the correct model has already been generated, it can be
+            provided so that it does not have to be generated for a second time.
+        :raises RowDoesNotExist: When the row with the provided id does not exist.
+        """
+
+        group = table.database.group
+        group.has_user(user, raise_error=True)
+
+        if not model:
+            model = table.get_model()
+
+        non_unique_ids = get_non_unique_values(row_ids)
+        if len(non_unique_ids) > 0:
+            raise RowIdsNotUnique(non_unique_ids)
+
+        rows = list(model.objects.filter(id__in=row_ids).enhance_by_fields())
+
+        if len(row_ids) != len(rows):
+            db_rows_ids = [db_row.id for db_row in rows]
+            raise RowDoesNotExist(sorted(list(set(row_ids) - set(db_rows_ids))))
+
+        before_return = before_row_delete.send(
+            self, row=rows, user=user, table=table, model=model
+        )
+
+        trashed_rows = TrashedRows()
+        trashed_rows.row_ids = row_ids
+        trashed_rows.table = table
+        # It's a bit on a hack, but we're storing the fetched row objects on the
+        # trashed_rows object, so that they can optionally be used later. This is for
+        # example used when storing the names in the trash.
+        trashed_rows.rows = rows
+
+        TrashHandler.trash(
+            user, group, table.database, trashed_rows, parent_id=table.id
+        )
+
+        updated_field_ids = [field_id for field_id in model._field_objects.keys()]
+        update_collector = CachingFieldUpdateCollector(
+            table, starting_row_id=row_ids, existing_model=model
+        )
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+            updated_field_ids, update_collector
+        ):
+            dependant_field_type.row_of_dependency_deleted(
+                dependant_field, rows, update_collector, path_to_starting_table
+            )
+        update_collector.apply_updates_and_get_updated_fields()
+
+        rows_deleted.send(
+            self,
+            rows=rows,
             user=user,
             table=table,
             model=model,

@@ -88,6 +88,10 @@ def public_row_created(sender, row, before, user, table, model, **kwargs):
 
 @receiver(row_signals.before_row_delete)
 def public_before_row_delete(sender, row, user, table, model, **kwargs):
+    # TODO: Batch row deletes are not yet supported for public grid.
+    # For now, this signal call will be ignored.
+    if isinstance(row, list):
+        return
     row_checker = ViewHandler().get_public_views_row_checker(
         table, model, only_include_views_which_want_realtime_events=True
     )

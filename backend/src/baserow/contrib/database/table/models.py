@@ -299,7 +299,12 @@ class TableModelQuerySet(models.QuerySet):
         return filter_builder.apply_to_queryset(self)
 
 
-class TableModelManager(models.Manager):
+class TableModelTrashAndObjectsManager(models.Manager):
+    def get_queryset(self):
+        return TableModelQuerySet(self.model, using=self._db)
+
+
+class TableModelManager(TableModelTrashAndObjectsManager):
     def get_queryset(self):
         return TableModelQuerySet(self.model, using=self._db).filter(trashed=False)
 
@@ -450,6 +455,7 @@ class Table(
             # We are using our own table model manager to implement some queryset
             # helpers.
             "objects": TableModelManager(),
+            "objects_and_trash": TableModelTrashAndObjectsManager(),
             # Indicates which position the row has.
             "order": models.DecimalField(
                 max_digits=40,

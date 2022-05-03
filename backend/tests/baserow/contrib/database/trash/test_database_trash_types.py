@@ -20,6 +20,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.trash.models import TrashedRows
 from baserow.core.models import TrashEntry
 from baserow.core.trash.exceptions import (
     ParentIdMustBeProvidedException,
@@ -413,9 +414,138 @@ def test_trashed_row_entry_includes_the_rows_primary_key_value_as_an_extra_descr
         user, database.group, database, row, parent_id=customers_table.id
     )
 
-    assert trash_entry.extra_description == "John"
+    assert trash_entry.names == ["John"]
     assert trash_entry.name == str(row.id)
     assert trash_entry.parent_name == "Customers"
+
+
+@pytest.mark.django_db
+def test_trashed_rows_entry_includes_includes_the_correct_names(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row1 = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Row A"},
+    )
+    row2 = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": ""},
+    )
+
+    trashed_rows = TrashedRows.objects.create(
+        table=customers_table, row_ids=[row1.id, row2.id]
+    )
+    trash_entry = TrashHandler.trash(
+        user, database.group, database, trashed_rows, parent_id=customers_table.id
+    )
+
+    assert trash_entry.names == ["Row A", f"unnamed row {row2.id}"]
+    assert trash_entry.name == " "
+    assert trash_entry.parent_name == "Customers"
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.rows.signals.rows_created.send")
+def test_trash_and_restore_rows_in_batch(send_mock, data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row1 = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Row A"},
+    )
+    row2 = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": ""},
+    )
+
+    trashed_rows = TrashedRows.objects.create(
+        table=customers_table, row_ids=[row1.id, row2.id]
+    )
+    TrashHandler.trash(
+        user, database.group, database, trashed_rows, parent_id=customers_table.id
+    )
+
+    customers_model = customers_table.get_model()
+
+    assert customers_model.objects.all().count() == 0
+    TrashHandler.restore_item(
+        user, "rows", trashed_rows.id, parent_trash_item_id=customers_table.id
+    )
+    assert customers_model.objects.all().count() == 2
+
+    send_mock.assert_called_once()
+    assert [r.id for r in send_mock.call_args[1]["rows"]] == [row1.id, row2.id]
+    assert send_mock.call_args[1]["user"] is None
+    assert send_mock.call_args[1]["table"].id == customers_table.id
+    assert send_mock.call_args[1]["model"]._generated_table_model
+    assert send_mock.call_args[1]["before"] is None
+
+
+@pytest.mark.django_db
+def test_permanently_delete_rows_in_batch(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    customers_table = data_fixture.create_database_table(
+        name="Customers", database=database
+    )
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    # Create a primary field and some example data for the customers table.
+    customers_primary_field = field_handler.create_field(
+        user=user, table=customers_table, type_name="text", name="Name", primary=True
+    )
+    row1 = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": "Row A"},
+    )
+    row2 = row_handler.create_row(
+        user=user,
+        table=customers_table,
+        values={f"field_{customers_primary_field.id}": ""},
+    )
+
+    trashed_rows = TrashedRows.objects.create(
+        table=customers_table, row_ids=[row1.id, row2.id]
+    )
+    TrashHandler.trash(
+        user, database.group, database, trashed_rows, parent_id=customers_table.id
+    )
+    TrashHandler.permanently_delete(trashed_rows, parent_id=customers_table.id)
+
+    customers_model = customers_table.get_model()
+    assert customers_model.objects_and_trash.all().count() == 0
+    assert TrashedRows.objects.all().count() == 0
 
 
 @pytest.mark.django_db
@@ -444,7 +574,7 @@ def test_trashed_row_entry_extra_description_is_unnamed_when_no_value_pk(
         user, database.group, database, row, parent_id=customers_table.id
     )
 
-    assert trash_entry.extra_description == f"unnamed row {row.id}"
+    assert trash_entry.names == [f"unnamed row {row.id}"]
     assert trash_entry.name == str(row.id)
     assert trash_entry.parent_name == "Customers"
 

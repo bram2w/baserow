@@ -8,7 +8,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import map_exceptions, validate_query_parameters
+from baserow.api.decorators import (
+    map_exceptions,
+    validate_body,
+    validate_query_parameters,
+)
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.exceptions import (
     RequestBodyValidationException,
@@ -75,6 +79,7 @@ from .serializers import (
     MoveRowQueryParamsSerializer,
     CreateRowQueryParamsSerializer,
     RowSerializer,
+    BatchDeleteRowsSerializer,
     get_batch_row_serializer_class,
     get_example_row_serializer_class,
     get_row_serializer_class,
@@ -1127,3 +1132,67 @@ class BatchRowsView(APIView):
         )
         response_serializer = response_serializer_class({"items": rows})
         return Response(response_serializer.data)
+
+
+class BatchDeleteRowsView(APIView):
+    authentication_classes = APIView.authentication_classes + [TokenAuthentication]
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Deletes the rows in the table related to the value.",
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="batch_delete_database_table_rows",
+        description=(
+            "Deletes existing rows in the table if the user has access to the "
+            "table's group."
+        ),
+        request=BatchDeleteRowsSerializer,
+        responses={
+            204: None,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM",
+                    "ERROR_ROW_IDS_NOT_UNIQUE",
+                ]
+            ),
+            404: get_error_schema(
+                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_ROW_DOES_NOT_EXIST"]
+            ),
+        },
+    )
+    @transaction.atomic
+    @validate_body(BatchDeleteRowsSerializer)
+    @map_exceptions(
+        {
+            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+            RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
+            NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
+            CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
+        }
+    )
+    def post(self, request, table_id, data):
+        """
+        Batch deletes existing rows based on provided row ids for the table with
+        the given table_id.
+        """
+
+        table = TableHandler().get_table(table_id)
+        TokenHandler().check_table_permissions(request, "delete", table, False)
+
+        RowHandler().delete_rows(
+            request.user,
+            table,
+            row_ids=data["items"],
+        )
+
+        return Response(status=204)
