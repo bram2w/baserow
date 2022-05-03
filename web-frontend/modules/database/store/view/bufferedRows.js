@@ -41,7 +41,7 @@ import RowService from '@baserow/modules/database/services/row'
  * ```
  */
 export default ({ service, customPopulateRow }) => {
-  let lastRequestSource = null
+  let lastRequestController = null
 
   const populateRow = (row) => {
     if (customPopulateRow) {
@@ -323,17 +323,17 @@ export default ({ service, customPopulateRow }) => {
         return
       }
 
-      // We can only make one request at the same time, so we're going to to set the
+      // We can only make one request at the same time, so we're going to set the
       // fetching state to `true` to prevent multiple requests being fired
       // simultaneously.
       commit('SET_FETCHING', true)
-      lastRequestSource = axios.CancelToken.source()
+      lastRequestController = new AbortController()
       try {
         const { data } = await service(this.$client).fetchRows({
           viewId: getters.getViewId,
           offset: rangeToFetch.offset,
           limit: rangeToFetch.limit,
-          cancelToken: lastRequestSource.token,
+          signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
         })
         commit('UPDATE_ROWS', {
@@ -344,7 +344,7 @@ export default ({ service, customPopulateRow }) => {
         if (axios.isCancel(error)) {
           throw new RefreshCancelledError()
         } else {
-          lastRequestSource = null
+          lastRequestController = null
           throw error
         }
       } finally {
@@ -371,11 +371,11 @@ export default ({ service, customPopulateRow }) => {
       // If another refresh or fetch request is currently running, we need to cancel
       // it because the response is most likely going to be outdated and we don't
       // need it anymore.
-      if (lastRequestSource !== null) {
-        lastRequestSource.cancel('Cancelled in favor of new request')
+      if (lastRequestController !== null) {
+        lastRequestController.abort()
       }
 
-      lastRequestSource = axios.CancelToken.source()
+      lastRequestController = new AbortController()
 
       try {
         // We first need to fetch the count of all rows because we need to know how
@@ -386,7 +386,7 @@ export default ({ service, customPopulateRow }) => {
           data: { count },
         } = await service(this.$client).fetchCount({
           viewId: getters.getViewId,
-          cancelToken: lastRequestSource.token,
+          signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
         })
 
@@ -426,7 +426,7 @@ export default ({ service, customPopulateRow }) => {
             offset: rangeToFetch.offset,
             limit: rangeToFetch.limit,
             includeFieldOptions,
-            cancelToken: lastRequestSource.token,
+            signal: lastRequestController.signal,
             search: getters.getServerSearchTerm,
           })
 
@@ -441,7 +441,7 @@ export default ({ service, customPopulateRow }) => {
         if (axios.isCancel(error)) {
           throw new RefreshCancelledError()
         } else {
-          lastRequestSource = null
+          lastRequestController = null
           throw error
         }
       } finally {

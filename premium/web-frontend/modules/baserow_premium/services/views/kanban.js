@@ -4,7 +4,7 @@ export default (client) => {
       kanbanId,
       limit = 100,
       offset = null,
-      cancelToken = null,
+      signal = null,
       includeFieldOptions = false,
       selectOptions = [],
     }) {
@@ -37,8 +37,8 @@ export default (client) => {
 
       const config = { params }
 
-      if (cancelToken !== null) {
-        config.cancelToken = cancelToken
+      if (signal !== null) {
+        config.signal = signal
       }
 
       return client.get(`/database/views/kanban/${kanbanId}/`, config)

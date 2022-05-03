@@ -491,8 +491,8 @@ let lastRequest = null
 let lastRequestOffset = null
 let lastRequestLimit = null
 let lastRefreshRequest = null
-let lastRefreshRequestSource = null
-let lastSource = null
+let lastRefreshRequestController = null
+let lastQueryController = null
 
 // We want to cancel previous aggregation request before creating a new one.
 const lastAggregationRequest = { request: null, controller: null }
@@ -597,20 +597,20 @@ export const actions = {
       // If another request is runnig we need to cancel that one because it won't
       // what we need at the moment.
       if (lastRequest !== null) {
-        lastSource.cancel('Canceled in favor of new request')
+        lastQueryController.abort()
       }
 
       // Doing the actual request and remember what we are requesting so we can compare
       // it when making a new request.
       lastRequestOffset = requestOffset
       lastRequestLimit = requestLimit
-      lastSource = axios.CancelToken.source()
+      lastQueryController = new AbortController()
       lastRequest = GridService(this.$client)
         .fetchRows({
           gridId,
           offset: requestOffset,
           limit: requestLimit,
-          cancelToken: lastSource.token,
+          signal: lastQueryController.signal,
           search: getters.getServerSearchTerm,
           publicUrl: getters.isPublic,
           publicAuthToken: getters.getPublicAuthToken,
@@ -811,15 +811,16 @@ export const actions = {
     { view, fields, primary, includeFieldOptions = false }
   ) {
     const gridId = getters.getLastGridId
+
     if (lastRefreshRequest !== null) {
-      lastRefreshRequestSource.cancel('Cancelled in favor of new request')
+      lastRefreshRequestController.abort()
     }
-    lastRefreshRequestSource = axios.CancelToken.source()
+    lastRefreshRequestController = new AbortController()
     lastRefreshRequest = GridService(this.$client)
       .fetchCount({
         gridId,
         search: getters.getServerSearchTerm,
-        cancelToken: lastRefreshRequestSource.token,
+        signal: lastRefreshRequestController.signal,
         publicUrl: getters.isPublic,
         publicAuthToken: getters.getPublicAuthToken,
         filters: getFilters(getters, rootGetters),
@@ -842,7 +843,7 @@ export const actions = {
             offset,
             limit,
             includeFieldOptions,
-            cancelToken: lastRefreshRequestSource.token,
+            signal: lastRefreshRequestController.signal,
             search: getters.getServerSearchTerm,
             publicUrl: getters.isPublic,
             publicAuthToken: getters.getPublicAuthToken,
