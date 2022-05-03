@@ -42,6 +42,8 @@
 * Stopped the generated model cache clear operation also deleting all other redis keys.
 * Added Spanish and Italian languages.
 * Added undo/redo.
+* Fixed bug where the link row field `link_row_relation_id` could fail when two 
+  simultaneous requests are made.
 * Added password protection for publicly shared grids and forms.
 * Made views trashable.
 * Fixed bug where a cell value was not reverted when the request to the backend fails.
