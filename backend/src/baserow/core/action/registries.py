@@ -3,6 +3,7 @@ import dataclasses
 from typing import Any, NewType, Optional
 
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 from rest_framework import serializers
 
 from baserow.core.action.models import Action
@@ -176,13 +177,17 @@ class ActionType(Instance, abc.ABC):
         """
 
         session = get_untrusted_client_session_id(user)
-        Action.objects.create(
-            user=user,
-            type=cls.type,
-            params=params,
-            scope=scope,
-            session=session,
-        )
+
+        # We don't want the action to be created when the "undo" feature flag is not
+        # enabled because it's not 100% finished yet.
+        if "undo" in settings.FEATURE_FLAGS:
+            Action.objects.create(
+                user=user,
+                type=cls.type,
+                params=params,
+                scope=scope,
+                session=session,
+            )
 
 
 action_scope_registry: ActionScopeRegistry = ActionScopeRegistry()
