@@ -247,5 +247,25 @@
         "enabled": "aktiviert",
         "settingAllowSignupsViaGroupInvitationsName": "Erlaube Registrierungen durch Gruppeneinladungen",
         "settingAllowSignupsViaGroupInvitationDescription": "Auch wenn die Erstellung von neuen Konten deaktiviert ist können Nutzer:innen durch Setzen dieser Option Nutzer:innen ein Konto erstellen."
+    },
+    "undoRedoNotification": {
+        "redoingText": "Deine Aktion wird wieder hergestellt",
+        "redoneTitle": "Wieder ausgeführt",
+        "skippingUndoDueToError": "Rückgängig machen hat aufgrund eines unbekannten Fehlers nicht funktioniert, überspringen.",
+        "redoingTitle": "Wiederherstellen...",
+        "failed": "Fehlgeschlagen",
+        "undoingTitle": "Rückgängig machen...",
+        "undoingText": "Deine Aktion rückgängig machen",
+        "undoneTitle": "Rückgängig gemacht",
+        "undoneText": "Aktion ist rückgängig gemacht",
+        "noMoreUndo": "Keine Aktionen zum rückgängig machen übrig",
+        "noMoreRedo": "Keine Aktionen zum wieder-ausführen übrig",
+        "redoneText": "Aktion wurde wieder ausgeführt",
+        "skippingRedoDueToError": "Wieder ausführen hat aufgrund eines unbekannten Fehler nicht funktioniert, überspringen."
+    },
+    "AuthorizationErrorNotification": {
+        "title": "Autorisierungsfehler",
+        "content": "Anscheinend sind Sie nicht berechtigt, diese Ressource anzuzeigen.",
+        "action": "Seite neu laden"
     }
 }

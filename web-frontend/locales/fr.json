@@ -135,7 +135,8 @@
         "inThisYear": "est cette année",
         "lowerThan": "est plus petit que",
         "lengthIsLowerThan": "a une longueur inférieure à",
-        "hasFileType": "est de type"
+        "hasFileType": "est de type",
+        "isDaysAgo": "il y a X jours"
     },
     "viewType": {
         "grid": "Tableau",

@@ -376,7 +376,10 @@
         "sharedViewDescription": "Le persone che hanno il link possono vedere il {viewTypeSharingLinkName}.",
         "disableLink": "disabilita link condiviso",
         "generateNewUrl": "genera nuovo url",
-        "copyURL": "copia URL"
+        "copyURL": "copia URL",
+        "EnablePassword": "Limita l'accesso con una password",
+        "DisablePassword": "L'accesso è protetto da password",
+        "ChangePassword": "Modifica"
     },
     "viewSortContext": {
         "noSortTitle": "Non hai ancora creato un ordinamento",
@@ -537,5 +540,36 @@
         "stateImportingTable": "Importazione tabella {table} in corso",
         "errorJobAlreadyRunningTitle": "Già in esecuzione",
         "errorJobAlreadyRunningDescription": "Un altro lavoro di importazione è già in esecuzione. Devi aspettare che finisca prima di iniziarne un altro."
+    },
+    "viewDecorator": {
+        "decorator": "Colore | 1 Colore | {count} Colori"
+    },
+    "chooseSingleSelectField": {
+        "addSelectField": "aggiungi selezione singola"
+    },
+    "viewDecoratorContext": {
+        "addDecorator": "Aggiungi colorazione"
+    },
+    "shareViewEnablePasswordModal": {
+        "newPasswordTitle": "Inserisci una password",
+        "newPasswordSave": "Imposta una password",
+        "changePasswordTitle": "Modifica password",
+        "newPasswordDescription": "Il link pubblico sarà accessibile solo inserendo la password corretta. Questa password verrà salvata cifrata.",
+        "changePasswordDescription": "Modificando la password, la precedente smetterà di funzionare. La password verrà salvata cifrata.",
+        "changePasswordSave": "Modifica password"
+    },
+    "shareViewDisablePasswordModal": {
+        "title": "Rimuovi la protezione con password",
+        "disable": "Disabilita",
+        "description": "Sei sicuro di voler eliminare la protezione tramite password per questo link pubblico? Se confermi, la password verrà eliminata e non sarà possibile ripristinarla"
+    },
+    "publicViewAuthLogin": {
+        "title": "Questa pagina è protetta da password",
+        "description": "Inserisci la password corretta per accedere alla pagina.",
+        "enter": "Accedi",
+        "error": {
+            "incorrectPasswordTitle": "Password sbagliata",
+            "incorrectPasswordText": "La password inserita non è corretta."
+        }
     }
 }

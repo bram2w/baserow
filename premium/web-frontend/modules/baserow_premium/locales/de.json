@@ -87,7 +87,8 @@
     },
     "editUserContext": {
         "changePassword": "Passwort ändern",
-        "delete": "Dauerhaft löschen"
+        "delete": "Dauerhaft löschen",
+        "impersonate": "Imitieren"
     },
     "changePasswordForm": {
         "newPassword": "Neues Passwort",
@@ -219,5 +220,27 @@
         "storeUsage": "Speicherverbrauch",
         "disconnectLicense": "Lizenz trennen",
         "disconnectDescription": "Wenn Sie diese Lizenz trennen, während sie aktiv ist, haben die zugehörigen Benutzer keinen Zugriff mehr auf den Plan. Damit wird die Lizenz effektiv entfernt. Bitte kontaktieren Sie unser Support-Team unter {contact}, wenn Sie diese Lizenz in einer anderen selbst gehosteten Instanz verwenden möchten."
+    },
+    "viewDecoratorType": {
+        "leftBorderColor": "Linker Rand",
+        "leftBorderColorDescription": "Färbe den linken Rand der Zeile",
+        "backgroundColor": "Hintergrundfarbe",
+        "backgroundColorDescription": "Färbe den Hintergrund einer Spalte",
+        "onlyForPremium": "Verfügbar in der premium Version",
+        "onlyOneDecoratorPerView": "Du kannst nur eine Verzierung von dieser Art pro Ansicht haben"
+    },
+    "decoratorValueProviderType": {
+        "singleSelectColor": "Einzelauswahl",
+        "singleSelectColorDescription": "Färbe Zeilen so wie der Wert einer Einzelauswahl",
+        "conditionalColor": "Bedingungen",
+        "conditionalColorDescription": "Färbe Zeilen wenn sie die Bedingungen erfüllen"
+    },
+    "conditionalColorValueProviderForm": {
+        "addColor": "Farbe hinzufügen",
+        "addCondition": "Bedingung hinzufügen",
+        "colorAlwaysApply": "Diese Farbe gilt standardmäßig. Sie können Bedingungen hinzufügen, indem Sie auf den \"Bedingung hinzufügen\" Knopf klicken."
+    },
+    "singleSelectColorValueProviderForm": {
+        "chooseAColor": "Welches Einzelauswahlfeld soll zum färben der Zeile verwendet werden?"
     }
 }
