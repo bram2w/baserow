@@ -768,6 +768,11 @@ class RowHandler:
             )
         update_collector.apply_updates_and_get_updated_fields()
 
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        updated_fields = [o["field"] for o in model._field_objects.values()]
+        ViewHandler().field_value_updated(updated_fields)
+
         rows_to_return = list(
             model.objects.all()
             .enhance_by_fields()
@@ -1222,6 +1227,11 @@ class RowHandler:
                 dependant_field, rows, update_collector, path_to_starting_table
             )
         update_collector.apply_updates_and_get_updated_fields()
+
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        updated_fields = [o["field"] for o in model._field_objects.values()]
+        ViewHandler().field_value_updated(updated_fields)
 
         rows_deleted.send(
             self,
