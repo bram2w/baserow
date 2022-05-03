@@ -26,6 +26,8 @@ from baserow.core.mixins import (
 )
 from baserow.core.utils import to_snake_case, remove_special_characters
 
+from .fields import SerialField
+
 
 NUMBER_MAX_DECIMAL_PLACES = 5
 
@@ -283,18 +285,7 @@ class LinkRowField(Field):
         null=True,
         blank=True,
     )
-    link_row_relation_id = models.IntegerField(null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        """
-        Every LinkRow needs to have a unique relation id that is shared with the
-        related link row field in the other table.
-        """
-
-        if self.link_row_relation_id is None:
-            self.link_row_relation_id = self.get_new_relation_id()
-
-        super().save(*args, **kwargs)
+    link_row_relation_id = SerialField(null=True, unique=False)
 
     @property
     def through_table_name(self):
@@ -309,16 +300,6 @@ class LinkRowField(Field):
             raise ValueError("The link row field does not yet have a relation id.")
 
         return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.link_row_relation_id}"
-
-    @staticmethod
-    def get_new_relation_id():
-        last_id = (
-            LinkRowField.objects_and_trash.all().aggregate(
-                largest=models.Max("link_row_relation_id")
-            )["largest"]
-            or 0
-        )
-        return last_id + 1
 
     def get_related_primary_field(self):
         try:
