@@ -87,7 +87,8 @@
     },
     "editUserContext": {
         "changePassword": "Modifier le mot de passe",
-        "delete": "Supprimer définitivement"
+        "delete": "Supprimer définitivement",
+        "impersonate": "Usurper"
     },
     "changePasswordForm": {
         "newPassword": "Nouveau mot de passe",
@@ -219,5 +220,27 @@
         "storeUsage": "Espace disponible",
         "disconnectLicense": "Déconnecter la licence",
         "disconnectDescription": "Si vous déconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
+    },
+    "viewDecoratorType": {
+        "onlyOneDecoratorPerView": "Vous ne pouvez utiliser qu'une seule décoration de ce type par vue",
+        "onlyForPremium": "Disponible en version Premium",
+        "leftBorderColorDescription": "Ajoute un bord de couleur à gauche de l'enregistrement",
+        "leftBorderColor": "Bord gauche",
+        "backgroundColor": "Couleur de fond",
+        "backgroundColorDescription": "Change la couleur de fond d'un enregistrement"
+    },
+    "singleSelectColorValueProviderForm": {
+        "chooseAColor": "Par quelle liste déroulante l'enregistrement doit-il être coloré ?"
+    },
+    "decoratorValueProviderType": {
+        "conditionalColorDescription": "Définie une couleur quand l'enregistrement respecte des conditions",
+        "singleSelectColorDescription": "Utilise la même couleur que celle définie pour une liste déroulante",
+        "singleSelectColor": "Liste déroulante",
+        "conditionalColor": "Par conditions"
+    },
+    "conditionalColorValueProviderForm": {
+        "addColor": "Ajouter une couleur",
+        "addCondition": "Ajouter une condition",
+        "colorAlwaysApply": "Cette couleur s'applique par défaut. Vous pouvez ajouter des conditions en cliquant sur le bouton « Ajouter une condition »."
     }
 }

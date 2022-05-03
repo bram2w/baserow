@@ -87,7 +87,8 @@
     },
     "editUserContext": {
         "changePassword": "Modifica password",
-        "delete": "Eliminato in modo permanente"
+        "delete": "Eliminato in modo permanente",
+        "impersonate": "Impersona"
     },
     "changePasswordForm": {
         "newPassword": "Nuova password",
@@ -220,5 +221,27 @@
         "storeUsage": "Utilizzo archiviazione",
         "disconnectLicense": "Disconnetti licenza",
         "disconnectDescription": "Sei sicuro di voler disconnettere questa licenza? Se la disconnetti mentre è attiva, tutti gli utenti collegati non avranno più accesso alle funzionalità del piano. La licenza verrà quindi rimossa. Se vuoi usare questa licenza in un'altra istanza self-hosted, contatta il nostro team di supporto tramite {contact}."
+    },
+    "viewDecoratorType": {
+        "leftBorderColor": "Bordo sinistro",
+        "leftBorderColorDescription": "Colora il bordo sinistro della riga",
+        "onlyForPremium": "Disponibile nella versione premium",
+        "backgroundColor": "Colore di sfondo",
+        "backgroundColorDescription": "Colora di sfondo della riga",
+        "onlyOneDecoratorPerView": "È possibile attivare una sola colorazione di questo tipo per una vista"
+    },
+    "decoratorValueProviderType": {
+        "conditionalColor": "Condizioni",
+        "singleSelectColor": "Selezione singola",
+        "singleSelectColorDescription": "Colora le righe con i colori della selezione singola",
+        "conditionalColorDescription": "Colora le righe quando vengono soddisfatte le condizioni"
+    },
+    "conditionalColorValueProviderForm": {
+        "addCondition": "aggiungi condizione",
+        "colorAlwaysApply": "Questo colore viene usato di default. Puoi aggiungere condizioni cliccando sul pulsante \"Aggiungi condizioni\".",
+        "addColor": "aggiungi colore"
+    },
+    "singleSelectColorValueProviderForm": {
+        "chooseAColor": "Quale singola selezione usare per colorare le righe?"
     }
 }

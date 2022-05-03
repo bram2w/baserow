@@ -135,7 +135,8 @@
         "inThisYear": "in diesem Jahr",
         "lowerThan": "niedriger als",
         "lengthIsLowerThan": "Länge ist niedriger als",
-        "hasFileType": "hat Dateityp"
+        "hasFileType": "hat Dateityp",
+        "isDaysAgo": "ist Tage alt"
     },
     "viewType": {
         "grid": "Gitternetz",

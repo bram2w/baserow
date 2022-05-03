@@ -135,7 +135,8 @@
         "inThisYear": "in quest'anno",
         "lowerThan": "inferiore a",
         "lengthIsLowerThan": "lunghezza inferiore a",
-        "hasFileType": "ha il tipo di file"
+        "hasFileType": "ha il tipo di file",
+        "isDaysAgo": "è giorni fa"
     },
     "viewType": {
         "grid": "Griglia",

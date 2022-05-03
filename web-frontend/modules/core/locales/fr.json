@@ -247,5 +247,25 @@
     "copyingNotification": {
         "title": "Copie en cours...",
         "content": "Préparation des données"
+    },
+    "undoRedoNotification": {
+        "undoingTitle": "Annulation en cours...",
+        "undoingText": "Annuler votre action",
+        "undoneTitle": "Annulée",
+        "undoneText": "Cette action est annulée",
+        "noMoreUndo": "Plus d'action à annuler",
+        "skippingUndoDueToError": "L'annulation a échoué en raison d'une erreur inconnue, celle-ci est ignorée.",
+        "redoingTitle": "En cours de rétablissement...",
+        "redoingText": "Rétablir votre action",
+        "redoneTitle": "Rétablie",
+        "redoneText": "Cette action est rétablie",
+        "noMoreRedo": "Plus d'action à rétablir",
+        "skippingRedoDueToError": "Le rétablissement à échoué en raison d'une erreur inconnue. Celui-ci est ignoré.",
+        "failed": "Échec"
+    },
+    "AuthorizationErrorNotification": {
+        "content": "Vous ne semblez pas avoir la permission de visualiser cette ressource.",
+        "action": "Rafraîchir la page",
+        "title": "Erreur d’autorisation"
     }
 }
