@@ -93,7 +93,19 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         modal.
 
         :param trashed_item: The item to be named.
-        :return The name of the trashed_group
+        :return The name of the trashed_item
+        """
+
+        pass
+
+    def get_names(self, trashed_item: Any) -> str:
+        """
+        Should return an array of names of this particular trashed item to display in
+        the trash modal. This is typically used when multiple items have been deleted
+        in batch and can be visualized differently by the client.
+
+        :param trashed_item: The item to be named.
+        :return The names of the trashed_item.
         """
 
         pass
@@ -108,18 +120,6 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
 
         item_to_trash.trashed = True
         item_to_trash.save()
-
-    # noinspection PyMethodMayBeStatic
-    def get_extra_description(
-        self, trashed_item: Any, parent: Optional[Any]
-    ) -> Optional[str]:
-        """
-        Should return an optional extra description to show along with the trash
-        entry for this particular trashed item.
-
-        :return A short string giving extra detail on what has been trashed.
-        """
-        return None
 
 
 class TrashableItemTypeRegistry(ModelRegistryMixin, Registry):

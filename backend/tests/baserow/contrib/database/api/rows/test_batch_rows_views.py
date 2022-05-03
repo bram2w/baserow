@@ -3,6 +3,7 @@ import pytest
 from django.shortcuts import reverse
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
@@ -128,7 +129,6 @@ def test_batch_create_rows_no_rows_provided(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
 
-    print(response.json())
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert response.json()["detail"] == expected_error_detail
@@ -1808,4 +1808,327 @@ def test_batch_update_rows_num_of_queries(api_client, data_fixture):
 
     assert len(update_one_row_ctx.captured_queries) == len(
         update_multiple_rows_ctx.captured_queries
+    )
+
+
+# Delete
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+@pytest.mark.parametrize("token_header", ["JWT invalid", "Token invalid"])
+def test_batch_delete_rows_invalid_token(api_client, data_fixture, token_header):
+    table = data_fixture.create_database_table()
+    url = reverse("api:database:rows:batch-delete", kwargs={"table_id": table.id})
+
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=token_header,
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_batch_delete_rows_token_no_delete_permission(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    no_create_perm_token = TokenHandler().create_token(
+        user, table.database.group, "no permissions"
+    )
+    TokenHandler().update_token_permissions(
+        user, no_create_perm_token, True, True, True, False
+    )
+    url = reverse("api:database:rows:batch-delete", kwargs={"table_id": table.id})
+
+    response = api_client.post(
+        url,
+        {"items": [1, 2]},
+        format="json",
+        HTTP_AUTHORIZATION=f"Token {no_create_perm_token.key}",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+    assert response.json()["error"] == "ERROR_NO_PERMISSION_TO_TABLE"
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_batch_delete_rows_user_not_in_group(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table()
+    request_body = {"items": [22]}
+    url = reverse("api:database:rows:batch-delete", kwargs={"table_id": table.id})
+
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_batch_delete_rows_invalid_table_id(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    url = reverse("api:database:rows:batch-delete", kwargs={"table_id": 14343})
+
+    response = api_client.post(
+        url,
+        {"items": [1, 2]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_batch_delete_rows_trash_them(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    model = table.get_model()
+    row_1 = model.objects.create()
+    row_2 = model.objects.create()
+    row_3 = model.objects.create()
+    url = reverse("api:database:rows:batch-delete", kwargs={"table_id": table.id})
+    request_body = {"items": [row_1.id, row_2.id]}
+
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+    row_3.refresh_from_db()
+    assert getattr(row_1, "trashed") is True
+    assert getattr(row_2, "trashed") is True
+    assert getattr(row_3, "trashed") is False
+
+
+@pytest.mark.django_db
+@pytest.mark.field_formula
+@pytest.mark.api_rows
+def test_batch_delete_rows_dependent_fields_diff_table(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    number_field = data_fixture.create_number_field(
+        table=table_b, order=1, name="Number"
+    )
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        order=2,
+        name="Number times two",
+        formula=f"lookup('{link_field.name}', '{number_field.name}')*2",
+        formula_type="number",
+    )
+    FieldDependencyHandler.rebuild_dependencies(formula_field, FieldCache())
+
+    model_b = table_b.get_model()
+    row_b_1 = model_b.objects.create()
+    row_b_2 = model_b.objects.create()
+
+    model = table.get_model()
+    row_1 = model.objects.create()
+    row_2 = model.objects.create()
+    getattr(row_1, f"field_{link_field.id}").set([row_b_1.id, row_b_2.id])
+    getattr(row_2, f"field_{link_field.id}").set([row_b_2.id])
+    row_1.save()
+    row_2.save()
+
+    url = reverse("api:database:rows:batch-delete", kwargs={"table_id": table_b.id})
+    request_body = {
+        "items": [
+            row_b_1.id,
+            row_b_2.id,
+        ]
+    }
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+    row_1.refresh_from_db()
+    row_2.refresh_from_db()
+    assert getattr(row_1, f"field_{formula_field.id}") == []
+    assert getattr(row_2, f"field_{formula_field.id}") == []
+
+
+@pytest.mark.django_db
+@pytest.mark.api_rows
+def test_batch_delete_rows_num_of_queries(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+
+    # number field updating another table through link & formula
+    number_field = data_fixture.create_number_field(
+        table=table_b, order=1, name="Number"
+    )
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        order=2,
+        name="Number times two",
+        formula=f"lookup('{link_field.name}', '{number_field.name}')*2",
+        formula_type="number",
+    )
+    FieldDependencyHandler.rebuild_dependencies(formula_field, FieldCache())
+
+    # common fields
+    text_field = data_fixture.create_text_field(
+        table=table_b, order=0, name="Color", text_default="white"
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table_b, order=2, name="For sale"
+    )
+
+    # single and multiple select fields
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table_b)
+    multi_select_option_1 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    multi_select_option_2 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 2",
+        color="blue",
+    )
+    multiple_select_field.select_options.set(
+        [multi_select_option_1, multi_select_option_2]
+    )
+    single_select_field = data_fixture.create_single_select_field(table=table_b)
+    single_select_option_1 = SelectOption.objects.create(
+        field=single_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    single_select_option_2 = SelectOption.objects.create(
+        field=single_select_field,
+        order=1,
+        value="Option 2",
+        color="blue",
+    )
+    single_select_field.select_options.set(
+        [single_select_option_1, single_select_option_2]
+    )
+
+    # file field
+    file_field = data_fixture.create_file_field(table=table_b)
+    file1 = data_fixture.create_user_file(
+        original_name="test.txt",
+        is_image=True,
+    )
+    file2 = data_fixture.create_user_file(
+        original_name="test2.txt",
+        is_image=True,
+    )
+
+    # setup the tables
+    model_b = table_b.get_model()
+    model = table.get_model()
+    row_1 = model.objects.create()
+    row_2 = model.objects.create()
+
+    # create rows
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table_b.id})
+    create_rows_request_body = {
+        "items": [
+            {
+                f"field_{number_field.id}": 120,
+                f"field_{text_field.id}": "Text",
+                f"field_{boolean_field.id}": True,
+                f"field_{single_select_field.id}": single_select_option_1.id,
+                f"field_{multiple_select_field.id}": [multi_select_option_1.id],
+                f"field_{file_field.id}": [
+                    {"name": file1.name, "visible_name": "new name"}
+                ],
+            },
+            {
+                f"field_{number_field.id}": 240,
+                f"field_{text_field.id}": "Text 2",
+                f"field_{boolean_field.id}": False,
+                f"field_{single_select_field.id}": single_select_option_1.id,
+                f"field_{multiple_select_field.id}": [multi_select_option_2.id],
+                f"field_{file_field.id}": [
+                    {"name": file2.name, "visible_name": "new name 2"}
+                ],
+            },
+            {
+                f"field_{number_field.id}": 240,
+                f"field_{text_field.id}": "Text 3",
+                f"field_{boolean_field.id}": False,
+                f"field_{single_select_field.id}": single_select_option_2.id,
+                f"field_{multiple_select_field.id}": [multi_select_option_2.id],
+                f"field_{file_field.id}": [
+                    {"name": file2.name, "visible_name": "new name 3"}
+                ],
+            },
+            {
+                f"field_{number_field.id}": 500,
+                f"field_{text_field.id}": "Text 4",
+                f"field_{boolean_field.id}": False,
+                f"field_{single_select_field.id}": single_select_option_2.id,
+                f"field_{multiple_select_field.id}": [multi_select_option_1.id],
+                f"field_{file_field.id}": [
+                    {"name": file2.name, "visible_name": "new name 4"}
+                ],
+            },
+        ]
+    }
+    response = api_client.post(
+        url,
+        create_rows_request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    # link rows table -> table_b
+    getattr(row_1, f"field_{link_field.id}").set([1, 2, 3, 4])
+    getattr(row_2, f"field_{link_field.id}").set([2, 3])
+    row_1.save()
+    row_2.save()
+
+    delete_url = reverse(
+        "api:database:rows:batch-delete", kwargs={"table_id": table_b.id}
+    )
+
+    with CaptureQueriesContext(connection) as delete_one_row_ctx:
+        request_body = {"items": [1]}
+        response = api_client.post(
+            delete_url,
+            request_body,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        )
+
+    with CaptureQueriesContext(connection) as delete_multiple_rows_ctx:
+        request_body = {"items": [2, 3, 4]}
+        response = api_client.post(
+            delete_url,
+            request_body,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+        )
+
+    assert len(delete_one_row_ctx.captured_queries) == len(
+        delete_multiple_rows_ctx.captured_queries
     )

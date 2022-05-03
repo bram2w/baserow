@@ -59,7 +59,7 @@ def test_deleting_a_group_moves_it_to_the_trash_and_hides_it(api_client, data_fi
                 "user_who_trashed": user.first_name,
                 "name": group_to_delete.name,
                 "parent_name": None,
-                "extra_description": None,
+                "names": None,
             }
         ],
     }
@@ -649,7 +649,7 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
                 "user_who_trashed": None,
                 "name": group_to_delete.name,
                 "parent_name": None,
-                "extra_description": None,
+                "names": None,
             }
         ],
     }

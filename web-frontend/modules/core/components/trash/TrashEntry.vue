@@ -21,12 +21,11 @@
         }}
       </div>
       <div class="trash-entry__deleted-at-display">{{ timeAgo }}</div>
-      <span
-        v-if="trashEntry.extra_description"
-        class="trash-entry__extra-description"
-      >
-        {{ trashEntry.extra_description }}
-      </span>
+      <ul v-if="trashEntry.names" class="trash-entry__items">
+        <li v-for="(name, index) in trashEntry.names" :key="index">
+          {{ name }}
+        </li>
+      </ul>
     </div>
     <div class="trash-entry__actions">
       <a

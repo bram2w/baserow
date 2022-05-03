@@ -55,15 +55,24 @@
   max-width: 100%;
 }
 
-.trash-entry__extra-description {
-  font-size: 12px;
-  background-color: $color-primary-100;
-  border-radius: 3px;
-  padding: 4px;
-  margin-top: 6px;
+.trash-entry__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
 
-  &:not(:last-child) {
-    margin-right: 6px;
+  li {
+    font-size: 12px;
+    background-color: $color-primary-100;
+    border-radius: 3px;
+    padding: 4px;
+    margin-top: 6px;
+
+    &:not(:last-child) {
+      margin-right: 6px;
+    }
   }
 }
 

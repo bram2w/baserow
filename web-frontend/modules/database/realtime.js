@@ -243,6 +243,23 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('rows_deleted', (context, data) => {
+    const { app, store } = context
+    for (const viewType of Object.values(app.$registry.getAll('view'))) {
+      for (let i = 0; i < data.rows.length; i++) {
+        const row = data.rows[i]
+        viewType.rowDeleted(
+          context,
+          data.table_id,
+          store.getters['field/getAll'],
+          store.getters['field/getPrimary'],
+          row,
+          'page/'
+        )
+      }
+    }
+  })
+
   realtime.registerEvent('view_created', ({ store }, data) => {
     if (store.getters['table/getSelectedId'] === data.view.table_id) {
       store.dispatch('view/forceCreate', { data: data.view })

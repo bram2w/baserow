@@ -141,6 +141,14 @@ def get_batch_row_serializer_class(row_serializer_class):
     return class_object
 
 
+class BatchDeleteRowsSerializer(serializers.Serializer):
+    items = serializers.ListField(
+        child=serializers.IntegerField(),
+        min_length=1,
+        max_length=settings.BATCH_ROWS_SIZE_LIMIT,
+    )
+
+
 def get_example_row_serializer_class(example_type="get", user_field_names=False):
     """
     Generates a serializer containing a field for each field type. It is only used for
