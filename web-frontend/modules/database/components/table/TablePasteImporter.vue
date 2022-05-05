@@ -50,7 +50,6 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import importer from '@baserow/modules/database/mixins/importer'
 import TableImporterPreview from '@baserow/modules/database/components/table/TableImporterPreview'
-import Papa from 'papaparse'
 
 export default {
   name: 'TablePasteImporter',
@@ -87,7 +86,7 @@ export default {
         return
       }
 
-      const limit = this.$env.INITIAL_TABLE_DATA_LIMIT || 1
+      const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
       const count = this.content.split(/\r\n|\r|\n/).length
       if (limit !== null && count > limit) {
         this.values.data = ''
@@ -99,7 +98,7 @@ export default {
         return
       }
 
-      Papa.parse(this.content, {
+      this.$papa.parse(this.content, {
         delimiter: '\t',
         complete: (data) => {
           // If parsed successfully and it is not empty then the initial data can be

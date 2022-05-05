@@ -178,7 +178,6 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import Papa from 'papaparse'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import GridViewSection from '@baserow/modules/database/components/view/grid/GridViewSection'
@@ -857,7 +856,7 @@ export default {
         )
         // If the output is undefined, it means that there is no multiple selection.
         if (output !== undefined) {
-          const tsv = Papa.unparse(output, { delimiter: '\t' })
+          const tsv = this.$papa.unparse(output, { delimiter: '\t' })
           navigator.clipboard.writeText(tsv)
         }
       } catch (error) {
@@ -889,7 +888,7 @@ export default {
         return
       }
 
-      const parsed = await Papa.parsePromise(
+      const parsed = await this.$papa.parsePromise(
         event.clipboardData.getData('text'),
         { delimiter: '\t' }
       )

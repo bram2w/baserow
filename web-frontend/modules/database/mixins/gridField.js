@@ -1,7 +1,6 @@
 import { isElement } from '@baserow/modules/core/utils/dom'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 import baseField from '@baserow/modules/database/mixins/baseField'
-import Papa from 'papaparse'
 
 /**
  * A mixin that can be used by a field grid component. It introduces the props that
@@ -141,7 +140,7 @@ export default {
           const value = this.$registry
             .get('field', this.field.type)
             .prepareValueForCopy(this.field, rawValue)
-          const tsv = Papa.unparse([[value]], { delimiter: '\t' })
+          const tsv = this.$papa.unparse([[value]], { delimiter: '\t' })
           copyToClipboard(tsv)
         }
 
@@ -172,7 +171,7 @@ export default {
         try {
           // Multiple values in TSV format can be provided, so we need to properly
           // parse it using Papa.
-          const parsed = await Papa.parsePromise(
+          const parsed = await this.$papa.parsePromise(
             event.clipboardData.getData('text'),
             { delimiter: '\t' }
           )
