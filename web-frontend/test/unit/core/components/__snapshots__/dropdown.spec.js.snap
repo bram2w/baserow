@@ -1,0 +1,810 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Dropdown component Test slots 1`] = `
+<div
+  class="dropdown"
+  tabindex="0"
+>
+  <a
+    class="dropdown__selected"
+  >
+    <p>
+      The value
+    </p>
+     
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    >
+      <li
+        class="select__item active"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            My item
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Dropdown component With items 1`] = `
+<div
+  class="dropdown"
+  tabindex="0"
+>
+  <a
+    class="dropdown__selected"
+  >
+    action.makeChoice 
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    >
+      <li
+        class="select__item"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        A
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Dropdown component With items 2`] = `
+<div
+  class="dropdown"
+  tabindex="0"
+>
+  <a
+    class="dropdown__selected"
+  >
+    <!---->
+    
+        A
+       
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    >
+      <li
+        class="select__item active"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        A
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+       
+      <li
+        class="select__item"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        B
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+       
+      <li
+        class="select__item disabled"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        C
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+       
+      <li
+        class="select__item"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <i
+              class="select__item-icon fas fa-fw fa-times"
+            />
+            
+        D
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+       
+      <li
+        class="select__item"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        E
+      
+          </div>
+           
+          <div
+            class="select__item-description"
+          >
+            
+      My description
+    
+          </div>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Dropdown component With items 3`] = `
+<div
+  class="dropdown dropdown--floating"
+  tabindex="0"
+>
+  <!---->
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    >
+      <li
+        class="select__item active"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        A
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+       
+      <li
+        class="select__item"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        B
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Dropdown component basics 1`] = `
+<div
+  class="dropdown"
+  tabindex="0"
+>
+  <a
+    class="dropdown__selected"
+  >
+    action.makeChoice 
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    />
+  </div>
+</div>
+`;
+
+exports[`Dropdown component basics 2`] = `
+<div
+  class="dropdown"
+  tabindex="0"
+>
+  <a
+    class="dropdown__selected"
+  >
+    action.makeChoice 
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <!---->
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    />
+  </div>
+</div>
+`;
+
+exports[`Dropdown component basics 3`] = `
+<div
+  class="dropdown dropdown--disabled"
+  tabindex=""
+>
+  <a
+    class="dropdown__selected"
+  >
+    action.makeChoice 
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    />
+  </div>
+</div>
+`;
+
+exports[`Dropdown component change value prop 1`] = `
+<div
+  class="dropdown"
+  tabindex="0"
+>
+  <a
+    class="dropdown__selected"
+  >
+    <!---->
+    
+        B
+       
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    >
+      <li
+        class="select__item"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        A
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+       
+      <li
+        class="select__item active"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        B
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Dropdown component test focus 1`] = `
+<div
+  class="dropdown"
+  tabindex=""
+>
+  <a
+    class="dropdown__selected"
+  >
+    <!---->
+    
+        A
+       
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    >
+      <li
+        class="select__item active hover"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        A
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Dropdown component test focus 2`] = `
+<div
+  class="dropdown"
+  tabindex="0"
+>
+  <a
+    class="dropdown__selected"
+  >
+    <!---->
+    
+        A
+       
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    >
+      <li
+        class="select__item active hover"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        A
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Dropdown component test interactions 1`] = `
+<div
+  class="dropdown"
+  tabindex=""
+>
+  <a
+    class="dropdown__selected"
+  >
+    <!---->
+    
+        A
+       
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    >
+      <li
+        class="select__item active hover"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        A
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+       
+      <li
+        class="select__item"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        B
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Dropdown component test interactions 2`] = `
+<div
+  class="dropdown"
+  tabindex="0"
+>
+  <a
+    class="dropdown__selected"
+  >
+    <!---->
+    
+        B
+       
+    <i
+      class="dropdown__toggle-icon fas fa-caret-down"
+    />
+  </a>
+   
+  <div
+    class="dropdown__items hidden"
+  >
+    <div
+      class="select__search"
+    >
+      <i
+        class="select__search-icon fas fa-search"
+      />
+       
+      <input
+        class="select__search-input"
+        placeholder="action.search"
+        tabindex="0"
+        type="text"
+      />
+    </div>
+     
+    <ul
+      class="select__items"
+      tabindex=""
+    >
+      <li
+        class="select__item hover"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        A
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+       
+      <li
+        class="select__item active"
+      >
+        <a
+          class="select__item-link"
+        >
+          <div
+            class="select__item-name"
+          >
+            <!---->
+            
+        B
+      
+          </div>
+           
+          <!---->
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
