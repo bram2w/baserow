@@ -776,9 +776,6 @@ export const actions = {
       const currentFieldValue = row[fieldToCallName]
       const optimisticFieldValue = fieldType.onRowChange(
         row,
-        field,
-        value,
-        oldValue,
         fieldToCall,
         currentFieldValue
       )

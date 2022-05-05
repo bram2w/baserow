@@ -325,7 +325,7 @@ export class FieldType extends Registerable {
    * By default the text value if the clipboard data is used.
    */
   prepareValueForPaste(field, clipboardData) {
-    return clipboardData.getData('text')
+    return clipboardData
   }
 
   /**
@@ -442,14 +442,7 @@ export class FieldType extends Registerable {
    * is for example used by the last modified field type to update the last modified
    * value in real time when a row has changed.
    */
-  onRowChange(
-    row,
-    updatedField,
-    updatedFieldValue,
-    updatedFieldOldValue,
-    currentField,
-    currentFieldValue
-  ) {
+  onRowChange(row, currentField, currentFieldValue) {
     return currentFieldValue
   }
 
@@ -714,7 +707,7 @@ export class LinkRowFieldType extends FieldType {
     let values
 
     try {
-      values = JSON.parse(clipboardData.getData('text'))
+      values = JSON.parse(clipboardData)
     } catch (SyntaxError) {
       return []
     }
@@ -880,7 +873,7 @@ export class NumberFieldType extends FieldType {
    * to be formatted.
    */
   prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData.getData('text')
+    const value = clipboardData
     if (
       isNaN(parseFloat(value)) ||
       !isFinite(value) ||
@@ -1012,7 +1005,7 @@ export class RatingFieldType extends FieldType {
    * to be formatted.
    */
   prepareValueForPaste(field, clipboardData) {
-    const pastedValue = clipboardData.getData('text')
+    const pastedValue = clipboardData
     const value = parseInt(pastedValue, 10)
 
     if (isNaN(value) || !isFinite(value)) {
@@ -1101,7 +1094,7 @@ export class BooleanFieldType extends FieldType {
    * value is true.
    */
   prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData.getData('text').toLowerCase().trim()
+    const value = clipboardData.toLowerCase().trim()
     return trueString.includes(value)
   }
 
@@ -1193,7 +1186,7 @@ class BaseDateFieldType extends FieldType {
    * correct format for the field. If it can't be parsed null is returned.
    */
   prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData.getData('text').toUpperCase()
+    const value = clipboardData.toUpperCase()
 
     // Formats for ISO dates
     let formats = [
@@ -1352,14 +1345,7 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
     return moment().utc().format()
   }
 
-  onRowChange(
-    row,
-    updatedField,
-    updatedFieldValue,
-    updatedFieldOldValue,
-    currentField,
-    currentFieldValue
-  ) {
+  onRowChange(row, currentField, currentFieldValue) {
     return this._onRowChangeOrMove()
   }
 
@@ -1421,7 +1407,7 @@ export class URLFieldType extends FieldType {
   }
 
   prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData.getData('text')
+    const value = clipboardData
     return isValidURL(value) ? value : ''
   }
 
@@ -1498,7 +1484,7 @@ export class EmailFieldType extends FieldType {
   }
 
   prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData.getData('text')
+    const value = clipboardData
     return isValidEmail(value) ? value : ''
   }
 
@@ -1597,7 +1583,7 @@ export class FileFieldType extends FieldType {
     let value
 
     try {
-      value = JSON.parse(clipboardData.getData('text'))
+      value = JSON.parse(clipboardData)
     } catch (SyntaxError) {
       return []
     }
@@ -1736,7 +1722,7 @@ export class SingleSelectFieldType extends FieldType {
     if (value === undefined || value === null) {
       return ''
     }
-    return value.id
+    return value.value
   }
 
   _findOptionWithMatchingId(field, rawTextValue) {
@@ -1755,7 +1741,7 @@ export class SingleSelectFieldType extends FieldType {
   }
 
   prepareValueForPaste(field, clipboardData) {
-    const rawTextValue = clipboardData.getData('text')
+    const rawTextValue = clipboardData
 
     return (
       this._findOptionWithMatchingId(field, rawTextValue) ||
@@ -1895,7 +1881,7 @@ export class MultipleSelectFieldType extends FieldType {
   prepareValueForPaste(field, clipboardData) {
     let values
     try {
-      values = JSON.parse(clipboardData.getData('text'))
+      values = JSON.parse(clipboardData)
     } catch (SyntaxError) {
       return []
     }
@@ -2006,7 +1992,7 @@ export class PhoneNumberFieldType extends FieldType {
   }
 
   prepareValueForPaste(field, clipboardData) {
-    const value = clipboardData.getData('text')
+    const value = clipboardData
     return isSimplePhoneNumber(value) ? value : ''
   }
 

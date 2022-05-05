@@ -500,6 +500,9 @@ export class GridViewType extends ViewType {
         fields,
         primary,
       })
+      store.dispatch(storePrefix + 'view/grid/fetchAllFieldAggregationData', {
+        view: store.getters['view/getSelected'],
+      })
     }
   }
 
@@ -527,6 +530,9 @@ export class GridViewType extends ViewType {
         fields,
         primary,
       })
+      store.dispatch(storePrefix + 'view/grid/fetchAllFieldAggregationData', {
+        view: store.getters['view/getSelected'],
+      })
     }
   }
 
@@ -542,6 +548,9 @@ export class GridViewType extends ViewType {
         scrollTop: store.getters[storePrefix + 'view/grid/getScrollTop'],
         fields,
         primary,
+      })
+      store.dispatch(storePrefix + 'view/grid/fetchAllFieldAggregationData', {
+        view: store.getters['view/getSelected'],
       })
     }
   }
