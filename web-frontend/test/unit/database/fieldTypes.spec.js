@@ -325,15 +325,9 @@ describe('FieldType tests', () => {
   test.each(datePrepareValueForPaste)(
     'Verify that prepareValueForPaste for DateFieldType returns the expected output',
     (value) => {
-      const clipboardData = {
-        getData() {
-          return value.fieldValue
-        },
-      }
-
       const result = new DateFieldType().prepareValueForPaste(
         value.field,
-        clipboardData
+        value.fieldValue
       )
       expect(result).toBe(value.expectedValue)
     }

@@ -55,6 +55,7 @@
       :store-prefix="props.storePrefix"
       :read-only="props.readOnly"
       @update="(...args) => $options.methods.update(listeners, props, ...args)"
+      @paste="(...args) => $options.methods.paste(listeners, props, ...args)"
       @edit="(...args) => $options.methods.edit(listeners, props, ...args)"
       @unselect="$options.methods.unselect(parent, props)"
       @selected="$options.methods.selected(listeners, props, $event)"
@@ -108,6 +109,15 @@ export default {
           field: props.field,
           value,
           oldValue,
+        })
+      }
+    },
+    paste(listeners, props, event) {
+      if (listeners.paste) {
+        listeners.paste({
+          data: event,
+          row: props.row,
+          field: props.field,
         })
       }
     },

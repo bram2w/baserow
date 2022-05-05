@@ -672,9 +672,6 @@ export default ({ service, customPopulateRow }) => {
         const currentFieldValue = row[fieldToCallName]
         const optimisticFieldValue = fieldType.onRowChange(
           row,
-          field,
-          value,
-          oldValue,
           fieldToCall,
           currentFieldValue
         )
@@ -708,6 +705,7 @@ export default ({ service, customPopulateRow }) => {
           row,
           values: oldValues,
         })
+        dispatch('fetchAllFieldAggregationData', { view })
         throw error
       }
     },

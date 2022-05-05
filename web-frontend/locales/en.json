@@ -24,6 +24,7 @@
         "retry": "Retry",
         "search": "Search",
         "copy": "Copy",
+        "paste": "Paste",
         "activate": "Activate",
         "deactivate": "Deactivate"
     },

@@ -94,6 +94,7 @@
           ...getSelectedCellStyle(field),
         }"
         @update="$emit('update', $event)"
+        @paste="$emit('paste', $event)"
         @edit="$emit('edit', $event)"
         @select="$emit('select', $event)"
         @unselect="$emit('unselect', $event)"
@@ -241,9 +242,9 @@ export default {
         this.$store.getters[this.storePrefix + 'view/grid/isMultiSelectActive']
       ) {
         const rowIndex =
-          this.$store.getters[
-            this.storePrefix + 'view/grid/getMultiSelectRowIndexById'
-          ](rowId)
+          this.$store.getters[this.storePrefix + 'view/grid/getRowIndexById'](
+            rowId
+          )
 
         const allFieldIds = this.allFields.map((field) => field.id)
         let fieldIndex = allFieldIds.findIndex((id) => field.id === id)

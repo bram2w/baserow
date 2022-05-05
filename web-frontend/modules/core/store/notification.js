@@ -6,6 +6,7 @@ export const state = () => ({
   failedConnecting: false,
   authorizationError: false,
   copying: false,
+  pasting: false,
   // See UNDO_REDO_STATES for all possible values.
   undoRedoState: UNDO_REDO_STATES.HIDDEN,
   items: [],
@@ -30,6 +31,9 @@ export const mutations = {
   },
   SET_COPYING(state, value) {
     state.copying = value
+  },
+  SET_PASTING(state, value) {
+    state.pasting = value
   },
   SET_UNDO_REDO_STATE(state, value) {
     state.undoRedoState = value
@@ -87,6 +91,9 @@ export const actions = {
   },
   setCopying({ commit }, value) {
     commit('SET_COPYING', value)
+  },
+  setPasting({ commit }, value) {
+    commit('SET_PASTING', value)
   },
   setUndoRedoState({ commit }, value) {
     commit('SET_UNDO_REDO_STATE', value)

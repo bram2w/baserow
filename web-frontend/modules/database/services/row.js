@@ -72,6 +72,9 @@ export default (client) => {
     update(tableId, rowId, values) {
       return client.patch(`/database/rows/table/${tableId}/${rowId}/`, values)
     },
+    batchUpdate(tableId, items) {
+      return client.patch(`/database/rows/table/${tableId}/batch/`, { items })
+    },
     /**
      * Moves the row to the position before the row related to the beforeRowId
      * parameters. If the before id is not provided then the row will be moved

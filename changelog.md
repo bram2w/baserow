@@ -45,6 +45,7 @@
 * Fixed bug where the link row field `link_row_relation_id` could fail when two 
   simultaneous requests are made.
 * Added password protection for publicly shared grids and forms.
+* Added multi-cell pasting.
 * Made views trashable.
 * Fixed bug where a cell value was not reverted when the request to the backend fails.
 * **Premium** Added row coloring.
