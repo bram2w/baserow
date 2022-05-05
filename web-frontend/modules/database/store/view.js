@@ -668,13 +668,18 @@ export const actions = {
     { view, decoration, readOnly = false }
   ) {
     commit('SET_DECORATION_LOADING', { decoration, value: true })
+    dispatch('forceDeleteDecoration', { view, decoration })
 
     try {
       if (!readOnly) {
         await DecorationService(this.$client).delete(decoration.id)
       }
-      dispatch('forceDeleteDecoration', { view, decoration })
     } catch (error) {
+      // Restore decoration in case of error
+      dispatch('forceCreateDecoration', {
+        view,
+        values: decoration,
+      })
       commit('SET_DECORATION_LOADING', { decoration, value: false })
       throw error
     }

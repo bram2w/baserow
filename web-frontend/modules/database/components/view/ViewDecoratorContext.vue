@@ -109,6 +109,7 @@ import ViewDecoratorItem from '@baserow/modules/database/components/view/ViewDec
 import SelectViewDecoratorContext from '@baserow/modules/database/components/view/SelectViewDecoratorContext'
 import DecoratorValueProviderItem from '@baserow/modules/database/components/view/DecoratorValueProviderItem'
 import DecoratorValueProviderList from '@baserow/modules/database/components/view/DecoratorValueProviderList'
+import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'ViewDecoratorContext',
@@ -180,27 +181,35 @@ export default {
   },
   methods: {
     async removeDecoration(decoration) {
-      await this.$store.dispatch('view/deleteDecoration', {
-        view: this.view,
-        decoration,
-      })
+      try {
+        await this.$store.dispatch('view/deleteDecoration', {
+          view: this.view,
+          decoration,
+        })
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
     },
     async selectValueProvider(decoration, valueProvider) {
       const valueProviderType = this.$registry.get(
         'decoratorValueProvider',
         valueProvider
       )
-      await this.$store.dispatch('view/updateDecoration', {
-        view: this.view,
-        values: {
-          value_provider_type: valueProviderType.getType(),
-          value_provider_conf: valueProviderType.getDefaultConfiguration({
-            view: this.view,
-            fields: this.allFields,
-          }),
-        },
-        decoration,
-      })
+      try {
+        await this.$store.dispatch('view/updateDecoration', {
+          view: this.view,
+          values: {
+            value_provider_type: valueProviderType.getType(),
+            value_provider_conf: valueProviderType.getDefaultConfiguration({
+              view: this.view,
+              fields: this.allFields,
+            }),
+          },
+          decoration,
+        })
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
     },
     async addDecoration(decoratorType) {
       const decoration = {
@@ -208,17 +217,25 @@ export default {
         value_provider_type: '',
         value_provider_conf: {},
       }
-      await this.$store.dispatch('view/createDecoration', {
-        view: this.view,
-        values: decoration,
-      })
+      try {
+        await this.$store.dispatch('view/createDecoration', {
+          view: this.view,
+          values: decoration,
+        })
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
     },
     async updateDecorationOptions(decoration, options) {
-      await this.$store.dispatch('view/updateDecoration', {
-        view: this.view,
-        values: { value_provider_conf: options },
-        decoration,
-      })
+      try {
+        await this.$store.dispatch('view/updateDecoration', {
+          view: this.view,
+          values: { value_provider_conf: options },
+          decoration,
+        })
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
     },
   },
 }
