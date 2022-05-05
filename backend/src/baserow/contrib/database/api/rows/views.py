@@ -908,7 +908,6 @@ class BatchRowsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(
-        exclude=True,
         parameters=[
             OpenApiParameter(
                 name="table_id",
@@ -950,6 +949,7 @@ class BatchRowsView(APIView):
             "types, the numbers/ids in the example are just there for example "
             "purposes, the field_ID must be replaced with the actual id of the field "
             "or the name of the field if `user_field_names` is provided."
+            "\n\n **WARNING:** This endpoint doesn't yet work with row created webhooks."
         ),
         request=get_example_batch_rows_serializer_class(
             example_type="post", user_field_names=True
@@ -1024,7 +1024,6 @@ class BatchRowsView(APIView):
         return Response(response_serializer.data)
 
     @extend_schema(
-        exclude=True,
         parameters=[
             OpenApiParameter(
                 name="table_id",
@@ -1060,6 +1059,7 @@ class BatchRowsView(APIView):
             "numbers/ids in the example are just there for example purposes, "
             "the field_ID must be replaced with the actual id of the field or the name "
             "of the field if `user_field_names` is provided."
+            "\n\n **WARNING:** This endpoint doesn't yet work with row updated webhooks."
         ),
         request=get_example_batch_rows_serializer_class(
             example_type="patch_batch", user_field_names=True
@@ -1152,6 +1152,7 @@ class BatchDeleteRowsView(APIView):
         description=(
             "Deletes existing rows in the table if the user has access to the "
             "table's group."
+            "\n\n **WARNING:**  This endpoint doesn't yet work with row deleted webhooks."
         ),
         request=BatchDeleteRowsSerializer,
         responses={
