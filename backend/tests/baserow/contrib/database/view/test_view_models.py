@@ -6,6 +6,7 @@ from baserow.contrib.database.views.models import (
     GridViewFieldOptions,
     GalleryViewFieldOptions,
     FormViewFieldOptions,
+    ViewDecoration,
 )
 
 
@@ -203,6 +204,19 @@ def test_form_view_field_options_manager_field_trashed(data_fixture):
     field.save()
 
     assert FormViewFieldOptions.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_view_decoration_manager_view_trashed(data_fixture):
+    view = data_fixture.create_grid_view()
+    data_fixture.create_view_decoration(view=view)
+
+    assert ViewDecoration.objects.count() == 1
+
+    view.trashed = True
+    view.save()
+
+    assert ViewDecoration.objects.count() == 0
 
 
 @pytest.mark.django_db
