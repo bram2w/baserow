@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* Added batch create/update/delete rows endpoints. These endpoints make it possible to
+  modify multiple rows at once. Currently, row created, row updated, and row deleted 
+  webhooks are not triggered when using these endpoints.
 * Fixed translations in emails sent by Baserow.
 * Fixed invalid `first_name` validation in the account form modal.
 * Shared public forms now don't allow creating new options
