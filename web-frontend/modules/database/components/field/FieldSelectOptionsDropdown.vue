@@ -5,7 +5,10 @@
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
     }"
+    :tabindex="realTabindex"
     @contextmenu.stop
+    @focusin="show()"
+    @focusout="focusout($event)"
   >
     <a
       v-if="showInput"
@@ -30,6 +33,7 @@
           type="text"
           class="select__search-input"
           :placeholder="searchText"
+          tabindex="0"
           @keyup="search(query)"
         />
       </div>
@@ -38,6 +42,7 @@
         v-prevent-parent-scroll
         v-auto-overflow-scroll
         class="select__items"
+        tabindex=""
       >
         <FieldSelectOptionsDropdownItem
           v-if="showEmptyValue"

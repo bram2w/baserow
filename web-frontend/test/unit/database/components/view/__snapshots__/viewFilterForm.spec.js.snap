@@ -81,6 +81,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
       >
         <div
           class="dropdown dropdown--floating dropdown--tiny"
+          tabindex="0"
         >
           <a
             class="dropdown__selected"
@@ -107,12 +108,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               <input
                 class="select__search-input"
                 placeholder="action.search"
+                tabindex="0"
                 type="text"
               />
             </div>
              
             <ul
               class="select__items"
+              tabindex=""
             >
               <li
                 class="select__item active"
@@ -179,6 +182,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
       >
         <div
           class="dropdown dropdown--floating dropdown--tiny"
+          tabindex="0"
         >
           <a
             class="dropdown__selected"
@@ -205,12 +209,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               <input
                 class="select__search-input"
                 placeholder="action.search"
+                tabindex="0"
                 type="text"
               />
             </div>
              
             <ul
               class="select__items"
+              tabindex=""
             >
               <li
                 class="select__item active"
@@ -370,6 +376,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
          
         <div
           class="dropdown dropdown--floating dropdown--tiny"
+          tabindex="0"
         >
           <a
             class="dropdown__selected"
@@ -390,6 +397,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
              
             <ul
               class="select__items"
+              tabindex=""
             >
               <li
                 class="select__item active"
@@ -440,6 +448,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
       >
         <div
           class="dropdown dropdown--floating dropdown--tiny"
+          tabindex="0"
         >
           <a
             class="dropdown__selected"
@@ -466,12 +475,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               <input
                 class="select__search-input"
                 placeholder="action.search"
+                tabindex="0"
                 type="text"
               />
             </div>
              
             <ul
               class="select__items"
+              tabindex=""
             >
               <li
                 class="select__item"
@@ -538,6 +549,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
       >
         <div
           class="dropdown dropdown--floating dropdown--tiny"
+          tabindex="0"
         >
           <a
             class="dropdown__selected"
@@ -564,12 +576,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               <input
                 class="select__search-input"
                 placeholder="action.search"
+                tabindex="0"
                 type="text"
               />
             </div>
              
             <ul
               class="select__items"
+              tabindex=""
             >
               <li
                 class="select__item active"
@@ -737,6 +751,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
       >
         <div
           class="dropdown dropdown--floating dropdown--tiny"
+          tabindex="0"
         >
           <a
             class="dropdown__selected"
@@ -763,12 +778,14 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
               <input
                 class="select__search-input"
                 placeholder="action.search"
+                tabindex="0"
                 type="text"
               />
             </div>
              
             <ul
               class="select__items"
+              tabindex=""
             >
               <li
                 class="select__item"
@@ -835,6 +852,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
       >
         <div
           class="dropdown dropdown--floating dropdown--tiny"
+          tabindex=""
         >
           <a
             class="dropdown__selected"
@@ -861,12 +879,14 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
               <input
                 class="select__search-input"
                 placeholder="action.search"
+                tabindex="0"
                 type="text"
               />
             </div>
              
             <ul
               class="select__items"
+              tabindex=""
             >
               <li
                 class="select__item active hover"
@@ -1034,6 +1054,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
       >
         <div
           class="dropdown dropdown--floating dropdown--tiny"
+          tabindex="0"
         >
           <a
             class="dropdown__selected"
@@ -1060,12 +1081,14 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
               <input
                 class="select__search-input"
                 placeholder="action.search"
+                tabindex="0"
                 type="text"
               />
             </div>
              
             <ul
               class="select__items"
+              tabindex=""
             >
               <li
                 class="select__item"
@@ -1132,6 +1155,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
       >
         <div
           class="dropdown dropdown--floating dropdown--tiny"
+          tabindex="0"
         >
           <a
             class="dropdown__selected"
@@ -1158,12 +1182,14 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
               <input
                 class="select__search-input"
                 placeholder="action.search"
+                tabindex="0"
                 type="text"
               />
             </div>
              
             <ul
               class="select__items"
+              tabindex=""
             >
               <li
                 class="select__item active hover"

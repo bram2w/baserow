@@ -5,6 +5,9 @@
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
     }"
+    :tabindex="realTabindex"
+    @focusin="show()"
+    @focusout="focusout($event)"
   >
     <a v-if="showInput" class="dropdown__selected" @click="show()">
       <template v-if="hasValue()">
@@ -29,10 +32,11 @@
           type="text"
           class="select__search-input"
           :placeholder="searchText === null ? $t('action.search') : searchText"
+          tabindex="0"
           @keyup="search(query)"
         />
       </div>
-      <ul ref="items" v-auto-overflow-scroll class="select__items">
+      <ul ref="items" v-auto-overflow-scroll class="select__items" tabindex="">
         <slot></slot>
       </ul>
     </div>

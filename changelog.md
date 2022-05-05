@@ -50,6 +50,7 @@
 * Fixed bug where a cell value was not reverted when the request to the backend fails.
 * **Premium** Added row coloring.
 * Fixed row coloring bug when the table doesn't have any single select field.
+* Dropdown can now be focused with tab key
 
 ## Released (2022-03-03 1.9.1)
 
