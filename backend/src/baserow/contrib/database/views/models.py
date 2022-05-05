@@ -283,7 +283,21 @@ class ViewFilter(models.Model):
         return view_filter_type_registry.get(self.type).get_preload_values(self)
 
 
+class ViewDecorationManager(models.Manager):
+    """
+    Manager for the ViewDecoration model.
+    The View can be trashed and the decorations are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(view__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
 class ViewDecoration(OrderableMixin, models.Model):
+    objects = ViewDecorationManager()
+
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
