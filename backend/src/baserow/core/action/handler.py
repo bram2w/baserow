@@ -1,5 +1,6 @@
 import logging
 import traceback
+from copy import deepcopy
 from typing import List, Optional
 
 from django.contrib.auth.models import AbstractUser
@@ -51,7 +52,10 @@ class ActionHandler:
             # Wrap with an inner transaction to ensure any errors get rolled back.
             with transaction.atomic():
                 action_type = action_type_registry.get(latest_not_undone_action.type)
-                latest_params = action_type.Params(**latest_not_undone_action.params)
+                latest_params = action_type.Params(
+                    **deepcopy(latest_not_undone_action.params)
+                )
+
                 action_type.undo(user, latest_params, action_being_undone)
         except Exception:
             tb = traceback.format_exc()
@@ -109,7 +113,9 @@ class ActionHandler:
                 # Wrap with an inner transaction to ensure any errors get rolled back.
                 with transaction.atomic():
                     action_type = action_type_registry.get(latest_undone_action.type)
-                    latest_params = action_type.Params(**latest_undone_action.params)
+                    latest_params = action_type.Params(
+                        **deepcopy(latest_undone_action.params)
+                    )
                     action_type.redo(user, latest_params, action_being_redone)
             except Exception:
                 tb = traceback.format_exc()

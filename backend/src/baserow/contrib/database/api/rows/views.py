@@ -57,6 +57,7 @@ from baserow.contrib.database.rows.actions import (
     DeleteRowActionType,
     MoveRowActionType,
     UpdateRowActionType,
+    UpdateRowsActionType,
 )
 from baserow.core.action.registries import action_type_registry
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotUnique
@@ -1041,6 +1042,7 @@ class BatchRowsView(APIView):
                     "internal Baserow field names (field_123 etc)."
                 ),
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="batch_update_database_table_rows",
@@ -1120,7 +1122,9 @@ class BatchRowsView(APIView):
         )
 
         try:
-            rows = RowHandler().update_rows(request.user, table, data["items"], model)
+            rows = action_type_registry.get_by_type(UpdateRowsActionType).do(
+                request.user, table, data["items"], model
+            )
         except ValidationError as e:
             raise RequestBodyValidationException(detail=e.message)
 

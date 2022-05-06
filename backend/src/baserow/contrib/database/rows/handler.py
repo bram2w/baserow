@@ -34,6 +34,8 @@ GeneratedTableModelForUpdate = NewType(
     "GeneratedTableModelForUpdate", GeneratedTableModel
 )
 
+RowsForUpdate = NewType("RowsForUpdate", QuerySet)
+
 
 class RowHandler:
     def prepare_values(self, fields, values):
@@ -790,23 +792,28 @@ class RowHandler:
 
         return rows_to_return
 
-    def update_rows(self, user, table, rows, model=None):
+    def update_rows(
+        self,
+        user: AbstractUser,
+        table: Table,
+        rows: List,
+        model: Optional[Type[GeneratedTableModel]] = None,
+        rows_to_update: Optional[RowsForUpdate] = None,
+    ) -> List[GeneratedTableModelForUpdate]:
         """
         Updates field values in batch based on provided rows with the new values.
 
         :param user: The user of whose behalf the change is made.
-        :type user: User
         :param table: The table for which the row must be updated.
-        :type table: Table
         :param rows: The list of rows with new values that should be set.
-        :type rows: list
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
-        :type model: Model
+        :param rows_to_update: If the rows to update have already been generated
+            it can be provided so that it does not have to be generated for a
+            second time.
         :raises RowIdsNotUnique: When trying to update the same row multiple times.
         :raises RowDoesNotExist: When any of the rows don't exist.
         :return: The updated row instances.
-        :rtype: list[Model]
         """
 
         group = table.database.group
@@ -827,9 +834,8 @@ class RowHandler:
             row_id = row.pop("id")
             rows_by_id[row_id] = row
 
-        rows_to_update = (
-            model.objects.select_for_update().enhance_by_fields().filter(id__in=row_ids)
-        )
+        if rows_to_update is None:
+            rows_to_update = self.get_rows_for_update(model, row_ids)
 
         if len(rows_to_update) != len(rows):
             db_rows_ids = [db_row.id for db_row in rows_to_update]
@@ -980,6 +986,19 @@ class RowHandler:
         )
 
         return rows_to_return
+
+    def get_rows_for_update(
+        self, model: GeneratedTableModel, row_ids: List[int]
+    ) -> RowsForUpdate:
+        """
+        Get the rows to update.
+        """
+        return cast(
+            RowsForUpdate,
+            model.objects.select_for_update()
+            .enhance_by_fields()
+            .filter(id__in=row_ids),
+        )
 
     def move_row_by_id(
         self,

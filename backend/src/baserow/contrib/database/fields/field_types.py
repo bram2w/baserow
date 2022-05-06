@@ -1012,7 +1012,7 @@ class LinkRowFieldType(FieldType):
         """
 
         related_rows = getattr(row, field_name)
-        return list(related_rows.values_list("id", flat=True))
+        return [related_row.id for related_row in related_rows.all()]
 
     def get_human_readable_value(self, value, field_object):
         def map_to_human_readable_value(inner_value, inner_field_object):
@@ -2059,7 +2059,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         self, row: "GeneratedTableModel", field_name: str
     ) -> List[int]:
         related_objects = getattr(row, field_name)
-        return list(related_objects.values_list("id", flat=True))
+        return [related_object.id for related_object in related_objects.all()]
 
     def get_response_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)

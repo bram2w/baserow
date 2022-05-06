@@ -18,6 +18,7 @@ from baserow.contrib.database.rows.actions import (
     DeleteRowActionType,
     MoveRowActionType,
     UpdateRowActionType,
+    UpdateRowsActionType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
 
@@ -626,3 +627,258 @@ def test_undo_redo_updating_row_dont_change_formula_field_values(data_fixture):
     assert action_redone is not None
     assert action_redone.type == UpdateRowActionType.type
     assert getattr(row, f"field_{formula_field.id}") == Decimal("4")
+
+
+@pytest.mark.django_db
+def test_can_undo_update_rows(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+
+    row_handler = RowHandler()
+
+    row_one = row_handler.create_row(user, table, {name_field.id: "Original value"})
+    row_two = row_handler.create_row(user, table, {name_field.id: "Original value"})
+
+    model = table.get_model()
+
+    assert model.objects.count() == 2
+
+    action_type_registry.get_by_type(UpdateRowsActionType).do(
+        user,
+        table,
+        [
+            {"id": row_one.id, f"field_{name_field.id}": "New value"},
+            {"id": row_two.id, f"field_{name_field.id}": "New value"},
+        ],
+    )
+
+    row_one.refresh_from_db()
+    row_two.refresh_from_db()
+
+    assert getattr(row_one, f"field_{name_field.id}") == "New value"
+    assert getattr(row_two, f"field_{name_field.id}") == "New value"
+
+    action_undone = ActionHandler.undo(
+        user, [TableActionScopeType.value(table_id=table.id)], session_id
+    )
+
+    assert action_undone is not None
+    assert action_undone.type == UpdateRowsActionType.type
+    assert action_undone.error is None
+
+    row_one.refresh_from_db()
+    row_two.refresh_from_db()
+
+    assert getattr(row_one, f"field_{name_field.id}") == "Original value"
+    assert getattr(row_two, f"field_{name_field.id}") == "Original value"
+
+
+@pytest.mark.django_db
+def test_can_undo_redo_update_rows(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+
+    row_handler = RowHandler()
+
+    row_one = row_handler.create_row(user, table, {name_field.id: "Original value"})
+    row_two = row_handler.create_row(user, table, {name_field.id: "Original value"})
+
+    action_type_registry.get_by_type(UpdateRowsActionType).do(
+        user,
+        table,
+        [
+            {"id": row_one.id, f"field_{name_field.id}": "New value"},
+            {"id": row_two.id, f"field_{name_field.id}": "New value"},
+        ],
+    )
+
+    ActionHandler.undo(
+        user, [TableActionScopeType.value(table_id=table.id)], session_id
+    )
+
+    action_redone = ActionHandler.redo(
+        user, [TableActionScopeType.value(table_id=table.id)], session_id
+    )
+
+    assert action_redone is not None
+    assert action_redone.type == UpdateRowsActionType.type
+    assert action_redone.error is None
+
+    row_one.refresh_from_db()
+    row_two.refresh_from_db()
+
+    assert getattr(row_one, f"field_{name_field.id}") == "New value"
+    assert getattr(row_two, f"field_{name_field.id}") == "New value"
+
+
+@pytest.mark.django_db
+def test_can_undo_redo_update_rows_interesting_field_types(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+    table1 = data_fixture.create_database_table(
+        name="Table", user=user, database=database
+    )
+    table2 = data_fixture.create_database_table(
+        name="Table 2", user=user, database=database
+    )
+
+    # Fields
+    name_field = data_fixture.create_text_field(
+        table=table1, name="Name", text_default="Test", primary=True
+    )
+    file_field = data_fixture.create_file_field(
+        table=table1,
+        name="File",
+    )
+    link_row_field = FieldHandler().create_field(
+        user=user,
+        table=table1,
+        type_name="link_row",
+        name="Link",
+        link_row_table=table2,
+    )
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table1)
+    multi_select_option_1 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=1,
+        value="Option 1",
+        color="#000000",
+    )
+    multi_select_option_2 = SelectOption.objects.create(
+        field=multiple_select_field,
+        order=2,
+        value="Option 2",
+        color="#000000",
+    )
+    multiple_select_field.select_options.set(
+        [multi_select_option_1, multi_select_option_2]
+    )
+    formula_field = data_fixture.create_formula_field(
+        table=table1,
+        name="formula",
+        formula=f"field('{name_field.name}')",
+        formula_type="text",
+    )
+
+    # Fixtures
+    file = data_fixture.create_user_file(
+        original_name="file1.txt",
+        is_image=False,
+    )
+
+    row_handler = RowHandler()
+
+    # Fill the seocond table with data
+    row_table_2 = row_handler.create_row(
+        user, table2, {name_field.id: "Row one table 2 name field"}
+    )
+    row_2_table_2 = row_handler.create_row(
+        user, table2, {name_field.id: "Row two table 2 name field"}
+    )
+
+    row_table_1 = row_handler.create_row(
+        user,
+        table1,
+        {
+            name_field.id: "Original value",
+            file_field.id: [{"name": file.name, "visible_name": "Original name"}],
+            link_row_field.id: [row_table_2.id],
+            multiple_select_field.id: [multi_select_option_1.id],
+        },
+    )
+
+    action_type_registry.get_by_type(UpdateRowsActionType).do(
+        user,
+        table1,
+        [
+            {
+                "id": row_table_1.id,
+                f"field_{name_field.id}": "New value",
+                f"field_{file_field.id}": [
+                    {"name": file.name, "visible_name": "New name"},
+                ],
+                f"field_{link_row_field.id}": [row_2_table_2.id],
+                f"field_{multiple_select_field.id}": [multi_select_option_2.id],
+            },
+        ],
+    )
+
+    row_table_1.refresh_from_db()
+
+    assert getattr(row_table_1, f"field_{name_field.id}") == "New value"
+    assert (
+        getattr(row_table_1, f"field_{file_field.id}")[0]["visible_name"] == "New name"
+    )
+    assert list(
+        getattr(row_table_1, f"field_{link_row_field.id}").values_list("id", flat=True)
+    ) == [row_2_table_2.id]
+    assert list(
+        getattr(row_table_1, f"field_{multiple_select_field.id}").values_list(
+            "id", flat=True
+        )
+    ) == [multi_select_option_2.id]
+    assert getattr(row_table_1, f"field_{formula_field.id}") == "New value"
+
+    action_undone = ActionHandler.undo(
+        user, [TableActionScopeType.value(table_id=table1.id)], session_id
+    )
+
+    assert action_undone is not None
+    assert action_undone.type == UpdateRowsActionType.type
+    assert action_undone.error is None
+
+    row_table_1.refresh_from_db()
+
+    assert getattr(row_table_1, f"field_{name_field.id}") == "Original value"
+    assert (
+        getattr(row_table_1, f"field_{file_field.id}")[0]["visible_name"]
+        == "Original name"
+    )
+    assert list(
+        getattr(row_table_1, f"field_{link_row_field.id}").values_list("id", flat=True)
+    ) == [row_table_2.id]
+    assert list(
+        getattr(row_table_1, f"field_{multiple_select_field.id}").values_list(
+            "id", flat=True
+        )
+    ) == [multi_select_option_1.id]
+    assert getattr(row_table_1, f"field_{formula_field.id}") == "Original value"
+
+    action_redone = ActionHandler.redo(
+        user, [TableActionScopeType.value(table_id=table1.id)], session_id
+    )
+
+    assert action_redone is not None
+    assert action_redone.type == UpdateRowsActionType.type
+    assert action_redone.error is None
+
+    row_table_1.refresh_from_db()
+
+    assert getattr(row_table_1, f"field_{name_field.id}") == "New value"
+    assert (
+        getattr(row_table_1, f"field_{file_field.id}")[0]["visible_name"] == "New name"
+    )
+    assert list(
+        getattr(row_table_1, f"field_{link_row_field.id}").values_list("id", flat=True)
+    ) == [row_2_table_2.id]
+    assert list(
+        getattr(row_table_1, f"field_{multiple_select_field.id}").values_list(
+            "id", flat=True
+        )
+    ) == [multi_select_option_2.id]
+    assert getattr(row_table_1, f"field_{formula_field.id}") == "New value"
