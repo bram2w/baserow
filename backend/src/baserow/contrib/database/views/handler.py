@@ -966,10 +966,12 @@ class ViewHandler:
         decorator_type_name: str,
         value_provider_type_name: str,
         value_provider_conf: Dict[str, Any],
+        order: Optional[int] = None,
         user: Union["AbstractUser", None] = None,
+        primary_key: Optional[int] = None,
     ) -> ViewDecoration:
         """
-        Creates a new view decoration.
+        Creates a new decoration based on the provided type.
 
         :param view: The view for which the filter needs to be created.
         :param decorator_type_name: The type of the decorator.
@@ -977,7 +979,9 @@ class ViewHandler:
             to the decorator.
         :param value_provider_conf: The configuration used by the value provider to
             compute the values for the decorator.
+        :param order: The order of the decoration.
         :param user: Optional user who have created the decoration.
+        :param primary_key: An optional primary key to give to the new view sort.
         :return: The created view decoration instance.
         """
 
@@ -1003,14 +1007,16 @@ class ViewHandler:
                     f"the decorator type {decorator_type_name}."
                 )
 
-        last_order = ViewDecoration.get_last_order(view)
+        if order is None:
+            order = ViewDecoration.get_last_order(view)
 
         view_decoration = ViewDecoration.objects.create(
+            pk=primary_key,
             view=view,
             type=decorator_type_name,
             value_provider_type=value_provider_type_name,
             value_provider_conf=value_provider_conf,
-            order=last_order,
+            order=order,
         )
 
         view_decoration_created.send(self, view_decoration=view_decoration, user=user)
@@ -1058,15 +1064,22 @@ class ViewHandler:
         self,
         view_decoration: ViewDecoration,
         user: Union["AbstractUser", None] = None,
-        **kwargs: Dict[str, Any],
+        decorator_type_name: Optional[str] = None,
+        value_provider_type_name: Optional[str] = None,
+        value_provider_conf: Optional[Dict[str, Any]] = None,
+        order: Optional[int] = None,
     ) -> ViewDecoration:
         """
         Updates the values of an existing view decoration.
 
         :param view_decoration: The view decoration that needs to be updated.
-        :param kwargs: The values that need to be updated, allowed values are
-            `type`, `value_provider_type`, `value_provider_conf` and `order`.
-        :param user: Optional user who have updated the decoration.
+        :param user: Optional user who have created the decoration..
+        :param decorator_type_name: The type of the decorator.
+        :param value_provider_type_name: The value provider that provides the value
+            to the decorator.
+        :param value_provider_conf: The configuration used by the value provider to
+            compute the values for the decorator.
+        :param order: The order of the decoration.
         :raises ViewDecorationDoesNotExist: The requested view decoration does not
             exists.
         :raises DecoratorValueProviderTypeNotCompatible: When the decorator value
@@ -1074,14 +1087,14 @@ class ViewHandler:
         :return: The updated view decoration instance.
         """
 
-        decorator_type_name = kwargs.get("type", view_decoration.type)
-        value_provider_type_name = kwargs.get(
-            "value_provider_type", view_decoration.value_provider_type
-        )
-        value_provider_conf = kwargs.get(
-            "value_provider_conf", view_decoration.value_provider_conf
-        )
-        order = kwargs.get("order", view_decoration.order)
+        if decorator_type_name is None:
+            decorator_type_name = view_decoration.type
+        if value_provider_type_name is None:
+            value_provider_type_name = view_decoration.value_provider_type
+        if value_provider_conf is None:
+            value_provider_conf = view_decoration.value_provider_conf
+        if order is None:
+            order = view_decoration.order
 
         decorator_type = decorator_type_registry.get(decorator_type_name)
         decorator_type.before_update_decoration(view_decoration, user)

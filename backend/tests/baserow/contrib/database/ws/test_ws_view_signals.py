@@ -204,7 +204,9 @@ def test_view_decoration_updated(mock_broadcast_to_channel_group, data_fixture):
     user = data_fixture.create_user()
     view_decoration = data_fixture.create_view_decoration(user=user)
     view_decoration = ViewHandler().update_decoration(
-        user=user, view_decoration=view_decoration, type="tmp_decorator_type_2"
+        user=user,
+        view_decoration=view_decoration,
+        decorator_type_name="tmp_decorator_type_2",
     )
 
     mock_broadcast_to_channel_group.delay.assert_called_once()
