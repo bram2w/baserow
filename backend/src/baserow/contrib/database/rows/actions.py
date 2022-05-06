@@ -1,7 +1,8 @@
 import dataclasses
+from copy import deepcopy
 
 from decimal import Decimal
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type, List
 
 from django.contrib.auth.models import AbstractUser
 from baserow.contrib.database.table.handler import TableHandler
@@ -387,3 +388,80 @@ class UpdateRowActionType(ActionType):
         RowHandler().update_row_by_id(
             user, table, row_id=params.row_id, values=params.new_row_values
         )
+
+
+class UpdateRowsActionType(ActionType):
+    type = "update_rows"
+
+    @dataclasses.dataclass
+    class Params:
+        table_id: int
+        original_rows_values: List
+        new_rows: List
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        table: Table,
+        rows: List,
+        model: Optional[Type[GeneratedTableModel]] = None,
+    ) -> List[GeneratedTableModelForUpdate]:
+        """
+        Updates field values in batch based on provided rows with the new values.
+        See the baserow.contrib.database.rows.handler.RowHandler.update_rows
+        for more information.
+        Undoing this action restores the original values.
+        Redoing set the new values again.
+
+        :param user: The user of whose behalf the change is made.
+        :param table: The table for which the rows must be updated.
+        :param rows: The rows that must be updated.
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :return: The updated rows.
+        """
+
+        row_handler = RowHandler()
+
+        if model is None:
+            model = table.get_model()
+
+        rows_keys_map = {row["id"]: row.keys() for row in rows}
+
+        row_ids = rows_keys_map.keys()
+        original_rows = row_handler.get_rows_for_update(model, row_ids)
+
+        original_rows_values = []
+        for row in original_rows:
+            original_row_values = row_handler.get_internal_values_for_fields(
+                row, rows_keys_map[row.id]
+            )
+            original_row_values["id"] = row.id
+            original_rows_values.append(original_row_values)
+
+        new_rows = deepcopy(rows)
+
+        updated_rows = row_handler.update_rows(
+            user, table, rows, model=model, rows_to_update=original_rows
+        )
+
+        params = cls.Params(table.id, original_rows_values, new_rows)
+
+        cls.register_action(user, params, cls.scope(table.id))
+
+        return updated_rows
+
+    @classmethod
+    def scope(cls, table_id) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        table = TableHandler().get_table(params.table_id)
+        RowHandler().update_rows(user, table, params.original_rows_values)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        table = TableHandler().get_table(params.table_id)
+        RowHandler().update_rows(user, table, params.new_rows)
