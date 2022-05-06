@@ -166,7 +166,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_1.order == Decimal("1.00000000000000000000")
     assert row_2.order == Decimal("2.00000000000000000000")
 
-    row_3 = handler.create_row(user=user, table=table, before=row_2)
+    row_3 = handler.create_row(user=user, table=table, before_row=row_2)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     assert row_1.order == Decimal("1.00000000000000000000")
@@ -174,7 +174,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_3.order == Decimal("1.99999999999999999999")
     assert send_mock.call_args[1]["before"].id == row_2.id
 
-    row_4 = handler.create_row(user=user, table=table, before=row_2)
+    row_4 = handler.create_row(user=user, table=table, before_row=row_2)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -183,7 +183,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_3.order == Decimal("1.99999999999999999998")
     assert row_4.order == Decimal("1.99999999999999999999")
 
-    row_5 = handler.create_row(user=user, table=table, before=row_3)
+    row_5 = handler.create_row(user=user, table=table, before_row=row_3)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -194,7 +194,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_4.order == Decimal("1.99999999999999999999")
     assert row_5.order == Decimal("1.99999999999999999997")
 
-    row_6 = handler.create_row(user=user, table=table, before=row_2)
+    row_6 = handler.create_row(user=user, table=table, before_row=row_2)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -207,7 +207,7 @@ def test_create_row(send_mock, data_fixture):
     assert row_5.order == Decimal("1.99999999999999999996")
     assert row_6.order == Decimal("1.99999999999999999999")
 
-    row_7 = handler.create_row(user, table=table, before=row_1)
+    row_7 = handler.create_row(user, table=table, before_row=row_1)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()
@@ -359,7 +359,7 @@ def test_create_rows_created_on_and_last_modified(data_fixture):
     handler = RowHandler()
 
     with freeze_time("2020-01-01 12:00"):
-        rows = handler.create_rows(user=user, table=table, rows=[{}])
+        rows = handler.create_rows(user=user, table=table, rows_values=[{}])
         row = rows[0]
         assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
         assert row.updated_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
@@ -426,7 +426,7 @@ def test_move_row(before_send_mock, send_mock, data_fixture):
     assert send_mock.call_args[1]["model"]._generated_table_model
     assert send_mock.call_args[1]["before_return"] == before_send_mock.return_value
 
-    handler.move_row_by_id(user=user, table=table, row_id=row_1.id, before=row_3)
+    handler.move_row_by_id(user=user, table=table, row_id=row_1.id, before_row=row_3)
     row_1.refresh_from_db()
     row_2.refresh_from_db()
     row_3.refresh_from_db()

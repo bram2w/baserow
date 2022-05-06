@@ -1,7 +1,7 @@
 import dataclasses
 
 from decimal import Decimal
-from typing import Any, Dict, Optional, Type
+from typing import Any, Dict, Optional, Type, List
 
 from django.contrib.auth.models import AbstractUser
 from baserow.contrib.database.table.handler import TableHandler
@@ -35,7 +35,7 @@ class CreateRowActionType(ActionType):
         table: Table,
         values: Optional[Dict[str, Any]] = None,
         model: Optional[Type[GeneratedTableModel]] = None,
-        before: Optional[GeneratedTableModel] = None,
+        before_row: Optional[GeneratedTableModel] = None,
         user_field_names: bool = False,
     ) -> GeneratedTableModel:
         """
@@ -51,7 +51,7 @@ class CreateRowActionType(ActionType):
             be the field ids.
         :param model: If a model is already generated it can be provided here to avoid
             having to generate the model again.
-        :param before: If provided the new row will be placed right before that row
+        :param before_row: If provided the new row will be placed right before that row
             instance.
         :param user_field_names: Whether or not the values are keyed by the internal
             Baserow field name (field_1,field_2 etc) or by the user field names.
@@ -63,7 +63,7 @@ class CreateRowActionType(ActionType):
             table,
             values=values,
             model=model,
-            before=before,
+            before_row=before_row,
             user_field_names=user_field_names,
         )
 
@@ -86,6 +86,72 @@ class CreateRowActionType(ActionType):
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         TrashHandler.restore_item(
             user, "row", params.row_id, parent_trash_item_id=params.table_id
+        )
+
+
+class CreateRowsActionType(ActionType):
+    type = "create_rows"
+
+    @dataclasses.dataclass
+    class Params:
+        table_id: int
+        row_ids: List[int]
+        trashed_rows_entry_id: Optional[int] = None
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        table: Table,
+        rows_values: List[Dict[str, Any]],
+        before_row: Optional[GeneratedTableModel] = None,
+        model: Optional[Type[GeneratedTableModel]] = None,
+    ) -> List[GeneratedTableModel]:
+        """
+        Creates rows for a given table with the provided values if the user
+        belongs to the related group. It also calls the rows_created signal.
+        See the baserow.contrib.database.rows.handler.RowHandler.create_rows
+        for more information.
+        Undoing this action trashes the rows sand redoing restores them all.
+
+        :param user: The user of whose behalf the rows are created.
+        :param table: The table for which the rows should be created.
+        :param rows_values: List of rows values for rows that need to be created.
+        :param before_row: If provided the new rows will be placed right before
+            the row with this id.
+        :param model: If the correct model has already been generated it can be
+            provided so that it does not have to be generated for a second time.
+        :return: The created list of rows instances.
+        """
+
+        rows = RowHandler().create_rows(
+            user, table, rows_values, before_row=before_row, model=model
+        )
+
+        params = cls.Params(table.id, [row.id for row in rows])
+        cls.register_action(user, params, cls.scope(table.id))
+
+        return rows
+
+    @classmethod
+    def scope(cls, table_id) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        trashed_rows_trash_entry = RowHandler().delete_rows(
+            user, TableHandler().get_table(params.table_id), params.row_ids
+        )
+        params.trashed_rows_entry_id = trashed_rows_trash_entry.id
+        action_being_undone.params = params
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        TrashHandler.restore_item(
+            user,
+            "rows",
+            params.trashed_rows_entry_id,
+            parent_trash_item_id=params.table_id,
         )
 
 
@@ -139,6 +205,64 @@ class DeleteRowActionType(ActionType):
         RowHandler().delete_row_by_id(
             user, TableHandler().get_table(params.table_id), params.row_id
         )
+
+
+class DeleteRowsActionType(ActionType):
+    type = "delete_rows"
+
+    @dataclasses.dataclass
+    class Params:
+        table_id: int
+        row_ids: List[int]
+        trashed_rows_entry_id: int
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        table: Table,
+        row_ids: List[int],
+        model: Optional[Type[GeneratedTableModel]] = None,
+    ):
+        """
+        Deletes rows of the given table with the given row_ids.
+        See the baserow.contrib.database.rows.handler.RowHandler.delete_rows
+        for more information.
+        Undoing this action restores the original rows and redoing trashes them again.
+
+        :param user: The user of whose behalf the change is made.
+        :param table: The table for which the row must be deleted.
+        :param row_ids: The id of the row that must be deleted.
+        :param model: If the correct model has already been generated, it can be
+            provided so that it does not have to be generated for a second time.
+        :raises RowDoesNotExist: When the row with the provided id does not exist.
+        """
+
+        trashed_rows_entry = RowHandler().delete_rows(user, table, row_ids, model=model)
+
+        params = cls.Params(table.id, row_ids, trashed_rows_entry.id)
+        cls.register_action(user, params, cls.scope(table.id))
+
+    @classmethod
+    def scope(cls, table_id) -> ActionScopeStr:
+        return TableActionScopeType.value(table_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        TrashHandler.restore_item(
+            user,
+            "rows",
+            params.trashed_rows_entry_id,
+            parent_trash_item_id=params.table_id,
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        trashed_rows_entry = RowHandler().delete_rows(
+            user, TableHandler().get_table(params.table_id), params.row_ids
+        )
+        params.trashed_rows_entry_id = trashed_rows_entry.id
+        action_being_redone.params = params
 
 
 def get_rows_displacement(
@@ -224,8 +348,8 @@ class MoveRowActionType(ActionType):
         user: AbstractUser,
         table: Table,
         row_id: int,
-        before: Optional[GeneratedTableModel] = None,
-        model: Type[GeneratedTableModel] = None,
+        before_row: Optional[GeneratedTableModel] = None,
+        model: Optional[Type[GeneratedTableModel]] = None,
     ) -> GeneratedTableModelForUpdate:
         """
         Moves the row before another row or to the end if no before row is provided.
@@ -240,7 +364,7 @@ class MoveRowActionType(ActionType):
         :param user: The user of whose behalf the row is moved
         :param table: The table that contains the row that needs to be moved.
         :param row_id: The id of the row that needs to be moved.
-        :param before: If provided the new row will be placed right before that row
+        :param before_row: If provided the new row will be placed right before that row
             instance. Otherwise the row will be moved to the end.
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
@@ -254,7 +378,9 @@ class MoveRowActionType(ActionType):
 
         original_row_order = row.order
 
-        updated_row = row_handler.move_row(user, table, row, before=before, model=model)
+        updated_row = row_handler.move_row(
+            user, table, row, before_row=before_row, model=model
+        )
 
         rows_displacement = get_rows_displacement(
             model, original_row_order, updated_row.order
@@ -281,9 +407,11 @@ class MoveRowActionType(ActionType):
         row_handler = RowHandler()
         row = row_handler.get_row_for_update(user, table, params.row_id, model=model)
 
-        before = get_before_row_from_displacement(row, model, -params.rows_displacement)
+        before_row = get_before_row_from_displacement(
+            row, model, -params.rows_displacement
+        )
 
-        row_handler.move_row(user, table, row, before=before, model=model)
+        row_handler.move_row(user, table, row, before_row=before_row, model=model)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
@@ -293,9 +421,11 @@ class MoveRowActionType(ActionType):
         row_handler = RowHandler()
         row = row_handler.get_row_for_update(user, table, params.row_id, model=model)
 
-        before = get_before_row_from_displacement(row, model, params.rows_displacement)
+        before_row = get_before_row_from_displacement(
+            row, model, params.rows_displacement
+        )
 
-        row_handler.move_row(user, table, row, before=before, model=model)
+        row_handler.move_row(user, table, row, before_row=before_row, model=model)
 
 
 class UpdateRowActionType(ActionType):

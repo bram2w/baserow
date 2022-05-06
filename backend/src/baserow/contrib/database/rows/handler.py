@@ -380,7 +380,7 @@ class RowHandler:
         table: Table,
         values: Optional[Dict[str, Any]] = None,
         model: Optional[Type[GeneratedTableModel]] = None,
-        before: Optional[GeneratedTableModel] = None,
+        before_row: Optional[GeneratedTableModel] = None,
         user_field_names: bool = False,
     ) -> GeneratedTableModel:
         """
@@ -393,7 +393,7 @@ class RowHandler:
             be the field ids.
         :param model: If a model is already generated it can be provided here to avoid
             having to generate the model again.
-        :param before: If provided the new row will be placed right before that row
+        :param before_row: If provided the new row will be placed right before that row
             instance.
         :param user_field_names: Whether or not the values are keyed by the internal
             Baserow field name (field_1,field_2 etc) or by the user field names.
@@ -406,10 +406,12 @@ class RowHandler:
         group = table.database.group
         group.has_user(user, raise_error=True)
 
-        instance = self.force_create_row(table, values, model, before, user_field_names)
+        instance = self.force_create_row(
+            table, values, model, before_row, user_field_names
+        )
 
         row_created.send(
-            self, row=instance, before=before, user=user, table=table, model=model
+            self, row=instance, before=before_row, user=user, table=table, model=model
         )
 
         return instance
@@ -647,44 +649,39 @@ class RowHandler:
 
         return row
 
-    def create_rows(self, user, table, rows, before_row_id=None, model=None):
+    def create_rows(
+        self,
+        user: AbstractUser,
+        table: Table,
+        rows_values: List[Dict[str, Any]],
+        before_row: Optional[GeneratedTableModel] = None,
+        model: Optional[Type[GeneratedTableModel]] = None,
+    ) -> List[GeneratedTableModel]:
         """
         Creates new rows for a given table if the user
         belongs to the related group. It also calls the rows_created signal.
 
         :param user: The user of whose behalf the rows are created.
-        :type user: User
         :param table: The table for which the rows should be created.
-        :type table: Table
-        :param rows: List of rows to be created. Individual rows should be instances
-            of the table model.
-        :type rows: list[Model]
-        :param before_row_id: If provided the new rows will be placed right before
-            the row with this id.
-        :type before_row_id: int
+        :param rows_values: List of rows values for rows that need to be created.
+        :param before_row: If provided the new rows will be placed right before
+            the before_row.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
-        :type model: Model
         :return: The created row instances.
-        :rtype: list[Model]
         """
 
         group = table.database.group
         group.has_user(user, raise_error=True)
 
-        if not model:
+        if model is None:
             model = table.get_model()
 
-        before_row = (
-            RowHandler().get_row(user, table, before_row_id, model)
-            if before_row_id
-            else None
-        )
         highest_order, step = self.get_order_before_row(
-            before_row, model, amount=len(rows)
+            before_row, model, amount=len(rows_values)
         )
 
-        rows = self.prepare_rows_in_bulk(model._field_objects, rows)
+        rows = self.prepare_rows_in_bulk(model._field_objects, rows_values)
 
         rows_relationships = []
         for index, row in enumerate(rows, start=-len(rows)):
@@ -986,8 +983,8 @@ class RowHandler:
         user: AbstractUser,
         table: Table,
         row_id: int,
-        before: Optional[GeneratedTableModel] = None,
-        model=None,
+        before_row: Optional[GeneratedTableModel] = None,
+        model: Optional[Type[GeneratedTableModel]] = None,
     ) -> GeneratedTableModelForUpdate:
         """
         Updates the row order value.
@@ -995,7 +992,7 @@ class RowHandler:
         :param user: The user of whose behalf the row is moved
         :param table: The table that contains the row that needs to be moved.
         :param row_id: The row id that needs to be moved.
-        :param before: If provided the new row will be placed right before that row
+        :param before_row: If provided the new row will be placed right before that row
             instance. Otherwise the row will be moved to the end.
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
@@ -1006,15 +1003,15 @@ class RowHandler:
 
         with transaction.atomic():
             row = self.get_row_for_update(user, table, row_id, model=model)
-            return self.move_row(user, table, row, before=before, model=model)
+            return self.move_row(user, table, row, before_row=before_row, model=model)
 
     def move_row(
         self,
         user: AbstractUser,
         table: Table,
         row: GeneratedTableModelForUpdate,
-        before: Optional[GeneratedTableModel] = None,
-        model=None,
+        before_row: Optional[GeneratedTableModel] = None,
+        model: Optional[Type[GeneratedTableModel]] = None,
     ) -> GeneratedTableModelForUpdate:
         """
         Updates the row order value.
@@ -1022,7 +1019,7 @@ class RowHandler:
         :param user: The user of whose behalf the row is moved
         :param table: The table that contains the row that needs to be moved.
         :param row: The row that needs to be moved.
-        :param before: If provided the new row will be placed right before that row
+        :param before_row: If provided the new row will be placed right before that row
             instance. Otherwise the row will be moved to the end.
         :param model: If the correct model has already been generated, it can be
             provided so that it does not have to be generated for a second time.
@@ -1038,7 +1035,7 @@ class RowHandler:
             self, row=row, user=user, table=table, model=model, updated_field_ids=[]
         )
 
-        row.order = self.get_order_before_row(before, model)[0]
+        row.order = self.get_order_before_row(before_row, model)[0]
         row.save()
 
         update_collector = CachingFieldUpdateCollector(
@@ -1167,7 +1164,7 @@ class RowHandler:
         table: Table,
         row_ids: List[int],
         model: Optional[Type[GeneratedTableModel]] = None,
-    ):
+    ) -> TrashedRows:
         """
         Trashes existing rows of the given table based on row_ids.
 
@@ -1241,3 +1238,5 @@ class RowHandler:
             model=model,
             before_return=before_return,
         )
+
+        return trashed_rows

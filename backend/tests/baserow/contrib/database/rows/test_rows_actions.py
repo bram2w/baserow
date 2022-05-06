@@ -15,7 +15,9 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.rows.actions import (
     CreateRowActionType,
+    CreateRowsActionType,
     DeleteRowActionType,
+    DeleteRowsActionType,
     MoveRowActionType,
     UpdateRowActionType,
 )
@@ -58,9 +60,13 @@ def test_can_undo_creating_row(data_fixture):
     assert getattr(row, f"field_{price_field.id}") == 59999.99
     assert not getattr(row, "field_9999", None)
 
-    ActionHandler.undo(
+    action_undone = ActionHandler.undo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
+
+    assert action_undone is not None
+    assert action_undone.type == CreateRowActionType.type
+    assert action_undone.error is None
 
     assert model.objects.all().count() == 0
 
@@ -105,13 +111,132 @@ def test_can_undo_redo_creating_row(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert model.objects.all().count() == 0
-
-    ActionHandler.redo(
+    action_redone = ActionHandler.redo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
+    assert action_redone is not None
+    assert action_redone.type == CreateRowActionType.type
+    assert action_redone.error is None
+
     assert model.objects.all().count() == 1
+
+    assert getattr(row, f"field_{name_field.id}") == "Tesla"
+    assert getattr(row, f"field_{speed_field.id}") == 240
+    assert getattr(row, f"field_{price_field.id}") == 59999.99
+    assert not getattr(row, "field_9999", None)
+
+
+@pytest.mark.django_db
+def test_can_undo_creating_rows(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    table = data_fixture.create_database_table(name="Car", user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    speed_field = data_fixture.create_number_field(
+        table=table, name="Max speed", number_negative=True
+    )
+    price_field = data_fixture.create_number_field(
+        table=table,
+        name="Price",
+        number_decimal_places=2,
+        number_negative=False,
+    )
+    model = table.get_model()
+
+    action_type_registry.get_by_type(CreateRowsActionType).do(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "Tesla",
+                f"field_{speed_field.id}": 240,
+                f"field_{price_field.id}": 59999.99,
+            },
+            {
+                f"field_{name_field.id}": "Giulietta",
+                f"field_{speed_field.id}": 210,
+                f"field_{price_field.id}": 34999.99,
+            },
+            {
+                f"field_{name_field.id}": "Panda",
+                f"field_{speed_field.id}": 160,
+                f"field_{price_field.id}": 8999.99,
+            },
+        ],
+    )
+
+    assert model.objects.all().count() == 3
+
+    action_undone = ActionHandler.undo(
+        user, [TableActionScopeType.value(table_id=table.id)], session_id
+    )
+
+    assert action_undone is not None
+    assert action_undone.type == CreateRowsActionType.type
+    assert action_undone.error is None
+
+    assert model.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_can_undo_redo_creating_rows(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    table = data_fixture.create_database_table(name="Car", user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    speed_field = data_fixture.create_number_field(
+        table=table, name="Max speed", number_negative=True
+    )
+    price_field = data_fixture.create_number_field(
+        table=table,
+        name="Price",
+        number_decimal_places=2,
+        number_negative=False,
+    )
+    model = table.get_model()
+
+    action_type_registry.get_by_type(CreateRowsActionType).do(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "Tesla",
+                f"field_{speed_field.id}": 240,
+                f"field_{price_field.id}": 59999.99,
+            },
+            {
+                f"field_{name_field.id}": "Giulietta",
+                f"field_{speed_field.id}": 210,
+                f"field_{price_field.id}": 34999.99,
+            },
+            {
+                f"field_{name_field.id}": "Panda",
+                f"field_{speed_field.id}": 160,
+                f"field_{price_field.id}": 8999.99,
+            },
+        ],
+    )
+
+    assert model.objects.all().count() == 3
+
+    ActionHandler.undo(
+        user, [TableActionScopeType.value(table_id=table.id)], session_id
+    )
+
+    action_redone = ActionHandler.redo(
+        user, [TableActionScopeType.value(table_id=table.id)], session_id
+    )
+
+    assert action_redone is not None
+    assert action_redone.type == CreateRowsActionType.type
+    assert action_redone.error is None
+
+    assert model.objects.all().count() == 3
 
 
 @pytest.mark.django_db
@@ -150,9 +275,13 @@ def test_can_undo_deleting_row(data_fixture):
 
     assert model.objects.all().count() == 0
 
-    ActionHandler.undo(
+    action_undone = ActionHandler.undo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
+
+    assert action_undone is not None
+    assert action_undone.type == DeleteRowActionType.type
+    assert action_undone.error is None
 
     assert model.objects.all().count() == 1
     assert getattr(row, f"field_{name_field.id}") == "Tesla"
@@ -195,21 +324,139 @@ def test_can_undo_redo_deleting_row(data_fixture):
 
     action_type_registry.get_by_type(DeleteRowActionType).do(user, table, row.id)
 
+    ActionHandler.undo(
+        user, [TableActionScopeType.value(table_id=table.id)], session_id
+    )
+
+    action_redone = ActionHandler.redo(
+        user, [TableActionScopeType.value(table_id=table.id)], session_id
+    )
+
+    assert action_redone is not None
+    assert action_redone.type == DeleteRowActionType.type
+    assert action_redone.error is None
+
     assert model.objects.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_can_undo_deleting_rows(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    table = data_fixture.create_database_table(name="Car", user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    speed_field = data_fixture.create_number_field(
+        table=table, name="Max speed", number_negative=True
+    )
+    price_field = data_fixture.create_number_field(
+        table=table,
+        name="Price",
+        number_decimal_places=2,
+        number_negative=False,
+    )
+    model = table.get_model()
+
+    rows = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "Tesla",
+                f"field_{speed_field.id}": 240,
+                f"field_{price_field.id}": 59999.99,
+            },
+            {
+                f"field_{name_field.id}": "Giulietta",
+                f"field_{speed_field.id}": 210,
+                f"field_{price_field.id}": 34999.99,
+            },
+            {
+                f"field_{name_field.id}": "Panda",
+                f"field_{speed_field.id}": 160,
+                f"field_{price_field.id}": 8999.99,
+            },
+        ],
+    )
+
+    assert model.objects.all().count() == 3
+
+    action_type_registry.get_by_type(DeleteRowsActionType).do(
+        user, table, [row.id for row in rows]
+    )
+
+    assert model.objects.all().count() == 0
+
+    action_undone = ActionHandler.undo(
+        user, [TableActionScopeType.value(table_id=table.id)], session_id
+    )
+
+    assert action_undone is not None
+    assert action_undone.type == DeleteRowsActionType.type
+    assert action_undone.error is None
+
+    assert model.objects.all().count() == 3
+
+
+@pytest.mark.django_db
+def test_can_undo_redo_deleting_rows(data_fixture):
+    session_id = "session-id"
+    user = data_fixture.create_user(session_id=session_id)
+    table = data_fixture.create_database_table(name="Car", user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    speed_field = data_fixture.create_number_field(
+        table=table, name="Max speed", number_negative=True
+    )
+    price_field = data_fixture.create_number_field(
+        table=table,
+        name="Price",
+        number_decimal_places=2,
+        number_negative=False,
+    )
+    model = table.get_model()
+
+    rows = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "Tesla",
+                f"field_{speed_field.id}": 240,
+                f"field_{price_field.id}": 59999.99,
+            },
+            {
+                f"field_{name_field.id}": "Giulietta",
+                f"field_{speed_field.id}": 210,
+                f"field_{price_field.id}": 34999.99,
+            },
+            {
+                f"field_{name_field.id}": "Panda",
+                f"field_{speed_field.id}": 160,
+                f"field_{price_field.id}": 8999.99,
+            },
+        ],
+    )
+
+    assert model.objects.all().count() == 3
+
+    action_type_registry.get_by_type(DeleteRowsActionType).do(
+        user, table, [row.id for row in rows]
+    )
 
     ActionHandler.undo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert model.objects.all().count() == 1
-    assert getattr(row, f"field_{name_field.id}") == "Tesla"
-    assert getattr(row, f"field_{speed_field.id}") == 240
-    assert getattr(row, f"field_{price_field.id}") == 59999.99
-    assert not getattr(row, "field_9999", None)
-
-    ActionHandler.redo(
+    action_redone = ActionHandler.redo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
+
+    assert action_redone is not None
+    assert action_redone.type == DeleteRowsActionType.type
+    assert action_redone.error is None
 
     assert model.objects.all().count() == 0
 
@@ -242,9 +489,13 @@ def test_can_undo_moving_row(data_fixture):
     assert row_2.order == Decimal("2.00000000000000000000")
     assert row_3.order == Decimal("3.00000000000000000000")
 
-    ActionHandler.undo(
+    action_undone = ActionHandler.undo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
+
+    assert action_undone is not None
+    assert action_undone.type == MoveRowActionType.type
+    assert action_undone.error is None
 
     refresh_rows_from_db()
     assert row_1.order < row_2.order < row_3.order
@@ -282,12 +533,13 @@ def test_can_undo_redo_moving_row(data_fixture):
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    refresh_rows_from_db()
-    assert row_1.order < row_2.order < row_3.order
-
-    ActionHandler.redo(
+    action_redone = ActionHandler.redo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
+
+    assert action_redone is not None
+    assert action_redone.type == MoveRowActionType.type
+    assert action_redone.error is None
 
     refresh_rows_from_db()
     assert row_2.order < row_3.order < row_1.order
@@ -315,18 +567,18 @@ def test_undo_moving_row_does_nothing_if_row_is_at_same_original_position(data_f
 
     # move row_1 to the end
     action_type_registry.get_by_type(MoveRowActionType).do(
-        user, table, row_1.id, before=row_2
+        user, table, row_1.id, before_row=row_2
     )
 
     refresh_rows_from_db()
     assert row_1.order < row_2.order < row_3.order
     order = [row_1.order, row_2.order, row_3.order]
 
-    last_action_undone = ActionHandler.undo(
+    action_undone = ActionHandler.undo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
     )
 
-    assert last_action_undone is None
+    assert action_undone is None
 
     refresh_rows_from_db()
     assert order == [row_1.order, row_2.order, row_3.order]
@@ -517,7 +769,11 @@ def test_can_undo_redo_updating_row(data_fixture):
     )
 
     car.refresh_from_db()
+
     assert action_undone is not None
+    assert action_undone.type == UpdateRowActionType.type
+    assert action_undone.error is None
+
     assert model.objects.all().count() == 1
     assert getattr(car, f"field_{car_name_field.id}") == "Model 3"
     assert getattr(car, f"field_{speed_field.id}") == 240
@@ -544,7 +800,11 @@ def test_can_undo_redo_updating_row(data_fixture):
     )
 
     car.refresh_from_db()
+
     assert action_redone is not None
+    assert action_redone.type == UpdateRowActionType.type
+    assert action_redone.error is None
+
     assert model.objects.all().count() == 1
     assert getattr(car, f"field_{car_name_field.id}") == "Alfa Romeo Giulietta"
     assert getattr(car, f"field_{speed_field.id}") == 220
@@ -613,8 +873,11 @@ def test_undo_redo_updating_row_dont_change_formula_field_values(data_fixture):
     )
 
     row.refresh_from_db()
+
     assert action_undone is not None
     assert action_undone.type == UpdateRowActionType.type
+    assert action_undone.error is None
+
     assert getattr(row, f"field_{formula_field.id}") == Decimal("4")
 
     # same for redo
@@ -625,4 +888,6 @@ def test_undo_redo_updating_row_dont_change_formula_field_values(data_fixture):
     row.refresh_from_db()
     assert action_redone is not None
     assert action_redone.type == UpdateRowActionType.type
+    assert action_redone.error is None
+
     assert getattr(row, f"field_{formula_field.id}") == Decimal("4")
