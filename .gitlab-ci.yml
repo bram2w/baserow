@@ -432,7 +432,9 @@ collect-backend-coverage:
     - coverage xml -o coverage.xml
   artifacts:
     reports:
-      cobertura: coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
 
 # If pipeline not triggered by tag:
@@ -498,8 +500,10 @@ web-frontend-test:
     paths:
       - reports/
     reports:
-      cobertura: reports/coverage/cobertura-coverage.xml
       junit: reports/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
   coverage: '/Lines\s*:\s*(\d+.?\d*)%/'
 
 # If pipeline not triggered by tag:
