@@ -36,7 +36,7 @@ def test_row_created(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["metadata"] == {}
 
     row_2 = RowHandler().create_row(
-        user=user, table=table, before=row, values={f"field_{field.id}": "Test2"}
+        user=user, table=table, before_row=row, values={f"field_{field.id}": "Test2"}
     )
     args = mock_broadcast_to_channel_group.delay.call_args
     assert args[0][0] == f"table-{table.id}"

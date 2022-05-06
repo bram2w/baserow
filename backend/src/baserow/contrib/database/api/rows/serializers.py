@@ -321,6 +321,10 @@ class CreateRowQueryParamsSerializer(serializers.Serializer):
     before = serializers.IntegerField(required=False)
 
 
+class BatchCreateRowsQueryParamsSerializer(serializers.Serializer):
+    before = serializers.IntegerField(required=False)
+
+
 class ListRowsQueryParamsSerializer(serializers.Serializer):
     user_field_names = serializers.BooleanField(required=False, default=False)
     search = serializers.CharField(required=False)

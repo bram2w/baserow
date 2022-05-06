@@ -756,7 +756,7 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
     # Move the visible row behind the invisible one
     with transaction.atomic():
         RowHandler().move_row_by_id(
-            user, table, visible_moving_row.id, before=invisible_row, model=model
+            user, table, visible_moving_row.id, before_row=invisible_row, model=model
         )
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
@@ -844,7 +844,7 @@ def test_given_row_invisible_in_public_view_when_moved_no_update_sent(
     # Move the invisible row
     with transaction.atomic():
         RowHandler().move_row_by_id(
-            user, table, invisible_moving_row.id, before=visible_row, model=model
+            user, table, invisible_moving_row.id, before_row=visible_row, model=model
         )
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (

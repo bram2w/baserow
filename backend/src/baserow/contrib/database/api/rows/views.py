@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -54,7 +55,9 @@ from baserow.contrib.database.fields.exceptions import (
 )
 from baserow.contrib.database.rows.actions import (
     CreateRowActionType,
+    CreateRowsActionType,
     DeleteRowActionType,
+    DeleteRowsActionType,
     MoveRowActionType,
     UpdateRowActionType,
     UpdateRowsActionType,
@@ -80,6 +83,7 @@ from .serializers import (
     MoveRowQueryParamsSerializer,
     CreateRowQueryParamsSerializer,
     RowSerializer,
+    BatchCreateRowsQueryParamsSerializer,
     BatchDeleteRowsSerializer,
     get_batch_row_serializer_class,
     get_example_row_serializer_class,
@@ -395,7 +399,7 @@ class RowsView(APIView):
         }
     )
     @validate_query_parameters(CreateRowQueryParamsSerializer)
-    def post(self, request, table_id, query_params):
+    def post(self, request: Request, table_id: int, query_params) -> Response:
         """
         Creates a new row for the given table_id. Also the post data is validated
         according to the tables field types.
@@ -413,7 +417,7 @@ class RowsView(APIView):
         data = validate_data(validation_serializer, request.data)
 
         before_id = query_params.get("before")
-        before = (
+        before_row = (
             RowHandler().get_row(request.user, table, before_id, model)
             if before_id
             else None
@@ -425,7 +429,7 @@ class RowsView(APIView):
                 table,
                 data,
                 model=model,
-                before=before,
+                before_row=before_row,
                 user_field_names=user_field_names,
             )
         except ValidationError as e:
@@ -887,14 +891,14 @@ class RowMoveView(APIView):
         row_handler = RowHandler()
 
         before_id = query_params.get("before_id")
-        before = (
+        before_row = (
             row_handler.get_row(request.user, table, before_id, model=model)
             if before_id
             else None
         )
 
         row = action_type_registry.get_by_type(MoveRowActionType).do(
-            request.user, table, row_id, before=before, model=model
+            request.user, table, row_id, before_row=before_row, model=model
         )
 
         serializer_class = get_row_serializer_class(
@@ -933,6 +937,7 @@ class BatchRowsView(APIView):
                     "internal Baserow field names (field_123 etc)."
                 ),
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="batch_create_database_table_rows",
@@ -985,7 +990,8 @@ class BatchRowsView(APIView):
             UserFileDoesNotExist: ERROR_USER_FILE_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, table_id):
+    @validate_query_parameters(BatchCreateRowsQueryParamsSerializer)
+    def post(self, request: Request, table_id: int, query_params) -> Response:
         """
         Creates new rows for the given table_id. Also the post data is validated
         according to the tables field types.
@@ -996,7 +1002,12 @@ class BatchRowsView(APIView):
         model = table.get_model()
 
         user_field_names = "user_field_names" in request.GET
-        before_row_id = request.query_params.get("before")
+        before_id = query_params.get("before")
+        before_row = (
+            RowHandler().get_row(request.user, table, before_id, model)
+            if before_id
+            else None
+        )
 
         row_validation_serializer = get_row_serializer_class(
             model, user_field_names=user_field_names
@@ -1009,11 +1020,11 @@ class BatchRowsView(APIView):
         )
 
         try:
-            rows = RowHandler().create_rows(
-                request.user, table, data["items"], before_row_id, model
+            rows = action_type_registry.get_by_type(CreateRowsActionType).do(
+                request.user, table, data["items"], before_row, model
             )
-        except ValidationError as e:
-            raise RequestBodyValidationException(detail=e.message)
+        except ValidationError as exc:
+            raise RequestBodyValidationException(detail=exc.message)
 
         response_row_serializer_class = get_row_serializer_class(
             model, RowSerializer, is_response=True, user_field_names=user_field_names
@@ -1150,6 +1161,7 @@ class BatchDeleteRowsView(APIView):
                 type=OpenApiTypes.INT,
                 description="Deletes the rows in the table related to the value.",
             ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table rows"],
         operation_id="batch_delete_database_table_rows",
@@ -1185,7 +1197,7 @@ class BatchDeleteRowsView(APIView):
             CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
         }
     )
-    def post(self, request, table_id, data):
+    def post(self, request: Request, table_id: int, data: Dict[str, Any]) -> Response:
         """
         Batch deletes existing rows based on provided row ids for the table with
         the given table_id.
@@ -1194,7 +1206,7 @@ class BatchDeleteRowsView(APIView):
         table = TableHandler().get_table(table_id)
         TokenHandler().check_table_permissions(request, "delete", table, False)
 
-        RowHandler().delete_rows(
+        action_type_registry.get_by_type(DeleteRowsActionType).do(
             request.user,
             table,
             row_ids=data["items"],
