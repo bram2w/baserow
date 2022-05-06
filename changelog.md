@@ -54,6 +54,9 @@
 * **Premium** Added row coloring.
 * Fixed row coloring bug when the table doesn't have any single select field.
 * Dropdown can now be focused with tab key
+* Added 0.0.0.0 and 127.0.0.1 as ALLOWED_HOSTS for connecting to the Baserow backend
+* Added a new BASEROW_EXTRA_ALLOWED_HOSTS optional comma separated environment variable
+  for configuring ALLOWED_HOSTS.
 
 ## Released (2022-03-03 1.9.1)
 
