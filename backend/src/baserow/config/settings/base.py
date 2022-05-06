@@ -17,7 +17,8 @@ if "SECRET_KEY" in os.environ:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("BASEROW_BACKEND_DEBUG", "off") == "on"
 
-ALLOWED_HOSTS = ["localhost"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS += os.getenv("BASEROW_EXTRA_ALLOWED_HOSTS", "").split(",")
 
 INSTALLED_APPS = [
     "django.contrib.auth",
