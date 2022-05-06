@@ -58,6 +58,7 @@
 * Added a new BASEROW_EXTRA_ALLOWED_HOSTS optional comma separated environment variable
   for configuring ALLOWED_HOSTS.
 * Fixed a bug for some number filters that causes all rows to be returned when text is entered.
+* Fixed webhook test call failing when request body is empty.
 
 ## Released (2022-03-03 1.9.1)
 
