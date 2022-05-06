@@ -54,6 +54,7 @@
 * **Premium** Added row coloring.
 * Fixed row coloring bug when the table doesn't have any single select field.
 * Dropdown can now be focused with tab key
+* Fixed a bug for some number filters that causes all rows to be returned when text is entered.
 
 ## Released (2022-03-03 1.9.1)
 

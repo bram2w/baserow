@@ -17,7 +17,7 @@ import { decimal } from 'vuelidate/lib/validators'
 import filterTypeInput from '@baserow/modules/database/mixins/filterTypeInput'
 
 export default {
-  name: 'ViewFilterTypeText',
+  name: 'ViewFilterTypeNumber',
   mixins: [filterTypeInput],
   methods: {
     focus() {

@@ -45,6 +45,9 @@ from baserow.contrib.database.formula import (
 
 
 class NotViewFilterTypeMixin:
+    def default_filter_on_exception(self):
+        return Q()
+
     def get_filter(self, *args, **kwargs):
         return ~super().get_filter(*args, **kwargs)
 
@@ -81,12 +84,11 @@ class EqualViewFilterType(ViewFilterType):
             return Q()
 
         # Check if the model_field accepts the value.
-        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
-            return Q()
+            return self.default_filter_on_exception()
 
 
 class NotEqualViewFilterType(NotViewFilterTypeMixin, EqualViewFilterType):
@@ -161,8 +163,12 @@ class ContainsViewFilterType(ViewFilterType):
     ]
 
     def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
-        field_type = field_type_registry.get_by_model(field)
-        return field_type.contains_query(field_name, value, model_field, field)
+        # Check if the model_field accepts the value.
+        try:
+            field_type = field_type_registry.get_by_model(field)
+            return field_type.contains_query(field_name, value, model_field, field)
+        except Exception:
+            return self.default_filter_on_exception()
 
 
 class ContainsNotViewFilterType(NotViewFilterTypeMixin, ContainsViewFilterType):
@@ -194,9 +200,7 @@ class LengthIsLowerThanViewFilterType(ViewFilterType):
                 q={f"{field_name}_len__lt": int(value)},
             )
         except ValueError:
-            pass
-
-        return Q()
+            return self.default_filter_on_exception()
 
 
 class HigherThanViewFilterType(ViewFilterType):
@@ -227,12 +231,11 @@ class HigherThanViewFilterType(ViewFilterType):
             value = floor(decimal)
 
         # Check if the model_field accepts the value.
-        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{f"{field_name}__gt": value})
         except Exception:
-            return Q()
+            return self.default_filter_on_exception()
 
 
 class LowerThanViewFilterType(ViewFilterType):
@@ -263,12 +266,11 @@ class LowerThanViewFilterType(ViewFilterType):
             value = ceil(decimal)
 
         # Check if the model_field accepts the value.
-        # noinspection PyBroadException
         try:
             model_field.get_prep_value(value)
             return Q(**{f"{field_name}__lt": value})
         except Exception:
-            return Q()
+            return self.default_filter_on_exception()
 
 
 class DateEqualViewFilterType(ViewFilterType):

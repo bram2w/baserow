@@ -2,6 +2,7 @@ from typing import Any, Dict, List, TYPE_CHECKING, NoReturn, Optional
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
+from django.core.exceptions import ValidationError
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models as django_models
 from django.db.models import (
@@ -11,7 +12,6 @@ from django.db.models import (
     QuerySet,
 )
 from django.db.models.fields.related import ManyToManyField, ForeignKey
-from django.forms import ValidationError
 
 from baserow.core.registry import (
     Instance,

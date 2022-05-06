@@ -6,7 +6,7 @@
 import viewFilter from '@baserow/modules/database/mixins/viewFilter'
 
 export default {
-  name: 'ViewFilterTypeText',
+  name: 'ViewFilterTypeTimeZone',
   mixins: [viewFilter],
 }
 </script>
