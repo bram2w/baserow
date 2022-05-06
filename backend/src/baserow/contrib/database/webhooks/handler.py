@@ -385,7 +385,7 @@ class WebhookHandler:
         return "{}\r\n{}\r\n\r\n{}".format(
             request.method + " " + request.url,
             "\r\n".join("{}: {}".format(k, v) for k, v in request.headers.items()),
-            json.dumps(json.loads(request.body), indent=4),
+            json.dumps(json.loads(request.body or "{}"), indent=4),
         )
 
     def format_response(self, response: Response) -> str:
