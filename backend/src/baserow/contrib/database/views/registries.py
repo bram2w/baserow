@@ -595,6 +595,10 @@ class ViewFilterType(Instance):
     checked and returns True if compatible or False if not.
     """
 
+    def default_filter_on_exception(self):
+        """The default Q to use when the filter value is of an incompatible type."""
+        return django_models.Q(pk__in=[])
+
     def get_filter(self, field_name, value, model_field, field) -> OptionallyAnnotatedQ:
         """
         Should return either a Q object or and AnnotatedQ containing the requested

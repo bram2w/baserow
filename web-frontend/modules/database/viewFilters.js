@@ -14,6 +14,7 @@ import { isNumeric } from '@baserow/modules/core/utils/string'
 import ViewFilterTypeFileTypeDropdown from '@baserow/modules/database/components/view/ViewFilterTypeFileTypeDropdown'
 import {
   FormulaFieldType,
+  NumberFieldType,
   RatingFieldType,
 } from '@baserow/modules/database/fieldTypes'
 
@@ -139,10 +140,11 @@ export class EqualViewFilterType extends ViewFilterType {
   }
 
   getInputComponent(field) {
-    if (field?.type === RatingFieldType.getType()) {
-      return ViewFilterTypeRating
+    const inputComponent = {
+      [RatingFieldType.getType()]: ViewFilterTypeRating,
+      [NumberFieldType.getType()]: ViewFilterTypeNumber,
     }
-    return ViewFilterTypeText
+    return inputComponent[field?.type] || ViewFilterTypeText
   }
 
   getCompatibleFieldTypes() {
@@ -180,10 +182,11 @@ export class NotEqualViewFilterType extends ViewFilterType {
   }
 
   getInputComponent(field) {
-    if (field?.type === RatingFieldType.getType()) {
-      return ViewFilterTypeRating
+    const inputComponent = {
+      [RatingFieldType.getType()]: ViewFilterTypeRating,
+      [NumberFieldType.getType()]: ViewFilterTypeNumber,
     }
-    return ViewFilterTypeText
+    return inputComponent[field?.type] || ViewFilterTypeText
   }
 
   getCompatibleFieldTypes() {
@@ -283,8 +286,11 @@ export class ContainsViewFilterType extends ViewFilterType {
     return i18n.t('viewFilter.contains')
   }
 
-  getInputComponent() {
-    return ViewFilterTypeText
+  getInputComponent(field) {
+    const inputComponent = {
+      [NumberFieldType.getType()]: ViewFilterTypeNumber,
+    }
+    return inputComponent[field?.type] || ViewFilterTypeText
   }
 
   getCompatibleFieldTypes() {
@@ -324,8 +330,11 @@ export class ContainsNotViewFilterType extends ViewFilterType {
     return i18n.t('viewFilter.containsNot')
   }
 
-  getInputComponent() {
-    return ViewFilterTypeText
+  getInputComponent(field) {
+    const inputComponent = {
+      [NumberFieldType.getType()]: ViewFilterTypeNumber,
+    }
+    return inputComponent[field?.type] || ViewFilterTypeText
   }
 
   getCompatibleFieldTypes() {
@@ -827,10 +836,10 @@ export class HigherThanViewFilterType extends ViewFilterType {
   }
 
   getInputComponent(field) {
-    if (field?.type === RatingFieldType.getType()) {
-      return ViewFilterTypeRating
+    const inputComponent = {
+      [RatingFieldType.getType()]: ViewFilterTypeRating,
     }
-    return ViewFilterTypeNumber
+    return inputComponent[field?.type] || ViewFilterTypeNumber
   }
 
   getCompatibleFieldTypes() {
@@ -867,10 +876,10 @@ export class LowerThanViewFilterType extends ViewFilterType {
   }
 
   getInputComponent(field) {
-    if (field?.type === RatingFieldType.getType()) {
-      return ViewFilterTypeRating
+    const inputComponent = {
+      [RatingFieldType.getType()]: ViewFilterTypeRating,
     }
-    return ViewFilterTypeNumber
+    return inputComponent[field?.type] || ViewFilterTypeNumber
   }
 
   getCompatibleFieldTypes() {

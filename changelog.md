@@ -57,6 +57,7 @@
 * Added 0.0.0.0 and 127.0.0.1 as ALLOWED_HOSTS for connecting to the Baserow backend
 * Added a new BASEROW_EXTRA_ALLOWED_HOSTS optional comma separated environment variable
   for configuring ALLOWED_HOSTS.
+* Fixed a bug for some number filters that causes all rows to be returned when text is entered.
 
 ## Released (2022-03-03 1.9.1)
 

@@ -125,12 +125,11 @@ def test_equal_filter_type(data_fixture):
     assert len(ids) == 1
     assert row.id in ids
 
-    # Because the value 'test' cannot be accepted the filter is not applied so it will
-    # return all rows.
+    # Because the value 'test' cannot be accepted no results will be returned.
     view_filter.field = integer_field
     view_filter.value = "test"
     view_filter.save()
-    assert handler.apply_filters(grid_view, model.objects.all()).count() == 3
+    assert handler.apply_filters(grid_view, model.objects.all()).count() == 0
 
     view_filter.field = decimal_field
     view_filter.value = "20.20"
@@ -1024,10 +1023,11 @@ def test_higher_than_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
+    # with an invalid filter value no results are returned
     view_filter.value = "not_number"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
     view_filter.value = "-5"
     view_filter.save()
@@ -1100,11 +1100,12 @@ def test_higher_than_filter_type(data_fixture):
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
 
+    # with an invalid filter value no results are returned
     view_filter.field = decimal_field
     view_filter.value = "not_number"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
 
 @pytest.mark.django_db
@@ -1174,10 +1175,11 @@ def test_lower_than_filter_type(data_fixture):
     assert row_3.id in ids
     assert row_4.id in ids
 
+    # with an invalid filter value no results are returned
     view_filter.value = "not_number"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
     view_filter.value = "-5"
     view_filter.save()
@@ -1250,11 +1252,12 @@ def test_lower_than_filter_type(data_fixture):
     assert row_3.id in ids
     assert row_4.id in ids
 
+    # with an invalid filter value no results are returned
     view_filter.field = decimal_field
     view_filter.value = "not_number"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 4
+    assert len(ids) == 0
 
 
 @pytest.mark.django_db
@@ -3567,10 +3570,11 @@ def test_length_is_lower_than_filter_type(data_fixture):
     assert row_2.id in ids
     assert row_3.id in ids
 
+    # with an invalid filter value no results are returned
     view_filter.value = "a"
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
-    assert len(ids) == 3
+    assert len(ids) == 0
 
     view_filter.value = 2
     view_filter.field = long_text_field
