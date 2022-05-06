@@ -1,6 +1,7 @@
 import dataclasses
 
 from collections import defaultdict
+from copy import deepcopy
 from typing import Dict, Any, Optional, List
 
 from baserow.contrib.database.action.scopes import TableActionScopeType
@@ -10,7 +11,12 @@ from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import FieldOptionsDict, ViewHandler
-from baserow.contrib.database.views.models import View, ViewFilter, ViewSort
+from baserow.contrib.database.views.models import (
+    View,
+    ViewFilter,
+    ViewSort,
+    ViewDecoration,
+)
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionScopeStr, ActionType
@@ -785,3 +791,254 @@ class DeleteViewActionType(ActionType):
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
         ViewHandler().delete_view_by_id(user, params.view_id)
+
+
+class CreateDecorationActionType(ActionType):
+    type = "create_decoration"
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+        decorator_id: int
+        decorator_type_name: str
+        value_provider_type_name: str
+        value_provider_conf: Dict[str, Any]
+
+    @classmethod
+    def do(
+        cls,
+        view: View,
+        decorator_type_name: str,
+        value_provider_type_name: str,
+        value_provider_conf: Dict[str, Any],
+        user: AbstractUser,
+    ) -> ViewDecoration:
+        """
+        Creates a new decoration based on the provided type.
+        See baserow.contrib.decorations.handler.DecorationsHandler.create_decoration
+        for further details.
+        Undoing this action deletes the decoration.
+
+        :param view: The view for which the filter needs to be created.
+        :param decorator_type_name: The type of the decorator.
+        :param value_provider_type_name: The value provider that provides the value
+            to the decorator.
+        :param value_provider_conf: The configuration used by the value provider to
+            compute the values for the decorator.
+        :param user: Optional user who have created the decoration.
+        :return: The created view decoration instance.
+        """
+
+        decoration = ViewHandler().create_decoration(
+            view,
+            decorator_type_name,
+            value_provider_type_name,
+            value_provider_conf,
+            user=user,
+        )
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(
+                view.id,
+                decoration.id,
+                decorator_type_name,
+                value_provider_type_name,
+                value_provider_conf,
+            ),
+            scope=cls.scope(view.id),
+        )
+
+        return decoration
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        view_decoration = ViewHandler().get_decoration(params.decorator_id)
+        ViewHandler().delete_decoration(view_decoration, user=user)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        view = ViewHandler().get_view(params.view_id)
+        ViewHandler().create_decoration(
+            view,
+            params.decorator_type_name,
+            params.value_provider_type_name,
+            params.value_provider_conf,
+            user=user,
+            primary_key=params.decorator_id,
+        )
+
+
+class UpdateDecorationActionType(ActionType):
+    type = "update_decoration"
+
+    @dataclasses.dataclass
+    class Params:
+        decorator_id: int
+        original_decoration_type_name: str
+        original_value_provider_type_name: str
+        original_value_provider_conf: Dict[str, Any]
+        original_order: int
+        new_decorator_type_name: str
+        new_value_provider_type_name: str
+        new_value_provider_conf: Dict[str, Any]
+        new_order: int
+
+    @classmethod
+    def do(
+        cls,
+        view_decoration: ViewDecoration,
+        user: AbstractUser,
+        decorator_type_name: str = None,
+        value_provider_type_name: str = None,
+        value_provider_conf: Dict[str, Any] = None,
+        order: int = None,
+    ) -> ViewDecoration:
+        """
+        Updates the values of an existing view decoration.
+        See baserow.contrib.decorations.handler.DecorationsHandler.update_decoration
+        for further details.
+        Undoing this action will revert the changes.
+        Redoing this action will apply the changes again.
+
+        :param view_decoration: The view decoration that needs to be updated.
+        :param user: Optional user who have created the decoration..
+        :param decorator_type_name: The type of the decorator.
+        :param value_provider_type_name: The value provider that provides the value
+            to the decorator.
+        :param value_provider_conf: The configuration used by the value provider to
+            compute the values for the decorator.
+        :param order: The order of the decoration.
+        :param user: Optional user who have updated the decoration.
+        :return: The updated view decoration instance.
+        """
+
+        original_view_decoration = deepcopy(view_decoration)
+        original_decoration_type_name = original_view_decoration.type
+        original_value_provider_type_name = original_view_decoration.value_provider_type
+        original_value_provider_conf = original_view_decoration.value_provider_conf
+        original_order = original_view_decoration.order
+
+        view_decoration_updated = ViewHandler().update_decoration(
+            view_decoration,
+            user=user,
+            decorator_type_name=decorator_type_name,
+            value_provider_type_name=value_provider_type_name,
+            value_provider_conf=value_provider_conf,
+            order=order,
+        )
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(
+                view_decoration.id,
+                original_decoration_type_name,
+                original_value_provider_type_name,
+                original_value_provider_conf,
+                original_order,
+                decorator_type_name,
+                value_provider_type_name,
+                value_provider_conf,
+                order,
+            ),
+            scope=cls.scope(view_decoration.view_id),
+        )
+
+        return view_decoration_updated
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
+        view_decoration = ViewHandler().get_decoration(params.decorator_id)
+        ViewHandler().update_decoration(
+            view_decoration,
+            user=user,
+            decorator_type_name=params.original_decoration_type_name,
+            value_provider_type_name=params.original_value_provider_type_name,
+            value_provider_conf=params.original_value_provider_conf,
+            order=params.original_order,
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
+        view_decoration = ViewHandler().get_decoration(params.decorator_id)
+        ViewHandler().update_decoration(
+            view_decoration,
+            user=user,
+            decorator_type_name=params.new_decorator_type_name,
+            value_provider_type_name=params.new_value_provider_type_name,
+            value_provider_conf=params.new_value_provider_conf,
+            order=params.new_order,
+        )
+
+
+class DeleteDecorationActionType(ActionType):
+    type = "delete_decoration"
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+        original_decorator_id: int
+        original_decorator_type_name: str
+        original_value_provider_type_name: str
+        original_value_provider_conf: str
+        original_order: int
+
+    @classmethod
+    def do(cls, view_decoration: ViewDecoration, user: AbstractUser):
+        """
+        Deletes an existing view decoration.
+        See baserow.contrib.decorations.handler.DecorationsHandler.delete_decoration
+        for further details.
+        Undoing this action will restore the decoration.
+        Redoing this action will delete the decoration again.
+
+        :param view_decoration: The view decoration instance that needs to be deleted.
+        :param user: Optional user who have deleted the decoration.
+        """
+
+        original_view_decoration = deepcopy(view_decoration)
+
+        ViewHandler().delete_decoration(view_decoration, user=user)
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(
+                original_view_decoration.view_id,
+                original_view_decoration.id,
+                original_view_decoration.type,
+                original_view_decoration.value_provider_type,
+                original_view_decoration.value_provider_conf,
+                original_view_decoration.order,
+            ),
+            scope=cls.scope(view_decoration.view_id),
+        )
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Any, action_being_undone: Action):
+        view = ViewHandler().get_view(params.view_id)
+        ViewHandler().create_decoration(
+            view=view,
+            user=user,
+            decorator_type_name=params.original_decorator_type_name,
+            value_provider_type_name=params.original_value_provider_type_name,
+            value_provider_conf=params.original_value_provider_conf,
+            primary_key=params.original_decorator_id,
+            order=params.original_order,
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Any, action_being_redone: Action):
+        view_decoration = ViewHandler().get_decoration(params.original_decorator_id)
+        ViewHandler().delete_decoration(view_decoration, user=user)

@@ -23,6 +23,9 @@ from baserow.contrib.database.views.actions import (
     UpdateViewSortActionType,
     UpdateViewFieldOptionsActionType,
     RotateViewSlugActionType,
+    CreateDecorationActionType,
+    UpdateDecorationActionType,
+    DeleteDecorationActionType,
 )
 
 from drf_spectacular.utils import extend_schema
@@ -877,7 +880,8 @@ class ViewDecorationsView(APIView):
                 type=OpenApiTypes.INT,
                 description="Creates a decoration for the view related to the given "
                 "value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table view decorations"],
         operation_id="create_database_table_view_decoration",
@@ -924,7 +928,9 @@ class ViewDecorationsView(APIView):
 
         # We can safely assume the field exists because the
         # CreateViewDecorationSerializer has already checked that.
-        view_decoration = view_handler.create_decoration(
+        view_decoration = action_type_registry.get_by_type(
+            CreateDecorationActionType
+        ).do(
             view,
             data["type"],
             data.get("value_provider_type", None),
@@ -984,7 +990,8 @@ class ViewDecorationView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Updates the view decoration related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table view decorations"],
         operation_id="update_database_table_view_decoration",
@@ -1049,8 +1056,13 @@ class ViewDecorationView(APIView):
             partial=False,
         )
 
-        view_decoration = handler.update_decoration(
-            view_decoration, user=request.user, **data
+        action_type_registry.get_by_type(UpdateDecorationActionType).do(
+            view_decoration,
+            user=request.user,
+            decorator_type_name=data.get("type", None),
+            value_provider_type_name=data.get("value_provider_type", None),
+            value_provider_conf=data.get("value_provider_conf", None),
+            order=data.get("order", None),
         )
 
         serializer = ViewDecorationSerializer(view_decoration)
@@ -1063,7 +1075,8 @@ class ViewDecorationView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Deletes the decoration related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table view decorations"],
         operation_id="delete_database_table_view_decoration",
@@ -1092,9 +1105,8 @@ class ViewDecorationView(APIView):
         group = view_decoration.view.table.database.group
         group.has_user(request.user, raise_error=True)
 
-        ViewHandler().delete_decoration(
-            view_decoration,
-            user=request.user,
+        action_type_registry.get_by_type(DeleteDecorationActionType).do(
+            view_decoration, user=request.user
         )
 
         return Response(status=204)

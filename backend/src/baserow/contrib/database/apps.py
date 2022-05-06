@@ -99,6 +99,9 @@ class DatabaseConfig(AppConfig):
             DeleteViewSortActionType,
             UpdateViewFieldOptionsActionType,
             RotateViewSlugActionType,
+            CreateDecorationActionType,
+            UpdateDecorationActionType,
+            DeleteDecorationActionType,
         )
 
         action_type_registry.register(CreateViewActionType())
@@ -113,6 +116,9 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(DeleteViewSortActionType())
         action_type_registry.register(RotateViewSlugActionType())
         action_type_registry.register(UpdateViewFieldOptionsActionType())
+        action_type_registry.register(CreateDecorationActionType())
+        action_type_registry.register(UpdateDecorationActionType())
+        action_type_registry.register(DeleteDecorationActionType())
 
         from .views.registries import (
             view_type_registry,
