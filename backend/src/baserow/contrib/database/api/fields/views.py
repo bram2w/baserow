@@ -13,7 +13,7 @@ from baserow.api.decorators import (
     validate_query_parameters,
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
-from baserow.api.schemas import get_error_schema
+from baserow.api.schemas import get_error_schema, CLIENT_SESSION_ID_SCHEMA_PARAMETER
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
 from baserow.api.utils import validate_data_custom_fields, type_from_data_or_registry
@@ -49,6 +49,7 @@ from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 from baserow.contrib.database.tokens.handler import TokenHandler
+from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInGroup
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from .serializers import (
@@ -63,6 +64,10 @@ from .serializers import (
 from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
     CircularFieldDependencyError,
+)
+from baserow.contrib.database.fields.actions import (
+    CreateFieldTypeAction,
+    DeleteFieldTypeAction,
 )
 
 
@@ -144,7 +149,8 @@ class FieldsView(APIView):
                 type=OpenApiTypes.INT,
                 description="Creates a new field for the provided table related to the "
                 "value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table fields"],
         operation_id="create_database_table_field",
@@ -214,9 +220,9 @@ class FieldsView(APIView):
         # field we need to be able to map those to the correct API exceptions which are
         # defined in the type.
         with field_type.map_api_exceptions():
-            field, updated_fields = FieldHandler().create_field(
-                request.user, table, type_name, return_updated_fields=True, **data
-            )
+            field, updated_fields = action_type_registry.get_by_type(
+                CreateFieldTypeAction
+            ).do(request.user, table, type_name, return_updated_fields=True, **data)
 
         serializer = field_type_registry.get_serializer(
             field, FieldSerializerWithRelatedFields, related_fields=updated_fields
@@ -360,7 +366,8 @@ class FieldView(APIView):
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
                 description="Deletes the field related to the provided value.",
-            )
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
         tags=["Database table fields"],
         operation_id="delete_database_table_field",
@@ -400,7 +407,9 @@ class FieldView(APIView):
         field = FieldHandler().get_field(field_id)
         field_type = field_type_registry.get_by_model(field.specific_class)
         with field_type.map_api_exceptions():
-            updated_fields = FieldHandler().delete_field(request.user, field)
+            updated_fields = action_type_registry.get_by_type(DeleteFieldTypeAction).do(
+                request.user, field
+            )
 
         return Response(RelatedFieldsSerializer({}, related_fields=updated_fields).data)
 

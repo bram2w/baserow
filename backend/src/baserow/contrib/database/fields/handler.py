@@ -1,9 +1,10 @@
 import logging
 from copy import deepcopy
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union, Tuple
 from psycopg2 import sql
 
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 from django.db import connection
 from django.db.utils import ProgrammingError, DataError
 
@@ -143,33 +144,27 @@ class FieldHandler:
 
     def create_field(
         self,
-        user,
-        table,
-        type_name,
+        user: AbstractUser,
+        table: Table,
+        type_name: str,
         primary=False,
         do_schema_change=True,
         return_updated_fields=False,
         **kwargs,
-    ):
+    ) -> Union[Field, Tuple[Field, List[Field]]]:
         """
         Creates a new field with the given type for a table.
 
         :param user: The user on whose behalf the field is created.
-        :type user: User
         :param table: The table that the field belongs to.
-        :type table: Table
         :param type_name: The type name of the field. Available types can be found in
             the field_type_registry.
-        :type type_name: str
         :param primary: Every table needs at least a primary field which cannot be
             deleted and is a representation of the whole row.
-        :type primary: bool
         :param do_schema_change: Indicates whether or not he actual database schema
             change has be made.
-        :type do_schema_change: bool
         :param return_updated_fields: When True any other fields who changed as a
             result of this field creation are returned with their new field instances.
-        :type return_updated_fields: bool
         :param kwargs: The field values that need to be set upon creation.
         :type kwargs: object
         :raises PrimaryFieldAlreadyExists: When we try to create a primary field,
@@ -179,7 +174,6 @@ class FieldHandler:
         :return: The created field instance. If return_updated_field is set then any
             updated fields as a result of creating the field are returned in a list
             as a second tuple value.
-        :rtype: Union[Field, Tuple[Field, List[Field]]
         """
 
         group = table.database.group
@@ -465,30 +459,26 @@ class FieldHandler:
 
     def delete_field(
         self,
-        user,
-        field,
+        user: AbstractUser,
+        field: Field,
         create_separate_trash_entry=True,
         update_collector=None,
         apply_and_send_updates=True,
         allow_deleting_primary=False,
-    ):
+    ) -> List[Field]:
         """
         Deletes an existing field if it is not a primary field.
 
         :param user: The user on whose behalf the table is created.
-        :type user: User
         :param field: The field instance that needs to be deleted.
-        :type field: Field
         :param create_separate_trash_entry: True if this deletion should create a trash
             entry just for this one field. This should be false only when this field is
             being deleted as part of a parent item whose trash entry will restore
             this field.
-        :type create_separate_trash_entry: bool
         :param update_collector: An optional update collector which will be used to
             store related field updates in.
         :param apply_and_send_updates: Set to False to disable related field updates
             being applied and any signals from being sent.
-        :type apply_and_send_updates: bool
         :param allow_deleting_primary: Set to true if its OK for a primary field to be
             deleted.
         :raises ValueError: When the provided field is not an instance of Field.
