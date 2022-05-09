@@ -183,7 +183,7 @@ def test_batch_rows_created_public_views_receive_restricted_row_created_ws_event
     rows = RowHandler().create_rows(
         user=user,
         table=table,
-        rows=rows_to_create,
+        rows_values=rows_to_create,
     )
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
@@ -291,7 +291,7 @@ def test_batch_rows_created_public_views_receive_row_created_when_filters_match(
     rows = RowHandler().create_rows(
         user=user,
         table=table,
-        rows=rows_to_create,
+        rows_values=rows_to_create,
     )
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
