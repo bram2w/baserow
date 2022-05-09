@@ -18,7 +18,6 @@ from django.db.models import Case, When, Q, F, Func, Value, CharField
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
-
 from pytz import timezone
 from rest_framework import serializers
 
@@ -83,6 +82,7 @@ from .fields import (
     BaserowLastModifiedField,
 )
 from .handler import FieldHandler
+from .constants import UPSERT_OPTION_DICT_KEY
 from .models import (
     TextField,
     LongTextField,
@@ -339,7 +339,7 @@ class NumberFieldType(FieldType):
             )
         return value
 
-    def get_serializer_field(self, instance, **kwargs):
+    def get_serializer_field(self, instance: NumberField, **kwargs):
         required = kwargs.get("required", False)
 
         kwargs["decimal_places"] = instance.number_decimal_places
@@ -381,7 +381,7 @@ class NumberFieldType(FieldType):
             **kwargs,
         )
 
-    def random_value(self, instance, fake, cache):
+    def random_value(self, instance: NumberField, fake, cache):
         if instance.number_decimal_places == 0:
             return fake.pyint(
                 min_value=-10000 if instance.number_negative else 1,
@@ -395,7 +395,9 @@ class NumberFieldType(FieldType):
                 positive=not instance.number_negative,
             )
 
-    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+    def get_alter_column_prepare_new_value(
+        self, connection, from_field: NumberField, to_field
+    ):
         if connection.vendor == "postgresql":
             decimal_places = to_field.number_decimal_places
 
@@ -431,6 +433,19 @@ class NumberFieldType(FieldType):
         return NumberField(
             number_decimal_places=formula_type.number_decimal_places,
             number_negative=True,
+        )
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field: NumberField, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        new_number_decimal_places = new_field_attrs.get(
+            "number_decimal_places", old_field.number_decimal_places
+        )
+        new_number_negative = new_field_attrs.get(
+            "number_negative", old_field.number_negative
+        )
+        return (old_field.number_decimal_places > new_number_decimal_places) or (
+            old_field.number_negative and not new_number_negative
         )
 
 
@@ -537,6 +552,12 @@ class RatingFieldType(FieldType):
         self, formula_type: BaserowFormulaNumberType
     ) -> "RatingField":
         return RatingField()
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field: RatingField, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        new_max_value = new_field_attrs.get("max_value", old_field.max_value)
+        return old_field.max_value > new_max_value
 
 
 class BooleanFieldType(FieldType):
@@ -783,9 +804,19 @@ class DateFieldType(FieldType):
             date_time_format=formula_type.date_time_format,
         )
 
+    def should_backup_field_data_for_same_type_update(
+        self, old_field: DateField, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        new_date_include_time = new_field_attrs.get(
+            "date_include_time", old_field.date_include_time
+        )
+        return old_field.date_include_time and not new_date_include_time
+
 
 class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
     can_be_in_form_view = False
+    field_data_is_derived_from_attrs = True
+
     allowed_fields = DateFieldType.allowed_fields + ["timezone"]
     serializer_field_names = DateFieldType.serializer_field_names + ["timezone"]
     serializer_field_overrides = {
@@ -913,6 +944,11 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
 
     def random_value(self, instance, fake, cache):
         return getattr(instance, self.source_field_name)
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        return False
 
 
 class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
@@ -1195,6 +1231,18 @@ class LinkRowFieldType(FieldType):
 
         return values
 
+    def export_prepared_values(self, field: LinkRowField):
+        values = super().export_prepared_values(field)
+
+        if field.link_row_table:
+            values["link_row_table"] = field.link_row_table_id
+
+        # We don't want to serialize the related field as the update call will create
+        # it again.
+        values.pop("link_row_related_field")
+
+        return values
+
     def before_create(self, table, primary, values, order, user):
         """
         It is not allowed to link with a table from another database. This method
@@ -1469,10 +1517,18 @@ class LinkRowFieldType(FieldType):
         else:
             return []
 
+    def should_backup_field_data_for_same_type_update(
+        self, old_field: LinkRowField, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        new_link_row_table_id = new_field_attrs.get(
+            "link_row_table", old_field.link_row_table_id
+        )
+        return old_field.link_row_table_id != new_link_row_table_id
+
     # noinspection PyMethodMayBeStatic
     def before_table_model_invalidated(
         self,
-        field: Field,
+        field: LinkRowField,
     ):
         invalidate_table_in_model_cache(field.link_row_table_id)
 
@@ -1754,6 +1810,19 @@ class SelectOptionBaseFieldType(FieldType):
                 user, from_field, to_field_values["select_options"]
             )
             to_field_values.pop("select_options")
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field: SingleSelectField, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        updated_ids = set()
+        for o in new_field_attrs.get("select_options", []):
+            if UPSERT_OPTION_DICT_KEY in o:
+                updated_ids.add(o[UPSERT_OPTION_DICT_KEY])
+            if "id" in o:
+                updated_ids.add(o["id"])
+
+        # If there are any deleted options we need to backup
+        return old_field.select_options.exclude(id__in=updated_ids).exists()
 
 
 class SingleSelectFieldType(SelectOptionBaseFieldType):
@@ -2276,7 +2345,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         self, field, to_create=None, to_update=None, to_delete=None
     ):
         """
-        Before removing the select options, we want to delete the link beetwen
+        Before removing the select options, we want to delete the link between
         the row and the options.
         """
 
@@ -2340,6 +2409,7 @@ class FormulaFieldType(ReadOnlyFieldType):
 
     can_be_primary_field = False
     can_be_in_form_view = False
+    field_data_is_derived_from_attrs = True
 
     CORE_FORMULA_FIELDS = [
         "formula",
@@ -2667,6 +2737,11 @@ class FormulaFieldType(ReadOnlyFieldType):
 
     def check_can_order_by(self, field):
         return self.to_baserow_formula_type(field.specific).can_order_by
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field: FormulaField, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        return False
 
 
 class LookupFieldType(FormulaFieldType):

@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Je hebt minstens één andere tabel in dezelfde database nodig om naar te linken.",
-        "selectTableLabel": "Selecteer een tabel om naar te linken",
-        "dataLost": "Door de tabel te veranderen, gaan alle gegevens verloren."
+        "selectTableLabel": "Selecteer een tabel om naar te linken"
     },
     "fieldSelectOptions": {
         "add": "Een optie toevoegen"

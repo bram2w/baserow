@@ -549,6 +549,11 @@ BASEROW_AIRTABLE_IMPORT_SOFT_TIME_LIMIT = int(
 # features for developers. See docs/development/feature-flags.md for more info.
 FEATURE_FLAGS = [flag.strip() for flag in os.getenv("FEATURE_FLAGS", "").split(",")]
 
+OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
+    "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5
+)
+MINUTES_UNTIL_ACTION_CLEANED_UP = os.getenv("MINUTES_UNTIL_ACTION_CLEANED_UP", "120")
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

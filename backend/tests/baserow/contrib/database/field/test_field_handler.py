@@ -24,7 +24,12 @@ from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )
 from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
-from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.handler import (
+    FieldHandler,
+)
+from baserow.contrib.database.fields.constants import (
+    UPSERT_OPTION_DICT_KEY,
+)
 from baserow.contrib.database.fields.models import (
     Field,
     TextField,
@@ -951,6 +956,59 @@ def test_update_select_options(data_fixture):
 
     assert SelectOption.objects.all().count() == 2
     assert field_2.select_options.all().count() == 0
+
+
+@pytest.mark.django_db
+def test_can_create_single_select_options_with_specific_pk(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_single_select_field(table=table)
+
+    # Test that no changes are reported when the values passed in are the same as the
+    # existing values
+    FieldHandler().update_field_select_options(
+        field=field,
+        user=user,
+        select_options=[
+            {
+                UPSERT_OPTION_DICT_KEY: 9999,
+                # This other id should be ignored if set.
+                "id": 1,
+                "value": "Option 1 B",
+                "color": "red",
+            },
+        ],
+    )
+    created_option = SelectOption.objects.get(pk=9999)
+    assert created_option.value == "Option 1 B"
+    assert created_option.color == "red"
+
+
+@pytest.mark.django_db
+def test_can_update_single_select_options_with_upsert_key(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_single_select_field(table=table)
+
+    # Test that no changes are reported when the values passed in are the same as the
+    # existing values
+    FieldHandler().update_field_select_options(
+        field=field,
+        user=user,
+        select_options=[
+            {
+                UPSERT_OPTION_DICT_KEY: field.id,
+                # This other id should be ignored if set.
+                "id": 1,
+                "value": "Option 1 B",
+                "color": "red",
+            },
+        ],
+    )
+    created_option = SelectOption.objects.get(pk=field.id)
+    assert created_option.value == "Option 1 B"
+    assert created_option.color == "red"
+    assert SelectOption.objects.count() == 1
 
 
 @pytest.mark.django_db

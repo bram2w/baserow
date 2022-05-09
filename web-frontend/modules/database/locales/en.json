@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "You need at least one other table in the same database to link to.",
-        "selectTableLabel": "Select a table to link to",
-        "dataLost": "By changing the table, all data will be lost."
+        "selectTableLabel": "Select a table to link to"
     },
     "fieldSelectOptions": {
         "add": "Add an option"

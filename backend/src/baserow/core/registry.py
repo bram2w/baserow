@@ -322,8 +322,11 @@ class Registry(Generic[T]):
             )
 
 
-class ModelRegistryMixin:
-    def get_by_model(self, model_instance):
+P = TypeVar("P")
+
+
+class ModelRegistryMixin(Generic[P, T]):
+    def get_by_model(self, model_instance: P) -> T:
         """
         Returns a registered instance of the given model class.
 

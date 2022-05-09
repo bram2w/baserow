@@ -222,12 +222,7 @@
           </template>
         </ul>
       </div>
-      <div
-        class="sidebar__foot"
-        :class="{
-          'sidebar__foot--with-undo-redo': enableUndoRedo,
-        }"
-      >
+      <div class="sidebar__foot sidebar__foot--with-undo-redo">
         <div class="sidebar__logo">
           <img
             height="14"
@@ -236,26 +231,24 @@
           />
         </div>
         <div class="sidebar__foot-links">
-          <template v-if="enableUndoRedo">
-            <a
-              class="sidebar__foot-link"
-              :class="{
-                'sidebar__foot-link--loading': undoLoading,
-              }"
-              @click="undo(false)"
-            >
-              <i class="fas fa-undo-alt"></i>
-            </a>
-            <a
-              class="sidebar__foot-link"
-              :class="{
-                'sidebar__foot-link--loading': redoLoading,
-              }"
-              @click="redo(false)"
-            >
-              <i class="fas fa-redo-alt"></i>
-            </a>
-          </template>
+          <a
+            class="sidebar__foot-link"
+            :class="{
+              'sidebar__foot-link--loading': undoLoading,
+            }"
+            @click="undo(false)"
+          >
+            <i class="fas fa-undo-alt"></i>
+          </a>
+          <a
+            class="sidebar__foot-link"
+            :class="{
+              'sidebar__foot-link--loading': redoLoading,
+            }"
+            @click="redo(false)"
+          >
+            <i class="fas fa-redo-alt"></i>
+          </a>
           <a
             class="sidebar__foot-link"
             @click="$store.dispatch('sidebar/toggleCollapsed')"
@@ -304,9 +297,6 @@ export default {
   },
   mixins: [editGroup, undoRedo],
   computed: {
-    enableUndoRedo() {
-      return this.$featureFlags.includes('undo')
-    },
     /**
      * Because all the applications that belong to the user are in the store we will
      * filter on the selected group here.

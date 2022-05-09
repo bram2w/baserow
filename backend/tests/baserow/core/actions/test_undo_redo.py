@@ -1,18 +1,28 @@
-from typing import cast
+from datetime import timedelta
+from typing import cast, Any
 from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
+from django.db import connection, transaction
+from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
+from freezegun import freeze_time
 
+from baserow.api.sessions import set_untrusted_client_session_id
+from baserow.contrib.database.fields.actions import UpdateFieldActionType
 from baserow.core.action.handler import ActionHandler
+from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     action_type_registry,
     ActionScopeStr,
+    ActionType,
 )
+from baserow.core.action.scopes import RootActionScopeType
 from baserow.core.actions import DeleteGroupActionType, CreateGroupActionType
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Group, GROUP_USER_PERMISSION_ADMIN
-from baserow.api.sessions import set_untrusted_client_session_id
 
 User = get_user_model()
 
@@ -243,6 +253,12 @@ def test_redoing_with_multiple_sessions_redoes_only_in_provided_session(
     assert not Group.objects.filter(id=group_user_from_first_session.group_id).exists()
     assert not Group.objects.filter(id=group_user_from_second_session.group_id).exists()
 
+    # Do something else in the other session, this should not affect the redo of
+    # the first session.
+    action_type_registry.get_by_type(CreateGroupActionType).do(
+        same_user_with_different_session, group_name="test2"
+    )
+
     action = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
     assert not action.is_undone()
     action = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
@@ -459,3 +475,164 @@ def test_when_redo_fails_the_action_is_rolled_back(
         "The group should still exist as the redo should have rolled back when it "
         "failed. "
     )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_actions_which_were_updated_less_than_configured_limit_ago_not_cleaned_up(
+    data_fixture, settings
+):
+    now = timezone.now()
+    num_minutes_where_actions_shouldnt_be_cleaned = timedelta(
+        minutes=int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP) / 2
+    )
+    with transaction.atomic():
+        with freeze_time(now - num_minutes_where_actions_shouldnt_be_cleaned):
+            _create_two_no_custom_cleanup_actions(data_fixture)
+
+    with freeze_time(now):
+        assert Action.objects.count() == 2
+        ActionHandler.clean_up_old_actions()
+        assert Action.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_cleanup_doesnt_do_n_queries_per_action_when_they_have_no_custom_cleanup(
+    data_fixture, settings, django_assert_num_queries
+):
+    now = timezone.now()
+    num_minutes_where_actions_will_be_old_for_clean = timedelta(
+        minutes=int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP) * 2
+    )
+    # Make two actions and record the number of queries done.
+    with freeze_time(now - num_minutes_where_actions_will_be_old_for_clean):
+        _create_two_no_custom_cleanup_actions(data_fixture)
+
+    with freeze_time(now):
+        assert Action.objects.count() == 2
+        with CaptureQueriesContext(connection) as clean_up_two_actions:
+            ActionHandler.clean_up_old_actions()
+        assert Action.objects.count() == 0
+
+    # Now make 4 actions and record the number of queries done
+    with freeze_time(now - num_minutes_where_actions_will_be_old_for_clean):
+        _create_two_no_custom_cleanup_actions(data_fixture)
+        _create_two_no_custom_cleanup_actions(data_fixture)
+
+    with freeze_time(now):
+        assert Action.objects.count() == 4
+        with CaptureQueriesContext(connection) as clean_up_four_actions:
+            ActionHandler.clean_up_old_actions()
+        assert Action.objects.count() == 0
+
+    # They should be the same as we should be doing a single bulk query to delete all
+    # actions without a custom cleanup.
+    assert len(clean_up_two_actions.captured_queries) == len(
+        clean_up_four_actions.captured_queries
+    )
+
+
+def _create_two_no_custom_cleanup_actions(data_fixture):
+    user = data_fixture.create_user()
+    group = (
+        action_type_registry.get_by_type(CreateGroupActionType)
+        .do(user, group_name="test2")
+        .group
+    )
+    action_type_registry.get_by_type(DeleteGroupActionType).do(
+        user, CoreHandler().get_group_for_update(group.id)
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_cleanup_does_extra_cleanup_for_actions_implementing_it(data_fixture, settings):
+    now = timezone.now()
+    num_minutes_where_actions_will_be_old_enough_for_cleaning = timedelta(
+        minutes=int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP) * 2
+    )
+    with transaction.atomic():
+        with freeze_time(
+            now - num_minutes_where_actions_will_be_old_enough_for_cleaning
+        ):
+            _create_two_no_custom_cleanup_actions(data_fixture)
+            _create_an_action_with_custom_cleanup(data_fixture)
+
+    with freeze_time(now):
+        assert Action.objects.count() == 3
+        ActionHandler.clean_up_old_actions()
+        assert Action.objects.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+def test_custom_cleanup_failing_doesnt_rollback_other_successful_cleanups(
+    data_fixture, settings, mutable_action_registry, django_assert_num_queries
+):
+
+    now = timezone.now()
+    num_minutes_where_actions_will_be_old_enough_for_cleaning = timedelta(
+        minutes=int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP) * 2
+    )
+    with transaction.atomic():
+        with freeze_time(
+            now - num_minutes_where_actions_will_be_old_enough_for_cleaning
+        ):
+            _create_two_no_custom_cleanup_actions(data_fixture)
+            _create_an_action_with_custom_cleanup(data_fixture)
+        # Make the cleanup action happen later so it is cleaned up last.
+        with freeze_time(
+            now - num_minutes_where_actions_will_be_old_enough_for_cleaning / 2
+        ):
+            action_which_will_fail = _create_an_action_with_custom_cleanup_which_raises(
+                mutable_action_registry,
+                data_fixture,
+                cleanup_exception_message="Custom cleanup failed",
+            )
+
+    with freeze_time(now):
+        assert Action.objects.count() == 4
+        with pytest.raises(Exception, match="Custom cleanup failed"):
+            ActionHandler.clean_up_old_actions()
+        # The other 3 actions were deleted successfully, and only the last one which
+        # failed is left.
+        assert Action.objects.count() == 1
+        assert Action.objects.first().id == action_which_will_fail.id
+
+
+def _create_an_action_with_custom_cleanup(data_fixture):
+    user = data_fixture.create_user()
+    text_field = data_fixture.create_text_field(user=user)
+    action_type_registry.get_by_type(UpdateFieldActionType).do(
+        user, text_field, "boolean"
+    )
+
+
+def _create_an_action_with_custom_cleanup_which_raises(
+    mutable_action_registry, data_fixture, cleanup_exception_message
+) -> Action:
+    class ActionWithCustomCleanupThatAlwaysRaises(ActionType):
+        type = "action_with_custom_cleanup_that_always_raises"
+
+        @classmethod
+        def clean_up_any_extra_action_data(cls, action_being_cleaned_up: Action):
+            raise Exception(cleanup_exception_message)
+
+        @classmethod
+        def do(cls, user) -> Action:
+            return cls.register_action(user, cls.Params(), cls.scope())
+
+        @classmethod
+        def scope(cls, *args, **kwargs) -> ActionScopeStr:
+            return RootActionScopeType.value()
+
+        @classmethod
+        def undo(cls, user: AbstractUser, params: Any, action_being_undone: Action):
+            pass
+
+        @classmethod
+        def redo(cls, user: AbstractUser, params: Any, action_being_redone: Action):
+            pass
+
+    mutable_action_registry.register(ActionWithCustomCleanupThatAlwaysRaises())
+
+    return mutable_action_registry.get_by_type(
+        ActionWithCustomCleanupThatAlwaysRaises
+    ).do(data_fixture.create_user())

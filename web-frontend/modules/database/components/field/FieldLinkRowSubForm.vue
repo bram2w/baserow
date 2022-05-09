@@ -26,17 +26,6 @@
           <div v-if="$v.values.link_row_table.$error" class="error">
             {{ $t('error.requiredField') }}
           </div>
-          <div
-            v-show="
-              initialLinkRowTable !== null &&
-              initialLinkRowTable !== values.link_row_table
-            "
-            class="alert alert--warning context__alert"
-          >
-            <p class="alert__content">
-              {{ $t('fieldLinkRowSubForm.dataLost') }}
-            </p>
-          </div>
         </div>
       </div>
     </div>

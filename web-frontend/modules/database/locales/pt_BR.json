@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "",
-        "selectTableLabel": "",
-        "dataLost": ""
+        "selectTableLabel": ""
     },
     "fieldSelectOptions": {
         "add": ""

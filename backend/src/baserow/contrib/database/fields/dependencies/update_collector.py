@@ -1,23 +1,27 @@
 from collections import defaultdict
-from typing import Optional
+from typing import Optional, Dict, List, Tuple
 
 from django.db.models import Expression
 
 from baserow.contrib.database.fields.dependencies.exceptions import InvalidViaPath
 from baserow.contrib.database.fields.field_cache import FieldCache
+from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.fields.signals import field_updated
-from baserow.contrib.database.table.models import GeneratedTableModel
+from baserow.contrib.database.table.models import GeneratedTableModel, Table
 
 
 class PathBasedUpdateStatementCollector:
-    def __init__(self, table, field_cache):
-        self.update_statements = {}
+    def __init__(self, table: Table, field_cache: FieldCache):
+        self.update_statements: Dict[str, Expression] = {}
         self.table = table
-        self.sub_paths = {}
+        self.sub_paths: Dict[str, PathBasedUpdateStatementCollector] = {}
         self.field_cache = field_cache
 
     def add_update_statement(
-        self, field, update_statement, path_from_starting_table=None
+        self,
+        field: Field,
+        update_statement: Expression,
+        path_from_starting_table: Optional[List[LinkRowField]] = None,
     ):
         if not path_from_starting_table:
             if self.table != field.table:
@@ -37,7 +41,11 @@ class PathBasedUpdateStatementCollector:
                 field, update_statement, path_from_starting_table[1:]
             )
 
-    def execute_all(self, starting_row_id=None, path_to_starting_table=None):
+    def execute_all(
+        self,
+        starting_row_id: Optional[int] = None,
+        path_to_starting_table: Optional[List[str]] = None,
+    ):
         path_to_starting_table = path_to_starting_table or []
         self._execute_pending_update_statements(path_to_starting_table, starting_row_id)
         for sub_path_column_name, sub_path in self.sub_paths.items():
@@ -47,7 +55,7 @@ class PathBasedUpdateStatementCollector:
             )
 
     def _execute_pending_update_statements(
-        self, path_to_starting_table, starting_row_id
+        self, path_to_starting_table: List[str], starting_row_id: Optional[int]
     ):
         model = self.field_cache.get_model(self.table)
         qs = model.objects_and_trash
@@ -73,10 +81,10 @@ class CachingFieldUpdateCollector(FieldCache):
 
     def __init__(
         self,
-        starting_table,
+        starting_table: Table,
         existing_field_lookup_cache: Optional[FieldCache] = None,
         existing_model: Optional[GeneratedTableModel] = None,
-        starting_row_id=None,
+        starting_row_id: Optional[int] = None,
     ):
         """
 
@@ -91,7 +99,7 @@ class CachingFieldUpdateCollector(FieldCache):
         """
 
         super().__init__(existing_field_lookup_cache, existing_model)
-        self._updated_fields_per_table = defaultdict(dict)
+        self._updated_fields_per_table: Dict[int, Dict[int, Field]] = defaultdict(dict)
         self._starting_row_id = starting_row_id
         self._starting_table = starting_table
 
@@ -101,9 +109,9 @@ class CachingFieldUpdateCollector(FieldCache):
 
     def add_field_with_pending_update_statement(
         self,
-        field,
+        field: Field,
         update_statement: Expression,
-        via_path_to_starting_table=None,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
     ):
         """
         Stores the provided field as an updated one to send in field updated signals
@@ -119,12 +127,14 @@ class CachingFieldUpdateCollector(FieldCache):
             used if self.starting_row_id is set so only rows which join back to the
             starting row via this path are updated.
         """
+
+        # noinspection PyTypeChecker
         self._updated_fields_per_table[field.table_id][field.id] = field
         self._update_statement_collector.add_update_statement(
             field, update_statement, via_path_to_starting_table
         )
 
-    def apply_updates_and_get_updated_fields(self):
+    def apply_updates_and_get_updated_fields(self) -> List[Field]:
         """
         Triggers all update statements to be executed in the correct order in as few
         update queries as possible.
@@ -152,12 +162,12 @@ class CachingFieldUpdateCollector(FieldCache):
                     user=None,
                 )
 
-    def _get_updated_fields_per_table(self):
+    def _get_updated_fields_per_table(self) -> List[Tuple[Field, List[Field]]]:
         result = []
         for fields_dict in self._updated_fields_per_table.values():
             fields = list(fields_dict.values())
             result.append((fields[0], fields[1:]))
         return result
 
-    def _for_table(self, table):
+    def _for_table(self, table) -> List[Field]:
         return list(self._updated_fields_per_table.get(table.id, {}).values())

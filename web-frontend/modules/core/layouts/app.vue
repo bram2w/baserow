@@ -55,8 +55,6 @@ export default {
       const isMac = navigator.platform.toUpperCase().includes('MAC')
       const osSpecificModifierPressed = isMac ? event.metaKey : event.ctrlKey
       if (
-        // Temporarily check if the undo redo is enabled.
-        this.$featureFlags.includes('undo') &&
         osSpecificModifierPressed &&
         event.key.toLowerCase() === 'z'
       ) {

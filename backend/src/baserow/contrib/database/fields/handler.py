@@ -1,11 +1,23 @@
 import logging
 from copy import deepcopy
-from typing import Dict, Any, Optional, List, Union, Tuple
+from typing import (
+    Dict,
+    Any,
+    Optional,
+    List,
+    TypeVar,
+    Type,
+    cast,
+    Union,
+    Tuple,
+    Callable,
+)
 from psycopg2 import sql
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
+from django.db.models import QuerySet
 from django.db.utils import ProgrammingError, DataError
 
 
@@ -13,7 +25,10 @@ from baserow.contrib.database.db.schema import (
     lenient_schema_editor,
     safe_django_schema_editor,
 )
-from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
+from baserow.contrib.database.fields.constants import (
+    RESERVED_BASEROW_FIELD_NAMES,
+    UPSERT_OPTION_DICT_KEY,
+)
 from baserow.contrib.database.fields.models import TextField
 from baserow.contrib.database.fields.field_converters import (
     MultipleSelectConversionConfig,
@@ -42,8 +57,11 @@ from .exceptions import (
     MaxFieldNameLengthExceeded,
     IncompatibleFieldTypeForUniqueValues,
 )
-from .models import Field, SelectOption
-from .registries import field_type_registry, field_converter_registry
+from .models import Field, SelectOption, SpecificFieldForUpdate
+from .registries import (
+    field_type_registry,
+    field_converter_registry,
+)
 from .signals import (
     field_created,
     field_updated,
@@ -104,8 +122,16 @@ def _validate_field_name(
         )
 
 
+T = TypeVar("T", bound="Field")
+
+
 class FieldHandler:
-    def get_field(self, field_id, field_model=None, base_queryset=None):
+    def get_field(
+        self,
+        field_id: int,
+        field_model: Optional[Type[T]] = None,
+        base_queryset: Optional[QuerySet] = None,
+    ) -> T:
         """
         Selects a field with a given id from the database.
 
@@ -142,6 +168,17 @@ class FieldHandler:
 
         return field
 
+    def get_specific_field_for_update(
+        self, field_id: int, field_model: Optional[Type[T]] = None
+    ) -> SpecificFieldForUpdate:
+
+        return cast(
+            SpecificFieldForUpdate,
+            self.get_field(
+                field_id, field_model, base_queryset=Field.objects.select_for_update()
+            ).specific,
+        )
+
     def create_field(
         self,
         user: AbstractUser,
@@ -150,6 +187,7 @@ class FieldHandler:
         primary=False,
         do_schema_change=True,
         return_updated_fields=False,
+        primary_key=None,
         **kwargs,
     ) -> Union[Field, Tuple[Field, List[Field]]]:
         """
@@ -167,6 +205,7 @@ class FieldHandler:
             result of this field creation are returned with their new field instances.
         :param kwargs: The field values that need to be set upon creation.
         :type kwargs: object
+        :param primary_key: The id of the field.
         :raises PrimaryFieldAlreadyExists: When we try to create a primary field,
             but one already exists.
         :raises MaxFieldLimitExceeded: When we try to create a field,
@@ -208,7 +247,11 @@ class FieldHandler:
         )
 
         instance = model_class(
-            table=table, order=last_order, primary=primary, **field_values
+            table=table,
+            order=last_order,
+            primary=primary,
+            pk=primary_key,
+            **field_values,
         )
         update_collector = CachingFieldUpdateCollector(table)
         instance.save(field_lookup_cache=update_collector, raise_if_invalid=True)
@@ -254,74 +297,92 @@ class FieldHandler:
             return instance
 
     def update_field(
-        self, user, field, new_type_name=None, return_updated_fields=False, **kwargs
-    ):
+        self,
+        user: AbstractUser,
+        field: SpecificFieldForUpdate,
+        new_type_name: Optional[str] = None,
+        return_updated_fields: bool = False,
+        postfix_to_fix_name_collisions: Optional[str] = None,
+        after_schema_change_callback: Optional[
+            Callable[[SpecificFieldForUpdate], None]
+        ] = None,
+        **kwargs,
+    ) -> Union[SpecificFieldForUpdate, Tuple[SpecificFieldForUpdate, List[Field]]]:
         """
-        Updates the values of the given field, if provided it is also possible to change
-        the type.
+        Updates the values and/or type of the given field.
 
         :param user: The user on whose behalf the table is updated.
-        :type user: User
         :param field: The field instance that needs to be updated.
-        :type field: Field
-        :param new_type_name: If the type needs to be changed it can be provided here.
-        :type new_type_name: str
+        :param new_type_name: If the type needs to be changed it can be
+            provided here.
         :param return_updated_fields: When True any other fields who changed as a
             result of this field update are returned with their new field instances.
-        :type return_updated_fields: bool
+        :param postfix_to_fix_name_collisions: If provided and the field name
+            already exists in the table, the specified postfix will be added to the
+            field name and possibly incremented until a unique unused name is found.
+            If this parameter is not set instead an exception will be raised if
+            the field name already exists.
+        :param after_schema_change_callback: If specified this callback is called
+            after the field has had it's schema updated but before any dependant
+            fields have been updated.
         :param kwargs: The field values that need to be updated
-        :type kwargs: object
         :raises ValueError: When the provided field is not an instance of Field.
         :raises CannotChangeFieldType: When the database server responds with an
             error while trying to change the field type. This should rarely happen
             because of the lenient schema editor, which replaces the value with null
             if it could not be converted.
-        :return: The updated field instance. If return_updated_field is set then any
-            updated fields as a result of updated the field are returned in a list
-            as a second tuple value.
-        :rtype: Union[Field, Tuple[Field, List[Field]]
+        :return: A data class containing information on all the changes made as a result
+            of the field update.
         """
 
         if not isinstance(field, Field):
             raise ValueError("The field is not an instance of Field.")
 
+        if type(field) is Field:
+            raise ValueError(
+                "The field must be a specific instance of Field and not the base type "
+                "Field itself."
+            )
+
         group = field.table.database.group
         group.has_user(user, raise_error=True)
 
         old_field = deepcopy(field)
-        field_type = field_type_registry.get_by_model(field)
-        old_field_type = field_type
+        from_field_type = field_type_registry.get_by_model(field)
         from_model = field.table.get_model(field_ids=[], fields=[field])
-        from_field_type = field_type.type
+        to_field_type_name = new_type_name or from_field_type.type
 
         # If the provided field type does not match with the current one we need to
         # migrate the field to the new type. Because the type has changed we also need
         # to remove all view filters.
-        baserow_field_type_changed = new_type_name and field_type.type != new_type_name
+        baserow_field_type_changed = from_field_type.type != to_field_type_name
         if baserow_field_type_changed:
-            field_type = field_type_registry.get(new_type_name)
+            to_field_type = field_type_registry.get(to_field_type_name)
 
-            if field.primary and not field_type.can_be_primary_field:
-                raise IncompatiblePrimaryFieldTypeError(new_type_name)
+            if field.primary and not to_field_type.can_be_primary_field:
+                raise IncompatiblePrimaryFieldTypeError(to_field_type_name)
 
-            new_model_class = field_type.model_class
+            new_model_class = to_field_type.model_class
             field.change_polymorphic_type_to(new_model_class)
 
             # If the field type changes it could be that some dependencies,
             # like filters or sortings need to be changed.
             ViewHandler().field_type_changed(field)
+        else:
+            to_field_type = from_field_type
 
-        allowed_fields = ["name"] + field_type.allowed_fields
+        allowed_fields = ["name"] + to_field_type.allowed_fields
         field_values = extract_allowed(kwargs, allowed_fields)
 
-        _validate_field_name(
-            field_values, field.table, field, raise_if_name_missing=False
+        self._validate_name_and_optionally_rename_if_collision(
+            field, field_values, postfix_to_fix_name_collisions
         )
 
-        field_values = field_type.prepare_values(field_values, user)
-        before = field_type.before_update(old_field, field_values, user)
+        field_values = to_field_type.prepare_values(field_values, user)
+        before = to_field_type.before_update(old_field, field_values, user)
 
         field = set_allowed_attrs(field_values, allowed_fields, field)
+
         update_collector = CachingFieldUpdateCollector(field.table)
         field.save(field_lookup_cache=update_collector, raise_if_invalid=True)
         FieldDependencyHandler.rebuild_dependencies(field, update_collector)
@@ -335,7 +396,7 @@ class FieldHandler:
         # Before a field is updated we are going to call the before_schema_change
         # method of the old field because some cleanup of related instances might
         # need to happen.
-        old_field_type.before_schema_change(
+        from_field_type.before_schema_change(
             old_field,
             field,
             from_model,
@@ -370,7 +431,7 @@ class FieldHandler:
                 # share the same underlying database column type.
                 force_alter_column = True
             else:
-                force_alter_column = field_type.force_same_type_alter_column(
+                force_alter_column = to_field_type.force_same_type_alter_column(
                     old_field, field
                 )
 
@@ -378,10 +439,10 @@ class FieldHandler:
             # the lenient schema editor.
             with lenient_schema_editor(
                 connection,
-                old_field_type.get_alter_column_prepare_old_value(
+                from_field_type.get_alter_column_prepare_old_value(
                     connection, old_field, field
                 ),
-                field_type.get_alter_column_prepare_new_value(
+                to_field_type.get_alter_column_prepare_new_value(
                     connection, old_field, field
                 ),
                 force_alter_column,
@@ -398,7 +459,7 @@ class FieldHandler:
                     logger.error(str(e))
                     message = (
                         f"Could not alter field when changing field type "
-                        f"{from_field_type} to {new_type_name}."
+                        f"{from_field_type.type} to {to_field_type_name}."
                     )
                     raise CannotChangeFieldType(message)
 
@@ -409,12 +470,12 @@ class FieldHandler:
         # If the new field doesn't support select options we can delete those
         # relations.
         if (
-            old_field_type.can_have_select_options
-            and not field_type.can_have_select_options
+            from_field_type.can_have_select_options
+            and not to_field_type.can_have_select_options
         ):
             old_field.select_options.all().delete()
 
-        field_type.after_update(
+        to_field_type.after_update(
             old_field,
             field,
             from_model,
@@ -424,6 +485,9 @@ class FieldHandler:
             altered_column,
             before,
         )
+
+        if after_schema_change_callback:
+            after_schema_change_callback(field)
 
         update_collector.cache_model_fields(to_model)
         for (
@@ -578,7 +642,13 @@ class FieldHandler:
         to_update = []
         to_create = []
         for select_option in select_options:
-            if "id" in select_option:
+            create_if_not_exists_id = select_option.get(UPSERT_OPTION_DICT_KEY)
+            if create_if_not_exists_id is not None:
+                if create_if_not_exists_id in existing_option_ids:
+                    to_update.append(create_if_not_exists_id)
+                else:
+                    to_create.append(select_option)
+            elif "id" in select_option:
                 to_update.append(select_option["id"])
             else:
                 to_create.append(select_option)
@@ -602,14 +672,17 @@ class FieldHandler:
 
         instance_to_create = []
         for order, select_option in enumerate(select_options):
-            id = select_option.pop("id", None)
+            upsert_id = select_option.pop(UPSERT_OPTION_DICT_KEY, None)
+            id = select_option.pop("id", upsert_id)
             if id in existing_option_ids:
+                select_option.pop("order", None)
                 # Update existing options
                 field.select_options.filter(id=id).update(**select_option, order=order)
             else:
                 # Create new instance
                 instance_to_create.append(
                     SelectOption(
+                        id=upsert_id,
                         field=field,
                         order=order,
                         value=select_option["value"],
@@ -630,7 +703,7 @@ class FieldHandler:
         table,
         field_names_to_try: List[str],
         field_ids_to_ignore: Optional[List[int]] = None,
-    ):
+    ) -> str:
         """
         Finds a unused field name in the provided table. If no names in the provided
         field_names_to_try list are available then the last field name in that list will
@@ -903,3 +976,30 @@ class FieldHandler:
             res = cursor.fetchall()
 
         return [x[0] for x in res]
+
+    def _validate_name_and_optionally_rename_if_collision(
+        self,
+        field: Field,
+        field_values: Dict[str, Any],
+        postfix_for_name_collisions: Optional[str],
+    ):
+        """
+        Validates the name of the field raising an exception if it is invalid. If the
+        postfix_for_name_collisions is provided and the new name collides
+        with an existing one then the provided name will be changed so it is unique
+        and the update will continue. In this case the provided postfix will first be
+        appended, if that is still not unique then a number will be added also.
+        """
+
+        try:
+            _validate_field_name(
+                field_values, field.table, field, raise_if_name_missing=False
+            )
+        except FieldWithSameNameAlreadyExists as e:
+            if postfix_for_name_collisions is not None:
+                field_values["name"] = self.find_next_unused_field_name(
+                    field.table,
+                    [f"{field_values['name']} {postfix_for_name_collisions}"],
+                )
+            else:
+                raise e

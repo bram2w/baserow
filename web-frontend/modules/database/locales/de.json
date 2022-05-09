@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Sie benötigen mindestens eine weitere Tabelle in derselben Datenbank, auf die Sie verweisen können.",
-        "selectTableLabel": "Wählen Sie eine Tabelle für die Verknüpfung",
-        "dataLost": "Wenn Sie die Tabelle ändern, gehen alle Daten verloren."
+        "selectTableLabel": "Wählen Sie eine Tabelle für die Verknüpfung"
     },
     "fieldSelectOptions": {
         "add": "Eine Option hinzufügen"

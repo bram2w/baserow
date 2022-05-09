@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Serve almeno un'altra tabella nello stesso database a cui collegarsi.",
-        "selectTableLabel": "Seleziona una tabella a cui collegarsi",
-        "dataLost": "Cambiando la tabella, tutti i dati saranno persi."
+        "selectTableLabel": "Seleziona una tabella a cui collegarsi"
     },
     "fieldSelectOptions": {
         "add": "Aggiungi un'opzione"

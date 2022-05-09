@@ -1,6 +1,9 @@
 import pytest
 from django.shortcuts import reverse
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_200_OK
+from rest_framework.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_200_OK,
+)
 
 from baserow.contrib.database.fields.models import SelectOption
 
@@ -121,3 +124,33 @@ def test_batch_update_rows_single_select_field_wrong_option(api_client, data_fix
         response.json()["detail"]
         == "The provided select option ids [787] are not valid select options."
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_single_select
+def test_cannot_pass_internal_force_create_option(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    single_select_field = data_fixture.create_single_select_field(table=table)
+    url = reverse(
+        "api:database:fields:item", kwargs={"field_id": single_select_field.id}
+    )
+    response = api_client.patch(
+        url,
+        {
+            "select_options": [
+                {
+                    "value": "Option 1",
+                    "color": "blue",
+                    "internal_only_force_create_with_pk": 9999,
+                }
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    created_option = SelectOption.objects.get()
+    assert created_option.id != 9999
+    assert created_option.value == "Option 1"
+    assert created_option.color == "blue"
