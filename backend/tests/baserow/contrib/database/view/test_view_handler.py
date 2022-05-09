@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.view_types import GridViewType
 from baserow.core.exceptions import UserNotInGroup
-from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.handler import ViewHandler, PublicViewRows
 from baserow.contrib.database.views.models import (
     View,
     GridView,
@@ -1494,6 +1494,88 @@ def test_get_public_views_which_include_row(data_fixture, django_assert_num_quer
     assert checker.get_public_views_where_row_is_visible(row2) == [
         public_view2.view_ptr,
         public_view3.view_ptr,
+    ]
+
+
+@pytest.mark.django_db
+def test_get_public_views_which_include_rows(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    visible_field = data_fixture.create_text_field(table=table)
+    hidden_field = data_fixture.create_text_field(table=table)
+    public_view1 = data_fixture.create_grid_view(
+        user,
+        create_options=False,
+        table=table,
+        public=True,
+        order=0,
+    )
+    public_view2 = data_fixture.create_grid_view(
+        user, table=table, public=True, order=1
+    )
+    public_view3 = data_fixture.create_grid_view(
+        user, table=table, public=True, order=2
+    )
+    # Should not appear in any results
+    data_fixture.create_form_view(user, table=table, public=True)
+    data_fixture.create_grid_view(user, table=table)
+    data_fixture.create_grid_view_field_option(public_view1, hidden_field, hidden=True)
+    data_fixture.create_grid_view_field_option(public_view2, hidden_field, hidden=True)
+
+    # Public View 1 has filters which match row 1
+    data_fixture.create_view_filter(
+        view=public_view1, field=visible_field, type="equal", value="Visible"
+    )
+    data_fixture.create_view_filter(
+        view=public_view1, field=hidden_field, type="equal", value="Hidden"
+    )
+
+    # Public View 2 has filters which match row 2
+    data_fixture.create_view_filter(
+        view=public_view2, field=visible_field, type="equal", value="Visible"
+    )
+    data_fixture.create_view_filter(
+        view=public_view2, field=hidden_field, type="equal", value="Not Match"
+    )
+
+    # Public View 3 has filters which match both rows
+    data_fixture.create_view_filter(
+        view=public_view2, field=visible_field, type="equal", value="Visible"
+    )
+
+    row = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{visible_field.id}": "Visible",
+            f"field_{hidden_field.id}": "Hidden",
+        },
+    )
+    row2 = RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{visible_field.id}": "Visible",
+            f"field_{hidden_field.id}": "Not Match",
+        },
+    )
+
+    model = table.get_model()
+    checker = ViewHandler().get_public_views_row_checker(
+        table, model, only_include_views_which_want_realtime_events=True
+    )
+
+    assert checker.get_public_views_where_rows_are_visible([row, row2]) == [
+        PublicViewRows(
+            view=ViewHandler().get_view(public_view1.id), allowed_row_ids={1}
+        ),
+        PublicViewRows(
+            view=ViewHandler().get_view(public_view2.id), allowed_row_ids={2}
+        ),
+        PublicViewRows(
+            view=ViewHandler().get_view(public_view3.id),
+            allowed_row_ids=PublicViewRows.ALL_ROWS_ALLOWED,
+        ),
     ]
 
 

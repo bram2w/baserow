@@ -150,6 +150,8 @@ are subscribed to the page.
 * `row_deleted`
 * `before_row_update`
 * `before_row_delete`
+* `before_rows_update`
+* `before_rows_delete`
 * `view_created`
 * `view_updated`
 * `view_deleted`

@@ -1,4 +1,5 @@
 from collections import defaultdict
+from dataclasses import dataclass
 from copy import deepcopy
 from typing import (
     Dict,
@@ -6,6 +7,7 @@ from typing import (
     List,
     Optional,
     Iterable,
+    Set,
     Tuple,
     Type,
     Union,
@@ -1673,30 +1675,38 @@ class ViewHandler:
             serialized using user_field_names=True.
         :return: A copy of the serialized_row with all hidden fields removed.
         """
+
         return self.restrict_rows_for_view(view, [serialized_row])[0]
 
     def restrict_rows_for_view(
-        self, view: View, serialized_rows: List[Dict[str, Any]]
+        self,
+        view: View,
+        serialized_rows: List[Dict[str, Any]],
+        allowed_row_ids: Optional[List[int]] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Removes any fields which are hidden in the view from the provided serialized
-        row ensuring no data is leaked according to the views field options.
+        Removes any fields which are hidden in the view and any rows that don't match
+        the allowed list of ids from the provided serializes rows ensuring no data is
+        leaked.
 
         :param view: The view to restrict the row by.
         :param serialized_rows: A list of python dictionaries which are the result of
             serializing the rows containing `field_XXX` keys per field value. They
             must not be serialized using user_field_names=True.
-        :return: A copy of the serialized_row with all hidden fields removed.
+        :param allowed_row_ids: A list of ids of rows that can be returned. If set to
+            None, all passed rows can be returned.
+        :return: A copy of the allowed serialized_rows with all hidden fields removed.
         """
 
         view_type = view_type_registry.get_by_model(view.specific_class)
         hidden_field_options = view_type.get_hidden_field_options(view)
         restricted_rows = []
         for serialized_row in serialized_rows:
-            row_copy = deepcopy(serialized_row)
-            for hidden_field_option in hidden_field_options:
-                row_copy.pop(f"field_{hidden_field_option.field_id}", None)
-            restricted_rows.append(row_copy)
+            if allowed_row_ids is None or serialized_row["id"] in allowed_row_ids:
+                row_copy = deepcopy(serialized_row)
+                for hidden_field_option in hidden_field_options:
+                    row_copy.pop(f"field_{hidden_field_option.field_id}", None)
+                restricted_rows.append(row_copy)
         return restricted_rows
 
     def _get_public_view_jwt_secret(self, view: View) -> str:
@@ -1752,6 +1762,27 @@ class ViewHandler:
             return True
         except jwt.InvalidTokenError:
             return False
+
+
+@dataclass
+class PublicViewRows:
+    """
+    Keeps track of which rows are allowed to be sent as a public signal
+    for a particular view.
+
+    When no row ids are set it is assumed that any row id is allowed.
+    """
+
+    ALL_ROWS_ALLOWED = None
+
+    view: View
+    allowed_row_ids: Optional[Set[int]]
+
+    def all_allowed(self):
+        return self.allowed_row_ids is PublicViewRows.ALL_ROWS_ALLOWED
+
+    def __iter__(self):
+        return iter((self.view, self.allowed_row_ids))
 
 
 class CachingPublicViewRowChecker:
@@ -1825,9 +1856,59 @@ class CachingPublicViewRowChecker:
 
         return views + self._always_visible_views
 
+    def get_public_views_where_rows_are_visible(self, rows) -> List[PublicViewRows]:
+        """
+        WARNING: If you are reusing the same checker and calling this method with the
+        same rows multiple times you must have correctly set which fields in the rows
+        might be updated in the checkers initials `updated_field_ids` attribute. This
+        is because for a given view, if we know none of the fields it filters on
+        will be updated we can cache the first check of if that rows exist as any
+        further changes to the rows wont be affecting filtered fields. Hence
+        `updated_field_ids` needs to be set if you are ever changing the rows and
+        reusing the same CachingPublicViewRowChecker instance.
+
+        :param rows: Rows in the checkers table.
+        :return: A list of PublicViewRows with view and a list of row ids where the rows
+            are visible for this checkers table.
+        """
+
+        visible_views_rows = []
+        row_ids = {row.id for row in rows}
+        for view, filter_qs, can_use_cache in self._views_with_filters:
+            if can_use_cache:
+                for id in row_ids:
+                    if id not in self._view_row_check_cache[view.id]:
+                        visible_ids = set(self._check_rows_visible(filter_qs, rows))
+                        for visible_id in visible_ids:
+                            self._view_row_check_cache[view.id][visible_id] = True
+                        break
+                else:
+                    visible_ids = row_ids
+
+                if len(visible_ids) > 0:
+                    visible_views_rows.append(PublicViewRows(view, visible_ids))
+
+            else:
+                visible_ids = set(self._check_rows_visible(filter_qs, rows))
+                if len(visible_ids) > 0:
+                    visible_views_rows.append(PublicViewRows(view, visible_ids))
+
+        for visible_view in self._always_visible_views:
+            visible_views_rows.append(
+                PublicViewRows(visible_view, PublicViewRows.ALL_ROWS_ALLOWED)
+            )
+
+        return visible_views_rows
+
     # noinspection PyMethodMayBeStatic
     def _check_row_visible(self, filter_qs, row):
         return filter_qs.filter(id=row.id).exists()
+
+    # noinspection PyMethodMayBeStatic
+    def _check_rows_visible(self, filter_qs, rows):
+        return filter_qs.filter(id__in=[row.id for row in rows]).values_list(
+            "id", flat=True
+        )
 
     def _view_row_checks_can_be_cached(self, view):
         if self._updated_field_ids is None:
