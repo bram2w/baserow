@@ -59,6 +59,8 @@
   for configuring ALLOWED_HOSTS.
 * Fixed a bug for some number filters that causes all rows to be returned when text is entered.
 * Fixed webhook test call failing when request body is empty.
+* Fixed a bug where making a multiple cell selection starting from an 
+  empty `link_row` or `formula` field was not possible in Firefox.
 
 ## Released (2022-03-03 1.9.1)
 

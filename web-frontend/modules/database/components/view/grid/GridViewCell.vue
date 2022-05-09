@@ -150,7 +150,6 @@ export default {
       }
     },
     cellMouseover(event, listeners) {
-      event.preventDefault()
       if (listeners['cell-mouseover']) {
         listeners['cell-mouseover']()
       }
