@@ -54,6 +54,8 @@
 * **Premium** Added row coloring.
 * Fixed row coloring bug when the table doesn't have any single select field.
 * Dropdown can now be focused with tab key
+* Fixed a bug where making a multiple cell selection starting from an 
+  empty `link_row` or `formula` field was not possible in Firefox.
 
 ## Released (2022-03-03 1.9.1)
 

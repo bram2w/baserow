@@ -339,6 +339,8 @@
 .grid-view__cell {
   @include absolute(0);
 
+  -moz-user-select: none;
+
   &.active {
     @include absolute(-2px);
 
