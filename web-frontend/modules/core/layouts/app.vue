@@ -58,13 +58,19 @@ export default {
         // Temporarily check if the undo redo is enabled.
         this.$featureFlags.includes('undo') &&
         osSpecificModifierPressed &&
-        event.code === 'KeyZ' &&
-        // If the active element is the body, it means that we're not focussing on
-        // other (text) inputs that have their own undo action. This will prevent the
-        // undo redo functionality while editing a cell directly.
-        document.body === document.activeElement
+        event.key.toLowerCase() === 'z'
       ) {
-        event.shiftKey ? this.redo() : this.undo()
+        // input/textareas/selects/editable dom elements have their own browser
+        // controlled undo/redo functionality so don't use our own if they have the
+        // focus.
+        if (
+          !['input', 'textarea', 'select'].includes(
+            document.activeElement.tagName.toLowerCase()
+          ) &&
+          !document.activeElement.isContentEditable
+        ) {
+          event.shiftKey ? this.redo() : this.undo()
+        }
       }
     },
   },
