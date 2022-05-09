@@ -27,6 +27,7 @@ from baserow.core.registry import (
 )
 from .dependencies.types import OptionalFieldDependencies
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
+from .constants import UPSERT_OPTION_DICT_KEY
 from .models import SelectOption, Field
 
 if TYPE_CHECKING:
@@ -93,6 +94,13 @@ class FieldType(
     read_only = False
     """Indicates whether the field allows inserting/updating row values or if it is
     read only."""
+
+    field_data_is_derived_from_attrs = False
+    """Set this to True if your field can completely reconstruct it's data just from
+    it's field attributes. When set to False the fields data will be backed up when
+    updated to a different type so an undo is possible. When True is backup isn't needed
+    and so isn't done as we can get the data back from simply restoring the attributes.
+    """
 
     def prepare_value_for_db(self, instance: Field, value: Any) -> Any:
         """
@@ -395,6 +403,37 @@ class FieldType(
         :return: The updates values.
         :type: dict
         """
+
+        return values
+
+    def export_prepared_values(self, field: Field):
+        """
+        Returns a serializable dict of prepared values for the fields attributes.
+        This method is the counterpart of `prepare_values`. It is called
+        by undo/redo ActionHandler to store the values in a way that could be
+        restored later on in in the UpdateField handler calling the `update_field`
+        method with values.
+
+        :param field: The field
+        :return: A dict of prepared values for the provided fields.
+        """
+
+        values = {
+            "name": field.name,
+        }
+
+        values.update({key: getattr(field, key) for key in self.allowed_fields})
+
+        if self.can_have_select_options:
+            values["select_options"] = [
+                {
+                    UPSERT_OPTION_DICT_KEY: select_option.id,
+                    "value": select_option.value,
+                    "color": select_option.color,
+                    "order": select_option.order,
+                }
+                for select_option in field.select_options.all()
+            ]
 
         return values
 
@@ -1191,6 +1230,28 @@ class FieldType(
         tables models which would be affected by this tables cache being invalidated.
         """
 
+    def should_backup_field_data_for_same_type_update(
+        self, old_field: Field, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        """
+        When a field is updated we backup it's data beforehand so we can undo the
+        update. This method is called when the update is not changing the type of
+        the field and decides if given the new_field_attrs whether or not to backup.
+
+        By default returns False as we assume when a fields type does not change
+        and only it's attributes are changing a backup is not required. If this is
+        not the case for your field type you should override this method and
+        return True when the attributes changing results in data loss (and hence a
+        backup is needed).
+
+        :param old_field: The original field instance.
+        :param new_field_attrs: The user supplied new field values.
+        :return: True if the field data should be backed up even if the type has
+            not changed, False otherwise.
+        """
+
+        return False
+
 
 class ReadOnlyFieldHasNoInternalDbValueError(Exception):
     """
@@ -1249,7 +1310,10 @@ class ReadOnlyFieldType(FieldType):
 
 
 class FieldTypeRegistry(
-    APIUrlsRegistryMixin, CustomFieldsRegistryMixin, ModelRegistryMixin, Registry
+    APIUrlsRegistryMixin,
+    CustomFieldsRegistryMixin,
+    ModelRegistryMixin[Field, FieldType],
+    Registry[FieldType],
 ):
     """
     With the field type registry it is possible to register new field types.  A field
@@ -1397,5 +1461,5 @@ class FieldConverterRegistry(Registry):
 
 # A default field type registry is created here, this is the one that is used
 # throughout the whole Baserow application to add a new field type.
-field_type_registry = FieldTypeRegistry()
-field_converter_registry = FieldConverterRegistry()
+field_type_registry: FieldTypeRegistry = FieldTypeRegistry()
+field_converter_registry: FieldConverterRegistry = FieldConverterRegistry()

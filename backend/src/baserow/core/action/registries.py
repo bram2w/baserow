@@ -3,12 +3,11 @@ import dataclasses
 from typing import Any, NewType, Optional
 
 from django.contrib.auth.models import AbstractUser
-from django.conf import settings
 from rest_framework import serializers
 
+from baserow.api.sessions import get_untrusted_client_session_id
 from baserow.core.action.models import Action
 from baserow.core.registry import Registry, Instance
-from baserow.api.sessions import get_untrusted_client_session_id
 
 # An alias type of a str (its exactly a str, just with a different name in the type
 # system). We use this instead of a normal str for type safety ensuring
@@ -84,15 +83,8 @@ class ActionScopeRegistry(Registry[ActionScopeType]):
     name = "action_scope"
 
 
-class ActionTypeRegistry(Registry):
-    name = "action_type"
-
-
 class ActionType(Instance, abc.ABC):
-    @property
-    @abc.abstractmethod
-    def type(self) -> str:
-        pass
+    type: str = NotImplemented
 
     @dataclasses.dataclass
     class Params:
@@ -165,7 +157,7 @@ class ActionType(Instance, abc.ABC):
         user: AbstractUser,
         params: Any,
         scope: ActionScopeStr,
-    ):
+    ) -> Action:
         """
         Registers a new action in the database using the untrusted client session id
         if set in the request headers.
@@ -178,16 +170,36 @@ class ActionType(Instance, abc.ABC):
 
         session = get_untrusted_client_session_id(user)
 
-        # We don't want the action to be created when the "undo" feature flag is not
-        # enabled because it's not 100% finished yet.
-        if "undo" in settings.FEATURE_FLAGS:
-            Action.objects.create(
-                user=user,
-                type=cls.type,
-                params=params,
-                scope=scope,
-                session=session,
-            )
+        action = Action.objects.create(
+            user=user,
+            type=cls.type,
+            params=params,
+            scope=scope,
+            session=session,
+        )
+        return action
+
+    @classmethod
+    def clean_up_any_extra_action_data(cls, action_being_cleaned_up: Action):
+        """
+        Should cleanup any extra data associated with the action as it has expired.
+
+        :param action_being_cleaned_up: The action that is old and being cleaned up.
+        """
+
+        pass
+
+    @classmethod
+    def has_custom_cleanup(cls) -> bool:
+        # noinspection PyUnresolvedReferences
+        return (
+            cls.clean_up_any_extra_action_data.__func__
+            != ActionType.clean_up_any_extra_action_data.__func__
+        )
+
+
+class ActionTypeRegistry(Registry[ActionType]):
+    name = "action_type"
 
 
 action_scope_registry: ActionScopeRegistry = ActionScopeRegistry()

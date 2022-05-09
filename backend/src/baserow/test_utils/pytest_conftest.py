@@ -43,6 +43,15 @@ def mutable_field_type_registry():
     field_type_registry.registry = before
 
 
+@pytest.fixture()
+def mutable_action_registry():
+    from baserow.core.action.registries import action_type_registry
+
+    before = action_type_registry.registry.copy()
+    yield action_type_registry
+    action_type_registry.registry = before
+
+
 # We reuse this file in the premium backend folder, if you run a pytest session over
 # plugins and the core at the same time pytest will crash if this called multiple times.
 def pytest_addoption(parser):

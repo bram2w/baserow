@@ -1,8 +1,9 @@
-from typing import Tuple
+from typing import Tuple, TYPE_CHECKING
 
 from django.db.models import Q
 
-from baserow.contrib.database.fields import models as field_models
+if TYPE_CHECKING:
+    from baserow.contrib.database.fields import models as field_models
 from baserow.contrib.database.fields.dependencies.circular_reference_checker import (
     will_cause_circular_dep,
 )

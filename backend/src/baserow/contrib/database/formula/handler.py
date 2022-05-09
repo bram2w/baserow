@@ -417,7 +417,7 @@ class FormulaHandler:
     @classmethod
     def recalculate_formula_and_get_update_expression(
         cls, field, old_field, field_cache
-    ):
+    ) -> Expression:
         """
         Recalculates the internal formula attributes and given its old field instance
         recreates the actual database column if the formula type has changed

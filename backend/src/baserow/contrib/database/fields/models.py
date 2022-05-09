@@ -1,3 +1,5 @@
+from typing import NewType
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.functional import cached_property
@@ -24,7 +26,10 @@ from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     TrashableModelMixin,
 )
-from baserow.core.utils import to_snake_case, remove_special_characters
+from baserow.core.utils import (
+    to_snake_case,
+    remove_special_characters,
+)
 
 from .fields import SerialField
 
@@ -471,3 +476,6 @@ class LookupField(FormulaField):
             + f"error={self.error},\n"
             + ")"
         )
+
+
+SpecificFieldForUpdate = NewType("SpecificFieldForUpdate", Field)

@@ -206,10 +206,12 @@ class DatabaseConfig(AppConfig):
         from .fields.actions import (
             CreateFieldTypeAction,
             DeleteFieldTypeAction,
+            UpdateFieldActionType,
         )
 
         action_type_registry.register(CreateFieldTypeAction())
         action_type_registry.register(DeleteFieldTypeAction())
+        action_type_registry.register(UpdateFieldActionType())
 
         from .views.view_types import GridViewType, GalleryViewType, FormViewType
 

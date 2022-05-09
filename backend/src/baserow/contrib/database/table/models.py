@@ -623,12 +623,10 @@ class Table(
             # Add the field to the attribute dict that is used to generate the
             # model. All the kwargs that are passed to the `get_model_field`
             # method are going to be passed along to the model field.
-            extra_kwargs = {}
             field_attrs[field_name] = field_type.get_model_field(
                 field,
                 db_column=field.db_column,
                 verbose_name=field.name,
-                **extra_kwargs,
             )
         return field_attrs
 

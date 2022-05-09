@@ -207,8 +207,7 @@
     },
     "fieldLinkRowSubForm": {
         "noTable": "Necesita al menos otra tabla en la misma base de datos para vincular.",
-        "selectTableLabel": "Seleccione una tabla para vincular",
-        "dataLost": "Al cambiar la tabla, se perderán todos los datos."
+        "selectTableLabel": "Seleccione una tabla para vincular"
     },
     "fieldSelectOptions": {
         "add": "Añadir una opción"

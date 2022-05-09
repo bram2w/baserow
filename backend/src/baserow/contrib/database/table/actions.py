@@ -1,16 +1,16 @@
 import dataclasses
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from django.contrib.auth.models import AbstractUser
-from baserow.contrib.database.models import Database
 
+from baserow.contrib.database.handler import DatabaseHandler
+from baserow.contrib.database.models import Database
+from baserow.contrib.database.table.handler import TableForUpdate, TableHandler
+from baserow.contrib.database.table.models import Table
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionType, ActionScopeStr
 from baserow.core.action.scopes import ApplicationActionScopeType
 from baserow.core.trash.handler import TrashHandler
-from baserow.contrib.database.handler import DatabaseHandler
-from baserow.contrib.database.table.handler import TableForUpdate, TableHandler
-from baserow.contrib.database.table.models import Table
 
 
 class CreateTableActionType(ActionType):
@@ -89,7 +89,7 @@ class DeleteTableActionType(ActionType):
         table_id: int
 
     @classmethod
-    def do(cls, user: AbstractUser, table: TableForUpdate) -> Any:
+    def do(cls, user: AbstractUser, table: TableForUpdate):
         """
         Deletes a table in the databse.
         See baserow.contrib.database.table.handler.TableHandler.delete_table
@@ -133,7 +133,7 @@ class OrderTableActionType(ActionType):
         new_tables_order: List[int]
 
     @classmethod
-    def do(cls, user: AbstractUser, database: Database, order: List[int]) -> Table:
+    def do(cls, user: AbstractUser, database: Database, order: List[int]):
         """
         Updates the order of the tables in the given database.
         See baserow.contrib.database.table.handler.TableHandler.order_table

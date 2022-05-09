@@ -10,7 +10,7 @@ import string
 from collections import namedtuple
 from decimal import Decimal
 from itertools import islice
-from typing import List, Optional, Iterable, TypeVar
+from typing import List, Optional, Iterable
 
 from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED
@@ -513,7 +513,3 @@ class ChildProgressBuilder:
             return parent.create_child(represents_progress, child_total)
         else:
             return Progress(child_total)
-
-
-T = TypeVar("T")
-K = TypeVar("K")
