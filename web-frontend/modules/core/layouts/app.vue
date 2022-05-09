@@ -54,10 +54,7 @@ export default {
     keyDown(event) {
       const isMac = navigator.platform.toUpperCase().includes('MAC')
       const osSpecificModifierPressed = isMac ? event.metaKey : event.ctrlKey
-      if (
-        osSpecificModifierPressed &&
-        event.key.toLowerCase() === 'z'
-      ) {
+      if (osSpecificModifierPressed && event.key.toLowerCase() === 'z') {
         // input/textareas/selects/editable dom elements have their own browser
         // controlled undo/redo functionality so don't use our own if they have the
         // focus.
