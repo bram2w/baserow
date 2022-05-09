@@ -16,6 +16,8 @@ from .exceptions import RowDoesNotExist, RowIdsNotUnique
 from .signals import (
     before_row_update,
     before_row_delete,
+    before_rows_update,
+    before_rows_delete,
     row_created,
     rows_created,
     row_updated,
@@ -845,9 +847,9 @@ class RowHandler:
                 if field_id in row_values or field["name"] in row_values:
                     updated_field_ids.add(field_id)
 
-        before_return = before_row_update.send(
+        before_return = before_rows_update.send(
             self,
-            row=list(rows_to_update),
+            rows=list(rows_to_update),
             user=user,
             table=table,
             model=model,
@@ -1212,8 +1214,8 @@ class RowHandler:
             db_rows_ids = [db_row.id for db_row in rows]
             raise RowDoesNotExist(sorted(list(set(row_ids) - set(db_rows_ids))))
 
-        before_return = before_row_delete.send(
-            self, row=rows, user=user, table=table, model=model
+        before_return = before_rows_delete.send(
+            self, rows=rows, user=user, table=table, model=model
         )
 
         trashed_rows = TrashedRows()
