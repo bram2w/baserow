@@ -6,7 +6,7 @@ export default (client) => {
       gridId,
       limit = 100,
       offset = null,
-      cancelToken = null,
+      signal = null,
       includeFieldOptions = false,
       includeRowMetadata = true,
       search = false,
@@ -56,8 +56,8 @@ export default (client) => {
 
       const config = { params }
 
-      if (cancelToken !== null) {
-        config.cancelToken = cancelToken
+      if (signal !== null) {
+        config.signal = signal
       }
 
       if (publicAuthToken) {
@@ -70,7 +70,7 @@ export default (client) => {
     fetchCount({
       gridId,
       search,
-      cancelToken = null,
+      signal = null,
       publicUrl = false,
       publicAuthToken = null,
       filters = {},
@@ -90,8 +90,8 @@ export default (client) => {
 
       const config = { params }
 
-      if (cancelToken !== null) {
-        config.cancelToken = cancelToken
+      if (signal !== null) {
+        config.signal = signal
       }
 
       if (publicAuthToken) {

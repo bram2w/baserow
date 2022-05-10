@@ -6,7 +6,7 @@ export default (client) => {
       offset = null,
       includeFieldOptions = false,
       search = false,
-      cancelToken = null,
+      signal = null,
     }) {
       const config = {
         params: {
@@ -15,8 +15,8 @@ export default (client) => {
       }
       const include = []
 
-      if (cancelToken !== null) {
-        config.cancelToken = cancelToken
+      if (signal !== null) {
+        config.signal = signal
       }
 
       if (offset !== null) {
@@ -37,15 +37,15 @@ export default (client) => {
 
       return client.get(`/database/views/gallery/${viewId}/`, config)
     },
-    fetchCount({ viewId, search, cancelToken = null }) {
+    fetchCount({ viewId, search, signal = null }) {
       const config = {
         params: {
           count: true,
         },
       }
 
-      if (cancelToken !== null) {
-        config.cancelToken = cancelToken
+      if (signal !== null) {
+        config.signal = signal
       }
 
       if (search) {
