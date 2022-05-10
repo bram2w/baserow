@@ -247,5 +247,25 @@
     "copyingNotification": {
         "title": "Copiando...",
         "content": "Preparando tus datos"
+    },
+    "undoRedoNotification": {
+        "undoingTitle": "Deshaciendo...",
+        "undoingText": "Deshaciendo tu acción",
+        "redoingText": "Rehaciendo tu acción",
+        "redoneTitle": "Rehecho",
+        "redoneText": "La acción es rehecha",
+        "noMoreRedo": "No hay más acciones que rehacer",
+        "skippingRedoDueToError": "Rehacer falló por un error desconocido, saltándolo.",
+        "failed": "Fallido",
+        "undoneTitle": "Deshecho",
+        "undoneText": "La acción es deshecha",
+        "noMoreUndo": "No hay más acciones que deshacer",
+        "skippingUndoDueToError": "Deshacer falló por un error desconocido, saltándolo.",
+        "redoingTitle": "Rehaciendo..."
+    },
+    "AuthorizationErrorNotification": {
+        "title": "Error de autorización",
+        "content": "Parece que no tienes permisos para ver este recurso.",
+        "action": "Refrescar página"
     }
 }
