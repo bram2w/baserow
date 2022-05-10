@@ -7,6 +7,7 @@ Faker==8.11.0
 Twisted==22.1
 gunicorn==20.1.0
 uvicorn[standard]==0.15.0
+websockets==10.3
 requests==2.26.0
 itsdangerous==2.0.1
 Pillow==9.0.0
