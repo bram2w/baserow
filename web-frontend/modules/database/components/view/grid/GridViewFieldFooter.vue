@@ -89,10 +89,6 @@ export default {
       if (this.fieldAggregationData[this.field.id] !== undefined) {
         const { value } = this.fieldAggregationData[this.field.id]
 
-        if (isNaN(value)) {
-          return null
-        }
-
         return this.viewAggregationType.getValue(value, {
           rowCount: this.rowCount,
           field: this.field,

@@ -342,6 +342,7 @@
   * Book Catalog
   * Applicant Tracker
   * Project Tracker
+* Fixed earliest and latest date aggregations
 
 ## Released (2021-07-16)
 
