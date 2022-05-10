@@ -35,7 +35,7 @@ https://www.linode.com/docs/development/version-control/how-to-install-git-on-li
 Once you have finished installing all the required software you should be able to run
 the following commands in your terminal.
 
-```
+```bash
 $ docker -v
 Docker version 20.10.6, build 370c289
 $ docker-compose -v

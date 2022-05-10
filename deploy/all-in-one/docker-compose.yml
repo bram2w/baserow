@@ -6,6 +6,10 @@ services:
     build:
       dockerfile: $PWD/deploy/all-in-one/Dockerfile
       context: $PWD
+    environment:
+      EMAIL_SMTP: 'yes'
+      EMAIL_SMTP_HOST: 'mailhog'
+      EMAIL_SMTP_PORT: '1025'
     ports:
       - "80:80"
       - "443:443"
