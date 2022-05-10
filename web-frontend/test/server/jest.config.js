@@ -5,5 +5,4 @@ module.exports = Object.assign({}, baseConfig, {
   testMatch: ['<rootDir>/web-frontend/test/server/**/*.spec.js'],
   displayName: 'server',
   name: 'server',
-  setupFilesAfterEnv: ['<rootDir>/web-frontend/test/server/jest.setup.js'],
 })
