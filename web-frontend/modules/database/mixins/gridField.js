@@ -194,6 +194,7 @@ export default {
               this.$emit('update', value, oldValue)
             }
           } else {
+            event.stopPropagation()
             this.$emit('paste', data)
           }
         } catch (e) {}
