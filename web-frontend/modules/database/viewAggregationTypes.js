@@ -84,6 +84,9 @@ export class ViewAggregationType extends Registerable {
    * @returns the final aggregation value for this type.
    */
   getValue(value, context) {
+    if (isNaN(value)) {
+      return null
+    }
     return value
   }
 
@@ -230,7 +233,7 @@ export class CheckedCountViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { rowCount }) {
-    if (rowCount === 0) {
+    if (rowCount === 0 || isNaN(value)) {
       return null
     }
     return rowCount - value
@@ -285,7 +288,7 @@ export class EmptyPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { rowCount }) {
-    if (rowCount === 0) {
+    if (rowCount === 0 || isNaN(value)) {
       return null
     }
     return `${Math.round((value / rowCount) * 100)}%`
@@ -340,7 +343,7 @@ export class NotEmptyPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { rowCount }) {
-    if (rowCount === 0) {
+    if (rowCount === 0 || isNaN(value)) {
       return null
     }
     return `${Math.round(((rowCount - value) / rowCount) * 100)}%`
@@ -375,7 +378,7 @@ export class NotCheckedPercentageViewAggregationType extends ViewAggregationType
   }
 
   getValue(value, { rowCount }) {
-    if (rowCount === 0) {
+    if (rowCount === 0 || isNaN(value)) {
       return null
     }
     return `${Math.round((value / rowCount) * 100)}%`
@@ -410,7 +413,7 @@ export class CheckedPercentageViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { rowCount }) {
-    if (rowCount === 0) {
+    if (rowCount === 0 || isNaN(value)) {
       return null
     }
     return `${Math.round(((rowCount - value) / rowCount) * 100)}%`
@@ -530,6 +533,9 @@ export class EarliestDateViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { field, fieldType }) {
+    if (!(typeof value === 'string')) {
+      return null
+    }
     return fieldType.toHumanReadableString(field, value)
   }
 
@@ -567,6 +573,9 @@ export class LatestDateViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { field, fieldType }) {
+    if (!(typeof value === 'string')) {
+      return null
+    }
     return fieldType.toHumanReadableString(field, value)
   }
 
@@ -616,6 +625,9 @@ export class AverageViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { field, fieldType }) {
+    if (isNaN(value)) {
+      return null
+    }
     if (fieldType.getType() === 'number') {
       return NumberFieldType.formatNumber(field, value)
     } else {
@@ -652,6 +664,9 @@ export class StdDevViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { field, fieldType }) {
+    if (isNaN(value)) {
+      return null
+    }
     if (fieldType.getType() === 'number') {
       return NumberFieldType.formatNumber(field, value)
     } else {
@@ -683,6 +698,9 @@ export class VarianceViewAggregationType extends ViewAggregationType {
   }
 
   getValue(value, { field, fieldType }) {
+    if (isNaN(value)) {
+      return null
+    }
     if (fieldType.getType() === 'number') {
       return NumberFieldType.formatNumber(field, value)
     } else {
